@@ -24,7 +24,9 @@ public:
         std::lock_guard lk(lock_);
         for (auto it = map_.begin(); it != map_.end();) {
             auto val = it->second;
-            if (val) val.reset();
+            if (val) {
+                val.reset();
+            }
             it = map_.erase(it);
         }
     }

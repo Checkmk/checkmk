@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Callable, Collection, Iterable, Mapping
 from itertools import chain
-from typing import Callable, Collection, Dict, Iterable, Mapping, Tuple
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -41,7 +41,7 @@ def __live_query_to_choices(
     query_callback: Callable[[MultiSiteConnection], Collection[LivestatusColumn]],
     limit: int,
     value: str,
-    params: Dict,
+    params: dict,
 ) -> Choices:
     selected_sites = get_only_sites_from_context(params.get("context", {}))
     with sites.only_sites(selected_sites), sites.set_limit(limit):
@@ -61,7 +61,7 @@ def _filter_choices(value: str, choices: Choices) -> Choices:
     return [(value, title) for value, title in choices if value_to_search in title.lower()]
 
 
-def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choices:
+def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choices:
     """Livestatus query of single column of unique elements.
     Prepare dropdown choices"""
 
@@ -72,7 +72,7 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: Dict) -> Choic
 
 
 @autocompleter_registry.register_expression("monitored_hostname")
-def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
+def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     context = params.get("context", {})
@@ -84,10 +84,10 @@ def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("config_hostname")
-def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
+def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    all_hosts: Dict[str, CREHost] = Host.all()
+    all_hosts: dict[str, CREHost] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
@@ -101,7 +101,7 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("sites")
-def sites_autocompleter(value: str, params: Dict) -> Choices:
+def sites_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
 
@@ -118,7 +118,7 @@ def sites_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("allgroups")
-def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
+def hostgroup_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     group_type = params["group_type"]
@@ -134,7 +134,7 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("check_cmd")
-def check_command_autocompleter(value: str, params: Dict) -> Choices:
+def check_command_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = [
@@ -147,16 +147,16 @@ def check_command_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("service_levels")
-def service_levels_autocompleter(value: str, params: Dict) -> Choices:
+def service_levels_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    choices: Choices = mkeventd.service_levels()
+    choices: Choices = [(str(level), descr) for level, descr in mkeventd.service_levels()]
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("syslog_facilities")
-def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
+def syslog_facilities_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
@@ -165,7 +165,7 @@ def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("monitored_service_description")
-def monitored_service_description_autocompleter(value: str, params: Dict) -> Choices:
+def monitored_service_description_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
     context = params.get("context", {})
@@ -181,7 +181,7 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")
-def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
+def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
     for path, name in Folder.folder_choices_fulltitle():  # str, HTML
@@ -194,7 +194,7 @@ def wato_folder_choices_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("kubernetes_labels")
-def kubernetes_labels_autocompleter(value: str, params: Dict) -> Choices:
+def kubernetes_labels_autocompleter(value: str, params: dict) -> Choices:
     filter_id = params["group_type"]
     object_type = filter_id.removeprefix("kubernetes_")
     label_name = f"cmk/kubernetes/{object_type}"
@@ -223,7 +223,7 @@ def kubernetes_labels_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("monitored_metrics")
-def metrics_autocompleter(value: str, params: Dict) -> Choices:
+def metrics_autocompleter(value: str, params: dict) -> Choices:
     context = params.get("context", {})
     host = context.get("host", {}).get("host", "")
     service = context.get("service", {}).get("service", "")
@@ -242,7 +242,7 @@ def metrics_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("tag_groups")
-def tag_group_autocompleter(value: str, params: Dict) -> Choices:
+def tag_group_autocompleter(value: str, params: dict) -> Choices:
     return sorted(
         (v for v in active_config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
         key=lambda a: a[1].lower(),
@@ -250,7 +250,7 @@ def tag_group_autocompleter(value: str, params: Dict) -> Choices:
 
 
 @autocompleter_registry.register_expression("tag_groups_opt")
-def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
+def tag_group_opt_autocompleter(value: str, params: dict) -> Choices:
     grouped: Choices = []
 
     for tag_group in active_config.tags.tag_groups:
@@ -265,7 +265,7 @@ def tag_group_opt_autocompleter(value: str, params: Dict) -> Choices:
 
 def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]
     row,
-) -> Iterable[Tuple[str, str]]:
+) -> Iterable[tuple[str, str]]:
     def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
         metric_id = metric_or_graph_id.replace("METRIC_", "")
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
@@ -283,12 +283,12 @@ def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]
 
 
 @autocompleter_registry.register_expression("available_graphs")
-def graph_templates_autocompleter(value: str, params: Dict) -> Choices:
+def graph_templates_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[Tuple[str, str]] = (
+        choices: Iterable[tuple[str, str]] = (
             (
                 graph_id,
                 str(

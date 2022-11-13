@@ -15,6 +15,15 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import (
+    Fetcher,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
+from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -23,38 +32,39 @@ import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.config import HostConfig
-from cmk.base.sources import Source
-from cmk.base.sources.ipmi import IPMISource
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 
 
-def dump_source(source: Source) -> str:
+def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
     # pylint: disable=too-many-branches
-    if isinstance(source, IPMISource):
+    if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
         items = []
-        if source.ipaddress:
-            items.append("Address: %s" % source.ipaddress)
-        if source.credentials:
-            items.append("User: %s" % source.credentials["username"])
+        if fetcher.address:
+            items.append("Address: %s" % fetcher.address)
+        if fetcher.username:
+            items.append("User: %s" % fetcher.username)
         if items:
             description = "%s (%s)" % (description, ", ".join(items))
         return description
 
-    if isinstance(source, PiggybackSource):
-        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / source.hostname)
+    if isinstance(fetcher, PiggybackFetcher):
+        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / fetcher.hostname)
 
-    if isinstance(source, ProgramSource):
-        response = ["Program: %s" % source.cmdline]
-        if source.stdin:
-            response.extend(["  Program stdin:", source.stdin])
+    if isinstance(fetcher, ProgramFetcher):
+        response = [
+            "Program: %s"
+            % (
+                fetcher.cmdline
+                if isinstance(fetcher.cmdline, str)
+                else fetcher.cmdline.decode("utf8")
+            )
+        ]
+        if fetcher.stdin:
+            response.extend(["  Program stdin:", fetcher.stdin])
         return "\n".join(response)
 
-    if isinstance(source, SNMPSource):
-        snmp_config = source.snmp_config
+    if isinstance(fetcher, SNMPFetcher):
+        snmp_config = fetcher.snmp_config
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
@@ -76,11 +86,11 @@ def dump_source(source: Source) -> str:
             snmp_config.snmp_backend.value,
         )
 
-    if isinstance(source, TCPSource):
-        return "TCP: %s:%d" % (source.ipaddress, source.agent_port)
+    if isinstance(fetcher, TCPFetcher):
+        return "TCP: %s:%d" % fetcher.address
 
     # Fallback for non-raw stuff.
-    return type(source).__name__
+    return type(fetcher).__name__
 
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
@@ -88,8 +98,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     host_config = config_cache.get_host_config(hostname)
 
     out.output("\n")
-    if host_config.is_cluster:
-        nodes = host_config.nodes
+    if config_cache.is_cluster(hostname):
+        nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise RuntimeError()
         color = tty.bgmagenta
@@ -99,7 +109,9 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         add_txt = ""
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(host_config, family=host_config.default_address_family)
+    ipaddress = _ip_address_for_dump_host(
+        hostname, host_config, family=host_config.default_address_family
+    )
 
     addresses: Optional[str] = ""
     if not host_config.is_ipv4v6_host:
@@ -107,6 +119,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     else:
         try:
             secondary = _ip_address_for_dump_host(
+                hostname,
                 host_config,
                 family=socket.AF_INET if host_config.is_ipv6_primary else socket.AF_INET6,
             )
@@ -135,8 +148,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
-    if host_config.is_cluster:
-        parents_list = host_config.nodes
+    if config_cache.is_cluster(hostname):
+        parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
     else:
@@ -161,14 +174,13 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        dump_source(source)
-        for source in sources.make_non_cluster_sources(
-            host_config,
+        dump_source(source, fetcher)
+        for source, _file_cache, fetcher in sources.make_non_cluster_sources(
+            hostname,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                hostname, config.snmp_without_sys_descr
             ),
             file_cache_max_age=file_cache.MaxAge.none(),
         )
@@ -222,11 +234,13 @@ def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters
 
 
 def _ip_address_for_dump_host(
+    host_name: HostName,
     host_config: HostConfig,
     *,
     family: socket.AddressFamily,
 ) -> Optional[str]:
+    config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception:
-        return "" if host_config.is_cluster else ip_lookup.fallback_ip_for(family)
+        return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)

@@ -14,15 +14,13 @@ use tokio::net::{TcpListener, TcpStream};
 #[cfg(unix)]
 use tokio::net::{UnixListener, UnixStream};
 
+#[cfg(unix)]
 pub async fn one_time_agent_response(
     socket_address: String,
     output: &str,
     expected_input: Option<&str>,
 ) -> AnyhowResult<()> {
-    #[cfg(unix)]
     let socket = UnixListener::bind(socket_address).unwrap();
-    #[cfg(windows)]
-    let socket = TcpListener::bind(socket_address).await?;
     let (stream, _) = socket.accept().await?;
     agent_response(stream, output.into(), expected_input).await
 }
@@ -63,10 +61,11 @@ pub async fn agent_response(
     output: String,
     expected_input: Option<&str>,
 ) -> AnyhowResult<()> {
+    let (mut reader, mut writer) = stream.split();
     let mut buf = vec![];
     tokio::time::timeout(tokio::time::Duration::from_secs(1), async {
         loop {
-            stream.read_buf(&mut buf).await?;
+            reader.read_buf(&mut buf).await?;
             tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
             if !buf.is_empty() {
                 return Ok::<(), AnyhowError>(());
@@ -80,7 +79,8 @@ pub async fn agent_response(
         assert_eq!(String::from_utf8(buf)?, input);
     }
 
-    stream.write_all(output.as_bytes()).await?;
-    stream.flush().await?;
+    writer.write_all(output.as_bytes()).await?;
+    writer.flush().await?;
+    let _ = writer.shutdown().await; // ignore error: not our problem
     Ok(())
 }

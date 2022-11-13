@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef p_internal_h__
-#define p_internal_h__
+#ifndef P_INTERNAL_H
+#define P_INTERNAL_H
 
 #include <chrono>
 #include <condition_variable>
@@ -36,8 +36,8 @@ inline std::string MakeStateFileName(std::string_view name,
     }
 
     std::string ip = ip_address.empty() ? "" : " " + std::string{ip_address};
-    std::transform(ip.cbegin(), ip.cend(), ip.begin(),
-                   [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
+    std::ranges::transform(
+        ip, ip.begin(), [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
 
     return std::string{name} + ip + std::string{extension};
 }
@@ -198,4 +198,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // p_internal_h__
+#endif  // P_INTERNAL_H

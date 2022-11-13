@@ -199,7 +199,7 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
             # e.g. [u'75000', u'70000, u'-5000', u'0'] -> (70000, 75000)
             # In case devices do no validation when thresholds are set this could result
             # in threshold values in a wrong order. To keep the behaviour consistent
-            # to temperature sensors the device levels are ordered accoringly.
+            # to temperature sensors the device levels are ordered accordingly.
             if sensortype == "dBm" and len(thresholds[sensor_id]) == 4:
                 unsorted_thresholds = thresholds[sensor_id][0:4]
                 converted_thresholds = [float(t) * factor for t in unsorted_thresholds]
@@ -220,7 +220,7 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
                 temp_crit_upper_raw, temp_warn_upper_raw = thresholds[sensor_id][0:2]
                 # Some devices deliver these values in the wrong order. In case the devices
                 # do no validation when thresholds are set this could result in values in a
-                # wrong oder as well. Device levels are assigned accoring to their size.
+                # wrong oder as well. Device levels are assigned according to their size.
                 dev_levels = (
                     min(float(temp_warn_upper_raw) * factor, float(temp_crit_upper_raw) * factor),
                     max(float(temp_warn_upper_raw) * factor, float(temp_crit_upper_raw) * factor),

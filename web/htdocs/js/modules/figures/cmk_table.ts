@@ -5,45 +5,32 @@ import * as dc from "dc";
 import * as cmk_figures from "cmk_figures";
 import * as crossfilter from "crossfilter2";
 
-// TODO: figure a way to add typing for figures data using these interfaces
-//https://github.com/tribe29/checkmk/blob/6bb901dcd7da6f64d55e08e206d68c604dbe6fb1/cmk/gui/figures.py#L108
-//https://github.com/tribe29/checkmk/blob/6bb901dcd7da6f64d55e08e206d68c604dbe6fb1/cmk/gui/figures.py#L24-L44
-interface TableFigureData {
-    label: string;
-    value: number;
-}
-interface FigureConfig {
-    id: string;
-    type: string;
-    title: string;
-    data: TableFigureData;
-}
-
-interface TableFigureRowsCells {
-    text: string;
-    html: string;
-    cell_type: string;
+export interface Rows {
     classes: string[];
-    rowspan: number;
-    colspan: number;
-    figure_config: FigureConfig;
+    cells: {
+        text: string;
+        html: string;
+        cell_type: string;
+        classes: string[];
+        rowspan: number;
+        colspan: number;
+        figure_config;
+    };
+}
+interface TableFigureData extends cmk_figures.FigureData {
+    rows?: Rows[];
+    classes?: string[];
 }
 
-interface TableFigureRows {
-    classes: string[];
-    cells: TableFigureRowsCells[];
-}
-
-interface TableFigureDatum {
-    classes: string[];
-    rows: TableFigureRows[];
-}
-
-export class TableFigure extends cmk_figures.FigureBase {
+export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
     _table;
 
     ident() {
         return "table";
+    }
+
+    getEmptyData(): TableFigureData {
+        return cmk_figures.getEmptyBasicFigureData();
     }
 
     initialize(debug) {

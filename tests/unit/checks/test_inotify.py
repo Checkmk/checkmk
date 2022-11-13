@@ -8,7 +8,7 @@ from typing import Dict
 
 import pytest
 
-from tests.testlib import Check  # type: ignore[import]
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 

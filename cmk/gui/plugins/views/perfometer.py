@@ -8,22 +8,16 @@ from typing import Optional, Sequence, Tuple
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.painters.v0.base import Cell, CellSpec, Painter, painter_registry
+from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    CellSpec,
-    display_options,
-    is_stale,
-    Painter,
-    painter_registry,
-    Row,
-)
 from cmk.gui.sorter import Sorter, sorter_registry
-from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 
 

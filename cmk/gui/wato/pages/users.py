@@ -19,6 +19,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -50,7 +51,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.table import table_element
+from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
@@ -334,6 +335,8 @@ class ModeUsers(WatoMode):
         timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
+        html.div("", id_="row_info")
+
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - active_config.user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
@@ -535,8 +538,15 @@ class ModeUsers(WatoMode):
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
                     html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+
+        show_row_count(
+            row_count=(row_count := len(users)),
+            row_info=_("user") if row_count == 1 else _("users"),
+            selection_id="users",
+        )
 
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"
@@ -658,7 +668,7 @@ class ModeEditUser(WatoMode):
         return menu
 
     def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
-        if self._rbn_enabled and not self._is_new_user:
+        if self._rbn_enabled() and not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Notification rules"),
                 icon_name="topic_events",
@@ -1334,21 +1344,20 @@ class ModeEditUser(WatoMode):
 
 def select_language(user_spec: UserSpec) -> None:
     languages: Choices = [
-        (ident or "en", alias)
+        (ident, alias)
         for (ident, alias) in get_languages()
         if ident not in active_config.hide_languages
     ]
     if not active_config.enable_community_translations:
         languages = [
-            (ident, alias) for (ident, alias) in languages if not is_community_translation(ident)
+            (ident, alias)
+            for (ident, alias) in languages
+            if ident and not is_community_translation(ident)
         ]
     if not languages:
         return
 
-    current_language = user_spec.get("language")
-    if current_language is None:
-        current_language = "_default_"
-
+    current_language = user_spec.get("language", "_default_")
     languages.insert(
         0,
         (

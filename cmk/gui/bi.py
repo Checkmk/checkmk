@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any
 
 from livestatus import LivestatusOutputFormat, LivestatusResponse, OnlySites, SiteId
 
@@ -33,7 +34,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
@@ -96,7 +97,7 @@ def aggregation_group_choices() -> DropdownChoiceEntries:
 
 
 def api_get_aggregation_state(  # type:ignore[no-untyped-def]
-    filter_names: Optional[List[str]] = None, filter_groups: Optional[List[str]] = None
+    filter_names: list[str] | None = None, filter_groups: list[str] | None = None
 ):
     bi_manager = BIManager()
     bi_aggregation_filter = BIAggregationFilter(
@@ -184,7 +185,7 @@ def api_get_aggregation_state(  # type:ignore[no-untyped-def]
 def check_title_uniqueness(forest):
     # Legacy, will be removed any decade from now
     # One aggregation cannot be in mutliple groups.
-    known_titles: Set[Any] = set()
+    known_titles: set[Any] = set()
     for aggrs in forest.values():
         for aggr in aggrs:
             title = aggr["title"]
@@ -202,7 +203,7 @@ def check_title_uniqueness(forest):
 
 
 def check_aggregation_title_uniqueness(aggregations):
-    known_titles: Set[Any] = set()
+    known_titles: set[Any] = set()
     for attrs in aggregations.values():
         title = attrs["title"]
         if title in known_titles:
@@ -220,7 +221,7 @@ def check_aggregation_title_uniqueness(aggregations):
 
 def _get_state_assumption_key(
     site: Any, host: Any, service: Any
-) -> Union[Tuple[Any, Any], Tuple[Any, Any, Any]]:
+) -> tuple[Any, Any] | tuple[Any, Any, Any]:
     if service:
         return (site, host, service)
     return (site, host)
@@ -279,7 +280,7 @@ def ajax_render_tree():
     # TODO: Cleanup the renderer to use a class registry for lookup
     renderer_class_name = request.var("renderer")
     if renderer_class_name == "FoldableTreeRendererTree":
-        renderer_cls: Type[ABCFoldableTreeRenderer] = FoldableTreeRendererTree
+        renderer_cls: type[ABCFoldableTreeRenderer] = FoldableTreeRendererTree
     elif renderer_class_name == "FoldableTreeRendererBoxes":
         renderer_cls = FoldableTreeRendererBoxes
     elif renderer_class_name == "FoldableTreeRendererBottomUp":
@@ -803,7 +804,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return [(content, height, [])]
 
     def _gen_node(self, tree, height, show_host):
-        leaves: List[Any] = []
+        leaves: list[Any] = []
         for node in tree[3]:
             if not node[2].get("hidden"):
                 leaves += self._gen_table(node, height - 1, show_host)
@@ -823,7 +824,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
 
 def find_all_leaves(  # type:ignore[no-untyped-def]
     node,
-) -> List[Tuple[Optional[str], HostName, Optional[ServiceName]]]:
+) -> list[tuple[str | None, HostName, ServiceName | None]]:
     # leaf node
     if node["type"] == 1:
         site, host = node["host"]
@@ -831,7 +832,7 @@ def find_all_leaves(  # type:ignore[no-untyped-def]
 
     # rule node
     if node["type"] == 2:
-        entries: List[Any] = []
+        entries: list[Any] = []
         for n in node["nodes"]:
             entries += find_all_leaves(n)
         return entries
@@ -909,48 +910,96 @@ def compute_bi_aggregation_filter(
 
 def table(
     context: VisualContext,
-    columns: List[ColumnName],
+    columns: list[ColumnName],
     query: str,
     only_sites: OnlySites,
-    limit: Optional[int],
+    limit: int | None,
     all_active_filters: Iterable[Filter],
-) -> List[Dict]:
+) -> list[dict]:
     bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
-def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
+def hostname_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=True,
+        bygroup=False,
     )
 
 
-def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
+def hostname_by_group_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=True,
+        bygroup=True,
     )
 
 
-def host_table(view, columns, query, only_sites, limit, all_active_filters):
+def host_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=False, bygroup=False
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=False,
+        bygroup=False,
     )
 
 
 def singlehost_table(
-    view, columns, query, only_sites, limit, all_active_filters, joinbyname, bygroup
-):
-
-    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+    joinbyname: bool,
+    bygroup: bool,
+) -> Rows:
+    filterheaders = "".join(get_livestatus_filter_headers(context, all_active_filters))
     host_columns = [c for c in columns if c.startswith("host_")]
 
     rows = []
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    bi_aggregation_filter = compute_bi_aggregation_filter(view.context, all_active_filters)
+    bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     bi_manager.status_fetcher.update_states_filtered(
         filterheaders, only_sites, limit, host_columns, bygroup, required_aggregations
@@ -1016,7 +1065,7 @@ def get_cached_bi_compiler() -> BICompiler:
 
 def bi_livestatus_query(
     query: str,
-    only_sites: Optional[List[SiteId]] = None,
+    only_sites: list[SiteId] | None = None,
     output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     fetch_full_data: bool = False,
 ) -> LivestatusResponse:

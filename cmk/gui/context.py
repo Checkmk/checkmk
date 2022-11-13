@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 from werkzeug.local import LocalStack
 
@@ -19,7 +18,6 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.plugins.openapi.restful_objects import Endpoint
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -110,27 +108,25 @@ class RequestContext:
         funnel: OutputFunnel,
         config_obj: Config,
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
-        html_obj: Optional[HTMLGenerator] = None,
-        timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
+        html_obj: HTMLGenerator | None = None,
+        timeout_manager: TimeoutManager | None = None,  # pylint: disable=redefined-outer-name
         theme: Theme = Theme(),  # pylint: disable=redefined-outer-name
-        display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name
+        display_options: DisplayOptions | None = None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
-        endpoint: Optional[Endpoint] = None,  # pylint: disable=redefined-outer-name
         *,
         stack: LocalStack,
         url_filter: logging.Filter,
     ):
         self.html = html_obj
-        self.auth_type: Optional[str] = None
+        self.auth_type: str | None = None
         self.timeout_manager = timeout_manager
         self.theme = theme
         self.display_options = display_options
-        self.session: Optional[userdb.Session] = None
-        self.flashes: Optional[List[str]] = None
-        self.translation: Optional[Translation] = None
+        self.session: userdb.Session | None = None
+        self.flashes: list[str] | None = None
+        self.translation: Translation | None = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
-        self.endpoint = endpoint
         self.request = req
         self.response = resp
         self.output_funnel = funnel
@@ -139,7 +135,7 @@ class RequestContext:
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = url_filter
-        self._web_log_handler: Optional[logging.Handler] = None
+        self._web_log_handler: logging.Handler | None = None
 
         self._stack = stack
 

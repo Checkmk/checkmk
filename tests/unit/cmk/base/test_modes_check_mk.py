@@ -9,10 +9,10 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
+from cmk.core_helpers import PiggybackFetcher
 from cmk.core_helpers.cache import FileCacheGlobals
 
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.sources.tcp import TCPSource
 
 
 class TestModeDumpAgent:
@@ -30,7 +30,13 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self, mode: result.OK(raw_data))
+        monkeypatch.setattr(
+            check_mk,
+            "get_raw_data",
+            lambda _file_cache, fetcher, _mode: (
+                result.OK(b"") if isinstance(fetcher, PiggybackFetcher) else result.OK(raw_data)
+            ),
+        )
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):

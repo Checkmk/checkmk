@@ -1,0 +1,14 @@
+Title: postgresql_stat_database: Levels for PostgreSQL database size
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1666247703
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+It's now possible to set CRIT/WARN levels on the size of PostgreSQL databases.
+This can be configured at the ruleset <i>PostgreSQL Database Statistics</i> and has
+effect to the state of the <i>PostgreSQL DB .. size</i> service.

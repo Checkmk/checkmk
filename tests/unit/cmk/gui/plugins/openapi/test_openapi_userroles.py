@@ -11,6 +11,8 @@ import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.gui.config import builtin_role_ids
+
 
 @pytest.fixture(name="object_base")
 def user_role_object_base(base: str) -> str:
@@ -85,7 +87,7 @@ def test_get_userrole_endpoint(object_base: str, get_userrole: Callable) -> None
 
 def test_get_userroles_endpoint(get_userroles: Callable) -> None:
     resp = get_userroles()
-    assert {user_role["id"] for user_role in resp.json["value"]} == {"user", "admin", "guest"}
+    assert {user_role["id"] for user_role in resp.json["value"]} == set(builtin_role_ids)
 
 
 def test_post_userrole_endpoint(clone_userrole: Callable, get_userrole: Callable) -> None:

@@ -4,32 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Literal,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-)
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from livestatus import SiteId
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
 
-DiagnosticsCLParameters = List[str]
-DiagnosticsModesParameters = Dict[str, Any]
-DiagnosticsOptionalParameters = Dict[str, Any]
-CheckmkFilesMap = Dict[str, Path]
-DiagnosticsElementJSONResult = Dict[str, Any]
+DiagnosticsCLParameters = list[str]
+DiagnosticsModesParameters = dict[str, Any]
+DiagnosticsOptionalParameters = dict[str, Any]
+CheckmkFilesMap = dict[str, Path]
+DiagnosticsElementJSONResult = dict[str, Any]
 DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 
@@ -37,8 +26,8 @@ DiagnosticsElementFilepaths = Iterator[Path]
 class DiagnosticsParameters(TypedDict):
     site: SiteId
     general: Literal[True]
-    opt_info: Optional[DiagnosticsOptionalParameters]
-    comp_specific: Optional[DiagnosticsOptionalParameters]
+    opt_info: DiagnosticsOptionalParameters | None
+    comp_specific: DiagnosticsOptionalParameters | None
 
 
 OPT_LOCAL_FILES = "local-files"
@@ -112,7 +101,7 @@ _CSV_COLUMNS = [
 
 def serialize_wato_parameters(
     wato_parameters: DiagnosticsParameters,
-) -> List[DiagnosticsCLParameters]:
+) -> list[DiagnosticsCLParameters]:
     parameters = {}
 
     opt_info_parameters = wato_parameters.get("opt_info")
@@ -123,13 +112,13 @@ def serialize_wato_parameters(
     if comp_specific_parameters is not None:
         parameters.update(comp_specific_parameters)
 
-    boolean_opts: List[str] = [
+    boolean_opts: list[str] = [
         k for k in sorted(parameters.keys()) if k in _BOOLEAN_CONFIG_OPTS and parameters[k]
     ]
 
-    config_files: Set[str] = set()
-    core_files: Set[str] = set()
-    log_files: Set[str] = set()
+    config_files: set[str] = set()
+    core_files: set[str] = set()
+    log_files: set[str] = set()
 
     for key, value in sorted(parameters.items()):
         if key == OPT_CHECKMK_CONFIG_FILES:
@@ -152,7 +141,7 @@ def serialize_wato_parameters(
             core_files |= _extract_list_of_files(value.get("core_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
-    chunks: List[List[str]] = []
+    chunks: list[list[str]] = []
     if boolean_opts:
         chunks.append(boolean_opts)
 
@@ -190,7 +179,7 @@ def _get_max_args() -> int:
     return max_args
 
 
-def _extract_list_of_files(value: Optional[Tuple[str, List[str]]]) -> Set[str]:
+def _extract_list_of_files(value: tuple[str, list[str]] | None) -> set[str]:
     if value is None:
         return set()
     return set(value[1])
@@ -268,30 +257,38 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
     return files_map
 
 
-def get_all_package_infos() -> Dict[str, Any]:
+class AllPackageInfos(TypedDict):
+    installed: Mapping[packaging.PackageName, packaging.PackageInfo | None]
+    unpackaged: Mapping[str, list[str]]
+    parts: packaging.PackagePartInfo
+    optional_packages: Mapping[str, tuple[packaging.PackageInfo, bool]]
+    enabled_packages: Mapping[str, packaging.PackageInfo]
+
+
+def get_all_package_infos() -> AllPackageInfos:
     return {
         "installed": packaging.get_installed_package_infos(),
         "unpackaged": packaging.get_unpackaged_files(),
         "parts": packaging.package_part_info(),
         "optional_packages": packaging.get_optional_package_infos(),
-        "disabled_packages": packaging.get_disabled_package_infos(),
+        "enabled_packages": packaging.get_enabled_package_infos(),
     }
 
 
-def _parse_mkp_file_parts(contents: Dict[str, Any]) -> Dict[str, Dict[str, Dict]]:
-    file_list: Dict[str, Any] = {}
+def _parse_mkp_file_parts(contents: Mapping[str, Any]) -> dict[str, dict[str, dict]]:
+    file_list: dict[str, Any] = {}
     for idx, file in enumerate(contents["files"]):
-        path = "%s/%s" % (contents["path"], file)
+        path = "{}/{}".format(contents["path"], file)
         file_list[path] = {"path": path, "permissions": str(contents["permissions"][idx])}
     return file_list
 
 
 def _parse_mkp_files(
-    items: List[str], module: str, contents: Dict[str, Any], state: str, package: str
-) -> Dict[str, Dict[str, Dict]]:
-    file_list: Dict[str, Dict[str, Any]] = {}
+    items: list[str], module: str, contents: Mapping[str, Any], state: str, package: str
+) -> dict[str, dict[str, dict]]:
+    file_list: dict[str, dict[str, Any]] = {}
     for file in items:
-        path = "%s/local/%s/%s" % (cmk.utils.paths.omd_root, _MODULE_TO_PATH[module], file)
+        path = f"{cmk.utils.paths.omd_root}/local/{_MODULE_TO_PATH[module]}/{file}"
         file_list[path] = {
             **{col: str(contents.get(col, "N/A")) for col in _CSV_COLUMNS},
             "package": package,
@@ -303,9 +300,9 @@ def _parse_mkp_files(
 
 
 def _deep_update(
-    d1: Dict[str, Dict[str, Any]], d2: Dict[str, Dict[str, Any]]
-) -> Dict[str, Dict[str, Any]]:
-    for key in set(list(d1.keys()) + list(d2.keys())):
+    d1: dict[str, dict[str, Any]], d2: dict[str, dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    for key in set(d1) | set(d2):
         if key not in d1:
             d1[key] = d2[key]
         elif key in d2:
@@ -323,25 +320,32 @@ def _get_path_type(path: Path) -> str:
     return "missing"
 
 
-def _filelist_to_csv_lines(dictlist: Dict[str, Dict[str, Any]]) -> Sequence[str]:
+def _filelist_to_csv_lines(dictlist: dict[str, dict[str, Any]]) -> Sequence[str]:
     lines = ["'%s'" % "';'".join(_CSV_COLUMNS)]
     for file_definition in dictlist.values():
         lines.append("'%s'" % "';'".join([file_definition.get(col, "N/A") for col in _CSV_COLUMNS]))
     return lines
 
 
-def get_local_files_csv(infos: DiagnosticsElementJSONResult) -> DiagnosticsElementCSVResult:
-    files: Dict[str, Dict[str, Any]] = {}
+def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
+    files: dict[str, dict[str, Any]] = {}
 
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
         files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
-    for state in ["installed", "optional_packages"]:
-        for (package, contents) in infos[state].items():
-            for (module, items) in contents["files"].items():
-                files = _deep_update(
-                    files, _parse_mkp_files(items, module, contents, state, package)
-                )
+    for package, (contents, _is_local) in infos["optional_packages"].items():
+        for (module, items) in contents["files"].items():
+            files = _deep_update(
+                files, _parse_mkp_files(items, module, contents, "optional_packages", package)
+            )
+    for package, opt_contents in infos["installed"].items():
+        if opt_contents is None:
+            # skip corrupt packages. TODO: rather create dummy package info and report the issue!
+            continue
+        for (module, items) in opt_contents["files"].items():
+            files = _deep_update(
+                files, _parse_mkp_files(items, module, opt_contents, "installed", package)
+            )
     for (module, contents) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(contents))
 
@@ -360,7 +364,7 @@ class CheckmkFileSensitivity(Enum):
 
 
 class CheckmkFileInfo(NamedTuple):
-    components: List[str]
+    components: list[str]
     sensitivity: CheckmkFileSensitivity
     description: str
 
@@ -375,7 +379,7 @@ def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: Checkm
     return "%s (L)" % rel_filepath
 
 
-def get_checkmk_file_description(rel_filepath: Optional[str] = None) -> Sequence[Tuple[str, str]]:
+def get_checkmk_file_description(rel_filepath: str | None = None) -> Sequence[tuple[str, str]]:
     cmk_file_info = {**CheckmkFileInfoByNameMap, **CheckmkFileInfoByRelFilePathMap}
     if rel_filepath is not None:
         return [(rel_filepath, cmk_file_info[rel_filepath].description)]
@@ -383,7 +387,7 @@ def get_checkmk_file_description(rel_filepath: Optional[str] = None) -> Sequence
     return [(f, d.description) for f, d in cmk_file_info.items()]
 
 
-def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) -> CheckmkFileInfo:
+def get_checkmk_file_info(rel_filepath: str, component: str | None = None) -> CheckmkFileInfo:
     # Some files like hosts.mk or rules.mk may be located in folder hierarchies.
     # Thus we have to find them via name. The presedence is as following:
     # 1. CheckmkFileInfoByNameMap
@@ -420,7 +424,7 @@ def get_checkmk_file_info(rel_filepath: str, component: Optional[str] = None) ->
 # Feel free to extend the maps:
 # - config file entries are relative to "etc/check_mk".
 # - log file entries are relative to "var/log".
-CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
+CheckmkFileInfoByNameMap: dict[str, CheckmkFileInfo] = {
     # config files
     "sites.mk": CheckmkFileInfo(
         components=[
@@ -470,7 +474,7 @@ CheckmkFileInfoByNameMap: Dict[str, CheckmkFileInfo] = {
     ),
 }
 
-CheckmkFileInfoByRelFilePathMap: Dict[str, CheckmkFileInfo] = {
+CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
     # config files
     "conf.d/wato/alert_handlers.mk": CheckmkFileInfo(
         components=[

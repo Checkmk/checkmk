@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "cfg.h"
 #include "cfg_details.h"
@@ -17,9 +18,10 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
+
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
@@ -28,7 +30,7 @@ namespace {
 fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
     fs::path temp_folder{GetTempDir()};
     auto path = temp_folder / name;
-    std::ofstream ofs(path.u8string());
+    std::ofstream ofs(wtools::ToStr(path));
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
@@ -37,9 +39,9 @@ fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
     return path;
 }
 
-static fs::path CreateTestFile(const fs::path &name, const std::string &text) {
+fs::path CreateTestFile(const fs::path &name, const std::string &text) {
     auto path = name;
-    std::ofstream ofs(path.u8string(), std::ios::binary);
+    std::ofstream ofs(wtools::ToStr(path), std::ios::binary);
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
@@ -243,7 +245,7 @@ TEST(AgentConfig, SmartMerge) {
                        "  disabled_sections: ~\n");  // no changes
 
         // prepare and check data
-        auto target_config = YAML::LoadFile(cfgs[0].u8string());
+        auto target_config = YAML::LoadFile(wtools::ToStr(cfgs[0]));
         target_config.remove(groups::kPs);
         target_config.remove(groups::kWinPerf);
         target_config.remove(groups::kPlugins);
@@ -253,7 +255,7 @@ TEST(AgentConfig, SmartMerge) {
         target_config.remove(groups::kLogWatchEvent);
         target_config.remove(groups::kFileInfo);
 
-        auto source_bakery = YAML::LoadFile(cfgs[1].u8string());
+        auto source_bakery = YAML::LoadFile(wtools::ToStr(cfgs[1]));
 
         // merge bakery to target
         ConfigInfo::smartMerge(target_config, source_bakery,
@@ -289,9 +291,8 @@ TEST(AgentConfig, SmartMerge) {
 
         std::swap(cfgs[1], cfgs[0]);
         // prepare and check data
-        target_config = YAML::LoadFile(cfgs[0].u8string());
-
-        source_bakery = YAML::LoadFile(cfgs[1].u8string());
+        target_config = YAML::LoadFile(wtools::ToStr(cfgs[0]));
+        source_bakery = YAML::LoadFile(wtools::ToStr(cfgs[1]));
 
         // merge and check output INTO core
         ConfigInfo::smartMerge(target_config, source_bakery,
@@ -364,12 +365,12 @@ TEST(AgentConfig, Aggregate) {
         // plugins
         {
             // prepare and check data
-            auto core_yaml = YAML::LoadFile(cfgs[0].u8string());
+            auto core_yaml = YAML::LoadFile(wtools::ToStr(cfgs[0]));
             auto core_plugin = core_yaml[groups::kPlugins];
             ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 4);
             ASSERT_EQ(core_plugin[vars::kPluginsFolders].size(), 2);
 
-            auto bakery_yaml = YAML::LoadFile(cfgs[1].u8string());
+            auto bakery_yaml = YAML::LoadFile(wtools::ToStr(cfgs[1]));
             auto bakery_plugin = bakery_yaml[groups::kPlugins];
             ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 2);
             ASSERT_EQ(bakery_plugin[vars::kPluginsFolders].size(), 1);
@@ -389,9 +390,9 @@ TEST(AgentConfig, Aggregate) {
 
         // winperf
         {
-            auto r = YAML::LoadFile(cfgs[0].u8string());
+            auto r = YAML::LoadFile(wtools::ToStr(cfgs[0]));
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 3);
-            auto b = YAML::LoadFile(cfgs[1].u8string());
+            auto b = YAML::LoadFile(wtools::ToStr(cfgs[1]));
             ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
             ConfigInfo::smartMerge(r, b, Combine::overwrite);
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(),
@@ -407,7 +408,6 @@ TEST(AgentConfig, Aggregate) {
     EXPECT_FALSE(GetCfg().isUserLoaded());
 
     ASSERT_EQ(yaml["bakery"]["status"].as<std::string>(), "loaded");
-    auto x = yaml["global"]["enabled"].as<bool>();
     ASSERT_EQ(yaml["global"]["enabled"].as<bool>(), false);
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
@@ -542,7 +542,7 @@ namespace cma::cfg {  // to become friendly for cma::cfg classes
 
 TEST(AgentConfig, LogFile) {
     auto fname = GetCurrentLogFileName();
-    EXPECT_TRUE(fname.size() != 0);
+    EXPECT_TRUE(!fname.empty());
 }
 
 TEST(AgentConfig, YamlRead) {
@@ -638,7 +638,6 @@ TEST(AgentConfig, FactoryConfig) {
     const auto cfg = GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 
-    auto sz = cfg.size();
     EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
     auto port = GetVal(groups::kGlobal, vars::kPort, -1);
     EXPECT_TRUE(port != -1);
@@ -670,7 +669,7 @@ TEST(AgentConfig, FactoryConfig) {
     EXPECT_TRUE(execute.size() > 3);
 
     auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-    EXPECT_TRUE(only_from.size() == 0);
+    EXPECT_TRUE(only_from.empty());
 
     {
         auto sections_enabled =
@@ -740,12 +739,9 @@ TEST(AgentConfig, FactoryConfig) {
         auto winperf_counters =
             GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto &counter : winperf_counters) {
-            auto id = counter.first;
-            EXPECT_TRUE(id != "");
-
-            auto name = counter.second;
-            EXPECT_TRUE(name != "");
+        for (const auto &[id, name] : winperf_counters) {
+            EXPECT_TRUE(!id.empty());
+            EXPECT_TRUE(!name.empty());
         }
     }
 
@@ -845,7 +841,6 @@ TEST(AgentConfig, UTF16LE) {
             return false;
         }
         auto cfg = GetLoadedConfig();
-        auto sz = cfg.size();
         return cfg.IsMap();  // minimum has ONE section
     };
 
@@ -861,11 +856,11 @@ TEST(AgentConfig, UTF16LE) {
     // we will use possibility to test our conversion functions from wtools
     // #TODO make separate
     auto name_utf8 = GetVal(groups::kGlobal, vars::kName, std::string(""));
-    EXPECT_TRUE(name_utf8 != "");
+    EXPECT_TRUE(!name_utf8.empty());
     auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
-    EXPECT_TRUE(name_utf16 != L"");
+    EXPECT_TRUE(!name_utf16.empty());
     auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
-    EXPECT_TRUE(utf8_from_utf16 != "");
+    EXPECT_TRUE(!utf8_from_utf16.empty());
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
 
@@ -956,16 +951,16 @@ TEST(AgentConfig, LoadingCheck) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    auto fname = std::string(XLOG::l.getLogParam().filename());
-    EXPECT_TRUE(fs::path{fname}.filename().u8string() ==
-                std::string{kDefaultLogFileName});
+    auto fname =
+        wtools::ToStr(fs::path{XLOG::l.getLogParam().filename()}.filename());
+    EXPECT_TRUE(fname == std::string{kDefaultLogFileName});
     EXPECT_TRUE(XLOG::d.isFileDbg());
     EXPECT_TRUE(XLOG::d.isWinDbg());
     EXPECT_TRUE(XLOG::l.isFileDbg());
     EXPECT_TRUE(XLOG::l.isWinDbg());
 
-    EXPECT_TRUE(groups::global.enabledSections().size() != 0);
-    EXPECT_TRUE(groups::global.disabledSections().size() == 0);
+    EXPECT_TRUE(!groups::global.enabledSections().empty());
+    EXPECT_TRUE(groups::global.disabledSections().empty());
 
     EXPECT_TRUE(groups::global.realtimePort() == cfg::kDefaultRealtimePort);
     EXPECT_TRUE(groups::global.realtimeTimeout() ==
@@ -1032,7 +1027,7 @@ TEST(AgentConfig, GlobalTest) {
             std::stringstream sstr;
             sstr << in.rdbuf();
             auto contents = sstr.str();
-            auto n = std::count(contents.begin(), contents.end(), '\n');
+            auto n = rs::count(contents, '\n');
             EXPECT_EQ(n, 2);
             EXPECT_NE(std::string::npos, contents.find("TEST WINDOWS LOG"));
             EXPECT_NE(std::string::npos, contents.find("CONTROL SHOT"));
@@ -1049,21 +1044,21 @@ TEST(AgentConfig, GlobalTest) {
     fs::path dir = GetUserDir();
     dir /= dirs::kLog;
     EXPECT_TRUE(
-        tools::IsEqual(fname, (dir / cfg::kDefaultLogFileName).u8string()));
+        tools::IsEqual(fname, wtools::ToStr(dir / cfg::kDefaultLogFileName)));
 
-    EXPECT_TRUE(cfg::groups::global.allowedSection("check_mk"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("winperf"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("uptime"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("systemtime"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("df"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("mem"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("services"));
+    EXPECT_TRUE(groups::global.allowedSection("check_mk"));
+    EXPECT_TRUE(groups::global.allowedSection("winperf"));
+    EXPECT_TRUE(groups::global.allowedSection("uptime"));
+    EXPECT_TRUE(groups::global.allowedSection("systemtime"));
+    EXPECT_TRUE(groups::global.allowedSection("df"));
+    EXPECT_TRUE(groups::global.allowedSection("mem"));
+    EXPECT_TRUE(groups::global.allowedSection("services"));
 
-    EXPECT_TRUE(!cfg::groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(!cfg::groups::global.allowedSection("_logfiles"));
+    EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
+    EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
 
-    auto val = cfg::groups::global.getWmiTimeout();
-    EXPECT_TRUE((val >= 1) && (val < 100));
+    auto val = groups::global.getWmiTimeout();
+    EXPECT_TRUE(val >= 1 && val < 100);
 }
 
 #define LW_ROOT_APP "- application: warn context"
@@ -1262,7 +1257,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     EXPECT_EQ(exe_units[0].pattern(), "a_1");
     EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
     EXPECT_EQ(exe_units[0].async(), true);
-    for (auto e : exe_units) {
+    for (const auto &e : exe_units) {
         EXPECT_TRUE(e.source().IsMap());
         EXPECT_TRUE(e.sourceText().empty());
     }

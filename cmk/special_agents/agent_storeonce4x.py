@@ -9,8 +9,9 @@
 
 import datetime as dt
 import logging
+from collections.abc import Callable, Generator, Sequence
 from pathlib import Path
-from typing import Any, Callable, Generator, Optional, Sequence, Tuple
+from typing import Any
 
 import urllib3
 from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
@@ -38,7 +39,7 @@ class StoreOnceOauth2Session(Requester):
 
     def __init__(self, host: str, port: str, user: str, secret: str, verify_ssl: bool) -> None:
         self._host = host
-        self._token_file = "%s/%s" % (str(self._token_dir), self._token_file_suffix % self._host)
+        self._token_file = f"{str(self._token_dir)}/{self._token_file_suffix % self._host}"
         self._port = port
         self._user = user
         self._secret = secret
@@ -52,13 +53,13 @@ class StoreOnceOauth2Session(Requester):
         self._oauth_session = OAuth2Session(
             self._user,
             client=self._client,
-            auto_refresh_url="https://%s:%s%s" % (self._host, self._port, self._refresh_endpoint),
+            auto_refresh_url=f"https://{self._host}:{self._port}{self._refresh_endpoint}",
             token_updater=lambda x: self.update_expires_in_abs(to_token_dict(x)),
         )
         # Fetch token
         token_dict = to_token_dict(
             self._oauth_session.fetch_token(
-                token_url="https://%s:%s%s" % (self._host, self._port, self._token_endpoint),
+                token_url=f"https://{self._host}:{self._port}{self._token_endpoint}",
                 username=self._user,
                 password=self._secret,
                 verify=self._verify_ssl,
@@ -84,8 +85,8 @@ class StoreOnceOauth2Session(Requester):
         dt_expires_in_earlier = dt.timedelta(0, expires_in_earlier)
         return dt.datetime.strftime(now + dt_expires_in - dt_expires_in_earlier, self._dt_fmt)
 
-    def get(self, path: str, parameters: Optional[StringMap] = None) -> Any:
-        url = "https://%s:%s%s" % (self._host, self._port, path)
+    def get(self, path: str, parameters: StringMap | None = None) -> Any:
+        url = f"https://{self._host}:{self._port}{path}"
         resp = self._oauth_session.request(
             method="GET",
             headers={"Accept": "application/json"},
@@ -108,13 +109,13 @@ def handler_nested(requester: Requester, uris: Sequence[str], identifier: str) -
 
     # Get appliance's dashboard per UUID
     for member in members["members"]:
-        yield requester.get("%s/%s" % (uris[1], member[identifier]))
+        yield requester.get(f"{uris[1]}/{member[identifier]}")
 
 
 # REST API 4.2.3 endpoint definitions
 # https://hewlettpackard.github.io/storeonce-rest/cindex.html
 BASE = "/api/v1"
-SECTIONS: Sequence[Tuple[str, ResultFn]] = (
+SECTIONS: Sequence[tuple[str, ResultFn]] = (
     (
         "d2d_services",
         lambda conn: handler_simple(
@@ -192,7 +193,7 @@ SECTIONS: Sequence[Tuple[str, ResultFn]] = (
 )
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("user", metavar="USER", help="""Username for Observer Role""")
     parser.add_argument("password", metavar="PASSWORD", help="""Password for Observer Role""")

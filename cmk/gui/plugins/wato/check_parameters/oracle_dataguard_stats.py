@@ -9,110 +9,105 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Checkbox, Dictionary, MonitoringState, TextInput, Tuple
+from cmk.gui.valuespec import Age, Checkbox, Dictionary, Migrate, MonitoringState, TextInput, Tuple
+
+
+def _migrate(params: dict) -> dict:
+    params.pop("mrp_option", None)
+    return params
 
 
 def _parameter_valuespec_oracle_dataguard_stats():
-    return Dictionary(
-        help=_(
-            "The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
-            "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
-            "The apply and transport lag can be configured with this rule."
+    return Migrate(
+        Dictionary(
+            help=_(
+                "The Data-Guard statistics are available in Oracle Enterprise Edition with enabled Data-Guard. "
+                "The <tt>init.ora</tt> parameter <tt>dg_broker_start</tt> must be <tt>TRUE</tt> for this check. "
+                "The apply and transport lag can be configured with this rule."
+            ),
+            elements=[
+                (
+                    "active_dataguard_option",
+                    MonitoringState(
+                        title=_("State in case of Active Data-Guard Option is active: "),
+                        help=_(
+                            "The Active Data-Guard Option needs an addional License from Oracle."
+                        ),
+                        default_value=1,
+                    ),
+                ),
+                (
+                    "primary_broker_state",
+                    Checkbox(
+                        title=_("Check State of Broker on Primary: "),
+                        default_value=False,
+                        help=_(
+                            "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
+                            "the Switchoverstate on Primary."
+                        ),
+                    ),
+                ),
+                (
+                    "apply_lag",
+                    Tuple(
+                        title=_("Apply lag: Maximum time"),
+                        help=_(
+                            "The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."
+                        ),
+                        elements=[
+                            Age(
+                                title=_("Warning at"),
+                            ),
+                            Age(
+                                title=_("Critical at"),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "apply_lag_min",
+                    Tuple(
+                        title=_("Apply lag: Minimum time"),
+                        help=_(
+                            "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
+                            "This is only useful if also <i>%s</i> has been configured."
+                        )
+                        % _("Apply lag: Maximum time"),
+                        elements=[
+                            Age(
+                                title=_("Warning at"),
+                            ),
+                            Age(
+                                title=_("Critical at"),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "missing_apply_lag_state",
+                    MonitoringState(
+                        title=_("Apply lag: State in case the apply lag is not known"),
+                        default_value=1,
+                    ),
+                ),
+                (
+                    "transport_lag",
+                    Tuple(
+                        title=_("Transport Lag"),
+                        help=_("The limit for the transport lag in <tt>v$dataguard_stats</tt>"),
+                        elements=[
+                            Age(
+                                title=_("Warning at"),
+                            ),
+                            Age(
+                                title=_("Critical at"),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
         ),
-        elements=[
-            (
-                "active_dataguard_option",
-                MonitoringState(
-                    title=_("State in case of Active Data-Guard Option is active: "),
-                    help=_("The Active Data-Guard Option needs an addional License from Oracle."),
-                    default_value=1,
-                ),
-            ),
-            (
-                "mrp_option",
-                Tuple(
-                    title=_("State in case Managed Recovery Process (MRP) is started or stopped"),
-                    help=_(
-                        "The MRP is usally started on each physical "
-                        "standby node. But in some setups this may vary and the process should "
-                        "only be started on specific or random nodes. Here you may define which "
-                        "state a specific node or service should have in case the MRP is started "
-                        "or stopped."
-                    ),
-                    elements=[
-                        MonitoringState(title=_("State in case MRP is started"), default_value=0),
-                        MonitoringState(title=_("State in case MRP is stopped"), default_value=2),
-                    ],
-                ),
-            ),
-            (
-                "primary_broker_state",
-                Checkbox(
-                    title=_("Check State of Broker on Primary: "),
-                    default_value=False,
-                    help=_(
-                        "Data-Guards with dg_broker_start=false needs Ignore Brokerstate to monitor "
-                        "the Switchoverstate on Primary."
-                    ),
-                ),
-            ),
-            (
-                "apply_lag",
-                Tuple(
-                    title=_("Apply lag: Maximum time"),
-                    help=_("The maximum limit for the apply lag in <tt>v$dataguard_stats</tt>."),
-                    elements=[
-                        Age(
-                            title=_("Warning at"),
-                        ),
-                        Age(
-                            title=_("Critical at"),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "apply_lag_min",
-                Tuple(
-                    title=_("Apply lag: Minimum time"),
-                    help=_(
-                        "The minimum limit for the apply lag in <tt>v$dataguard_stats</tt>. "
-                        "This is only useful if also <i>%s</i> has been configured."
-                    )
-                    % _("Apply lag: Maximum time"),
-                    elements=[
-                        Age(
-                            title=_("Warning at"),
-                        ),
-                        Age(
-                            title=_("Critical at"),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "missing_apply_lag_state",
-                MonitoringState(
-                    title=_("Apply lag: State in case the apply lag is not known"),
-                    default_value=1,
-                ),
-            ),
-            (
-                "transport_lag",
-                Tuple(
-                    title=_("Transport Lag"),
-                    help=_("The limit for the transport lag in <tt>v$dataguard_stats</tt>"),
-                    elements=[
-                        Age(
-                            title=_("Warning at"),
-                        ),
-                        Age(
-                            title=_("Critical at"),
-                        ),
-                    ],
-                ),
-            ),
-        ],
+        migrate=_migrate,
     )
 
 

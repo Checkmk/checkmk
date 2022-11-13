@@ -171,7 +171,10 @@ def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         search,
         "get_languages",
-        lambda: [[""], ["de"]],
+        lambda: [
+            ("en", "English"),
+            ("de", "German"),
+        ],
     )
 
 
@@ -213,7 +216,7 @@ class TestIndexBuilder:
         index_builder: IndexBuilder,
     ) -> None:
 
-        current_lang = ""
+        current_lang = "en"
 
         def localize_with_memory(lang):
             """Needed to remember currently set language"""
@@ -232,7 +235,7 @@ class TestIndexBuilder:
             lambda: current_lang,
         )
 
-        start_lang = ""
+        start_lang = "en"
         localize_with_memory(start_lang)
         index_builder.build_full_index()
         assert current_lang == start_lang
@@ -305,7 +308,7 @@ class TestIndexBuilderAndSearcher:
 @pytest.fixture(name="created_host_url")
 def fixture_created_host_url(with_admin_login) -> str:  # type:ignore[no-untyped-def]
     folder = Folder.root_folder()
-    folder.create_hosts([("host", {}, [])], bake=lambda *args: None)
+    folder.create_hosts([("host", {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
 
 

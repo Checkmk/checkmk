@@ -6,17 +6,15 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef windows_service_api_h__
-#define windows_service_api_h__
+#ifndef WINDOWS_SERVICE_API_H
+#define WINDOWS_SERVICE_API_H
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #include <chrono>
-#include <cstdint>  // wchar_t when compiler options set weird
 #include <functional>
 
 #include "common/wtools_service.h"
-#include "tools/_raii.h"
 #include "tools/_xlog.h"
 
 // Common Namespace for whole Windows Agent
@@ -28,7 +26,7 @@ int InstallMainService();               // on install
 int RemoveMainService();                // on remove
 int TestIo();                           // on check -io
 int TestMt();                           // on check -mt
-int TestMainServiceSelf(int Interval);  // on check self
+int TestMainServiceSelf(int interval);  // on check self
 int TestLegacy();                       // on test
 int RestoreWATOConfig();                // on restore
 int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
@@ -53,13 +51,13 @@ int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
 
 int ExecRealtimeTest(bool print);  // on rt
-int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile,
+int ExecCvtIniYaml(const std::filesystem::path &ini_file_name,
+                   const std::filesystem::path &yaml_file_name,
                    StdioLog stdio_log);  // on cvt
 int ExecExtractCap(std::wstring_view cap_file,
                    std::wstring_view to);  //
-int ExecSection(const std::wstring &SecName,
-                int RepeatPause,      // if 0 no repeat
+int ExecSection(const std::wstring &section,
+                int repeat_pause,     // if 0 no repeat
                 StdioLog stdio_log);  // on section
 int ServiceAsService(
     std::wstring_view app_name, std::chrono::milliseconds delay,
@@ -70,10 +68,11 @@ int GetFirewallPort();
 
 void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
                                   std::wstring_view rule_name);
-[[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
+[[maybe_unused]] bool ProcessServiceConfiguration(
+    std::wstring_view service_name);
 
 // Converter API from YML language to wtools
-wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view text);
+wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view mode);
 wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
@@ -104,6 +103,6 @@ bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 bool IsGlobalStopSignaled() noexcept;
 void CancelAll(bool cancel) noexcept;
 
-};  // namespace cma::srv
+}  // namespace cma::srv
 
-#endif  // windows_service_api_h__
+#endif  // WINDOWS_SERVICE_API_H

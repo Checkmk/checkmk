@@ -40,6 +40,7 @@ class MetricData(NamedTuple):
     render_func: Callable[[float], str]
     upper_levels_param: str = ""
     lower_levels_param: str = ""
+    boundaries: tuple[float | None, float | None] | None = None
 
 
 Section = Mapping[str, Resource]
@@ -170,6 +171,21 @@ def discover_azure_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
+def iter_resource_attributes(
+    resource: Resource, include_keys: tuple[str] = ("location",)
+) -> Iterable[tuple[str, str | None]]:
+    def capitalize(string):
+        return string[0].upper() + string[1:]
+
+    for key in include_keys:
+        if (value := getattr(resource, key)) is not None:
+            yield capitalize(key), value
+
+    for key, value in sorted(resource.tags.items()):
+        if not key.startswith("hidden-"):
+            yield capitalize(key), value
+
+
 def check_azure_metrics(
     metrics_data: Sequence[MetricData],
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
@@ -193,6 +209,7 @@ def check_azure_metrics(
                 metric_name=metric_data.metric_name,
                 label=metric_data.metric_label,
                 render_func=metric_data.render_func,
+                boundaries=metric_data.boundaries,
             )
 
     return check_metric

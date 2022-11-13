@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Service, ServiceLabel
 from cmk.base.plugins.agent_based.utils import gcp
@@ -23,8 +23,8 @@ ASSET_TYPE = gcp.AssetType("file.googleapis.com/Instance")
 
 
 def discover(
-    section_gcp_service_filestore: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_filestore: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "filestore")
     for item, share in assets[ASSET_TYPE].items():
@@ -41,8 +41,8 @@ def discover(
 def check(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_filestore: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_filestore: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "fs_used_percent": gcp.MetricSpec(

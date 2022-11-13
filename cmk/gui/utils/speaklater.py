@@ -16,6 +16,7 @@ class LazyString:
     def __init__(self, func: Callable[[str], str], text: str) -> None:
         self._func = func
         self._text = text
+        self._args: object = None
 
     def __getattr__(self, attr: str) -> object:
         if attr == "__setstate__":
@@ -29,7 +30,10 @@ class LazyString:
         return "l'{0}'".format(str(self))
 
     def __str__(self) -> str:
-        return str(self._func(self._text))
+        string = str(self._func(self._text))
+        if self._args is None:
+            return string
+        return string % self._args
 
     def __len__(self) -> int:
         return len(str(self))
@@ -79,11 +83,17 @@ class LazyString:
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __mod__(self, other: object) -> str:
-        return str(self) % other
+    def __mod__(self, other: object) -> "LazyString":
+        self._args = other
+        return self
 
     def __rmod__(self, other: str) -> str:
         return other + str(self)
 
     def to_json(self) -> str:
         return str(self)
+
+    def unlocalized_str(self) -> str:
+        if self._args is None:
+            return self._text
+        return self._text % self._args

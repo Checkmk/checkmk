@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Container, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Container, Iterator, Mapping, NamedTuple, Sequence
+from typing import Any, NamedTuple
 from uuid import UUID
 
 import cmk.utils.paths

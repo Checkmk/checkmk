@@ -42,7 +42,7 @@ def test_htmllib_integration() -> None:
         (LazyString(str, "'"), "&#x27;"),
     ],
 )
-def test_escape_attribute(inp, out) -> None:  # type:ignore[no-untyped-def]
+def test_escape_attribute(inp: escaping.EscapableEntity, out: str) -> None:
     assert escaping.escape_attribute(inp) == out
 
 
@@ -109,10 +109,11 @@ def test_escape_attribute(inp, out) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_escape_text(inp, out) -> None:  # type:ignore[no-untyped-def]
+def test_escape_text(inp: escaping.EscapableEntity, out: str | None) -> None:
     if out is None:
-        out = inp
-    assert escaping.escape_text(inp) == out
+        assert escaping.escape_text(inp) == inp
+    else:
+        assert escaping.escape_text(inp) == out
 
 
 @pytest.mark.parametrize(
@@ -124,5 +125,5 @@ def test_escape_text(inp, out) -> None:  # type:ignore[no-untyped-def]
         (LazyString(str, "some <a>link</a> in lazy text"), "some link in lazy text"),
     ],
 )
-def test_strip_tags(inp, out) -> None:  # type:ignore[no-untyped-def]
+def test_strip_tags(inp: escaping.EscapableEntity, out: str) -> None:
     assert escaping.strip_tags(inp) == out

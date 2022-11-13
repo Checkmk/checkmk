@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.snmplib.type_defs import SpecialColumn
 
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
+from cmk.base.api.agent_based.type_defs import OIDSpecTuple
 
 
 def test_oid_end_repr() -> None:
@@ -27,6 +30,6 @@ def test_oid_end_compat_with_backend() -> None:
         (".1.2", ["42.1", "42.2"]),  # 42 should be in base
     ],
 )
-def test_snmptree_valid(base, oids) -> None:  # type:ignore[no-untyped-def]
+def test_snmptree_valid(base: str, oids: Sequence[str | OIDSpecTuple]) -> None:
     with pytest.raises((ValueError, TypeError)):
         SNMPTree(base=base, oids=oids).validate()

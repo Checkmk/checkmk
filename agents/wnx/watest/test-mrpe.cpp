@@ -11,7 +11,8 @@
 #include "system_error"  // for error_code
 #include "test_tools.h"
 
-std::string_view a;
+namespace fs = std::filesystem;
+
 /*
 Typic output:
 
@@ -33,7 +34,7 @@ public:
         auto yaml = GetLoadedConfig();
         auto sections =
             GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        sections.push_back(std::string(groups::kMrpe));
+        sections.emplace_back(std::string(groups::kMrpe));
         PutInternalArray(groups::kGlobal, vars::kSectionsEnabled, sections);
         yaml[groups::kGlobal].remove(vars::kSectionsDisabled);
         yaml[groups::kGlobal][vars::kLogDebug] = "all";
@@ -45,8 +46,7 @@ public:
 
 TEST(SectionProviderMrpe, Construction) {
     YamlLoaderMrpe w;
-    using namespace cma::cfg;
-    EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
+    EXPECT_TRUE(cfg::groups::global.allowedSection(cfg::groups::kMrpe));
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
     EXPECT_TRUE(mrpe.checks().empty());
@@ -57,16 +57,16 @@ TEST(SectionProviderMrpe, Construction) {
     EXPECT_TRUE(out.empty());
 }
 
-void replaceYamlSeq(std::string_view Group, std::string_view SeqName,
-                    std::vector<std::string> Vec) {
-    YAML::Node Yaml = cma::cfg::GetLoadedConfig();
-    for (size_t i = 0; i < Yaml[Group][SeqName].size(); i++)
-        Yaml[Group][SeqName].remove(0);
+void replaceYamlSeq(std::string_view group, std::string_view section,
+                    const std::vector<std::string> &vec) {
+    auto yaml = cfg::GetLoadedConfig();
+    for (size_t i = 0; i < yaml[group][section].size(); i++)
+        yaml[group][section].remove(0);
 
-    Yaml[Group][SeqName].reset();
+    yaml[group][section].reset();
 
-    for (auto &str : Vec) {
-        Yaml[Group][SeqName].push_back(str);
+    for (const auto &str : vec) {
+        yaml[group][section].push_back(str);
     }
 }
 
@@ -102,8 +102,15 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
-    auto test_fs_ = tst::TempCfgFs::CreateNoIo();
+    XLOG::l(
+        "The agent controller is not compatible with this Windows version. "
+        "You can disable using the agent controller by configuring the "
+        "Checkmk rule set \"Windows agent controller\" for this host.");
+    auto test_fs_ = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs_->loadFactoryConfig());
+    tst::CreateWorkFile(
+        std::filesystem::path{cfg::GetUserDir()} / "mrpe_checks.cfg",
+        R"(check = Type 'c:\windows\system32\chcp.com')");
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
     auto yaml = cfg::GetLoadedConfig();
@@ -123,14 +130,14 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
     replaceYamlSeq(
         cfg::groups::kMrpe, cfg::vars::kMrpeConfig,
-        {"check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
-         "include sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // reference
-         "Include=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // valid without space
-         "include  =   'mrpe_checks.cfg'",                //
-         "includes = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",  // invalid
-         "includ = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg",    // invalid
-         "chck = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",  // invalid
-         "check = 'c:\\windows\\system32\\mode.com' CON CP /STATUS"});  // valid
+        {R"(check = Console 'c:\windows\system32\mode.com' CON CP /STATUS)",
+         R"(include sk = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg)",  // reference
+         R"(Include=$CUSTOM_AGENT_PATH$\mrpe_checks.cfg)",       // no space
+         R"(include  =   'mrpe_checks.cfg')",                    //
+         R"(includes = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg)",    // invalid
+         R"(includ = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg)",      // invalid
+         R"(chck = Console 'c:\windows\system32\mode.com' CON CP /STATUS)",  // invalid
+         R"(check = 'c:\windows\system32\mode.com' CON CP /STATUS)"});  // valid
 
     auto strings =
         cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
@@ -139,21 +146,20 @@ TEST(SectionProviderMrpe, ConfigLoad) {
     ASSERT_EQ(mrpe.includes().size(), 3);
     mrpe.loadConfig();
     ASSERT_EQ(mrpe.includes().size(), 3);
-    EXPECT_EQ(mrpe.includes()[0], "sk = $CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
-    EXPECT_EQ(mrpe.includes()[1], "=$CUSTOM_AGENT_PATH$\\mrpe_checks.cfg");
+    EXPECT_EQ(mrpe.includes()[0],
+              R"(sk = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg)");
+    EXPECT_EQ(mrpe.includes()[1], R"(=$CUSTOM_AGENT_PATH$\mrpe_checks.cfg)");
     EXPECT_EQ(mrpe.includes()[2], "=   'mrpe_checks.cfg'");
     ASSERT_EQ(mrpe.checks().size(), 2);
     EXPECT_EQ(mrpe.checks()[0],
-              "Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS");
+              R"(Console 'c:\windows\system32\mode.com' CON CP /STATUS)");
     EXPECT_EQ(mrpe.checks()[1],
-              "'c:\\windows\\system32\\mode.com' CON CP /STATUS");
+              R"('c:\windows\system32\mode.com' CON CP /STATUS)");
 
     EXPECT_EQ(mrpe.includes().size(), 3);
     EXPECT_EQ(mrpe.checks().size(), 2);
-    if (kMrpeRemoveAbsentFiles)
-        EXPECT_EQ(mrpe.entries().size(), 4);
-    else
-        EXPECT_EQ(mrpe.entries().size(), 5);
+    constexpr size_t count = kMrpeRemoveAbsentFiles ? 4 : 5;
+    EXPECT_EQ(mrpe.entries().size(), count);
 }
 
 TEST(SectionProviderMrpe, YmlCheck) {
@@ -171,8 +177,7 @@ TEST(SectionProviderMrpe, YmlCheck) {
     EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
 }
 
-static auto CreateMrpeFiles(std::filesystem::path cfg_dir,
-                            std::filesystem::path file_dir) {
+static auto CreateMrpeFiles(const fs::path &cfg_dir, const fs::path &file_dir) {
     auto mrpe_file_1 =
         tst::CreateWorkFile(file_dir / "mrpe1.bat", "@echo output_of_mrpe1");
 
@@ -214,8 +219,8 @@ TEST(SectionProviderMrpe, ProcessCfg) {
     {
         auto table_1 = cma::tools::SplitString(result_1, " ");
         EXPECT_EQ(table_1.size(), 4);
-        EXPECT_EQ(table_1[0],
-                  std::string("(") + mrpe_file_1.filename().u8string() + ")");
+        EXPECT_EQ(table_1[0], std::string("(") +
+                                  wtools::ToStr(mrpe_file_1.filename()) + ")");
         EXPECT_EQ(table_1[1], "Type");
         EXPECT_EQ(table_1[2], "0");
         EXPECT_EQ(table_1[3], "output_of_mrpe1\n");
@@ -225,8 +230,8 @@ TEST(SectionProviderMrpe, ProcessCfg) {
         auto table_2 = cma::tools::SplitString(result_2, " ");
         EXPECT_FALSE(result_2.empty());
         EXPECT_EQ(table_2.size(), 4);
-        EXPECT_EQ(table_2[0],
-                  std::string("(") + mrpe_file_2.filename().u8string() + ")");
+        EXPECT_EQ(table_2[0], std::string("(") +
+                                  wtools::ToStr(mrpe_file_2.filename()) + ")");
         EXPECT_EQ(table_2[1], "Type");
         EXPECT_EQ(table_2[2], "0");
         EXPECT_EQ(table_2[3], "output_of_mrpe2\n");
@@ -291,8 +296,8 @@ TEST(SectionProviderMrpe, Run) {
     replaceYamlSeq(
         groups::kMrpe, vars::kMrpeConfig,
         {
-            "check = Codepage 'c:\\windows\\system32\\chcp.com'",
-            "check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
+            R"(check = Codepage 'c:\windows\system32\chcp.com')",
+            R"(check = Console 'c:\windows\system32\mode.com' CON CP /STATUS)",
         });
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);

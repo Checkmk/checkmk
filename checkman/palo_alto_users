@@ -4,11 +4,11 @@ catalog: hw/network/palo_alto
 license: GPLv2
 distribution: check_mk
 description:
- Displays the number of logged in users. This check is purely
- informative and always OK.
+ Displays the number of logged in users out of the maximum allowed users.
+ The service goes {WARN}/{CRIT} if it exceeds the levels configured. Per default no levels are configured.
 
 discovery:
  One service is created for each Palo Alto firewall.
 
 cluster:
- On a cluster the number of logged in users will be summed across the nodes.
+ On a cluster the number of logged in users and the maximum allowed users will be summed across the nodes.

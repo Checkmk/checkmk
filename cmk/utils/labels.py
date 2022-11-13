@@ -8,22 +8,23 @@ from __future__ import annotations
 
 import os
 from ast import literal_eval
-from typing import Callable, Dict, Final, List, Mapping, NamedTuple, Tuple
+from collections.abc import Callable, Mapping
+from typing import Final, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, ServiceName
+from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, Ruleset, ServiceName
 
-UpdatedHostLabelsEntry = Tuple[str, float, str]
+UpdatedHostLabelsEntry = tuple[str, float, str]
 
 
 class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
-    explicit_host_labels: Dict
-    host_label_rules: List
-    service_label_rules: List
+    explicit_host_labels: dict[str, Labels]
+    host_label_rules: Ruleset[dict[str, str]]
+    service_label_rules: Ruleset[dict[str, str]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 
@@ -78,7 +79,7 @@ def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry
         return (path.name, path.stat().st_mtime, f.read())
 
 
-def get_updated_host_label_files(newer_than: float) -> List[UpdatedHostLabelsEntry]:
+def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEntry]:
     """Returns the host label file content + meta data which are newer than the given timestamp"""
     updated_host_labels = []
     for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
@@ -91,7 +92,7 @@ def get_updated_host_label_files(newer_than: float) -> List[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-def save_updated_host_label_files(updated_host_labels: List[UpdatedHostLabelsEntry]) -> None:
+def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
     """Persists the data previously read by get_updated_host_label_files()"""
     for file_name, mtime, content in updated_host_labels:
         file_path = cmk.utils.paths.discovered_host_labels_dir / file_name

@@ -6,10 +6,9 @@
 import copy
 import re
 from collections.abc import Sequence
-from typing import Any, Dict, get_args, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Tuple, Type, Union
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
 
@@ -30,14 +29,16 @@ from cmk.gui.groups import (
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
+from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import GlobalSettings, load_configuration_settings
+from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopic,
@@ -46,14 +47,11 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_preserving_link
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple, format_config_value
+from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
-
-def _clear_group_information_request_cache() -> None:
-    load_group_information.cache_clear()  # type: ignore[attr-defined]
 
 
 def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
@@ -76,7 +74,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
 
     _set_group(all_groups, group_type, name, extra_info)
     _add_group_change(
-        extra_info, "edit-%sgroups" % group_type, _("Create new %s group %s") % (group_type, name)
+        extra_info, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
     )
 
 
@@ -98,26 +96,26 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
-                _("Removed %sgroup %s from customer %s")
+                _l("Removed %sgroup %s from customer %s")
                 % (group_type, name, managed.get_customer_name_by_id(old_customer)),
             )
             _add_group_change(
                 extra_info,
                 "edit-%sgroups" % group_type,
-                _("Moved %sgroup %s to customer %s. Additional properties may have changed.")
+                _l("Moved %sgroup %s to customer %s. Additional properties may have changed.")
                 % (group_type, name, managed.get_customer_name_by_id(new_customer)),
             )
         else:
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
-                _("Updated properties of %sgroup %s") % (group_type, name),
+                _l("Updated properties of %sgroup %s") % (group_type, name),
             )
     else:
         _add_group_change(
             extra_info,
             "edit-%sgroups" % group_type,
-            _("Updated properties of %s group %s") % (group_type, name),
+            _l("Updated properties of %s group %s") % (group_type, name),
         )
 
 
@@ -141,19 +139,19 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     # Delete group
     group = groups.pop(name)
     save_group_information(all_groups)
-    _add_group_change(group, "edit-%sgroups", _("Deleted %s group %s") % (group_type, name))
+    _add_group_change(group, "edit-%sgroups", _l("Deleted %s group %s") % (group_type, name))
 
 
 # TODO: Consolidate all group change related functions in a class that can be overriden
 # by the CME code for better encapsulation.
-def _add_group_change(group: GroupSpec, action_name: str, text: str) -> None:
+def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
     group_sites = None
     if cmk_version.is_managed_edition():
         cid = managed.get_customer_id(group)
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
                 raise Exception("cannot happen: no customer ID")
-            group_sites = list(managed.get_sites_of_customer(cid).keys())
+            group_sites = list(managed_helpers.get_sites_of_customer(cid).keys())
 
     add_change(action_name, text, sites=group_sites)
 
@@ -196,68 +194,6 @@ def _set_group(
 
     if group_type == "contact":
         hooks.call("contactgroups-saved", all_groups)
-
-
-def save_group_information(
-    all_groups: AllGroupSpecs,
-    custom_default_config_dir: Optional[str] = None,
-) -> None:
-    if custom_default_config_dir:
-        check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
-    else:
-        check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
-        multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
-
-    _save_cmk_base_groups(all_groups, check_mk_config_dir)
-    _save_gui_groups(all_groups, multisite_config_dir)
-
-    _clear_group_information_request_cache()
-
-
-def _save_cmk_base_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
-    check_mk_groups: Dict[GroupType, Dict[GroupName, str]] = {}
-    for group_type, groups in all_groups.items():
-        check_mk_groups[group_type] = {}
-        for gid, group in groups.items():
-            check_mk_groups[group_type][gid] = group["alias"]
-
-    # Save Checkmk world related parts
-    store.makedirs(config_dir)
-    output = wato_fileheader()
-    for group_type in get_args(GroupType):
-        if check_mk_groups.get(group_type):
-            output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (
-                group_type,
-                group_type,
-            )
-            output += "define_%sgroups.update(%s)\n\n" % (
-                group_type,
-                format_config_value(check_mk_groups[group_type]),
-            )
-    store.save_text_to_file("%s/groups.mk" % config_dir, output)
-
-
-def _save_gui_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
-    multisite_groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
-
-    for group_type, groups in all_groups.items():
-        for gid, group in groups.items():
-            for attr, value in group.items():
-                if attr != "alias":  # Saved in cmk_base
-                    multisite_groups.setdefault(group_type, {})
-                    multisite_groups[group_type].setdefault(gid, {})
-                    multisite_groups[group_type][gid][attr] = value
-
-    store.makedirs(config_dir)
-    output = wato_fileheader()
-    for what in get_args(GroupType):
-        if multisite_groups.get(what):
-            output += "multisite_%sgroups = \\\n%s\n\n" % (
-                what,
-                format_config_value(multisite_groups[what]),
-            )
-    store.save_text_to_file("%s/groups.mk" % config_dir, output)
 
 
 def find_usages_of_group(name: GroupName, group_type: GroupType) -> List[Tuple[str, str]]:

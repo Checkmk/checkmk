@@ -6,6 +6,7 @@
 import time
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.base.api.agent_based.render as render
 
@@ -19,8 +20,8 @@ import cmk.base.api.agent_based.render as render
         ("1587908220", "Apr 26 2020"),
     ],
 )
-def test_date(epoch, output) -> None:  # type:ignore[no-untyped-def]
-    assert output == render.date(epoch=epoch)
+def test_date(epoch: str | float | None, output: str) -> None:
+    assert output == render.date(epoch=epoch)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -32,9 +33,9 @@ def test_date(epoch, output) -> None:  # type:ignore[no-untyped-def]
         ("1587908220", "Apr 26 2020 13:37:00"),
     ],
 )
-def test_datetime(monkeypatch, epoch, output) -> None:  # type:ignore[no-untyped-def]
+def test_datetime(monkeypatch: MonkeyPatch, epoch: str | float | None, output: str) -> None:
     monkeypatch.setattr(time, "localtime", time.gmtime)
-    assert output == render.datetime(epoch=epoch)
+    assert output == render.datetime(epoch=epoch)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -51,7 +52,7 @@ def test_datetime(monkeypatch, epoch, output) -> None:  # type:ignore[no-untyped
         (31536001, "1 year 0 days"),
     ],
 )
-def test_timespan(seconds, output) -> None:  # type:ignore[no-untyped-def]
+def test_timespan(seconds: float, output: str) -> None:
     assert output == render.timespan(seconds=seconds)
 
 
@@ -71,7 +72,7 @@ def test_timespan_negative() -> None:
         (-2, 1),
     ],
 )
-def test__digits_left(value, output) -> None:  # type:ignore[no-untyped-def]
+def test__digits_left(value: float, output: int) -> None:
     assert output == render._digits_left(value)
 
 
@@ -89,7 +90,7 @@ def test__digits_left(value, output) -> None:  # type:ignore[no-untyped-def]
         (-123.123, True, ("-123", "B")),
     ],
 )
-def test__auto_scale(value, use_si_units, output) -> None:  # type:ignore[no-untyped-def]
+def test__auto_scale(value: float, use_si_units: bool, output: tuple[str, str]) -> None:
     assert output == render._auto_scale(value, use_si_units)
 
 
@@ -108,7 +109,7 @@ def test__auto_scale(value, use_si_units, output) -> None:  # type:ignore[no-unt
         (-17408, "-17.4 kB"),
     ],
 )
-def test_disksize(bytes_, output) -> None:  # type:ignore[no-untyped-def]
+def test_disksize(bytes_: float, output: str) -> None:
     assert output == render.disksize(bytes_)
 
 
@@ -127,7 +128,7 @@ def test_disksize(bytes_, output) -> None:  # type:ignore[no-untyped-def]
         (-17408, "-17.0 KiB"),
     ],
 )
-def test_bytes(bytes_, output) -> None:  # type:ignore[no-untyped-def]
+def test_bytes(bytes_: float, output: str) -> None:
     assert output == render.bytes(bytes_)
 
 
@@ -144,7 +145,7 @@ def test_bytes(bytes_, output) -> None:  # type:ignore[no-untyped-def]
         (-1234000678, "-1,234,000,678 B"),
     ],
 )
-def test_filesize(bytes_, output) -> None:  # type:ignore[no-untyped-def]
+def test_filesize(bytes_: float, output: str) -> None:
     assert output == render.filesize(bytes_)
 
 
@@ -161,7 +162,7 @@ def test_filesize(bytes_, output) -> None:  # type:ignore[no-untyped-def]
         (-1234000678, "-9.87 GBit/s"),
     ],
 )
-def test_nicspeed(octets_per_sec, output) -> None:  # type:ignore[no-untyped-def]
+def test_nicspeed(octets_per_sec: float, output: str) -> None:
     assert output == render.nicspeed(octets_per_sec)
 
 
@@ -179,7 +180,7 @@ def test_nicspeed(octets_per_sec, output) -> None:  # type:ignore[no-untyped-def
         (-1234000678, "-9.87 GBit/s"),
     ],
 )
-def test_networkbandwitdh(octets_per_sec, output) -> None:  # type:ignore[no-untyped-def]
+def test_networkbandwitdh(octets_per_sec: float, output: str) -> None:
     assert output == render.networkbandwidth(octets_per_sec)
 
 
@@ -196,7 +197,7 @@ def test_networkbandwitdh(octets_per_sec, output) -> None:  # type:ignore[no-unt
         (-1234000678, "-1.23 GB/s"),
     ],
 )
-def test_iobandwidth(bytes_, output) -> None:  # type:ignore[no-untyped-def]
+def test_iobandwidth(bytes_: float, output: str) -> None:
     assert output == render.iobandwidth(bytes_)
 
 
@@ -218,7 +219,7 @@ def test_iobandwidth(bytes_, output) -> None:  # type:ignore[no-untyped-def]
         (123.456, "123.46%"),
     ],
 )
-def test_percent(percentage, output) -> None:  # type:ignore[no-untyped-def]
+def test_percent(percentage: float, output: str) -> None:
     assert output == render.percent(percentage)
     # 6. Bereich kleiner 0:
     #     negieren und "-" davorhängen
@@ -236,5 +237,5 @@ def test_percent(percentage, output) -> None:  # type:ignore[no-untyped-def]
         (111222333444, "111 GHz"),
     ],
 )
-def test_frequency(hz, output) -> None:  # type:ignore[no-untyped-def]
+def test_frequency(hz: float, output: str) -> None:
     assert output == render.frequency(hz)

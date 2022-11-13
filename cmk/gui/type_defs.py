@@ -9,7 +9,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal, NamedTuple, Text, TypedDict, Union
+from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -64,7 +64,7 @@ class UserRole:
 
 
 class ChoiceGroup(NamedTuple):
-    title: Text
+    title: str
     choices: Choices
 
 
@@ -186,12 +186,8 @@ class LinkFromSpec(TypedDict, total=False):
     has_inventory_tree_history: Sequence[SDPath]
 
 
-class TypedVisual(_VisualMandatory):
+class Visual(_VisualMandatory):
     link_from: LinkFromSpec
-
-
-# TODO: Will be replaced by TypedVisual once all visual types have been moved over to TypedDict
-Visual = dict[str, Any]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -305,7 +301,7 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _ViewSpecMandatory(TypedVisual):
+class _ViewSpecMandatory(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
     group_painters: Sequence[PainterSpec]
@@ -359,7 +355,7 @@ class SetOnceDict(dict):
 
     def __setitem__(self, key, value):
         if key in self:
-            raise ValueError("key %r already set" % (key,))
+            raise ValueError(f"key {key!r} already set")
         dict.__setitem__(self, key, value)
 
     def __delitem__(self, key):
@@ -405,8 +401,8 @@ class TopicMenuItem(NamedTuple):
 
 
 class TopicMenuTopic(NamedTuple):
-    name: "str"
-    title: "str"
+    name: str
+    title: str
     items: list[TopicMenuItem]
     max_entries: int = 10
     icon: Icon | None = None
@@ -488,8 +484,10 @@ RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
 MetricExpression = str
 LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-MetricDefinition = Union[  # https://github.com/python/mypy/issues/11098
-    tuple[MetricExpression, LineType], tuple[MetricExpression, LineType, str | LazyString]
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
+MetricDefinition = Union[
+    tuple[MetricExpression, LineType],
+    tuple[MetricExpression, LineType, str | LazyString],
 ]
 PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
@@ -566,7 +564,8 @@ CustomGraphIdentifier = tuple[Literal["custom"], str]
 ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
 SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
 
-GraphIdentifier = Union[  # https://github.com/python/mypy/issues/11098
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
+GraphIdentifier = Union[
     CustomGraphIdentifier,
     tuple[Literal["forecast"], str],
     TemplateGraphIdentifier,
@@ -597,19 +596,14 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-CustomAttr = TypedDict(
-    "CustomAttr",
-    {
-        "title": str,
-        "help": str,
-        "name": str,
-        "topic": str,
-        "type": str,
-        "add_custom_macro": bool,
-        "show_in_table": bool,
-    },
-    total=True,
-)
+class CustomAttr(TypedDict, total=True):
+    title: str
+    help: str
+    name: str
+    topic: str
+    type: str
+    add_custom_macro: bool
+    show_in_table: bool
 
 
 class Key(BaseModel):

@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef realtime_h__
-#define realtime_h__
+#ifndef REALTIME_H
+#define REALTIME_H
 
 #include <condition_variable>
 #include <mutex>
@@ -22,8 +22,8 @@ enum {
     kDataOffset = kHeaderSize + kTimeStampSize
 };
 
-constexpr const std::string_view kEncryptedHeader{"00"};
-constexpr const std::string_view kPlainHeader{"99"};
+constexpr std::string_view kEncryptedHeader{"00"};
+constexpr std::string_view kPlainHeader{"99"};
 
 using RtBlock = std::vector<uint8_t>;
 using RtTable = std::vector<std::string_view>;
@@ -50,7 +50,7 @@ public:
 
     void connectFrom(std::string_view address, int port,
                      const RtTable &sections, std::string_view passphrase,
-                     int Timeout);
+                     int timeout);
 
     void connectFrom(std::string_view address, int port,
                      const RtTable &sections, std::string_view passphrase) {
@@ -64,7 +64,7 @@ public:
 
 private:
     void mainThread() noexcept;
-    std::string generateData();
+    std::string generateData() const;
 
     void clear();
     void resetSections();
@@ -95,4 +95,4 @@ private:
 };
 
 }  // namespace cma::rt
-#endif  // realtime_h__
+#endif  // REALTIME_H

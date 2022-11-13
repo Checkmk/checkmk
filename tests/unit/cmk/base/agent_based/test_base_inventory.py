@@ -7,43 +7,47 @@
 
 import pytest
 
-from tests.testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode
+from cmk.utils.type_defs import EVERYTHING
 
-from cmk.base.agent_based import inventory
-from cmk.base.agent_based.inventory._retentions import (
+from cmk.core_helpers.type_defs import NO_SELECTION
+
+import cmk.base.agent_based.inventory._inventory as _inventory
+import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.inventory._inventory import _parse_inventory_plugin_item
+from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
+    ItemsOfInventoryPlugin,
+    RealHostTreeAggregator,
     RetentionInfo,
-    RetentionsTracker,
     TableUpdater,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 
 
-def test_aggregator_raises_collision() -> None:
-    inventory_items: list[Attributes | TableRow] = [
-        Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
-        TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
-    ]
-
+@pytest.mark.parametrize(
+    "item, known_class_name",
+    [
+        (Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}), "TableRow"),
+        (TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}), "Attributes"),
+    ],
+)
+def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> None:
     # For some reason, the callee raises instead of returning the exception if
     # it runs in debug mode.  So let us explicitly disable that here.
     cmk.utils.debug.disable()
 
-    result = inventory.TreeAggregator().aggregate_results(
-        inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
-        raw_cache_info=None,
-        is_legacy_plugin=False,
-    )
+    with pytest.raises(TypeError) as e:
+        _parse_inventory_plugin_item(item, known_class_name)
 
-    assert isinstance(result, TypeError)
-    assert str(result) == (
-        "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
-    )
+        assert str(e) == (
+            "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
+        )
 
 
 _TREE_WITH_OTHER = StructuredDataNode()
@@ -55,17 +59,15 @@ _TREE_WITH_EDGE.setdefault_node(("edge",))
 @pytest.mark.parametrize(
     "old_tree, inv_tree",
     [
-        (_TREE_WITH_OTHER, None),
-        (_TREE_WITH_EDGE, None),
         (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
         (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
     ],
 )
 def test__tree_nodes_are_not_equal(
     old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode | None,
+    inv_tree: StructuredDataNode,
 ) -> None:
-    assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
+    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
 @pytest.mark.parametrize(
@@ -76,29 +78,27 @@ def test__tree_nodes_are_not_equal(
     ],
 )
 def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
 def test_integrate_attributes() -> None:
-    inventory_items: list[Attributes] = [
-        Attributes(
-            path=["a", "b", "c"],
-            inventory_attributes={
-                "foo0": "bar0",
-                "foo1": "bar1",
-            },
-        ),
-    ]
-
-    tree_aggr = inventory.TreeAggregator()
+    tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
-        inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
-        raw_cache_info=None,
-        is_legacy_plugin=False,
+        ItemsOfInventoryPlugin(
+            items=[
+                Attributes(
+                    path=["a", "b", "c"],
+                    inventory_attributes={
+                        "foo0": "bar0",
+                        "foo1": "bar1",
+                    },
+                ),
+            ],
+            raw_cache_info=None,
+        )
     )
 
-    assert tree_aggr.trees.inventory.serialize() == {
+    assert tree_aggr.inventory_tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {
@@ -126,43 +126,41 @@ def test_integrate_attributes() -> None:
 
 
 def test_integrate_table_row() -> None:
-    inventory_items: list[TableRow] = [
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "baz"},
-            inventory_columns={
-                "col1": "baz val1",
-                "col2": "baz val2",
-                "col3": "baz val3",
-            },
-        ),
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "bar"},
-            inventory_columns={
-                "col1": "bar val1",
-                "col2": "bar val2",
-            },
-        ),
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "bar"},
-            inventory_columns={
-                "col1": "new bar val1",
-                "col3": "bar val3",
-            },
-        ),
-    ]
-
-    tree_aggr = inventory.TreeAggregator()
+    tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
-        inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
-        raw_cache_info=None,
-        is_legacy_plugin=False,
+        ItemsOfInventoryPlugin(
+            items=[
+                TableRow(
+                    path=["a", "b", "c"],
+                    key_columns={"foo": "baz"},
+                    inventory_columns={
+                        "col1": "baz val1",
+                        "col2": "baz val2",
+                        "col3": "baz val3",
+                    },
+                ),
+                TableRow(
+                    path=["a", "b", "c"],
+                    key_columns={"foo": "bar"},
+                    inventory_columns={
+                        "col1": "bar val1",
+                        "col2": "bar val2",
+                    },
+                ),
+                TableRow(
+                    path=["a", "b", "c"],
+                    key_columns={"foo": "bar"},
+                    inventory_columns={
+                        "col1": "new bar val1",
+                        "col3": "bar val3",
+                    },
+                ),
+            ],
+            raw_cache_info=None,
+        ),
     )
 
-    assert tree_aggr.trees.inventory.serialize() == {
+    assert tree_aggr.inventory_tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {
@@ -204,7 +202,7 @@ def test_integrate_table_row() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_name, path, raw_cache_info",
+    "raw_intervals, node_type, path, raw_cache_info",
     [
         # === Attributes ===
         # empty config
@@ -502,23 +500,23 @@ def test_integrate_table_row() -> None:
 )
 def test_retentions_add_cache_info_no_match(
     raw_intervals: list[dict],
-    node_name: str,
+    node_type: str,
     path: SDPath,
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
     now = 100
-    retentions_tracker = RetentionsTracker(raw_intervals)
-    retentions_tracker.may_add_cache_info(
+    tree_aggregator = RealHostTreeAggregator(raw_intervals)
+    tree_aggregator._may_add_cache_info(
         now=now,
-        node_name=node_name,
+        node_type=node_type,
         path=path,
         raw_cache_info=raw_cache_info,
     )
-    assert retentions_tracker.retention_infos == {}
+    assert tree_aggregator._retention_infos == {}
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_name, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
+    "raw_intervals, node_type, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
     [
         # === Attributes ===
         # config, right path, all attributes
@@ -674,22 +672,22 @@ def test_retentions_add_cache_info_no_match(
 )
 def test_retentions_add_cache_info(
     raw_intervals: list[dict],
-    node_name: str,
+    node_type: str,
     raw_cache_info: tuple[int, int] | None,
     expected_intervals: RetentionIntervals,
     match_some_keys: bool,
     match_other_keys: bool,
 ) -> None:
     now = 100
-    retentions_tracker = RetentionsTracker(raw_intervals)
-    retentions_tracker.may_add_cache_info(
+    tree_aggregator = RealHostTreeAggregator(raw_intervals)
+    tree_aggregator._may_add_cache_info(
         now=now,
-        node_name=node_name,
+        node_type=node_type,
         path=("path-to", "node"),
         raw_cache_info=raw_cache_info,
     )
 
-    retention_info = retentions_tracker.retention_infos.get((("path-to", "node"), node_name))
+    retention_info = tree_aggregator._retention_infos.get((("path-to", "node"), node_type))
     assert retention_info is not None
 
     assert retention_info.intervals == expected_intervals
@@ -770,7 +768,7 @@ def test_updater_null_obj_attributes() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -787,7 +785,7 @@ def test_updater_null_obj_attributes_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -804,7 +802,7 @@ def test_updater_null_obj_tables() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -821,7 +819,7 @@ def test_updater_null_obj_tables_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -1189,13 +1187,7 @@ def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> No
     [
         (lambda key: key in ["unknown", "keyz"], {}),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 "old": RetentionIntervals(1, 2, 3),
                 "new": RetentionIntervals(4, 5, 6),
@@ -1250,13 +1242,7 @@ def test_updater_merge_attributes(
     [
         (lambda key: key in ["unknown", "keyz"], {}),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 "new": RetentionIntervals(4, 5, 6),
                 "keys": RetentionIntervals(4, 5, 6),
@@ -1309,13 +1295,7 @@ def test_updater_merge_attributes_outdated(
             {},
         ),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 ("Ident 1",): {
                     "old": RetentionIntervals(1, 2, 3),
@@ -1387,13 +1367,7 @@ def test_updater_merge_tables(
             {},
         ),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 ("Ident 1",): {
                     "new": RetentionIntervals(4, 5, 6),
@@ -1454,7 +1428,7 @@ def test_updater_merge_tables_outdated(
         (3, 3),
     ],
 )
-def test__execute_active_check_inventory(
+def test_check_inventory_tree(
     monkeypatch: pytest.MonkeyPatch,
     failed_state: int | None,
     expected: int,
@@ -1465,23 +1439,74 @@ def test__execute_active_check_inventory(
     ts.apply(monkeypatch)
 
     monkeypatch.setattr(
-        inventory,
-        "_inventorize_host",
-        lambda host_config, selected_sections, run_plugin_names, retentions_tracker: inventory.ActiveInventoryResult(
-            trees=inventory.InventoryTrees(
-                inventory=StructuredDataNode(),
-                status_data=StructuredDataNode(),
-            ),
+        _inventory,
+        "_fetch_real_host_data",
+        lambda *args, **kw: _inventory.FetchedDataResult(
+            parsed_sections_broker=ParsedSectionsBroker({}),
             source_results=[],
             parsing_errors=[],
             processing_failed=True,
+            no_data_or_files=False,
         ),
     )
 
-    result = inventory._execute_active_check_inventory(
-        HostConfig.make_host_config(hostname),
-        {} if failed_state is None else {"inv-fail-status": failed_state},
+    monkeypatch.setattr(
+        _inventory,
+        "_inventorize_real_host",
+        lambda *args, **kw: RealHostTreeAggregator([]),
     )
 
-    assert expected == result.state
-    assert "Cannot update tree" in result.summary
+    check_result = _inventory.check_inventory_tree(
+        hostname,
+        host_config=HostConfig.make_host_config(hostname),
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        parameters=config.HWSWInventoryParameters.from_raw(
+            {} if failed_state is None else {"inv-fail-status": failed_state}
+        ),
+        old_tree=StructuredDataNode(),
+    ).check_result
+
+    assert expected == check_result.state
+    assert "Cannot update tree" in check_result.summary
+
+
+@pytest.mark.parametrize("processing_failed", [True, False])
+def test_check_inventory_tree_no_data_or_files(
+    monkeypatch: pytest.MonkeyPatch,
+    processing_failed: bool,
+) -> None:
+    hostname = "my-host"
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        _inventory,
+        "_fetch_real_host_data",
+        lambda *args, **kw: _inventory.FetchedDataResult(
+            parsed_sections_broker=ParsedSectionsBroker({}),
+            source_results=[],
+            parsing_errors=[],
+            processing_failed=processing_failed,
+            no_data_or_files=True,
+        ),
+    )
+
+    monkeypatch.setattr(
+        _inventory,
+        "_inventorize_real_host",
+        lambda *args, **kw: RealHostTreeAggregator([]),
+    )
+
+    check_result = _inventory.check_inventory_tree(
+        hostname,
+        host_config=HostConfig.make_host_config(hostname),
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        parameters=config.HWSWInventoryParameters.from_raw({}),
+        old_tree=StructuredDataNode(),
+    ).check_result
+
+    assert check_result.state == 0
+    assert check_result.summary == "No data yet, please be patient"

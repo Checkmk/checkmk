@@ -5,18 +5,23 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_cronjob_info import check_kube_cronjob_info
-from cmk.base.plugins.agent_based.utils.kube import CronJobInfo
+from cmk.base.plugins.agent_based.utils.kube import (
+    ConcurrencyPolicy,
+    CronJobInfo,
+    NamespaceName,
+    Timestamp,
+)
 
 
 def test_check_kube_cronjob_info() -> None:
     section = CronJobInfo(
         name="cronjob",
-        namespace="checkmk-monitoring",
-        creation_timestamp=1600000000.0,
+        namespace=NamespaceName("checkmk-monitoring"),
+        creation_timestamp=Timestamp(1600000000.0),
         labels={},
         annotations={},
         schedule="0 * * * *",
-        concurrency_policy="Allow",
+        concurrency_policy=ConcurrencyPolicy.Allow,
         failed_jobs_history_limit=10,
         successful_jobs_history_limit=10,
         suspend=False,

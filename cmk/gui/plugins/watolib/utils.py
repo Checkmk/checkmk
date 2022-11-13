@@ -69,7 +69,7 @@ class ABCConfigDomain(abc.ABC):
         return True
 
     @classmethod
-    def get_all_default_globals(cls) -> Dict[str, Any]:
+    def get_all_default_globals(cls) -> Mapping[str, Any]:
         return _get_all_default_globals()
 
     @abc.abstractmethod
@@ -124,7 +124,7 @@ class ABCConfigDomain(abc.ABC):
         self.save(settings, site_specific=True, custom_site_path=custom_site_path)
 
     @abc.abstractmethod
-    def default_globals(self):
+    def default_globals(self) -> Mapping[str, Any]:
         """Returns a dictionary that contains the default settings
         of all configuration variables of this config domain."""
         raise NotImplementedError()

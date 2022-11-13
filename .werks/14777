@@ -1,0 +1,17 @@
+Title: Add queue usage counters to status table
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1667979318
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Add 6 columns to the status table in livestatus: carbon_queue_usage,
+carbon_queue_usage_rate, influxdb_queue_usage, influxdb_queue_usage_rate,
+rrdcached_queue_usage, rrdcached_queue_usage_rate.  Usage is defined
+as the approximate size of the queue passing the data to its connection
+over the total size of the queue.
+
+

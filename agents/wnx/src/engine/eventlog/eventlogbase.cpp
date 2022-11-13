@@ -63,10 +63,7 @@ bool operator==(const EventLogRecordBase::ptr &lhs,
 
     return false;
 }
-bool operator!=(const EventLogRecordBase::ptr &lhs,
-                const EventLogRecordBase::ptr &rhs) {
-    return !(lhs == rhs);
-}
+
 }  // namespace
 
 /// scans eventlog and applies processor to every entry.
@@ -129,9 +126,9 @@ std::string EventLogRecordBase::stringize(cfg::EventLevels required,
     }
 
     auto time_generated = timeGenerated();
-    const auto *t = ::localtime(&time_generated);
+    const auto *t = ::localtime(&time_generated);  // NOLINT
     char timestamp[64];
-    ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
+    ::strftime(timestamp, sizeof timestamp, "%b %d %H:%M:%S", t);
 
     // source is the application that produced the event
     std::string source_name = wtools::ToUtf8(source());
@@ -155,14 +152,14 @@ char EventLogRecordBase::getEventSymbol(cfg::EventLevels required) const {
         case Level::information:
         case Level::audit_success:
         case Level::success:
-            return (required == cfg::EventLevels::kAll)
+            return required == cfg::EventLevels::kAll
                        ? 'O'
                        : '.';  // potential drop of context
         case Level::audit_failure:
             return 'C';
-        default:
-            return 'u';
     }
+    // unreachable
+    return ' ';
 }
 
 /// decode windows level to universal
@@ -178,9 +175,9 @@ cfg::EventLevels EventLogRecordBase::calcEventLevel() const {
             return cfg::EventLevels::kAll;
         case Level::audit_failure:
             return cfg::EventLevels::kCrit;
-        default:
-            return cfg::EventLevels::kWarn;
     }
+    // unreachable
+    return cfg::EventLevels::kCrit;
 }
 
 }  // namespace cma::evl

@@ -11,7 +11,13 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_pod_info import check_kube_pod_info
-from cmk.base.plugins.agent_based.utils.kube import PodInfo
+from cmk.base.plugins.agent_based.utils.kube import (
+    IpAddress,
+    NamespaceName,
+    PodInfo,
+    PodUID,
+    Timestamp,
+)
 
 
 @pytest.mark.parametrize(
@@ -19,19 +25,19 @@ from cmk.base.plugins.agent_based.utils.kube import PodInfo
     [
         pytest.param(
             PodInfo(
-                namespace="default",
+                namespace=NamespaceName("default"),
                 name="mypod",
-                creation_timestamp=1600000000.0,
+                creation_timestamp=Timestamp(1600000000.0),
                 labels={},
                 annotations={},
                 node=None,
                 host_network=None,
                 dns_policy="Default",
                 qos_class="burstable",
-                host_ip="192.168.49.2",
-                pod_ip="172.17.0.2",
+                host_ip=IpAddress("192.168.49.2"),
+                pod_ip=IpAddress("172.17.0.2"),
                 restart_policy="Always",
-                uid="dd1019ca-c429-46af-b6b7-8aad47b6081a",
+                uid=PodUID("dd1019ca-c429-46af-b6b7-8aad47b6081a"),
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
             ),

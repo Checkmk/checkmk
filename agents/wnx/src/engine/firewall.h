@@ -13,8 +13,8 @@
 // THANK YOU FOR UNDERSTANDING
 // ***************************************************
 
-#ifndef firewall_h__
-#define firewall_h__
+#ifndef FIREWALL_H
+#define FIREWALL_H
 
 #pragma once
 
@@ -22,31 +22,30 @@
 
 #include <functional>
 
-#include "tools/_raii.h"
-
 namespace cma::fw {
 
 constexpr std::wstring_view kRuleGroup = L"Checkmk Agent";
 constexpr std::wstring_view kRuleDescription =
     L"Allow inbound network traffic to the Checkmk Agent";
 
-bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
-                       int port);
+bool CreateInboundRule(std::wstring_view rule_name,
+                       std::wstring_view raw_app_name, int port);
 
-/// Remove *one* rule by 'name'
+/// Remove *one* rule by 'rule_name'
 bool RemoveRule(std::wstring_view rule_name);
 
-/// Remove *one* rule by 'name' and 'app_name'
-bool RemoveRule(std::wstring_view rule_name, std::wstring_view app_name);
+/// Remove *one* rule by 'rule_name' and 'raw_app_name'
+bool RemoveRule(std::wstring_view rule_name, std::wstring_view raw_app_name);
 
 /// If raw_app_name is empty, then ignore check app name in rule
-int CountRules(std::wstring_view name, std::wstring_view raw_app_name);
+int CountRules(std::wstring_view rule_name, std::wstring_view raw_app_name);
 
 /// Find a rule by 'name'
-INetFwRule *FindRule(std::wstring_view name);
+INetFwRule *FindRule(std::wstring_view rule_name);
 
-/// Find a rule by 'name' and 'app_name'
-INetFwRule *FindRule(std::wstring_view name, std::wstring_view app_name);
+/// Find a rule by 'rule_name' and 'app_name'
+INetFwRule *FindRule(std::wstring_view rule_name,
+                     std::wstring_view raw_app_name);
 
 // "Proxy" class to keep Windows Firewall API isolated
 class Policy {
@@ -59,11 +58,11 @@ public:
     Policy();
     ~Policy();
 
-    INetFwRules *getRules() { return rules_; }
-    long getRulesCount();
-    long getCurrentProfileTypes();
+    [[nodiscard]] INetFwRules *getRules() const noexcept { return rules_; }
+    [[nodiscard]] long getRulesCount() const;
+    [[nodiscard]] long getCurrentProfileTypes() const;
 
-    IEnumVARIANT *getEnum();
+    [[nodiscard]] IEnumVARIANT *getEnum() const;
 
 private:
     INetFwPolicy2 *policy_ = nullptr;
@@ -72,4 +71,4 @@ private:
 
 }  // namespace cma::fw
 
-#endif  // firewall_h__
+#endif  // FIREWALL_H

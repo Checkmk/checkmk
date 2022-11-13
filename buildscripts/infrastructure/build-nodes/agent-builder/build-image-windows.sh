@@ -88,8 +88,6 @@ package_names=(
     locales
     make
     mingw-w64
-    mono-devel
-    mono-xbuild
     openssh-client
     openssl
     patch

@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Callable
-from typing import Any, Type
+from typing import Any
 
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
+    AggregationKind,
     bi_aggregation_function_registry,
     BIStates,
     ReqConstant,
@@ -53,16 +56,16 @@ def mapped_states(f: Callable[[Any, list[int]], int]) -> Callable[[Any, list[int
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "best"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionBestSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionBestSchema]:
         return BIAggregationFunctionBestSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "count": self.count,
             "restrict_state": self.restrict_state,
         }
@@ -79,7 +82,7 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionBestSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionBest.type())
+    type = ReqConstant(BIAggregationFunctionBest.kind())
     count = ReqInteger(dump_default=1)
     restrict_state = ReqInteger(
         dump_default=2,
@@ -106,16 +109,16 @@ class BIAggregationFunctionBestSchema(Schema):
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "worst"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionWorstSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionWorstSchema]:
         return BIAggregationFunctionWorstSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "count": self.count,
             "restrict_state": self.restrict_state,
         }
@@ -132,7 +135,7 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionWorstSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionWorst.type())
+    type = ReqConstant(BIAggregationFunctionWorst.kind())
     count = ReqInteger(dump_default=1, example=2)
     restrict_state = ReqInteger(
         dump_default=2,
@@ -159,16 +162,16 @@ class BIAggregationFunctionWorstSchema(Schema):
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "count_ok"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionCountOKSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionCountOKSchema]:
         return BIAggregationFunctionCountOKSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "levels_ok": self.levels_ok,
             "levels_warn": self.levels_warn,
         }
@@ -198,7 +201,7 @@ class BIAggregationFunctionCountSettings(Schema):
 
 
 class BIAggregationFunctionCountOKSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionCountOK.type())
+    type = ReqConstant(BIAggregationFunctionCountOK.kind())
     levels_ok = ReqNested(BIAggregationFunctionCountSettings)
     levels_warn = ReqNested(BIAggregationFunctionCountSettings)
 
@@ -216,7 +219,7 @@ class BIAggregationFunctionCountOKSchema(Schema):
 class BIAggregationFunctionSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = dict((k, v.schema()) for k, v in bi_aggregation_function_registry.items())
+    type_schemas = {k: v.schema() for k, v in bi_aggregation_function_registry.items()}
 
     # type_schemas ={
     #    "worst": BIAggregationFunctionWorstSchema,
@@ -227,4 +230,4 @@ class BIAggregationFunctionSchema(OneOfSchema):
     def get_obj_type(self, obj: ABCBIAggregationFunction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
-        return obj.type()
+        return obj.kind()

@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Final, List, Mapping, Optional, TYPE_CHECKING
+from collections.abc import Mapping
+from typing import Any, Final, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -41,16 +42,15 @@ class IPMIFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        ident: str,  # Literal["mgmt_ipmi"],
         address: HostAddress,  # Could actually be HostName as well.
-        username: Optional[str],
-        password: Optional[str],
+        username: str | None,
+        password: str | None,
     ) -> None:
-        super().__init__(ident, logger=logging.getLogger("cmk.helper.ipmi"))
+        super().__init__(logger=logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
-        self._command: Optional[ipmi_cmd.Command] = None
+        self._command: ipmi_cmd.Command | None = None
 
     def __repr__(self) -> str:
         return (
@@ -74,7 +74,6 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             "address": self.address,
             "username": self.username,
             "password": self.password,
-            "ident": self.ident,
         }
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
@@ -91,7 +90,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         )
 
         # Performance: See header.
-        import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
+        import pyghmi.ipmi.command as ipmi_cmd
 
         try:
             self._command = ipmi_cmd.Command(
@@ -146,7 +145,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
         # Performance: See header.
-        import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+        import pyghmi.ipmi.sdr as ipmi_sdr
 
         try:
             sdr = ipmi_sdr.SDR(self._command)
@@ -193,7 +192,9 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         output = b"<<<ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
-                output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
+                output += b"|".join(
+                    str(f).encode("utf8") for f in (entity_name, attribute_name, value)
+                )
                 output += b"\n"
 
         return AgentRawData(output)
@@ -217,7 +218,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _parse_sensor_reading(
         self, number: int, reading: ipmi_sdr.SensorReading
-    ) -> List[AgentRawData]:
+    ) -> list[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]

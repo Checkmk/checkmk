@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef df_h__
-#define df_h__
+#ifndef DF_H
+#define DF_H
 
 #include <string>
 
@@ -20,7 +20,7 @@ constexpr auto kDfSeparatorString = section::kTabSeparatorString;
 
 class Df : public Asynchronous {
 public:
-    Df() : Asynchronous(cma::section::kDfName, '\t') {}
+    Df() : Asynchronous(section::kDfName, '\t') {}
 
 private:
     std::string makeBody() override;
@@ -37,6 +37,6 @@ std::vector<std::string> GetDriveVector();
 uint64_t CalcUsage(uint64_t avail, uint64_t total) noexcept;
 }  // namespace df
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
-#endif  // df_h__
+#endif  // DF_H

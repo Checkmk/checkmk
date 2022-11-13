@@ -88,9 +88,10 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
             ]
             + auth,
             close_fds=True,
-            # Silence the very noisy output. May be useful to enable this for debugging tests
-            # stdout=subprocess.DEVNULL,
-            # stderr=subprocess.STDOUT,
+            # Capture output to return the error message for debugging purposes
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
         ),
     )
 
@@ -140,23 +141,26 @@ def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
     p = process_def.process
     port = process_def.port
     exitcode = p.poll()
-    if exitcode is not None:
-        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    snmpsimd_died = exitcode is not None
 
-    # Wait for snmpsimd to initialize the UDP sockets
-    num_sockets = 0
-    try:
-        for e in os.listdir("/proc/%d/fd" % p.pid):
-            try:
-                if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
-                    num_sockets += 1
-            except OSError:
-                pass
-    except OSError:
-        exitcode = p.poll()
-        if exitcode is None:
-            raise
-        raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+    if not snmpsimd_died:
+        # Wait for snmpsimd to initialize the UDP sockets
+        num_sockets = 0
+        try:
+            for e in os.listdir("/proc/%d/fd" % p.pid):
+                try:
+                    if os.readlink("/proc/%d/fd/%s" % (p.pid, e)).startswith("socket:"):
+                        num_sockets += 1
+                except OSError:
+                    pass
+        except OSError:
+            exitcode = p.poll()
+            if exitcode is None:
+                raise
+            snmpsimd_died = True
+    if snmpsimd_died:
+        error_msg = p.stdout.read().split("\n", 1)[0]
+        raise Exception("snmpsimd died. Exit code: %d; error message: %s" % (exitcode, error_msg))
 
     if num_sockets < 2:
         return False

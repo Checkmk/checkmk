@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef system_time_h__
-#define system_time_h__
+#ifndef SYSTEM_TIME_H
+#define SYSTEM_TIME_H
 
 #include <string>
 
@@ -16,7 +16,7 @@ namespace cma::provider {
 
 class SystemTime : public Synchronous {
 public:
-    SystemTime() : Synchronous(cma::section::kSystemTime) {}
+    SystemTime() : Synchronous(section::kSystemTime) {}
     SystemTime(const std::string &name, char separator)
         : Synchronous(name, separator) {}
 
@@ -26,4 +26,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // system_time_h__
+#endif  // SYSTEM_TIME_H

@@ -5,12 +5,11 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Type
+from typing import Any
 
 from livestatus import LivestatusResponse, MultiSiteConnection
 
 from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.base import BaseQuery
 from cmk.utils.livestatus_helpers.expressions import (
     And,
     BinaryExpression,
@@ -34,8 +33,7 @@ class ResultRow(dict):
     Sadly the values can't really be checked by mypy, but this won't be possible with dict-lookups
     as well.
 
-    >>> from typing import Dict
-    >>> result: Dict[str, Any] = {'a': 'b', 'b': 5, 'c': [1, 2, 3]}
+    >>> result: dict[str, Any] = {'a': 'b', 'b': 5, 'c': [1, 2, 3]}
     >>> d = ResultRow(result)
     >>> str_value = d.a  # is of type Any
     >>> str_value
@@ -92,7 +90,7 @@ class ResultRow(dict):
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
-def _get_column(table_class: Type[Table], col: str) -> Column:
+def _get_column(table_class: type[Table], col: str) -> Column:
     """Strip prefixes from column names and return the correct column
 
     Examples:
@@ -126,7 +124,7 @@ def _get_column(table_class: Type[Table], col: str) -> Column:
     return getattr(table_class, col)
 
 
-class Query(BaseQuery):
+class Query:
     """A representation of a Livestatus query.
 
     This holds all necessary information to generate a valid livestatus query.
@@ -222,7 +220,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         if len(_tables) != 1:
             raise ValueError(f"Query doesn't specify a single table: {_tables!r}")
 
-        self.table: Type[Table] = _tables.pop()
+        self.table: type[Table] = _tables.pop()
 
     def filter(self, filter_expr: QueryExpression) -> "Query":
         """Apply additional filters to an existing query.
@@ -435,7 +433,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             names = self.column_names
 
         for entry in self.fetch_values(sites):
-            # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
+            # This is dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
     def to_dict(self, sites: MultiSiteConnection) -> dict[Any, Any]:
@@ -639,7 +637,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
                 table_name = parts[1]
                 try:
-                    table_class: Type[Table] = getattr(tables, table_name.title())
+                    table_class: type[Table] = getattr(tables, table_name.title())
                 except AttributeError:
                     raise ValueError(f"Table {table_name} was not defined in the tables module.")
                 break
@@ -690,7 +688,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
 
 def _parse_line(
-    table: Type[Table],
+    table: type[Table],
     filter_string: str,
 ) -> BinaryExpression:
     """Parse a single filter line into a BinaryExpression

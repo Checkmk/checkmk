@@ -5,10 +5,11 @@
 
 import logging
 import socket
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from fnmatch import fnmatch
-from typing import Generator, List, NamedTuple, Optional, Sequence, Tuple
+from typing import NamedTuple
 
 from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
 from smb.smb_structs import OperationFailure  # type: ignore[import]
@@ -23,7 +24,7 @@ class File(NamedTuple):
     file: SharedFile
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "hostname",
@@ -69,7 +70,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 def iter_shared_files(
-    conn: SMBConnection, hostname: str, share_name: str, pattern: List[str], subdir: str = ""
+    conn: SMBConnection, hostname: str, share_name: str, pattern: list[str], subdir: str = ""
 ) -> Generator[File, None, None]:
 
     for shared_file in conn.listPath(share_name, subdir):
@@ -93,8 +94,8 @@ def iter_shared_files(
 
 
 def get_all_shared_files(
-    conn: SMBConnection, hostname: str, patterns: List[str]
-) -> Generator[Tuple[str, List[File]], None, None]:
+    conn: SMBConnection, hostname: str, patterns: list[str]
+) -> Generator[tuple[str, list[File]], None, None]:
     share_names = [s.name for s in conn.listShares()]
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
@@ -113,7 +114,7 @@ def get_all_shared_files(
         yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
 
 
-def write_section(all_files: Generator[Tuple[str, List[File]], None, None]) -> None:
+def write_section(all_files: Generator[tuple[str, list[File]], None, None]) -> None:
     with SectionWriter("fileinfo", separator="|") as writer:
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         writer.append(int(datetime.timestamp(now)))

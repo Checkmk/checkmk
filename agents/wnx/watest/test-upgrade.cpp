@@ -13,7 +13,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "tools/_tgt.h"
 #include "upgrade.h"
 
 namespace fs = std::filesystem;
@@ -198,16 +197,16 @@ std::string not_bakeryfile =
     "    counters = Terminal Services:ts_sessions\n"
     "\n";
 
-static void CreateFileTest(std::filesystem::path Path, std::string Content) {
-    std::ofstream ofs(Path);
+static void CreateFileTest(const fs::path &path, const std::string &content) {
+    std::ofstream ofs(path);
 
-    ofs << Content;
+    ofs << content;
 }
 
-static auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
-                          const std::string YamlName) {
-    auto ini_file = Lwa / (YamlName + ".ini");
-    CreateFileTest(Lwa / ini_file, Content);
+static auto CreateIniFile(const fs::path &lwa, const std::string &content,
+                          const std::string &yaml_name) {
+    auto ini_file = lwa / (yaml_name + ".ini");
+    CreateFileTest(lwa / ini_file, content);
     return ini_file;
 }
 
@@ -241,7 +240,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
         old_location.string() + "\\" + std::string(files::kUpgradeProtocol),
         old_file.string());
 
-    auto x = CreateProtocolFile(old_location, "  old_file");
+    CreateProtocolFile(old_location, "  old_file");
     ASSERT_TRUE(fs::exists(old_file, ec));
 
     EXPECT_TRUE(
@@ -253,7 +252,7 @@ TEST(UpgradeTest, CheckProtocolUpdate) {
     ASSERT_TRUE(content.has_value());
     EXPECT_TRUE(content->find("old_file") != std::string::npos);
 
-    x = CreateProtocolFile(old_location, "  new_file");
+    CreateProtocolFile(old_location, "  new_file");
     EXPECT_TRUE(
         UpdateProtocolFile(new_location.wstring(), old_location.wstring()));
     EXPECT_TRUE(fs::exists(new_file, ec));
@@ -339,13 +338,13 @@ TEST(UpgradeTest, PatchRelativePath) {
     EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
 }
 
-std::filesystem::path ConstructBakeryYmlPath(std::filesystem::path pd_dir) {
+fs::path ConstructBakeryYmlPath(const fs::path &pd_dir) {
     auto bakery_yaml = pd_dir / dirs::kBakery / files::kDefaultMainConfigName;
     bakery_yaml += files::kDefaultBakeryExt;
     return bakery_yaml;
 }
 
-std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
+fs::path ConstructUserYmlPath(const fs::path &pd_dir) {
     auto user_yaml = pd_dir / files::kDefaultMainConfigName;
     user_yaml += files::kDefaultUserExt;
     return user_yaml;
@@ -365,8 +364,6 @@ TEST(UpgradeTest, LoggingSupport) {
     auto [lwa_dir, pd_dir] = CreateInOut();
     ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
-    std::error_code ec;
-
     auto expected_bakery_name = ConstructBakeryYmlPath(pd_dir);
     auto expected_user_name = ConstructUserYmlPath(pd_dir);
 
@@ -380,7 +377,7 @@ TEST(UpgradeTest, LoggingSupport) {
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
         auto yml_global = yaml[groups::kGlobal];
         ASSERT_TRUE(yml_global.IsMap());
@@ -606,6 +603,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
         auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
         ASSERT_TRUE(local_exists);
         auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_FALSE(user_exists);
         // local changed
         EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
         EXPECT_GE(fs::file_size(user_yaml, ec), 50);
@@ -624,6 +622,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
         auto local_exists = ConvertLocalIniFile(lwa_dir, pd_dir);
         ASSERT_TRUE(local_exists);
         auto user_exists = ConvertUserIniFile(lwa_dir, pd_dir, local_exists);
+        EXPECT_FALSE(user_exists);
         // local changed
         EXPECT_EQ(fs::file_size(bakery_yaml, ec), 2);
         EXPECT_GE(fs::file_size(user_yaml, ec), 50);
@@ -660,7 +659,7 @@ TEST(UpgradeTest, LoadIni) {
         auto table = tools::SplitString(a1, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
-        EXPECT_TRUE(table[2].size() == 0);
+        EXPECT_TRUE(table[2].empty());
     }
     {
         auto a2 = MakeComments("[b]", false);
@@ -669,7 +668,7 @@ TEST(UpgradeTest, LoadIni) {
         auto table = tools::SplitString(a2, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
-        EXPECT_TRUE(table[2].size() == 0);
+        EXPECT_TRUE(table[2].empty());
     }
 
     {
@@ -690,7 +689,7 @@ TEST(UpgradeTest, LoadIni) {
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
 
@@ -702,7 +701,7 @@ TEST(UpgradeTest, LoadIni) {
         EXPECT_TRUE(IsBakeryIni(ini));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
 
@@ -711,7 +710,7 @@ TEST(UpgradeTest, LoadIni) {
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
         EXPECT_TRUE(yaml.IsMap());
@@ -722,19 +721,21 @@ TEST(UpgradeTest, LoadIni) {
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile_strange, name);
         auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
         EXPECT_TRUE(yaml.IsMap());
     }
 }
 
-TEST(UpgradeTest, CopyFoldersApi) {
+TEST(UpgradeTest, IsFileNonCompatible) {
     EXPECT_TRUE(IsFileNonCompatible("Cmk-updatE-Agent.exe"));
     EXPECT_TRUE(IsFileNonCompatible("c:\\Cmk-updatE-Agent.exe"));
     EXPECT_FALSE(IsFileNonCompatible("cmk_update_agent.exe"));
     EXPECT_FALSE(IsFileNonCompatible("c:\\cmk_update_agent.exe"));
+}
 
+TEST(UpgradeTest, IsPathProgramData) {
     EXPECT_TRUE(IsPathProgramData("checkmk/agent"));
     EXPECT_TRUE(IsPathProgramData("c:\\Checkmk/agent"));
     EXPECT_TRUE(IsPathProgramData("c:\\Checkmk\\Agent"));
@@ -742,51 +743,51 @@ TEST(UpgradeTest, CopyFoldersApi) {
     EXPECT_FALSE(IsPathProgramData("Checkmk_Agent"));
     EXPECT_FALSE(IsPathProgramData("Check\\mkAgent"));
     EXPECT_FALSE(IsPathProgramData("c:\\Check\\mkAgent"));
-
-    fs::path base = cfg::GetTempDir();
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-
-    fs::path file_path = base / "marker.tmpx";
-    {
-        std::ofstream ofs(file_path);
-
-        ASSERT_TRUE(ofs) << "Can't open file " << file_path.u8string()
-                         << "error " << GetLastError() << "\n";
-        ofs << "@marker\n";
-    }
-
-    std::error_code ec;
-    {
-        EXPECT_FALSE(fs::is_directory(file_path, ec));
-        auto ret = CreateFolderSmart(file_path);
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(fs::is_directory(file_path, ec));
-    }
-
-    {
-        auto test_path = base / "plugin";
-        EXPECT_FALSE(fs::exists(test_path, ec));
-        auto ret = CreateFolderSmart(test_path);
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(fs::is_directory(base / "plugin", ec));
-    }
-
-    {
-        auto test_path = base / "mrpe";
-        EXPECT_FALSE(fs::exists(test_path, ec));
-        fs::create_directories(test_path);
-        auto ret = CreateFolderSmart(test_path);
-        EXPECT_TRUE(ret);
-        EXPECT_TRUE(fs::is_directory(test_path, ec));
-    }
 }
 
+namespace {
+std::pair<fs::path, fs::path> CreateFolderApiFile() {
+    fs::path base = cfg::GetTempDir();
+    tst::SafeCleanTempDir();
+    fs::path file_path = base / "marker.tmpx";
+    std::ofstream ofs(file_path);
+    EXPECT_TRUE(ofs) << "Can't open file " << file_path.string() << "error "
+                     << GetLastError() << "\n";
+    ofs << "@marker\n";
+    return {base, file_path};
+}
+}  // namespace
+
+TEST(UpgradeTest, FolderApi) {
+    const auto [base, file_path] = CreateFolderApiFile();
+    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
+
+    std::error_code ec;
+
+    EXPECT_FALSE(fs::is_directory(file_path, ec));
+    EXPECT_TRUE(CreateFolderSmart(file_path));
+    EXPECT_TRUE(fs::is_directory(file_path, ec));
+
+    const auto test_path_plugin = base / "plugin";
+
+    EXPECT_FALSE(fs::exists(test_path_plugin, ec));
+    EXPECT_TRUE(CreateFolderSmart(test_path_plugin));
+    EXPECT_TRUE(fs::is_directory(test_path_plugin, ec));
+
+    auto test_path_mrpe = base / "mrpe";
+    EXPECT_FALSE(fs::exists(test_path_mrpe, ec));
+    fs::create_directories(test_path_mrpe);
+    EXPECT_TRUE(CreateFolderSmart(test_path_mrpe));
+    EXPECT_TRUE(fs::is_directory(test_path_mrpe, ec));
+}
+
+#if 0
+/// Reference
 static const char *const a1 =
     "AlignmentFixupsPersec|Caption|ContextSwitchesPersec|Description|ExceptionDispatchesPersec|FileControlBytesPersec|FileControlOperationsPersec|FileDataOperationsPersec|FileReadBytesPersec|FileReadOperationsPersec|FileWriteBytesPersec|FileWriteOperationsPersec|FloatingEmulationsPersec|Frequency_Object|Frequency_PerfTime|Frequency_Sys100NS|Name|PercentRegistryQuotaInUse|PercentRegistryQuotaInUse_Base|Processes|ProcessorQueueLength|SystemCallsPersec|SystemUpTime|Threads|Timestamp_Object|Timestamp_PerfTime|Timestamp_Sys100NS|WMIStatus";
 static const char *const a2 =
     "8753143349248||8757138597559||8753154542256|1668537305287|952521535002|951235405633|25314498833504|950257251850|3054676197176|950165926199|949187772416|10000000|2435538|10000000||949554799728|951335256063|949187772535|949187772416|952503978051|132104050924847952|949187774233|132134863734478619|7504388659458|132134935734470000|OK";
-
+#endif
 TEST(UpgradeTest, CopyFolders) {
     auto temp_fs{tst::TempCfgFs::Create()};
     auto [lwa_path, tgt] = tst::CreateInOut();
@@ -850,8 +851,8 @@ TEST(UpgradeTest, CopyFiles) {
 
     auto count = CopyFolderRecursive(
         lwa_path, cfg::GetTempDir(), fs::copy_options::overwrite_existing,
-        [lwa_path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, lwa_path),
+        [lwa_path](const fs::path &path) {
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
                       wtools::ToUtf8(cfg::GetTempDir()));
             return true;
         });
@@ -859,7 +860,7 @@ TEST(UpgradeTest, CopyFiles) {
 
     count = CopyFolderRecursive(
         lwa_path, cfg::GetTempDir(), fs::copy_options::skip_existing,
-        [lwa_path](fs::path path) {
+        [lwa_path](const fs::path &path) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
                       wtools::ToUtf8(cfg::GetTempDir()));
             return true;
@@ -925,7 +926,6 @@ TEST(UpgradeTest, StopStartStopOhmIntegration) {
     fs::path ohm = lwa_path;
     ohm /= "bin";
     ohm /= "OpenHardwareMonitorCLI.exe";
-    std::error_code ec;
     if (!fs::exists(ohm)) {
         xlog::sendStringToStdio(
             "OHM is not installed with LWA, further testing of OHM is skipped\n",
@@ -966,7 +966,6 @@ TEST(UpgradeTest, FindLwa_Long) {
     if (lwa_path.empty()) {
         GTEST_SKIP()
             << "Legacy Agent is absent. Either install it or simulate it";
-        return;
     }
 
     EXPECT_TRUE(ActivateLegacyAgent());

@@ -1,0 +1,23 @@
+Title: Fix deletion of users on remote sites if own LDAP connector is used
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1666763519
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Until now, the concept of user management in distributed setups was that the
+central site was responsible to keep track of the known users and pushed the
+config to the remote sites.
+
+This leeds to the problem, that users on remote sites with an own LDAP
+connector configured were deleted on every activation of changes.
+
+We now skip this users for deletion on activation, so the remote site is
+responsible for users who are synchronized via the configured LDAP connection.
+
+Please note that these kind of users are still not visible/usable in the setup
+of the central site. You can e.g. not select them in rules like notification
+rules. But this was also the case before.

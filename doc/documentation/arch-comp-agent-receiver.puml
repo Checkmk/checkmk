@@ -1,0 +1,52 @@
+@startuml
+
+participant Agent as agent
+participant "agent-receiver" as agent_receiver
+participant "RestAPI" as rest_api
+
+== pairing ==
+
+agent -> agent_receiver:  /pairing (Credentials, csr)
+agent_receiver -> rest_api: /root__cert (Credentials)
+rest_api -> agent_receiver: Root Certificate
+agent_receiver -> rest_api: /csr (Credentials, csr)
+rest_api -> agent_receiver: Signed certificate
+agent_receiver -> agent: Root Certificate, Signed Certificate
+
+
+== register_with_hostname ==
+
+agent -> agent_receiver: /register_with_hostname (Credentials, uuid, hostname)
+agent_receiver -> rest_api: /objects/host_config_internal/hostname (Credentials, hostname)
+rest_api -> agent_receiver: host_config
+agent_receiver -> rest_api: /objects/host_config_internal/hostname/actions/link_uuid/invoke (Credentials, hostname, uuid)
+rest_api -> agent_receiver: OK
+agent_receiver -> agent: OK
+
+
+== register_with_labels ==
+
+agent -> agent_receiver: /register_with_labels (Credentials, uuid, agent_labels)
+agent_receiver -> rest_api: /version (Credentials)
+rest_api -> agent_receiver: Version
+agent_receiver -> agent_receiver: Write registration file (uuid, agent_labels)
+agent_receiver -> agent: OK
+
+
+== agent_data ==
+
+agent -[#green]-> agent_receiver: /agent_data (uuid, data, compression)
+agent_receiver -> agent_receiver: Is registered?
+agent_receiver -> agent_receiver: Is push agent?
+agent_receiver -> agent_receiver: Decompress data
+agent_receiver -> agent_receiver: Store data
+agent_receiver -[#green]-> agent: OK
+
+
+== registration_status ==
+
+agent -[#green]-> agent_receiver: /registration_status (uuid)
+agent_receiver -[#green]-> agent: RegistrationStatus
+
+
+@enduml

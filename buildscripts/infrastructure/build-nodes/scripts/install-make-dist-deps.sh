@@ -15,11 +15,6 @@ case "$DISTRO" in
         apt-get install -y \
             rpm \
             alien
-        # Needed for building the shipped OpenHardwareMonitorCLI.exe
-        # TODO: We should really move this to a windows node based step
-        apt-get install -y \
-            mono-complete \
-            mono-xbuild
         # Not needed for "make dist", but for the post-build steps of
         # buildscripts/scripts/build-cmk-version.jenkins
         apt-get install -y \

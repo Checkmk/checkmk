@@ -16,7 +16,6 @@
 #include "common/wtools.h"
 #include "logger.h"
 #include "service_processor.h"
-#include "tools/_raii.h"
 
 using namespace std::literals;
 
@@ -44,7 +43,7 @@ static bool IsPluginRequiredType(const PluginEntry &plugin,
 }
 
 // returns 0 on lack plugin entries
-int FindMaxTimeout(const cma::PluginMap &pm, PluginMode need_type) {
+int FindMaxTimeout(const PluginMap &pm, PluginMode need_type) {
     int timeout = 0;
     for (const auto &[path, plugin] : pm) {
         if (IsPluginRequiredType(plugin, need_type)) {
@@ -104,7 +103,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
         }
 
         auto &mc = sp->getModuleCommander();
-        auto fname = entry.path().u8string();
+        auto fname = wtools::ToStr(entry.path());
         XLOG::t.i("checking our script");
 
         if (!mc.isModuleScript(fname)) {
@@ -197,10 +196,10 @@ std::string ToString(const std::vector<char> &v) {
 
 void PluginsProvider::gatherAllData(std::string &out) {
     int last_count = 0;
-    auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
+    const auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
     last_count_ += last_count;
 
-    auto data_async = RunAsyncPlugins(pm_, last_count, true);
+    const auto data_async = RunAsyncPlugins(pm_, last_count, true);
     last_count_ += last_count;
 
     out += ToString(data_sync);
@@ -231,7 +230,7 @@ namespace config {
 // i future may be controlled using yml
 bool g_local_no_send_if_empty_body = true;
 bool g_local_send_empty_at_end = false;
-};  // namespace config
+}  // namespace config
 
 void LocalProvider::updateSectionStatus() {
     std::string body;

@@ -7,8 +7,9 @@ import itertools
 import json
 import logging
 import re
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Dict, Generic, Literal, Mapping, Optional, Sequence, TypeVar, Union
+from typing import Generic, Literal, TypeVar
 
 from kubernetes import client  # type: ignore[import]
 
@@ -103,7 +104,7 @@ class AppsAPI:
 class RawAPIResponse:
     response: str
     status_code: int
-    headers: Dict[str, str]
+    headers: dict[str, str]
 
 
 class RawAPI:
@@ -119,7 +120,7 @@ class RawAPI:
         self,
         method: Literal["GET", "POST", "PUT", "OPTIONS", "DELETE"],
         resource_path: str,
-        query_params: Optional[Dict[str, str]] = None,
+        query_params: dict[str, str] | None = None,
     ) -> RawAPIResponse:
         # Found the auth_settings here:
         # https://github.com/kubernetes-client/python/issues/528
@@ -136,7 +137,7 @@ class RawAPI:
         )
 
     def _get_healthz(self, url: str) -> api.HealthZ:
-        def get_health(query_params: Optional[Dict[str, str]] = None) -> tuple[int, str]:
+        def get_health(query_params: dict[str, str] | None = None) -> tuple[int, str]:
             # https://kubernetes.io/docs/reference/using-api/health-checks/
             try:
                 response = self._request("GET", url, query_params=query_params)
@@ -169,7 +170,7 @@ class RawAPI:
         return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
 
 
-def _extract_sequence_based_identifier(git_version: str) -> Optional[str]:
+def _extract_sequence_based_identifier(git_version: str) -> str | None:
     """
 
     >>> _extract_sequence_based_identifier("v1.20.0")
@@ -209,7 +210,7 @@ def _extract_sequence_based_identifier(git_version: str) -> Optional[str]:
 
 def decompose_git_version(
     git_version: api.GitVersion,
-) -> Union[api.KubernetesVersion, api.UnknownKubernetesVersion]:
+) -> api.KubernetesVersion | api.UnknownKubernetesVersion:
     # One might think that version_json["major"] and version_json["minor"] would be more suitable
     # than parsing major from GitVersion. Sadly, the minor version is not an integer, e.g. "21+".
     # The approach taken here is based on the `kubectl version`.
@@ -252,7 +253,7 @@ class UnsupportedEndpointData(Exception):
 
 def version_from_json(
     raw_version: str,
-) -> Union[api.UnknownKubernetesVersion, api.KubernetesVersion]:
+) -> api.UnknownKubernetesVersion | api.KubernetesVersion:
     try:
         version_json = json.loads(raw_version)
     except Exception as e:
@@ -269,9 +270,7 @@ def version_from_json(
     return decompose_git_version(version_json["gitVersion"])
 
 
-def _verify_version_support(
-    version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion]
-) -> None:
+def _verify_version_support(version: api.KubernetesVersion | api.UnknownKubernetesVersion) -> None:
     if (
         isinstance(version, api.KubernetesVersion)
         and (version.major, version.minor) in SUPPORTED_VERSIONS

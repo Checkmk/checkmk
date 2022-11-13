@@ -79,9 +79,7 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
             // remove encoded length of the log_text:
             let offset = payload.len() - data.len();
             bytes.extend_from_slice(&payload[offset..]);
-            client
-                .send_message(&bytes)
-                .unwrap_or_else(|e| eprintln!("Fail to send {:?}", e)); // we can't log in the function
+            client.send_message(&bytes).unwrap_or_default(); // we can't log in the function
         }
         Err(_) => {
             // happens if we have not enough user rights

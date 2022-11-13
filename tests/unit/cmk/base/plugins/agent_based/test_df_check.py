@@ -457,7 +457,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     106418.50390625,
                     levels=(112333.35624980927, 126375.0257806778),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 140416.6953125),
                 ),
                 Metric("fs_free", 33998.19140625, boundaries=(0, None)),
                 Metric(
@@ -494,7 +494,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     106418.50390625,
                     levels=(112333.35624980927, 126375.0257806778),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 140416.6953125),
                 ),
                 Metric("fs_free", 33998.19140625, boundaries=(0.0, None)),
                 Metric(
@@ -531,7 +531,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     181.890625,
                     levels=(8000.621874809265, 9000.699608802795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 10000.77734375),
                 ),
                 Metric("fs_free", 9818.88671875, boundaries=(0.0, None)),
                 Metric(
@@ -558,7 +558,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     181.890625,
                     levels=(8000.621874809265, 9000.699608802795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 10000.77734375),
                 ),
                 Metric("fs_free", 9818.88671875, boundaries=(0.0, None)),
                 Metric(
@@ -585,7 +585,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     4327.29296875,
                     levels=(16383.199999809265, 18431.099999427795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 20479.0),
                 ),
                 Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
                 Metric(
@@ -620,7 +620,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     4327.29296875,
                     levels=(16383.199999809265, 18431.099999427795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 20479.0),
                 ),
                 Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
                 Metric(
@@ -647,7 +647,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     4327.29296875,
                     levels=(16383.199999809265, 18431.099999427795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 20479.0),
                 ),
                 Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
                 Metric(
@@ -678,7 +678,7 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
                     "fs_used",
                     4327.29296875,
                     levels=(16383.199999809265, 18431.099999427795),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 20479.0),
                 ),
                 Metric("fs_free", 16151.70703125, boundaries=(0.0, None)),
                 Metric(
@@ -1096,7 +1096,7 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
                     "fs_used",
                     0.1845703125,
                     levels=(0.1640625, 0.1845703125),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
@@ -1123,7 +1123,7 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
                     "fs_used",
                     0.1845703125,
                     levels=(0.1640625, 0.1845703125),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
@@ -1150,7 +1150,7 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
                     "fs_used",
                     0.1845703125,
                     levels=(0.1640625, 0.1845703125),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 0.205078125),
                 ),
                 Metric("fs_free", 0.0205078125, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
@@ -1199,7 +1199,7 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
                     "fs_used",
                     0.2021484375,
                     levels=(0.1796875, 0.2021484375),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 0.224609375),
                 ),
                 Metric("fs_free", 0.0224609375, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
@@ -1226,7 +1226,10 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
             },
             [
                 Metric(
-                    "fs_used", 0.2021484375, levels=(0.1796875, 0.2021484375), boundaries=(0, None)
+                    "fs_used",
+                    0.2021484375,
+                    levels=(0.1796875, 0.2021484375),
+                    boundaries=(0.0, 0.224609375),
                 ),
                 Metric("fs_free", 0.0224609375, boundaries=(0, None)),
                 Metric("fs_used_percent", 90.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),

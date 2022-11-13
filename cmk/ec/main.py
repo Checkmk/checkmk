@@ -27,7 +27,7 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
@@ -51,7 +51,15 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, MatchGroups, Rule, TextMatchResult, TextPattern
+from .config import (
+    Config,
+    ConfigFromWATO,
+    ECRulePack,
+    MatchGroups,
+    Rule,
+    TextMatchResult,
+    TextPattern,
+)
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
@@ -1179,7 +1187,7 @@ class EventServer(ECServerThread):
 
     # Precompile regular expressions and similar stuff.
     def compile_rules(  # pylint: disable=too-many-branches
-        self, rule_packs: Iterable[dict[str, Any]]
+        self, rule_packs: Sequence[ECRulePack]
     ) -> None:
         self._rules = []
         self._rule_by_id = {}
@@ -1611,10 +1619,9 @@ class EventServer(ECServerThread):
     # There is still no common library. Please keep this in sync with the
     # original code
     def translate_hostname(self, backedhost: str) -> str:
-        translation = self._config["hostname_translation"]
 
         # Here comes the original code from modules/check_mk_base.py
-        if translation:
+        if translation := self._config["hostname_translation"]:
             # 1. Case conversion
             caseconf = translation.get("case")
             if caseconf == "upper":
@@ -1811,8 +1818,7 @@ class EventServer(ECServerThread):
 
     def _get_rule_event_limit(self, rule_id: str | None) -> tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
-        rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
-        if rule_limit:
+        if rule_limit := self._rule_by_id.get(rule_id, {}).get("event_limit"):
             return rule_limit["limit"], rule_limit["action"]
 
         return (
@@ -2654,6 +2660,8 @@ class StatusServer(ECServerThread):
         arguments = parts[1:]
         if command == "DELETE":
             self.handle_command_delete(arguments)
+        elif command == "DELETE_EVENTS_OF_HOST":
+            self.handle_command_delete_events_of_host(arguments)
         elif command == "RELOAD":
             self.handle_command_reload()
         elif command == "SHUTDOWN":
@@ -2684,8 +2692,14 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_ids, user = arguments
-        for event_id in event_ids.split(","):
-            self._event_status.delete_event(int(event_id), user)
+        ids = {int(event_id) for event_id in event_ids.split(",")}
+        self._event_status.delete_events_by(lambda event: event["id"] in ids, user)
+
+    def handle_command_delete_events_of_host(self, arguments: list[str]) -> None:
+        if len(arguments) != 2:
+            raise MKClientError("Wrong number of arguments for DELETE_EVENTS_OF_HOST")
+        hostname, user = arguments
+        self._event_status.delete_events_by(lambda event: event["host"] == hostname, user)
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_id, user, acknowledged, comment, contact = arguments
@@ -3446,17 +3460,15 @@ class EventStatus:
             return found  # do event action, return found copy of event
         return None  # do not do event action
 
-    # locked with self.lock
-    def delete_event(self, event_id: int, user: str) -> None:
-        for nr, event in enumerate(self._events):
-            if event["id"] == event_id:
+    def delete_events_by(self, predicate: Callable[[Event], bool], user: str) -> None:
+        for event in self._events[:]:
+            if predicate(event):
                 event["phase"] = "closed"
                 if user:
                     event["owner"] = user
                 self._history.add(event, "DELETE", user)
-                self._remove_event_by_nr(nr)
-                return
-        raise MKClientError(f"No event with id {event_id}")
+                self.remove_event(event)
+                self._count_event_remove(event)
 
     def get_events(self) -> list[Any]:
         return self._events

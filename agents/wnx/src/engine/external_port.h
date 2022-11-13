@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#if !defined(external_port_h__)
-#define external_port_h__
+#ifndef EXTERNAL_PORT_H
+#define EXTERNAL_PORT_H
 
 #include <chrono>
 #include <cstdint>
@@ -17,7 +17,6 @@
 #include "common/cfg_info.h"
 #include "encryption.h"
 #include "logger.h"
-#include "tools/_xlog.h"
 
 namespace cma::world {
 using ReplyFunc =
@@ -93,7 +92,7 @@ private:
     }
     size_t allocCryptBuffer(const encrypt::Commander *commander);
     void do_write(const void *data_block, std::size_t data_length,
-                  encrypt::Commander *crypto_commander);
+                  const encrypt::Commander *crypto_commander);
 
     asio::ip::tcp::socket socket_;
 
@@ -104,7 +103,7 @@ private:
     mutable std::mutex data_lock_;
     std::optional<std::string> remote_ip_;
 
-    const size_t segment_size_ = 48 * 1024;
+    const size_t segment_size_ = size_t{48} * 1024;
     std::vector<char> crypt_buf_;
 };
 
@@ -161,8 +160,7 @@ inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    explicit ExternalPort(wtools::BaseServiceProcessor *owner)
-        : owner_(owner) {}
+    explicit ExternalPort(wtools::BaseServiceProcessor * /* owner*/) {}
 
     virtual ~ExternalPort() = default;
 
@@ -172,8 +170,8 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     struct IoParam {
-        uint16_t port;  /// can be 0 for mailslot
-        LocalOnly local_only;
+        uint16_t port{0};  /// can be 0 for mailslot
+        LocalOnly local_only{false};
         std::optional<uint32_t> pid;
     };
 
@@ -197,7 +195,6 @@ public:
     size_t entriesInQueue() const;
 
 private:
-    wtools::BaseServiceProcessor *owner_ = nullptr;
     class server {
         static asio::ip::tcp::endpoint makeEndpoint(bool ipv6, uint16_t port,
                                                     LocalOnly local_only) {
@@ -220,7 +217,7 @@ private:
 
         // this is the only entry point
         // based on the code example from asio
-        void run_accept(SinkFunc sink, ExternalPort *ext_port);
+        void run_accept(const SinkFunc &sink, ExternalPort *ext_port);
 
     private:
         uint16_t port_{0U};
@@ -242,7 +239,8 @@ protected:
     void wakeThread();
     void timedWaitForSession();
     void processSession(const ReplyFunc &reply, AsioSession::s_ptr session);
-    void processRequest(const ReplyFunc &reply, const std::string &request);
+    void processRequest(const ReplyFunc &reply,
+                        const std::string &request) const;
 
     bool isShutdown() const noexcept {
         std::lock_guard lk(io_thread_lock_);
@@ -251,7 +249,7 @@ protected:
 
     /// returns thread continue status
     bool registerAsioContext(asio::io_context *context) {
-        std::lock_guard<std::mutex> lk(io_thread_lock_);
+        std::lock_guard lk(io_thread_lock_);
         if (shutdown_thread_) {
             context_ = nullptr;
             return false;
@@ -261,7 +259,7 @@ protected:
     }
 
     void stopExecution() {
-        std::lock_guard<std::mutex> lk(io_thread_lock_);
+        std::lock_guard lk(io_thread_lock_);
         XLOG::l.t("Stopping execution");
         if (context_ != nullptr) {
             context_->stop();  // non blocking call to stop IO
@@ -269,10 +267,12 @@ protected:
         shutdown_thread_ = true;
     }
 
-    void ioThreadProc(const ReplyFunc &reply, uint16_t port,
-                      LocalOnly local_only, std::optional<uint32_t> pid);
+    void ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
+                      LocalOnly local_only,
+                      std::optional<uint32_t> controller_pid);
 
-    void mailslotThreadProc(const ReplyFunc &reply, uint32_t pid);
+    void mailslotThreadProc(const ReplyFunc &reply_func,
+                            uint32_t controller_pid);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth
@@ -296,9 +296,9 @@ protected:
     asio::io_context io_context_;  // may be used by ioThreadProc
 };
 
-bool SendDataToMailSlot(const std::string &mailslo_name,
-                        const std::vector<uint8_t> &data);
+bool SendDataToMailSlot(const std::string &mailslot_name,
+                        const std::vector<uint8_t> &data_block);
 
 }  // namespace cma::world
 
-#endif  // external_port_h__
+#endif  // EXTERNAL_PORT_H

@@ -839,3 +839,7 @@ export function copy_to_clipboard(node_id, success_msg_id = "") {
         remove_class(success_msg_node, "hidden");
     }
 }
+
+export function querySelectorID<T extends HTMLElement>(id: string): T | null {
+    return document.querySelector<T>(`#${id}`);
+}

@@ -536,10 +536,6 @@ msgid "%s instances"
 msgstr "%s instanties"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%s in %s"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s is geen geldige UNIX timestamp"
 
@@ -1936,13 +1932,6 @@ msgstr "Er bestaat al een BI pack met deze ID."
 
 msgid "A Multisite view"
 msgstr "Een Multisite overzicht"
-
-msgid ""
-"A bulk discovery job is already running. Please use the "
-"\"bulk_discovery_status\" call to get the curent status."
-msgstr ""
-"Er loopt al een bulk discovery job. Gebruik de aanroep "
-"\"bulk_discovery_status\" om de huidige status op te vragen."
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -3732,6 +3721,9 @@ msgstr "Extra IPv6-adressen"
 msgid "Additional Plugin Output"
 msgstr "Extra plug-in uitgang"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Extra kopregels"
 
@@ -4189,6 +4181,10 @@ msgstr "Agent-gebaseerde plugins (Controles, Inventaris)"
 msgid "Agent controller"
 msgstr "Agent controller"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "Agent registratie"
+
 msgid "Agent deployment"
 msgstr "Agent inzet"
 
@@ -4213,16 +4209,21 @@ msgstr "Agent-labelsimulator"
 msgid "Agent output"
 msgstr "Agent uitgang"
 
-msgid "Agent pairing"
-msgstr "Agent koppeling"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "Agent plugins: Reguliere uitdrukking om plugins uit te sluiten"
 
 msgid "Agent plugins: versions"
 msgstr "Agent plugins: versies"
 
+#, fuzzy
+msgid "Agent receiver port"
+msgstr "Agent Fout"
+
 msgid "Agent registration"
+msgstr "Agent registratie"
+
+#, fuzzy
+msgid "Agent registration user"
 msgstr "Agent registratie"
 
 msgid "Agent rules"
@@ -4639,6 +4640,9 @@ msgstr "Alle online gebruikers"
 msgid "All package types are signed with the key '%s'"
 msgstr "Alle pakkettypes zijn ondertekend met de sleutel '%s'"
 
+msgid "All packages (enabled or disabled)"
+msgstr ""
+
 msgid "All pages"
 msgstr "Alle pagina's"
 
@@ -4656,6 +4660,10 @@ msgstr "Alle protocollen"
 
 msgid "All queues listed here will be skipped."
 msgstr "Alle wachtrijen die hier staan, worden overgeslagen."
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr "Toon licentie gebruiksinformatie van Checkmk sites."
 
 msgid "All resource groups are running on a different node (none)"
 msgstr "Alle resource groepen draaien op een andere node (geen)"
@@ -5710,14 +5718,6 @@ msgstr "Atto Fibrebridge FC-poort"
 msgid "Attribute"
 msgstr "Attribuut"
 
-#, python-format
-msgid ""
-"Attribute \"%s\" of user \"%s\" can not be changed, because it is locked by "
-"the user connection."
-msgstr ""
-"Attribuut \"%s\" van gebruiker \"%s\" kan niet worden gewijzigd, omdat het "
-"is vergrendeld door de gebruikersverbinding."
-
 msgid "Attribute Sync Plugins"
 msgstr "Attribuut Sync Plugins"
 
@@ -5825,10 +5825,6 @@ msgstr "Auteur"
 msgid "Authorization"
 msgstr "Machtiging"
 
-#, python-format
-msgid "Authorization Error. Insufficent permissions for '%s'"
-msgstr "Autorisatiefout. Onvoldoende machtigingen voor '%s'"
-
 msgid "Authorization Header"
 msgstr "Autorisatie header"
 
@@ -5917,13 +5913,6 @@ msgstr "Automatisch herladen van pagina's"
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-"Automatisch koppelen zal mislukken als sommige gegevens ontbreken. TODO: "
-"Concept voor het omgaan met deze situatie"
-
 msgid "Automatic takeover"
 msgstr "Automatische overname"
 
@@ -5952,9 +5941,6 @@ msgstr ""
 "Voer automatisch een service discovery uit op alle nieuwe hosts die door "
 "deze verbinding worden aangemaakt. Nieuwe diensten zullen in deze stap aan "
 "de bewaking worden toegevoegd."
-
-msgid "Automatically execute pairing"
-msgstr "Automatisch koppelen uitvoeren"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -6008,10 +5994,6 @@ msgstr "Automatiseringsgeheim voor machinerekeningen"
 
 msgid "Automation user rejected"
 msgstr "Automatisering gebruiker afgewezen"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
-"Automatiseringsgebruiker die wordt gebruikt om de koppeling uit te voeren."
 
 msgid "Autostart Services"
 msgstr "Autostart diensten"
@@ -6427,18 +6409,12 @@ msgstr "Terug naar overzicht met teruggestelde checkboxes"
 msgid "Backend Conn. %s"
 msgstr "Backend Conn. %s"
 
-msgid "Background Job"
-msgstr "Achtergrond Job"
-
 #, python-format
 msgid "Background Job %s already running"
 msgstr "Achtergrond opdracht %s loopt al"
 
 msgid "Background in status color and label"
 msgstr "Achtergrond in statuskleur en label"
-
-msgid "Background job"
-msgstr "Achtergrond baan"
 
 msgid "Background job acknowledged"
 msgstr "Achtergrond baan erkend"
@@ -7368,12 +7344,16 @@ msgstr ""
 "om dit pakket een andere naam te geven, bv. om meerdere agents (met "
 "verschillende configuraties) te kunnen installeren."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By default the server will try to contact the monitored host and pull the "
 "data by initializing a TCP connection. On the %s you can configure a push "
 "configuration, where the monitored host is expected to send the data to the "
-"monitoring server without being actively triggered."
+"monitoring server without being actively triggered.\n"
+"\n"
+"If you are configuring this, you might want to also set the \"%s\" attribute "
+"to \"%s\". The host not being reachable by the site is one of the main "
+"reason why you want to use the push connection in the first place."
 msgstr ""
 "Standaard zal de server proberen de gemonitorde host te contacteren en de "
 "gegevens op te halen door een TCP-verbinding te initialiseren. Op de %s kunt "
@@ -8129,6 +8109,13 @@ msgstr ""
 "Kan deze weergave niet in matrix layout weergeven. U hebt ten minste twee "
 "kolommen nodig!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"Voor het downloaden van licentie gebruiksrapporten moet u "
+"abonnementsgegevens toevoegen."
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -8331,6 +8318,14 @@ msgstr "Zaak"
 msgid "Case insensitive"
 msgstr "Hoofdletterongevoelig"
 
+#, fuzzy
+msgid "Case sensitive"
+msgstr "Hoofdletterongevoelig"
+
+#, fuzzy
+msgid "Case sensitivity"
+msgstr "Hoofdletterongevoelig"
+
 msgid "Case translation"
 msgstr "Geval vertaling"
 
@@ -8521,23 +8516,10 @@ msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
-"boven in map \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Eigenschappen van regel \"%s\" gewijzigd, regel verplaatst van map \"%s\" "
 "naar \"%s\""
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel #%d in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
@@ -9075,14 +9057,6 @@ msgstr ""
 "echter rekening mee dat sommige apparaten die SNMPv2c ondersteunen buggy "
 "kunnen zijn. In dergelijke gevallen kunt u proberen om bulk walk uit te "
 "schakelen met de regelset \"Disable bulk walks on SNMPv2c/v3\"."
-
-#, python-format
-msgid ""
-"Checkmk exception: %s\n"
-"%s"
-msgstr ""
-"Checkmk uitzondering: %s\n"
-"%s"
 
 msgid "Checkmk fetcher usage"
 msgstr "Checkmk fetcher gebruik"
@@ -9732,10 +9706,6 @@ msgstr "Kloon onderwerp"
 
 msgid "Clone view"
 msgstr "Kloon uitzicht"
-
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr "Gekloonde regel van regel %s in regelset \"%s\" in map \"%s\""
 
 msgid "Close Timewarp"
 msgstr "Timewarp sluiten"
@@ -10556,10 +10526,10 @@ msgstr ""
 "Configureer de naam van de HTTP verzoek header variabele om te lezen van de "
 "inkomende HTTP verzoeken"
 
+#, fuzzy, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 "Configureer de poort om de realtime gegevens naar toe te sturen. De "
 "Microcore moet <a href=\"wato.py?"
@@ -11580,10 +11550,6 @@ msgstr "Maak nieuwe %s"
 msgid "Create new %s attribute %s"
 msgstr "Maak nieuw %s attribuut %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "Creëer nieuwe %s groep %s"
-
 msgid "Create new auxiliary tag"
 msgstr "Maak een nieuwe hulp tag"
 
@@ -11623,7 +11589,9 @@ msgstr "Willekeurige controlegegevens creëren"
 msgid "Create random secret"
 msgstr "Creëer willekeurig geheim"
 
-msgid "Create real-time data executing the following agent plugins"
+#, fuzzy
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr ""
 "Real-time gegevens creëren door de volgende agent plugins uit te voeren"
 
@@ -11713,14 +11681,6 @@ msgid "Created new extension package %s"
 msgstr "Nieuw uitbreidingspakket %s aangemaakt"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "Nieuwe map %s aangemaakt"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "Nieuwe host %s aangemaakt."
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Nieuwe host tag groep '%s' aangemaakt"
 
@@ -11750,10 +11710,6 @@ msgstr "Nieuw regelpakket aangemaakt met id %s"
 #, python-format
 msgid "Created new time period %s"
 msgstr "Nieuwe tijdsperiode aangemaakt %s"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "Nieuwe gebruikers aangemaakt: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11957,6 +11913,10 @@ msgstr ""
 "Kritiek van de dienst wanneer sensoren detecteren dat de stroom is "
 "uitgeschakeld."
 
+#, fuzzy
+msgid "CronJobs"
+msgstr "Pods van CronJobs"
+
 msgid "Current"
 msgstr "Huidige"
 
@@ -12063,9 +12023,6 @@ msgstr "Momenteel in downtime"
 
 msgid "Currently indexing, please try again shortly."
 msgstr "Wordt momenteel geïndexeerd, probeer het binnenkort opnieuw."
-
-msgid "Currently not supported with this Checkmk Edition"
-msgstr "Momenteel niet ondersteund door deze Checkmk-editie"
 
 msgid "Currently open connections"
 msgstr "Momenteel open verbindingen"
@@ -13076,6 +13033,10 @@ msgstr ""
 msgid "Default is Windows authentication"
 msgstr "Standaard is Windows verificatie"
 
+#, fuzzy
+msgid "Default language"
+msgstr "Standaardwaarde"
+
 msgid "Default layout"
 msgstr "Standaard lay-out"
 
@@ -13575,10 +13536,6 @@ msgid "Deleted %s %d"
 msgstr "%s %d verwijderd"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "Gewiste %s groep %s"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "Gewiste BI-aggregatie %s"
 
@@ -13610,24 +13567,12 @@ msgid "Deleted custom GUI logo"
 msgstr "Verwijderde aangepaste GUI logo"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "Verwijderde map %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "Verwijderde host %s"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Verwijderde notificatie regel %d van gebruiker %s"
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "Verwijderde rol '%s'"
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr "Regel #%d verwijderd in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13638,20 +13583,12 @@ msgid "Deleted rule pack %s"
 msgstr "Verwijderde regel pack %s"
 
 #, python-format
-msgid "Deleted ruleset '%s' for '%s'"
-msgstr "Regelset '%s' voor '%s' verwijderd"
-
-#, python-format
 msgid "Deleted site %s"
 msgstr "Verwijderde site %s"
 
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "Gewiste periode %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "Verwijderde gebruiker: %s"
 
 msgid "Deletes"
 msgstr "Verwijdert"
@@ -14343,10 +14280,6 @@ msgstr "Certificaatvalidatie uitschakelen"
 msgid "Disable configuration via WATO on this site"
 msgstr "Configuratie via WATO op deze site uitschakelen"
 
-#, python-format
-msgid "Disable extension package %s"
-msgstr "Uitschakelen uitbreidingspakket %s"
-
 msgid "Disable flap detection"
 msgstr "Klepdetectie uitschakelen"
 
@@ -14440,8 +14373,9 @@ msgstr "Uitgeschakelde geclusterde diensten - gelokaliseerd op cluster host"
 msgid "Disabled custom checks - defined via rule"
 msgstr "Uitgeschakelde aangepaste controles - gedefinieerd via regels"
 
-msgid "Disabled extensions"
-msgstr "Uitgeschakelde extensies"
+#, fuzzy, python-format
+msgid "Disabled extension package %s"
+msgstr "Uitschakelen uitbreidingspakket %s"
 
 msgid "Disabled legacy services - defined in main.mk"
 msgstr "Uitgeschakelde legacy diensten - gedefinieerd in main.mk"
@@ -15290,6 +15224,9 @@ msgstr "Geen niveaus opleggen"
 msgid "Do not impose levels, always be OK"
 msgstr "Geen niveaus opleggen, altijd OK zijn"
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "Komen niet overeen met waarschuwingen van de gebeurtenissenconsole"
 
@@ -15574,8 +15511,9 @@ msgid ""
 "Do you really want to remove the TLS registration of the selected hosts?"
 msgstr "Wilt u echt de TLS registratie van de geselecteerde hosts verwijderen?"
 
-#, python-format
-msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the package file <tt>%s</tt> from your system?"
 msgstr "Wilt u echt het pakket <tt>%s</tt> van uw systeem verwijderen?"
 
 #, fuzzy
@@ -16422,6 +16360,10 @@ msgstr "Wijzig dienst groep"
 msgid "Edit services"
 msgstr "Diensten bewerken"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d Filter instellingen"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "Siteverbinding %s bewerken"
@@ -16432,9 +16374,6 @@ msgstr "Bewerk site specifieke globale instellingen van %s"
 
 msgid "Edit stored report"
 msgstr "Bewerk opgeslagen rapport"
-
-msgid "Edit subscription settings"
-msgstr "Abonnementsinstellingen bewerken"
 
 msgid "Edit tag group"
 msgstr "Bewerk tag groep"
@@ -16540,10 +16479,6 @@ msgid "Edited host tag group %s (%s)"
 msgstr "Bewerkte host tag groep %s (%s)"
 
 #, python-format
-msgid "Edited properties of folder %s"
-msgstr "Bewerkte eigenschappen van map %s"
-
-#, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
 msgstr "Bewerkte regel in regelset \"%s\" in map \"%s\""
 
@@ -16598,11 +16533,19 @@ msgstr ""
 "aanvaardt u elk certificaat dat door de server wordt aangeboden. Het wordt "
 "sterk aangeraden om dit ingeschakeld te laten."
 
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
+
 msgid "Elastic Block Storage (EBS)"
 msgstr "Elastische blokopslag (EBS)"
 
 msgid "Elastic Compute Cloud (EC2)"
 msgstr "Elastic Compute Cloud (EC2)"
+
+#, fuzzy
+msgid "Elastic Container Service (ECS)"
+msgstr "Relationele databankdienst (RDS)"
 
 msgid "Elastic IP Addresses"
 msgstr "Elastische IP-adressen"
@@ -16785,6 +16728,12 @@ msgstr "Inschakelen automatische agent updates"
 msgid "Enable automatic host key acceptance"
 msgstr "Automatische acceptatie van hostsleutel inschakelen"
 
+msgid "Enable community translated languages"
+msgstr ""
+
+msgid "Enable community translated languages (not supported)"
+msgstr ""
+
 msgid "Enable core dumps"
 msgstr "Kerndumps inschakelen"
 
@@ -16932,9 +16881,13 @@ msgstr "Inschakelen/uitschakelen verwerking van perfdata voor diensten"
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
-#, python-format
-msgid "Enabled extension package %s"
-msgstr "Uitbreidingspakket %s ingeschakeld"
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "deze site inschakelen"
+
+#, fuzzy
+msgid "Enabled (inactive on this site)"
+msgstr "deze site inschakelen"
 
 msgid "Enabled in time range"
 msgstr "Ingeschakeld in tijdzone"
@@ -18298,10 +18251,6 @@ msgstr ""
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Kan de oorsprongsregel van %s / %s niet bepalen"
 
-#, python-format
-msgid "Failed to discover %s: %s"
-msgstr "Mislukt %s te ontdekken: %s"
-
 msgid "Failed to estimate the Apache process size"
 msgstr "Kan de grootte van het Apache proces niet schatten"
 
@@ -19075,10 +19024,6 @@ msgstr "Map"
 #, python-format
 msgid "Folder %r does not exist."
 msgstr "Map %r bestaat niet."
-
-#, python-format
-msgid "Folder %s does not exist"
-msgstr "Map %s bestaat niet"
 
 #, python-format
 msgid "Folder %s not found."
@@ -21737,10 +21682,6 @@ msgid "Host"
 msgstr "Gastheer"
 
 #, python-format
-msgid "Host %s already exists in the folder %s"
-msgstr "Host %s bestaat al in de map %s"
-
-#, python-format
 msgid ""
 "Host %s does not exist on remote site %s. This may be caused by a failed "
 "configuration synchronization. Have a look at the <a href=\"wato.py?"
@@ -21825,9 +21766,6 @@ msgstr "Gastadres gezinnen"
 
 msgid "Host address family (Primary)"
 msgstr "Gastheeradres familie (Primair)"
-
-msgid "Host address of the monitoring server"
-msgstr "Host adres van de monitoring server"
 
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Hostadressen (IPv4/IPv6)"
@@ -23341,6 +23279,11 @@ msgstr ""
 "aggregatie dat doet. Deze downtime wordt ook automatisch opgeruimd wanneer "
 "de aggregatie de downtime verlaat. Downtime die u handmatig instelt voor "
 "deze controle wordt niet beïnvloed."
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -25334,9 +25277,6 @@ msgstr ""
 "\"https://exchange.checkmk.com/\">Checkmk Exchange</a> voor door tribe29 "
 "gereviewde packages."
 
-msgid "Install this package"
-msgstr "Installeer dit pakket"
-
 msgid "Installation"
 msgstr "Installatie"
 
@@ -25353,9 +25293,6 @@ msgstr "Geïnstalleerde agent"
 #, python-format
 msgid "Installed extension package %s-%s (%s)"
 msgstr "Geïnstalleerd uitbreidingspakket %s-%s (%s)"
-
-msgid "Installed extension packages"
-msgstr "Geïnstalleerde uitbreidingspakketten"
 
 msgid "Installed, stopped and running services"
 msgstr "Geïnstalleerde, gestopte en lopende diensten"
@@ -25746,10 +25683,6 @@ msgstr "Ongeldige ident"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ongeldige ident: %s"
-
-#, python-format
-msgid "Invalid key(s): %s"
-msgstr "Ongeldige sleutel(s): %s"
 
 msgid "Invalid login"
 msgstr "Ongeldige aanmelding"
@@ -26428,6 +26361,10 @@ msgstr "Service level van bericht behouden (indien beschikbaar)"
 msgid "Keep special characters"
 msgstr "Bewaar speciale tekens"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "Gevestigde verbindingen"
+
 msgid "Keepalived Parameters"
 msgstr "Keepalived Parameters"
 
@@ -26748,9 +26685,6 @@ msgid ""
 msgstr ""
 "Labels moeten in het formaat <tt>[KEY]:[VALUE]</tt> zijn. Bijvoorbeeld "
 "<tt>cmk/os_family:linux</tt>."
-
-msgid "Labels to set on the paired hosts"
-msgstr "Labels in te stellen op de gekoppelde hosts"
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -27587,6 +27521,10 @@ msgstr "Licentie staat"
 
 msgid "License usage"
 msgstr "Licentiegebruik"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "Licentiestatus"
 
 msgid "Licensing Status"
 msgstr "Licentiestatus"
@@ -29088,6 +29026,10 @@ msgstr ""
 msgid "Manage the Dynamic configuration connections"
 msgstr "Beheer de dynamische configuratieverbindingen"
 
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "Windows agent controller problemen oplossen"
+
 msgid "Manage users of the monitoring system."
 msgstr "Beheer van de gebruikers van het bewakingssysteem."
 
@@ -30459,11 +30401,9 @@ msgstr "Verkeerd geplande replica's"
 msgid "Missing Prerequisite"
 msgstr "Ontbrekende voorwaarde"
 
-msgid "Missing config file for agent {}"
+#, fuzzy, python-format
+msgid "Missing config file for agent %s%s"
 msgstr "Ontbrekend configuratiebestand voor agent {}"
-
-msgid "Missing config file for agent {}/{}"
-msgstr "Ontbrekend configuratiebestand voor agent {}/{}"
 
 #, python-format
 msgid "Missing connection parameter: %s"
@@ -30525,10 +30465,6 @@ msgstr "De vereiste \"Service name\" selectie ontbreekt."
 
 msgid "Missing required context information"
 msgstr "Ontbrekende vereiste contextinformatie"
-
-#, python-format
-msgid "Missing required key(s): %s"
-msgstr "Ontbrekende vereiste sleutel(s): %s"
 
 msgid "Missing required selection."
 msgstr "Ontbrekende verplichte selectie."
@@ -30662,10 +30598,6 @@ msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
 msgstr "Gewijzigde mappen: %d, gewijzigde hosts: %d, gewijzigde regelsets: %d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "Gewijzigde host %s."
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "Gewijzigd regelpakket %s"
 
@@ -30680,10 +30612,6 @@ msgstr "Gewijzigde tijdsperiode %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "Gewijzigde gebruikersrol '%s'"
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "Gewijzigde gebruikers: %s"
 
 msgid "Modify"
 msgstr "Wijzigen"
@@ -30902,6 +30830,10 @@ msgstr "Monitoring van container- en containerorchestratiesoftware"
 
 msgid "Monitoring of forwarded logfiles"
 msgstr "Bewaking van doorgestuurde logfiles"
+
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "Controle staat"
 
 msgid "Monitoring state"
 msgstr "Controle staat"
@@ -31129,13 +31061,6 @@ msgid "Moved %d hosts to %s"
 msgstr "Verplaatst %d hosts naar %s"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"Verplaatst %sgroep %s naar klant %s. Andere eigenschappen kunnen veranderd "
-"zijn."
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "BI-aggregatie met ID %s verplaatst naar BI-pakket %s"
 
@@ -31143,22 +31068,8 @@ msgstr "BI-aggregatie met ID %s verplaatst naar BI-pakket %s"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "BI regel met ID %s verplaatst naar BI pakket %s"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "Verplaatst map %s naar %s"
-
 msgid "Moved from"
 msgstr "Verplaatst van"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "Verplaatst host van \"%s\" naar \"%s\""
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -32268,9 +32179,6 @@ msgstr "Geen zoekfunctie, geef een lijst met argumenten"
 msgid "No service level is set in event"
 msgstr "Er is geen serviceniveau ingesteld in de gebeurtenis"
 
-msgid "No site given."
-msgstr "Geen locatie opgegeven."
-
 msgid "No status host"
 msgstr "Geen status host"
 
@@ -32279,13 +32187,6 @@ msgstr "Geen succesvolle synchronisatie tot nu toe."
 
 msgid "No such file"
 msgstr "No such file"
-
-msgid "No such host"
-msgstr "Geen dergelijke host"
-
-#, python-format
-msgid "No such host(s): %s"
-msgstr "Geen dergelijke host(s): %s"
 
 #, python-format
 msgid ""
@@ -34239,9 +34140,6 @@ msgstr ""
 "worden gegroepeerd (samenvatting) of dat elke eenheid een afzonderlijke "
 "dienst krijgt toegewezen (enkelvoudig)."
 
-msgid "Optional extension packages"
-msgstr "Optionele uitbreidingspakketten"
-
 msgid "Optional general information"
 msgstr "Facultatieve algemene informatie"
 
@@ -34337,7 +34235,15 @@ msgid "Order"
 msgstr "Bestel"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Apparaattoestanden gebruiken"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Overzicht toepassingen"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Overzicht toepassingen"
 
 #, fuzzy
@@ -34775,8 +34681,9 @@ msgstr "Naam pakket"
 msgid "Package name:"
 msgstr "Naam van het pakket:"
 
-msgid "Package not installed or corrupt"
-msgstr "Pakket niet geïnstalleerd of corrupt"
+#, fuzzy
+msgid "Package not found"
+msgstr "Pagina niet gevonden"
 
 msgid "Package properties"
 msgstr "Pakketeigenschappen"
@@ -34903,12 +34810,6 @@ msgstr "Pagina's"
 
 msgid "Pages per second"
 msgstr "Pagina's per seconde"
-
-msgid "Pair manually"
-msgstr "Handmatig paren"
-
-msgid "Pair on installation"
-msgstr "Paar op installatie"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto Actieve Sessies"
@@ -35098,10 +34999,6 @@ msgstr "Passphrase"
 msgid "Password"
 msgstr "Wachtwoord"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "Wachtwoord gewijzigd (synchronisatie mislukt: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
 
@@ -35162,6 +35059,10 @@ msgstr "Pad naar sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Pad naar tijdelijke directory (zal worden aangemaakt)"
+
+#, fuzzy
+msgid "Path to unix socket"
+msgstr "Pad naar .env bestand"
 
 msgid "Path-patterns where to search for Jar files"
 msgstr "Pad-patronen waar te zoeken naar Jar bestanden"
@@ -36968,10 +36869,6 @@ msgstr "Product"
 msgid "Profile"
 msgstr "Profiel"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "Profiel gewijzigd (synchronisatie mislukt: %s)"
-
 msgid "Profile requests"
 msgstr "Profiel verzoeken"
 
@@ -37908,10 +37805,6 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "Vernieuwde controleconfiguratie van host '%s'"
 
 #, python-format
-msgid "Refreshed check configuration of host [%s] with %d services"
-msgstr "Vernieuwde controleconfiguratie van host [%s] met %d diensten"
-
-#, python-format
 msgid "Refusing to read file not owned by site user: \"%s\""
 msgstr ""
 
@@ -38003,6 +37896,10 @@ msgstr "Registersleutels om naar software te zoeken (Windows)"
 msgid "Regular expression"
 msgstr "Reguliere uitdrukking"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "Reguliere uitdrukkingen voor berichtclassificatie"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr ""
 "Reguliere uitdrukking voor het matchen van de syslog tag "
@@ -38043,6 +37940,11 @@ msgstr "Reguliere uitdrukking om plugins uit te sluiten"
 
 msgid "Regular expression to expect in content"
 msgstr "Reguliere uitdrukking te verwachten in de inhoud"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "Reguliere uitdrukking: "
@@ -38300,23 +38202,11 @@ msgid "Removed"
 msgstr "Verwijderd"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "%sgroep %s verwijderd van klant %s"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "Hulp tag %s (%s) verwijderd"
 
-#, python-format
-msgid "Removed disabled extension package %s"
-msgstr "Uitgeschakeld extensiepakket %s verwijderd"
-
 msgid "Removed entries"
 msgstr "Verwijderde items"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "Expliciete attributen van host %s verwijderd."
 
 #, python-format
 msgid "Removed extension package %s"
@@ -38362,34 +38252,6 @@ msgstr "Hernoem meerdere hosts"
 #, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "Hernoemd %d %s op de volgende plaatsen:<br><ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "Hernoemde clusterknooppunt van %s in %s."
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "Hernoemde host %s"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "Hernoemde host van %s in %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Hernoemde host van %s naar %s"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr "Hernoemde host in %d regelsets van map %s"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "Hernoemde ouder van %s in %s."
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
 
 msgid "Renaming Operations"
 msgstr "Operaties hernoemen"
@@ -39972,10 +39834,6 @@ msgstr "Sla deze host op en ga naar"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Opgeslagen controleconfiguratie van host '%s' met %d diensten"
 
-#, python-format
-msgid "Saved check configuration of host [%s] with %d services"
-msgstr "Opgeslagen controleconfiguratie van host [%s] met %d diensten"
-
 msgid "Saved read only settings"
 msgstr "Opgeslagen alleen-lezen instellingen"
 
@@ -40888,14 +40746,6 @@ msgstr "Details over het zoeken naar een dienst"
 msgid "Service discovery rules"
 msgstr "Regels voor het opsporen van diensten"
 
-#, python-format
-msgid ""
-"Service discovery successful. Added %d, removed %d, kept %d, total %d "
-"services and %d new, %d total host labels"
-msgstr ""
-"Service ontdekking succesvol. Toegevoegd %d, verwijderd %d, behouden %d, "
-"totaal %d services en %d nieuw, %d totaal host labels"
-
 msgid "Service discovery triggers service discovery check"
 msgstr "Service discovery leidt tot service discovery-controle"
 
@@ -41316,10 +41166,6 @@ msgstr "Stel het aantal herhalingen voor plugins en lokale controles in"
 msgid "Set roles"
 msgstr "Stel rollen in"
 
-#, python-format
-msgid "Set ruleset '%s' for '%s' with %d rules"
-msgstr "Stel regelset '%s' in voor '%s' met %d regels"
-
 msgid ""
 "Set service names or regular expression patterns here to allow only matching "
 "services to be activated automatically. If you set both this and 'Don't "
@@ -41616,9 +41462,6 @@ msgstr ""
 "voor de tag groep (voor hosts en mappen). Wat regels betreft, moet je zelf "
 "beslissen hoe je te werk gaat."
 
-msgid "Setup is disabled on this site."
-msgstr "Setup is uitgeschakeld op deze site."
-
 msgid "Setup is disabled."
 msgstr "Setup is uitgeschakeld."
 
@@ -41911,9 +41754,6 @@ msgstr "Toon legende"
 msgid "Show less"
 msgstr "Minder tonen"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr "Toon licentie gebruiksinformatie van Checkmk sites."
-
 msgid "Show margin round the graph"
 msgstr "Toon marge rond de grafiek"
 
@@ -42089,6 +41929,14 @@ msgstr "Verticale as tonen"
 
 msgid "Show volume name in service output"
 msgstr "Toon volumenaam in dienstuitvoer"
+
+msgid ""
+"Show/Hide community translated languages in the \"Language\" dropdown (User "
+"> Edit profile). Note that these translations are contributed by the Checkmk "
+"community and thus no liability is assumed for their validity.<br>If this "
+"setting is turned from 'on' to 'off' while a user has set a community "
+"translated language, the user's language is changed to 'English'."
+msgstr ""
 
 msgid "Show/Hide password"
 msgstr "Wachtwoord tonen/verbergen"
@@ -42385,10 +42233,6 @@ msgstr "Site aangepast veld ID"
 msgid "Site icon"
 msgstr "Site-icoon"
 
-#, python-format
-msgid "Site id not found: %s"
-msgstr "Site id niet gevonden: %s"
-
 msgid "Site is disabled"
 msgstr "Site is uitgeschakeld"
 
@@ -42435,6 +42279,10 @@ msgstr "De staat van de site is onbekend"
 msgid "Site status"
 msgstr "Plaats Status"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "Site-to-site bandbreedte"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "Locatiespecifieke globale configuratie voor %s"
@@ -42450,6 +42298,10 @@ msgstr "Sitenaam"
 
 msgid "Sites"
 msgstr "Sites"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "Site-to-site bandbreedte"
 
 msgid "Size"
 msgstr "Maat"
@@ -43458,6 +43310,11 @@ msgid "Specify the site that should monitor this host."
 msgstr "Specificeer de site die deze host moet monitoren."
 
 msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
+
+msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
 "that site is being processed."
 msgstr ""
@@ -43745,10 +43602,6 @@ msgstr "Beginnen"
 
 msgid "Starting VMs"
 msgstr "VM's starten"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "Start activering (Sites: %s)"
 
 msgid "Starting from period number"
 msgstr "Uitgaande van periode nummer"
@@ -44899,9 +44752,6 @@ msgstr "Geslaagde provisies"
 msgid "Success"
 msgstr "Succes"
 
-msgid "Successfully baked agents"
-msgstr "Succesvol gebakken agenten"
-
 msgid "Successfully changed password."
 msgstr "Wachtwoord succesvol gewijzigd."
 
@@ -45399,9 +45249,6 @@ msgstr "TLS/SSL/Https uitgeschakeld"
 #, python-format
 msgid "TNS Alias %s"
 msgstr "TNS Alias %s"
-
-msgid "TODO"
-msgstr "TODO"
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Gebruikt geheugen via SNMP"
@@ -46449,10 +46296,6 @@ msgstr "De Haven Beschrijving"
 msgid "The SAP system ID."
 msgstr "De SAP-systeem-ID."
 
-#, python-format
-msgid "The SLA id %s is unknown or not visible to this user"
-msgstr "De SLA id %s is onbekend of niet zichtbaar voor deze gebruiker"
-
 msgid ""
 "The SQL-statement or procedure name which is executed on the DBMS. It must "
 "return a result table with one row and at least two columns. The first "
@@ -46835,9 +46678,6 @@ msgstr ""
 msgid "The average utilization of memory on the active supervisor"
 msgstr "Het gemiddelde geheugengebruik op de actieve supervisor"
 
-msgid "The background job is missing a logger instance"
-msgstr "De achtergrond job mist een logger instantie"
-
 msgid "The backup has been deleted."
 msgstr "De backup is verwijderd."
 
@@ -47044,17 +46884,6 @@ msgstr "Het commentaar dat automatisch wordt verzonden met een adhoc downtime"
 msgid "The complete hardware- and software inventory of a host"
 msgstr "De volledige hardware- en software-inventaris van een host"
 
-msgid ""
-"The configuration has changed in the meantime. You need to load the "
-"configuration and start another update. If the existing configuration should "
-"not be checked, you can remove the configuration_hash value from the request "
-"object."
-msgstr ""
-"De configuratie is in de tussentijd gewijzigd. U moet de configuratie laden "
-"en een nieuwe update starten. Als de bestaande configuratie niet moet worden "
-"gecontroleerd, kunt u de configuration_hash waarde uit het request object "
-"verwijderen."
-
 msgid "The configuration is currently in read only mode. "
 msgstr "De configuratie is momenteel alleen in leesmodus. "
 
@@ -47133,6 +46962,12 @@ msgstr ""
 "een andere site wordt gemonitord. Als je deze host wilt wijzigen, moet je "
 "het site attribuut veranderen in de lokale site. Maar dit kan er voor zorgen "
 "dat de host vanuit meerdere sites gemonitord wordt."
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -47713,10 +47548,6 @@ msgid ""
 msgstr ""
 "De volledige URL naar de Kubernetes API server inclusief het protocol (http "
 "of https) en de poort."
-
-#, python-format
-msgid "The function %s is not in the snapshotted functions."
-msgstr "De functie %s staat niet in de snapshotted functies."
 
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
@@ -48680,9 +48511,11 @@ msgstr ""
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr "Het aantal elementen in de tupel moet precies %d zijn."
 
+#, python-format
 msgid ""
 "The number of incoming and processed agent registration requests are not the "
-"same."
+"same:\n"
+"%s"
 msgstr ""
 
 msgid ""
@@ -48838,6 +48671,10 @@ msgstr ""
 "geheugen, enz.) van componenten van een apparaat (bijv. rekeenheden als "
 "componenten van een rekserver als apparaat) in het laatste controle-"
 "interval. Het mogelijke bereik is van 0% tot 100%"
+
+#, python-format
+msgid "The package is now enabled, but could not be installed on this site: %s"
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "Het pager adres is optioneel "
@@ -50291,6 +50128,12 @@ msgstr ""
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Deze hosts hebben de juiste versie van hun agent geïnstalleerd."
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -50911,13 +50754,6 @@ msgstr ""
 "Deze controle controleert het aantal en de leeftijd van de mails in de "
 "mailboxen."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Deze controle controleert hoe vaak databaseobjecten in een PostgreSQL "
-"Database worden benaderd"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 "Deze controle controleert locking gerelateerde informatie van MSSQL "
@@ -50954,6 +50790,13 @@ msgstr ""
 "Deze controle controleert het aantal logboekwisselingen van een ORACLE "
 "database instantie in de laatste 60 minuten. U kunt niveaus instellen voor "
 "boven- en ondergrenzen."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Deze controle controleert het huidige aantal actieve en inactieve sessies op "
+"PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
@@ -51383,10 +51226,6 @@ msgstr ""
 "tijd metrieken beschikbaar moeten zijn om de periode niet als onbekend te "
 "markeren. Dit is relevant voor aggregaties die veel groter zijn dan één "
 "minuut."
-
-msgid "This is rule pack can be packaged with the Extension Packages module."
-msgstr ""
-"Dit is regelpakket kan worden verpakt met de module Uitbreidingspakketten."
 
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
@@ -51995,8 +51834,8 @@ msgstr ""
 "ingeschakeld, worden de gebruikersnaam en het IP-adres van de client waar "
 "het verzoek vandaan komt, gelogd."
 
-#, python-format
-msgid "This package cannot be installed: %s"
+#, fuzzy, python-format
+msgid "This package cannot be uploaded: %s"
 msgstr "Dit pakket kan niet worden geïnstalleerd: %s"
 
 msgid "This package does not exist."
@@ -52558,6 +52397,19 @@ msgstr ""
 "toepassing zijn, dit betekent dat de pakketten van meerdere regels worden "
 "samengevoegd."
 
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
+
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
 "at once. You can also assign aggregations to specific hosts through the "
@@ -52944,6 +52796,11 @@ msgstr "Deze regel komt overeen."
 #, python-format
 msgid "This rule matches: %s"
 msgstr "Deze regel komt overeen: %s"
+
+#, fuzzy
+msgid "This rule pack can be packaged with the Extension Packages module."
+msgstr ""
+"Dit is regelpakket kan worden verpakt met de module Uitbreidingspakketten."
 
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
@@ -53826,9 +53683,6 @@ msgstr "Deze site ligt momenteel plat."
 
 msgid "This site is currently not reachable."
 msgstr "Deze site is momenteel niet bereikbaar."
-
-msgid "This site is not a distributed WATO site."
-msgstr "Deze site is geen verspreide WATO-site."
 
 msgid "This site is not responding."
 msgstr "Deze site reageert niet."
@@ -55800,14 +55654,6 @@ msgid "Unable to analyze matching, because \"service\" parameter is missing"
 msgstr "Kan matching niet analyseren, omdat \"service\" parameter ontbreekt"
 
 #, python-format
-msgid ""
-"Unable to apply new hosttag configuration. The following tags are still in "
-"use, but not mentioned in the updated configuration: %s"
-msgstr ""
-"Kan nieuwe hosttag-configuratie niet toepassen. De volgende tags zijn nog in "
-"gebruik, maar worden niet genoemd in de bijgewerkte configuratie: %s"
-
-#, python-format
 msgid "Unable to authenticate with LDAP (%s)"
 msgstr "Kan niet authentiseren met LDAP (%s)"
 
@@ -55828,15 +55674,9 @@ msgstr ""
 "Kan geen verbinding maken met instantie %s. Controleer de credentials onder "
 "Global Settings."
 
-msgid "Unable to create parent folder(s)."
-msgstr "Kan geen bovenliggende map(pen) aanmaken."
-
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Kan groep niet verwijderen. Deze is nog in gebruik door: %s"
-
-msgid "Unable to delete root folder"
-msgstr "Kan de hoofdmap niet verwijderen"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -56064,9 +55904,6 @@ msgstr "Unicast pakketsnelheden"
 msgid "Unidirectional UDP Traffic"
 msgstr "Unidirectioneel UDP-verkeer"
 
-msgid "Uninstall and remove this package"
-msgstr "Deïnstalleer en verwijder dit pakket"
-
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -56104,6 +55941,10 @@ msgstr "Eenheid van meting"
 msgid "Unix Timestamp (Epoch)"
 msgstr "Unix-tijdstempel (Epoch)"
 
+#, fuzzy
+msgid "Unix-Socket"
+msgstr "Stopcontact"
+
 msgid "Unknown"
 msgstr "Onbekend"
 
@@ -56111,15 +55952,15 @@ msgstr "Onbekend"
 msgid "Unknown %s group: %s"
 msgstr "Onbekende %s groep: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "Secundair - DUnknown"
+
 msgid "Unknown agent configuration"
 msgstr "Onbekende agent configuratie"
 
 msgid "Unknown aggregation"
 msgstr "Onbekende aggregatie"
-
-#, python-format
-msgid "Unknown attribute: %s"
-msgstr "Onbekend kenmerk: %s"
 
 msgid "Unknown configuration change"
 msgstr "Onbekende configuratiewijziging"
@@ -56151,16 +55992,8 @@ msgid "Unknown site (%s)"
 msgstr "Onbekende site (%s)"
 
 #, python-format
-msgid "Unknown tag %s"
-msgstr "Onbekende tag %s"
-
-#, python-format
 msgid "Unknown tag group \"%s\""
 msgstr "Onbekende tag groep \"%s\""
-
-#, python-format
-msgid "Unknown tag group %s"
-msgstr "Onbekende tag groep %s"
 
 #, python-format
 msgid "Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>"
@@ -56303,9 +56136,6 @@ msgstr "Bijgewerkte attributen: "
 msgid "Updated discovered host labels of '%s' with %d labels"
 msgstr "Gevonden hostlabels van '%s' bijgewerkt met %d labels"
 
-msgid "Updated host tags through Web-API"
-msgstr "Bijgewerkte host tags via Web-API"
-
 msgid ""
 "Updated metrics are written to disk in the configured interval. The write "
 "operation is only performed for metrics that are being updated. Old metrics "
@@ -56314,14 +56144,6 @@ msgstr ""
 "Bijgewerkte metrieken worden naar schijf geschreven in het geconfigureerde "
 "interval. De schrijfoperatie wordt alleen uitgevoerd voor metrieken die "
 "worden bijgewerkt. Oude metrieken worden niet beïnvloed door deze optie."
-
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "Bijgewerkte eigenschappen van %s groep %s"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "Bijgewerkte eigenschappen van %sgroep %s"
 
 msgid "Updates"
 msgstr "Updates"
@@ -56345,9 +56167,6 @@ msgstr "Upload"
 #, python-format
 msgid "Upload %s"
 msgstr "Uploaden %s"
-
-msgid "Upload & install"
-msgstr "Uploaden en installeren"
 
 msgid "Upload CRT/PEM File"
 msgstr "Upload CRT/PEM-bestand"
@@ -56384,6 +56203,10 @@ msgstr "Pakket uploaden"
 
 msgid "Uploaded a custom GUI logo"
 msgstr "Een aangepast GUI logo geupload"
+
+#, fuzzy, python-format
+msgid "Uploaded extension package %s-%s (%s)"
+msgstr "Geïnstalleerd uitbreidingspakket %s-%s (%s)"
 
 msgid "Upper"
 msgstr "Boven"
@@ -56948,6 +56771,14 @@ msgstr "Gebruik GIT versiebeheer voor WATO"
 msgid "Use Hard States"
 msgstr "Gebruik harde staten"
 
+#, fuzzy
+msgid "Use IP Address of assigned host"
+msgstr "IP-adres van gastheer"
+
+#, fuzzy
+msgid "Use IP address of assigned host"
+msgstr "IP-adres van gastheer"
+
 msgid "Use IPMItool"
 msgstr "Gebruik IPMItool"
 
@@ -57136,6 +56967,10 @@ msgstr "Grafiektitel gebruiken"
 
 msgid "Use host address"
 msgstr "Gebruik host adres"
+
+#, fuzzy
+msgid "Use host name of assigned host"
+msgstr "Totaal aantal niet-toegewezen shards"
 
 msgid "Use hostname"
 msgstr "Gebruik hostnaam"
@@ -62240,9 +62075,6 @@ msgstr "Je moet een rol ID opgeven."
 msgid "You have to select at least one element."
 msgstr "Je moet minstens één element selecteren."
 
-msgid "You have to specify some hosts"
-msgstr "Je moet een aantal hosts specificeren"
-
 msgid "You have used an invalid character"
 msgstr "U hebt een ongeldig teken gebruikt"
 
@@ -63010,6 +62842,10 @@ msgstr "betrouwbaarheidsinterval"
 msgid "configuration"
 msgstr "configuratie"
 
+#, fuzzy
+msgid "configure"
+msgstr "Configureer"
+
 msgid "connection"
 msgstr "aansluiting"
 
@@ -63127,6 +62963,10 @@ msgstr "vertraagd"
 
 msgid "demand"
 msgstr "vraag"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "Gebeurtenis werd automatisch verwijderd"
 
 msgid "detections/s"
 msgstr "detecties/s"
@@ -64015,6 +63855,14 @@ msgstr "online"
 msgid "online canisters"
 msgstr "online bussen"
 
+#, fuzzy
+msgid "only messages"
+msgstr "logboekberichten"
+
+#, fuzzy
+msgid "only requests"
+msgstr "verzoeken"
+
 msgid "only v4"
 msgstr "alleen v4"
 
@@ -64686,6 +64534,390 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%s in %s"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
+#~ "boven in map \"%s\""
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel #%d in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Gekloonde regel van regel %s in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "Creëer nieuwe %s groep %s"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "Nieuwe map %s aangemaakt"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "Nieuwe host %s aangemaakt."
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "Nieuwe gebruikers aangemaakt: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "Gewiste %s groep %s"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "Verwijderde map %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "Verwijderde host %s"
+
+#, python-format
+#~ msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Regel #%d verwijderd in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "Verwijderde gebruiker: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "Bewerkte eigenschappen van map %s"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "Gewijzigde host %s."
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "Gewijzigde gebruikers: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "Verplaatst %sgroep %s naar klant %s. Andere eigenschappen kunnen "
+#~ "veranderd zijn."
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "Verplaatst map %s naar %s"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "Verplaatst host van \"%s\" naar \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map "
+#~ "\"%s\""
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "Wachtwoord gewijzigd (synchronisatie mislukt: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "Profiel gewijzigd (synchronisatie mislukt: %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "%sgroep %s verwijderd van klant %s"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "Expliciete attributen van host %s verwijderd."
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "Hernoemde clusterknooppunt van %s in %s."
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "Hernoemde host %s"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "Hernoemde host van %s in %s."
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Hernoemde host van %s naar %s"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr "Hernoemde host in %d regelsets van map %s"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "Hernoemde ouder van %s in %s."
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "Start activering (Sites: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "Bijgewerkte eigenschappen van %s groep %s"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "Bijgewerkte eigenschappen van %sgroep %s"
+
+#~ msgid "Agent pairing"
+#~ msgstr "Agent koppeling"
+
+#~ msgid ""
+#~ "Automatic pairing will fail if some data is missing. TODO: Concept for "
+#~ "handling this situation"
+#~ msgstr ""
+#~ "Automatisch koppelen zal mislukken als sommige gegevens ontbreken. TODO: "
+#~ "Concept voor het omgaan met deze situatie"
+
+#~ msgid "Automatically execute pairing"
+#~ msgstr "Automatisch koppelen uitvoeren"
+
+#~ msgid "Automation user that is used to perform pairing."
+#~ msgstr ""
+#~ "Automatiseringsgebruiker die wordt gebruikt om de koppeling uit te voeren."
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "Abonnementsinstellingen bewerken"
+
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "Host adres van de monitoring server"
+
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "Labels in te stellen op de gekoppelde hosts"
+
+#~ msgid "Pair manually"
+#~ msgstr "Handmatig paren"
+
+#~ msgid "Pair on installation"
+#~ msgstr "Paar op installatie"
+
+#~ msgid "TODO"
+#~ msgstr "TODO"
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "Activeren op geselecteerde sites"
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Deze controle controleert hoe vaak databaseobjecten in een PostgreSQL "
+#~ "Database worden benaderd"
+
+#~ msgid "Disabled extensions"
+#~ msgstr "Uitgeschakelde extensies"
+
+#, python-format
+#~ msgid "Enabled extension package %s"
+#~ msgstr "Uitbreidingspakket %s ingeschakeld"
+
+#~ msgid "Install this package"
+#~ msgstr "Installeer dit pakket"
+
+#~ msgid "Installed extension packages"
+#~ msgstr "Geïnstalleerde uitbreidingspakketten"
+
+#~ msgid "Optional extension packages"
+#~ msgstr "Optionele uitbreidingspakketten"
+
+#~ msgid "Package not installed or corrupt"
+#~ msgstr "Pakket niet geïnstalleerd of corrupt"
+
+#, python-format
+#~ msgid "Removed disabled extension package %s"
+#~ msgstr "Uitgeschakeld extensiepakket %s verwijderd"
+
+#~ msgid "Uninstall and remove this package"
+#~ msgstr "Deïnstalleer en verwijder dit pakket"
+
+#~ msgid "Upload & install"
+#~ msgstr "Uploaden en installeren"
+
+#~ msgid "Background Job"
+#~ msgstr "Achtergrond Job"
+
+#~ msgid "Background job"
+#~ msgstr "Achtergrond baan"
+
+#~ msgid "The background job is missing a logger instance"
+#~ msgstr "De achtergrond job mist een logger instantie"
+
+#, python-format
+#~ msgid "The function %s is not in the snapshotted functions."
+#~ msgstr "De functie %s staat niet in de snapshotted functies."
+
+#~ msgid ""
+#~ "A bulk discovery job is already running. Please use the "
+#~ "\"bulk_discovery_status\" call to get the curent status."
+#~ msgstr ""
+#~ "Er loopt al een bulk discovery job. Gebruik de aanroep "
+#~ "\"bulk_discovery_status\" om de huidige status op te vragen."
+
+#, python-format
+#~ msgid ""
+#~ "Attribute \"%s\" of user \"%s\" can not be changed, because it is locked "
+#~ "by the user connection."
+#~ msgstr ""
+#~ "Attribuut \"%s\" van gebruiker \"%s\" kan niet worden gewijzigd, omdat "
+#~ "het is vergrendeld door de gebruikersverbinding."
+
+#, python-format
+#~ msgid "Authorization Error. Insufficent permissions for '%s'"
+#~ msgstr "Autorisatiefout. Onvoldoende machtigingen voor '%s'"
+
+#, python-format
+#~ msgid ""
+#~ "Checkmk exception: %s\n"
+#~ "%s"
+#~ msgstr ""
+#~ "Checkmk uitzondering: %s\n"
+#~ "%s"
+
+#~ msgid "Currently not supported with this Checkmk Edition"
+#~ msgstr "Momenteel niet ondersteund door deze Checkmk-editie"
+
+#, python-format
+#~ msgid "Deleted ruleset '%s' for '%s'"
+#~ msgstr "Regelset '%s' voor '%s' verwijderd"
+
+#, python-format
+#~ msgid "Failed to discover %s: %s"
+#~ msgstr "Mislukt %s te ontdekken: %s"
+
+#, python-format
+#~ msgid "Folder %s does not exist"
+#~ msgstr "Map %s bestaat niet"
+
+#, python-format
+#~ msgid "Host %s already exists in the folder %s"
+#~ msgstr "Host %s bestaat al in de map %s"
+
+#, python-format
+#~ msgid "Invalid key(s): %s"
+#~ msgstr "Ongeldige sleutel(s): %s"
+
+#, python-format
+#~ msgid "Missing required key(s): %s"
+#~ msgstr "Ontbrekende vereiste sleutel(s): %s"
+
+#~ msgid "No site given."
+#~ msgstr "Geen locatie opgegeven."
+
+#~ msgid "No such host"
+#~ msgstr "Geen dergelijke host"
+
+#, python-format
+#~ msgid "No such host(s): %s"
+#~ msgstr "Geen dergelijke host(s): %s"
+
+#, python-format
+#~ msgid "Refreshed check configuration of host [%s] with %d services"
+#~ msgstr "Vernieuwde controleconfiguratie van host [%s] met %d diensten"
+
+#, python-format
+#~ msgid "Saved check configuration of host [%s] with %d services"
+#~ msgstr "Opgeslagen controleconfiguratie van host [%s] met %d diensten"
+
+#, python-format
+#~ msgid ""
+#~ "Service discovery successful. Added %d, removed %d, kept %d, total %d "
+#~ "services and %d new, %d total host labels"
+#~ msgstr ""
+#~ "Service ontdekking succesvol. Toegevoegd %d, verwijderd %d, behouden %d, "
+#~ "totaal %d services en %d nieuw, %d totaal host labels"
+
+#, python-format
+#~ msgid "Set ruleset '%s' for '%s' with %d rules"
+#~ msgstr "Stel regelset '%s' in voor '%s' met %d regels"
+
+#~ msgid "Setup is disabled on this site."
+#~ msgstr "Setup is uitgeschakeld op deze site."
+
+#, python-format
+#~ msgid "Site id not found: %s"
+#~ msgstr "Site id niet gevonden: %s"
+
+#~ msgid "Successfully baked agents"
+#~ msgstr "Succesvol gebakken agenten"
+
+#, python-format
+#~ msgid "The SLA id %s is unknown or not visible to this user"
+#~ msgstr "De SLA id %s is onbekend of niet zichtbaar voor deze gebruiker"
+
+#~ msgid ""
+#~ "The configuration has changed in the meantime. You need to load the "
+#~ "configuration and start another update. If the existing configuration "
+#~ "should not be checked, you can remove the configuration_hash value from "
+#~ "the request object."
+#~ msgstr ""
+#~ "De configuratie is in de tussentijd gewijzigd. U moet de configuratie "
+#~ "laden en een nieuwe update starten. Als de bestaande configuratie niet "
+#~ "moet worden gecontroleerd, kunt u de configuration_hash waarde uit het "
+#~ "request object verwijderen."
+
+#~ msgid "This site is not a distributed WATO site."
+#~ msgstr "Deze site is geen verspreide WATO-site."
+
+#, python-format
+#~ msgid ""
+#~ "Unable to apply new hosttag configuration. The following tags are still "
+#~ "in use, but not mentioned in the updated configuration: %s"
+#~ msgstr ""
+#~ "Kan nieuwe hosttag-configuratie niet toepassen. De volgende tags zijn nog "
+#~ "in gebruik, maar worden niet genoemd in de bijgewerkte configuratie: %s"
+
+#~ msgid "Unable to create parent folder(s)."
+#~ msgstr "Kan geen bovenliggende map(pen) aanmaken."
+
+#~ msgid "Unable to delete root folder"
+#~ msgstr "Kan de hoofdmap niet verwijderen"
+
+#, python-format
+#~ msgid "Unknown attribute: %s"
+#~ msgstr "Onbekend kenmerk: %s"
+
+#, python-format
+#~ msgid "Unknown tag %s"
+#~ msgstr "Onbekende tag %s"
+
+#, python-format
+#~ msgid "Unknown tag group %s"
+#~ msgstr "Onbekende tag groep %s"
+
+#~ msgid "Updated host tags through Web-API"
+#~ msgstr "Bijgewerkte host tags via Web-API"
+
+#~ msgid "You have to specify some hosts"
+#~ msgstr "Je moet een aantal hosts specificeren"
+
+#~ msgid "Missing config file for agent {}/{}"
+#~ msgstr "Ontbrekend configuratiebestand voor agent {}/{}"
 
 #~ msgid "Search result(s) preview"
 #~ msgstr "Zoekresultaat(en) voorbeeld"
@@ -67644,9 +67876,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgstr ""
 #~ "Gebeurtenis werd gearchiveerd omdat geen regel overeenkwam en archivering "
 #~ "is geactiveerd in de globale instellingen."
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "Gebeurtenis werd automatisch verwijderd"
 
 #~ msgid "Exchanges"
 #~ msgstr "Uitwisselingen"

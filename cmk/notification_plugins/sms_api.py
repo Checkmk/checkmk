@@ -5,7 +5,7 @@
 
 import sys
 from dataclasses import dataclass
-from typing import NoReturn, Optional, Union
+from typing import NoReturn
 
 import requests
 
@@ -43,7 +43,7 @@ class RequestParameter:
     recipient: str
     url: str
     verify: bool
-    proxies: Optional[dict[str, str]]
+    proxies: dict[str, str] | None
     user: str
     pwd: str
     timeout: float
@@ -74,7 +74,7 @@ class Context:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def _get_context_parameter(raw_context: RawContext) -> Union[Errors, Context]:
+def _get_context_parameter(raw_context: RawContext) -> Errors | Context:
     """First, get the request parameters for sendind the sms. Then construct
     the sms message and get the endpoint specific parameters to return the
     context for notification processing.
@@ -121,7 +121,7 @@ def _get_context_parameter(raw_context: RawContext) -> Union[Errors, Context]:
     return Errors(["Unknown unsupported modem: %s" % endpoint])
 
 
-def _get_request_params_from_context(raw_context: RawContext) -> Union[Errors, RequestParameter]:
+def _get_request_params_from_context(raw_context: RawContext) -> Errors | RequestParameter:
     recipient = raw_context["CONTACTPAGER"].replace(" ", "")
     if not recipient:
         return Errors(["Error: Pager Number of %s not set\n" % raw_context["CONTACTNAME"]])
@@ -164,9 +164,7 @@ def process_notifications(context: Context) -> int:
     )
 
     if response.status_code != 200 or response.content != b"OK\n":
-        sys.stderr.write(
-            "Error Status: %s Details: %r\n" % (response.status_code, response.content)
-        )
+        sys.stderr.write(f"Error Status: {response.status_code} Details: {response.content!r}\n")
         return 2
 
     sys.stdout.write("Notification successfully send via sms.\n")

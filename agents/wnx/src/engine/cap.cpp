@@ -6,19 +6,15 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <string>
-#include <string_view>
-#include <unordered_set>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
 #include "common/yaml.h"
-#include "cvt.h"
 #include "logger.h"
-#include "tools/_raii.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
 #include "upgrade.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -30,8 +26,7 @@ std::string ErrorCodeToMessage(std::error_code ec) {
 }
 
 void CopyFileWithLog(const fs::path &target, const fs::path &source) {
-    std::error_code ec;
-    if (fs::copy_file(source, target, ec)) {
+    if (std::error_code ec; fs::copy_file(source, target, ec)) {
         XLOG::l.i("Copy file '{}' to '{}' [OK]", source, target);
     } else {
         XLOG::l("Copy file '{}' to '{}' failed {}", source, target,
@@ -60,7 +55,7 @@ namespace cma::cfg::cap {
 std::wstring ProcessPluginPath(const std::string &name) {
     // Extract basename and dirname from path
     fs::path fpath(name);
-    fs::path plugin_folder = cma::cfg::GetUserDir();
+    fs::path plugin_folder = GetUserDir();
 
     plugin_folder /= fpath;
 
@@ -72,7 +67,7 @@ std::wstring ProcessPluginPath(const std::string &name) {
 // all other name should be read
 std::optional<uint32_t> ReadFileNameLength(std::ifstream &cap_file) {
     uint8_t length = 0;
-    cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof length);
     if (cap_file.good()) {
         return length;
     }
@@ -92,26 +87,26 @@ std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
     size_t buffer_length = length;
     ++buffer_length;
 
-    std::vector<char> dataBuffer(buffer_length, 0);
-    cap_file.read(dataBuffer.data(), length);
+    std::vector<char> data_buffer(buffer_length, 0);
+    cap_file.read(data_buffer.data(), length);
 
     if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file name body");
         return {};
     }
 
-    dataBuffer[length] = '\0';
+    data_buffer[length] = '\0';
 
-    XLOG::d.t("Processing file '{}'", dataBuffer.data());
+    XLOG::d.t("Processing file '{}'", data_buffer.data());
 
-    return std::string(dataBuffer.data());
+    return {data_buffer.data()};
 }
 
 // skips too big files or invalid data
-std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
-    int32_t length = 0;
-    CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
-    if (!CapFile.good()) {
+std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file) {
+    uint32_t length = 0;
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof length);
+    if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data header");
         return {};
     }
@@ -127,14 +122,14 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
         return {};
     }
     const size_t buffer_length = length;
-    std::vector<char> dataBuffer(buffer_length, 0);
-    CapFile.read(dataBuffer.data(), length);
+    std::vector<char> data_buffer(buffer_length, 0);
+    cap_file.read(data_buffer.data(), length);
 
-    if (!CapFile.good()) {
+    if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data body");
         return {};
     }
-    return dataBuffer;
+    return data_buffer;
 }
 
 constexpr uint32_t kInternalMax{256};
@@ -192,7 +187,7 @@ bool StoreFile(const std::wstring &name, const std::vector<char> &data) {
     try {
         std::ofstream ofs(name, std::ios::binary | std::ios::trunc);
         if (ofs.good()) {
-            ofs.write(data.data(), data.size());
+            ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
             return true;
         }
         XLOG::l.crit("Cannot create file to '{}', status = {}", fpath,
@@ -228,7 +223,7 @@ static std::string GetTryKillMode() {
 }
 
 namespace {
-const std::array<std::wstring, 3> TryToKillAllowedNames = {
+const std::array<std::wstring, 3> g_try_to_kill_allowed_names = {
     L"cmk-update-agent.exe", L"mk_logwatch.exe", L"mk_jolokia.exe"};
 }
 
@@ -236,7 +231,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
     const auto try_kill_mode = GetTryKillMode();
     if (try_kill_mode == values::kTryKillSafe) {
         XLOG::d.i("Mode is safe, checking on list");
-        if (rs::any_of(TryToKillAllowedNames,
+        if (rs::any_of(g_try_to_kill_allowed_names,
                        [proc_name](const std::wstring &name) {
                            return tools::IsEqual(proc_name, name);
                        })) {
@@ -281,7 +276,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 }
 
 [[nodiscard]] bool IsStoreFileAgressive() noexcept {
-    return GetTryKillMode() != cfg::values::kTryKillNo;
+    return GetTryKillMode() != values::kTryKillNo;
 }
 
 bool CheckAllFilesWritable(const std::string &directory) {
@@ -427,7 +422,7 @@ bool ReinstallCaps(const fs::path &target_cap, const fs::path &source_cap) {
     std::error_code ec;
     std::vector<std::wstring> files_left;
     if (fs::exists(target_cap, ec)) {
-        if (Process(target_cap.u8string(), ProcMode::remove, files_left)) {
+        if (Process(wtools::ToStr(target_cap), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", target_cap);
             fs::remove(target_cap, ec);
             for (auto &name : files_left)
@@ -439,7 +434,7 @@ bool ReinstallCaps(const fs::path &target_cap, const fs::path &source_cap) {
 
     files_left.clear();
     if (fs::exists(source_cap, ec)) {
-        if (Process(source_cap.u8string(), ProcMode::install, files_left)) {
+        if (Process(wtools::ToStr(source_cap), ProcMode::install, files_left)) {
             XLOG::l.t("File '{}' installed", source_cap);
             fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
@@ -492,7 +487,7 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
     }
 
     try {
-        auto yaml = YAML::LoadFile(source_yaml.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(source_yaml));
         if (!yaml.IsDefined() || !yaml.IsMap()) {
             XLOG::l("Supplied Yaml '{}' is bad", source_yaml);
             return false;
@@ -504,7 +499,7 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
             return false;
         }
 
-        auto install = cma::yml::GetVal(global, vars::kInstall, false);
+        auto install = yml::GetVal(global, vars::kInstall, false);
         XLOG::l.i("Supplied yaml '{}' {}", source_yaml,
                   install ? "to be installed" : "will not be installed");
         if (!install) return false;
@@ -545,7 +540,7 @@ void InstallYmlFile() {
     XLOG::l.t("Installing yml file '{}'", source_yml);
     if (NeedReinstall(target_yml, source_yml)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_yml, source_yml);
-        fs::path bakery_yml = cma::cfg::GetBakeryDir();
+        fs::path bakery_yml = GetBakeryDir();
 
         bakery_yml /= files::kBakeryYmlFile;
         ReinstallYaml(bakery_yml, target_yml, source_yml);
@@ -637,7 +632,7 @@ PairOfPath GetExampleYmlNames() {
     return {tgt_example, src_example};
 }
 
-constexpr bool G_PatchLineEnding =
+constexpr bool g_patch_line_ending =
     false;  // set to true to fix error during checkout git
 
 static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
@@ -651,7 +646,7 @@ static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
     if (!ec) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt, src);
-        if (G_PatchLineEnding) {
+        if constexpr (g_patch_line_ending) {
             wtools::PatchFileLineEnding(tgt);
         }
     } else {
@@ -695,9 +690,9 @@ bool Install() {
 
 // Re-install all files as is from the root-install
 bool ReInstall() {
-    fs::path root_dir = cfg::GetRootInstallDir();
-    fs::path user_dir = cfg::GetUserInstallDir();
-    fs::path bakery_dir = cfg::GetBakeryDir();
+    const fs::path root_dir = GetRootInstallDir();
+    const fs::path user_dir = GetUserInstallDir();
+    const fs::path bakery_dir = GetBakeryDir();
 
     std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
         {files::kCapFile, ReinstallCaps},

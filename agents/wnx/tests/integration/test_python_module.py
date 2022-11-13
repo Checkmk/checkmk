@@ -42,8 +42,6 @@ def test_python_module(  # type:ignore[no-untyped-def]
     data_dir: Path,
     git_dir: Path,
 ) -> None:
-    pytest.skip("Disabled test: import _socket failed")
-    assert not (module_dir / "DLLs").exists()
     assert postinstall_module(module_dir) == 0
     assert (module_dir / "DLLs").exists()
     patch_venv_config(module_dir)

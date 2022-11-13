@@ -4,7 +4,6 @@
 //
 #include "pch.h"
 
-#include <chrono>
 #include <numeric>
 
 #include "agent_controller.h"
@@ -16,11 +15,11 @@ using namespace std::chrono_literals;
 using namespace std::string_literals;
 using asio::ip::tcp;
 
-namespace wtools {  // to become friendly for wtools classes
+namespace wtools {
 class TestProcessor2 : public wtools::BaseServiceProcessor {
 public:
     TestProcessor2() { s_counter++; }
-    virtual ~TestProcessor2() { s_counter--; }
+    ~TestProcessor2() override { s_counter--; }
 
     // Standard Windows API to Service hit here
     void stopService(wtools::StopMode /*stop_mode*/) override {
@@ -32,7 +31,9 @@ public:
     void shutdownService(wtools::StopMode /*stop_mode*/) override {
         shutdowned_ = true;
     }
-    const wchar_t *getMainLogName() const override { return L"log.log"; }
+    [[nodiscard]] const wchar_t *getMainLogName() const override {
+        return L"log.log";
+    }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -40,16 +41,15 @@ public:
     bool shutdowned_ = false;
     bool continued_ = false;
     static int s_counter;
-};  // namespace wtoolsclassTestProcessor:publiccma::srv::BaseServiceProcessor
+};
 int TestProcessor2::s_counter = 0;
 }  // namespace wtools
 
-namespace cma::world {  // to become friendly for wtools classes
-#include <iostream>
+namespace cma::world {
 
 TEST(ExternalPortTest, StartStop) {
     world::ReplyFunc reply =
-        [](const std::string /*ip */) -> std::vector<uint8_t> { return {}; };
+        [](const std::string & /*ip */) -> std::vector<uint8_t> { return {}; };
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port(&tp);  //
 
@@ -63,7 +63,7 @@ TEST(ExternalPortTest, StartStop) {
     EXPECT_FALSE(test_port.startIo(reply, io_param));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [&test_port]() { return test_port.isIoStarted(); }));
+        1000ms, [&test_port] { return test_port.isIoStarted(); }));
 
     cma::tools::sleep(50);
     test_port.shutdownIo();  // this is long operation
@@ -72,8 +72,8 @@ TEST(ExternalPortTest, StartStop) {
 
 class ExternalPortCheckProcessFixture : public ::testing::Test {
 public:
-    ReplyFunc reply = [this](const std::string ip) -> std::vector<uint8_t> {
-        remote_ip = ip;
+    ReplyFunc reply = [this](const std::string &ip) -> std::vector<uint8_t> {
+        this->remote_ip = ip;
         return {};
     };
     void SetUp() override {
@@ -104,7 +104,7 @@ public:
         return count;
     }
     tst::TempCfgFs::ptr temp_fs;
-    void disableElevatedAllowed() {
+    void disableElevatedAllowed() const {
         auto cfg = cfg::GetLoadedConfig();
         cfg[cfg::groups::kSystem][cfg::vars::kController]
            [cfg::vars::kControllerAllowElevated] = YAML::Load("no");
@@ -126,7 +126,7 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -145,7 +145,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -155,7 +155,7 @@ TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -163,8 +163,9 @@ TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
 class ExternalPortTestFixture : public ::testing::Test {
 public:
     ReplyFunc reply = [this](const std::string & /*ip*/) {
-        std::vector<uint8_t> data(reply_text_.begin(), reply_text_.end());
-        if (delay_) {
+        std::vector<uint8_t> data(this->reply_text_.begin(),
+                                  this->reply_text_.end());
+        if (this->delay_) {
             std::this_thread::sleep_for(50ms);
         }
 
@@ -201,7 +202,7 @@ public:
 
 TEST_F(ExternalPortTestFixture, ReadIntegration) {
     tst::FirewallOpener fwo;
-    ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this]() {
+    ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this] {
         std::error_code ec;
         this->sock_.connect(this->endpoint_, ec);
         return ec.value() == 0;
@@ -225,7 +226,7 @@ public:
             sessions_.emplace_back(std::make_shared<AsioSession>(std::move(s)));
         }
 
-        for (auto as : sessions_) {
+        for (const auto &as : sessions_) {
             test_port_.putOnQueue(as);
         }
     }
@@ -253,7 +254,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeAsioSessions) {
         [](const std::string & /*_*/) { return std::vector<uint8_t>{}; },
         10000);
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [this]() { return test_port_.entriesInQueue() == 0; }));
+        1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
 }
 
 TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
@@ -271,7 +272,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
             .pid{::GetCurrentProcessId()},
         });
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [this]() { return test_port_.entriesInQueue() == 0; }));
+        1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
     EXPECT_EQ(std::accumulate(result_.begin(), result_.end(), ""s),
               "0123456789101112131415"s);
 }
@@ -279,7 +280,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
 namespace {
 size_t g_count{0};
 std::mutex g_lock;
-void runThread(int port) {
+void runThread(uint16_t port) {
     asio::io_context ios;
     tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"), port);
 

@@ -31,6 +31,9 @@ def agent_azure_arguments(
         else:
             args += [option, value]
 
+    if "services" in params:
+        args += ["--services", *params["services"]]
+
     config = params["config"]
     if "fetchall" in config:
         return args

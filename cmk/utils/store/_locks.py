@@ -11,9 +11,9 @@ import fcntl
 import logging
 import os
 import threading
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional, Union
 
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
@@ -122,7 +122,7 @@ def _set_lock(name: str, fd: int) -> None:
     _aquired_locks()[name] = fd
 
 
-def _get_lock(name: str) -> Optional[int]:
+def _get_lock(name: str) -> int | None:
     return _aquired_locks().get(name)
 
 
@@ -143,7 +143,7 @@ def _has_lock(name: str) -> bool:
 
 
 @contextmanager
-def locked(path: Union[Path, str], blocking: bool = True) -> Iterator[None]:
+def locked(path: Path | str, blocking: bool = True) -> Iterator[None]:
     try:
         aquire_lock(path, blocking)
         yield
@@ -151,7 +151,7 @@ def locked(path: Union[Path, str], blocking: bool = True) -> Iterator[None]:
         release_lock(path)
 
 
-def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
+def aquire_lock(path: Path | str, blocking: bool = True) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -173,7 +173,7 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
 
         try:
             fcntl.flock(fd, flags)
-        except IOError:
+        except OSError:
             os.close(fd)
             raise
 
@@ -184,29 +184,29 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
         os.close(fd)
         fd = fd_new
 
-    _set_lock(str(path), fd)  # pylint: disable=no-value-for-parameter
+    _set_lock(str(path), fd)
     logger.debug("Got lock on %s", path)
 
 
 @contextmanager
-def try_locked(path: Union[Path, str]) -> Iterator[bool]:
+def try_locked(path: Path | str) -> Iterator[bool]:
     try:
         yield try_aquire_lock(path)
     finally:
         release_lock(path)
 
 
-def try_aquire_lock(path: Union[Path, str]) -> bool:
+def try_aquire_lock(path: Path | str) -> bool:
     try:
         aquire_lock(path, blocking=False)
         return True
-    except IOError as e:
+    except OSError as e:
         if e.errno != errno.EAGAIN:  # Try again
             raise
         return False
 
 
-def release_lock(path: Union[Path, str]) -> None:
+def release_lock(path: Path | str) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -226,7 +226,7 @@ def release_lock(path: Union[Path, str]) -> None:
     logger.debug("Released lock on %s", path)
 
 
-def have_lock(path: Union[str, Path]) -> bool:
+def have_lock(path: str | Path) -> bool:
     return _has_lock(str(path))
 
 
@@ -239,7 +239,7 @@ def release_all_locks() -> None:
 
 
 @contextmanager
-def leave_locked_unless_exception(path: Union[str, Path]) -> Iterator[None]:
+def leave_locked_unless_exception(path: str | Path) -> Iterator[None]:
     """Contextmanager to lock a file, and release the lock if an exception occurs.
 
     If no exception occurs, the file is left behind locked.

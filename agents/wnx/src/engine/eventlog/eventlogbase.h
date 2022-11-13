@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef EventLogBase_h
-#define EventLogBase_h
+#ifndef EVENT_LOG_BASE_H
+#define EVENT_LOG_BASE_H
 
 #include <ctime>
 #include <functional>
@@ -117,4 +117,4 @@ inline uint64_t choosePos(uint64_t last_read_pos) {
 }
 
 }  // namespace cma::evl
-#endif  // EventLogBase_h
+#endif  // EVENT_LOG_BASE_H

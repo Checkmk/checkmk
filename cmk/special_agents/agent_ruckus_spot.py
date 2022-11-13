@@ -91,11 +91,11 @@ def main(sys_argv=None):
             ("access_points/statuses.json", "ap"),
             ("locations/last_known.json", "locations"),
         ]:
-            url = "http://%(address)s/api/v1/venues/%(venueid)s/%(url_end)s" % {
-                "address": address,
-                "venueid": venueid,
-                "url_end": url_end,
-            }
+            url = "http://{address}/api/v1/venues/{venueid}/{url_end}".format(
+                address=address,
+                venueid=venueid,
+                url_end=url_end,
+            )
             response = requests.get(url, auth=(api_key, "X"))
 
             sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)

@@ -137,7 +137,7 @@ def test_query_row_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) 
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, _len_rows = row_table.query(view, [], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
@@ -151,7 +151,7 @@ def test_query_row_table_inventory_unknown_columns(
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
@@ -163,7 +163,7 @@ def test_query_row_table_inventory_add_columns(monkeypatch: pytest.MonkeyPatch, 
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])
 
@@ -173,7 +173,7 @@ def test_query_row_table_inventory_history(monkeypatch: pytest.MonkeyPatch, view
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, _len_rows = row_table.query(view, [], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
@@ -185,7 +185,7 @@ def test_query_row_table_inventory_history_unknown_columns(
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
@@ -197,7 +197,7 @@ def test_query_row_table_inventory_history_add_columns(
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])
 
@@ -216,7 +216,7 @@ def test_query_row_multi_table_inventory(monkeypatch: pytest.MonkeyPatch, view: 
     row_table = RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view, [], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
@@ -237,7 +237,7 @@ def test_query_row_multi_table_inventory_unknown_columns(
     row_table = RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
@@ -258,7 +258,7 @@ def test_query_row_multi_table_inventory_add_columns(
     row_table = RowMultiTableInventory(sources, ["sid"], [])
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
+    rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ["host_foo"])
 

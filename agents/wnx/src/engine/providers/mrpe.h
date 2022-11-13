@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef mrpe_h__
-#define mrpe_h__
+#ifndef MRPE_H
+#define MRPE_H
 
 #include <filesystem>
 #include <string>
@@ -13,7 +13,6 @@
 #include <utility>
 
 #include "cma_core.h"
-#include "logger.h"
 #include "providers/internal.h"
 #include "section_header.h"
 
@@ -131,4 +130,4 @@ void AddCfgFileToEntries(const std::string &user,
                          std::vector<MrpeEntry> &entries);
 }  // namespace cma::provider
 
-#endif  // mrpe_h__
+#endif  // MRPE_H

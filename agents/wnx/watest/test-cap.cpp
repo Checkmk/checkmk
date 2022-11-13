@@ -14,7 +14,6 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -44,14 +43,14 @@ TEST(CapTest, InstallFileAsCopyNoThrow) {
 /// \brief Keeps temporary folder and pair of file names and dirs
 class CapTestFixture : public ::testing::Test {
 public:
-    static constexpr std::string_view name() { return "a.txt"; };
+    static constexpr std::string_view name() { return "a.txt"; }
     void SetUp() override {}
 
-    fs::path source() const { return source_dir() / name(); }
-    fs::path target() const { return target_dir() / name(); }
+    [[nodiscard]] fs::path source() const { return source_dir() / name(); }
+    [[nodiscard]] fs::path target() const { return target_dir() / name(); }
 
-    fs::path source_dir() const { return temp.in(); }
-    fs::path target_dir() const { return temp.out(); }
+    [[nodiscard]] fs::path source_dir() const { return temp.in(); }
+    [[nodiscard]] fs::path target_dir() const { return temp.out(); }
 
 private:
     tst::TempDirPair temp{
@@ -135,10 +134,10 @@ public:
         fs::create_directories(temp_fs_->data() / dirs::kUserInstallDir);
     }
 
-    fs::path yml_source() const {
+    [[nodiscard]] fs::path yml_source() const {
         return temp_fs_->root() / dirs::kInstall / name();
     }
-    fs::path yml_target() const {
+    [[nodiscard]] fs::path yml_target() const {
         return temp_fs_->data() / dirs::kInstall / name();
     }
 
@@ -181,7 +180,7 @@ TEST_F(CapTestYamlFixture, Install) {
     EXPECT_TRUE(fs::exists(GetBakeryFile())) << "should exist";
 }
 
-TEST_F(CapTestYamlFixture, ReInstall) {
+TEST_F(CapTestYamlFixture, ReInstallAbsentEverything) {
     auto yml_base =
         tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
     ASSERT_TRUE(fs::exists(yml_base));
@@ -194,6 +193,14 @@ TEST_F(CapTestYamlFixture, ReInstall) {
     EXPECT_FALSE(ReinstallYaml(yml_bakery, yml_target(), yml_source()));
     EXPECT_FALSE(fs::exists(yml_bakery)) << "must be absent";
     EXPECT_FALSE(fs::exists(yml_target())) << "must be absent";
+}
+
+TEST_F(CapTestYamlFixture, ReInstall) {
+    auto yml_base =
+        tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
+    ASSERT_TRUE(fs::exists(yml_base));
+
+    auto yml_bakery = GetBakeryFile();
 
     // target presented: everything is removed
     // fs::copy_file(yml_base, yml_source());
@@ -339,7 +346,7 @@ TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(tools::RunDetachedCommand(
         wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8"));
     cma::tools::sleep(200ms);
-    std::vector<char> buf = {'_', '_'};
+    std::vector buf = {'_', '_'};
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
     ASSERT_TRUE(StoreFileAgressive(cmk_test_ping, buf, 1));
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
@@ -363,7 +370,9 @@ public:
         names_[1] = GetUserPluginsDir() + L"\\mk_inventory.vbs";
     }
 
-    const std::array<std::wstring, 2> &names() const { return names_; };
+    [[nodiscard]] const std::array<std::wstring, 2> &names() const {
+        return names_;
+    }
 
     void makeFilesInPlugins() const {
         fs::create_directories(GetUserPluginsDir());
@@ -460,10 +469,10 @@ fs::path CreateInvalidCap() {
     uint8_t name_len = 12;
     constexpr char name[] = "123456789012";
     file.open(file_name, std::ios::trunc | std::ios::binary | std::ios::out);
-    file.write(reinterpret_cast<const char *>(&name_len), sizeof(name_len));
+    file.write(reinterpret_cast<const char *>(&name_len), sizeof name_len);
     file.write(name, name_len);
     uint32_t len = 123000;
-    file.write(reinterpret_cast<const char *>(&len), sizeof(len));
+    file.write(reinterpret_cast<const char *>(&len), sizeof len);
     file.write(name, name_len);
     return file_name;
 }
@@ -508,7 +517,6 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         fs::path yml_w_base =
             tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
 
-        std::error_code ec;
         try {
             // Prepare installed files
             fs::create_directory(r / dirs::kInstall);
@@ -560,7 +568,7 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         }
 
         // now damage files
-        auto destroy_file = [](fs::path f) {
+        auto destroy_file = [](const fs::path &f) {
             std::ofstream ofs(f, std::ios::binary);
 
             if (ofs) {

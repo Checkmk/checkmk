@@ -6,12 +6,19 @@
 # pylint: disable=redefined-outer-name
 
 import datetime
+from collections.abc import Callable
 from typing import Literal
 
 import pytest
 from dateutil.tz import tzutc
 
-from cmk.special_agents.agent_aws import AWSConfig, CloudFront, CloudFrontSummary, ResultDistributor
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    CloudFront,
+    CloudFrontSummary,
+    OverallTags,
+    ResultDistributor,
+)
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
 
@@ -211,10 +218,13 @@ class FakeTaggingClient:
 
 
 @pytest.fixture()
-def get_cloudfront_sections():
-    def _create_cloudfront_sections(  # type:ignore[no-untyped-def]
-        names, tags, assign_to_domain_host: bool
-    ):
+def get_cloudfront_sections() -> Callable[
+    [object | None, OverallTags, bool],
+    tuple[CloudFrontSummary, CloudFront],
+]:
+    def _create_cloudfront_sections(
+        names: object | None, tags: OverallTags, assign_to_domain_host: bool
+    ) -> tuple[CloudFrontSummary, CloudFront]:
         region = "us-east-1"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudfront_names", names)

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
-from typing import List, Optional
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
@@ -12,7 +11,7 @@ from cmk.utils.type_defs import AgentRawData
 
 
 def our_uptime() -> float:
-    return float((open("/proc/uptime").read().split()[0]))
+    return float(open("/proc/uptime").read().split()[0])
 
 
 # replace simulator tags in output
@@ -47,9 +46,7 @@ def process(output: AgentRawData) -> AgentRawData:
     return output
 
 
-def agentsim_uptime(
-    rate: float = 1.0, period: Optional[float] = None
-) -> int:  # period = sinus wave
+def agentsim_uptime(rate: float = 1.0, period: float | None = None) -> int:  # period = sinus wave
     if period is None:
         return int(our_uptime() * rate)
 
@@ -58,7 +55,7 @@ def agentsim_uptime(
     return int(u * rate + int(a * math.sin(u * 2.0 * math.pi / period)))  # fixed: true-division
 
 
-def agentsim_enum(values: List[bytes], period: int = 1) -> bytes:  # period is in seconds
+def agentsim_enum(values: list[bytes], period: int = 1) -> bytes:  # period is in seconds
     hit = int(our_uptime() / period % len(values))  # fixed: true-division
     return values[hit]
 

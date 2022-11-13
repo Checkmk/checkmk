@@ -10,26 +10,28 @@
 #include "on_start.h"
 #include "read_file.h"
 #include "test_tools.h"
+#include "tools/_raii.h"
+
 namespace fs = std::filesystem;
 using namespace std::string_literals;
 
 namespace xlog {
 TEST(xlogTest, xlogLowLevel) {
-    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::Flags::kAddCr));
-    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::Flags::kAddCr));
+    EXPECT_TRUE(IsAddCrFlag(Flags::kAddCr));
+    EXPECT_FALSE(IsAddCrFlag(~Flags::kAddCr));
 
-    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::Flags::kNoCr));
-    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::Flags::kNoCr));
+    EXPECT_TRUE(IsNoCrFlag(Flags::kNoCr));
+    EXPECT_FALSE(IsNoCrFlag(~Flags::kNoCr));
 
     std::string s;
-    EXPECT_NO_THROW(xlog::RmCr(s));
-    xlog::AddCr(s);
+    EXPECT_NO_THROW(RmCr(s));
+    AddCr(s);
     EXPECT_EQ(s, "\n");
-    xlog::AddCr(s);
+    AddCr(s);
     EXPECT_EQ(s, "\n");
-    xlog::RmCr(s);
+    RmCr(s);
     EXPECT_EQ(s, "");
-    EXPECT_NO_THROW(xlog::RmCr(s));
+    EXPECT_NO_THROW(RmCr(s));
 }
 }  // namespace xlog
 
@@ -75,11 +77,11 @@ TEST(LogTest, RotationFileNameCreation) {
 }
 
 TEST(LogTest, RotationFileCfgParam) {
-    for (auto t : {XLOG::LogType::debug, XLOG::LogType::log,
-                   XLOG::LogType::stdio, XLOG::LogType::trace}) {
-        XLOG::Emitter e(t);
-        auto max_count = e.getBackupLogMaxCount();
-        auto max_size = e.getBackupLogMaxSize();
+    for (auto type : {XLOG::LogType::debug, XLOG::LogType::log,
+                      XLOG::LogType::stdio, XLOG::LogType::trace}) {
+        XLOG::Emitter e(type);
+        const auto max_count = e.getBackupLogMaxCount();
+        const auto max_size = e.getBackupLogMaxSize();
         EXPECT_TRUE(max_count < 32);
         EXPECT_TRUE(max_size > 100'000);
         EXPECT_TRUE(max_size < 1'000'000'000);
@@ -87,13 +89,13 @@ TEST(LogTest, RotationFileCfgParam) {
 }
 
 static bool FindString(const std::string &name, unsigned int index,
-                       const std::string &Text) {
+                       const std::string &text) {
     auto filename = details::MakeBackupLogName(name, index);
     auto data = tst::ReadFileAsTable(filename);
     if (data.size() != 1) return false;
     auto table = cma::tools::SplitString(data[0], " ");
     if (table.size() != 3) return false;
-    return table[2] == Text;
+    return table[2] == text;
 }
 
 TEST(LogTest, RotationFile) {
@@ -231,31 +233,31 @@ TEST(LogTest, All) {
 
     // Check API
     {
-        XLOG::Emitter l(XLOG::LogType::log);
-        const auto &lp = l.logParam();
+        Emitter logger(LogType::log);
+        const auto &lp = logger.logParam();
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
-        l.configFile(cma::cfg::GetCurrentLogFileName());
+        logger.configFile(cma::cfg::GetCurrentLogFileName());
         EXPECT_TRUE(cma::cfg::GetCurrentLogFileName() == lp.filename());
-        l.configPrefix(prefix);
+        logger.configPrefix(prefix);
         EXPECT_TRUE(prefix == lp.prefix());
         EXPECT_TRUE(prefix_ascii == lp.prefixAscii());
     }
 
     {
-        XLOG::Emitter d(XLOG::LogType::debug);
-        auto &lp = t.logParam();
+        Emitter logger(LogType::debug);
+        auto &lp = logger.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
     {
-        XLOG::Emitter t(XLOG::LogType::trace);
-        auto &lp = t.logParam();
+        Emitter logger(LogType::trace);
+        auto &lp = logger.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
 
-        t.enableFileLog(true);
+        logger.enableFileLog(true);
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
 
-        t.enableFileLog(false);
+        logger.enableFileLog(false);
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
@@ -263,16 +265,16 @@ TEST(LogTest, All) {
 
     // CLEAN FILE
     {
-        XLOG::Emitter l(XLOG::LogType::log);
-        auto &lp = l.logParam();
-        l.configFile("");
+        Emitter logger(LogType::log);
+        auto &lp = logger.logParam();
+        logger.configFile("");
         EXPECT_TRUE(lp.filename()[0] == 0) << "File not changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint)
             << "Flag was changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint)
             << "Flag was changed";
 
-        l.configPrefix(L"ac");
+        logger.configPrefix(L"ac");
         std::string new_prefix = lp.prefixAscii();
         EXPECT_TRUE(new_prefix == "ac");
     }
@@ -353,7 +355,6 @@ TEST(LogTest, All) {
 
 TEST(LogTest, Simulation) {
     GTEST_SKIP() << "This test is not finished";
-    return;
     // Output to log
     XLOG::l() << L"This streamed Log Entry and"  // body
                                                  // .....
@@ -390,17 +391,17 @@ TEST(LogTest, Simulation) {
 }
 
 TEST(LogTest, EmitterLogRotation) {
-    XLOG::Emitter l(XLOG::LogType::log);
-    l.setLogRotation(3, 1024 * 1024);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 3);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 1024 * 1024);
-    l.setLogRotation(0, 0);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 0);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024);
+    XLOG::Emitter logger(XLOG::LogType::log);
+    logger.setLogRotation(3, 1024 * 1024);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 3);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 1024 * 1024);
+    logger.setLogRotation(0, 0);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 0);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 256 * 1024);
 
-    l.setLogRotation(1000, 1024 * 1024 * 1024);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 64);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024 * 1024);
+    logger.setLogRotation(1000, 1024 * 1024 * 1024);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 64);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 256 * 1024 * 1024);
 }
 
 TEST(LogTest, Setup) {
@@ -435,12 +436,12 @@ std::string return_current_time_and_date() {
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
     std::stringstream ss;
-    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");  // NOLINT
     return ss.str();
 }
 
 TEST(LogTest, EventTest) {
-    if (false) {
+    if constexpr (false) {
         // #TODO place in docu
         // #REFERENCE how to use windows event log
         XLOG::details::LogWindowsEventCritical(1, "Test is on {}", "error!");
@@ -477,9 +478,9 @@ TEST(LogTest, Functional) {
         std::stringstream sstr;
         sstr << in.rdbuf();
         auto contents = sstr.str();
-        auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
         ASSERT_EQ(result.size(), 9);
+        ASSERT_EQ(result.size(), std::ranges::count(contents, '\n'));
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));

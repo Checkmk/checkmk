@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "cfg.h"
 #include "cfg_engine.h"
@@ -13,11 +14,11 @@
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 
 using cma::evl::SkipDuplicatedRecords;
 using std::chrono::steady_clock;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
@@ -190,7 +191,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .timeout = -1,
                            .skip = SkipDuplicatedRecords::no};
         auto start = steady_clock::now();
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        auto [_, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
         EXPECT_TRUE(
             std::chrono::duration_cast<std::chrono::seconds>(end - start)
@@ -328,8 +329,9 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
 
     int pos = 0;
     for (const auto &sec : sections) {
-        auto type = sec.Type();
-        if (!sec.IsMap()) continue;
+        if (!sec.IsMap()) {
+            continue;
+        }
         YAML::Emitter emit;
         emit << sec;
         LogWatchEntry lwe;
@@ -374,8 +376,9 @@ TEST(LogWatchEventTest, CheckTestConfig) {
 
     int pos = 0;
     for (const auto &sec : sections) {
-        auto type = sec.Type();
-        if (!sec.IsMap()) continue;
+        if (!sec.IsMap()) {
+            continue;
+        }
         YAML::Emitter emit;
         emit << sec;
         LogWatchEntry lwe;
@@ -669,7 +672,6 @@ TEST(LogWatchEventTest, CheckMakeBodyIntegration) {
     LogWatchEvent lw;
     lw.loadConfig();
     auto ret = lw.makeBody();
-    ret = lw.makeBody();
     EXPECT_TRUE(ret.size() < 2000) << "should be almost empty";
     auto table = tools::SplitString(ret, "\n");
     auto old_size = table.size();
@@ -773,15 +775,14 @@ TEST(LogWatchEventTest, TestMakeBody) {
     {
         auto st = states;
         auto logs_in = logs_in_registry;
-        logs_in.push_back("Zcx");
+        logs_in.emplace_back("Zcx");
         auto processed = UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
         for (auto &s : st) {
-            auto found = std::find(logs_in.cbegin(), logs_in.cend(), s.name_);
+            auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
-
             } else {
                 count++;
                 EXPECT_TRUE(s.presented_);
@@ -796,12 +797,12 @@ TEST(LogWatchEventTest, TestMakeBody) {
     {
         auto st = states;
         std::vector<std::string> logs_in;
-        logs_in.push_back("Zcx");
+        logs_in.emplace_back("Zcx");
         auto processed = UpdateEventLogStates(st, logs_in, SendMode::all);
         EXPECT_EQ(processed, 1);
         int count = 0;
         for (auto &s : st) {
-            auto found = std::find(logs_in.cbegin(), logs_in.cend(), s.name_);
+            auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
 
@@ -816,8 +817,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         EXPECT_EQ(count, logs_in.size());  // all must be inside
     }
 
-    auto processed =
-        UpdateEventLogStates(states, logs_in_registry, SendMode::normal);
+    auto _ = UpdateEventLogStates(states, logs_in_registry, SendMode::normal);
 
     int application_index = -1;
     int system_index = -1;

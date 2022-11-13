@@ -8,7 +8,7 @@ import os
 import sys
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Union
+from typing import Any, Dict, Literal, Mapping, Optional, Union
 
 import cmk.utils.crash_reporting as crash_reporting
 import cmk.utils.debug
@@ -22,10 +22,6 @@ from cmk.utils.type_defs import (
     SectionName,
     ServiceName,
 )
-
-from cmk.snmplib.type_defs import SNMPBackendEnum
-
-from cmk.base.config import HostConfig
 
 CrashReportStore = crash_reporting.CrashReportStore
 
@@ -62,11 +58,18 @@ def create_section_crash_dump(
 
     text = f"{operation.title()} of section {section_name} failed"
     try:
-        crash = SectionCrashReport.from_section(
-            section_name=section_name,
-            section_content=section_content,
-            host_name=host_name,
-            rtc_package=rtc_package,
+        crash = SectionCrashReport.from_exception(
+            details={
+                "section_name": str(section_name),
+                "section_content": section_content,
+                "host_name": host_name,
+            },
+            type_specific_attributes={
+                "snmp_info": _read_snmp_info(host_name),
+                "agent_output": (
+                    _read_agent_output(host_name) if rtc_package is None else rtc_package
+                ),
+            },
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -77,12 +80,14 @@ def create_section_crash_dump(
 
 
 def create_check_crash_dump(
-    *,
-    host_config: HostConfig,
+    host_name: HostName,
     service_name: ServiceName,
+    *,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
+    is_cluster: bool,
     is_enforced: bool,
+    is_inline_snmp: bool,
     rtc_package: Optional[AgentRawData],
 ) -> str:
     """Create a crash dump from an exception occured during check execution
@@ -93,14 +98,23 @@ def create_check_crash_dump(
     """
     text = "check failed - please submit a crash report!"
     try:
-        crash = CheckCrashReport.from_check(
-            host_config=host_config,
-            check_plugin_name=str(plugin_name),
-            check_plugin_kwargs=plugin_kwargs,
-            is_enforced_service=is_enforced,
-            description=service_name,
-            text=text,
-            rtc_package=rtc_package,
+        crash = CheckCrashReport.from_exception(
+            details={
+                "check_output": text,
+                "host": host_name,
+                "is_cluster": is_cluster,
+                "description": service_name,
+                "check_type": str(plugin_name),
+                "inline_snmp": is_inline_snmp,
+                "enforced_service": is_enforced,
+                **plugin_kwargs,
+            },
+            type_specific_attributes={
+                "snmp_info": _read_snmp_info(host_name),
+                "agent_output": _read_agent_output(host_name)
+                if rtc_package is None
+                else rtc_package,
+            },
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
@@ -138,73 +152,16 @@ class CrashReportWithAgentOutput(crash_reporting.ABCCrashReport):
 
 @crash_reporting.crash_report_registry.register
 class SectionCrashReport(CrashReportWithAgentOutput):
-    @classmethod
-    def type(cls) -> str:
+    @staticmethod
+    def type() -> Literal["section"]:
         return "section"
-
-    @classmethod
-    def from_section(
-        cls,
-        *,
-        section_name: SectionName,
-        section_content: object,
-        host_name: HostName,
-        rtc_package: Optional[AgentRawData],
-    ) -> crash_reporting.ABCCrashReport:
-        snmp_info = _read_snmp_info(host_name)
-        return cls.from_exception(
-            details={
-                "section_name": str(section_name),
-                "section_content": section_content,
-                "host_name": host_name,
-            },
-            type_specific_attributes={
-                "snmp_info": snmp_info,
-                "agent_output": _read_agent_output(host_name)
-                if rtc_package is None
-                else rtc_package,
-            },
-        )
 
 
 @crash_reporting.crash_report_registry.register
 class CheckCrashReport(CrashReportWithAgentOutput):
-    @classmethod
-    def type(cls) -> str:
+    @staticmethod
+    def type() -> Literal["check"]:
         return "check"
-
-    @classmethod
-    def from_check(
-        cls,
-        *,
-        host_config: HostConfig,
-        check_plugin_name: str,
-        check_plugin_kwargs: Mapping[str, Any],
-        is_enforced_service: bool,
-        description: ServiceName,
-        text: str,
-        rtc_package: Optional[AgentRawData],
-    ) -> crash_reporting.ABCCrashReport:
-        snmp_info = _read_snmp_info(host_config.hostname)
-        return cls.from_exception(
-            details={
-                "check_output": text,
-                "host": host_config.hostname,
-                "is_cluster": host_config.is_cluster,
-                "description": description,
-                "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(host_config.hostname).snmp_backend
-                == SNMPBackendEnum.INLINE,
-                "enforced_service": is_enforced_service,
-                **check_plugin_kwargs,
-            },
-            type_specific_attributes={
-                "snmp_info": snmp_info,
-                "agent_output": _read_agent_output(host_config.hostname)
-                if rtc_package is None
-                else rtc_package,
-            },
-        )
 
 
 def _read_snmp_info(hostname: str) -> Optional[bytes]:

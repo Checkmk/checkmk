@@ -7,18 +7,16 @@
 #include "cfg.h"
 #include "commander.h"
 #include "common/mailslot_transport.h"
-#include "logger.h"
 #include "service_processor.h"
 
 using namespace std::chrono_literals;
 
 namespace cma::commander {
-bool RunCommand(std::string_view peer, std::string_view cmd);
 
 static bool GetEnabledFlag(bool dflt) {
     auto yaml = cfg::GetLoadedConfig();
     auto yaml_global = yaml[cfg::groups::kGlobal];
-    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, true);
+    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, dflt);
 }
 
 static void SetEnabledFlag(bool flag) {

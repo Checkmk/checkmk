@@ -277,13 +277,15 @@ modules:
         - name: 'python-3'              # this is name of the zip file and folder where  zip is installed to
           exts: ['.checkmk.py', '.py' ]   # list of extensions to be used automatically
           exec: '.venv\Scripts\python.exe {}'   # command line, exe is relative to folder modules
-    
+
 
 system:
     enabled: yes
 
     controller:
-        run: yes                            # start controller if controller presented
+        run: yes                            # start controller if present
+        detect_proxy: no                    # controller runtime option, see CLI for more information
+        validate_api_cert: no               # controller runtime option, see CLI for more information
 
         check: yes                          # if yes that only the controller process connections could access agent monitoring data
                                             # set no if monitoring is lost and in log you find 'Connection forbidden: address'

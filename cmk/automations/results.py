@@ -5,8 +5,9 @@
 
 from abc import ABC, abstractmethod
 from ast import literal_eval
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, List, Mapping, Optional, Sequence, Type, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.parameters import TimespecificParameters
@@ -36,8 +37,8 @@ from cmk.utils.type_defs import (
 )
 
 
-class ResultTypeRegistry(Registry[Type["ABCAutomationResult"]]):
-    def plugin_name(self, instance: Type["ABCAutomationResult"]) -> str:
+class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
+    def plugin_name(self, instance: type["ABCAutomationResult"]) -> str:
         return instance.automation_call()
 
 
@@ -61,7 +62,7 @@ class ABCAutomationResult(ABC):
 
     @classmethod
     def deserialize(
-        cls: Type[_DeserializedType],
+        cls: type[_DeserializedType],
         serialized_result: SerializedResult,
     ) -> _DeserializedType:
         return cls(*literal_eval(serialized_result))
@@ -107,16 +108,16 @@ result_type_registry.register(DiscoveryResult)
 class CheckPreviewEntry:
     check_source: str
     check_plugin_name: str
-    ruleset_name: Optional[RulesetName]
+    ruleset_name: RulesetName | None
     item: Item
     discovered_parameters: LegacyCheckParameters
     effective_parameters: LegacyCheckParameters
     description: str
-    state: Optional[int]
+    state: int | None
     output: str
-    metrics: List[MetricTuple]
+    metrics: list[MetricTuple]
     labels: dict[str, str]
-    found_on_nodes: List[HostName]
+    found_on_nodes: list[HostName]
 
 
 @dataclass
@@ -341,7 +342,7 @@ result_type_registry.register(DiagHostResult)
 
 @dataclass
 class ActiveCheckResult(ABCAutomationResult):
-    state: Optional[ServiceState]
+    state: ServiceState | None
     output: ServiceDetails
 
     @staticmethod
@@ -391,7 +392,7 @@ result_type_registry.register(NotificationReplayResult)
 
 @dataclass
 class NotificationAnalyseResult(ABCAutomationResult):
-    result: Optional[NotifyAnalysisInfo]
+    result: NotifyAnalysisInfo | None
 
     @staticmethod
     def automation_call() -> str:

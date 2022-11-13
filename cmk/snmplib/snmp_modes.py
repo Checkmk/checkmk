@@ -6,8 +6,8 @@
 import os
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -20,8 +20,8 @@ from cmk.utils.type_defs import SectionName
 from . import snmp_cache
 from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
-SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
-SNMPWalkOptions = Dict[str, List[OID]]
+SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
+SNMPWalkOptions = dict[str, list[OID]]
 
 # .
 #   .--Generic SNMP--------------------------------------------------------.
@@ -38,8 +38,8 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(
-    oid: str, *, section_name: Optional[SectionName] = None, backend: SNMPBackend
-) -> Optional[SNMPDecodedString]:
+    oid: str, *, section_name: SectionName | None = None, backend: SNMPBackend
+) -> SNMPDecodedString | None:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
@@ -52,7 +52,7 @@ def get_single_oid(
     if oid in snmp_cache.single_oid_cache():
         console.vverbose("       Using cached OID %s: " % oid)
         cached_value = snmp_cache.single_oid_cache()[oid]
-        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, cached_value, tty.normal))
+        console.vverbose(f"{tty.bold}{tty.green}{cached_value!r}{tty.normal}\n")
         return cached_value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
@@ -73,12 +73,12 @@ def get_single_oid(
             value = None
 
     if value is not None:
-        console.vverbose("%s%s%r%s\n" % (tty.bold, tty.green, value, tty.normal))
+        console.vverbose(f"{tty.bold}{tty.green}{value!r}{tty.normal}\n")
     else:
         console.vverbose("failed.\n")
 
     if value is not None:
-        decoded_value: Optional[SNMPDecodedString] = backend.config.ensure_str(
+        decoded_value: SNMPDecodedString | None = backend.config.ensure_str(
             value
         )  # used ensure_str function with different possible encoding arguments
     else:
@@ -151,7 +151,7 @@ def do_snmptranslate(walk_filename: str) -> None:
     if not walk_path.exists():
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
-    command: List[str] = [
+    command: list[str] = [
         "snmptranslate",
         "-m",
         "ALL",
@@ -203,7 +203,7 @@ def do_snmpwalk(options: SNMPWalkOptions, *, backend: SNMPBackend) -> None:
             options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
         )
     except Exception as e:
-        console.error("Error walking %s: %s\n" % (backend.hostname, e))
+        console.error(f"Error walking {backend.hostname}: {e}\n")
         if cmk.utils.debug.enabled():
             raise
     cmk.utils.cleanup.cleanup_globals()
@@ -217,14 +217,14 @@ def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: SNMPBac
     with Path(filename).open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(oids, backend=backend):
             for oid, value in rows:
-                file.write("%s %s\n" % (oid, value))
+                file.write(f"{oid} {value}\n")
             console.verbose("%d variables.\n" % len(rows))
 
-    console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.\n")
 
 
 def _execute_walks_for_dump(
-    oids: List[OID], *, backend: SNMPBackend
+    oids: list[OID], *, backend: SNMPBackend
 ) -> Iterable[SNMPRowInfoForStoredWalk]:
     for oid in oids:
         try:
@@ -236,7 +236,7 @@ def _execute_walks_for_dump(
                 raise
 
 
-def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
+def oids_to_walk(options: SNMPWalkOptions | None = None) -> list[OID]:
     if options is None:
         options = {}
 
@@ -256,5 +256,5 @@ def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
     snmp_cache.initialize_single_oid_cache(backend.config)
 
     value = get_single_oid(oid, backend=backend)
-    sys.stdout.write("%s (%s): %r\n" % (backend.hostname, backend.address, value))
+    sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
     cmk.utils.cleanup.cleanup_globals()

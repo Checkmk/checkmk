@@ -136,7 +136,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/$(FmtVersion)/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
@@ -171,7 +171,7 @@ cd $(ProjectDir)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/$(FmtVersion)/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
@@ -207,7 +207,7 @@ cd $(ProjectDir)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/$(FmtVersion)/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
@@ -243,7 +243,7 @@ cd $(ProjectDir)</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/$(AsioVersion)/include;../../extlibs/yaml-cpp/include;../../extlibs/$(FmtVersion)/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>

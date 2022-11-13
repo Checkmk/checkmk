@@ -5,7 +5,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Mapping, TypedDict
+from typing import cast, Literal, Mapping, TypedDict, TypeVar
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -124,6 +124,23 @@ def get_float_from_element(
     return float(text_with_unit[: -len(unit)]) * factor
 
 
+def get_int_from_element(element: ElementTree.Element | None) -> int | None:
+    if element is None or element.text is None:
+        return None
+    return int(element.text)
+
+
+T = TypeVar("T")
+
+
+def _let_pydantic_check_none(value: T | None) -> T:
+    return cast(T, value)
+
+
+def _let_pydantic_check_power_state(value: str | None) -> PowerState:
+    return cast(PowerState, value)
+
+
 def parse_nvidia_smi(string_table: StringTable) -> Section:
     xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
     return Section(
@@ -132,14 +149,16 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
         else None,
         driver_version=get_text_from_element(xml.find("driver_version")),
         cuda_version=get_text_from_element(xml.find("cuda_version")),
-        attached_gpus=get_text_from_element(xml.find("attached_gpus")),
+        attached_gpus=get_int_from_element(xml.find("attached_gpus")),
         gpus={
             ":".join(gpu.get("id", "").split(":")[-2:]): GPU(
-                id=gpu.get("id"),
+                id=_let_pydantic_check_none(gpu.get("id")),
                 product_name=get_text_from_element(gpu.find("product_name")),
                 product_brand=get_text_from_element(gpu.find("product_brand")),
                 power_readings=PowerReadings(
-                    power_state=get_text_from_element(gpu.find("power_readings/power_state")),
+                    power_state=_let_pydantic_check_power_state(
+                        get_text_from_element(gpu.find("power_readings/power_state")),
+                    ),
                     power_management=PowerManagement(
                         get_text_from_element(gpu.find("power_readings/power_management"))
                     ),

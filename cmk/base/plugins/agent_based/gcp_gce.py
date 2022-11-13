@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 import time
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import gcp, interfaces, uptime
 
 
-def parse_gce_uptime(string_table: StringTable) -> Optional[uptime.Section]:
+def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
     if not string_table:
         return None
     section = gcp.parse_piggyback(string_table)
@@ -31,7 +32,7 @@ register.agent_section(
 )
 
 
-def parse_default(string_table: StringTable) -> Optional[gcp.PiggyBackSection]:
+def parse_default(string_table: StringTable) -> gcp.PiggyBackSection | None:
     if not string_table:
         return None
     return gcp.parse_piggyback(string_table)

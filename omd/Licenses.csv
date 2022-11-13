@@ -20,7 +20,7 @@ nagios,3.5.1,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/nagios
 NagVis,1.9.29,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/nagvis/nagvis-1.9.29.tar.gz
 net-snmp,5.9.1,MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,omd/packages/net-snmp/net-snmp-5.9.1.zip,"Also MIT Expat and BSD-3-Clause: „Various copyrights apply to this package, listed in various separate parts below.“",,,
 NRPE,3.2.1,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/nrpe/nrpe-3.2.1.tar.gz,,,,
-Open Hardware Monitor,0.8.0,MPL-2.0,https://opensource.org/licenses/MPL-2.0,omd/packages/openhardwaremonitor/openhardwaremonitor-0.8.0.zip,The remainder of the software which is not under the Mozilla Public License 2.0 (MPL) is available under one of a variety of other licenses which are given below.      Aga.Controls License     WinRing0 License     jQuery License     Knockout License,,,
+Open Hardware Monitor,0.8.0,MPL-2.0,https://opensource.org/licenses/MPL-2.0,omd/packages/openhardwaremonitor/openhardwaremonitor-0.9.6.zip,The remainder of the software which is not under the Mozilla Public License 2.0 (MPL) is available under one of a variety of other licenses which are given below.      Aga.Controls License     WinRing0 License     jQuery License     Knockout License,,,
 OpenSSL,1.1.1l,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,omd/packages/openssl/openssl-1.1.1l.tar.gz
 Perl module: Archive-Zip,1.59,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/Archive-Zip-1.59.tar.gz
 Perl module: base,2.18,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/base-2.18.tar.gz,,,,

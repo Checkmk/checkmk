@@ -6,17 +6,13 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef fileinfo_details_h__
-#define logwatch_event_details_h__
+#ifndef LOGWATCH_EVENT_DETAILS_H
+#define LOGWATCH_EVENT_DETAILS_H
 
-#include <filesystem>
-#include <regex>
 #include <string>
 
 #include "cma_core.h"
-#include "providers/internal.h"
 #include "providers/logwatch_event.h"
-#include "section_header.h"
 
 namespace cma::provider::details {
 State ParseStateLine(const std::string &line);
@@ -24,4 +20,4 @@ StateVector LoadEventlogOffsets(const PathVector &state_files,
                                 bool reset_pos_to_null);
 }  // namespace cma::provider::details
 
-#endif  // logwatch_event_details_h__
+#endif  // LOGWATCH_EVENT_DETAILS_H

@@ -62,7 +62,7 @@ class dict_property(t.Generic[T]):
         if instance is None:
             return self
         try:
-            return instance[self.name]  # type: ignore[index]
+            return instance[self.name]
         except KeyError as exc:
             raise AttributeError(exc) from exc
 

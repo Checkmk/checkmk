@@ -30,6 +30,10 @@ exclude_aws_limits_perf_vars = [
     "vpc_sec_group_rules",
     "vpc_sec_groups",
     "if_vpc_sec_group",
+    "capacity_providers",
+    "container_instances",
+    "services",
+    "nodes_per_cluster",
 ]
 
 
@@ -43,7 +47,9 @@ class LambdaFunctionConfiguration:
 @dataclass(frozen=True)
 class AWSMetric:
     value: float
+    render_func: Callable[[float], str] | None = None
     levels_lower: tuple[float, float] | None = None
+    levels_upper: tuple[float, float] | None = None
     name: str | None = None
     label: str | None = None
 
@@ -133,7 +139,9 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
             value=metric_info.value,
             metric_name=metric_info.name,
             levels_lower=metric_info.levels_lower,
+            levels_upper=metric_info.levels_upper,
             label=metric_info.label,
+            render_func=metric_info.render_func,
         )
 
 

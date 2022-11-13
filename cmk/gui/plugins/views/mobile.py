@@ -9,11 +9,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.views.utils import Cell, Layout, layout_registry
+from cmk.gui.painters.v0.base import Cell
 from cmk.gui.type_defs import PainterSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.view_store import multisite_builtin_views
+from cmk.gui.views.layout import Layout, layout_registry
+from cmk.gui.visual_link import render_link_to_view
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
@@ -919,7 +921,7 @@ def render_mobile_table(
             else:
                 colspan = None
 
-            cell.paint(row, colspan=colspan)
+            cell.paint(row, render_link_to_view, colspan=colspan)
         html.close_row()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -972,7 +974,7 @@ def render_mobile_list(
     # Paint data rows
     for row in rows:
         html.open_li()
-        rendered_cells = [cell.render(row) for cell in cells]
+        rendered_cells = [cell.render(row, render_link_to_view) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
             assert isinstance(rendered_content, (str, HTML))
@@ -1048,7 +1050,7 @@ def render_mobile_dataset(
     for row in rows:
         html.open_table(class_="dataset")
         for cell in cells:
-            _tdclass, content = cell.render(row)
+            _tdclass, content = cell.render(row, render_link_to_view)
             if not content:
                 continue  # Omit empty cells
 
@@ -1057,7 +1059,7 @@ def render_mobile_dataset(
             html.close_tr()
 
             html.open_tr(class_="data")
-            cell.paint(row)
+            cell.paint(row, render_link_to_view)
             html.close_tr()
 
         html.close_table()

@@ -19,6 +19,7 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "logger.h"
+#include "tools/_process.h"
 
 namespace cma::tools::zip {
 // usually this pointer comes from Windows API
@@ -70,10 +71,10 @@ static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
     VARIANT variantDir{0};
     InitVariant(variantDir, bstr.bstr());
     Folder *folder = nullptr;
-    auto hResult = dispatch->NameSpace(variantDir, &folder);
+    auto result = dispatch->NameSpace(variantDir, &folder);
 
-    if (!SUCCEEDED(hResult)) {
-        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", hResult);
+    if (!SUCCEEDED(result)) {
+        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", result);
         return nullptr;
     }
 
@@ -94,19 +95,6 @@ static bool CheckTheParameters(std::filesystem::path file,
     }
 
     return true;
-}
-
-static ReleasedResource<FolderItem> GetItem(FolderItems *fi, long i) {
-    VARIANT var_index;
-    VariantInit(&var_index);
-    var_index.lVal = i;
-    var_index.vt = VT_I4;
-
-    FolderItem *item = nullptr;
-    fi->Item(var_index, &item);
-    ::VariantClear(&var_index);
-
-    return ReleasedResource<FolderItem>{item};
 }
 
 static ReleasedResource<IShellDispatch> CreateShellDispatch() {
@@ -131,21 +119,21 @@ static ReleasedResource<FolderItems> GetFolderItems(Folder *folder) {
 namespace {
 
 zip::Type GetFileType(std::wstring_view name) noexcept {
-    constexpr std::array<char, 2> cab_header{'M', 'S'};
-    constexpr std::array<char, 2> zip_header{'P', 'K'};
+    constexpr std::array cab_header{'M', 'S'};
+    constexpr std::array zip_header{'P', 'K'};
     try {
         std::ifstream f(wtools::ToUtf8(name), std::ios::binary);
         if (!f.good()) {
-            return zip::Type::unknown;
+            return Type::unknown;
         }
 
         std::array<char, 2> header;
-        f.read(reinterpret_cast<char *>(header.data()), 2);
+        f.read(header.data(), 2);
         if (header == cab_header) {
-            return zip::Type::cab;
+            return Type::cab;
         }
         if (header == zip_header) {
-            return zip::Type::zip;
+            return Type::zip;
         }
         XLOG::l("Header is not known '{}{}'", header[0], header[1]);
     } catch (const std::exception &e) {
@@ -153,7 +141,7 @@ zip::Type GetFileType(std::wstring_view name) noexcept {
         // ifstream or memory allocations
         XLOG::l("Exception '{}' generated reading header", e.what());
     }
-    return zip::Type::unknown;
+    return Type::unknown;
 }
 
 bool UnzipFile(std::wstring_view file_src, std::wstring_view dir_dest) {
@@ -203,7 +191,7 @@ bool UnzipFile(std::wstring_view file_src, std::wstring_view dir_dest) {
 bool UncabFile(std::wstring_view file_src, std::wstring_view dir_dest) {
     auto command_line = fmt::format(L"expand {} -F:* {}", file_src, dir_dest);
     XLOG::l.i("Executing '{}'", wtools::ToUtf8(command_line));
-    return tools::RunCommandAndWait(command_line);
+    return RunCommandAndWait(command_line);
 }
 }  // namespace
 
@@ -214,11 +202,11 @@ bool Extract(const std::filesystem::path &file_src,
     }
 
     switch (GetFileType(file_src.wstring())) {
-        case zip::Type::zip:
+        case Type::zip:
             return UnzipFile(file_src.wstring(), dir_dest.wstring());
-        case zip::Type::cab:
+        case Type::cab:
             return UncabFile(file_src.wstring(), dir_dest.wstring());
-        case zip::Type::unknown:
+        case Type::unknown:
             return false;
     }
 

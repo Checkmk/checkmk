@@ -138,11 +138,10 @@ def _add_scanned_hosts_to_folder(folder: "CREFolder", found: NetworkScanFoundHos
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration():
-        # Note:  `folder` is a CREFolder but it will still try to bake,
-        # although the bakery is a CEE feature.  The code under
-        # `hosts_and_folders` is very convoluted.
-        folder.create_hosts(entries, bake=bakery.try_bake_agents_for_hosts)
+        folder.create_hosts(entries)
         folder.save()
+
+    bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
 
 
 def _save_network_scan_result(folder: "CREFolder", result: NetworkScanResult) -> None:

@@ -9,6 +9,7 @@
             "ubuntu-18.04",
             "ubuntu-20.04",
             "ubuntu-22.04",
+            "ubuntu-22.10",
             "centos-7",
             "centos-8",
             "almalinux-9",
@@ -19,6 +20,7 @@
             "sles-15sp1",
             "sles-15sp2",
             "sles-15sp3",
+            "sles-15sp4",
             "cma",
             "cma-3"
         ],

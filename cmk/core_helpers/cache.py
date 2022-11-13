@@ -9,24 +9,20 @@ Cache hierarchy
 .. uml::
 
     abstract FileCache<TRawData> {
-        + read(Mode) : Optional[TRawData]
+        + read(Mode) : TRawData | None
         + write(TRawData, Mode) : None
-        + {abstract} make_path(Mode) : Path
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
     }
     class AgentFileCache {
-        + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
     }
     class NoCache {
-        + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
     }
     class SNMPFileCache {
-        + make_path(Mode) : Path
         - _from_cache_file(bytes) : TRawData
         - _to_cache_file(TRawData) : bytes
     }
@@ -51,23 +47,9 @@ import abc
 import copy
 import enum
 import logging
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Final,
-    Generic,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils
 import cmk.utils.store as _store
@@ -90,29 +72,29 @@ __all__ = [
 
 # ABCRawDataSection is wrong from a typing point of view.
 # AgentRawDataSection and SNMPRawDataSection are not correct either.
-ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
+ABCRawDataSection = AgentRawDataSection | SNMPRawDataSection
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
     Generic[TRawDataSection],
-    MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]],
+    MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]],
 ):
     __slots__ = ("_store",)
 
     def __init__(
-        self, store: MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]]
+        self, store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]]
     ):
         self._store = store
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._store)
+        return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: SectionName) -> Tuple[int, int, Sequence[TRawDataSection]]:
+    def __getitem__(self, key: SectionName) -> tuple[int, int, Sequence[TRawDataSection]]:
         return self._store.__getitem__(key)
 
     def __setitem__(
-        self, key: SectionName, value: Tuple[int, int, Sequence[TRawDataSection]]
+        self, key: SectionName, value: tuple[int, int, Sequence[TRawDataSection]]
     ) -> None:
         return self._store.__setitem__(key, value)
 
@@ -130,7 +112,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
         cls,
         *,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
     ) -> "PersistedSections[TRawDataSection]":
         return cls(
             {
@@ -150,7 +132,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
 class SectionStore(Generic[TRawDataSection]):
     def __init__(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         *,
         logger: logging.Logger,
     ) -> None:
@@ -184,8 +166,8 @@ class SectionStore(Generic[TRawDataSection]):
     def update(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, Tuple[int, int]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        cache_info: MutableMapping[SectionName, tuple[int, int]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
     ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
@@ -204,7 +186,7 @@ class SectionStore(Generic[TRawDataSection]):
     def _update(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
         keep_outdated: bool,
@@ -231,7 +213,7 @@ class SectionStore(Generic[TRawDataSection]):
     def _add_persisted_sections(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, Tuple[int, int]],
+        cache_info: MutableMapping[SectionName, tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
     ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         cache_info.update(
@@ -295,16 +277,16 @@ class FileCache(Generic[TRawData], abc.ABC):
         self,
         hostname: HostName,
         *,
-        base_path: Union[str, Path],
+        path_template: str,
         max_age: MaxAge,
         use_outdated: bool,
         simulation: bool,
         use_only_cache: bool,
-        file_cache_mode: Union[FileCacheMode, int],
+        file_cache_mode: FileCacheMode | int,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
-        self.base_path: Final = Path(base_path)
+        self.path_template: Final = path_template
         self.max_age = max_age
         self.use_outdated = use_outdated
         # TODO(ml): Make sure simulation and use_only_cache are identical
@@ -321,7 +303,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             + ", ".join(
                 (
                     f"{self.hostname}",
-                    f"base_path={self.base_path}",
+                    f"path_template={self.path_template}",
                     f"max_age={self.max_age}",
                     f"use_outdated={self.use_outdated}",
                     f"simulation={self.simulation}",
@@ -338,7 +320,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         return all(
             (
                 self.hostname == other.hostname,
-                self.base_path == other.base_path,
+                self.path_template == other.path_template,
                 self.max_age == other.max_age,
                 self.use_outdated == other.use_outdated,
                 self.simulation == other.simulation,
@@ -350,7 +332,7 @@ class FileCache(Generic[TRawData], abc.ABC):
     def to_json(self) -> Mapping[str, Any]:
         return {
             "hostname": str(self.hostname),
-            "base_path": str(self.base_path),
+            "path_template": self.path_template,
             "max_age": self.max_age,
             "use_outdated": self.use_outdated,
             "simulation": self.simulation,
@@ -359,7 +341,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         }
 
     @classmethod
-    def from_json(cls: Type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
+    def from_json(cls: type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
         serialized_ = copy.deepcopy(dict(serialized))
         max_age = MaxAge(*serialized_.pop("max_age"))
         return cls(max_age=max_age, **serialized_)
@@ -372,10 +354,6 @@ class FileCache(Generic[TRawData], abc.ABC):
     @staticmethod
     @abc.abstractmethod
     def _to_cache_file(raw_data: TRawData) -> bytes:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def make_path(self, mode: Mode) -> Path:
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
@@ -393,7 +371,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         return True
 
-    def read(self, mode: Mode) -> Optional[TRawData]:
+    def read(self, mode: Mode) -> TRawData | None:
         self._logger.debug("Read from cache: %r", self)
         raw_data = self._read(mode)
         if raw_data is not None:
@@ -404,16 +382,23 @@ class FileCache(Generic[TRawData], abc.ABC):
             raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
 
         if self.use_only_cache:
-            raise MKFetcherError("Got not data (use_only_cache)")
+            raise MKFetcherError("Got no data (use_only_cache)")
 
         return raw_data
 
-    def _read(self, mode: Mode) -> Optional[TRawData]:
+    @staticmethod
+    def _make_path(template: str, *, hostname: HostName, mode: Mode) -> Path:
+        # This is a kind of arbitrary mini-language but explicit in the
+        # caller and easy to extend in the future.  If somebody has a
+        # better idea to allow a serializable and parametrizable path
+        # creation, that's fine with me.
+        return Path(template.format(mode=mode.name.lower(), hostname=hostname))
+
+    def _read(self, mode: Mode) -> TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
-        path = self.make_path(mode)
-
+        path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
         try:
             cachefile_age = cmk.utils.cachefile_age(path)
         except FileNotFoundError:
@@ -447,17 +432,17 @@ class FileCache(Generic[TRawData], abc.ABC):
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
-        path = self.make_path(mode)
+        path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            raise MKGeneralException("Cannot create directory %r: %s" % (path.parent, e))
+            raise MKGeneralException(f"Cannot create directory {path.parent!r}: {e}")
 
         self._logger.debug("Write data to cache file %s", path)
         try:
             _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
         except Exception as e:
-            raise MKGeneralException("Cannot write cache file %s: %s" % (path, e))
+            raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
 
 class FileCacheGlobals:

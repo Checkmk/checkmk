@@ -32,7 +32,7 @@ except ImportError:
 if sys.version_info[0] >= 3:
     from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
 else:
-    from urllib2 import quote  # type: ignore[attr-defined] # pylint: disable=import-error
+    from urllib2 import quote  # pylint: disable=import-error
 
 try:
     try:

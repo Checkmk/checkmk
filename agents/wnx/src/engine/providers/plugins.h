@@ -4,10 +4,9 @@
 // source code package.
 
 #pragma once
-#ifndef plugins_h__
-#define plugins_h__
+#ifndef PLUGINS_H
+#define PLUGINS_H
 
-#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -21,7 +20,7 @@ namespace config {
 // in future may be controlled using yml
 extern bool g_local_no_send_if_empty_body;
 extern bool g_local_send_empty_at_end;
-};  // namespace config
+}  // namespace config
 
 enum class PluginType { normal, local };
 
@@ -31,6 +30,7 @@ public:
         setHeaderless();
         local_ = false;
         cfg_name_ = cfg::groups::kPlugins;
+        last_count_ = 0;
     }
 
     PluginsProvider(std::string_view name, char separator)
@@ -76,8 +76,8 @@ public:
 };
 
 enum class PluginMode { all, sync, async };
-int FindMaxTimeout(const PluginMap &pm, PluginMode type);
+int FindMaxTimeout(const PluginMap &pm, PluginMode need_type);
 
 }  // namespace cma::provider
 
-#endif  // plugins_h__
+#endif  // PLUGINS_H

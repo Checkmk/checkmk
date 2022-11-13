@@ -10,7 +10,7 @@ import argparse
 import json
 import logging
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import requests
 import urllib3
@@ -94,7 +94,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
     setup_logging(args.verbose)
     logging.debug("cmd: argv=%r, turned into: %r", argv, args.__dict__)
     try:
-        url_prefix = "%s://%s%s/%s" % (
+        url_prefix = "{}://{}{}/{}".format(
             "http" if args.no_tls else "https",
             args.hostname,
             ":%s" % args.port if args.port else "",
@@ -117,7 +117,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         raise SystemExit(-1)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     """Just replace password placeholders in command line args and call
     write_section_from_get_request()"""
     if argv is None:

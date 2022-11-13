@@ -5,11 +5,12 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Final, FrozenSet, Sequence, Union
+from collections.abc import Sequence
+from typing import Final, NamedTuple
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
-__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection"]
+__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection", "SourceInfo", "FetcherType"]
 
 
 class Mode(enum.Enum):
@@ -32,8 +33,17 @@ class FetcherType(enum.Enum):
     IPMI = enum.auto()
     PIGGYBACK = enum.auto()
     PROGRAM = enum.auto()
+    SPECIAL_AGENT = enum.auto()
     SNMP = enum.auto()
     TCP = enum.auto()
+
+
+class SourceInfo(NamedTuple):
+    hostname: HostName
+    ipaddress: HostAddress | None
+    ident: str
+    fetcher_type: FetcherType
+    source_type: SourceType
 
 
 # Note that the inner Sequence[str] to AgentRawDataSection
@@ -53,7 +63,7 @@ class SelectionType(enum.Enum):
     NONE = enum.auto()
 
 
-SectionNameCollection = Union[SelectionType, FrozenSet[SectionName]]
+SectionNameCollection = SelectionType | frozenset[SectionName]
 # If preselected sections are given, we assume that we are interested in these
 # and only these sections, so we may omit others and in the SNMP case
 # must try to fetch them (regardles of detection).

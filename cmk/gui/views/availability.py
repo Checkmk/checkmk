@@ -32,6 +32,7 @@ from cmk.gui.availability import (
     AVTimeRange,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -49,7 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views.utils import display_options, format_plugin_output
+from cmk.gui.painters.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML

@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef mem_h__
-#define mem_h__
+#ifndef MEM_H
+#define MEM_H
 
 #include <string>
 
@@ -26,6 +26,6 @@ private:
     std::string makeBody() override;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
-#endif  // mem_h__
+#endif  // MEM_H

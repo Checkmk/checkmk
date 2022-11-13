@@ -124,7 +124,7 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
@@ -1291,7 +1291,7 @@ def initialize_site_ca(site: SiteContext) -> None:
     This will be used e.g. for serving SSL secured livestatus"""
     ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CN_TEMPLATE.format(site.name)),
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):
@@ -1748,7 +1748,8 @@ def call_scripts(site: SiteContext, phase: str) -> None:
     if path.exists():
         putenv("OMD_ROOT", site.dir)
         putenv("OMD_SITE", site.name)
-        for file in path.iterdir():
+        # NOTE: scripts have an order!
+        for file in sorted(path.iterdir()):
             if file.name[0] == ".":
                 continue
             sys.stdout.write('Executing %s script "%s"...' % (phase, file.name))
@@ -2082,7 +2083,7 @@ def welcome_message(site: SiteContext, admin_password: str) -> None:
     )
     sys.stdout.write(
         "  After logging in, you can change the password for cmkadmin with "
-        "%s'htpasswd etc/htpasswd cmkadmin'%s.\n" % (tty.bold, tty.normal)
+        "%s'cmk-passwd cmkadmin'%s.\n" % (tty.bold, tty.normal)
     )
     sys.stdout.write("\n")
 
@@ -2206,6 +2207,10 @@ def finalize_site(
         if status:
             bail_out("Error in non-priviledged sub-process.")
 
+    # The config changes above, made with the site user, have to be also available for
+    # the root user, so load the site config again. Otherwise e.g. changed
+    # APACHE_TCP_PORT would not be recognized
+    site.load_config()
     register_with_system_apache(version_info, site, apache_reload)
 
 

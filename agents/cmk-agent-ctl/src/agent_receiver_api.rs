@@ -206,21 +206,14 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         host_name: &str,
     ) -> AnyhowResult<()> {
-        Api::check_response_204(
-            certs::client(
-                Some(certs::HandshakeCredentials {
-                    server_root_cert: root_cert,
-                    client_identity: None,
-                }),
-                self.use_proxy,
-            )?
-            .post(Self::endpoint_url(base_url, &["register_with_hostname"])?)
-            .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&RegistrationWithHNBody {
+        self.call_registration_endpoint(
+            Self::endpoint_url(base_url, &["register_with_hostname"])?,
+            root_cert,
+            credentials,
+            &RegistrationWithHNBody {
                 uuid: uuid.to_owned(),
                 host_name: String::from(host_name),
-            })
-            .send()?,
+            },
         )
     }
 
@@ -232,7 +225,27 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         agent_labels: &types::AgentLabels,
     ) -> AnyhowResult<()> {
-        Api::check_response_204(
+        self.call_registration_endpoint(
+            Self::endpoint_url(base_url, &["register_with_labels"])?,
+            root_cert,
+            credentials,
+            &RegistrationWithALBody {
+                uuid: uuid.to_owned(),
+                agent_labels: agent_labels.clone(),
+            },
+        )
+    }
+}
+
+impl Api {
+    fn call_registration_endpoint(
+        &self,
+        url: reqwest::Url,
+        root_cert: &str,
+        credentials: &types::Credentials,
+        body: &impl Serialize,
+    ) -> AnyhowResult<()> {
+        Self::check_response_204(
             certs::client(
                 Some(certs::HandshakeCredentials {
                     server_root_cert: root_cert,
@@ -240,12 +253,9 @@ impl Registration for Api {
                 }),
                 self.use_proxy,
             )?
-            .post(Self::endpoint_url(base_url, &["register_with_labels"])?)
+            .post(url)
             .basic_auth(&credentials.username, Some(&credentials.password))
-            .json(&RegistrationWithALBody {
-                uuid: uuid.to_owned(),
-                agent_labels: agent_labels.clone(),
-            })
+            .json(body)
             .send()?,
         )
     }

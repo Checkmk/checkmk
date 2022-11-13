@@ -11,22 +11,22 @@ import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any, Dict, Optional, TypedDict, Union
+from typing import Any, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
 
-StringMap = Dict[str, str]  # should be Mapping[] but we're not ready yet..
+StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 
 
 class TokenDict(TypedDict):
     access_token: str
     refresh_token: str
     expires_in: float
-    expires_in_abs: Optional[str]
+    expires_in_abs: str | None
 
 
-def get_requests_ca() -> Optional[str]:
+def get_requests_ca() -> str | None:
     return os.environ.get("REQUESTS_CA_BUNDLE")
 
 
@@ -41,7 +41,7 @@ def to_token_dict(data: Any) -> TokenDict:
 
 class Requester(abc.ABC):
     @abc.abstractmethod
-    def get(self, path: str, parameters: Optional[StringMap] = None) -> Any:
+    def get(self, path: str, parameters: StringMap | None = None) -> Any:
         raise NotImplementedError()
 
 
@@ -49,7 +49,7 @@ class HTTPSConfigurableConnection(HTTPSConnection):
 
     IGNORE = "__ignore"
 
-    def __init__(self, host: str, ca_file: Optional[str] = None) -> None:
+    def __init__(self, host: str, ca_file: str | None = None) -> None:
         super().__init__(host)
         self.__ca_file = ca_file
 
@@ -98,15 +98,15 @@ class HTTPSAuthRequester(Requester):
     ) -> None:
         self._req_headers = {
             "Authorization": "Basic "
-            + base64.encodebytes(("%s:%s" % (username, password)).encode()).strip().decode()
+            + base64.encodebytes((f"{username}:{password}").encode()).strip().decode()
         }
         self._base_url = "https://%s:%d/%s" % (server, port, base_url)
         self._opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
 
-    def get(self, path: str, parameters: Optional[StringMap] = None) -> Any:
-        url = "%s/%s/" % (self._base_url, path)
+    def get(self, path: str, parameters: StringMap | None = None) -> Any:
+        url = f"{self._base_url}/{path}/"
         if parameters is not None:
-            url = "%s?%s" % (url, "&".join(["%s=%s" % par for par in parameters.items()]))
+            url = "{}?{}".format(url, "&".join(["%s=%s" % par for par in parameters.items()]))
 
         request = Request(url, headers=self._req_headers)
         response = self._opener.open(request)
@@ -117,7 +117,7 @@ def create_api_connect_session(
     api_url: str,
     no_cert_check: bool = False,
     auth: Any = None,
-    token: Optional[str] = None,
+    token: str | None = None,
 ) -> "ApiSession":
     """Create a custom requests Session
 
@@ -158,9 +158,7 @@ class ApiSession(Session):
 
     """
 
-    def __init__(
-        self, base_url: Optional[str] = None, ssl_verify: Optional[Union[str, bool]] = None
-    ):
+    def __init__(self, base_url: str | None = None, ssl_verify: str | bool | None = None):
         super().__init__()
         self._base_url = base_url if base_url else ""
         self.ssl_verify = ssl_verify if ssl_verify else False

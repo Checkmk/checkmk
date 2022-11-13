@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 from typing import Any, Dict, Literal, Tuple
 
 import pytest
@@ -23,20 +22,17 @@ from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import painter_option_registry
-from cmk.gui.plugins.views.utils import Cell, Painter
-from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.painters.v0 import base as painter_base
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.sorter import sorter_registry
 from cmk.gui.type_defs import PainterSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.view_store import multisite_builtin_views
-
-
-@pytest.fixture(name="view")
-def view_fixture(request_context: None) -> View:
-    view_name = "allhosts"
-    view_spec = multisite_builtin_views[view_name].copy()
-    return View(view_name, view_spec, view_spec.get("context", {}))
+from cmk.gui.views import command
+from cmk.gui.views.command import command_group_registry, command_registry
+from cmk.gui.views.layout import layout_registry
+from cmk.gui.views.page_show_view import get_limit
 
 
 def test_registered_painter_options() -> None:
@@ -76,7 +72,7 @@ def test_registered_layouts() -> None:
         "tiled",
     ]
 
-    names = cmk.gui.plugins.views.utils.layout_registry.keys()
+    names = layout_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
@@ -99,7 +95,7 @@ def test_layout_properties() -> None:
     }
 
     for ident, spec in expected.items():
-        plugin = cmk.gui.plugins.views.utils.layout_registry[ident]()
+        plugin = layout_registry[ident]()
         assert isinstance(plugin.title, str)
         assert spec["title"] == plugin.title
         assert spec["checkboxes"] == plugin.can_display_checkboxes
@@ -107,7 +103,7 @@ def test_layout_properties() -> None:
 
 
 def test_get_layout_choices() -> None:
-    choices = cmk.gui.plugins.views.utils.layout_registry.get_choices()
+    choices = layout_registry.get_choices()
     assert sorted(choices) == sorted(
         [
             ("matrix", "Matrix"),
@@ -145,20 +141,16 @@ def test_registered_command_groups() -> None:
         "various",
     ]
 
-    names = cmk.gui.plugins.views.utils.command_group_registry.keys()
+    names = command_group_registry.keys()
     assert sorted(expected) == sorted(names)
 
 
 def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        cmk.gui.plugins.views.utils,
-        "command_group_registry",
-        cmk.gui.plugins.views.utils.CommandGroupRegistry(),
-    )
-    cmk.gui.plugins.views.utils.register_command_group("abc", "A B C", 123)
+    monkeypatch.setattr(command, "command_group_registry", command.CommandGroupRegistry())
+    command.register_command_group("abc", "A B C", 123)
 
-    group = cmk.gui.plugins.views.utils.command_group_registry["abc"]()
-    assert isinstance(group, cmk.gui.plugins.views.utils.CommandGroup)
+    group = command.command_group_registry["abc"]()
+    assert isinstance(group, command.CommandGroup)
     assert group.ident == "abc"
     assert group.title == "A B C"
     assert group.sort_index == 123
@@ -277,10 +269,10 @@ def test_registered_commands() -> None:
             }
         )
 
-    names = cmk.gui.plugins.views.utils.command_registry.keys()
+    names = command_registry.keys()
     assert sorted(expected.keys()) == sorted(names)
 
-    for cmd_class in cmk.gui.plugins.views.utils.command_registry.values():
+    for cmd_class in command_registry.values():
         cmd = cmd_class()
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
@@ -289,11 +281,7 @@ def test_registered_commands() -> None:
 
 
 def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        cmk.gui.plugins.views.utils,
-        "command_registry",
-        cmk.gui.plugins.views.utils.CommandRegistry(),
-    )
+    monkeypatch.setattr(command, "command_registry", command.CommandRegistry())
 
     def render() -> None:
         pass
@@ -301,7 +289,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     def action():
         pass
 
-    cmk.gui.plugins.views.utils.register_legacy_command(
+    command.register_legacy_command(
         {
             "tables": ["tabl"],
             "permission": "general.use",
@@ -311,8 +299,8 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     )
 
-    cmd = cmk.gui.plugins.views.utils.command_registry["blabla"]()
-    assert isinstance(cmd, cmk.gui.plugins.views.utils.Command)
+    cmd = command.command_registry["blabla"]()
+    assert isinstance(cmd, command.Command)
     assert cmd.ident == "blabla"
     assert cmd.title == "Bla Bla"
     assert cmd.permission == cmk.gui.default_permissions.PermissionGeneralUse
@@ -670,9 +658,7 @@ def test_registered_datasources() -> None:
 
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    painters: list[Painter] = [
-        painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()
-    ]
+    painters: list[Painter] = [painter_class() for painter_class in painter_registry.values()]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
         (painter, Cell(view.spec, None, PainterSpec(name=painter.ident))) for painter in painters
     ]
@@ -688,15 +674,15 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 
 def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     monkeypatch.setattr(
-        cmk.gui.plugins.views.utils,
+        painter_base,
         "painter_registry",
-        cmk.gui.plugins.views.utils.PainterRegistry(),
+        PainterRegistry(),
     )
 
     def rendr(row):
         return ("abc", "xyz")
 
-    cmk.gui.plugins.views.utils.register_painter(
+    painter_base.register_painter(
         "abc",
         {
             "title": "A B C",
@@ -710,9 +696,9 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell(view.spec, None, PainterSpec(name=painter.ident))
-    assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
+    painter = painter_base.painter_registry["abc"]()
+    dummy_cell = Cell(view.spec, None, PainterSpec(name=painter.ident))
+    assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
     assert painter.short_title(dummy_cell) == "ABC"
@@ -1868,92 +1854,6 @@ def test_registered_sorters() -> None:
         assert sorter.load_inv == spec.get("load_inv", False)
 
 
-def test_get_needed_regular_columns(view: View) -> None:
-    class SomeFilter(Filter):
-        def display(self, value):
-            return
-
-        def columns_for_filter_table(self, context):
-            return ["some_column"]
-
-    columns = cmk.gui.views._get_needed_regular_columns(
-        [
-            SomeFilter(
-                ident="some_filter",
-                title="Some filter",
-                sort_index=1,
-                info="info",
-                htmlvars=[],
-                link_columns=[],
-            )
-        ],
-        view,
-    )
-    assert sorted(columns) == sorted(
-        [
-            "host_accept_passive_checks",
-            "host_acknowledged",
-            "host_action_url_expanded",
-            "host_active_checks_enabled",
-            "host_address",
-            "host_check_command",
-            "host_check_type",
-            "host_comments_with_extra_info",
-            "host_custom_variable_names",
-            "host_custom_variable_values",
-            "host_downtimes",
-            "host_downtimes_with_extra_info",
-            "host_filename",
-            "host_has_been_checked",
-            "host_icon_image",
-            "host_in_check_period",
-            "host_in_notification_period",
-            "host_in_service_period",
-            "host_is_flapping",
-            "host_modified_attributes_list",
-            "host_name",
-            "host_notes_url_expanded",
-            "host_notifications_enabled",
-            "host_num_services_crit",
-            "host_num_services_ok",
-            "host_num_services_pending",
-            "host_num_services_unknown",
-            "host_num_services_warn",
-            "host_perf_data",
-            "host_pnpgraph_present",
-            "host_scheduled_downtime_depth",
-            "host_staleness",
-            "host_state",
-            "some_column",
-        ]
-    )
-
-
-@pytest.mark.usefixtures("load_config")
-def test_get_needed_join_columns(view: View) -> None:
-    view_spec = copy.deepcopy(view.spec)
-    view_spec["painters"] = [
-        *view_spec["painters"],
-        PainterSpec(name="service_description", join_index="CPU load"),
-    ]
-    view = View(view.name, view_spec, view_spec.get("context", {}))
-
-    columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
-
-    expected_columns = [
-        "host_name",
-        "service_description",
-    ]
-
-    if cmk_version.is_managed_edition():
-        expected_columns += [
-            "host_custom_variable_names",
-            "host_custom_variable_values",
-        ]
-
-    assert sorted(columns) == sorted(expected_columns)
-
-
 def test_create_view_basics() -> None:
     view_name = "allhosts"
     view_spec = multisite_builtin_views[view_name]
@@ -2004,7 +1904,7 @@ def test_gui_view_row_limit(
 
     mocker.patch.object(active_config, "roles", {"nobody": {"permissions": permissions}})
     mocker.patch.object(user, "role_ids", ["nobody"])
-    assert cmk.gui.views.get_limit() == result
+    assert get_limit() == result
 
 
 def test_view_only_sites(view: View) -> None:
@@ -2675,6 +2575,6 @@ def test_view_page(  # type:ignore[no-untyped-def]
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
-        assert "heute" in resp
-        assert "query=null" not in resp
+        assert "heute" in resp.text
+        assert "query=null" not in resp.text
         assert str(resp).count("/domain-types/host/collections/all") == 1

@@ -21,7 +21,7 @@ LONGSERVICEOUTPUT_HTML in custom notification scripts please
 switch to the macros HOSTOUTPUT, SERVICEOUTPUT, and
 LONGSERVICEOUTPUT which contain the textual state markers
 '(!)' and '(!!)' for WARN and CRIT, respectively. The *_HTML
-variables will be deprecated in 1.6 and removed in 1.7.
+variables will be deprecated in 1.6 and removed in 2.0.
 If you want to replace the textual state markers by HTML code
 you can use the utility function
 cmk.notification_plugins.utils.format_plugin_output.

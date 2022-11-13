@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[attr-defined]
 from typing import Callable
 
 import pytest
+
+from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName
@@ -28,7 +29,9 @@ from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
 pytestmark = pytest.mark.checks
 
 
-def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register) -> None:
+def test_create_section_plugin_from_legacy(
+    fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister
+) -> None:
     for name, check_info_dict in fix_plugin_legacy.check_info.items():
         # only test main checks
         if name != section_name_of(name):
@@ -53,11 +56,11 @@ def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register) -> N
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy) -> None:
+def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
     assert set(fix_plugin_legacy.snmp_scan_functions) == set(fix_plugin_legacy.snmp_info)
 
 
-def test_snmp_tree_translation(fix_plugin_legacy) -> None:
+def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for info_spec in fix_plugin_legacy.snmp_info.values():
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately
@@ -65,7 +68,7 @@ def test_snmp_tree_translation(fix_plugin_legacy) -> None:
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(fix_plugin_legacy) -> None:
+def test_scan_function_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for name, scan_func in fix_plugin_legacy.snmp_scan_functions.items():
         if name in (
             # these are already migrated manually:
@@ -98,12 +101,12 @@ def test_explicit_conversion(func: Callable[[str], str]) -> None:
     assert created == explicit
 
 
-def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy) -> None:
+def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy: FixPluginLegacy) -> None:
     for name in fix_plugin_legacy.snmp_info:
         assert name == section_name_of(name)
 
 
-def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
+def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister) -> None:
     migrated = {str(name) for name in fix_register.check_plugins}
     # we don't expect pure section declarations anymore
     true_checks = {
@@ -115,7 +118,7 @@ def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
     assert not failures, "failed to migrate: {!r}".format(failures)
 
 
-def test_all_check_variables_present(fix_plugin_legacy) -> None:
+def test_all_check_variables_present(fix_plugin_legacy: FixPluginLegacy) -> None:
     expected_check_variables = {
         "AKCP_TEMP_CHECK_DEFAULT_PARAMETERS",
         "ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS",
@@ -130,7 +133,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "BALANCE_THRESHOLDS",
         "DELL_IDRAC_FANS_STATE_MAP",
         "DEVICE_TYPE_MAP",
-        "ENVIROMUX_CHECK_DEFAULT_PARAMETERS",
         "ERROR_DETAILS",
         "F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS",
         "FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS",
@@ -365,7 +367,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "enterasys_cpu_default_levels",
         "enterasys_powersupply_default",
         "enterasys_temp_default_levels",
-        "enviromux_default_levels",
         "epson_beamer_lamp_default_levels",
         "esx_vsphere_objects_default_levels",
         "etherbox2_temp_default_levels",
@@ -699,11 +700,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "saprouter_cert_default_levels",
         "security_master_temp_default_levels",
         "sensatronics_temp_default_levels",
-        "sensor_digital_value_names",
-        "sensor_status_names",
-        "sensor_type_names",
-        "sensor_type_names_external",
-        "sensor_type_names_sems_external",
         "severity_to_states",
         "shards_info",
         "siemens_plc_temp_default_levels",
@@ -741,7 +737,6 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
         "tasks_info",
         "temp_unitsym",
         "threads_default_levels",
-        "threepar_ports_default_levels",
         "threepar_remotecopy_default_levels",
         "tinkerforge_humidity_default_levels",
         "tsm_scratch_default_levels",
@@ -799,16 +794,13 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
     )
 
 
-def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
+def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) -> None:
     expected_legacy_checks = {
-        "3par_capacity",
         "3par_cpgs",
         "3par_cpgs.usage",
         "3par_hosts",
-        "3par_ports",
         "3par_remotecopy",
         "3par_system",
-        "3par_volumes",
         "3ware_disks",
         "3ware_info",
         "3ware_units",
@@ -995,7 +987,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "azure_usagedetails",
         "azure_virtualmachines",
         "azure_virtualmachines.summary",
-        "azure_virtualnetworkgateways",
         "barracuda_mail_latency",
         "barracuda_mailqueues",
         "barracuda_system_cpu_util",
@@ -1367,23 +1358,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "entersekt.ecerterrors",
         "entersekt.soaperrors",
         "entersekt.certexpiry",
-        "enviromux",
-        "enviromux.voltage",
-        "enviromux.humidity",
-        "enviromux_aux",
-        "enviromux_aux.voltage",
-        "enviromux_aux.humidity",
-        "enviromux_digital",
-        "enviromux_external",
-        "enviromux_external.voltage",
-        "enviromux_external.humidity",
-        "enviromux_sems_digital",
-        "enviromux_sems_external",
-        "enviromux_sems_external.voltage",
-        "enviromux_sems_external.humidity",
-        "enviromux_sems",
-        "enviromux_sems.voltage",
-        "enviromux_sems.humidity",
         "epson_beamer_lamp",
         "esx_vsphere_counters.uptime",
         "esx_vsphere_counters.swap",
@@ -2129,7 +2103,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "splunk_jobs",
         "splunk_license_state",
         "splunk_license_usage",
-        "sshd_config",
         "statgrab_cpu",
         "steelhead_connections",
         "steelhead_peers",

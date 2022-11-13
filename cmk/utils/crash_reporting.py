@@ -21,7 +21,7 @@ from collections.abc import Iterator, Mapping
 from contextlib import suppress
 from itertools import islice
 from pathlib import Path
-from typing import Any, Type
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -150,9 +150,7 @@ class ABCCrashReport(abc.ABC):
         return cls(**attributes)
 
     @classmethod
-    def deserialize(
-        cls: Type[ABCCrashReport], serialized: dict[str, dict[str, str]]
-    ) -> ABCCrashReport:
+    def deserialize(cls, serialized: dict[str, dict[str, str]]) -> ABCCrashReport:
         """Deserialize the object"""
         class_ = crash_report_registry[serialized["crash_info"]["crash_type"]]
         return class_(**serialized)
@@ -225,7 +223,7 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
     # HACK: copy-n-paste from cmk.utils.exception.MKException.__str__ below.
     # Remove this after migration...
     if exc_value is None or not exc_value.args:
-        exc_txt = str("")
+        exc_txt = ""
     elif len(exc_value.args) == 1 and isinstance(exc_value.args[0], bytes):
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
@@ -298,8 +296,8 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
     return val
 
 
-class CrashReportRegistry(cmk.utils.plugin_registry.Registry[Type[ABCCrashReport]]):
-    def plugin_name(self, instance: Type[ABCCrashReport]) -> str:
+class CrashReportRegistry(cmk.utils.plugin_registry.Registry[type[ABCCrashReport]]):
+    def plugin_name(self, instance: type[ABCCrashReport]) -> str:
         return instance.type()
 
 

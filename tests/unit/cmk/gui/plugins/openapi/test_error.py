@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from cmk.gui.plugins.openapi.restful_objects import response_schemas
+from cmk.gui.plugins.openapi.restful_objects.api_error import ApiError
 from cmk.gui.plugins.openapi.utils import problem
 
 
@@ -43,7 +43,7 @@ def test_openapi_error_response():
     )
 
     json_dict = json.loads(problem_response.data)
-    schema = response_schemas.ApiError()
+    schema = ApiError()
     loaded = schema.load(json_dict)
     dumped = schema.dump(loaded)
 

@@ -9,14 +9,13 @@
 //
 #pragma once
 
-#ifndef stop_watch_h__
-#define stop_watch_h__
+#ifndef STOP_WATCH_H
+#define STOP_WATCH_H
 #include <chrono>
 #include <cstdint>
 #include <mutex>
 #include <string>
 #include <string_view>
-#include <tuple>
 
 #include "tools/_raii.h"
 
@@ -52,6 +51,7 @@ public:
         started_ = false;
         return *this;
     }
+    ~StopWatch() = default;
 
     void start() {
         std::lock_guard lk(lock_);
@@ -147,4 +147,4 @@ private:
 
 }  // namespace wtools
 
-#endif  // stop_watch_h__
+#endif  // STOP_WATCH_H

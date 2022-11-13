@@ -49,6 +49,14 @@ def is_plus_repo() -> bool:
     return os.path.exists(cpe_path())
 
 
+def is_containerized() -> bool:
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.exists("/run/.containerenv")
+        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
+    )
+
+
 def virtualenv_path() -> Path:
     venv = subprocess.check_output(
         [str(repo_path() / "scripts/run-pipenv"), "--bare", "--venv"], encoding="utf-8"
@@ -186,6 +194,8 @@ def add_python_paths() -> None:
 
     # if not running as site user, make the livestatus module available
     if not is_running_as_site_user():
+        if is_enterprise_repo():
+            sys.path.insert(0, os.path.join(cmc_path()))
         sys.path.insert(0, os.path.join(cmk_path(), "livestatus/api/python"))
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 

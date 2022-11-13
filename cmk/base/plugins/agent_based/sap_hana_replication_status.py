@@ -13,7 +13,7 @@ SAP_HANA_REPL_STATUS_MAP: Final = {
     "0": (State.UNKNOWN, "unknown status from replication script", "state_unknown"),
     "10": (State.CRIT, "no system replication", "state_no_replication"),
     "11": (State.CRIT, "error", "state_error"),
-    # "12" accuatly stands for "unknown replication status", but as per customer"s information
+    # "12" actually stands for "unknown replication status", but as per customer's information
     # (see SUP-1436), this should be indicated as "passive" replication aka secondary SAP HANA node.
     "12": (State.OK, "passive", "state_replication_unknown"),
     "13": (State.WARN, "initializing", "state_initializing"),

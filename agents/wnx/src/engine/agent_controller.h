@@ -4,12 +4,11 @@
 // source code package.
 
 #pragma once
-#ifndef agent_controller_h__
-#define agent_controller_h__
+#ifndef AGENT_CONTROLLER_H
+#define AGENT_CONTROLLER_H
 #include <cstdint>
 #include <filesystem>
 #include <optional>
-#include <string_view>
 
 namespace YAML {
 class Node;
@@ -80,4 +79,4 @@ void CreateArtifacts(const std::filesystem::path &marker,
                      bool controller_exists) noexcept;
 }  // namespace cma::ac
 
-#endif  // agent_controller_h__
+#endif  // AGENT_CONTROLLER_H

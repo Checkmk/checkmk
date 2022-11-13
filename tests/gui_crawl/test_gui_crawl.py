@@ -10,7 +10,6 @@ import io
 import json
 import logging
 import os
-import pprint
 import re
 import tarfile
 import time
@@ -141,12 +140,18 @@ class CrawlResult:
 
 
 def format_js_error(error: playwright.async_api.Error) -> str:
-    data = {
-        "message": error.message,
-        "name": error.name,
-        "stack": error.stack,
-    }
-    return pprint.pformat(data)
+    return f"{error.name}: {error.message}\n{error.stack}"
+
+
+def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.async_api.Frame:
+    # There are two main frames: Playwright main_frame is the outer frame, the
+    # frame named main is the frame with the name "main". This is where the
+    # interesing checkmk stuff is happening, so we try to find it, but fall
+    # back to the outer frame if we can not find it.
+    for frame in page.frames:
+        if frame.name == "main":
+            return frame
+    return page.main_frame
 
 
 class Crawler:
@@ -191,6 +196,16 @@ class Crawler:
 
         context = await browser.new_context()
         page = await context.new_page()
+
+        async def handle_page_error(error: playwright.async_api.Error) -> None:
+            self.handle_error(
+                Url(try_find_frame_named_main(page).url),
+                error_type="JavascriptCreateError",
+                message=format_js_error(error),
+            )
+
+        page.on("pageerror", handle_page_error)
+
         await page.goto(self.site.internal_url)
         await page.fill('input[name="_username"]', "cmkadmin")
         await page.fill('input[name="_password"]', "cmk")
@@ -352,7 +367,7 @@ class Crawler:
     ) -> PageContent:
         logs = []
 
-        async def handle_console_messages(msg):
+        async def handle_console_messages(msg: playwright.async_api.ConsoleMessage) -> None:
             location = (
                 f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
             )
@@ -637,14 +652,23 @@ def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url, None, 
 @pytest.fixture
 def site() -> Site:
     version = os.environ.get("VERSION", CMKVersion.DAILY)
+    reuse = os.environ.get("REUSE")
+    # if REUSE is undefined, a site will neither be reused nor be dropped
+    reuse_site = reuse == "1"
+    drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="crawl_", update_from_git=version == "git", install_test_python_modules=False
     )
 
-    site = None
-    if os.environ.get("REUSE", "0") == "1":
+    site = sf.get_existing_site("central")
+    if site.exists() and reuse_site:
+        logger.info("Reuse existing site (REUSE=1)")
         site = sf.get_existing_site("central")
-    if site is None or not site.exists():
+    else:
+        if site.exists() and drop_site:
+            logger.info("Dropping existing site (REUSE=0)")
+            site.rm()
+        logger.info("Creating new site")
         site = sf.get_site("central")
     logger.info("Site %s is ready!", site.id)
 

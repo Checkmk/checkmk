@@ -14,7 +14,6 @@ SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
-import abc
 import ast
 import errno
 import hashlib
@@ -30,7 +29,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -39,13 +38,15 @@ from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils
 import cmk.utils.agent_registration as agent_registration
+import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.license_usage import save_extensions
-from cmk.utils.license_usage.export import LicenseUsageExtensions
+from cmk.utils.licensing import save_extensions
+from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -57,8 +58,8 @@ import cmk.gui.watolib.automations
 import cmk.gui.watolib.config_domain_name as config_domain_name
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
-import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
+from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -78,14 +79,12 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.userdb.utils import user_sync_default_config
 from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
     DomainRequests,
     get_always_activate_domains,
     get_config_domain,
     SerializedSettings,
-    wato_fileheader,
 )
 from cmk.gui.site_config import allsites, get_site_config, is_single_local_site, site_is_local
 from cmk.gui.sites import disconnect as sites_disconnect
@@ -93,10 +92,17 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import (
+    ABCSnapshotDataCollector,
+    create_distributed_wato_files,
+    get_site_globals,
+    ReplicationPath,
+    SnapshotSettings,
+)
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
@@ -129,17 +135,6 @@ ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-
-
-class SnapshotSettings(NamedTuple):
-    # TODO: Refactor to Path
-    snapshot_path: str
-    # TODO: Refactor to Path
-    work_dir: str
-    # TODO: Clarify naming (-> replication path or snapshot component?)
-    snapshot_components: List[ReplicationPath]
-    component_names: Set[str]
-    site_config: SiteConfiguration
 
 
 # Directories and files to synchronize during replication
@@ -851,7 +846,7 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
             backup_snapshot_proc = multiprocessing.Process(
-                target=cmk.gui.watolib.snapshots.create_snapshot, args=(self._comment,)
+                target=backup_snapshots.create_snapshot, args=(self._comment,)
             )
             backup_snapshot_proc.start()
 
@@ -940,7 +935,7 @@ class ActivateChangesManager(ActivateChanges):
         job.start(job.schedule_sites)
 
     def _log_activation(self):
-        log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
+        log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
         log_audit("activate-changes", log_msg)
 
         if self._comment:
@@ -1032,39 +1027,6 @@ class SnapshotManager:
         hooks.call("post-snapshot-creation", self._site_snapshot_settings)
 
 
-class ABCSnapshotDataCollector(abc.ABC):
-    """Prepares files to be synchronized to the remote sites"""
-
-    def __init__(self, site_snapshot_settings: Dict[SiteId, SnapshotSettings]) -> None:
-        super().__init__()
-        self._site_snapshot_settings = site_snapshot_settings
-        self._logger = logger.getChild(self.__class__.__name__)
-
-    @abc.abstractmethod
-    def prepare_snapshot_files(self) -> None:
-        """Site independent preparation of files to be used for the sync snapshots
-        This will be called once before iterating over all sites.
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_generic_components(self) -> List[ReplicationPath]:
-        """Return the site independent snapshot components
-        These will be collected by the SnapshotManager once when entering the context manager
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_site_components(
-        self, snapshot_settings: SnapshotSettings
-    ) -> Tuple[List[ReplicationPath], List[ReplicationPath]]:
-        """Split the snapshot components into generic and site specific components
-
-        The generic components have the advantage that they only need to be created once for all
-        sites and can be shared between the sites to optimize processing."""
-        raise NotImplementedError()
-
-
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
     def prepare_snapshot_files(self):
         """Collect the files to be synchronized for all sites
@@ -1113,9 +1075,23 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         if os.path.exists(snapshot_settings.work_dir):
             shutil.rmtree(snapshot_settings.work_dir)
 
-        for component in snapshot_settings.snapshot_components:
-            if component.ident == "sitespecific":
-                continue  # Will be created for each site individually later
+        for component in self.get_generic_components():
+            # Generic components (i.e. any component that does not have "ident"
+            # = "sitespecific") are collected to be snapshotted. Site-specific
+            # components as well as distributed wato components are done later on
+            # in the process.
+
+            # Note that at this stage, components that have been deselected
+            # from site synchronisation by the user must not be pre-filtered,
+            # otherwise these settings would cascade randomly from the first site
+            # to the other sites.
+
+            # These components are deselected in the snapshot settings of the
+            # site, which is the basis of the actual synchronisation.
+
+            # Examples of components that can be excluded:
+            # - event console ("mkeventd", "mkeventd_mkp")
+            # - MKPs ("local", "mkps")
 
             source_path = cmk.utils.paths.omd_root / component.site_path
             target_path = Path(snapshot_settings.work_dir).joinpath(component.site_path)
@@ -1725,7 +1701,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         self._set_sync_state(_("Computing differences"))
         to_sync_new, to_sync_changed, to_delete = get_file_names_to_sync(
-            self._logger, central_file_infos, remote_file_infos, self._file_filter_func
+            self._site_id,
+            self._logger,
+            central_file_infos,
+            remote_file_infos,
+            self._file_filter_func,
         )
 
         self._logger.debug("New files to be synchronized: %r", to_sync_new)
@@ -1832,7 +1812,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
-        if any(request.name == omd_ident for request in domain_requests):
+        # If request.settings is empty no `omd-config-change` job is started
+        if any(request.name == omd_ident and request.settings for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
         return response
@@ -2114,6 +2095,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
         if _need_to_update_config_after_sync():
+            logger.debug("Updating active packages")
+            cmk.utils.packaging.update_active_packages(logger)
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 
@@ -2169,50 +2152,6 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         raise MKGeneralException(message)
 
 
-def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
-    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
-    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
-
-
-def _create_distributed_wato_file_for_base(
-    base_dir: Path, site_id: SiteId, is_remote: bool
-) -> None:
-    output = wato_fileheader()
-    output += (
-        "# This file has been created by the master site\n"
-        "# push the configuration to us. It makes sure that\n"
-        "# we only monitor hosts that are assigned to our site.\n\n"
-    )
-    output += "distributed_wato_site = '%s'\n" % site_id
-    output += "is_wato_slave_site = %r\n" % is_remote
-
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
-
-
-def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
-    if cmk_version.is_raw_edition():
-        return
-
-    output = wato_fileheader()
-    output += "dcd_is_wato_remote_site = %r\n" % is_remote
-
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
-
-
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
-    site_globals = site_config.get("globals", {}).copy()
-    site_globals.update(
-        {
-            "wato_enabled": not site_config.get("disable_wato", True),
-            "userdb_automatic_sync": site_config.get(
-                "user_sync", user_sync_default_config(site_id)
-            ),
-            "user_login": site_config.get("user_login", False),
-        }
-    )
-    return site_globals
-
-
 def _get_replication_components(site_config: SiteConfiguration) -> List[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
@@ -2249,6 +2188,7 @@ def _get_replication_components(site_config: SiteConfiguration) -> List[Replicat
 
 
 def get_file_names_to_sync(
+    site_id: SiteId,
     site_logger: logging.Logger,
     central_file_infos: "Dict[str, ConfigSyncFileInfo]",
     remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
@@ -2265,7 +2205,13 @@ def get_file_names_to_sync(
 
     # New files
     central_files = set(central_file_infos.keys())
-    remote_files = set(remote_file_infos.keys())
+    remote_files_set = set(remote_file_infos.keys())
+    remote_site_config = get_site_config(site_id)
+    remote_files = (
+        _filter_remote_files(remote_files_set)
+        if remote_site_config.get("user_sync")
+        else remote_files_set
+    )
     to_sync_new = list(central_files - remote_files)
 
     # Add differing files
@@ -2288,6 +2234,38 @@ def get_file_names_to_sync(
         to_sync_changed = list(filterfalse(file_filter_func, to_sync_changed))
         to_delete = list(filterfalse(file_filter_func, to_delete))
     return to_sync_new, to_sync_changed, to_delete
+
+
+def _filter_remote_files(remote_files: set[str]) -> set[str]:
+    """
+    Exclude the remote files of users not known to the central site from
+    removal.
+
+    This is important if a remote site uses LDAP connectors that the central
+    site does not use. The central site would not know about the users on the
+    remote site and would delete the unknown users on every sync.
+    """
+    remote_files_to_keep: set[str] = set()
+    users_known_to_central: dict[UserId, bool] = {}
+    for file in remote_files:
+        if not file.startswith("var/check_mk/web"):
+            remote_files_to_keep.add(file)
+            continue
+
+        file_parts = file.split("/")
+        if len(file_parts) == 4:
+            remote_files_to_keep.add(file)
+            continue
+
+        user_id = UserId(file_parts[3])
+
+        if user_id not in users_known_to_central:
+            users_known_to_central[user_id] = userdb.user_exists(user_id)
+
+        if users_known_to_central[user_id]:
+            remote_files_to_keep.add(file)
+
+    return remote_files_to_keep
 
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:

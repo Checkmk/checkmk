@@ -41,7 +41,7 @@ permission_registry.register(
             "Pairing of Checkmk agents with the monitoring site. This step establishes trust "
             "between the agent and the monitoring site."
         ),
-        defaults=["admin"],
+        defaults=["admin", "agent_registration"],
     )
 )
 

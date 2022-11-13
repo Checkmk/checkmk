@@ -18,7 +18,7 @@ namespace wtools {
 class TestProcessor : public wtools::BaseServiceProcessor {
 public:
     TestProcessor() { s_counter++; }
-    virtual ~TestProcessor() override { s_counter--; }
+    ~TestProcessor() override { s_counter--; }
 
     // Standard Windows API to Service hit here
     void stopService(wtools::StopMode /*stop_mode*/) override {
@@ -30,7 +30,9 @@ public:
     void shutdownService(wtools::StopMode /*stop_mode*/) override {
         shutdowned_ = true;
     }
-    const wchar_t *getMainLogName() const override { return L"log.log"; }
+    [[nodiscard]] const wchar_t *getMainLogName() const override {
+        return L"log.log";
+    }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -51,9 +53,6 @@ TEST(ServiceControllerTest, CreateDelete) {
                      p->shutdowned_ || p->stopped_);
         EXPECT_NE(controller.processor_, nullptr);
         EXPECT_EQ(controller.name_, nullptr);
-        EXPECT_EQ(controller.can_stop_, false);
-        EXPECT_EQ(controller.can_shutdown_, false);
-        EXPECT_EQ(controller.can_pause_continue_, false);
         EXPECT_NE(controller.processor_, nullptr);
     }
     EXPECT_EQ(TestProcessor::s_counter, 0);
@@ -84,15 +83,12 @@ TEST(ServiceControllerTest, StartStop) {
     int counter = 0;
 
     wtools::ServiceController controller(
-        std::make_unique<cma::srv::ServiceProcessor>(100ms, [&counter]() {
+        std::make_unique<cma::srv::ServiceProcessor>(100ms, [&counter] {
             counter++;
             return true;
         }));
     EXPECT_NE(controller.processor_, nullptr);
     EXPECT_EQ(controller.name_, nullptr);
-    EXPECT_EQ(controller.can_stop_, false);
-    EXPECT_EQ(controller.can_shutdown_, false);
-    EXPECT_EQ(controller.can_pause_continue_, false);
     EXPECT_NE(controller.processor_, nullptr);
 
     wtools::UninstallService(test_service_name);
@@ -105,7 +101,7 @@ TEST(ServiceControllerTest, StartStop) {
                                        ));
     ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
     auto success = wtools::ServiceController::StopType::fail;
-    std::thread t([&]() {
+    std::thread t([&] {
         success =
             controller.registerAndRun(test_service_name, true, true, true);
     });
@@ -259,25 +255,25 @@ TEST(CmaSrv, ServiceChange) {
     });
 
     auto err_control =
-        WinService::ReadUint32(kServiceName, WinService::kRegErrorControl);
+        WinService::readUint32(kServiceName, WinService::kRegErrorControl);
     // setting opposite value
     SetErrorMode(err_control == 0 ? values::kErrorModeLog
                                   : values::kErrorModeIgnore);
     ProcessServiceConfiguration(cma::srv::kServiceName);
     auto new_err_control =
-        WinService::ReadUint32(kServiceName, WinService::kRegErrorControl);
+        WinService::readUint32(kServiceName, WinService::kRegErrorControl);
     EXPECT_EQ(new_err_control, err_control == SERVICE_ERROR_IGNORE
                                    ? SERVICE_ERROR_NORMAL
                                    : SERVICE_ERROR_IGNORE);
 
-    auto start = WinService::ReadUint32(kServiceName, WinService::kRegStart);
+    auto start = WinService::readUint32(kServiceName, WinService::kRegStart);
     if (start <= SERVICE_AUTO_START)
         SetStartMode(values::kStartModeDemand);
     else
         SetStartMode(values::kStartModeAuto);
     ProcessServiceConfiguration(cma::srv::kServiceName);
     auto new_start =
-        WinService::ReadUint32(kServiceName, WinService::kRegStart);
+        WinService::readUint32(kServiceName, WinService::kRegStart);
     EXPECT_EQ(new_start, start < SERVICE_AUTO_START ? SERVICE_AUTO_START
                                                     : SERVICE_DEMAND_START);
 }
@@ -295,14 +291,14 @@ void SetCfgMode(YAML::Node &cfg, std::string_view mode, bool all_ports) {
 }
 
 std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
-    auto rule = cma::fw::FindRule(name, app_name);
+    const auto rule = cma::fw::FindRule(name, app_name);
     ON_OUT_OF_SCOPE(if (rule) { rule->Release(); });
     if (rule == nullptr) {
         return {};
     }
 
     BSTR bstr = nullptr;
-    auto x = rule->get_LocalPorts(&bstr);
+    auto _ = rule->get_LocalPorts(&bstr);
     std::wstring port(bstr);
     ::SysFreeString(bstr);
     return port;

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from kubernetes import client  # type: ignore[import]
 
@@ -95,7 +95,7 @@ def _match_controllers(
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]]
 ) -> Mapping[str, Sequence[api.PodUID]]:
     """Matches controllers to the pods they control."""
-    controller_to_pods: Dict[str, List[api.PodUID]] = {}
+    controller_to_pods: dict[str, list[api.PodUID]] = {}
     for pod_uid, chain in pod_to_controllers.items():
         for controller in chain:
             controller_to_pods.setdefault(controller.uid, []).append(pod_uid)
@@ -106,7 +106,7 @@ def _match_controllers(
 def map_controllers(
     raw_pods: Sequence[client.V1Pod],
     object_to_owners: Mapping[str, api.OwnerReferences],
-) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
+) -> tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     pod_to_controllers = _find_control_chains(
         pod_uids=(pod.metadata.uid for pod in raw_pods),
         object_to_owners=object_to_owners,
@@ -120,7 +120,7 @@ def map_controllers_top_to_down(
     """Creates a mapping where the key is the controller and the value a sequence of controlled
     objects
     """
-    top_down_references: Dict[str, List[str]] = {}
+    top_down_references: dict[str, list[str]] = {}
     for object_uid, owner_references in object_to_owners.items():
         for owner_reference in owner_references:
             top_down_references.setdefault(owner_reference.uid, []).append(object_uid)

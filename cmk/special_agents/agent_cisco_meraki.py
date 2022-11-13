@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -31,11 +30,19 @@ _LOGGER = logging.getLogger("agent_cisco_meraki")
 _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
 _API_NAME_ORGANISATION_ID: Final = "organizationId"
+_API_NAME_DEVICE_SERIAL: Final = "serial"
+_API_NAME_DEVICE_LAN_IP: Final = "lanIp"
 
 _SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
+_SEC_NAME_DEVICE_INFO: Final = "_device_info"  # Not configurable, needed for piggyback
+_SEC_NAME_DEVICE_STATUSES: Final = "device-statuses"
+_SEC_NAME_SENSOR_READINGS: Final = "sensor-readings"
 
 _SECTION_NAME_MAP = {
     _SEC_NAME_LICENSES_OVERVIEW: "licenses_overview",
+    _SEC_NAME_DEVICE_INFO: "device_info",
+    _SEC_NAME_DEVICE_STATUSES: "device_status",
+    _SEC_NAME_SENSOR_READINGS: "sensor_readings",
 }
 
 MerakiAPIData = Mapping[str, object]
@@ -149,6 +156,36 @@ class MerakiOrganisation:
                     data=licenses_overview,
                 )
 
+        if _need_devices(self.config.section_names):
+            devices_by_serial = self._get_devices_by_serial()
+        else:
+            devices_by_serial = {}
+
+        for device in devices_by_serial.values():
+            yield self._make_section(
+                name=_SEC_NAME_DEVICE_INFO,
+                data=device,
+                piggyback=str(device[_API_NAME_DEVICE_LAN_IP]),
+            )
+
+        if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
+            for device_status in self._get_device_statuses():
+                if piggyback := self._get_device_piggyback(device_status, devices_by_serial):
+                    yield self._make_section(
+                        name=_SEC_NAME_DEVICE_STATUSES,
+                        data=device_status,
+                        piggyback=piggyback,
+                    )
+
+        if _SEC_NAME_SENSOR_READINGS in self.config.section_names:
+            for sensor_reading in self._get_sensor_readings():
+                if piggyback := self._get_device_piggyback(sensor_reading, devices_by_serial):
+                    yield self._make_section(
+                        name=_SEC_NAME_SENSOR_READINGS,
+                        data=sensor_reading,
+                        piggyback=piggyback,
+                    )
+
     def _get_licenses_overview(self) -> MerakiAPIData | None:
         try:
             return self.config.dashboard.organizations.getOrganizationLicensesOverview(
@@ -158,11 +195,54 @@ class MerakiOrganisation:
             _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
             return None
 
-    def _make_section(self, *, name: str, data: MerakiAPIData) -> Section:
+    def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
+        try:
+            return {
+                str(device[_API_NAME_DEVICE_SERIAL]): device
+                for device in self.config.dashboard.organizations.getOrganizationDevices(
+                    self.organisation_id, total_pages="all"
+                )
+            }
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get devices: %r", self.organisation_id, e)
+            return {}
+
+    def _get_device_statuses(self) -> Sequence[MerakiAPIData]:
+        try:
+            return self.config.dashboard.organizations.getOrganizationDevicesStatuses(
+                self.organisation_id, total_pages="all"
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get device statuses: %r", self.organisation_id, e)
+            return []
+
+    def _get_sensor_readings(self) -> Sequence[MerakiAPIData]:
+        try:
+            return self.config.dashboard.sensor.getOrganizationSensorReadingsLatest(
+                self.organisation_id, total_pages="all"
+            )
+        except meraki.exceptions.APIError as e:
+            _LOGGER.debug("Organisation ID: %r: Get sensor readings: %r", self.organisation_id, e)
+            return []
+
+    def _get_device_piggyback(
+        self, device: MerakiAPIData, devices_by_serial: Mapping[str, MerakiAPIData]
+    ) -> str | None:
+        try:
+            serial = str(device[_API_NAME_DEVICE_SERIAL])
+            return str(devices_by_serial[serial][_API_NAME_DEVICE_LAN_IP])
+        except KeyError as e:
+            _LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
+            return None
+
+    def _make_section(
+        self, *, name: str, data: MerakiAPIData, piggyback: str | None = None
+    ) -> Section:
         return Section(
             api_data_source=MerakiAPIDataSource.org,
             name=_SECTION_NAME_MAP[name],
             data=data,
+            piggyback=piggyback,
         )
 
 
@@ -239,7 +319,24 @@ def _get_organisation_ids(config: MerakiConfig, orgs: Sequence[str]) -> Sequence
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:
-    return any(s in section_names for s in [_SEC_NAME_LICENSES_OVERVIEW])
+    return any(
+        s in section_names
+        for s in [
+            _SEC_NAME_LICENSES_OVERVIEW,
+            _SEC_NAME_DEVICE_STATUSES,
+            _SEC_NAME_SENSOR_READINGS,
+        ]
+    )
+
+
+def _need_devices(section_names: Sequence[str]) -> bool:
+    return any(
+        s in section_names
+        for s in [
+            _SEC_NAME_DEVICE_STATUSES,
+            _SEC_NAME_SENSOR_READINGS,
+        ]
+    )
 
 
 def agent_cisco_meraki_main(args: Args) -> None:

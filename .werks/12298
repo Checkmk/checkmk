@@ -5,7 +5,7 @@ Component: livestatus
 Date: 1618558661
 Edition: cre
 Knowledge: doc
-Level: 1
+Level: 2
 Version: 2.1.0b1
 
 In 2.0.0p1 CRE, metrics belonging to different services would

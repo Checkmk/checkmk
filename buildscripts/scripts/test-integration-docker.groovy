@@ -50,9 +50,9 @@ def main() {
                 cmk_version,
                 "${package_dir}/${cmk_version}",
                 EDITION,
-                "buster",  // TODO should be parametrized
+                "jammy",  // TODO (CMK-11568): This must be kept in sync with e.g. docker/Dockerfile
             );
-            
+
             artifacts_helper.download_source_tar(
                 INTERNAL_DEPLOY_DEST,
                 INTERNAL_DEPLOY_PORT,
@@ -62,7 +62,7 @@ def main() {
             );
         }
     }
-    
+
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
@@ -74,4 +74,3 @@ def main() {
     }
 }
 return this;
-

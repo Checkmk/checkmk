@@ -18,7 +18,7 @@
 #   The drive, actor, archive, tapes and library checks are subchecks of the status
 #   check although none of these checks share the same oids.
 #   As a result, "info" is always a list of 6 sublists and each check only
-#   acceses exactly one of the sublists.
+#   accesses exactly one of the sublists.
 #
 
 # .

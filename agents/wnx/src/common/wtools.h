@@ -9,8 +9,8 @@
 //
 #pragma once
 
-#ifndef wtools_h__
-#define wtools_h__
+#ifndef WTOOLS_H
+#define WTOOLS_H
 #if defined(_WIN32)
 #include <AclAPI.h>
 #include <comdef.h>
@@ -18,7 +18,7 @@
 #include "Windows.h"
 #include "winperf.h"
 
-#define _WIN32_DCOM
+#define _WIN32_DCOM  // NOLINT
 
 #include <TlHelp32.h>
 #include <WbemIdl.h>
@@ -34,8 +34,6 @@
 #include <tuple>
 
 #include "datablock.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
 #include "tools/_win.h"
 #include "tools/_xlog.h"
 
@@ -56,6 +54,12 @@ enum class SecurityLevel { standard, admin };
 class SecurityAttributeKeeper {
 public:
     explicit SecurityAttributeKeeper(SecurityLevel sl);
+    SecurityAttributeKeeper(const SecurityAttributeKeeper &) = delete;
+    SecurityAttributeKeeper &operator=(const SecurityAttributeKeeper &) =
+        delete;
+    SecurityAttributeKeeper(SecurityAttributeKeeper &&) = delete;
+    SecurityAttributeKeeper &operator=(SecurityAttributeKeeper &&) = delete;
+
     ~SecurityAttributeKeeper();
 
     [[nodiscard]] const SECURITY_ATTRIBUTES *get() const noexcept {
@@ -334,12 +338,14 @@ public:
     // returns process id
     uint32_t goExecAsJob(std::wstring_view command_line) noexcept;
 
-    // returns process id
+    /// returns process id
     uint32_t goExecAsJobAndUser(std::wstring_view user,
                                 std::wstring_view password,
                                 std::wstring_view command_line) noexcept;
-    // returns process id
+    /// returns process id
     uint32_t goExecAsDetached(std::wstring_view command_line) noexcept;
+    /// returns process id
+    uint32_t goExecAsController(std::wstring_view command_line) noexcept;
 
     void kill(bool kill_tree_too) {
         auto proc_id = process_id_.exchange(0);
@@ -364,7 +370,7 @@ public:
                     process_handle_ = nullptr;
                 }
             } else {
-                if (kProcessTreeKillAllowed) {
+                if constexpr (kProcessTreeKillAllowed) {
                     KillProcessTree(proc_id);
                 }
             }
@@ -387,7 +393,7 @@ public:
     auto &getData() noexcept { return data_; }
 
     bool trySetExitCode(uint32_t pid, uint32_t code) noexcept {
-        if ((pid != 0U) && pid == process_id_) {
+        if (pid != 0U && pid == process_id_) {
             exit_code_ = code;
             return true;
         }
@@ -395,6 +401,9 @@ public:
     }
 
 private:
+    enum class UsePipe { yes, no };
+    uint32_t goExec(std::wstring_view command_line, UsePipe use_pipe) noexcept;
+
     void prepareResources(std::wstring_view command_line,
                           bool create_pipe) noexcept;
     void cleanResources() noexcept;
@@ -416,7 +425,6 @@ private:
 };
 
 class ServiceController {
-private:
     static std::mutex s_lock_;
     static ServiceController *s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill
@@ -431,7 +439,7 @@ public:
 
     virtual ~ServiceController() {
         std::lock_guard lk(s_lock_);
-        if ((s_controller_ != nullptr) && s_controller_ == this) {
+        if (s_controller_ != nullptr && s_controller_ == this) {
             s_controller_ = nullptr;
         }
     }
@@ -465,10 +473,10 @@ protected:
         status_.dwWin32ExitCode = win32_exit_code;
         status_.dwWaitHint = wait_hint;
 
-        status_.dwCheckPoint = ((current_state == SERVICE_RUNNING) ||
-                                (current_state == SERVICE_STOPPED))
-                                   ? 0
-                                   : check_point++;
+        status_.dwCheckPoint =
+            current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
+                ? 0
+                : check_point++;
 
         // Report the status of the service to the SCM.
         const auto ret = ::SetServiceStatus(status_handle_, &status_);
@@ -528,9 +536,6 @@ private:
     std::unique_ptr<BaseServiceProcessor> processor_;
 
     std::unique_ptr<wchar_t[]> name_;
-    bool can_stop_{false};
-    bool can_shutdown_{false};
-    bool can_pause_continue_{false};
 
     SERVICE_STATUS status_{0};
     SERVICE_STATUS_HANDLE status_handle_{nullptr};
@@ -567,7 +572,12 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
 }
 
 inline std::string ToUtf8(std::string_view src) noexcept {
-    return std::string(src);
+    return std::string{src};
+}
+
+/// Converts correctly path to string using conversion form wchar to utf8
+inline std::string ToStr(const std::filesystem::path &src) noexcept {
+    return ToUtf8(src.wstring());
 }
 
 std::wstring ToCanonical(std::wstring_view raw_app_name);
@@ -607,10 +617,10 @@ using DataSequence = cma::tools::DataBlock<BYTE>;
 // API:
 // 1. Read data from registry
 DataSequence ReadPerformanceDataFromRegistry(
-    const std::wstring &counter_list) noexcept;
+    const std::wstring &counter_name) noexcept;
 
 // 2. Find required object
-const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_sequence,
+const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
                                        DWORD counter_index) noexcept;
 
 // 3. Get Instances and Names of Instances
@@ -631,7 +641,7 @@ std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
 
 // NAMES
 std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE *object,
-                                               const NameMap &map);
+                                               const NameMap &name_map);
 // 5. And Values!
 std::vector<uint64_t> GenerateValues(
     const PERF_COUNTER_DEFINITION &counter,
@@ -788,8 +798,7 @@ inline uint32_t WmiGetUint32(const VARIANT &var) noexcept {
         case VT_I2:
             return static_cast<uint32_t>(var.iVal);
             // 32 bits values
-        case VT_UI4:
-            return var.uintVal;  // no conversion here, we expect good type here
+        case VT_UI4:  // no conversion here, we expect good type here
         case VT_I4:
             return var.uintVal;
         default:
@@ -870,7 +879,6 @@ inline uint64_t WmiGetUint64(const VARIANT &var) noexcept {
         case VT_I2:
             return static_cast<uint64_t>(var.iVal);
         case VT_UI4:
-            return static_cast<uint64_t>(var.uintVal);
         case VT_I4:
             return static_cast<uint64_t>(var.uintVal);
         case VT_UI8:
@@ -911,7 +919,7 @@ enum class StatusColumn { ok, timeout };
 std::string StatusColumnText(StatusColumn exception_column) noexcept;
 
 /// "decorator" for WMI tables with OK, Timeout: WMIStatus
-std::string WmiPostProcess(const std::string &in, StatusColumn exception_column,
+std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
                            char separator);
 
 // the class is thread safe
@@ -927,42 +935,42 @@ public:
     bool open() noexcept;
     bool connect(std::wstring_view name_space) noexcept;
     // This is OPTIONAL feature, LWA doesn't use it
-    bool impersonate() noexcept;
+    [[maybe_unused]] bool impersonate() const noexcept;  // NOLINT
     // on error returns empty string and timeout status
     static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject *enumerator,
-        const std::vector<std::wstring> &names, std::wstring_view separator,
-        uint32_t wmi_timeout) noexcept;
+        const std::vector<std::wstring> &existing_names,
+        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
     /// work horse to ask certain names from the target
     /// on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring> &names, const std::wstring &target,
-        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
+        std::wstring_view separator, uint32_t wmi_timeout) const noexcept;
 
     /// special purposes: formatting for PS for example
     /// on error returns nullptr
     /// You have to call Release for returned object!!!
     IEnumWbemClassObject *queryEnumerator(
         const std::vector<std::wstring> &names,
-        const std::wstring &target) noexcept;
+        const std::wstring &target) const noexcept;
 
 private:
     void close() noexcept;
-    static std::wstring makeQuery(const std::vector<std::wstring> &Names,
-                                  const std::wstring &Target) noexcept;
+    static std::wstring makeQuery(const std::vector<std::wstring> &names,
+                                  const std::wstring &target) noexcept;
 
     mutable std::mutex lock_;
     IWbemLocator *locator_{nullptr};
     IWbemServices *services_{nullptr};
 };
 
-HMODULE LoadWindowsLibrary(const std::wstring &DllPath);
+HMODULE LoadWindowsLibrary(const std::wstring &dll_path);
 
 /// Look into the registry in order to find out, which
 /// event logs are available
 /// return false only when something wrong with registry
-std::vector<std::string> EnumerateAllRegistryKeys(const char *RegPath);
+std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path);
 
 /// returns data from the root machine registry
 uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
@@ -998,15 +1006,19 @@ public:
     };
     /// \b bstrPath - path for which ACL info should be queried
     explicit ACLInfo(const _bstr_t &path) noexcept;
+    ACLInfo(const ACLInfo &) = delete;
+    ACLInfo operator=(const ACLInfo &) = delete;
+    ACLInfo(ACLInfo &&) = delete;
+    ACLInfo operator=(ACLInfo &&) = delete;
     virtual ~ACLInfo();
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
     /// \b Outputs ACL info in Human-readable format
-    std::string output();
+    [[nodiscard]] std::string output() const;
 
 private:
     void clearAceList() noexcept;
-    HRESULT addAceToList(ACE_HEADER *pAce) noexcept;
+    HRESULT addAceToList(ACE_HEADER *ace) noexcept;
     _bstr_t path_;
     AceList *ace_list_;  // list of Access Control Entries
 };
@@ -1101,4 +1113,4 @@ std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port);
 uint32_t GetServiceStatus(const std::wstring &name) noexcept;
 }  // namespace wtools
 
-#endif  // wtools_h__
+#endif  // WTOOLS_H

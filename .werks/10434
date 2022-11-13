@@ -13,7 +13,7 @@ exists on the hosts. By default, all proxy configurations should be ignored comp
 by cmk-update-agent(.exe). However, the agent updater does an initial HEAD request to
 it's configured Checkmk-server, that did not respect the ruleset's configuration.
 
-With is fixed with this Werk.
+This is fixed with this Werk.
 
 If you experience problems emerging from the agent updater erroneously following a
 configured proxy and because of this failing to connect to Checkmk-server, you can

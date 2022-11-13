@@ -6,8 +6,8 @@
 // provides api to automatic install MSI files by service
 
 #pragma once
-#ifndef install_api_h__
-#define install_api_h__
+#ifndef INSTALL_API_H
+#define INSTALL_API_H
 
 #include <filesystem>
 #include <optional>
@@ -90,7 +90,7 @@ constexpr std::wstring_view kMsiMigrationRequest = L"1";
 inline std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
-};  // namespace registry
+}  // namespace registry
 
 /// Returns command and success status
 /// set StartUpdateProcess to 'skip' for dry run
@@ -99,8 +99,9 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     std::wstring_view msi_name, std::wstring_view msi_dir,
     UpdateProcess start_update_process);
 
-std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
-std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
+std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view file_name);
+std::filesystem::path GenerateTempFileNameInTempPath(
+    std::wstring_view msi_name);
 
 // internal API with diag published to simplify testing or for later use
 // ****************************************
@@ -133,7 +134,7 @@ namespace api_err {
 /// Returns string with error message if the install API failed.
 std::optional<std::wstring> Get();
 /// calls if something is going wrong during installation.
-void Register(const std::string &err);
+void Register(const std::string &error);
 void Clean();
 }  // namespace api_err
 
@@ -141,4 +142,4 @@ bool IsMigrationRequired();
 
 }  // namespace cma::install
 
-#endif  // install_api_h__
+#endif  // INSTALL_API_H

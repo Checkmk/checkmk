@@ -15,7 +15,7 @@ def test_tolerance_check_set_sync_time() -> None:
     sync_time = 23.0
     value_store: Dict[str, Any] = {}
 
-    store_sync_time(value_store, sync_time)
+    store_sync_time(value_store, sync_time, value_store_key="time_server")
 
     assert value_store["time_server"] == sync_time
 
@@ -29,6 +29,9 @@ def test_tolerance_check_new_sync_time() -> None:
             sync_time=sync_time,
             levels_upper=(0.0, 0.0),
             value_store=value_store,
+            metric_name="last_sync_time",
+            label="Time since last sync",
+            value_store_key="time_server",
         )
     ) == [
         Result(
@@ -69,6 +72,9 @@ def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result
             sync_time=None,
             levels_upper=None,
             value_store=value_store,
+            metric_name="last_sync_time",
+            label="Time since last sync",
+            value_store_key="time_server",
             notice_only=notice_only,
         )
     ) == [expected_result]
@@ -78,7 +84,16 @@ def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result
 @mock.patch("time.time", mock.Mock(return_value=42.0))
 def test_host_time_ahead():
     value_store: Dict[str, Any] = {"time_server": 43.0}
-    assert list(tolerance_check(sync_time=None, levels_upper=None, value_store=value_store,)) == [
+    assert list(
+        tolerance_check(
+            sync_time=None,
+            levels_upper=None,
+            value_store=value_store,
+            metric_name="last_sync_time",
+            label="Time since last sync",
+            value_store_key="time_server",
+        )
+    ) == [
         Result(
             state=State.CRIT,
             summary="Cannot reasonably calculate time since last synchronization (hosts time is running ahead)",
@@ -97,6 +112,9 @@ def test_tolerance_check_stored_sync_time() -> None:
             sync_time=None,
             levels_upper=(0.0, 0.0),
             value_store=value_store,
+            metric_name="last_sync_time",
+            label="Time since last sync",
+            value_store_key="time_server",
         )
     ) == [
         Result(

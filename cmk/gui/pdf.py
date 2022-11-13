@@ -20,9 +20,10 @@ import io
 import os
 import subprocess
 import tempfile
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Callable, Literal, Optional, overload, Protocol, Sequence, TypedDict, Union
+from typing import Literal, overload, Protocol, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -33,7 +34,6 @@ from reportlab.pdfgen import canvas  # type: ignore[import]
 from six import ensure_str
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import response
@@ -42,7 +42,7 @@ from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
-RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
+RawTableColumn = tuple[str, str | RawIconColumn | RawRendererColumn]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 SizeInternal = float
@@ -67,7 +67,7 @@ def from_mm(dim: Sequence[float]) -> Sequence[float]:
     ...
 
 
-def from_mm(dim: Union[float, Sequence[float]]) -> Union[float, Sequence[float]]:
+def from_mm(dim: float | Sequence[float]) -> float | Sequence[float]:
     if isinstance(dim, (int, float)):
         return dim * mm
     return [x * mm for x in dim]
@@ -152,8 +152,8 @@ class Document:
         pagesize: tuple[SizeMM, SizeMM],
         margins: tuple[SizeMM, SizeMM, SizeMM, SizeMM],
         mirror_margins: bool = False,
-        pagebreak_function: Optional[Callable] = None,
-        pagebreak_arguments: Optional[tuple] = None,
+        pagebreak_function: Callable | None = None,
+        pagebreak_arguments: tuple | None = None,
     ) -> None:
         # Static paper settings for this document
         self._pagesize = from_mm(pagesize)
@@ -209,7 +209,7 @@ class Document:
         self._gfx_state_stack: list[GFXState] = []
         self.set_gfx_state()
 
-    def end(self, sendas: Optional[str] = None, do_send: bool = True) -> Optional[bytes]:
+    def end(self, sendas: str | None = None, do_send: bool = True) -> bytes | None:
         self._canvas.showPage()
         self._canvas.save()
         pdf_source = self._output_buffer.getvalue()
@@ -405,7 +405,7 @@ class Document:
         raise ValueError(f"Invalid position: {position}")
 
     def place_hrule(
-        self, position: Position, width: SizeMM = 0.05, color: Optional[RGBColor] = None
+        self, position: Position, width: SizeMM = 0.05, color: RGBColor | None = None
     ) -> None:
         el_width = self._right - self._left
         el_height = width * mm
@@ -511,7 +511,7 @@ class Document:
 
     # Add vertical white space, skip. If that does not fit onto the current
     # page, then make a page break and *do not* skip!
-    def add_margin(self, height: Optional[SizeMM] = None, force: bool = False) -> None:
+    def add_margin(self, height: SizeMM | None = None, force: bool = False) -> None:
         if height is not None:
             marg = height * mm
         else:
@@ -523,7 +523,7 @@ class Document:
             self.margin(marg, force)
 
     def add_hrule(
-        self, margin: SizeMM = 0.1, width: SizeMM = 0.05, color: Optional[RGBColor] = None
+        self, margin: SizeMM = 0.1, width: SizeMM = 0.05, color: RGBColor | None = None
     ) -> None:
         self._linepos -= margin * mm
         self.save_state()
@@ -564,7 +564,7 @@ class Document:
         width_mm: SizeMM,
         height_mm: SizeMM,
         border_width: SizeMM = 0,
-        left_mm: Optional[SizeMM] = None,
+        left_mm: SizeMM | None = None,
     ) -> tuple[SizeMM, SizeMM, SizeMM, SizeMM]:
         self.advance(height_mm * mm)
 
@@ -635,14 +635,14 @@ class Document:
             aligned_string(abs_x, abs_y, part, alignment)
             self.restore_state()
 
-    def set_tabstops(self, tabstops: list[Union[SizeMM, float, str]]) -> None:
+    def set_tabstops(self, tabstops: list[SizeMM | float | str]) -> None:
         # t is a list of tab stops. Each entry is either an int
         # or float -> tabstop in mm. Or it is a string that has
         # prefix of characters followed by a number (mm). The
         # characters specify alignment and font style. We convert
         # all this here to a pair ( "bc", 17.2 ) of the alignment
         # characters and the tabstop in *internal* dimensions.
-        def convert_tabstop(t: Union[SizeMM, str]) -> tuple[str, SizeInternal]:
+        def convert_tabstop(t: SizeMM | str) -> tuple[str, SizeInternal]:
             if isinstance(t, (int, float)):
                 return "", float(t) * mm
             if isinstance(t, str):
@@ -729,7 +729,7 @@ class Document:
                 ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
             )
         except Exception as e:
-            raise Exception("Cannot render image %s: %s" % (path, e))
+            raise Exception(f"Cannot render image {path}: {e}")
 
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
@@ -748,7 +748,7 @@ class Document:
         align: Align = "center",
         valign: VerticalAlign = "bottom",
         bold: bool = False,
-        color: Optional[RGBColor] = None,
+        color: RGBColor | None = None,
     ) -> None:
         if color or bold:
             self.save_state()
@@ -779,9 +779,9 @@ class Document:
         top_mm: SizeMM,
         width_mm: SizeMM,
         height_mm: SizeMM,
-        line_width: Optional[SizeInternal] = None,
-        line_color: Optional[RGBColor] = None,
-        fill_color: Optional[RGBColor] = None,
+        line_width: SizeInternal | None = None,
+        line_color: RGBColor | None = None,
+        fill_color: RGBColor | None = None,
     ) -> None:
         self.save_state()
 
@@ -818,7 +818,7 @@ class Document:
         top2_mm: SizeMM,
         width: SizeInternal = 0.05,
         color: RGBColor = black,
-        dashes: Optional[Sequence[SizeMM]] = None,
+        dashes: Sequence[SizeMM] | None = None,
     ) -> None:
         self.save_state()
         self.set_line_width(width)
@@ -980,6 +980,8 @@ class Document:
 
 
 class CellRenderer(Protocol):
+    supports_stepwise_rendering: bool
+
     def render(
         self,
         pdfdoc: Document,
@@ -989,8 +991,13 @@ class CellRenderer(Protocol):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
+        ...
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[CellRenderer]:
         ...
 
     def maximal_width(self, pdfdoc: Document) -> SizeMM:
@@ -1073,7 +1080,7 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: list[CellRenderer] = [
-            TitleCell("heading", header_text) for header_text in header_texts  #
+            TitleCell(["heading"], header_text) for header_text in header_texts  #
         ]
 
         rows: list[list[CellRenderer]] = []
@@ -1081,17 +1088,18 @@ class TableRenderer:
             row: list[CellRenderer] = []
             rows.append(row)
             for css, entry in raw_row:
+                css_list: list[str] = [] if css is None else css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
                     elif entry[0] == "object":
                         row.append(entry[1])
                     else:
-                        raise Exception("Invalid table entry %r in add_table()" % (entry,))
+                        raise Exception(f"Invalid table entry {entry!r} in add_table()")
                 elif css == "leftheading":
-                    row.append(TitleCell(css, entry))
+                    row.append(TitleCell(css_list, entry))
                 else:
-                    row.append(TextCell(css, entry))
+                    row.append(TextCell(css_list, entry))
 
         # Now we balance the widths of the columns. Each render object has an
         # absolute minimum width (e.g. the width of the longest word) and
@@ -1188,7 +1196,7 @@ class TableRenderer:
         for row_index, row in enumerate(rows):
             row_oddeven = "odd" if row_oddeven == "even" else "even"
 
-            if self._paint_graph_row(
+            if self._paint_stepwise(
                 row,
                 column_widths,
                 y_padding,
@@ -1361,7 +1369,7 @@ class TableRenderer:
                 left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
             )
 
-    def _paint_graph_row(
+    def _paint_stepwise(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1388,37 +1396,24 @@ class TableRenderer:
         solution we should drop the approach of trying to build our own table rendering solution and
         find something more battle tested.
         """
-        if cmk_version.is_raw_edition():
-            return False
-
-        # This import hack is needed because this module is part of the raw edition while
-        # the PainterPrinterTimeGraph class is not (also we don't have a base class
-        # available in CRE to use instead).
-        # pylint: disable=no-name-in-module
-        from cmk.gui.cee.plugins.reporting.pnp_graphs import PainterPrinterTimeGraph
-
         is_single_dataset = (
-            len(row) == 2
-            and isinstance(row[0], TitleCell)
-            and isinstance(row[1], PainterPrinterTimeGraph)
+            len(row) == 2 and isinstance(row[0], TitleCell) and row[1].supports_stepwise_rendering
         )
-        is_single_column = len(row) == 1 and isinstance(row[0], PainterPrinterTimeGraph)
+        is_single_column = len(row) == 1 and row[0].supports_stepwise_rendering
 
         if not is_single_dataset and not is_single_column:
             return False
 
-        graph_column = row[-1]
-        assert isinstance(graph_column, PainterPrinterTimeGraph)
-
-        if self.pdf.fits_on_remaining_page(graph_column.height(self.pdf) * mm):
+        column = row[-1]
+        if self.pdf.fits_on_remaining_page(column.height(self.pdf) * mm):
             return False
 
-        if self.pdf.fits_on_empty_page(graph_column.height(self.pdf) * mm):
+        if self.pdf.fits_on_empty_page(column.height(self.pdf) * mm):
             return False
 
-        for index, step in enumerate(graph_column.get_render_steps(self.pdf, headers, y_padding)):
+        for index, step in enumerate(column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
-                step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
+                step_row = [row[0] if index == 0 else TitleCell(["lefheading"], ""), step]
             else:
                 step_row = [step]
 
@@ -1444,7 +1439,8 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell(CellRenderer):
-    def __init__(self, csses: Optional[str], text: str) -> None:
+    def __init__(self, csses: list[str] | None, text: str) -> None:
+        self.supports_stepwise_rendering = False
         self._text = text
         self._bold = False
         self._color = black
@@ -1452,15 +1448,26 @@ class TextCell(CellRenderer):
         self._alignment: Align = "left"
 
         if csses is None:
-            csses = ""
+            csses = []
+
+        state_in_css: bool = any(
+            css.startswith("hstate")
+            or css.startswith("state")
+            or css.startswith("svcstate")
+            or css.startswith("if_state")
+            for css in csses
+        )
 
         # TODO: Sollte das nicht lieber raus aus dem allgemeinen pdf.py? Ist eigentlich
         # Spezifisch für Views, etc.
-        if "heading" in csses or "state" in csses:
+        if "heading" in csses or state_in_css:
             self._bold = True
 
         if "number" in csses:
             self._alignment = "right"
+
+        if "count" in csses:
+            self._alignment = "center"
 
         if "unused" in csses:
             self._color = (0.6, 0.6, 0.6)
@@ -1473,7 +1480,12 @@ class TextCell(CellRenderer):
                 self._bg_color = color
                 self._alignment = "center"
 
-        self._narrow = "narrow" in csses or "state" in csses
+        self._narrow = "narrow" in csses or state_in_css
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[TextCell]:
+        return []
 
     def minimal_width(self, pdfdoc: Document) -> SizeMM:  # without padding
         # TODO: consider bold here!
@@ -1507,7 +1519,7 @@ class TextCell(CellRenderer):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
         if self._bg_color != white:
             color = self._bg_color
@@ -1539,7 +1551,13 @@ class IconCell(CellRenderer):
     """Rendering *one* UI icon"""
 
     def __init__(self, path: str) -> None:
+        self.supports_stepwise_rendering = False
         self._image_path = path
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[TextCell]:
+        return []
 
     def minimal_width(self, pdfdoc: Document) -> SizeMM:
         return self.height(pdfdoc)
@@ -1568,7 +1586,7 @@ class IconCell(CellRenderer):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
         w = self.width(pdfdoc)
         pdfdoc.render_image(left + x_padding, top - w - y_padding, w, w, self._image_path)
@@ -1606,8 +1624,7 @@ def pdf2png(pdf_source: bytes) -> bytes:
     completed_process = subprocess.run(
         ["pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to", "1000", temp_file.name],
         close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
 

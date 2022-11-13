@@ -19,15 +19,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import painter_option_registry, PainterOption, PainterOptions
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    CellSpec,
-    CSVExportError,
-    Painter,
-    painter_registry,
-    Row,
-)
-from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
+from cmk.gui.painters.v0.base import Cell, CellSpec, CSVExportError, Painter, painter_registry
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
@@ -35,7 +28,6 @@ from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
-    from cmk.gui.view import View
 
 
 #     ____        _
@@ -80,14 +72,16 @@ class DataSourceBIAggregations(ABCDataSource):
 class RowTableBIAggregations(RowTable):
     def query(
         self,
-        view: View,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
         columns: List[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
         limit: Optional[int],
         all_active_filters: List[Filter],
     ) -> Union[Rows, Tuple[Rows, int]]:
-        return bi.table(view.context, columns, headers, only_sites, limit, all_active_filters)
+        return bi.table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -118,8 +112,18 @@ class DataSourceBIHostAggregations(ABCDataSource):
 
 
 class RowTableBIHostAggregations(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return bi.host_table(view, columns, headers, only_sites, limit, all_active_filters)
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
+        return bi.host_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -153,8 +157,18 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
 
 
 class RowTableBIHostnameAggregations(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return bi.hostname_table(view, columns, headers, only_sites, limit, all_active_filters)
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
+        return bi.hostname_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 @data_source_registry.register
@@ -187,9 +201,19 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
 
 
 class RowTableBIHostnameByGroupAggregations(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: Optional[int],
+        all_active_filters: List[Filter],
+    ) -> Union[Rows, Tuple[Rows, int]]:
         return bi.hostname_by_group_table(
-            view, columns, headers, only_sites, limit, all_active_filters
+            context, columns, headers, only_sites, limit, all_active_filters
         )
 
 

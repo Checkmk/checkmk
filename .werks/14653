@@ -1,0 +1,12 @@
+Title: Checkmk agent OSX: Add "Interface" services
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1667256119
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+
+

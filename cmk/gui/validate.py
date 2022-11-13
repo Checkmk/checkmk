@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -14,12 +14,12 @@ from cmk.gui.i18n import _
 
 def validate_id(
     mode: str,
-    existing_entries: Dict[str, Any],
-    reserved_unique_ids: Optional[list[str]] = None,
-) -> Callable[[Dict[str, Any], str], None]:
+    existing_entries: dict[str, Any],
+    reserved_unique_ids: list[str] | None = None,
+) -> Callable[[dict[str, Any], str], None]:
     """Validate ID of newly created or cloned pagetype or visual"""
 
-    def _validate(properties: Dict[str, Any], varprefix: str) -> None:
+    def _validate(properties: dict[str, Any], varprefix: str) -> None:
         name = properties["name"]
         if mode in ["create", "clone"]:
             if existing_entries.get(name):

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import Dict, Iterator, Mapping, Type, TypeVar
+from collections.abc import Iterator, Mapping
+from typing import TypeVar
 
 _VT = TypeVar("_VT")
 
@@ -20,7 +21,7 @@ class Registry(Mapping[str, _VT]):
     To create a registry inherit from ``Registry[A]`` where ``A`` is the class
     of the objects that are stored in the registry. Although it is not
     recommended classes can be stored inside registries as well. To create a
-    class registry you have to derive from ``Registry[Type[A]]``.
+    class registry you have to derive from ``Registry[type[A]]``.
 
     Objects can be added or removed with the register and unregister methods.
 
@@ -44,7 +45,7 @@ class Registry(Mapping[str, _VT]):
 
     def __init__(self) -> None:
         super().__init__()
-        self._entries: Dict[str, _VT] = {}
+        self._entries: dict[str, _VT] = {}
 
     @abstractmethod
     def plugin_name(self, instance: _VT) -> str:
@@ -57,11 +58,6 @@ class Registry(Mapping[str, _VT]):
         self.registration_hook(instance)
         self._entries[self.plugin_name(instance)] = instance
         return instance
-
-    def register_instance(self, cls: Type[_VT]) -> Type[_VT]:
-        """Decorate a class to create an instance of the class and register it to the object registry"""
-        self.register(cls())
-        return cls
 
     def unregister(self, name: str) -> None:
         del self._entries[name]

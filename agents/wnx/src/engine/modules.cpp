@@ -12,16 +12,17 @@
 #include <fmt/xchar.h>
 
 #include <filesystem>
+#include <fstream>
 #include <ranges>
 #include <string>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
-#include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_misc.h"
+#include "tools/_process.h"
 #include "zip.h"
 
 using namespace std::literals;
@@ -106,7 +107,7 @@ fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
 }
 
 bool ModuleCommander::IsQuickReinstallAllowed() noexcept {
-    auto enabled_in_config =
+    const auto enabled_in_config =
         GetVal(groups::kModules, vars::kModulesQuickReinstall, true);
     return cfg::g_quick_module_reinstall_allowed && enabled_in_config;
 }
@@ -473,13 +474,13 @@ std::vector<char> ReadFileBeginning(const fs::path &name, size_t count) {
         f.open(name, std::ios::binary);
         std::vector<char> data;
         data.resize(count);
-        f.read(data.data(), count);
+        f.read(data.data(), static_cast<std::streamsize>(count));
         f.close();
 
         return data;
     } catch (const std::ifstream::failure &e) {
         XLOG::l("Exception '{}' reading file '{}'", e.what(), name);
-    };
+    }
 
     return {};
 }

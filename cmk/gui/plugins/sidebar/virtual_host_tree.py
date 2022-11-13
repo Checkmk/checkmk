@@ -532,7 +532,3 @@ function virtual_host_tree_enter(path)
     @classmethod
     def refresh_regularly(cls):
         return True
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user", "guest"]

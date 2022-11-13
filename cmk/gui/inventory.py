@@ -11,10 +11,11 @@ import os
 import shutil
 import time
 import xml.dom.minidom
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Literal, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from typing import Literal, NamedTuple
 
 import dicttoxml  # type: ignore[import]
 
@@ -56,7 +57,7 @@ from cmk.gui.valuespec import TextInput, ValueSpec
 
 def get_attribute(
     tree: StructuredDataNode, inventory_path: InventoryPath
-) -> Union[None, str, int, float]:
+) -> None | str | int | float:
     if inventory_path.source != TreeSource.attributes or not inventory_path.key:
         return None
     attributes = tree.get_attributes(inventory_path.path)
@@ -73,7 +74,7 @@ class TreeSource(Enum):
 class InventoryPath:
     path: SDPath
     source: TreeSource
-    key: Optional[SDKey] = None
+    key: SDKey | None = None
 
     @classmethod
     def parse(cls, raw_path: SDRawPath) -> InventoryPath:
@@ -122,7 +123,7 @@ class InventoryPath:
         return self.path[-1] if self.path else ""
 
 
-def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
+def load_filtered_and_merged_tree(row: Row) -> StructuredDataNode | None:
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
     hostname = row.get("host_name")
@@ -133,7 +134,7 @@ def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
     return _filter_tree(merged_tree)
 
 
-def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: HostName) -> Row:
+def get_status_data_via_livestatus(site: livestatus.SiteId | None, hostname: HostName) -> Row:
     query = (
         "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
         % livestatus.lqencode(hostname)
@@ -158,7 +159,7 @@ def get_short_inventory_filepath(hostname: HostName) -> Path:
     )
 
 
-def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
+def vs_element_inventory_visible_raw_path() -> tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
     # 'Contact groups::Permitted HW/SW inventory paths'.
@@ -199,7 +200,7 @@ _DEFAULT_PATH_TO_TREE = Path()
 
 class InventoryHistoryPath(NamedTuple):
     path: Path
-    timestamp: Optional[int]
+    timestamp: int | None
 
     @classmethod
     def default(cls) -> InventoryHistoryPath:
@@ -214,7 +215,7 @@ class InventoryHistoryPath(NamedTuple):
 
 
 class HistoryEntry(NamedTuple):
-    timestamp: Optional[int]
+    timestamp: int | None
     new: int
     changed: int
     removed: int
@@ -230,7 +231,7 @@ class FilterInventoryHistoryPathsError(Exception):
     pass
 
 
-def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
+def load_latest_delta_tree(hostname: HostName) -> StructuredDataNode | None:
     def _get_latest_timestamps(
         tree_paths: Sequence[InventoryHistoryPath],
     ) -> FilteredInventoryHistoryPaths:
@@ -255,7 +256,7 @@ def load_latest_delta_tree(hostname: HostName) -> Optional[StructuredDataNode]:
 def load_delta_tree(
     hostname: HostName,
     timestamp: int,
-) -> Tuple[Optional[StructuredDataNode], Sequence[str]]:
+) -> tuple[StructuredDataNode | None, Sequence[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
@@ -291,7 +292,7 @@ def load_delta_tree(
     return delta_history[0].delta_tree, corrupted_history_files
 
 
-def get_history(hostname: HostName) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
+def get_history(hostname: HostName) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     return _get_history(
         hostname,
         filter_tree_paths=lambda tree_paths: FilteredInventoryHistoryPaths(
@@ -305,7 +306,7 @@ def _get_history(
     hostname: HostName,
     *,
     filter_tree_paths: Callable[[Sequence[InventoryHistoryPath]], FilteredInventoryHistoryPaths],
-) -> Tuple[Sequence[HistoryEntry], Sequence[str]]:
+) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     if "/" in hostname:
         return [], []  # just for security reasons
 
@@ -318,8 +319,8 @@ def _get_history(
         return [], []
 
     cached_tree_loader = _CachedTreeLoader()
-    corrupted_history_files: Set[Path] = set()
-    history: List[HistoryEntry] = []
+    corrupted_history_files: set[Path] = set()
+    history: list[HistoryEntry] = []
 
     for previous, current in _get_pairs(filtered_tree_paths):
         if current.timestamp is None:
@@ -382,10 +383,10 @@ def _get_inventory_history_paths(hostname: HostName) -> Sequence[InventoryHistor
 
 def _get_pairs(
     filtered_tree_paths: FilteredInventoryHistoryPaths,
-) -> Sequence[Tuple[InventoryHistoryPath, InventoryHistoryPath]]:
+) -> Sequence[tuple[InventoryHistoryPath, InventoryHistoryPath]]:
     start_tree_path = filtered_tree_paths.start_tree_path
 
-    pairs: List[Tuple[InventoryHistoryPath, InventoryHistoryPath]] = []
+    pairs: list[tuple[InventoryHistoryPath, InventoryHistoryPath]] = []
     for tree_path in filtered_tree_paths.tree_paths:
         pairs.append((start_tree_path, tree_path))
         start_tree_path = tree_path
@@ -395,7 +396,7 @@ def _get_pairs(
 
 @dataclass(frozen=True)
 class _CachedTreeLoader:
-    _lookup: Dict[Path, StructuredDataNode] = field(default_factory=dict)
+    _lookup: dict[Path, StructuredDataNode] = field(default_factory=dict)
 
     def get_tree(self, filepath: Path) -> StructuredDataNode:
         if filepath == _DEFAULT_PATH_TO_TREE:
@@ -422,7 +423,7 @@ class _CachedTreeLoader:
 @dataclass(frozen=True)
 class _CachedDeltaTreeLoader:
     hostname: HostName
-    previous_timestamp: Optional[int]
+    previous_timestamp: int | None
     current_timestamp: int
 
     @property
@@ -430,10 +431,10 @@ class _CachedDeltaTreeLoader:
         return Path(
             cmk.utils.paths.inventory_delta_cache_dir,
             self.hostname,
-            "%s_%s" % (self.previous_timestamp, self.current_timestamp),
+            f"{self.previous_timestamp}_{self.current_timestamp}",
         )
 
-    def get_cached_entry(self) -> Optional[HistoryEntry]:
+    def get_cached_entry(self) -> HistoryEntry | None:
         try:
             cached_data = store.load_object_from_file(self._path, default=None)
         except MKGeneralException:
@@ -450,7 +451,7 @@ class _CachedDeltaTreeLoader:
         self,
         previous_tree: StructuredDataNode,
         current_tree: StructuredDataNode,
-    ) -> Optional[HistoryEntry]:
+    ) -> HistoryEntry | None:
         delta_result = current_tree.compare_with(previous_tree)
         new, changed, removed, delta_tree = (
             delta_result.counter["new"],
@@ -484,8 +485,8 @@ class LoadStructuredDataError(MKException):
 
 @request_memoize(maxsize=None)
 def _load_structured_data_tree(
-    tree_type: Literal["inventory", "status_data"], hostname: Optional[HostName]
-) -> Optional[StructuredDataNode]:
+    tree_type: Literal["inventory", "status_data"], hostname: HostName | None
+) -> StructuredDataNode | None:
     """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
         return None
@@ -509,7 +510,7 @@ def _load_structured_data_tree(
         raise LoadStructuredDataError()
 
 
-def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[StructuredDataNode]:
+def _load_status_data_tree(hostname: HostName | None, row: Row) -> StructuredDataNode | None:
     # If no data from livestatus could be fetched (CRE) try to load from cache
     # or status dir
     raw_status_data_tree = row.get("host_structured_status")
@@ -519,9 +520,9 @@ def _load_status_data_tree(hostname: Optional[HostName], row: Row) -> Optional[S
 
 
 def _merge_inventory_and_status_data_tree(
-    inventory_tree: Optional[StructuredDataNode],
-    status_data_tree: Optional[StructuredDataNode],
-) -> Optional[StructuredDataNode]:
+    inventory_tree: StructuredDataNode | None,
+    status_data_tree: StructuredDataNode | None,
+) -> StructuredDataNode | None:
     if inventory_tree is None:
         return status_data_tree
 
@@ -531,7 +532,7 @@ def _merge_inventory_and_status_data_tree(
     return inventory_tree.merge_with(status_data_tree)
 
 
-def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[StructuredDataNode]:
+def _filter_tree(struct_tree: StructuredDataNode | None) -> StructuredDataNode | None:
     if struct_tree is None:
         return None
 
@@ -687,11 +688,11 @@ def inventory_of_host(host_name: HostName, api_request):  # type:ignore[no-untyp
     return merged_tree.serialize()
 
 
-def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) -> None:
+def verify_permission(host_name: HostName, site: livestatus.SiteId | None) -> None:
     if user.may("general.see_all"):
         return
 
-    query = "GET hosts\nFilter: host_name = %s\nStats: state >= 0%s" % (
+    query = "GET hosts\nFilter: host_name = {}\nStats: state >= 0{}".format(
         livestatus.lqencode(host_name),
         "\nAuthUser: %s" % livestatus.lqencode(user.id) if user.id else "",
     )
@@ -792,3 +793,7 @@ class InventoryHousekeeping:
         ]:
             timestamps.add(filename.name)
         return timestamps
+
+
+def execute_inventory_housekeeping_job() -> None:
+    cmk.gui.inventory.InventoryHousekeeping().run()

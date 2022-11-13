@@ -29,9 +29,7 @@ BLACK              := scripts/run-black
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
-DIST_DEPS          := $(CONFIG_DEPS) \
-                      omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe \
-                      omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
+DIST_DEPS          := $(CONFIG_DEPS) 
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
@@ -173,14 +171,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	$(MAKE) -C doc/plugin-api html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
-	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
-	    --exclude "cee" \
-	    --exclude "cee.py*" \
-	    --exclude "cme" \
-	    --exclude "cme.py*" \
-	    --exclude "cpe" \
-	    --exclude "cpe.py*" \
-	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
@@ -238,6 +228,8 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/python-3.cab \
 		windows/python-3.4.cab \
 		windows/check_mk.user.yml \
+		windows/OpenHardwareMonitorLib.dll \
+		windows/OpenHardwareMonitorCLI.exe \
 		windows/CONTENTS \
 		windows/mrpe \
 		windows/plugins
@@ -249,11 +241,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "=============================================================================="
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
-
-omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
-	$(MAKE) -C omd openhardwaremonitor-dist
-
-omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
 
 ntop-mkp:
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
@@ -418,8 +405,6 @@ EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 
 AGENT_CTL_TARGET_PATH=agents/cmk-agent-ctl/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
-	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe" \
-	    --exclude="omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll" \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude=$(AGENT_CTL_TARGET_PATH) \
@@ -506,7 +491,6 @@ setup:
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
-	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
 	$(MAKE) -C locale setup
 

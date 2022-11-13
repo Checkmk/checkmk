@@ -5,22 +5,21 @@
 """Defaults for rule pack and configuration"""
 
 import logging
-from collections.abc import Iterable
-from typing import Any
+from collections.abc import Collection
 
 from cmk.utils.i18n import _
 
-from .config import ConfigFromWATO, Rule, SNMPCredential
+from .config import ConfigFromWATO, ECRulePackSpec, Rule, SNMPCredential
 
 
-def default_rule_pack(rules: Iterable[Rule]) -> dict[str, Any]:
+def default_rule_pack(rules: Collection[Rule]) -> ECRulePackSpec:
     """Returns the default rule pack"""
-    return {
-        "id": "default",
-        "title": _("Default rule pack"),
-        "rules": rules,
-        "disabled": False,
-    }
+    return ECRulePackSpec(
+        id="default",
+        title=_("Default rule pack"),
+        rules=rules,
+        disabled=False,
+    )
 
 
 def default_config() -> ConfigFromWATO:
@@ -32,7 +31,6 @@ def default_config() -> ConfigFromWATO:
     return {
         "rules": [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         "rule_packs": [],  # new format with rule packs
-        "mkp_rule_packs": {},  # rule packs provided by MKPs and referenced in rule_packs
         "actions": [],
         "debug_rules": False,
         "rule_optimizer": True,

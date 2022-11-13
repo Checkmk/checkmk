@@ -66,7 +66,7 @@ def collect_attributes(
     object_type: ObjectType,
     context: ObjectContext,
 ) -> List[Attr]:
-    """Collect all attributes for a specific use case
+    """Collect all host attributes for a specific object type
 
     Use cases can be host or folder creation or updating.
 
@@ -142,6 +142,21 @@ def collect_attributes(
                 field=maybe_call(getattr(attr, "openapi_field", None)),
             )
             result.append(attr_entry)
+
+    # This function is called during import time by the host_attributes_field factory. But to make
+    # this work as expected the registration of all host attributes have to be done prior to that
+    # call. This is ensured by using the right import order. However, this is some kind of an
+    # implicit dependency and broke multiple times now. So we add this check here to get additional
+    # help. The hope is that this points us faster to the source of a future issue that would
+    # otherwise be uncovered by a unit test case with a hard to understand error message later.
+    #
+    # We can not check the full collection of expected attributes here, so the easiest is to apply
+    # some critical level of attributes we expect to have as first line of defense.
+    if len(result) < 9:
+        raise RuntimeError(
+            "Are we missing some host attributes? "
+            f"Found the following: {[r.name for r in result]!r}"
+        )
 
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()

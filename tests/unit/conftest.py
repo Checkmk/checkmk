@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import copy
 import logging
 import shutil
@@ -11,6 +12,7 @@ from typing import Any, Iterable, Iterator, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from fakeredis import FakeRedis  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
@@ -28,7 +30,6 @@ from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.site import omd_site
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 @pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
-    edition_short = request.param  # type: ignore[attr-defined]
+    edition_short = request.param
     if edition_short == "cpe" and not is_plus_repo():
         pytest.skip("Needed files are not available")
 
@@ -248,15 +249,6 @@ class FixRegister:
             check_api.get_check_api_context,
         )
 
-        # our test environment does not deal with namespace packages properly. load plus plugins:
-        try:
-            load_plugins = list(load_plugins_with_exceptions("plus.cmk.base.plugins.agent_based"))
-        except ModuleNotFoundError:
-            pass
-        else:
-            for _plugin, exception in load_plugins:
-                raise exception
-
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
         self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
@@ -315,12 +307,12 @@ class FixPluginLegacy:
 
 
 @pytest.fixture(scope="session", name="fix_register")
-def fix_register_fixture():
+def fix_register_fixture() -> Iterator[FixRegister]:
     yield FixRegister()
 
 
 @pytest.fixture(scope="session")
-def fix_plugin_legacy(fix_register):
+def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
     yield FixPluginLegacy(fix_register)
 
 
@@ -389,3 +381,9 @@ def initialised_item_state():
         mock_vs,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
+    """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)

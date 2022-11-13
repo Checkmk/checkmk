@@ -151,7 +151,8 @@ std::string MapToV6Network(std::string_view network) {
             auto address_v4 = network_v4.network();
             auto address_v6 =
                 asio::ip::make_address_v6(asio::ip::v4_mapped, address_v4);
-            auto prefix_len = network_v4.prefix_length() + 128 - 32;
+            const unsigned short prefix_len =
+                network_v4.prefix_length() + 128 - 32;
             auto end_network =
                 asio::ip::make_network_v6(address_v6, prefix_len);
             return end_network.to_string();

@@ -9,39 +9,61 @@ import logging
 import os
 
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import BrowserContext, Page
 
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
 
+logger = logging.getLogger(__name__)
+username = "cmkadmin"
+password = "cmk"
+
 
 @pytest.fixture(name="test_site", scope="session", autouse=True)
 def site() -> Site:
-    logging.info("Setting up testsite")
+    logger.info("Setting up testsite")
     version = os.environ.get("VERSION", CMKVersion.DAILY)
+    reuse = os.environ.get("REUSE")
+    # if REUSE is undefined, a site will neither be reused nor be dropped
+    reuse_site = reuse == "1"
+    drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="gui_e2e_", update_from_git=version == "git", install_test_python_modules=False
     )
 
-    site_to_return = None
-    if os.environ.get("REUSE", "0") == "1":
-        site_to_return = sf.get_existing_site("central")
-    if site_to_return is None or not site_to_return.exists():
+    site_to_return = sf.get_existing_site("central")
+    if site_to_return.exists() and reuse_site:
+        logger.info("Reuse existing site (REUSE=1)")
+    else:
+        if site_to_return.exists() and drop_site:
+            logger.info("Dropping existing site (REUSE=0)")
+            site_to_return.rm()
+        logger.info("Creating new site")
         site_to_return = sf.get_site("central")
-    logging.info("Testsite %s is up", site_to_return.id)
+    logger.info("Testsite %s is up", site_to_return.id)
 
     return site_to_return
 
 
-@pytest.fixture(name="logged_in_page")
-def logged_in(test_site: Site, page: Page) -> PPage:
-    username = "cmkadmin"
-    password = "cmk"
-
-    page.goto(test_site.internal_url)
-    ppage = PPage(page, site_id=test_site.id)
-
+def log_in(log_in_url: str, page: Page, test_site: Site) -> PPage:
+    page.goto(log_in_url)
+    ppage = PPage(
+        page,
+        site_id=test_site.id,
+        site_url=test_site.internal_url,
+    )
     ppage.login(username, password)
 
     return ppage
+
+
+@pytest.fixture(name="logged_in_page")
+def logged_in(test_site: Site, page: Page) -> PPage:
+    return log_in(test_site.internal_url, page, test_site)
+
+
+@pytest.fixture(name="logged_in_page_mobile")
+def logged_in_mobile(test_site: Site, context_mobile: BrowserContext) -> PPage:
+    page = context_mobile.new_page()
+    return log_in(test_site.internal_url_mobile, page, test_site)

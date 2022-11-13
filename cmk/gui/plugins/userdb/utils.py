@@ -288,6 +288,7 @@ def _get_builtin_roles() -> Roles:
         "admin": _("Administrator"),
         "user": _("Normal monitoring user"),
         "guest": _("Guest user"),
+        "agent_registration": _("Agent registration user"),
     }
     return {
         rid: {

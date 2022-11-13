@@ -218,6 +218,7 @@ def test_format_nagios_object() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("fixup_ip_lookup")
 def test_create_nagios_host_spec(
     hostname_str: str, result: Dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
@@ -334,7 +335,7 @@ def test_dump_precompiled_hostcheck(
     monkeypatch.setattr(
         core_nagios,
         "_get_needed_plugin_names",
-        lambda c: (set(), {CheckPluginName("uptime")}, set()),
+        lambda *args, **kw: (set(), {CheckPluginName("uptime")}, set()),
     )
 
     host_check = core_nagios._dump_precompiled_hostcheck(
@@ -386,7 +387,7 @@ def test_compile_delayed_host_check(
     monkeypatch.setattr(
         core_nagios,
         "_get_needed_plugin_names",
-        lambda c: (set(), {CheckPluginName("uptime")}, set()),
+        lambda *args, **kw: (set(), {CheckPluginName("uptime")}, set()),
     )
 
     source_file = core_nagios.HostCheckStore.host_check_source_file_path(
@@ -640,7 +641,7 @@ def test_create_nagios_servicedefs_active_check(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -735,7 +736,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -786,7 +787,7 @@ def test_create_nagios_servicedefs_omit_service(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -835,7 +836,7 @@ def test_create_nagios_servicedefs_invalid_args(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
 
 @pytest.mark.parametrize(
@@ -902,7 +903,7 @@ def test_create_nagios_config_commands(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
     core_nagios._create_nagios_config_commands(cfg)
 
     assert outfile.getvalue() == expected_result

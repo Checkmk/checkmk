@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import requests
 
@@ -54,7 +54,7 @@ def agent_elasticsearch_main(args: Args) -> None:
                 raise
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
 
     parser = create_default_argument_parser(description=__doc__)
 
@@ -91,7 +91,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 def handle_cluster_health(response):
     for item, value in response.items():
-        sys.stdout.write("%s %s\n" % (item, value))
+        sys.stdout.write(f"{item} {value}\n")
 
 
 def handle_nodes(response):
@@ -104,15 +104,19 @@ def handle_nodes(response):
             mem = proc["mem"]
 
             sys.stdout.write(
-                "%s open_file_descriptors %s\n" % (node["name"], proc["open_file_descriptors"])
+                "{} open_file_descriptors {}\n".format(node["name"], proc["open_file_descriptors"])
             )
             sys.stdout.write(
-                "%s max_file_descriptors %s\n" % (node["name"], proc["max_file_descriptors"])
+                "{} max_file_descriptors {}\n".format(node["name"], proc["max_file_descriptors"])
             )
-            sys.stdout.write("%s cpu_percent %s\n" % (node["name"], cpu["percent"]))
-            sys.stdout.write("%s cpu_total_in_millis %s\n" % (node["name"], cpu["total_in_millis"]))
+            sys.stdout.write("{} cpu_percent {}\n".format(node["name"], cpu["percent"]))
             sys.stdout.write(
-                "%s mem_total_virtual_in_bytes %s\n" % (node["name"], mem["total_virtual_in_bytes"])
+                "{} cpu_total_in_millis {}\n".format(node["name"], cpu["total_in_millis"])
+            )
+            sys.stdout.write(
+                "{} mem_total_virtual_in_bytes {}\n".format(
+                    node["name"], mem["total_virtual_in_bytes"]
+                )
             )
 
 
@@ -122,7 +126,7 @@ def handle_stats(response):
         sys.stdout.write("<<<elasticsearch_shards>>>\n")
 
         sys.stdout.write(
-            "%s %s %s\n" % (shards.get("total"), shards.get("successful"), shards.get("failed"))
+            "{} {} {}\n".format(shards.get("total"), shards.get("successful"), shards.get("failed"))
         )
 
     docs = response.get("_all", {}).get("total")
@@ -131,7 +135,7 @@ def handle_stats(response):
         count = docs.get("docs", {}).get("count")
         size = docs.get("store", {}).get("size_in_bytes")
 
-        sys.stdout.write("%s %s\n" % (count, size))
+        sys.stdout.write(f"{count} {size}\n")
 
     indices_data = response.get("indices")
     if indices_data is not None:

@@ -61,13 +61,15 @@ class ViewStore:
     @staticmethod
     def _load_all_views() -> AllViewSpecs:
         """Loads all view definitions from disk and returns them"""
-        # Skip views which do not belong to known datasources
-        return visuals.load(
-            "views",
-            multisite_builtin_views,
-            internal_view_to_runtime_view,
-            skip_func=lambda v: v["datasource"] not in data_source_registry,
-        )
+        return {
+            k: v
+            for k, v in visuals.load(
+                "views",
+                multisite_builtin_views,
+                internal_view_to_runtime_view,
+            ).items()
+            if v["datasource"] in data_source_registry
+        }
 
     @staticmethod
     def _load_permitted_views(all_views: AllViewSpecs) -> PermittedViewSpecs:

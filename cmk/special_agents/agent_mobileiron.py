@@ -16,19 +16,8 @@ import itertools
 import logging
 import re
 from collections import defaultdict, UserDict
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Final,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from collections.abc import Collection, Iterator, Mapping, Sequence
+from typing import Any, Final
 from urllib.parse import urljoin
 
 import requests
@@ -85,7 +74,7 @@ class HostnameDict(UserDict):
     """
 
     def __init__(self) -> None:
-        self._keys_seen: Dict[str, itertools.count] = defaultdict(itertools.count)
+        self._keys_seen: dict[str, itertools.count] = defaultdict(itertools.count)
         super().__init__()
 
     def __setitem__(self, key: str, value: Mapping) -> None:
@@ -95,11 +84,11 @@ class HostnameDict(UserDict):
         super().__setitem__(key, value)
 
 
-def _get_partition_list(opt_string: str) -> List[str]:
+def _get_partition_list(opt_string: str) -> list[str]:
     return opt_string.split(",")
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
@@ -141,9 +130,9 @@ class MobileironAPI:
         self,
         api_host: str,
         key_fields: Sequence[str],
-        auth: Tuple[str, str],
+        auth: tuple[str, str],
         regex_patterns: Regexes,
-        proxy: Optional[str] = None,
+        proxy: str | None = None,
     ) -> None:
         self.api_host = api_host
         self._key_fields = key_fields
@@ -162,7 +151,7 @@ class MobileironAPI:
     def __enter__(self) -> MobileironAPI:
         return self
 
-    def __exit__(self, *exc_info: Tuple) -> None:
+    def __exit__(self, *exc_info: tuple) -> None:
         if self._session:
             self._session.close()
 
@@ -180,7 +169,7 @@ class MobileironAPI:
             ):
                 self._all_devices[compound_key] = device_json
 
-    def _get_one_page(self, params: Dict[str, Union[int, str]]) -> Mapping[str, Any]:
+    def _get_one_page(self, params: dict[str, int | str]) -> Mapping[str, Any]:
         """Yield one page from the API with params."""
 
         try:
@@ -255,7 +244,7 @@ class MobileironAPI:
 
     def get_all_devices(
         self,
-        partitions: List[str],
+        partitions: list[str],
     ) -> Mapping[str, Any]:
         """Returns all devices in all partitions without duplicates."""
 

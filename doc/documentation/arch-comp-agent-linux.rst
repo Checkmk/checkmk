@@ -61,7 +61,19 @@ asynchronous job, and one synchronous job which is socket activated.
 In either case, cached data is stored in cache files, and output by the
 synchronous job as long as the files are valid.
 
+Folders used by the agent
+-------------------------
+
+They can be configured in the Bakery ("Installation paths for agent files (Linux, UNIX)")
+
+* Binaries (Default: `/usr/bin`): Agent itself and caching agent, etc.
+* Configuration files (Default: `/etc/check_mk/`): Configurations for agent plugins, e.g. `cmk-update-agent.cfg` or `mysql.cfg`.
+  They might include clear text passwords.
+* Variable data (Default: `/var/lib/check_mk_agent/`): Cache files, spool files, logs etc.
+* Plugins and local checks (Default: `/usr/lib/check_mk_agent/`): Folder for storing plugins and local checks.
 
 Risks and technical debts
 =========================
 This component is by default run as root the monitored system.
+
+When the agent is run as non root the directories might not be usable as intended.

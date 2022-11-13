@@ -6,8 +6,9 @@
 import ast
 import json
 import sys
+from collections.abc import Mapping
 from multiprocessing.pool import ThreadPool
-from typing import Any, Dict, Mapping, Set
+from typing import Any
 
 import requests
 import urllib3
@@ -198,7 +199,7 @@ class AggregationRawdataGenerator:
 class AggregationOutputRenderer:
     def render(self, aggregation_data_results) -> None:  # type:ignore[no-untyped-def]
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
-        connection_info: Dict[str, Set[str]] = {field: set() for field in connection_info_fields}  #
+        connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}  #
 
         output = []
         for aggregation_result in aggregation_data_results:

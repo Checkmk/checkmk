@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A user can edit some user profile attributes on this page"""
 
+from collections.abc import Iterable
 from datetime import datetime
 from typing import Any, Optional
 
@@ -14,7 +15,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
-from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
+from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic, UserAttribute
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -46,7 +47,7 @@ class UserProfile(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user_spec = users[user.id]
 
-        language = request.get_ascii_input_mandatory("language", "")
+        language = request.get_ascii_input_mandatory("language")
         # Set the users language if requested to set it explicitly
         if language != "_default_":
             user_spec["language"] = language
@@ -88,7 +89,7 @@ class UserProfile(ABCUserProfilePage):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         if user.authorized_login_sites():
-            back_url = "user_profile_replicate.py?from_valuespec=user_profile.py"
+            back_url = "user_profile_replicate.py?back=user_profile.py"
         else:
             back_url = "user_profile.py"
 
@@ -153,14 +154,22 @@ class UserProfile(ABCUserProfilePage):
         html.footer()
 
 
-def _show_custom_user_attr(user_spec: UserSpec, custom_attr) -> None:  # type:ignore[no-untyped-def]
+def _show_custom_user_attr(
+    user_spec: UserSpec, custom_attr: Iterable[tuple[str, UserAttribute]]
+) -> None:
     for name, attr in custom_attr:
         if attr.user_editable():
             vs = attr.valuespec()
-            forms.section(_u(vs.title()))
-            value = user_spec.get(name, vs.default_value())  # type: ignore[literal-required]
-            if not attr.permission() or user.may(attr.permission()):
+            title = vs.title()
+            assert title is not None  # Hmmm...
+            forms.section(_u(title))
+            value = user_spec.get(name, vs.default_value())
+            permission = attr.permission()
+            if not permission or user.may(permission):
                 vs.render_input("ua_" + name, value)
-                html.help(_u(vs.help()))
+                h = vs.help()
+                if isinstance(h, str):
+                    h = _u(h)
+                html.help((h))
             else:
                 html.write_text(vs.value_to_html(value))

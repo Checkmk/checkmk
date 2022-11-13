@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from tests.unit.conftest import FixRegister
+
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
-def test_all_sections_are_subscribed_by_some_plugin(  # type:ignore[no-untyped-def]
-    fix_register,
+def test_all_sections_are_subscribed_by_some_plugin(
+    fix_register: FixRegister,
 ) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
@@ -29,8 +31,8 @@ def test_all_sections_are_subscribed_by_some_plugin(  # type:ignore[no-untyped-d
     assert unsubscribed_sections_names == {"labels"}
 
 
-def test_section_detection_uses_sysdescr_or_sysobjid(  # type:ignore[no-untyped-def]
-    fix_register,
+def test_section_detection_uses_sysdescr_or_sysobjid(
+    fix_register: FixRegister,
 ) -> None:
     """Make sure the first OID is the system description or the system object ID
 
@@ -107,7 +109,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(  # type:ignore[no-untyped-
             """
 
 
-def test_section_parse_function_does_something(fix_register) -> None:  # type:ignore[no-untyped-def]
+def test_section_parse_function_does_something(fix_register: FixRegister) -> None:
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
@@ -256,8 +258,8 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         ), f"💚 The agent section {name} now has a parse function! Remove it from the list above!"
 
 
-def test_snmp_section_parse_function_deals_with_empty_input(  # type:ignore[no-untyped-def]
-    fix_register,
+def test_snmp_section_parse_function_deals_with_empty_input(
+    fix_register: FixRegister,
 ) -> None:
     """We make sure that all parse functions can handle empty table data"""
     for section in fix_register.snmp_sections.values():

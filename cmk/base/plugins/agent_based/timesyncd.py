@@ -4,7 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence, Tuple, TypedDict
+from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, TypedDict
+
+import pytz
+from dateutil import parser as date_parser
+from typing_extensions import NotRequired
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -23,15 +27,15 @@ class CheckParams(TypedDict):
     stratum_level: int
     quality_levels: Tuple[float, float]
     alert_delay: Tuple[int, int]
-    last_synchronized: Tuple[int, int]
+    last_synchronized: NotRequired[Tuple[int, int]]
+    last_ntp_message: Tuple[int, int]
 
 
-# last_synchronized default values increased since a few systems required longer time
 default_check_parameters = CheckParams(
     stratum_level=10,
     quality_levels=(200.0, 500.0),
     alert_delay=(300, 3600),
-    last_synchronized=(7500, 10800),
+    last_ntp_message=(3600, 7200),
 )
 
 
@@ -64,6 +68,11 @@ class Section(TypedDict, total=False):
     stratum: int
     offset: float
     jitter: float
+
+
+@dataclass(frozen=True)
+class NTPMessageSection:
+    receivetimestamp: float
 
 
 def _strip_sign(time_string: str) -> Tuple[str, int]:
@@ -127,21 +136,59 @@ def parse_timesyncd(string_table: StringTable) -> Section:
     return section
 
 
+def _parse_ntp_message_timestamp(ntp_message_raw: str, timezone_raw: str) -> float:
+    ntp_message = ntp_message_raw.removeprefix("NTPMessage={ ").removesuffix(" }")
+    ntp_message_parsed = dict((m.split("=", maxsplit=1) for m in ntp_message.split(", ")))
+
+    receive_timestamp_raw = ntp_message_parsed["ReceiveTimestamp"]
+    tz_info = pytz.timezone(timezone_raw.removeprefix("Timezone="))
+    receive_datetime = date_parser.parse(receive_timestamp_raw)
+    if receive_datetime.tzinfo is None:  # parsing e.g. "CEST" does not always work
+        receive_datetime = tz_info.localize(receive_datetime)
+
+    receive_timestamp = receive_datetime.astimezone(pytz.utc).timestamp()
+    return receive_timestamp
+
+
+def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection | None:
+    if not string_table:
+        return None
+    ntp_message_lines = [line[0] for line in string_table if line[0].startswith("NTPMessage")]
+    if len(ntp_message_lines) == 0:
+        return None
+    [ntp_message_line] = ntp_message_lines
+    [timezone_line] = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    section = NTPMessageSection(
+        receivetimestamp=_parse_ntp_message_timestamp(ntp_message_line, timezone_line)
+    )
+    return section
+
+
 def _get_levels_seconds(params: Mapping[str, Any]) -> Tuple[float, float]:
     warn_milli, crit_milli = params["quality_levels"]
     return warn_milli / 1000.0, crit_milli / 1000.0
 
 
-def discover_timesyncd(section: Section) -> DiscoveryResult:
-    if section:
+def discover_timesyncd(
+    section_timesyncd: Optional[Section],
+    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+) -> DiscoveryResult:
+    if section_timesyncd:
         yield Service()
 
 
-def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_timesyncd(
+    params: Mapping[str, Any],
+    section_timesyncd: Optional[Section],
+    section_timesyncd_ntpmessage: Optional[NTPMessageSection],
+) -> CheckResult:
+    if section_timesyncd is None:
+        return
+
     levels = _get_levels_seconds(params)
 
     # Offset information
-    offset = section.get("offset")
+    offset = section_timesyncd.get("offset")
     if offset is not None:
         yield from check_levels(
             value=abs(offset),
@@ -151,7 +198,7 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
             label="Offset",
         )
 
-    synctime = section.get("synctime")
+    synctime = section_timesyncd.get("synctime")
     levels_upper = (
         params.get("alert_delay") if synctime is None else params.get("last_synchronized")
     )
@@ -159,14 +206,27 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
         sync_time=synctime,
         levels_upper=levels_upper,
         value_store=get_value_store(),
+        metric_name="last_sync_time",
+        label="Time since last sync",
+        value_store_key="time_server",
     )
 
-    server = section.get("server")
+    if section_timesyncd_ntpmessage is not None:
+        yield from tolerance_check(
+            sync_time=section_timesyncd_ntpmessage.receivetimestamp,
+            levels_upper=params.get("last_ntp_message"),
+            value_store=get_value_store(),
+            metric_name="last_sync_receive_time",
+            label="Time since last NTPMessage",
+            value_store_key="last_sync_receive_time",
+        )
+
+    server = section_timesyncd.get("server")
     if server is None or server == "null":
-        yield Result(state=State.OK, summary="Found no time server")
+        yield Result(state=State.CRIT, summary="Found no time server")
         return
 
-    if (stratum := section.get("stratum")) is not None:
+    if (stratum := section_timesyncd.get("stratum")) is not None:
         yield from check_levels(
             value=stratum,
             levels_upper=(stratum_level := params["stratum_level"] - 1, stratum_level),
@@ -174,7 +234,7 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
         )
 
     # Jitter Information append
-    jitter = section.get("jitter")
+    jitter = section_timesyncd.get("jitter")
     if jitter is not None:
         yield from check_levels(
             value=jitter,
@@ -184,6 +244,11 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
             label="Jitter",
         )
 
+    # server is configured and can be resolved, but e.g. NTP blocked by firewall
+    if server is not None and all(item is None for item in [offset, stratum, jitter]):
+        yield Result(state=State.CRIT, summary="Found no time server")
+        return
+
     yield Result(state=State.OK, summary="Synchronized on %s" % server)
 
 
@@ -191,10 +256,14 @@ register.agent_section(
     name="timesyncd",
     parse_function=parse_timesyncd,
 )
-
+register.agent_section(
+    name="timesyncd_ntpmessage",
+    parse_function=parse_timesyncd_ntpmessage,
+)
 register.check_plugin(
     name="timesyncd",
     service_name="Systemd Timesyncd Time",
+    sections=["timesyncd", "timesyncd_ntpmessage"],
     discovery_function=discover_timesyncd,
     check_function=check_timesyncd,
     check_default_parameters=default_check_parameters,

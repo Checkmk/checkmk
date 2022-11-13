@@ -9,7 +9,6 @@ import os
 import socket
 import sys
 from itertools import groupby
-from typing import Optional, Tuple, Union
 
 import snap7  # type: ignore[import]
 from snap7.common import Snap7Exception, Snap7Library  # type: ignore[import]
@@ -116,7 +115,7 @@ def parse_spec(hostspec):
 
         if ":" in p[2]:
             typename, size_str = p[2].split(":")
-            datatype: Union[Tuple[str, int], str] = (typename, int(size_str))
+            datatype: tuple[str, int] | str = (typename, int(size_str))
         else:
             datatype = p[2]
         value.update(
@@ -214,7 +213,7 @@ def _addresses_from_area_values(values):
 
         datatype = device_value["datatype"]
         if isinstance(datatype, tuple):
-            size: Optional[int] = datatype[1]
+            size: int | None = datatype[1]
         else:
             size = DATATYPES[datatype][0]
 
@@ -334,7 +333,7 @@ def main(sys_argv=None):
 
         with SectionWriter("siemens_plc", None) as writer:
             for values in parsed_area_values:
-                writer.append("%s %s %s %s" % (hostname, *values))
+                writer.append("{} {} {} {}".format(hostname, *values))
 
 
 if __name__ == "__main__":

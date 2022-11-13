@@ -55,7 +55,7 @@ def test_check_fast_lta_volumes(check_fast_lta_volumes) -> None:  # type:ignore[
             "fs_used",
             9536.7431640625,
             levels=(762939.453125, 858306.884765625),
-            boundaries=(0.0, None),
+            boundaries=(0.0, 953674.31640625),
         ),
         Metric("fs_free", 944137.5732421875, boundaries=(0, None)),
         Metric("fs_used_percent", 1.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),

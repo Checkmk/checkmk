@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 
 def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:

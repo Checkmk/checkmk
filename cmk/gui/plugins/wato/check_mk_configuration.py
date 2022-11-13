@@ -5,14 +5,15 @@
 
 import logging
 import re
-from typing import Dict, List, Literal
+from collections.abc import Mapping
+from typing import Any, Dict, List, Literal
 from typing import Tuple as _Tuple
 from typing import Type
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 from cmk.utils.type_defs import TagID
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import is_plus_edition, is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -163,7 +164,7 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
             ),
         )
 
-    def need_restart(self):
+    def need_restart(self) -> bool:
         return True
 
 
@@ -1258,8 +1259,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
                         Dictionary(
                             title=_("Translations"),
                             elements=lambda: [
-                                (l or "en", TextInput(title=a, size=32))
-                                for (l, a) in get_languages()
+                                (l, TextInput(title=a, size=32)) for (l, a) in get_languages()
                             ],
                             columns=2,
                         ),
@@ -3941,7 +3941,7 @@ def _valuespec_periodic_discovery():
             FixedValue(
                 value=None,
                 title=_("Do not perform periodic service discovery check"),
-                totext=_("no discovery check"),
+                totext="",
             ),
             _vs_periodic_discovery(),
         ],
@@ -4551,6 +4551,68 @@ rulespec_registry.register(
         item_type="service",
         name="extra_service_conf:notes_url",
         valuespec=_valuespec_extra_service_conf_notes_url,
+    )
+)
+
+
+def _valuespec_automatic_host_removal() -> CascadingDropdown:
+    return CascadingDropdown(
+        title=_("Automatic host removal"),
+        help=_("Configure the automatic removal of monitored hosts.")
+        + (
+            (
+                _(
+                    " <b>Note</b>: To restrict this rule to hosts created via "
+                    '<a href="%s">auto-registration</a>, use the host label '
+                    "<tt>cmk/agent_auto_registered:yes</tt>."
+                )
+                % makeuri_contextless(
+                    request,
+                    [("mode", "agent_registration")],
+                    filename="wato.py",
+                )
+            )
+            if is_plus_edition()
+            else ""
+        ),
+        sorted=False,
+        choices=[
+            (
+                "enabled",
+                _("Enable automatic host removal"),
+                Dictionary(
+                    elements=[
+                        (
+                            "checkmk_service_crit",
+                            Age(
+                                title=_("Duration of CRITICAL state of Check_MK service"),
+                                help=_(
+                                    "Automatically remove hosts whose Check_MK service has been in the state "
+                                    "CRITICAL for longer than the configured time period."
+                                ),
+                            ),
+                        ),
+                    ],
+                    optional_keys=False,
+                ),
+            ),
+            (
+                "disabled",
+                _("Disable automatic host removal"),
+                FixedValue(
+                    value=None,
+                    totext="",
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        name="automatic_host_removal",
+        valuespec=_valuespec_automatic_host_removal,
     )
 )
 
@@ -5173,22 +5235,6 @@ def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:  # type:ignore[no-un
     return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
 
 
-def _realtime_encryption() -> _Tuple[str, DropdownChoice]:
-    return (
-        "use_realtime",
-        DropdownChoice(
-            title=_("Encryption for Realtime Updates"),
-            help=_("Choose if realtime updates are sent/expected encrypted"),
-            default_value="enforce",
-            choices=[
-                ("enforce", _("Enforce (drop unencrypted data)")),
-                ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                ("disable", _("Disable (drop encrypted data)")),
-            ],
-        ),
-    )
-
-
 def _valuespec_agent_encryption_no_tls() -> Dictionary:
     return Dictionary(
         title=_("Allow non-TLS connections"),
@@ -5215,7 +5261,6 @@ def _valuespec_agent_encryption_no_tls() -> Dictionary:
                     ],
                 ),
             ),
-            _realtime_encryption(),
         ],
         optional_keys=[],
         help=_("Control encryption of data sent from agents to Checkmk.")
@@ -5229,36 +5274,53 @@ def _valuespec_agent_encryption_no_tls() -> Dictionary:
     )
 
 
-def _valuespec_agent_encryption():
+def _migrate_encryption_settings(p: Mapping[str, Any]) -> Mapping[str, Any]:
+    """
+    >>> _migrate_encryption_settings({})
+    {}
+    >>> _migrate_encryption_settings({'use_realtime': 'enforce'})
+    {}
+    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'})
+    {}
+    >>> _migrate_encryption_settings({'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable', 'use_realtime': 'enforce'})
+    {'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable'}
+
+    """
+    if "use_regular" in p:
+        return {
+            "passphrase": p["passphrase"],
+            "use_regular": p["use_regular"],
+        }
+    return {}
+
+
+def _valuespec_agent_encryption() -> Migrate:
     tls_alt_name_title = _("Use TLS encryption (Linux)")
-    return Alternative(
-        title=_("Encryption (Linux, Windows)"),
-        help=_("Control encryption of data sent from agents to Checkmk.")
-        + "<br>"
-        + _(
-            "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
-            "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
-            "Please keep this in mind when configuring this ruleset."
-        )
-        % tls_alt_name_title,
-        elements=[
-            Dictionary(
-                title=tls_alt_name_title,
-                elements=[
-                    _realtime_encryption(),
-                    _encryption_secret(_("Encryption secret for Realtime Updates")),
-                ],
-                help=_("Control encryption of data sent from agents to Checkmk.")
-                + "<br>"
-                + _(
-                    "<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
-                    "agent and the Windows agent. However, when setting the Encryption settings to "
-                    "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
-                    "Please keep this in mind when configuring this ruleset."
+    return Migrate(
+        migrate=_migrate_encryption_settings,
+        valuespec=Alternative(
+            title=_("Encryption (Linux, Windows)"),
+            help=_("Control encryption of data sent from agents to Checkmk.")
+            + "<br>"
+            + _(
+                "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
+                "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
+                "Please keep this in mind when configuring this ruleset."
+            )
+            % tls_alt_name_title,
+            elements=[
+                FixedValue(
+                    title=tls_alt_name_title,
+                    value={},
+                    totext="",
+                    help=_(
+                        "Rely on the TLS encryption provided by the agent controller."
+                        " No additional encryption is appied."
+                    ),
                 ),
-            ),
-            _valuespec_agent_encryption_no_tls(),
-        ],
+                _valuespec_agent_encryption_no_tls(),
+            ],
+        ),
     )
 
 

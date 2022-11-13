@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef service_processor_h__
-#define service_processor_h__
+#ifndef SERVICE_PROCESSOR_H
+#define SERVICE_PROCESSOR_H
 
 #include <fmt/format.h>
 
@@ -21,7 +21,6 @@
 #include <utility>
 
 #include "async_answer.h"
-#include "carrier.h"
 #include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
@@ -48,6 +47,7 @@
 #include "providers/wmi.h"
 #include "read_file.h"
 #include "realtime.h"
+#include "tools/_process.h"
 #include "tools/_win.h"
 
 namespace cma::srv {
@@ -69,7 +69,7 @@ public:
         return process_id_ != 0;
     }
 
-    uint32_t processId() const noexcept { return process_id_; };
+    uint32_t processId() const noexcept { return process_id_; }
 
 private:
     mutable std::mutex lock_;
@@ -94,7 +94,7 @@ concept ProviderLike = std::is_base_of_v<cma::provider::Basic, T>;
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
-requires ProviderLike<T>
+    requires ProviderLike<T>
 class SectionProvider {
 public:
     // engine is default constructed
@@ -200,9 +200,8 @@ public:
     ServiceProcessor(std::chrono::milliseconds delay,
                      const thread_callback &callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
-    ServiceProcessor() noexcept : external_port_(this) {
-        delay_ = std::chrono::milliseconds{1000};
-    }
+    ServiceProcessor() noexcept
+        : delay_{std::chrono::milliseconds{1000}}, external_port_(this) {}
     ~ServiceProcessor() override {
         try {
             ohm_process_.stop();
@@ -235,7 +234,7 @@ public:
 
     std::string getInternalPort() const noexcept { return internal_port_; }
 
-    void processYamlInput(const std::string &yaml) noexcept;
+    void processYamlInput(const std::string &yaml_text) noexcept;
 
     // functions for testing/verifying
     void startTestingMainThread();
@@ -275,8 +274,8 @@ private:
 
     cma::cfg::modules::ModuleCommander mc_;
 
-    void informDevice(cma::rt::Device &Device,
-                      std::string_view Ip) const noexcept;
+    void informDevice(rt::Device &rt_device,
+                      std::string_view ip_addr) const noexcept;
 
     void mainThread(world::ExternalPort *ex_port, bool cap_installed) noexcept;
     void mainThreadAsTest() noexcept { mainThread(nullptr, false); }
@@ -292,7 +291,7 @@ private:
     std::condition_variable stop_thread_;
     std::mutex lock_stopper_;
     bool stop_requested_ = false;
-    thread_callback callback_ = []() { return true; };  // nothing
+    thread_callback callback_ = [] { return true; };  // nothing
 
     uint16_t working_port_ = cma::cfg::kMainPort;
 
@@ -310,7 +309,7 @@ private:
         std::unique_lock l(lock_stopper_);
         auto stop_requested = stop_thread_.wait_until(
             l, std::chrono::steady_clock::now() + delay_,
-            [this]() { return stop_requested_; });
+            [this] { return stop_requested_; });
         return stop_requested;
     }
 
@@ -342,7 +341,7 @@ private:
     }
 
     //
-    int startProviders(AnswerId timestamp, const std::string &ip_addr);
+    int startProviders(AnswerId answer_id, const std::string &ip_addr);
 
     // all pre operation required for normal functionality
     void preStartBinaries();
@@ -355,7 +354,7 @@ private:
     int max_wait_time_{0};  // this is waiting time for all section to run
 
     template <typename T>
-    bool isAllowed(const T &engine) {
+    static bool isAllowed(const T &engine) {
         if (!engine.isAllowedByTime()) {
             XLOG::d.t("Skipping '{}' by time", engine.getUniqName());
             return false;
@@ -401,8 +400,8 @@ private:
     void kickWinPerf(AnswerId answer_id, const std::string &ip_addr);
 
     template <typename T>
-    requires std::derived_from<T, provider::Synchronous> std::string generate()
-    const {
+        requires std::derived_from<T, provider::Synchronous>
+    std::string generate() const {
         T section;
         section.updateSectionStatus();
         return section.generateContent();
@@ -436,7 +435,7 @@ private:
     }
 
     void logAnswerProcessing(bool success) const {
-        auto get_segments_text = [this]() {
+        auto get_segments_text = [this] {
             auto list = answer_.segmentNameList();
             std::string s;
             for (auto const &l : list) {
@@ -503,11 +502,10 @@ private:
                     if (block) {
                         XLOG::d("Provider '{}' added answer", name_);
                         return p->addSectionToAnswer(name_, answer, *block);
-                    } else {
-                        XLOG::l("Provider '{}' FAILED answer", name_);
-                        p->addSectionToAnswer(name_, answer);
-                        return false;
                     }
+                    XLOG::l("Provider '{}' FAILED answer", name_);
+                    p->addSectionToAnswer(name_, answer);
+                    return false;
                 },
                 stamp,  // param 1
                 proc    // param 2
@@ -559,7 +557,7 @@ private:
         std::string path_string;
         auto paths = cfg::GetExePaths();
         for (const auto &dir : paths) {
-            path_string += dir.u8string() + "\n";
+            path_string += wtools::ToStr(dir) + "\n";
         }
 
         XLOG::l("File '{}' not found on the path '{}'",
@@ -569,14 +567,14 @@ private:
     // starting executable(any!) with valid command line
     // API to start exe
     std::future<bool> kickExe(
-        bool async_mode,                      // controlled from the config
-        const std::wstring &exe_name,         //
-        AnswerId answer_id,                   //
-        ServiceProcessor *service_processor,  // host
-        const std::wstring &segment_name,     // identifies exe
-        int timeout,                          // for exe
-        const std::wstring &command_line,     //
-        const std::wstring &log_file) {       // this is optional
+        bool async_mode,                       // controlled from the config
+        const std::wstring &exe_name,          //
+        AnswerId answer_id,                    //
+        ServiceProcessor *service_processor,   // host
+        const std::wstring &segment_name,      // identifies exe
+        int timeout,                           // for exe
+        const std::wstring &command_line,      //
+        const std::wstring &log_file) const {  // this is optional
         return std::async(
             async_mode ? std::launch::async : std::launch::deferred,
             [this, exe_name, log_file](AnswerId answer,
@@ -701,4 +699,4 @@ void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
 
 }  // namespace cma::srv
 
-#endif  // service_processor_h__
+#endif  // SERVICE_PROCESSOR_H

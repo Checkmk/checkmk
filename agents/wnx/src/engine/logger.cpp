@@ -9,14 +9,14 @@ namespace fs = std::filesystem;
 
 namespace XLOG {
 
-Emitter l(LogType::log);
-Emitter d(LogType::debug);
-Emitter t(LogType::trace);
-Emitter stdio(LogType::stdio);
-Emitter bp(LogType::log, true);
+Emitter l(LogType::log);         // NOLINT
+Emitter d(LogType::debug);       // NOLINT
+Emitter t(LogType::trace);       // NOLINT
+Emitter stdio(LogType::stdio);   // NOLINT
+Emitter bp(LogType::log, true);  // NOLINT
 
 namespace details {
-static bool EventLogEnabled = true;
+static bool g_event_log_enabled = true;
 
 std::string g_log_context;
 
@@ -58,9 +58,9 @@ unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) noexcept {
     return EVENTLOG_ERROR_TYPE;
 }
 
-static std::atomic<bool> g_log_duplicated_on_stdio = false;
-static std::atomic<bool> g_log_colored_on_stdio = false;
-static DWORD g_log_old_mode = -1;
+static std::atomic g_log_duplicated_on_stdio = false;
+static std::atomic g_log_colored_on_stdio = false;
+static DWORD g_log_old_mode = static_cast<DWORD>(-1);
 
 bool IsDuplicatedOnStdio() noexcept {
     return details::g_log_duplicated_on_stdio;
@@ -110,7 +110,7 @@ public:
     GlobalLogSettings &operator=(const GlobalLogSettings &) = delete;
 
 private:
-    constexpr static auto last_ = static_cast<int>(LogType::last);
+    constexpr static auto last_ = static_cast<int>(LogType::stdio);
     mutable std::mutex lock_;
     Info arr_[last_];
 };
@@ -146,7 +146,7 @@ int Type2Marker(xlog::Type log_type) noexcept {
 // converter from low level log type
 // to some default mark
 uint32_t Mods2Directions(const xlog::LogParam &lp, uint32_t mods) noexcept {
-    int directions = lp.directions_;
+    auto directions = lp.directions_;
 
     if ((mods & Mods::kStdio) != 0) {
         directions |= xlog::Directions::kStdioPrint;
@@ -323,7 +323,7 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
 
     // EVENT
     if (setup::IsEventLogEnabled() &&
-        ((dirs & xlog::Directions::kEventPrint) != 0)) {
+        (dirs & xlog::Directions::kEventPrint) != 0) {
         // we do not need to format string for the event
         const auto windows_event_log_id = cma::GetModus() == cma::Modus::service
                                               ? EventClass::kSrvDefault
@@ -341,8 +341,8 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
     const auto file_print = (dirs & xlog::Directions::kFilePrint) != 0;
     const auto stdio_print = (dirs & xlog::Directions::kStdioPrint) != 0;
 
-    if (stdio_print || (file_print && details::IsDuplicatedOnStdio())) {
-        auto normal = xlog::formatString(flags, "", text);
+    if (stdio_print || file_print && details::IsDuplicatedOnStdio()) {
+        const auto normal = xlog::formatString(flags, "", text);
         xlog::sendStringToStdio(normal.c_str(), c);
     }
 
@@ -376,7 +376,7 @@ void ColoredOutputOnStdio(bool on) noexcept {
         constexpr DWORD old_mode =
             ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         ::SetConsoleMode(std_input, old_mode);
-    } else if (details::g_log_old_mode != -1) {
+    } else if (details::g_log_old_mode != static_cast<DWORD>(-1)) {
         ::SetConsoleMode(std_input, details::g_log_old_mode);
     }
 }
@@ -441,9 +441,11 @@ void EnableWinDbg(bool enable) noexcept {
     t.enableWinDbg(enable);
 }
 
-bool IsEventLogEnabled() noexcept { return details::EventLogEnabled; }
+bool IsEventLogEnabled() noexcept { return details::g_event_log_enabled; }
 
-void EnableEventLog(bool enable) noexcept { details::EventLogEnabled = enable; }
+void EnableEventLog(bool enable) noexcept {
+    details::g_event_log_enabled = enable;
+}
 
 // all parameters are set in config
 void Configure(const std::string &log_file_name, int debug_level, bool windbg,

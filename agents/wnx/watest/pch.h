@@ -19,7 +19,7 @@
 // NOTE: This code block is used to speed compilation.
 // Sets usually for msbuild in script using environment variable
 // ExternalCompilerOptions.
-#ifdef DECREASE_COMPILE_TIME
+#ifdef _DECREASE_COMPILE_TIME_
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -51,8 +51,7 @@
 #include "common/cfg_info.h"
 
 // definitions required for gtest
-#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
-#define _CRT_SECURE_NO_WARNINGS
+#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING  // NOLINT
 #include "common/yaml.h"
 #include "gtest/gtest.h"
 

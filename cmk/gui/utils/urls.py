@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import re
 import urllib.parse
 from enum import Enum
 from functools import lru_cache
-from typing import Mapping, Optional, Sequence, Tuple, Union
+from typing import Literal, Mapping, Optional, Sequence, Tuple, Union
 
+from typing_extensions import assert_never
+
+from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
@@ -68,11 +70,11 @@ def urlencode(value: Optional[str]) -> str:
     return "" if value is None else quote_plus(value)
 
 
-# Matches paths which may have a /site/check_mk/ prefix and end with "filename.py". See doctests.
-PATH_RE = re.compile(r"^(?:/[^/]+/check_mk/)?([^/.]+)\.py(?:$|[^/])")
-
-
-def _file_name_from_path(path: str) -> str:
+def _file_name_from_path(
+    path: str,
+    on_error: Literal["raise", "ignore"] = "ignore",
+    default: str = "index",
+) -> str:
     """Derive a "file name" from the path.
 
     These no longer map to real file names, but rather to the page handlers attached to the names.
@@ -91,23 +93,37 @@ def _file_name_from_path(path: str) -> str:
             >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py")
             'should_match'
 
-            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py")
-            'index'
-
-            >>> _file_name_from_path("/NO_SITE/check_mk/foo/bar")
-            'index'
-
             >>> _file_name_from_path("/NO_SITE/check_mk/")
             'index'
 
-            >>> _file_name_from_path("/NO_SITE/check_mk/.py")
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py", on_error="ignore")
             'index'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py", on_error="ignore", default="not_found")
+            'not_found'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py", on_error="raise")
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKNotFound: Not found
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/foo/bar", on_error="raise")
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKNotFound: Not found
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/.py", on_error="raise")
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKNotFound: Not found
 
         Not so sensible values. Not sure where this would occur, but tests were in place which
         required this.
 
-            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/")
-            'should_match'
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/", on_error="raise")
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKNotFound: Not found
 
         `file_name_and_query_vars_from_url` expects relative URLs, so we sadly need to support
         those as well.
@@ -117,17 +133,35 @@ def _file_name_from_path(path: str) -> str:
 
         This works as expected.
 
-            >>> _file_name_from_path(".py")
-            'index'
-
+            >>> _file_name_from_path(".py", on_error="raise")
+            Traceback (most recent call last):
+            ...
+            cmk.gui.exceptions.MKNotFound: Not found
     """
-    if match := PATH_RE.match(path.rstrip("/")):
-        return match.group(1)
+    parts = path.split("/")
+    if len(parts) in (1, 4) and len(parts[-1]) > 3 and parts[-1].endswith(".py"):
+        # If it is a relative url or a URL like /site/check_mk/file.py and the filename is not just
+        # the extension (like /site/check_mk/.py) then we have a filename.
+        result = parts[-1][:-3]
+    elif len(parts) < 5 and not parts[-1]:
+        # If we have a "normal" url and not an excessive amount of paths (probably a duplication)
+        # and the last part is empty, we have an "index" URL.
+        result = "index"
+    else:
+        if on_error == "raise":  # pylint: disable=no-else-raise
+            raise MKNotFound("Not found")
+        elif on_error == "ignore":
+            result = default
+        else:
+            assert_never(on_error)
+            raise RuntimeError("To make pylint happy")
 
-    return "index"
+    return result
 
 
-def requested_file_name(request: Request) -> str:
+def requested_file_name(
+    request: Request, on_error: Literal["raise", "ignore"] = "ignore", default: str = "index"
+) -> str:
     """Convenience wrapper around _file_name_from_path
 
     Args:
@@ -143,14 +177,18 @@ def requested_file_name(request: Request) -> str:
         >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py"))
         'foo_bar'
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/"))
-        'foo_bar'
+        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/"), on_error="raise")
+        Traceback (most recent call last):
+        ...
+        cmk.gui.exceptions.MKNotFound: Not found
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/foo"))
-        'index'
+        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/foo"), on_error="raise")
+        Traceback (most recent call last):
+        ...
+        cmk.gui.exceptions.MKNotFound: Not found
 
     """
-    return _file_name_from_path(request.path)
+    return _file_name_from_path(request.path, on_error=on_error, default=default)
 
 
 def requested_file_with_query(request: Request) -> str:

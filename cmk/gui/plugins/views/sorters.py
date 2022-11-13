@@ -5,12 +5,17 @@
 
 import abc
 import time
-from typing import List, Optional, Sequence, Tuple, TYPE_CHECKING
+from typing import List, Optional, Sequence, Tuple
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import (
+from cmk.gui.painters.v0.base import declare_1to1_sorter
+from cmk.gui.painters.v0.helpers import get_tag_groups
+from cmk.gui.painters.v1.helpers import get_perfdata_nth_value
+from cmk.gui.site_config import get_site_config
+from cmk.gui.sorter import (
     cmp_custom_variable,
     cmp_insensitive_string,
     cmp_ip_address,
@@ -20,18 +25,13 @@ from cmk.gui.plugins.views.utils import (
     cmp_simple_string,
     cmp_string_list,
     compare_ips,
-    declare_1to1_sorter,
-    get_perfdata_nth_value,
-    get_tag_groups,
+    declare_simple_sorter,
+    Sorter,
+    sorter_registry,
 )
-from cmk.gui.site_config import get_site_config
-from cmk.gui.sorter import declare_simple_sorter, DerivedColumnsSorter, Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
-
-if TYPE_CHECKING:
-    from cmk.gui.view import View
 
 
 def cmp_state_equiv(r):

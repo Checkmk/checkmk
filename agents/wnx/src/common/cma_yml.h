@@ -29,7 +29,7 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string &group_name,
         if (!group.IsMap()) {
             return {};
         }
-        auto val = group[value_name];
+        const auto val = group[value_name];
         if (val.IsDefined() && !val.IsNull()) {
             return val.as<T>();
         }
@@ -51,20 +51,24 @@ T GetVal(YAML::Node yaml, const std::string &group_name,
     return dflt;
 }
 
-inline YAML::Node GetNode(YAML::Node yaml, const std::string &section,
+inline YAML::Node GetNode(const YAML::Node &yaml, const std::string &section,
                           const std::string &name) noexcept {
     auto ret = GetVal<YAML::Node>(yaml, section, name);
 
-    if (ret) return *ret;
+    if (ret) {
+        return *ret;
+    }
 
     return {};
 }
 
 inline std::optional<YAML::Node> GetGroup(
     YAML::Node yaml, const std::string &value_name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) {
+            return {};
+        }
+
         auto node = yaml[value_name];
         return node;
     } catch (const std::exception &e) {
@@ -79,11 +83,16 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string &name) noexcept {
     if (yaml.size() == 0) return {};
 
     try {
-        auto val = yaml[name];
-        if (!val.IsDefined()) return {};
-
-        if (val.IsScalar()) return val.as<T>();
-        if (val.IsNull()) return {};
+        const auto val = yaml[name];
+        if (!val.IsDefined()) {
+            return {};
+        }
+        if (val.IsScalar()) {
+            return val.as<T>();
+        }
+        if (val.IsNull()) {
+            return {};
+        }
         return {};
     } catch (const std::exception &e) {
         LogException("Cannot read yml value '{}' code: [{}]", name, e);
@@ -95,9 +104,8 @@ std::optional<T> GetVal(YAML::Node yaml, const std::string &name) noexcept {
 template <>
 inline std::optional<YAML::Node> GetVal(YAML::Node yaml,
                                         const std::string &name) noexcept {
-    if (yaml.size() == 0) return {};
-
     try {
+        if (yaml.size() == 0) return {};
         return yaml[name];
     } catch (const std::exception &e) {
         LogException("Cannot read yml node '{}' code: [{}]", name, e);

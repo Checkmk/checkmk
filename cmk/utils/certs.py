@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import re
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, NamedTuple, Tuple, Union
+from typing import Final, NamedTuple
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -36,6 +40,25 @@ from cryptography.x509 import (
 )
 from cryptography.x509.oid import NameOID
 
+from livestatus import SiteId
+
+
+class _CNTemplate:
+    """Template used to create the certs CN containing the sites name"""
+
+    def __init__(self, template: str) -> None:
+        self._temp = template
+        self._match = re.compile("CN=" + template % "([^=+,]*)").match
+
+    def format(self, site: SiteId | str) -> str:
+        return self._temp % site
+
+    def extract_site(self, rfc4514_string: str) -> SiteId | None:
+        return None if (m := self._match(rfc4514_string)) is None else SiteId(m.group(1))
+
+
+CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
+
 _DEFAULT_VALIDITY = 999 * 365
 
 
@@ -44,11 +67,11 @@ class RootCA(NamedTuple):
     rsa: RSAPrivateKeyWithSerialization
 
     @classmethod
-    def load(cls, path: Path) -> "RootCA":
+    def load(cls, path: Path) -> RootCA:
         return cls(*load_cert_and_private_key(path))
 
     @classmethod
-    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> "RootCA":
+    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> RootCA:
         try:
             return cls.load(path)
         except FileNotFoundError:
@@ -68,7 +91,7 @@ class RootCA(NamedTuple):
         self,
         name: str,
         days_valid: int = _DEFAULT_VALIDITY,
-    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+    ) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
         private_key = _make_private_key()
         cert = _sign_csr(
             _make_csr(
@@ -96,7 +119,7 @@ def root_cert_path(ca_dir: Path) -> Path:
     return ca_dir / "ca.pem"
 
 
-def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return (
         load_pem_x509_certificate(
             pem_bytes := path_pem.read_bytes(),
@@ -245,7 +268,7 @@ def _make_subject_name(cn: str) -> Name:
 
 
 def _rsa_public_key_from_cert_or_csr(
-    c: Union[Certificate, CertificateSigningRequest],
+    c: Certificate | CertificateSigningRequest,
     /,
 ) -> RSAPublicKey:
     assert isinstance(
@@ -253,3 +276,18 @@ def _rsa_public_key_from_cert_or_csr(
         RSAPublicKey,
     )
     return public_key
+
+
+class RemoteSiteCertsStore:
+    def __init__(self, path: Path) -> None:
+        self.path: Final = path
+
+    def save(self, site_id: SiteId, cert: Certificate) -> None:
+        self.path.mkdir(parents=True, exist_ok=True)
+        self._make_file_name(site_id).write_bytes(cert.public_bytes(Encoding.PEM))
+
+    def load(self, site_id: SiteId) -> Certificate:
+        return load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
+
+    def _make_file_name(self, site_id: SiteId) -> Path:
+        return self.path / f"{site_id}.pem"

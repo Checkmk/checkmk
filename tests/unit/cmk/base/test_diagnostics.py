@@ -223,8 +223,16 @@ def test_diagnostics_element_local_files_json() -> None:
 
 
 def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors
+    monkeypatch: pytest.MonkeyPatch, tmp_path, _collectors
 ) -> None:
+
+    monkeypatch.setattr(
+        cmk.utils.paths, "local_optional_packages_dir", tmp_path / "local_optional_packages_dir"
+    )
+    monkeypatch.setattr(
+        cmk.utils.paths, "local_enabled_packages_dir", tmp_path / "local_enabled_packages_dir"
+    )
+
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
     def create_test_package(name):
@@ -251,16 +259,16 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("local_files.json")
 
-    info_keys = [
+    with filepath.open() as fh:
+        content = json.loads(fh.read())
+
+    assert set(content) == {
         "installed",
         "unpackaged",
         "parts",
         "optional_packages",
-        "disabled_packages",
-    ]
-    content = json.loads(filepath.open().read())
-
-    assert sorted(content.keys()) == sorted(info_keys)
+        "enabled_packages",
+    }
 
     installed_keys = [name]
     assert sorted(content["installed"].keys()) == sorted(installed_keys)
@@ -322,9 +330,10 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
             assert content["parts"][key]["files"] == []
             assert content["parts"][key]["permissions"] == []
 
-    assert content["optional_packages"] == {}
+    assert set(content["optional_packages"]) == {"test-package-json-1.0.mkp"}
 
     shutil.rmtree(str(packaging.package_dir()))
+    shutil.rmtree(str(cmk.utils.paths.local_share_dir))
 
 
 def test_diagnostics_element_local_files_csv() -> None:
@@ -338,8 +347,16 @@ def test_diagnostics_element_local_files_csv() -> None:
 
 
 def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors
+    monkeypatch: pytest.MonkeyPatch, tmp_path, _collectors
 ) -> None:
+
+    monkeypatch.setattr(
+        cmk.utils.paths, "local_optional_packages_dir", tmp_path / "local_optional_packages_dir"
+    )
+    monkeypatch.setattr(
+        cmk.utils.paths, "local_enabled_packages_dir", tmp_path / "local_enabled_packages_dir"
+    )
+
     diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
     check_dir = cmk.utils.paths.local_checks_dir
 

@@ -11,7 +11,12 @@ import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APIDeploymentFactory,
+    APINodeFactory,
     APIPodFactory,
+    composed_entities_builder,
+    ContainerResourcesFactory,
+    ContainerSpecFactory,
     MetaDataFactory,
     pod_phase_generator,
     PodSpecFactory,
@@ -19,29 +24,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 )
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.agent_kube import aggregate_resources, Cluster
+from cmk.special_agents.agent_kube import aggregate_resources
 from cmk.special_agents.utils_kubernetes.api_server import LOWEST_FUNCTIONING_VERSION
 from cmk.special_agents.utils_kubernetes.schemata import api, section
-
-
-class ContainerResourcesFactory(ModelFactory):
-    __model__ = api.ContainerResources
-
-
-class ClusterDetailsFactory(ModelFactory):
-    __model__ = api.ClusterDetails
-
-
-class ContainerSpecFactory(ModelFactory):
-    __model__ = api.ContainerSpec
-
-
-class APIDeployment(ModelFactory):
-    __model__ = api.Deployment
-
-
-class APINode(ModelFactory):
-    __model__ = api.Node
 
 
 class ResourcesRequirementsFactory(ModelFactory):
@@ -52,62 +37,20 @@ class CronJobFactory(ModelFactory):
     __model__ = api.CronJob
 
 
-@pytest.fixture
-def node_name():
-    return "node"
-
-
-@pytest.fixture
-def api_node(node_name):
-    node = APINode.build()
-    node.metadata.name = node_name
-    return node
-
-
-@pytest.fixture
-def api_pod(node_name):
-    pod = APIPodFactory.build()
-    pod.spec.node = node_name
-    return pod
-
-
-def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
-    api_node: api.Node, api_pod: api.Pod
-):
+def test_pod_node_allocation_within_cluster() -> None:
     """Test pod is correctly allocated to node within cluster"""
-    cluster = Cluster.from_api_resources(
-        excluded_node_roles=[],
-        pods=[api_pod],
-        nodes=[api_node],
-        statefulsets=[],
-        daemon_sets=[],
-        deployments=[],
-        cluster_details=ClusterDetailsFactory.build(),
-    )
+    node = APINodeFactory.build()
+    pod = APIPodFactory.build(spec=PodSpecFactory.build(node=node.metadata.name))
+    cluster = composed_entities_builder(pods=[pod], nodes=[node])
     assert len(cluster.nodes) == 1
     assert len(cluster.nodes[0].pods) == 1
 
 
-def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def]
-    api_node, api_pod
-) -> None:
+def test_pod_deployment_allocation_within_cluster() -> None:
     """Test pod is correctly allocated to deployment within cluster"""
-
-    class APIDeployment(ModelFactory):
-        __model__ = api.Deployment
-
-    deployment = APIDeployment.build()
-    deployment.pods = [api_pod.uid]
-    cluster = Cluster.from_api_resources(
-        excluded_node_roles=[],
-        pods=[api_pod],
-        nodes=[api_node],
-        statefulsets=[],
-        daemon_sets=[],
-        deployments=[deployment],
-        cluster_details=ClusterDetailsFactory.build(),
-    )
+    cluster = composed_entities_builder(deployments=[APIDeploymentFactory.build()])
     assert len(cluster.deployments) == 1
+    assert len(cluster.deployments[0].pods) == 1
 
 
 ONE_KiB = 1024
@@ -120,15 +63,12 @@ def container_spec(
     request_memory: Optional[float] = 1.0 * ONE_MiB,
     limit_memory: Optional[float] = 2.0 * ONE_MiB,
 ) -> api.ContainerSpec:
-    class ContainerSpecFactory(ModelFactory):
-        __model__ = api.ContainerSpec
-
-        resources = api.ContainerResources(
+    return ContainerSpecFactory.build(
+        resources=api.ContainerResources(
             limits=api.ResourcesRequirements(memory=limit_memory, cpu=limit_cpu),
             requests=api.ResourcesRequirements(memory=request_memory, cpu=request_cpu),
         )
-
-    return ContainerSpecFactory.build()
+    )
 
 
 def test_aggregate_resources_summed_request_cpu() -> None:

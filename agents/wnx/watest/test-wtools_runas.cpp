@@ -38,7 +38,7 @@ static std::string ReadFromHandle(HANDLE h) {
     if (buf.empty()) return {};
 
     buf.emplace_back(0);
-    return reinterpret_cast<char *>(buf.data());
+    return buf.data();
 }
 
 TEST(WtoolsRunAs, NoUser_Integration) {

@@ -12,9 +12,9 @@
 #include <string>
 
 #include "common/wtools.h"
-#include "tools/_raii.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
+
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
@@ -57,7 +57,7 @@ uint64_t CalcUsage(uint64_t avail, uint64_t total) noexcept {
         return 0;
     }
 
-    return 100 - (100 * avail) / total;
+    return 100 - 100 * avail / total;
 }
 
 std::string ProduceFileSystemOutput(std::string_view volume_id) {
@@ -67,7 +67,7 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
     if (volume_name.empty())
         volume_name = volume_id;
     else
-        std::replace(volume_name.begin(), volume_name.end(), ' ', '_');
+        rs::replace(volume_name, ' ', '_');
 
     return fmt::format("{}\t{}\t{}\t{}\t{}\t{}%\t{}\n",  //
                        volume_name,                      //
@@ -203,7 +203,7 @@ std::string ProduceFormattedInfoForFixedDrive(std::string_view volume_id) {
 }
 
 std::pair<std::string, int> ProduceFormattedInfoForFixedDrives(
-    const std::vector<std::string> volumes) {
+    const std::vector<std::string> &volumes) {
     std::string out;
     int count = 0;
     for (const auto &v : volumes) {
@@ -231,4 +231,4 @@ std::string Df::makeBody() {
     return output;
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

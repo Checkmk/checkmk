@@ -24,8 +24,8 @@ from cmk.fields.primitives import (
     UUID,
 )
 from cmk.fields.validators import (
+    HostNameValidator,
     IsValidRegexp,
-    validate_hostname,
     ValidateAnyOfValidators,
     ValidateHostName,
     ValidateIPv4,
@@ -47,6 +47,7 @@ __all__ = [
     "Float",
     "Email",
     "Function",
+    "HostNameValidator",
     "IPv4",
     "IPv4Interface",
     "IPv6",
@@ -62,6 +63,5 @@ __all__ = [
     "ValidateIPv4Network",
     "ValidateIPv6",
     "IsValidRegexp",
-    "validate_hostname",
     "ValidateHostName",
 ]

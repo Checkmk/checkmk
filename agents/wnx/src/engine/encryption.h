@@ -3,21 +3,20 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef encryption_h__
-#define encryption_h__
+#ifndef ENCRYPTION_H
+#define ENCRYPTION_H
 
 #include <wincrypt.h>
 
 #include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "tools/_misc.h"
 
 namespace cma::encrypt {
 // algorithm can't currently be changed
-enum Algorithm {
+enum class Algorithm {
     kDefault = CALG_AES_256,
     kHash = CALG_MD5
 
@@ -42,6 +41,10 @@ public:
         : Commander(key, Length::kDefault) {}
 
     Commander(const BYTE *key, DWORD length);
+    Commander(const Commander &) = delete;
+    Commander &operator=(const Commander &) = delete;
+    Commander(Commander &&) = delete;
+    Commander &operator=(Commander &&) = delete;
 
     ~Commander();
 
@@ -95,4 +98,4 @@ std::unique_ptr<Commander> MakeCrypt();
 
 std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider);
 }  // namespace cma::encrypt
-#endif  // encryption_h__
+#endif  // ENCRYPTION_H

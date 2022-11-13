@@ -2,7 +2,6 @@
 
 #include "carrier.h"
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <ranges>
@@ -28,7 +27,7 @@ std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept {
     }
     const auto *data_source = static_cast<const uint8_t *>(dh->data());
     const auto *data_end = data_source + dh->length();
-    std::vector<unsigned char> vectorized_data(data_source, data_end);
+    std::vector vectorized_data(data_source, data_end);
 
     if (!vectorized_data.empty() && vectorized_data.back() == 0) {
         XLOG::l.w("Section '{}' sends null terminated strings",
@@ -39,14 +38,14 @@ std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept {
 }
 
 namespace {
-const std::vector<std::string> g_supported_carriers = {
+const std::vector g_supported_carriers = {
     std::string{kCarrierMailslotName},  // standard internal
     std::string{kCarrierNullName},      // drop
     std::string{kCarrierDumpName},      // log only
     std::string{kCarrierFileName}       // write to file
 };
 
-const std::vector<std::string> g_unsupported_carriers = {
+const std::vector g_unsupported_carriers = {
     std::string{kCarrierAsioName},  // future use
 };
 
@@ -172,9 +171,7 @@ bool CoreCarrier::mailSlotSend(DataType data_type, const std::string &peer_name,
 bool CoreCarrier::dumpSlotSend(DataType data_type,
                                const std::string & /*peer_name*/,
                                uint64_t /*answer_id*/, const void *data,
-                               size_t /*length*/) const
-
-{
+                               size_t /*length*/) const {
     if (data != nullptr) {
         std::cout << static_cast<const char *>(data);
         if (data_type != DataType::kSegment) {
@@ -200,23 +197,24 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
             case DataType::kCommand:
-                if (auto rcp = cma::commander::ObtainRunCommandProcessor();
+                if (auto rcp = commander::ObtainRunCommandProcessor();
                     rcp != nullptr) {
                     std::string cmd{static_cast<const char *>(data), length};
                     rcp(peer_name, cmd);
                 }
                 break;
 
-            default:
+            case DataType::kYaml:
                 f.open(carrier_address_ + ".unknown",
                        std::ios::app | std::ios::binary);
                 break;
         }
 
         if (data != nullptr) {
-            f.write(static_cast<const char *>(data), length);
+            f.write(static_cast<const char *>(data),
+                    static_cast<std::streamsize>(length));
             if (data_type == DataType::kLog) {
-                const char c = '\n';
+                constexpr char c = '\n';
                 f.write(&c, 1);
             }
         }
@@ -244,7 +242,7 @@ bool CoreCarrier::asioSlotSend(DataType /*data_type*/,
 }
 
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
-    carrier::CoreCarrier cc;
+    CoreCarrier cc;
 
     auto internal_port = BuildPortName(std::string{kCarrierMailslotName},
                                        std::string{mail_slot});

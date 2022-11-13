@@ -3,7 +3,6 @@
 //
 #include "pch.h"
 
-#include <string_view>
 #include <thread>
 
 #include "asio.h"
@@ -11,6 +10,7 @@
 #include "common/cfg_info.h"
 #include "realtime.h"
 #include "tools/_misc.h"
+#include "tools/_raii.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view str) {
@@ -60,10 +60,7 @@ private:
 
 void StartTestServer(asio::io_context *IoContext, int Port) {
     try {
-        ;
-
         UdpServer s(*IoContext, Port);
-
         IoContext->run();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
@@ -210,7 +207,7 @@ TEST(RealtimeTest, Base_Long) {
                         "");
 
         EXPECT_TRUE(ret);
-        WaitFor([]() { return TestTable.size() >= 6; }, 20s);
+        WaitFor([] { return TestTable.size() >= 6; }, 20s);
 
         EXPECT_TRUE(dev.started());
         dev.stop();
@@ -241,7 +238,7 @@ TEST(RealtimeTest, Base_Long) {
                         "encrypt");
 
         EXPECT_TRUE(ret);
-        WaitFor([]() { return TestTable.size() >= 6; }, 20s);
+        WaitFor([] { return TestTable.size() >= 6; }, 20s);
         EXPECT_TRUE(dev.started());
         dev.stop();
         EXPECT_FALSE(dev.started());

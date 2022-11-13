@@ -39,7 +39,10 @@ def test_check_grouped(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> No
         )
     ) == [
         Metric(
-            "fs_used", 9435.0, levels=(83287.19999980927, 93698.0999994278), boundaries=(0.0, None)
+            "fs_used",
+            9435.0,
+            levels=(83287.19999980927, 93698.0999994278),
+            boundaries=(0.0, 104109.0),
         ),
         Metric("fs_free", 94674.0, boundaries=(0.0, None)),
         Metric(
@@ -62,7 +65,7 @@ def test_check_single_item(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(dfn, "get_value_store", lambda: {"/flash.delta": (0, 720)})
     assert list(dfn.check_df_netscaler("/flash", FILESYSTEM_DEFAULT_PARAMS, section)) == [
         Metric(
-            "fs_used", 720.0, levels=(6380.799999237061, 7178.39999961853), boundaries=(0.0, None)
+            "fs_used", 720.0, levels=(6380.799999237061, 7178.39999961853), boundaries=(0.0, 7976.0)
         ),
         Metric("fs_free", 7256.0, boundaries=(0.0, None)),
         Metric(

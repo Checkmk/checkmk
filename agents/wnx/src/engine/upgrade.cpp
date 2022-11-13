@@ -5,16 +5,18 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <optional>
 #include <string>
-#include <string_view>
 
-#include "common/yaml.h"
+#include "cfg_details.h"
 #include "cvt.h"
 #include "glob_match.h"
 #include "install_api.h"
 #include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
+#include "tools/_process.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 namespace fs = std::filesystem;
@@ -32,7 +34,7 @@ enum class ServiceStartType {
 // returns false if folder cannot be created
 [[nodiscard]] bool CreateFolderSmart(const fs::path &tgt) noexcept {
     std::error_code ec;
-    if (cma::tools::IsValidRegularFile(tgt)) {
+    if (tools::IsValidRegularFile(tgt)) {
         fs::remove(tgt, ec);
     }
     if (fs::exists(tgt, ec)) {
@@ -83,7 +85,7 @@ int CopyAllFolders(const fs::path &legacy_root, const fs::path &program_data,
         return 0;
     }
 
-    static const std::wstring_view folders[] = {
+    static constexpr std::wstring_view folders[] = {
         L"config", L"plugins", L"local",
         L"spool",  // may contain important files
         L"mrpe",   L"state",   L"bin"};
@@ -147,13 +149,10 @@ bool IsIgnoredFile(const fs::path &filename) {
 
 // copies all files from root, exception is ini and exe
 // returns count of files copied
-int CopyRootFolder(const fs::path &LegacyRoot, const fs::path &ProgramData) {
-    using namespace cma::tools;
-    using namespace cma::cfg;
-
+int CopyRootFolder(const fs::path &legacy_root, const fs::path &program_data) {
     auto count = 0;
     std::error_code ec;
-    for (const auto &dir_entry : fs::directory_iterator(LegacyRoot, ec)) {
+    for (const auto &dir_entry : fs::directory_iterator(legacy_root, ec)) {
         const auto &p = dir_entry.path();
         if (fs::is_directory(p, ec)) {
             continue;
@@ -161,12 +160,12 @@ int CopyRootFolder(const fs::path &LegacyRoot, const fs::path &ProgramData) {
 
         if (details::IsIgnoredFile(p)) {
             XLOG::l.i("File '{}' in root folder '{}' is ignored", p,
-                      LegacyRoot);
+                      legacy_root);
             continue;
         }
 
         // Copy to the targetParentPath which we just created.
-        fs::copy(p, ProgramData, fs::copy_options::skip_existing, ec);
+        fs::copy(p, program_data, fs::copy_options::skip_existing, ec);
 
         if (ec.value() == 0) {
             count++;
@@ -205,7 +204,6 @@ int CopyFolderRecursive(
                 if (ec.value() != 0) {
                     XLOG::l("Failed create folder '{} error {}",
                             target_parent_path, ec.value());
-                    continue;
                 }
             } else {
                 if (IsFileNonCompatible(p)) {
@@ -233,16 +231,16 @@ int CopyFolderRecursive(
     return count;
 }
 
-int GetServiceStatus(SC_HANDLE ServiceHandle) {
+std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle) {
     DWORD bytes_needed = 0;
     SERVICE_STATUS_PROCESS ssp;
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
-    if (QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO, buffer,
-                             sizeof(SERVICE_STATUS_PROCESS),
+    if (QueryServiceStatusEx(service_handle, SC_STATUS_PROCESS_INFO, buffer,
+                             sizeof SERVICE_STATUS_PROCESS,
                              &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
-        return -1;
+        return {};
     }
     return ssp.dwCurrentState;
 }
@@ -253,7 +251,7 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
     if (::QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof(SERVICE_STATUS_PROCESS),
+                               sizeof SERVICE_STATUS_PROCESS,
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return 0;
@@ -261,13 +259,13 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     return ssp.dwWaitHint;
 }
 
-int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
+std::optional<DWORD> SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
     SERVICE_STATUS_PROCESS ssp;
     if (::ControlService(Handle, Command,
                          reinterpret_cast<LPSERVICE_STATUS>(&ssp)) == FALSE) {
         XLOG::l("ControlService command [{}] failed [{}]", Command,
                 GetLastError());
-        return -1;
+        return {};
     }
     return ssp.dwCurrentState;
 }
@@ -303,14 +301,15 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
     return {manager_handle, handle, 0};
 }
 
-int GetServiceStatusByName(const std::wstring &Name) {
-    auto [manager_handle, handle, err] = OpenServiceForControl(Name);
+std::optional<DWORD> GetServiceStatusByName(const std::wstring &name) {
+    auto [manager_handle, handle, err] = OpenServiceForControl(name);
 
     ON_OUT_OF_SCOPE(
         if (manager_handle) { CloseServiceHandle(manager_handle); });
     ON_OUT_OF_SCOPE(if (handle) { CloseServiceHandle(handle); });
 
     if (handle == nullptr) {
+        XLOG::l("OpenService failed [{}]", GetLastError());
         return err;
     }
 
@@ -335,7 +334,7 @@ static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
 // so good as for 2019
 static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
                            DWORD current_status) noexcept {
-    auto status = current_status;
+    std::optional status = current_status;
     const auto delay = CalcDelay(handle);
     constexpr uint64_t timeout = 30'000;  // 30-second time-out
     const auto start_time = GetTickCount64();
@@ -344,14 +343,11 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
         XLOG::l.i("Service stop pending...");
 
         while (status == SERVICE_STOP_PENDING) {
-            cma::tools::sleep(delay);
-
+            tools::sleep(delay);
             status = GetServiceStatus(handle);
-
-            if (status == -1) {
+            if (!status) {
                 return false;
             }
-
             if (status == SERVICE_STOPPED) {
                 XLOG::l.i("Service '{}' stopped successfully.", name_to_log);
                 return true;
@@ -366,21 +362,18 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
 
     // Send a stop code to the service.
     status = SendServiceCommand(handle, SERVICE_CONTROL_STOP);
-
-    if (status == -1) {
+    if (!status) {
         return false;
     }
 
     // Wait for the service to stop.
-
     while (status != SERVICE_STOPPED) {
-        cma::tools::sleep(delay);
+        tools::sleep(delay);
 
         status = GetServiceStatus(handle);
-        if (status == -1) {
+        if (!status) {
             return false;
         }
-
         if (GetTickCount64() - start_time > timeout) {
             XLOG::l("Wait timed out for '{}'", name_to_log);
             return false;
@@ -407,7 +400,7 @@ bool StopWindowsService(std::wstring_view service_name) {
 
     // Make sure the service is not already stopped.
     const auto status = GetServiceStatus(handle);
-    if (status == -1) {
+    if (!status) {
         return false;
     }
 
@@ -416,7 +409,7 @@ bool StopWindowsService(std::wstring_view service_name) {
         return true;
     }
 
-    return TryStopService(handle, name_to_log, status);
+    return TryStopService(handle, name_to_log, *status);
 }
 
 static void LogStartStatus(const std::wstring &service_name,
@@ -573,15 +566,18 @@ bool DeactivateLegacyAgent() {
                                      ServiceStartType::disable);
 }
 
-int WaitForStatus(std::function<int(const std::wstring &)> status_checker,
-                  std::wstring_view service_name, int expected_status,
-                  int millisecs) {
-    int status = -1;
+std::optional<DWORD> WaitForStatus(
+    const std::function<std::optional<DWORD>(const std::wstring &)>
+        &status_checker,
+    std::wstring_view service_name, int expected_status, int millisecs) {
+    const std::wstring name{service_name};
     while (true) {
-        status = status_checker(std::wstring(service_name));
-        if (status == expected_status) return status;
+        auto status = status_checker(name);
+        if (status == expected_status) {
+            return *status;
+        }
         if (millisecs >= 0) {
-            tools::sleep(1000);
+            tools::sleep(1000U);
             XLOG::l.i("1 second is over status is {}, t=required {}...", status,
                       expected_status);
         } else {
@@ -590,12 +586,11 @@ int WaitForStatus(std::function<int(const std::wstring &)> status_checker,
         millisecs -= 1000;
     }
 
-    return status;
+    return {};
 }
 
-static void LogAndDisplayErrorMessage(int status) {
-    auto driver_body =
-        cma::cfg::details::FindServiceImagePath(L"winring0_1_2_0");
+static void LogAndDisplayErrorMessage(DWORD status) {
+    auto driver_body = cfg::details::FindServiceImagePath(L"winring0_1_2_0");
 
     using namespace xlog::internal;
     if (!driver_body.empty()) {
@@ -622,7 +617,7 @@ static void LogAndDisplayErrorMessage(int status) {
 
 bool FindStopDeactivateLegacyAgent() {
     XLOG::l.t("Find, stop and deactivate");
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
@@ -664,14 +659,15 @@ bool FindStopDeactivateLegacyAgent() {
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_STOPPED, 5000);
 
-    if (status == SERVICE_STOPPED ||
-        status == 1060 ||  // case when driver killed by OHM
-        status == -1) {    // variant when damned OHM kill and remove damned
-                           // driver before we have a chance to check its stop
+    if (!status.has_value() ||  // driver before we have a chance to check its
+                                // stop
+        status == SERVICE_STOPPED ||  // case when driver killed by OHM
+        status == 1060  // variant when damned OHM kill and remove damned
+    ) {
         return true;
     }
 
-    LogAndDisplayErrorMessage(status);
+    LogAndDisplayErrorMessage(*status);
 
     return false;
 }
@@ -697,7 +693,7 @@ static bool RunOhm(const fs::path &lwa_path) noexcept {
 
 bool FindActivateStartLegacyAgent(AddAction action) {
     XLOG::l.t("Find, activate and start");
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
@@ -741,9 +737,9 @@ bool RunDetachedProcess(const std::wstring &Name) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    ZeroMemory(&pi, sizeof pi);
     std::wstring name = Name;
     auto windows_name = const_cast<LPWSTR>(name.c_str());
 
@@ -1038,8 +1034,8 @@ bool UpgradeLegacy(Force force_upgrade) {
 
     fs::path user_dir = cfg::GetUserDir();
 
-    auto count = CopyAllFolders(path, user_dir, CopyFolderMode::keep_old);
-    count += CopyRootFolder(path, user_dir);
+    CopyAllFolders(path, user_dir, CopyFolderMode::keep_old);
+    CopyRootFolder(path, user_dir);
 
     XLOG::l.i("Converting ini file...");
     ConvertIniFiles(path, user_dir);
@@ -1097,9 +1093,10 @@ bool ConvertLocalIniFile(const fs::path &legacy_root,
     return false;
 }
 
-bool ConvertUserIniFile(const fs::path &legacy_root,
-                        const fs::path &pdata,  // programdata/checkmk/agent
-                        bool local_ini_exists) {
+bool ConvertUserIniFile(
+    const fs::path &legacy_root,
+    const fs::path &program_data,  // programdata/checkmk/agent
+    bool local_ini_exists) {
     if (cma::cfg::DetermineInstallationType() == InstallationType::wato) {
         XLOG::l("Bad Call for Bad Installation");
         return false;
@@ -1119,7 +1116,7 @@ bool ConvertUserIniFile(const fs::path &legacy_root,
     const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
 
     // generate
-    auto out_folder = pdata;
+    auto out_folder = program_data;
 
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
@@ -1192,11 +1189,11 @@ bool IsBakeryIni(const fs::path &Path) noexcept {
         }
 
         char buffer[kBakeryMarker.size()];
-        ifs.read(buffer, sizeof(buffer));
+        ifs.read(buffer, sizeof buffer);
         if (!ifs) {
             return false;
         }
-        return 0 == memcmp(buffer, kBakeryMarker.data(), sizeof(buffer));
+        return 0 == memcmp(buffer, kBakeryMarker.data(), sizeof buffer);
 
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " Exception {}", e.what());
@@ -1316,7 +1313,7 @@ fs::path FindOldState() {
 
 std::string GetNewHash(const fs::path &dat) noexcept {
     try {
-        auto yml = YAML::LoadFile(dat.u8string());
+        auto yml = YAML::LoadFile(wtools::ToStr(dat));
         auto hash = GetVal(yml, kHashName.data(), std::string());
         if (hash == cfg::kBuildHashValue) {
             XLOG::l.t("Hash is from packaged agent, ignoring");
@@ -1333,10 +1330,11 @@ std::string GetNewHash(const fs::path &dat) noexcept {
 
 std::string ReadHash(std::fstream &ifs) noexcept {
     try {
-        char old_hash[17];
-        ifs.read(old_hash, sizeof(old_hash) - 1);
-        old_hash[sizeof(old_hash) - 1] = 0;
-        if (strlen(old_hash) != 16) {
+        constexpr size_t len{16};
+        char old_hash[len + 1];
+        ifs.read(old_hash, len);
+        old_hash[len] = 0;
+        if (strlen(old_hash) != len) {
             XLOG::l("Bad hash in the ini");
             return {};
         }
@@ -1354,7 +1352,7 @@ std::string GetOldHashFromFile(const fs::path &ini,
         ifs.open(ini,
                  std::fstream::binary | std::fstream::in | std::fstream::out);
 
-        std::string str((std::istreambuf_iterator<char>(ifs)),
+        std::string str((std::istreambuf_iterator(ifs)),
                         std::istreambuf_iterator<char>());
 
         auto pos = str.find(marker);
@@ -1388,7 +1386,7 @@ bool PatchHashInFile(const fs::path &ini, const std::string &hash,
         ifs.open(ini,
                  std::fstream::binary | std::fstream::in | std::fstream::out);
 
-        std::string str((std::istreambuf_iterator<char>(ifs)),
+        std::string str((std::istreambuf_iterator(ifs)),
                         std::istreambuf_iterator<char>());
 
         auto pos = str.find(marker);
@@ -1482,7 +1480,7 @@ void Execute() {
     }
 
     // un-installation self
-    auto x = std::thread([]() {
+    auto x = std::thread([] {
         XLOG::l.i("Requested remove of Legacy Agent...");
         auto result = UninstallProduct(products::kLegacyAgent);
         if (result) {

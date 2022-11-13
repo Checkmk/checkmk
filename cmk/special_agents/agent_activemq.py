@@ -5,7 +5,7 @@
 
 import sys
 import xml.etree.ElementTree as ET
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from requests.auth import HTTPBasicAuth
 
@@ -14,7 +14,7 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
 
 
-def parse_arguments(args: Optional[Sequence[str]]) -> Args:
+def parse_arguments(args: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "servername",

@@ -47,7 +47,7 @@ def create_inventory_plugin(
     inventory_function: Callable,
     inventory_default_parameters: Optional[Mapping[str, Any]] = None,
     inventory_ruleset_name: Optional[str] = None,
-    module: Optional[str] = None,
+    module: str,
 ) -> InventoryPlugin:
     """Return an InventoryPlugin object after validating and converting the arguments one by one
 

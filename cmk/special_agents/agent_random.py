@@ -32,7 +32,7 @@ def main(sys_argv=None):
     state_file = state_dir / hostname
     try:
         history = ast.literal_eval(state_file.read_text())
-    except (OSError, SyntaxError, IOError):
+    except (OSError, SyntaxError):
         history = {}
 
     services = [

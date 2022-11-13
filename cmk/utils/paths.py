@@ -7,11 +7,10 @@ to all components of Check_MK."""
 
 import os
 from pathlib import Path
-from typing import Union
 
 
 # One bright day, when every path is really a Path, this can die... :-)
-def _path(*args: Union[str, Path]) -> str:
+def _path(*args: str | Path) -> str:
     return str(Path(*args))
 
 
@@ -23,7 +22,7 @@ def _omd_path_str(path: str) -> str:
     return str(_omd_path(path))
 
 
-def _local_path(global_path: Union[str, Path]) -> Path:
+def _local_path(global_path: str | Path) -> Path:
     return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 
@@ -37,6 +36,7 @@ rrd_single_dir = _opt_root / "var/check_mk/rrd"
 
 mkbackup_lock_dir = Path("/run/lock/mkbackup")
 trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
+remote_sites_cas_dir = _omd_path("var/ssl/remote_sites_cas")
 root_cert_file = _omd_path("etc/ssl/ca.pem")
 site_cert_file = _omd_path(f"etc/ssl/sites/{os.environ.get('OMD_SITE')}.pem")
 default_config_dir = _omd_path_str("etc/check_mk")
@@ -75,10 +75,12 @@ livebackendsdir = _omd_path_str("share/check_mk/livestatus")
 inventory_output_dir = _omd_path_str("var/check_mk/inventory")
 inventory_archive_dir = _omd_path_str("var/check_mk/inventory_archive")
 inventory_delta_cache_dir = _omd_path_str("var/check_mk/inventory_delta_cache")
+autoinventory_dir = _omd_path_str("var/check_mk/autoinventory")
 status_data_dir = _omd_path_str("tmp/check_mk/status_data")
 robotmk_html_log_dir = _omd_path_str("var/robotmk")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
+autodiscovery_dir = _omd_path_str("var/check_mk/autodiscovery")
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 profile_dir = Path(var_dir, "web")
@@ -125,6 +127,8 @@ local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 local_alert_handlers_dir = _local_path(alert_handlers_dir)
 local_optional_packages_dir = _omd_path("var/check_mk/packages_local")
+local_enabled_packages_dir = local_share_dir / "enabled_packages"
+
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
 

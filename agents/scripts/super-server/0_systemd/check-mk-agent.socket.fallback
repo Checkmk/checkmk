@@ -1,5 +1,6 @@
 [Unit]
 Description=TCP Checkmk Agent Socket
+Documentation=https://docs.checkmk.com/latest/en/agent_linux.html
 
 [Socket]
 ListenStream=6556

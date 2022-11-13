@@ -11,19 +11,19 @@
 namespace cma::cfg {
 
 namespace yml_var {
-constexpr const std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
-constexpr const std::string_view kCore = "$BUILTIN_AGENT_PATH$";
-constexpr const std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
-constexpr const std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
-constexpr const std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
+constexpr std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
+constexpr std::string_view kCore = "$BUILTIN_AGENT_PATH$";
+constexpr std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
+constexpr std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
+constexpr std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
 
-constexpr const std::string_view kBuiltinOld = "@builtin";
-constexpr const std::string_view kCoreOld = "@core";
-constexpr const std::string_view kLocalOld = "@local";
-constexpr const std::string_view kUserOld = "@user";
-constexpr const std::string_view kDataOld = "@data";
+constexpr std::string_view kBuiltinOld = "@builtin";
+constexpr std::string_view kCoreOld = "@core";
+constexpr std::string_view kLocalOld = "@local";
+constexpr std::string_view kUserOld = "@user";
+constexpr std::string_view kDataOld = "@data";
 
-};  // namespace yml_var
+}  // namespace yml_var
 
 namespace groups {
 constexpr std::string_view kGlobal = "global";
@@ -60,7 +60,7 @@ const char *const kSectionFlush = "section_flush";                    // bool
 const char *const kGlobalEncrypt = "encrypted";                       // bool
 const char *const kGlobalPassword = "passphrase";                     // string
 const char *const kGlobalWmiTimeout = "wmi_timeout";                  // int
-const std::string_view kCpuLoadMethod{"cpuload_method"};              // string
+constexpr std::string_view kCpuLoadMethod{"cpuload_method"};          // string
 
 const char *const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -143,9 +143,10 @@ constexpr const char *const kLogWatchEvent_ParamWords[] = {
     "crit",    // 4
 };
 
-const char *const kLogWatchEvent_ParamDefault = kLogWatchEvent_ParamWords[1];
+constexpr const char *const kLogWatchEvent_ParamDefault =
+    kLogWatchEvent_ParamWords[1];
 
-const char *const kLogWatchEvent_ContextWords[] = {
+constexpr const char *const kLogWatchEvent_ContextWords[] = {
     "context",    // 0
     "nocontext",  // 1
 };
@@ -198,7 +199,10 @@ constexpr std::string_view kModulesQuickReinstall = "quick_reinstall";  // bool
 // group "system"
 constexpr std::string_view kController = "controller";  // dictionary
 constexpr std::string_view kControllerRun = "run";      // bool
-constexpr std::string_view kControllerCheck = "check";  // bool
+constexpr std::string_view kControllerDetectProxy = "detect_proxy";  // bool
+constexpr std::string_view kControllerValidApiCert =
+    "validate_api_cert";                                               // bool
+constexpr std::string_view kControllerCheck = "check";                 // bool
 constexpr std::string_view kControllerForceLegacy = "force_legacy";    // bool
 constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
 constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
@@ -222,8 +226,8 @@ constexpr const char *const kWaitNetwork = "wait_network";  // int, seconds
 namespace values {
 
 // global.cpuload_method
-const std::string_view kCpuLoadWmi{"use_wmi"};
-const std::string_view kCpuLoadPerf{"use_perf"};
+constexpr std::string_view kCpuLoadWmi{"use_wmi"};
+constexpr std::string_view kCpuLoadPerf{"use_perf"};
 
 // modules.table
 constexpr std::string_view kModulesNamePython = "python-3";  //
@@ -269,7 +273,7 @@ constexpr std::string_view kControllerOnCrashEmergency{"emergency_mode"};
 }  // namespace values
 
 namespace defaults {
-const std::string_view kCpuLoad{values::kCpuLoadPerf};
+constexpr std::string_view kCpuLoad{values::kCpuLoadPerf};
 constexpr const char *const kStartMode = values::kStartModeAuto;
 constexpr const char *const kErrorMode = values::kErrorModeLog;
 constexpr bool kRestartOnCrash = true;
@@ -283,7 +287,8 @@ constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
 constexpr std::string_view kControllerAgentChannelMailSlot{"mailslot"};
-constexpr std::string_view kControllerAgentChannelDefault{kControllerAgentChannelMailSlot};
+constexpr std::string_view kControllerAgentChannelDefault{
+    kControllerAgentChannelMailSlot};
 constexpr std::string_view kControllerOnCrashDefault{
     values::kControllerOnCrashIgnore};
 constexpr bool kControllerLocalOnly{true};

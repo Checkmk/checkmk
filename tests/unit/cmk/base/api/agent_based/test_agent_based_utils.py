@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
+from collections.abc import Sequence
 
 import pytest
 
@@ -54,7 +55,7 @@ def _test_atomic_relation(relation_name, value, testcases):
         ),
     ],
 )
-def test_contains(value, testcases) -> None:  # type:ignore[no-untyped-def]
+def test_contains(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     _test_atomic_relation("contains", value, testcases)
 
 
@@ -84,7 +85,7 @@ def test_contains(value, testcases) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_startswith(value, testcases) -> None:  # type:ignore[no-untyped-def]
+def test_startswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     _test_atomic_relation("startswith", value, testcases)
 
 
@@ -114,7 +115,7 @@ def test_startswith(value, testcases) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_endswith(value, testcases) -> None:  # type:ignore[no-untyped-def]
+def test_endswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     _test_atomic_relation("endswith", value, testcases)
 
 
@@ -130,7 +131,7 @@ def test_endswith(value, testcases) -> None:  # type:ignore[no-untyped-def]
         ("fürwahr", True),
     ],
 )
-def test_exists(testcases) -> None:  # type:ignore[no-untyped-def]
+def test_exists(testcases: tuple[str, bool]) -> None:
     spec = utils.exists(".1.2.3")
     _validate_detect_spec(spec)
     assert len(spec) == 1

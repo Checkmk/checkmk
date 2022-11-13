@@ -9,7 +9,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_cluster import inventory_kube_cluster
-from cmk.base.plugins.agent_based.utils.kube import ClusterInfo
+from cmk.base.plugins.agent_based.utils.kube import ClusterInfo, GitVersion
 
 from .utils_inventory import sort_inventory_result
 
@@ -20,7 +20,7 @@ from .utils_inventory import sort_inventory_result
         pytest.param(
             ClusterInfo(
                 name="Liam",  # first result when googling: 'best names'
-                version="v1.22.2",
+                version=GitVersion("v1.22.2"),
             ),
             [
                 Attributes(

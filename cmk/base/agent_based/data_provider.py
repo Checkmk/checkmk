@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import (
     Any,
     Dict,
@@ -25,6 +26,7 @@ import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
+    AgentRawData,
     HostKey,
     HostName,
     ParsedSectionName,
@@ -33,7 +35,10 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.snmplib.type_defs import SNMPRawData
+
 from cmk.core_helpers.host_sections import HostSections
+from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -41,16 +46,15 @@ from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
 if TYPE_CHECKING:
-    from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import SectionNameCollection
 
-    from cmk.base.sources import Source
 
 CacheInfo = Optional[Tuple[int, int]]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
-SourceResults = Sequence[Tuple["Source", result.Result[HostSections, Exception]]]
+
+SourceResults = Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]]
 
 
 class ParsingResult(NamedTuple):
@@ -295,12 +299,13 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Iterable[Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
+    logger: logging.Logger,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
-    Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
+    Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]],
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -312,22 +317,20 @@ def parse_messages(
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
+    results: List[Tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    for source, fetcher_message in fetched:
-        host_key = HostKey(fetcher_message.host_name, fetcher_message.source_type)
+    for source, raw_data in fetched:
+        host_key = HostKey(source.hostname, source.source_type)
 
         console.vverbose(f"  {host_key!s}")
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(
-            fetcher_message.raw_data,
-            hostname=fetcher_message.host_name,
-            fetcher_type=fetcher_message.fetcher_type,
-            ident=fetcher_message.ident,
+            source,
+            raw_data,
             selection=selected_sections,
-            logger=source._logger,
+            logger=logger,
         )
         results.append((source, source_result))
         if source_result.is_ok():

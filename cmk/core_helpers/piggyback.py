@@ -6,7 +6,8 @@
 import copy
 import json
 import logging
-from typing import Any, Final, List, Mapping, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any, Final
 
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
@@ -19,16 +20,15 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        ident: str,  # Literal["piggyback"],
         hostname: HostName,
-        address: Optional[HostAddress],
-        time_settings: Sequence[Tuple[Optional[str], str, int]],
+        address: HostAddress | None,
+        time_settings: Sequence[tuple[str | None, str, int]],
     ) -> None:
-        super().__init__(ident, logger=logging.getLogger("cmk.helper.piggyback"))
+        super().__init__(logger=logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
-        self._sources: List[PiggybackRawDataInfo] = []
+        self._sources: list[PiggybackRawDataInfo] = []
 
     def __repr__(self) -> str:
         return (
@@ -52,7 +52,6 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             "hostname": self.hostname,
             "address": self.address,
             "time_settings": self.time_settings,
-            "ident": self.ident,
         }
 
     def open(self) -> None:
@@ -92,7 +91,7 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
 
     @staticmethod
     def _raw_data(
-        hostname: Optional[str],
+        hostname: str | None,
         time_settings: PiggybackTimeSettings,
     ) -> Sequence[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)

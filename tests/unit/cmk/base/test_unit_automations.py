@@ -2,9 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Dict
+
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import Ruleset
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
@@ -78,20 +81,22 @@ def test_service_labels(monkeypatch):
     ts.add_host("test-host")
     ts.set_ruleset(
         "service_label_rules",
-        [
-            {
-                "condition": {"service_description": [{"$regex": "CPU load"}]},
-                "value": {"label1": "val1"},
-            },
-            {
-                "condition": {"service_description": [{"$regex": "CPU load"}]},
-                "value": {"label2": "val2"},
-            },
-            {
-                "condition": {"service_description": [{"$regex": "CPU temp"}]},
-                "value": {"label1": "val1"},
-            },
-        ],
+        Ruleset[Dict[str, str]](
+            [
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "value": {"label1": "val1"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "value": {"label2": "val2"},
+                },
+                {
+                    "condition": {"service_description": [{"$regex": "CPU temp"}]},
+                    "value": {"label1": "val1"},
+                },
+            ]
+        ),
     )
     ts.apply(monkeypatch)
 

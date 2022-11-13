@@ -113,8 +113,8 @@ public:
 
 private:
     bool Post(const void *data, int len);
-    OVERLAPPED CreateOverlapped() const noexcept;
-    std::optional<DWORD> CheckMessageSize();
+    static OVERLAPPED CreateOverlapped() noexcept;
+    std::optional<DWORD> CheckMessageSize() const;
 
     void MailBoxThread(ThreadProc foo, int sleep_value, void *context);
 

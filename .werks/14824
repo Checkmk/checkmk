@@ -1,0 +1,29 @@
+Title: Custom extensions: Potentially incompatible change in GUI code
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1666352144
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk only affects developers of custom extensions to Checkmk.
+
+The variable <tt>cmk.gui.config.builtin_role_ids</tt>, which specifies IDs for built-in user roles,
+has been split into two new variables:
+
+LI: <tt>cmk.gui.config.default_authorized_builtin_role_ids</tt>: IDs of built-in user roles which
+are by default authorized to use dashlets, sidebar snapins etc., unless explicitly specified
+differently (at the moment admin, user, guest).
+LI: <tt>cmk.gui.config.default_unauthorized_builtin_role_ids</tt>: IDs of built-in user roles which
+are by default <i>not</i> authorized to use dashlets, sidebar snapins etc., unless explicitly
+specified differently.
+
+Note that <tt>builtin_role_ids</tt> still exists (still containing all built-in role IDs), however,
+most developer will likely want to use <tt>cmk.gui.config.default_authorized_builtin_role_ids</tt>
+in the future to avoid unwanted authorizations of new user roles added to
+<tt>default_unauthorized_builtin_role_ids</tt>.
+
+Alternatively, you may explicitly declare the roles you want to permit by default using
+<tt>["admin", "user", "guest"]</tt>.

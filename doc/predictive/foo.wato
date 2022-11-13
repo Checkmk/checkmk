@@ -3,16 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[name-defined]
 # pylint: disable=undefined-variable,disable=blacklisted-name
 
 # WATO declaration for the check parameters of foo
-register_check_parameters(
+register_check_parameters(  # type: ignore[name-defined]
     "My own checks",  # main topic for this rule in WATO
     "foobar",  # name of WATO group, was declared in check (not always name of check)
     "Levels for foo",  # title of the WATO ruleset
-    Levels(
-        help=_(  # pylint: disable=not-callable
+    Levels(  # type: ignore[name-defined]
+        help=_(  # type: ignore[name-defined] # pylint: disable=not-callable
             "The foo check does check the foo of a bar. Here you can define parameters..."
         ),
         unit="processes",

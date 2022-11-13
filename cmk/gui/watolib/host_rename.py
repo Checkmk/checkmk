@@ -19,7 +19,7 @@ from cmk.utils.type_defs import HostName
 from cmk.gui import userdb
 from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import rename_hosts
@@ -175,7 +175,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
         if changed_folder_rulesets:
             add_change(
                 "edit-ruleset",
-                _("Renamed host in %d rulesets of folder %s")
+                _l("Renamed host in %d rulesets of folder %s")
                 % (len(changed_folder_rulesets), folder.title()),
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
@@ -206,8 +206,8 @@ def _rename_hosts_in_check_mk(
 ) -> Dict[str, int]:
     action_counts: Dict[str, int] = {}
     for site_id, name_pairs in _group_renamings_by_site(renamings).items():
-        message = _("Renamed host %s") % ", ".join(
-            [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs]
+        message = _l("Renamed host %s") % ", ".join(
+            ["%s into %s" % (oldname, newname) for (oldname, newname) in name_pairs]
         )
 
         # Restart is done by remote automation (below), so don't do it during rename/sync

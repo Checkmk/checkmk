@@ -6,8 +6,8 @@
 // provides high level api to get perf counters using command line
 
 #pragma once
-#ifndef perf_counters_cl_h__
-#define perf_counters_cl_h__
+#ifndef PERF_COUNTERS_CL_H
+#define PERF_COUNTERS_CL_H
 
 #include <string>
 #include <string_view>
@@ -33,6 +33,6 @@ std::string AccumulateCounters(
 
 }  // namespace provider
 
-};  // namespace cma
+}  // namespace cma
 
-#endif  // perf_counters_cl_h__
+#endif  // PERF_COUNTERS_CL_H

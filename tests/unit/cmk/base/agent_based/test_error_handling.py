@@ -6,29 +6,15 @@
 
 import pytest
 
-from tests.testlib.base import Scenario
-
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import ExitSpec, HostName
 
 import cmk.base.agent_based.error_handling as error_handling
-from cmk.base.config import HostConfig
 
 
-@pytest.fixture(name="hostname")
-def hostname_fixture(monkeypatch) -> HostName:  # type:ignore[no-untyped-def]
-    # Hide ugly Scenario hack.
-    hostname = "hostname"
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.apply(monkeypatch)
-    return hostname
-
-
-def test_no_error_keeps_returns_status_from_callee(  # type:ignore[no-untyped-def]
-    hostname: HostName, capsys
-) -> None:
+def test_no_error_keeps_returns_status_from_callee(capsys) -> None:  # type:ignore[no-untyped-def]
+    hostname = HostName("host_name")
     state, text = error_handling._handle_success(
         ActiveCheckResult(
             0,
@@ -45,16 +31,16 @@ def test_no_error_keeps_returns_status_from_callee(  # type:ignore[no-untyped-de
     assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
 
 
-def test_MKTimeout_exception_returns_2(  # type:ignore[no-untyped-def]
-    hostname: HostName, capsys
-) -> None:
-    host_config = HostConfig.make_host_config(hostname)
+def test_MKTimeout_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
+    hostname = HostName("host_name")
     state, text = error_handling._handle_failure(
         MKTimeout("oops!"),
-        host_config.exit_code_spec(),
-        host_config=host_config,
+        ExitSpec(),
+        host_name=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
+        is_cluster=False,
+        is_inline_snmp=False,
         rtc_package=None,
         keepalive=False,
     )
@@ -66,16 +52,16 @@ def test_MKTimeout_exception_returns_2(  # type:ignore[no-untyped-def]
     assert capsys.readouterr().out == "Timed out\n"
 
 
-def test_MKAgentError_exception_returns_2(  # type:ignore[no-untyped-def]
-    hostname: HostName, capsys
-) -> None:
-    host_config = HostConfig.make_host_config(hostname)
+def test_MKAgentError_exception_returns_2(capsys) -> None:  # type:ignore[no-untyped-def]
+    hostname = "host_name"
     state, text = error_handling._handle_failure(
         MKAgentError("oops!"),
-        host_config.exit_code_spec(),
-        host_config=host_config,
+        ExitSpec(),
+        host_name=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
+        is_cluster=False,
+        is_inline_snmp=False,
         rtc_package=None,
         keepalive=False,
     )
@@ -87,16 +73,16 @@ def test_MKAgentError_exception_returns_2(  # type:ignore[no-untyped-def]
     assert capsys.readouterr().out == "oops!\n"
 
 
-def test_MKGeneralException_returns_3(  # type:ignore[no-untyped-def]
-    hostname: HostName, capsys
-) -> None:
-    host_config = HostConfig.make_host_config(hostname)
+def test_MKGeneralException_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
+    hostname = "host_name"
     state, text = error_handling._handle_failure(
         MKGeneralException("kaputt!"),
-        host_config.exit_code_spec(),
-        host_config=host_config,
+        ExitSpec(),
+        host_name=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
+        is_cluster=False,
+        is_inline_snmp=False,
         rtc_package=None,
         keepalive=False,
     )
@@ -109,16 +95,16 @@ def test_MKGeneralException_returns_3(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("disable_debug")
-def test_unhandled_exception_returns_3(  # type:ignore[no-untyped-def]
-    hostname: HostName, capsys
-) -> None:
-    host_config = HostConfig.make_host_config(hostname)
+def test_unhandled_exception_returns_3(capsys) -> None:  # type:ignore[no-untyped-def]
+    hostname = "host_name"
     state, text = error_handling._handle_failure(
         ValueError("unexpected :/"),
-        host_config.exit_code_spec(),
-        host_config=host_config,
+        ExitSpec(),
+        host_name=hostname,
         service_name="service_name",
         plugin_name="pluging_name",
+        is_cluster=False,
+        is_inline_snmp=False,
         rtc_package=None,
         keepalive=False,
     )

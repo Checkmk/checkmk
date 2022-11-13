@@ -2,10 +2,7 @@
 
 #include "cma_yml.h"
 
-#include <fmt/format.h>
-
 #include <string>
-#include <string_view>
 
 #include "logger.h"
 
@@ -15,11 +12,12 @@ void LogException(const std::string &format, std::string_view group,
                   std::string_view name, const std::exception &e) {
     try {
         XLOG::l(format, group, name, e.what());
-    } catch (const std::exception &e) {
+    } catch (const std::exception &bad_exception) {
         try {
-            XLOG::l.crit("Cannot print '{}' exception '{}'", format, e);
-        } catch (const std::exception &e) {
-            XLOG::l.crit("Cannot print, exception '{}'", e);
+            XLOG::l.crit("Cannot print '{}' exception '{}'", format,
+                         bad_exception);
+        } catch (const std::exception &more_bad_exception) {
+            XLOG::l.crit("Cannot print, exception '{}'", more_bad_exception);
         }
     }
 }
@@ -28,11 +26,12 @@ void LogException(const std::string &format, std::string_view name,
                   const std::exception &e) {
     try {
         XLOG::l(format, name, e.what());
-    } catch (const std::exception &e) {
+    } catch (const std::exception &bad_exception) {
         try {
-            XLOG::l.crit("Cannot print '{}' exception '{}'", format, e);
-        } catch (const std::exception &e) {
-            XLOG::l.crit("Cannot print, exception '{}'", e);
+            XLOG::l.crit("Cannot print '{}' exception '{}'", format,
+                         bad_exception);
+        } catch (const std::exception &more_bad_exception) {
+            XLOG::l.crit("Cannot print, exception '{}'", more_bad_exception);
         }
     }
 }

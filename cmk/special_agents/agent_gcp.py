@@ -6,21 +6,10 @@
 import datetime
 import json
 import time
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Protocol
 
 import requests
 import typing_extensions
@@ -79,7 +68,7 @@ class ClientProtocol(Protocol):
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         ...
 
-    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
+    def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         ...
 
     def health_info(self) -> Mapping[str, Any]:
@@ -114,7 +103,7 @@ class Client:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset().list_assets(request)
 
-    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
+    def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
         query = f'SELECT PROJECT.name, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}` WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" GROUP BY PROJECT.name, currency, invoice.month'
         body = {"query": query, "useLegacySql": False}
@@ -122,7 +111,7 @@ class Client:
         response = request.execute()
         schema: Schema = response["schema"]["fields"]
 
-        pages: List[Page] = [response["rows"]]
+        pages: list[Page] = [response["rows"]]
         # collect all rows, even if we use pagination
         if "pageToken" in response:
             request = self.bigquery().getQueryResults(
@@ -308,7 +297,7 @@ class HealthSection:
         return json.dumps(self.health_info)
 
 
-Section = Union[AssetSection, ResultSection, PiggyBackSection, CostSection, HealthSection]
+Section = AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection
 
 #################
 # Serialization #
@@ -378,7 +367,7 @@ class ResourceFilter:
 
 
 def time_series(
-    client: ClientProtocol, service: Service, filter_by: Optional[ResourceFilter]
+    client: ClientProtocol, service: Service, filter_by: ResourceFilter | None
 ) -> Iterator[Result]:
     now = time.time()
     seconds = int(now)
@@ -410,7 +399,7 @@ def time_series(
 
 
 def run_metrics(
-    client: ClientProtocol, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
+    client: ClientProtocol, services: Iterable[Service], filter_by: ResourceFilter | None = None
 ) -> Iterator[ResultSection]:
     for s in services:
         yield ResultSection(s.name, time_series(client, s, filter_by))
@@ -439,11 +428,11 @@ def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
 
 
 def piggy_back(
-    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset]
+    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset], prefix: str
 ) -> Iterable[PiggyBackSection]:
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
         label = host.asset.resource.data[service.asset_label]
-        name = host.asset.resource.data[service.name_label]
+        name = f"{prefix}_{host.asset.resource.data[service.name_label]}"
         filter_by = ResourceFilter(label=service.metric_label, value=label)
         sections = run_metrics(client, services=service.services, filter_by=filter_by)
         yield PiggyBackSection(
@@ -455,10 +444,13 @@ def piggy_back(
 
 
 def run_piggy_back(
-    client: ClientProtocol, services: Sequence[PiggyBackService], assets: Sequence[Asset]
+    client: ClientProtocol,
+    services: Sequence[PiggyBackService],
+    assets: Sequence[Asset],
+    prefix: str,
 ) -> Iterable[PiggyBackSection]:
     for s in services:
-        yield from piggy_back(client, s, assets)
+        yield from piggy_back(client, s, assets, prefix)
 
 
 ########
@@ -473,7 +465,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
     schema, pages = client.list_costs(tableid=cost.tableid)
     columns = {el["name"]: i for i, el in enumerate(schema)}
     assert set(columns.keys()) == {"name", "cost", "currency", "month"}
-    cost_rows: List[CostRow] = []
+    cost_rows: list[CostRow] = []
     for page in pages:
         for row in page:
             data = row["f"]
@@ -488,7 +480,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
     return cost_rows
 
 
-def run_cost(client: ClientProtocol, cost: Optional[CostArgument]) -> Iterable[CostSection]:
+def run_cost(client: ClientProtocol, cost: CostArgument | None) -> Iterable[CostSection]:
     if cost is None:
         return
     yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
@@ -512,14 +504,15 @@ def run(
     client: ClientProtocol,
     services: Sequence[Service],
     piggy_back_services: Sequence[PiggyBackService],
-    serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
-    cost: Optional[CostArgument],
+    serializer: Callable[[Iterable[Section] | Iterable[PiggyBackSection]], None],
+    cost: CostArgument | None,
     monitor_health: bool,
+    piggy_back_prefix: str,
 ) -> None:
     assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
     serializer([assets])
     serializer(run_metrics(client, services))
-    serializer(run_piggy_back(client, piggy_back_services, assets.assets))
+    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
     serializer(run_cost(client, cost))
     if monitor_health:
         serializer(run_health(client))
@@ -788,6 +781,12 @@ REDIS = Service(
             ),
         ),
         Metric(
+            name="redis.googleapis.com/stats/evicted_keys",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="redis.googleapis.com/stats/cache_hit_ratio",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
@@ -797,6 +796,20 @@ REDIS = Service(
             name="redis.googleapis.com/clients/connected",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="redis.googleapis.com/replication/master/slaves/lag",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+                group_by_fields=["metric.slave"],
+            ),
+        ),
+        Metric(
+            name="redis.googleapis.com/replication/role",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+                group_by_fields=["resource.node_id"],
             ),
         ),
     ],
@@ -948,7 +961,7 @@ SERVICES = {
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
     parser.add_argument(
@@ -979,6 +992,13 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         action="store_true",
         help="Monitor GCP Health",
     )
+
+    parser.add_argument(
+        "--piggy-back-prefix",
+        type=str,
+        help="Prefix for piggyback hosts",
+        required=True,
+    )
     return parser.parse_args(argv)
 
 
@@ -988,6 +1008,7 @@ def agent_gcp_main(args: Args) -> None:
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
     monitor_health = args.monitor_health
+    piggy_back_prefix = args.piggy_back_prefix
     run(
         client,
         services,
@@ -995,6 +1016,7 @@ def agent_gcp_main(args: Args) -> None:
         serializer=gcp_serializer,
         cost=cost,
         monitor_health=monitor_health,
+        piggy_back_prefix=piggy_back_prefix,
     )
 
 

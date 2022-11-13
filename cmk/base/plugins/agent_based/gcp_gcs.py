@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from .agent_based_api.v1 import register, render, Service, ServiceLabel
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -24,8 +24,8 @@ ASSET_TYPE = gcp.AssetType("storage.googleapis.com/Bucket")
 
 
 def discover(
-    section_gcp_service_gcs: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_gcs: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "gcs")
     for item, bucket in assets[ASSET_TYPE].items():
@@ -41,8 +41,8 @@ def discover(
 def check_gcp_gcs_requests(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_gcs: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_gcs: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
@@ -66,8 +66,8 @@ register.check_plugin(
 def check_gcp_gcs_network(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_gcs: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_gcs: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "net_data_sent": gcp.MetricSpec(
@@ -96,8 +96,8 @@ register.check_plugin(
 def check_gcp_gcs_object(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_gcs: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_gcs: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "aws_bucket_size": gcp.MetricSpec(

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
@@ -24,7 +24,15 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
-from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.type_defs import (
+    Choices,
+    MegaMenu,
+    RoleName,
+    TopicMenuItem,
+    TopicMenuTopic,
+    ViewSpec,
+    Visual,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -68,7 +76,7 @@ def render_wato(mini) -> None | bool:  # type:ignore[no-untyped-def]
     return None
 
 
-def get_wato_menu_items() -> List[TopicMenuTopic]:
+def get_wato_menu_items() -> list[TopicMenuTopic]:
     by_topic: Dict[MainModuleTopic, TopicMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -178,7 +186,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> list[RoleName]:
         return ["admin", "user"]
 
     # refresh pending changes, if other user modifies something
@@ -327,7 +335,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Render link target selection
         #
         # Apply some view specific filters
-        views_to_show: List[Tuple[str, ViewSpec]] = []
+        views_to_show: list[tuple[str, ViewSpec]] = []
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in get_permitted_views().items():
@@ -344,9 +352,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "foldertree", (dflt_topic_name, dflt_target_name)
         )
 
-        visuals_to_show = [("views", (k, dict(v))) for k, v in views_to_show]
+        visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
+            ("views", (k, v)) for k, v in views_to_show
+        ]
         visuals_to_show += [
-            ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
+            ("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()
         ]
 
         topics = make_topic_menu(visuals_to_show)

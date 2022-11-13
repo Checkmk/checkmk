@@ -11,6 +11,7 @@
 #include "cfg.h"
 #include "common/mailslot_transport.h"
 #include "test_tools.h"
+#include "tools/_raii.h"
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
@@ -32,7 +33,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel ms/{} -vv",
+              fmt::format("x -vv daemon --agent-channel ms/{}",
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));
 }
@@ -43,7 +44,7 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    std::vector<std::string> loadConfigAndGetResult(
+    [[nodiscard]] std::vector<std::string> loadConfigAndGetResult(
         const std::string &cfg) const {
         if (!temp_fs_->loadContent(cfg)) {
             return {};
@@ -56,7 +57,9 @@ public:
         std::error_code ec;
         fs::remove(tomlFile(), ec);
     }
-    fs::path tomlFile() const { return tst::GetTempDir() / "the_file.toml"; }
+    [[nodiscard]] fs::path tomlFile() const {
+        return tst::GetTempDir() / "the_file.toml";
+    }
 
     // "allowed_ip = [x,b,z]" -> ["x","b","z"]
     static std::vector<std::string> convertTomlToIps(
@@ -88,6 +91,8 @@ TEST_F(AgentControllerCreateToml, Port) {
     }
     EXPECT_TRUE(table[3].empty());
     EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+    EXPECT_EQ(table[5], "detect_proxy = false");
+    EXPECT_EQ(table[6], "validate_api_cert = false");
 }
 
 TEST_F(AgentControllerCreateToml, PortAndAllowed) {
@@ -104,12 +109,35 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
     EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
 
     auto all = std::accumulate(
-        table.begin() + 5, table.end(), std::string{},
+        table.begin() + 5, table.end() - 2, std::string{},
         [](const std::string &a, const std::string &b) { return a + b; });
     auto actual_ips = convertTomlToIps(all);
     auto expected_ips = tools::SplitString(std::string{allowed}, " ");
     EXPECT_TRUE(rs::is_permutation(actual_ips, expected_ips));
     EXPECT_EQ(actual_ips.size(), expected_ips.size());
+
+    EXPECT_EQ(table[table.size() - 2], "detect_proxy = false");
+    EXPECT_EQ(table[table.size() - 1], "validate_api_cert = false");
+}
+
+TEST_F(AgentControllerCreateToml, PortAndRuntimeOpts) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: \n"
+                                           "  port: {}\n"
+                                           "system:\n"
+                                           "  controller:\n"
+                                           "    detect_proxy: yes\n"
+                                           "    validate_api_cert: yes\n",
+                                           port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+    EXPECT_EQ(table[5], "detect_proxy = true");
+    EXPECT_EQ(table[6], "validate_api_cert = true");
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {
@@ -132,7 +160,7 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "    agent_channel: {}\n",
                                              ch_in)));
         EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
-                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
+                  fmt::format("x -vv daemon --agent-channel {}", ch_out));
         EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration), 0U);
@@ -148,7 +176,7 @@ TEST(AgentController, BuildCommandLineAgentChannelMailsLot) {
         "    run: yes\n"
         "    agent_channel: mailslot\n";
     const auto expected_command = fmt::format(
-        "x daemon --agent-channel {}{}{} -vv", ac::kCmdMailSlotPrefix,
+        "x -vv daemon --agent-channel {}{}{}", ac::kCmdMailSlotPrefix,
         kCmdPrefixSeparator,
         mailslot::BuildMailSlotNameStem(GetModus(), ::GetCurrentProcessId()));
 
@@ -176,7 +204,7 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "    run: yes\n"
                                          "    agent_channel: ll\n")));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {}{}{} -vv",
+              fmt::format("x -vv daemon --agent-channel {}{}{}",
                           ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));
@@ -196,7 +224,7 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  port: {}\n",
                                          allowed, port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {}{}{} -vv",
+              fmt::format("x -vv daemon --agent-channel {}{}{}",
                           ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));
@@ -314,9 +342,9 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    bool markerExists() const { return fs::exists(markerFile()); }
-    bool legacyExists() const { return fs::exists(legacyFile()); }
-    bool flagExists() const { return fs::exists(flagFile()); }
+    [[nodiscard]] bool markerExists() const { return fs::exists(markerFile()); }
+    [[nodiscard]] bool legacyExists() const { return fs::exists(legacyFile()); }
+    [[nodiscard]] bool flagExists() const { return fs::exists(flagFile()); }
 
     void killArtifacts() const {
         std::error_code ec;
@@ -325,16 +353,16 @@ public:
         fs::remove(flagFile(), ec);
     }
 
-    fs::path markerFile() const {
+    [[nodiscard]] fs::path markerFile() const {
         return temp_fs_->data() / ac::kCmkAgentUnistall;
     }
 
-    fs::path flagFile() const {
+    [[nodiscard]] fs::path flagFile() const {
         return temp_fs_->data() / ac::kControllerFlagFile;
     }
 
 private:
-    fs::path legacyFile() const {
+    [[nodiscard]] fs::path legacyFile() const {
         return temp_fs_->data() / ac::kLegacyPullFile;
     }
 

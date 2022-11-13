@@ -23,15 +23,15 @@ TEST(CmaTools, CheckArgvForValue) {
 
     EXPECT_TRUE(CheckArgvForValue(2, t, 1, "b"));
     EXPECT_FALSE(CheckArgvForValue(2, t, 2, "c"));
-};
+}
 
 }  // namespace cma::tools
 
 namespace cma::tools {  // to become friendly for cma::cfg classes
 
 TEST(CmaTools, AddVectorsStrings) {
-    const std::vector<char> c = {'a', 'b', 'c'};
-    const std::vector<char> z = {'x', 'y', 'z'};
+    const std::vector c = {'a', 'b', 'c'};
+    const std::vector z = {'x', 'y', 'z'};
     const std::string s = "012";
 
     auto op = c;
@@ -114,7 +114,7 @@ TEST(CmaTools, Trimmer) {
     }
 
     {
-        std::string a = "";
+        std::string a;
         LeftTrim(a);
         EXPECT_EQ(a, "");
         RightTrim(a);
@@ -203,7 +203,7 @@ TEST(CmaTools, WideUpper) {
     WideUpper(w);
     EXPECT_EQ(w, test_cyrillic_upper);
 
-    std::wstring nothing = L"";
+    std::wstring nothing;
     WideUpper(nothing);
     EXPECT_EQ(nothing, L"");
 }
@@ -213,7 +213,7 @@ TEST(CmaTools, WideLower) {
     WideLower(w);
     EXPECT_EQ(w, test_cyrillic_lower);
 
-    std::wstring nothing = L"";
+    std::wstring nothing;
     WideLower(w);
     EXPECT_EQ(nothing, L"");
 }

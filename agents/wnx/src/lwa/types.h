@@ -6,11 +6,8 @@
 #ifndef types_h
 #define types_h
 
-#include <limits.h>
-#include <stdint.h>
-
+#include <cstdint>
 #include <filesystem>
-#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -158,7 +155,7 @@ struct glob_token {
 // Pattern definition within the config file:
 //      C = *critpatternglobdescription*
 struct condition_pattern {
-    condition_pattern(const char state_, const std::string glob_pattern_)
+    condition_pattern(const char state_, const std::string &glob_pattern_)
         : state(state_), glob_pattern(glob_pattern_) {}
     char state;
     std::string glob_pattern;
@@ -219,10 +216,8 @@ inline std::ostream &operator<<(std::ostream &os,
 template <>
 inline script_execution_mode from_string<script_execution_mode>(
     const std::string &value) {
-    if (value == "async")
-        return script_execution_mode::ASYNC;
-    else if (value == "sync")
-        return script_execution_mode::SYNC;
+    if (value == "async") return script_execution_mode::ASYNC;
+    if (value == "sync") return script_execution_mode::SYNC;
     throw std::runtime_error("invalid execution mode");
 }
 
@@ -238,7 +233,8 @@ inline script_async_execution from_string<script_async_execution>(
 
 // Command definitions for MRPE
 struct mrpe_entry {
-    mrpe_entry(const std::string run_as_user_, const std::string command_line_,
+    mrpe_entry(const std::string &run_as_user_,
+               const std::string &command_line_,
                const std::string &plugin_name_,
                const std::string &service_description_)
         : run_as_user(run_as_user_)

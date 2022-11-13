@@ -6,8 +6,10 @@
 
 import datetime
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Pattern, Sequence
+from re import Pattern
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -38,7 +40,7 @@ class Incident:
     affected_products: Sequence[str]
     affected_location: Sequence[str]
     begin: datetime.datetime
-    end: Optional[datetime.datetime]
+    end: datetime.datetime | None
     description: str
     is_on_going: bool
     uri: str

@@ -48,7 +48,9 @@ class TestAPIDeployments:
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
-        assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
+        assert metadata.labels == {
+            "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
+        }
         assert metadata.annotations == {"deployment.kubernetes.io/revision": "2"}
 
     def test_parse_metadata_missing_annotations_and_labels(

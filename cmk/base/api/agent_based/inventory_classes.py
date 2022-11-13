@@ -184,4 +184,4 @@ class InventoryPlugin(NamedTuple):
     inventory_function: InventoryFunction
     inventory_default_parameters: ParametersTypeAlias
     inventory_ruleset_name: Optional[RuleSetName]
-    module: Optional[str]  # not available for auto migrated plugins.
+    module: str

@@ -5,9 +5,9 @@
 
 #include <atomic>
 #include <string>
-#include <string_view>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "windows_service_api.h"
@@ -17,17 +17,19 @@ namespace fs = std::filesystem;
 namespace cma {
 
 // internal global variables:
-static bool S_ConfigLoaded = false;
-static std::atomic<bool> S_OnStartCalled = false;
+namespace {
+bool g_config_loaded = false;
+std::atomic g_s_on_start_called = false;
+}  // namespace
 
-bool ConfigLoaded() { return S_ConfigLoaded; }
+bool ConfigLoaded() { return g_config_loaded; }
 
 std::pair<fs::path, fs::path> FindTestDirs(const fs::path &base) {
     auto root_dir = fs::path{base} / "test" / "root";
     auto data_dir = fs::path{base} / "test" / "data";
-    std::error_code ec;
 
-    if (fs::exists(root_dir, ec) && fs::exists(data_dir, ec)) {
+    if (std::error_code ec;
+        fs::exists(root_dir, ec) && fs::exists(data_dir, ec)) {
         return {root_dir, data_dir};
     }
 
@@ -39,8 +41,7 @@ std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
         case AppType::exe:
             for (const auto &env_var :
                  {env::regression_base_dir, env::integration_base_dir}) {
-                auto dir = tools::win::GetEnv(env_var);
-                if (!dir.empty()) {
+                if (auto dir = tools::win::GetEnv(env_var); !dir.empty()) {
                     XLOG::l.i(
                         "YOU ARE USING '{}' set by environment variable '{}'",
                         wtools::ToUtf8(dir), wtools::ToUtf8(env_var));
@@ -59,7 +60,9 @@ std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
             }
             return FindTestDirs(dir);
         }
-        default:
+        case AppType::failed:
+        case AppType::srv:
+        case AppType::automatic:
             XLOG::l("Bad Mode [{}]", static_cast<int>(app_type));
             return {};
     }
@@ -92,7 +95,7 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
             XLOG::l.crit("Invalid value of the AppType automatic [{}]",
                          static_cast<int>(app_type));
             return false;
-    };
+    }
     LogFolders();
     return true;
 }
@@ -139,9 +142,9 @@ void UninstallAlert::set() noexcept {
 
 bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
                     YamlCacheOp cache_op) {
-    S_ConfigLoaded = cfg::InitializeMainConfig(config_filenames, cache_op);
+    g_config_loaded = cfg::InitializeMainConfig(config_filenames, cache_op);
 
-    if (S_ConfigLoaded) {
+    if (g_config_loaded) {
         cfg::ProcessKnownConfigGroups();
         cfg::SetupEnvironmentFromGroups();
     }
@@ -174,7 +177,7 @@ bool OnStartCore(AppType type, const std::wstring &config_file) {
 bool OnStart(AppType proposed_type, const std::wstring &config_file) {
     auto type = CalcAppType(proposed_type);
 
-    auto already_loaded = S_OnStartCalled.exchange(true);
+    auto already_loaded = g_s_on_start_called.exchange(true);
     if (type == AppType::srv) {
         XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 35,
                                              "check_mk_service is loading");

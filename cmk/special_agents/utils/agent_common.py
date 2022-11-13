@@ -15,8 +15,9 @@ import argparse
 import json
 import logging
 import sys
+from collections.abc import Callable, Sequence
 from types import GeneratorType
-from typing import Any, Callable, List, Optional, Sequence
+from typing import Any
 
 import urllib3
 
@@ -25,7 +26,7 @@ import cmk.utils.password_store
 
 class SectionManager:
     def __init__(self) -> None:
-        self._data: List[str] = []
+        self._data: list[str] = []
 
     def __enter__(self) -> "SectionManager":
         return self
@@ -73,7 +74,7 @@ class ConditionalPiggybackSection(SectionManager):
     foo: bar
     """
 
-    def __init__(self, hostname: Optional[str]) -> None:
+    def __init__(self, hostname: str | None) -> None:
         super().__init__()
         self.set_piggyback = bool(hostname)
         if self.set_piggyback:
@@ -101,13 +102,13 @@ class SectionWriter(SectionManager):
     "b"
     """
 
-    def __init__(self, section_name: str, separator: Optional[str] = "\0") -> None:
+    def __init__(self, section_name: str, separator: str | None = "\0") -> None:
         super().__init__()
         self.append(f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}>>>")
 
 
 def _special_agent_main_core(
-    parse_arguments: Callable[[Optional[Sequence[str]]], argparse.Namespace],
+    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
     main_fn: Callable[[argparse.Namespace], None],
     argv: Sequence[str],
 ) -> None:
@@ -146,9 +147,9 @@ def _special_agent_main_core(
 
 
 def special_agent_main(
-    parse_arguments: Callable[[Optional[Sequence[str]]], argparse.Namespace],
+    parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
     main_fn: Callable[[argparse.Namespace], None],
-    argv: Optional[Sequence[str]] = None,
+    argv: Sequence[str] | None = None,
 ) -> None:
     """
     Because it modifies sys.argv and part of the functionality is terminating the process with

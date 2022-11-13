@@ -8,17 +8,18 @@ from __future__ import annotations
 
 import json
 import threading
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, Callable, ContextManager, Dict, Iterator, Literal, NamedTuple, Optional
+from typing import Any, ContextManager, Literal, NamedTuple
+from unittest import mock
+from unittest.mock import MagicMock
 
-import mock
 import pytest
 import webtest  # type: ignore[import]
 
 # TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
 from _pytest.monkeypatch import MonkeyPatch
-from mock import MagicMock
 from mypy_extensions import KwArg
 
 from tests.testlib.plugin_registry import reset_registries
@@ -26,7 +27,6 @@ from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import UserId
 
@@ -148,16 +148,6 @@ def load_plugins() -> None:
     if errors := get_failed_plugins():
         raise Exception(f"The following errors occured during plugin loading: {errors}")
 
-    # our test environment does not deal with namespace packages properly.
-    # Load plus plugins explicitly:
-    try:
-        load_plugins = list(load_plugins_with_exceptions("plus.cmk.gui.plugins"))
-    except ModuleNotFoundError:
-        pass
-    else:
-        for _plugin, exception in load_plugins:
-            raise exception
-
 
 @pytest.fixture()
 def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
@@ -263,7 +253,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-def get_link(resp: dict, rel: str):  # type:ignore[no-untyped-def]
+def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
             return link
@@ -292,10 +282,10 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kw)
-        self.username: Optional[str] = None
-        self.password: Optional[str] = None
+        self.username: str | None = None
+        self.password: str | None = None
 
-    def set_credentials(self, username, password) -> None:  # type:ignore[no-untyped-def]
+    def set_credentials(self, username: str | None, password: str | None) -> None:
         self.username = username
         self.password = password
 
@@ -304,7 +294,7 @@ class WebTestAppForCMK(webtest.TestApp):
     ) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def has_link(self, resp: webtest.TestResponse, rel) -> bool:  # type:ignore[no-untyped-def]
+    def has_link(self, resp: webtest.TestResponse, rel: str) -> bool:
         if resp.status_code == 204:
             return False
         try:
@@ -313,12 +303,12 @@ class WebTestAppForCMK(webtest.TestApp):
         except KeyError:
             return False
 
-    def follow_link(  # type:ignore[no-untyped-def]
+    def follow_link(
         self,
         resp: webtest.TestResponse,
-        rel,
-        json_data: Optional[Dict[str, Any]] = None,
-        **kw,
+        rel: str,
+        json_data: dict[str, Any] | None = None,
+        **kw: object,
     ) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
         params = dict(kw)
@@ -396,7 +386,6 @@ def with_host(
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
-        bake=lambda *args: None,
     )
     yield hostnames
     hosts_and_folders.CREFolder.root_folder().delete_hosts(

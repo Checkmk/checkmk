@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from typing import Iterable, List, Optional
+from collections.abc import Iterable
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
@@ -19,9 +19,7 @@ __all__ = ["ClassicSNMPBackend"]
 
 
 class ClassicSNMPBackend(SNMPBackend):
-    def get(
-        self, oid: OID, context_name: Optional[SNMPContextName] = None
-    ) -> Optional[SNMPRawValue]:
+    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         if oid.endswith(".*"):
             oid_prefix = oid[:-2]
             commandtype = "getnext"
@@ -39,7 +37,7 @@ class ClassicSNMPBackend(SNMPBackend):
             "-OQ",
             "-Oe",
             "-Ot",
-            "%s%s%s" % (protospec, ipaddress, portspec),
+            f"{protospec}{ipaddress}{portspec}",
             oid_prefix,
         ]
 
@@ -89,9 +87,9 @@ class ClassicSNMPBackend(SNMPBackend):
     def walk(
         self,
         oid: str,
-        section_name: Optional[SectionName] = None,
-        table_base_oid: Optional[str] = None,
-        context_name: Optional[str] = None,
+        section_name: SectionName | None = None,
+        table_base_oid: str | None = None,
+        context_name: str | None = None,
     ) -> SNMPRowInfo:
         protospec = self._snmp_proto_spec()
 
@@ -101,7 +99,7 @@ class ClassicSNMPBackend(SNMPBackend):
 
         portspec = self._snmp_port_spec()
         command = self._snmp_walk_command(context_name)
-        command += ["-OQ", "-OU", "-On", "-Ot", "%s%s%s" % (protospec, ipaddress, portspec), oid]
+        command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
         console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
         rowinfo: SNMPRowInfo = []
@@ -187,7 +185,7 @@ class ClassicSNMPBackend(SNMPBackend):
             return ""
         return ":%d" % self.config.port
 
-    def _snmp_walk_command(self, context_name: Optional[SNMPContextName]) -> List[str]:
+    def _snmp_walk_command(self, context_name: SNMPContextName | None) -> list[str]:
         """Returns command lines for snmpwalk and snmpget
 
         Including options for authentication. This handles communities and
@@ -206,8 +204,8 @@ class ClassicSNMPBackend(SNMPBackend):
     def _snmp_base_command(  # pylint: disable=too-many-branches
         self,
         what: str,
-        context_name: Optional[SNMPContextName],
-    ) -> List[str]:
+        context_name: SNMPContextName | None,
+    ) -> list[str]:
         options = []
 
         if what == "get":

@@ -119,7 +119,7 @@ PACKAGE_PATH=$(pwd)/download
 DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}"
-PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
+PKG_FILE="${PKG_NAME}_0.jammy_$(dpkg --print-architecture).deb"
 
 if [ -n "$NEXUS_USERNAME" ]; then
     log "Log into artifacts.lan.tribe29.com:4000"

@@ -12,94 +12,27 @@ import copy
 import logging
 import os
 import pprint
-from collections.abc import Iterable, Iterator, KeysView, Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, cast, Union
+from typing import Any, cast
 
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.exceptions import MKException
 
-from .config import ConfigFromWATO
+from .config import (
+    ConfigFromWATO,
+    ECRulePack,
+    ECRulePackSpec,
+    MkpRulePackBindingError,
+    MkpRulePackProxy,
+)
 from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
 
 ECRuleSpec = dict[str, Any]
-ECRulePackSpec = dict[str, Any]  # TODO: improve this type
-ECRulePack = Union[ECRulePackSpec, "MkpRulePackProxy"]
-
-
-class MkpRulePackBindingError(MKException):
-    """Base class for exceptions related to rule pack binding"""
-
-
-class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
-    """
-    An object of this class represents an entry (i.e. a rule pack) in
-    mkp_rule_packs. It is used as a reference to an EC rule pack
-    that either can be exported or is already exported in a MKP.
-
-    A newly created instance is not yet connected to a specific rule pack.
-    This is achieved via the method bind_to.
-    """
-
-    def __init__(self, rule_pack_id: str) -> None:
-        super().__init__()
-        # Ideally the 'id_' would not be necessary and the proxy object would
-        # be bound to it's referenced object upon initialization. Unfortunately,
-        # this is not possible because the mknotifyd.mk could specify referenced
-        # objects as well.
-        self.id_ = rule_pack_id
-        self.rule_pack: ECRulePackSpec | None = None
-
-    def __getitem__(self, key: str) -> ECRulePackSpec:
-        if self.rule_pack is None:
-            raise MkpRulePackBindingError("Proxy is not bound")
-        return self.rule_pack[key]
-
-    def __setitem__(self, key: str, value: Any) -> None:
-        if self.rule_pack is None:
-            raise MkpRulePackBindingError("Proxy is not bound")
-        self.rule_pack[key] = value
-
-    def __delitem__(self, key: str) -> None:
-        if self.rule_pack is None:
-            raise MkpRulePackBindingError("Proxy is not bound")
-        del self.rule_pack[key]
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}("{self.id_}")'
-
-    # __iter__ and __len__ are only defined as a workaround for a buggy entry
-    # in the typeshed
-    def __iter__(self) -> Iterator[str]:
-        yield from self.keys()
-
-    def __len__(self) -> int:
-        return len(self.keys())
-
-    def keys(self) -> KeysView[str]:
-        """List of keys of this rule pack"""
-        if self.rule_pack is None:
-            raise MkpRulePackBindingError("Proxy is not bound")
-        return self.rule_pack.keys()
-
-    def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
-        """Binds this rule pack to the given MKP rule pack"""
-        if self.id_ != mkp_rule_pack["id"]:
-            raise MkpRulePackBindingError(
-                f"The IDs of {self} and {mkp_rule_pack} cannot be different."
-            )
-
-        self.rule_pack = mkp_rule_pack
-
-    @property
-    def is_bound(self) -> bool:
-        """Has this rule pack been bound via bind_to()?"""
-        return self.rule_pack is not None
 
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
@@ -166,40 +99,44 @@ def remove_exported_rule_pack(id_: str) -> None:
     """
     Removes the .mk file representing the exported rule pack.
     """
-    export_file = mkp_rule_pack_dir() / ("%s.mk" % id_)
+    export_file = mkp_rule_pack_dir() / f"{id_}.mk"
     export_file.unlink()
 
 
 def _bind_to_rule_pack_proxies(
-    rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any, Any]
+    rule_packs: Iterable[ECRulePack], mkp_rule_packs: Mapping[str, ECRulePackSpec]
 ) -> None:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
     """
     for rule_pack in rule_packs:
-        try:
-            if isinstance(rule_pack, MkpRulePackProxy):
-                rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
-        except KeyError:
-            raise MkpRulePackBindingError(
-                'Exported rule pack with ID "%s" not found.' % rule_pack.id_
-            )
+        if isinstance(rule_pack, MkpRulePackProxy):
+            if mkp_rule_pack := mkp_rule_packs.get(rule_pack.id_):
+                rule_pack.bind_to(mkp_rule_pack)
+            else:
+                raise MkpRulePackBindingError(
+                    f"Exported rule pack with ID '{rule_pack.id_}' not found."
+                )
 
 
 def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-many-branches
     """Load event console configuration."""
-    # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
-    global_context = cast(dict[str, Any], default_config())
+    # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
+    global_context = dict(default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
+    global_context["mkp_rule_packs"] = {}
     for path in [settings.paths.main_config_file.value] + sorted(
         settings.paths.config_dir.value.glob("**/*.mk")
     ):
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # pylint: disable=exec-used
+    assert isinstance(global_context["rule_packs"], Iterable)
+    assert isinstance(global_context["mkp_rule_packs"], Mapping)
+    _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
+    global_context.pop("mkp_rule_packs", None)
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)
-    _bind_to_rule_pack_proxies(config["rule_packs"], config["mkp_rule_packs"])
 
     # Convert livetime fields in rules into new format
     for rule in config["rules"]:
@@ -255,7 +192,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
     return config
 
 
-def load_rule_packs() -> Sequence[ECRulePackSpec]:
+def load_rule_packs() -> Sequence[ECRulePack]:
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
     in the rule packs are already bound to the referenced object."""
     return load_config(_default_settings())["rule_packs"]
@@ -274,7 +211,7 @@ def save_rule_packs(
     else:
         rule_packs_text = repr(rule_packs)
 
-    output += "rule_packs += \\\n%s\n" % rule_packs_text
+    output += f"rule_packs += \\\n{rule_packs_text}\n"
 
     if not dir_:
         dir_ = rule_pack_dir()
@@ -303,16 +240,17 @@ def export_rule_pack(
         if rule_pack.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         rule_pack = rule_pack.rule_pack
-
     repr_ = pprint.pformat(rule_pack) if pretty_print else repr(rule_pack)
-    output = (
-        "# Written by WATO\n" "# encoding: utf-8\n" "\n" "mkp_rule_packs['%s'] = \\\n" "%s\n"
-    ) % (rule_pack["id"], repr_)
+    output = f"""# Written by WATO
+# encoding: utf-8
 
+mkp_rule_packs['{rule_pack['id']}'] = \\
+{repr_}
+"""
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack["id"]), str(output))
+    store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", output)
 
 
 def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
@@ -334,7 +272,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     save_rule_packs(rule_packs)
 
 
-def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: dict[str, Any]) -> None:
+def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) -> None:
     """
     Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
     """
@@ -344,6 +282,7 @@ def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: dict[str, Any]) -> N
             "Expected an instance of %s got %s"
             % (MkpRulePackProxy.__name__, proxy.__class__.__name__)
         )
+    assert proxy.rule_pack is not None
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 

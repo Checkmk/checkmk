@@ -150,7 +150,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch) -> None:  # type:ignore[no-unty
     ts.add_host("bulkwalk_h")
     ts.add_host("v2c_h")
     ts.add_host("not_included")
-    monkeypatch.setattr(HostConfig, "_is_inline_backend_supported", lambda _: True)
+    monkeypatch.setattr(HostConfig, "_is_inline_backend_supported", lambda *args: True)
 
     config_cache = ts.apply(monkeypatch)
 

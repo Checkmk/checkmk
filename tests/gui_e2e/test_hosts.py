@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from tests.testlib.playwright.helpers import PPage
 
 
@@ -12,11 +11,10 @@ class TestHost:
 
 
 class TestHosts:
-    def test_create_and_delete_a_host(self, logged_in_page: PPage) -> None:
+    def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
         """
-
         self._create_host(logged_in_page)
 
         logged_in_page.goto_monitoring_all_hosts()
@@ -24,9 +22,8 @@ class TestHosts:
 
         self._delete_host(logged_in_page)
 
-    def test_reschedule(self, logged_in_page: PPage) -> None:
+    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """reschedules a check"""
-
         self._create_host(logged_in_page)
 
         logged_in_page.goto_monitoring_all_hosts()
@@ -62,8 +59,7 @@ class TestHosts:
         ).click()
 
         logged_in_page.activate_selected()
-
-        logged_in_page.expect_activation_state("Success")
+        logged_in_page.expect_success_state()
 
     @staticmethod
     def _delete_host(logged_in_page: PPage) -> None:
@@ -76,6 +72,6 @@ class TestHosts:
         logged_in_page.main_frame.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()
-        logged_in_page.activate_selected()
 
-        logged_in_page.expect_activation_state("Success")
+        logged_in_page.activate_selected()
+        logged_in_page.expect_success_state()

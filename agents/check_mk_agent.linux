@@ -966,6 +966,27 @@ read_postfix_queue_dirs() {
     fi
 }
 
+## Postfix status monitoring
+read_postfix_master_pid() {
+    postfix_queue_dir=${1}
+    postfix_instance_name=${2:-postfix}
+    echo "<<<postfix_mailq_status:sep(58)>>>"
+    if [ -e "${postfix_queue_dir}/pid/master.pid" ]; then
+        if [ -r "${postfix_queue_dir}/pid/master.pid" ]; then
+            postfix_pid=$(sed 's/ //g' <"${postfix_queue_dir}/pid/master.pid") # handle possible spaces in output
+            if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+                echo "${postfix_instance_name}:the Postfix mail system is running:PID:${postfix_pid}"
+            else
+                echo "${postfix_instance_name}:PID file exists but instance is not running!"
+            fi
+        else
+            echo "${postfix_instance_name}:PID file exists but is not readable"
+        fi
+    else
+        echo "${postfix_instance_name}:the Postfix mail system is not running"
+    fi
+}
+
 ## Postfix mailqueue monitoring
 ## Determine the number of mails and their size in several postfix mail queue
 section_mailqueue() {
@@ -978,36 +999,18 @@ section_mailqueue() {
                 if [ -n "${queue_dir}" ]; then
                     postfix_queue_dir=$(postconf -c "${queue_dir}" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
                     read_postfix_queue_dirs "${postfix_queue_dir}" "${queue_dir}"
+                    postfix_instance_name=$(postconf -c "${queue_dir}" -h multi_instance_name 2>/dev/null)
+                    read_postfix_master_pid "${postfix_queue_dir}" "${postfix_instance_name}"
                 fi
             done
         fi
         # Always check for the default queue. It can exist even if multiple instances are configured
         read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
+        read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)"
 
     elif [ -x /usr/sbin/ssmtp ]; then
         echo '<<<postfix_mailq>>>'
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
-    fi
-
-    # Postfix status monitoring. Can handle multiple instances.
-    if inpath postfix; then
-        echo "<<<postfix_mailq_status:sep(58)>>>"
-        for i in /var/spool/postfix*/; do
-            if [ -e "${i}/pid/master.pid" ]; then
-                if [ -r "${i}/pid/master.pid" ]; then
-                    postfix_pid=$(sed 's/ //g' <"${i}/pid/master.pid") # handle possible spaces in output
-                    if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
-                        echo "${i}:the Postfix mail system is running:PID:${postfix_pid}" | sed 's/\/var\/spool\///g'
-                    else
-                        echo "${i}:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
-                    fi
-                else
-                    echo "${i}:PID file exists but is not readable"
-                fi
-            else
-                echo "${i}:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
-            fi
-        done
     fi
 
     # Check status of qmail mailqueue
@@ -1250,24 +1253,6 @@ section_mkbackup() {
     fi
 }
 
-section_job() {
-    (
-        cd "${MK_VARDIR}/job" 2>/dev/null || return
-        echo '<<<job>>>'
-        for username in *; do
-            (
-                # the return below only terminates the subshell, not the entire function
-                cd "${username}" 2>/dev/null || return
-                if [ "$(id -u)" -eq 0 ]; then
-                    su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
-                else
-                    head -n -0 -v ./*
-                fi
-            )
-        done
-    )
-}
-
 section_thermal() {
     if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ] && ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
         echo '<<<lnx_thermal:sep(124)>>>'
@@ -1326,6 +1311,32 @@ section_haproxy() {
 # BEGIN COMMON AGENT CODE
 #
 
+section_job() {
+    # Get statistics about monitored jobs.
+
+    _cat_files() {
+        # read file names from stdin and write like `head -n -0 -v file`
+        while read -r file; do
+            printf "==> %s <==\n" "${file##./}"
+            cat "${file}"
+        done
+    }
+
+    (
+        cd "${MK_VARDIR}/job" 2>/dev/null || return
+        printf "<<<job>>>\n"
+        for user in *; do
+            (
+                cd "${user}" 2>/dev/null || return # return from subshell only
+                # This folder is owned (and thus writable) by the user that ran the jobs.
+                # The agent (root) must not read files that are not owned by the user.
+                # This prevents symlink or hardlink attacks.
+                find -L . -type f -user "${user}" | _cat_files
+            )
+        done
+    )
+}
+
 section_fileinfo() {
     # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
     perl -e '
@@ -1345,19 +1356,20 @@ section_fileinfo() {
     }
     exit if ! @patterns;
 
-    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
-
+    my $file_stats = "";
     foreach (@patterns) {
         foreach (bsd_glob("$_")) {
             if (! -f) {
-                print "$_|missing\n" if ! -d;
+                $file_stats .= "$_|missing\n" if ! -d;
             } elsif (my @infos = stat) {
-                print "$_|ok|$infos[7]|$infos[9]\n";
+                $file_stats .= "$_|ok|$infos[7]|$infos[9]\n";
             } else {
-                print "$_|stat failed: $!\n";
+                $file_stats .= "$_|stat failed: $!\n";
             }
         }
     }
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n$file_stats";
     ' -- "${MK_CONFDIR}"
 }
 
@@ -1388,7 +1400,16 @@ section_timesyncd() {
 
     echo "<<<timesyncd>>>"
     timedatectl timesync-status
-    get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    # /run/systemd/timesync/synchronized is a more reliable/the correct file to look at for > systemd v250
+    if [ -f "/run/systemd/timesync/synchronized" ]; then
+        get_file_mtime /run/systemd/timesync/synchronized | awk '{print "[[["$1"]]]"}'
+    else
+        get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+    fi
+
+    echo "<<<timesyncd_ntpmessage:sep(10)>>>"
+    timedatectl show-timesync | awk '/NTPMessage/{print $0}'
+    timedatectl show | awk '/Timezone/{print $0}'
     return 0 # intended not to execute section_ntp even in the case where get_file_mtime fails
 }
 
@@ -1435,26 +1456,21 @@ run_real_time_checks() {
     # shellcheck source=agents/cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
-    # new mechanism to set the passphrase has priority
-    secret="${PASSPHRASE:-"${RTC_SECRET}"}"
-
-    if [ "${ENCRYPTED_RT}" != "no" ]; then
-        [ -n "${secret}" ] || {
-            echo "ERROR: Missing secret, but encryption is requested. Not sending real-time data." >&2
-            return
-        }
+    if [ -z "${RTC_SECRET}" ]; then
+        define_optionally_encrypt "no"
+    else
         inpath openssl || {
             echo "ERROR: openssl command is missing, but encryption is requested. Not sending real-time data." >&2
             return
         }
+        define_optionally_encrypt "yes"
     fi
 
-    define_optionally_encrypt "${ENCRYPTED_RT}"
     for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
         # no such file => no expansion of ?* => nothing to do
         # braces are needed so run_real_time_checks_for_remote can be forked away
         # otherwise async execution of check plugins is held off by activated realtime checks.
-        [ -e "${trigger}" ] && { run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null & }
+        [ -e "${trigger}" ] && { run_real_time_checks_for_remote "${trigger}" "${RTC_SECRET}" >/dev/null & }
     done
 }
 

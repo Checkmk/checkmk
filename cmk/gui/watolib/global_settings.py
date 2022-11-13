@@ -3,18 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from livestatus import SiteGlobals
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
 
-GlobalSettings = Dict[str, Any]
+GlobalSettings = dict[str, Any]
 
 
 def load_configuration_settings(
-    site_specific: bool = False, custom_site_path: Optional[str] = None, full_config: bool = False
+    site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
 ) -> SiteGlobals:
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
@@ -31,8 +31,10 @@ def rulebased_notifications_enabled() -> bool:
     return load_configuration_settings().get("enable_rulebased_notifications", False)
 
 
-def save_global_settings(vars_, site_specific=False, custom_site_path=None):
-    per_domain: Dict[str, Dict[Any, Any]] = {}
+def save_global_settings(
+    vars_: dict[str, Any], site_specific: bool = False, custom_site_path: str | None = None
+) -> None:
+    per_domain: dict[str, dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()
@@ -60,11 +62,9 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
             domain().save(domain_config, custom_site_path=custom_site_path)
 
 
-def load_site_global_settings(custom_site_path: Optional[str] = None) -> SiteGlobals:
+def load_site_global_settings(custom_site_path: str | None = None) -> SiteGlobals:
     return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
-def save_site_global_settings(
-    settings: SiteGlobals, custom_site_path: Optional[str] = None
-) -> None:
+def save_site_global_settings(settings: SiteGlobals, custom_site_path: str | None = None) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

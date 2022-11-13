@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef EventLog_h
-#define EventLog_h
+#ifndef EVENT_LOG_H
+#define EVENT_LOG_H
 
 #include <map>
 
@@ -12,7 +12,7 @@
 namespace cma::evl {
 class MessageResolver {
 public:
-    MessageResolver(const std::wstring &log_name) : _name(log_name) {}
+    explicit MessageResolver(const std::wstring &log_name) : _name(log_name) {}
     MessageResolver(const MessageResolver &) = delete;
     MessageResolver &operator=(const MessageResolver &) = delete;
     ~MessageResolver() {
@@ -28,7 +28,7 @@ public:
 
 private:
     std::vector<std::wstring> getMessageFiles(LPCWSTR source) const;
-    std::wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
+    std::wstring resolveInt(DWORD event_id, LPCWSTR dllpath,
                             LPCWSTR *parameters) const;
 
     std::wstring _name;
@@ -36,21 +36,25 @@ private:
 };
 
 class EventLog : public EventLogBase {
-    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
+    static constexpr size_t INIT_BUFFER_SIZE = 64U * 1024U;
 
 public:
     /**
      * Construct a reader for the named eventlog
      */
-    EventLog(const std::wstring &Name);
-    ~EventLog() {
+    explicit EventLog(const std::wstring &name);
+    EventLog(const EventLog &) = delete;
+    EventLog operator=(const EventLog &) = delete;
+    EventLog(EventLog &&) = delete;
+    EventLog operator=(EventLog &&) = delete;
+    ~EventLog() override {
         if (handle_ != nullptr) {
             ::CloseEventLog(handle_);
             handle_ = nullptr;
         }
     }
 
-    virtual std::wstring getName() const override;
+    std::wstring getName() const override;
 
     /**
      * seek to the specified record on the next read or, if the
@@ -59,7 +63,7 @@ public:
      * seeking on large eventlogs. In this case this function will still
      * work as expected but the next read will be slow.
      */
-    virtual void seek(uint64_t record_id) override;
+    void seek(uint64_t record_number) override;
 
     /**
      * read the next eventlog record
@@ -67,14 +71,14 @@ public:
      * be quick most of the time but occasionally cause a fetch via api that
      * takes longer
      */
-    virtual EventLogRecordBase *readRecord() override;
+    EventLogRecordBase *readRecord() override;
 
     /**
      * return the ID of the last record in eventlog
      */
-    virtual uint64_t getLastRecordId() override;
+    uint64_t getLastRecordId() override;
 
-    virtual bool isLogValid() const override { return handle_ != nullptr; }
+    bool isLogValid() const override { return handle_ != nullptr; }
 
 private:
     bool fillBuffer();
@@ -91,4 +95,4 @@ private:
     MessageResolver message_resolver_;
 };
 }  // namespace cma::evl
-#endif  // EventLog_h
+#endif  // EVENT_LOG_H

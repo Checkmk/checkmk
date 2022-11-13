@@ -15,11 +15,31 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DropdownChoice,
+    ListChoice,
     ListOf,
     ListOfStrings,
+    Migrate,
     TextInput,
     Tuple,
+    ValueSpec,
 )
+
+# Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
+# in the azure special agent
+ALL_AZURE_SERVICES: list[tuple[str, str]] = [
+    ("users_count", _("Users in the Active Directory")),
+    ("ad_connect", _("AD Connect Sync")),
+    ("usage_details", _("Usage Details")),
+    ("Microsoft.Compute/virtualMachines", _("Virtual Machines")),
+    ("Microsoft.Network/virtualNetworkGateways", _("vNet Gateway")),
+    ("Microsoft.Sql/servers/databases", _("SQL Databases")),
+    ("Microsoft.Storage/storageAccounts", _("Storage")),
+    ("Microsoft.Web/sites", _("Web Servers (IIS)")),
+    ("Microsoft.DBforMySQL/servers", _("Database for MySQL")),
+    ("Microsoft.DBforPostgreSQL/servers", _("Database for PostgreSQL")),
+    ("Microsoft.Network/trafficmanagerprofiles", _("Traffic Manager")),
+    ("Microsoft.Network/loadBalancers", _("Load Balancer")),
+]
 
 
 def _special_agents_azure_azure_explicit_config():
@@ -73,108 +93,120 @@ def _special_agents_azure_azure_tag_based_config():
     )
 
 
+def _migrate_services(data):
+    if "services" not in data:
+        # Services selection was introduced after Azure monitoring so we want that the users with an
+        # older version will have all services enabled as it was before this change
+        data["services"] = [service_id for service_id, _service_name in ALL_AZURE_SERVICES]
+    return data
+
+
 def _valuespec_special_agents_azure():
-    return Dictionary(
-        title=_("Microsoft Azure"),
-        help=_(
-            "To monitor Azure resources add this datasource to <b>one</b> host. "
-            "The data will be transported using the piggyback mechanism, so make "
-            "sure to create one host for every monitored resource group. You can "
-            "learn about the discovered groups in the <i>Azure Agent Info</i> "
-            "service of the host owning the datasource program."
+    return Migrate(
+        Dictionary(
+            title=_("Microsoft Azure"),
+            help=_(
+                "To monitor Azure resources add this datasource to <b>one</b> host. "
+                "The data will be transported using the piggyback mechanism, so make "
+                "sure to create one host for every monitored resource group. You can "
+                "learn about the discovered groups in the <i>Azure Agent Info</i> "
+                "service of the host owning the datasource program."
+            ),
+            # element names starting with "--" will be passed do cmd line w/o parsing!
+            elements=[
+                (
+                    "subscription",
+                    TextInput(
+                        title=_("Subscription ID"),
+                        allow_empty=False,
+                        size=45,
+                    ),
+                ),
+                (
+                    "tenant",
+                    TextInput(
+                        title=_("Tenant ID / Directory ID"),
+                        allow_empty=False,
+                        size=45,
+                    ),
+                ),
+                (
+                    "client",
+                    TextInput(
+                        title=_("Client ID / Application ID"),
+                        allow_empty=False,
+                        size=45,
+                    ),
+                ),
+                (
+                    "secret",
+                    MigrateToIndividualOrStoredPassword(
+                        title=_("Client Secret"),
+                        allow_empty=False,
+                        size=45,
+                    ),
+                ),
+                get_services_vs(),
+                (
+                    "config",
+                    Dictionary(
+                        title=_("Retrieve information about..."),
+                        # Since we introduced this, Microsoft has already reduced the number
+                        # of allowed API requests. At the time of this writing (11/2018)
+                        # you can find the number here:
+                        # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
+                        help=_(
+                            "By default, all resources associated to the configured tenant ID"
+                            " will be monitored."
+                        )
+                        + " "
+                        + _(
+                            "However, since Microsoft limits API calls to %s per hour"
+                            " (%s per minute), you can restrict the monitoring to individual"
+                            " resource groups and resources."
+                        )
+                        % ("12000", "200"),
+                        elements=[
+                            ("explicit", _special_agents_azure_azure_explicit_config()),
+                            ("tag_based", _special_agents_azure_azure_tag_based_config()),
+                        ],
+                    ),
+                ),
+                (
+                    "piggyback_vms",
+                    DropdownChoice(
+                        title=_("Map data relating to VMs"),
+                        help=_(
+                            "By default, data relating to a VM is sent to the group host"
+                            " corresponding to the resource group of the VM, the same way"
+                            " as for any other resource. If the VM is present in your "
+                            " monitoring as a separate host, you can choose to send the data"
+                            " to the VM itself."
+                        ),
+                        choices=[
+                            ("grouphost", _("Map data to group host")),
+                            ("self", _("Map data to the VM itself")),
+                        ],
+                    ),
+                ),
+                (
+                    "sequential",
+                    DropdownChoice(
+                        title=_("Force agent to run in single thread"),
+                        help=_(
+                            "Check this to turn off multiprocessing."
+                            " Recommended for debugging purposes only."
+                        ),
+                        choices=[
+                            (False, _("Run agent multithreaded")),
+                            (True, _("Run agent in single thread")),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=["subscription", "piggyback_vms", "sequential"],
         ),
-        # element names starting with "--" will be passed do cmd line w/o parsing!
-        elements=[
-            (
-                "subscription",
-                TextInput(
-                    title=_("Subscription ID"),
-                    allow_empty=False,
-                    size=45,
-                ),
-            ),
-            (
-                "tenant",
-                TextInput(
-                    title=_("Tenant ID / Directory ID"),
-                    allow_empty=False,
-                    size=45,
-                ),
-            ),
-            (
-                "client",
-                TextInput(
-                    title=_("Client ID / Application ID"),
-                    allow_empty=False,
-                    size=45,
-                ),
-            ),
-            (
-                "secret",
-                MigrateToIndividualOrStoredPassword(
-                    title=_("Client Secret"),
-                    allow_empty=False,
-                    size=45,
-                ),
-            ),
-            (
-                "config",
-                Dictionary(
-                    title=_("Retrieve information about..."),
-                    # Since we introduced this, Microsoft has already reduced the number
-                    # of allowed API requests. At the time of this writing (11/2018)
-                    # you can find the number here:
-                    # https://docs.microsoft.com/de-de/azure/azure-resource-manager/resource-manager-request-limits
-                    help=_(
-                        "By default, all resources associated to the configured tenant ID"
-                        " will be monitored."
-                    )
-                    + " "
-                    + _(
-                        "However, since Microsoft limits API calls to %s per hour"
-                        " (%s per minute), you can restrict the monitoring to individual"
-                        " resource groups and resources."
-                    )
-                    % ("12000", "200"),
-                    elements=[
-                        ("explicit", _special_agents_azure_azure_explicit_config()),
-                        ("tag_based", _special_agents_azure_azure_tag_based_config()),
-                    ],
-                ),
-            ),
-            (
-                "piggyback_vms",
-                DropdownChoice(
-                    title=_("Map data relating to VMs"),
-                    help=_(
-                        "By default, data relating to a VM is sent to the group host"
-                        " corresponding to the resource group of the VM, the same way"
-                        " as for any other resource. If the VM is present in your "
-                        " monitoring as a separate host, you can choose to send the data"
-                        " to the VM itself."
-                    ),
-                    choices=[
-                        ("grouphost", _("Map data to group host")),
-                        ("self", _("Map data to the VM itself")),
-                    ],
-                ),
-            ),
-            (
-                "sequential",
-                DropdownChoice(
-                    title=_("Force agent to run in single thread"),
-                    help=_(
-                        "Check this to turn off multiprocessing."
-                        " Recommended for debugging purposes only."
-                    ),
-                    choices=[
-                        (False, _("Run agent multithreaded")),
-                        (True, _("Run agent in single thread")),
-                    ],
-                ),
-            ),
-        ],
-        optional_keys=["subscription", "piggyback_vms", "sequential"],
+        migrate=_migrate_services,
     )
 
 
@@ -185,3 +217,25 @@ rulespec_registry.register(
         valuespec=_valuespec_special_agents_azure,
     )
 )
+
+
+def get_services_vs() -> tuple[str, ValueSpec]:
+    return (
+        "services",
+        ListChoice(
+            title=_("Azure services to monitor"),
+            choices=ALL_AZURE_SERVICES,
+            # users_count and ad_connect are disabled by default because they require special
+            # permissions on the Azure app (Graph API permissions + admin consent).
+            default_value=[
+                s[0] for s in ALL_AZURE_SERVICES if s[0] not in {"users_count", "ad_connect"}
+            ],
+            allow_empty=True,
+            help=_(
+                "Select which Azure services to monitor.\n"
+                "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
+                " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
+                " and to grant admin consent to it."
+            ),
+        ),
+    )

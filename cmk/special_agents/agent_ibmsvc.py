@@ -208,7 +208,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     # fetch information by ssh
     #############################################################################
 
-    cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (
+    cmd = "ssh -o ConnectTimeout={} {} {}@{} '".format(
         opt_timeout,
         opt_any_hostkey,
         shlex.quote(user),
@@ -227,8 +227,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     result = subprocess.run(  # nosec B602 # BNS:67522a
         cmd,
         shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         stdin=None,
         encoding="utf-8",
         check=False,
@@ -261,5 +260,5 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         )
         show_profile.chmod(0o755)
 
-        sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+        sys.stderr.write(f"Profile '{g_profile_path}' written. Please run {show_profile}.\n")
     return None

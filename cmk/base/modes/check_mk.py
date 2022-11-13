@@ -43,6 +43,7 @@ from cmk.utils.type_defs import (
 import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.core_helpers.factory as snmp_factory
+from cmk.core_helpers import FetcherType, get_raw_data
 from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.type_defs import Mode as FetchMode
@@ -65,6 +66,7 @@ import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
@@ -419,43 +421,36 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
     _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
-
-        if host_config.is_cluster:
+        if config_cache.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
+        host_config = config_cache.get_host_config(hostname)
         ipaddress = config.lookup_ip_address(host_config)
 
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources.make_non_cluster_sources(
-            host_config,
+        for source, file_cache, fetcher in sources.make_non_cluster_sources(
+            hostname,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                hostname, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if isinstance(source, sources.snmp.SNMPSource):
+            if source.fetcher_type is FetcherType.SNMP:
                 continue
 
-            raw_data = source.fetch(FetchMode.CHECKING)
+            raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
-                raw_data,
-                hostname=source.hostname,
-                fetcher_type=source.fetcher_type,
-                ident=source.id,
-                selection=NO_SELECTION,
-                logger=source._logger,
+                source, raw_data, selection=NO_SELECTION, logger=log.logger
             )
             source_results = summarize(
                 source.hostname,
                 source.ipaddress,
                 host_sections,
-                exit_spec=host_config.exit_code_spec(source.id),
+                exit_spec=host_config.exit_code_spec(source.ident),
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
@@ -465,7 +460,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
-                    source.id,
+                    source.ident,
                     ", ".join(r.summary for r in source_results),
                 )
                 has_errors = True
@@ -1472,7 +1467,7 @@ modes.register(
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     _handle_fetcher_options(options)
 
-    if not (queue := discovery.AutodiscoveryQueue()):
+    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
         return
 
@@ -2065,6 +2060,52 @@ if cmk_version.edition() is cmk_version.Edition.CRE:
         active_check_handler=lambda *args: None,
         keepalive=False,
     )
+
+# .
+#   .--inventorize-marked-hosts--------------------------------------------.
+#   |           _                      _             _                     |
+#   |          (_)_ ____   _____ _ __ | |_ ___  _ __(_)_______             |
+#   |          | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| |_  / _ \            |
+#   |          | | | | \ V /  __/ | | | || (_) | |  | |/ /  __/            |
+#   |          |_|_| |_|\_/ \___|_| |_|\__\___/|_|  |_/___\___|            |
+#   |                                                                      |
+#   |                         _            _   _               _           |
+#   |    _ __ ___   __ _ _ __| | _____  __| | | |__   ___  ___| |_ ___     |
+#   |   | '_ ` _ \ / _` | '__| |/ / _ \/ _` | | '_ \ / _ \/ __| __/ __|    |
+#   |   | | | | | | (_| | |  |   <  __/ (_| | | | | | (_) \__ \ |_\__ \    |
+#   |   |_| |_| |_|\__,_|_|  |_|\_\___|\__,_| |_| |_|\___/|___/\__|___/    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
+    _handle_fetcher_options(options)
+
+    if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
+        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        return
+
+    config.load()
+    inventory.inventorize_marked_hosts(
+        create_core(config.monitoring_core),
+        config.get_config_cache(),
+        queue,
+    )
+
+
+modes.register(
+    Mode(
+        long_option="inventorize-marked-hosts",
+        handler_function=mode_inventorize_marked_hosts,
+        short_help="Run inventory for hosts which previously had no tree data",
+        long_help=[
+            "Run actual service HW/SW Inventory on all hosts that had no tree data",
+            "in the previous run",
+        ],
+        sub_options=_FETCHER_OPTIONS,
+        needs_config=False,
+    )
+)
 
 # .
 #   .--version-------------------------------------------------------------.

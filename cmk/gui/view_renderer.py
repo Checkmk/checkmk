@@ -6,7 +6,7 @@
 import abc
 import collections
 import json
-from typing import Dict, Iterator, List
+from collections.abc import Iterator
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -47,7 +47,6 @@ from cmk.gui.page_menu_utils import (
     get_ntop_page_menu_dropdown,
 )
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.views.utils import Command, load_used_options
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
@@ -56,6 +55,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
+from cmk.gui.views.command import Command
 from cmk.gui.visuals import view_title
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
@@ -63,7 +63,7 @@ if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
-def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
+def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
     action_rows: Rows = []
     for row in rows:
         if row_id(view_spec["datasource"], row) in selected_ids:
@@ -71,7 +71,7 @@ def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[st
     return action_rows
 
 
-def show_filter_form(view: View, show_filters: List[Filter]) -> None:
+def show_filter_form(view: View, show_filters: list[Filter]) -> None:
     visuals.show_filter_form(
         info_list=view.datasource.infos,
         context={f.ident: view.context.get(f.ident, {}) for f in show_filters if f.available()},
@@ -84,7 +84,7 @@ class ABCViewRenderer(abc.ABC):
     def __init__(self, view: View) -> None:
         super().__init__()
         self.view = view
-        self._menu_topics: Dict[str, List[PageMenuTopic]] = collections.defaultdict(list)
+        self._menu_topics: dict[str, list[PageMenuTopic]] = collections.defaultdict(list)
 
     def append_menu_topic(self, dropdown: str, topic: PageMenuTopic) -> None:
         self._menu_topics[dropdown].append(topic)
@@ -95,7 +95,7 @@ class ABCViewRenderer(abc.ABC):
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
-        show_filters: List[Filter],
+        show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
     ) -> None:
         raise NotImplementedError()
@@ -111,7 +111,7 @@ class GUIViewRenderer(ABCViewRenderer):
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
-        show_filters: List[Filter],
+        show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
     ):
         view_spec = self.view.spec
@@ -326,7 +326,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         return False
 
-    def _page_menu(self, rows: Rows, show_filters: List[Filter]) -> PageMenu:
+    def _page_menu(self, rows: Rows, show_filters: list[Filter]) -> PageMenu:
         breadcrumb: Breadcrumb = self.view.breadcrumb()
         if not display_options.enabled(display_options.B):
             return PageMenu()  # No buttons -> no menu
@@ -383,7 +383,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
         return menu
 
-    def _page_menu_dropdown_commands(self) -> List[PageMenuDropdown]:
+    def _page_menu_dropdown_commands(self) -> list[PageMenuDropdown]:
         if not display_options.enabled(display_options.C):
             return []
 
@@ -422,7 +422,7 @@ class GUIViewRenderer(ABCViewRenderer):
                     css_classes=["command"],
                 )
 
-    def _page_menu_dropdowns_context(self, rows: Rows) -> List[PageMenuDropdown]:
+    def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
     def _page_menu_dropdowns_ntop(  # type:ignore[no-untyped-def]
@@ -482,7 +482,7 @@ class GUIViewRenderer(ABCViewRenderer):
         # Link related reports
         yield from collect_context_links(self.view, rows, mobile=False, visual_types=["reports"])
 
-    def _extend_display_dropdown(self, menu: PageMenu, show_filters: List[Filter]) -> None:
+    def _extend_display_dropdown(self, menu: PageMenu, show_filters: list[Filter]) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
 
         display_dropdown.topics.insert(
@@ -511,7 +511,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 ),
             )
 
-    def _page_menu_entries_filter(self, show_filters: List[Filter]) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_filter(self, show_filters: list[Filter]) -> Iterator[PageMenuEntry]:
         is_filter_set = request.var("filled_in") == "filter"
 
         yield PageMenuEntry(
@@ -573,10 +573,10 @@ class GUIViewRenderer(ABCViewRenderer):
                 item=make_simple_link(url),
             )
 
-    def _page_menu_dropdown_add_to(self) -> List[PageMenuDropdown]:
+    def _page_menu_dropdown_add_to(self) -> list[PageMenuDropdown]:
         return visuals.page_menu_dropdown_add_to_visual(add_type="view", name=self.view.name)
 
-    def _render_filter_form(self, show_filters: List[Filter]) -> HTML:
+    def _render_filter_form(self, show_filters: list[Filter]) -> HTML:
         if not display_options.enabled(display_options.F) or not show_filters:
             return HTML()
 
@@ -587,10 +587,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
-            painter_options.show_form(
-                self.view.spec,
-                load_used_options(self.view.spec, self.view.group_cells + self.view.row_cells),
-            )
+            painter_options.show_form(self.view.spec, self.view.painter_options)
             return HTML(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:

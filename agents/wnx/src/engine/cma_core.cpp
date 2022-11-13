@@ -101,9 +101,9 @@ bool AreFilesSame(const fs::path &tgt, const fs::path &src) {
         // seek back to beginning and use std::equal to compare contents
         f1.seekg(0, std::ifstream::beg);
         f2.seekg(0, std::ifstream::beg);
-        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+        return std::equal(std::istreambuf_iterator(f1.rdbuf()),
                           std::istreambuf_iterator<char>(),
-                          std::istreambuf_iterator<char>(f2.rdbuf()));
+                          std::istreambuf_iterator(f2.rdbuf()));
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
         return false;
@@ -169,7 +169,6 @@ PathVector GatherAllFiles(const PathVector &Folders) {
 
             if (fs::is_regular_file(status)) {
                 paths.push_back(p.path());
-                continue;
             }
         }
     }
@@ -198,7 +197,6 @@ void GatherMatchingFilesAndDirs(
         if (fs::is_regular_file(status) &&
             tools::GlobMatch(file_pattern.wstring(), p.path().wstring())) {
             files_found.push_back(p.path());
-            continue;
         }
     }
 }
@@ -308,8 +306,7 @@ void InsertInPluginMap(PluginMap &plugin_map, const PathVector &found_files) {
 }
 
 namespace {
-cma::cfg::Plugins::ExeUnit *GetEntrySafe(UnitMap &unit_map,
-                                         const std::string &key) {
+cfg::Plugins::ExeUnit *GetEntrySafe(UnitMap &unit_map, const std::string &key) {
     try {
         return &unit_map.at(key);
     } catch (const std::out_of_range &) {
@@ -389,8 +386,8 @@ void ApplyEverythingLogResult(const std::string &format, std::string_view file,
 
 std::vector<fs::path> RemoveDuplicatedFilesByName(
     const std::vector<fs::path> &found_files, bool local) {
-    cma::tools::StringSet cache;
-    std::vector<fs::path> files{found_files};
+    tools::StringSet cache;
+    std::vector files{found_files};
     std::erase_if(files, [&cache, local](const fs::path &candidate) {
         const auto fname = wtools::ToUtf8(candidate.filename().wstring());
         const auto new_file = tools::AddUniqStringToSetIgnoreCase(cache, fname);
@@ -498,7 +495,7 @@ void ApplyEverythingToPluginMap(PluginMap &plugin_map,
 void UpdatePluginMap(PluginMap &plugin_map,  // output is here
                      bool local,             // type of plugin
                      const PathVector &found_files,
-                     const std::vector<cma::cfg::Plugins::ExeUnit> &units,
+                     const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists) {
     if (found_files.empty() || units.empty()) {
         plugin_map.clear();  // nothing todo
@@ -537,12 +534,12 @@ std::optional<std::string> GetPiggyBackName(const std::string &in_string) {
 bool TryToHackStringWithCachedInfo(std::string &in_string,
                                    const std::string &value_to_insert) {
     // probably regex better or even simple memcmp/strcmp
-    const auto pos_start = in_string.find(cma::section::kLeftBracket);
-    const auto pos_end = in_string.find(cma::section::kRightBracket);
+    const auto pos_start = in_string.find(section::kLeftBracket);
+    const auto pos_end = in_string.find(section::kRightBracket);
     if (pos_start == 0 &&                // starting from <<<
         pos_end != std::string::npos &&  // >>> presented too
         pos_end > pos_start &&           //
-        (pos_end - pos_start) < 100) {   // not very far away
+        pos_end - pos_start < 100) {     // not very far away
         in_string.insert(pos_end, value_to_insert);
         return true;
     }
@@ -550,7 +547,7 @@ bool TryToHackStringWithCachedInfo(std::string &in_string,
     return false;
 }
 
-constexpr const bool g_config_remove_slash_r{false};
+constexpr bool g_config_remove_slash_r{false};
 
 std::string ConstructPatchString(time_t time_now, int cache_age,
                                  HackDataMode mode) {
@@ -587,7 +584,7 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
     size_t data_count = 0;
     bool hack_allowed = true;
     for (auto &t : table) {
-        if (g_config_remove_slash_r) {
+        if constexpr (g_config_remove_slash_r) {
             while (t.back() == '\r') {
                 t.pop_back();
             }
@@ -673,7 +670,7 @@ std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
             }
             tools::AddVector(accu, data);
             storeData(pid, accu);
-            if (cma::cfg::LogPluginOutput()) {
+            if (cfg::LogPluginOutput()) {
                 XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                         wtools::ToUtf8(cmd_line), pid, code, data.data());
             }
@@ -745,7 +742,7 @@ bool TheMiniBox::waitForStop(std::chrono::milliseconds interval) {
     std::unique_lock lk(lock_);
     const auto stop_time = std::chrono::steady_clock::now() + interval;
     const auto stopped =
-        cv_stop_.wait_until(lk, stop_time, [this]() { return stop_set_; });
+        cv_stop_.wait_until(lk, stop_time, [this] { return stop_set_; });
 
     return stopped || stop_set_;
 }
@@ -780,6 +777,9 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, const std::wstring &exec,
                 break;
             case StartMode::detached:
                 proc_id_ = ar->goExecAsDetached(exec);
+                break;
+            case StartMode::controller:
+                proc_id_ = ar->goExecAsController(exec);
                 break;
         }
 
@@ -981,8 +981,8 @@ void PluginEntry::threadCore(const std::wstring &Id) {
     // pre entry
     // thread counters block
     XLOG::d.i("Async Thread for {} is to be started", wtools::ToUtf8(Id));
-    g_tread_count++;
-    ON_OUT_OF_SCOPE(g_tread_count--);
+    ++g_tread_count;
+    ON_OUT_OF_SCOPE(--g_tread_count);
     std::unique_lock lk(lock_);
     if (!thread_on_) {
         XLOG::l(XLOG::kBp)("Attempt to start without resource acquiring");
@@ -1033,36 +1033,35 @@ void PluginEntry::threadCore(const std::wstring &Id) {
                     std::lock_guard l(data_lock_);
                     storeData(pid, accu);
                 }
-                if (cma::cfg::LogPluginOutput())
+                if (cfg::LogPluginOutput())
                     XLOG::t(
                         "Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
                         wtools::ToUtf8(cmd_line), pid, code, data.data());
             });
             break;
-        } else {
-            // process was either stopped or failed(timeout)
-            const auto failed = minibox_.isFailed();
-            unregisterProcess();
-            XLOG::d("Async Plugin '{}' is {}", path(),
-                    failed ? "failed" : "stopped");
-            if (!failed || is_detached) {
-                // we do not retry:
-                // - not failed processes, i.e. forces to stop from outside
-                // - detached processes, i.e. agent updater
-                break;
-            }
-            failures_++;
-            if (isTooManyRetries()) {
-                XLOG::d("Async Plugin '{}' has too many failures {}", path(),
-                        failures_);
-
-                std::lock_guard l(data_lock_);
-                resetData();
-                failures_ = 0;
-                break;
-            }
         }
-    };
+        // process was either stopped or failed(timeout)
+        const auto failed = minibox_.isFailed();
+        unregisterProcess();
+        XLOG::d("Async Plugin '{}' is {}", path(),
+                failed ? "failed" : "stopped");
+        if (!failed || is_detached) {
+            // we do not retry:
+            // - not failed processes, i.e. forces to stop from outside
+            // - detached processes, i.e. agent updater
+            break;
+        }
+        failures_++;
+        if (isTooManyRetries()) {
+            XLOG::d("Async Plugin '{}' has too many failures {}", path(),
+                    failures_);
+
+            std::lock_guard l(data_lock_);
+            resetData();
+            failures_ = 0;
+            break;
+        }
+    }
 
     XLOG::d.t("Thread OFF: '{}'", path());
 }
@@ -1134,7 +1133,7 @@ void PluginEntry::restartAsyncThreadIfFinished(const std::wstring &Id) {
 
 std::vector<char> PluginEntry::getResultsAsync(bool StartProcessNow) {
     // check is valid parameters
-    if (cacheAge() < cma::cfg::kMinimumCacheAge && cacheAge() != 0) {
+    if (cacheAge() < cfg::kMinimumCacheAge && cacheAge() != 0) {
         XLOG::l("Plugin '{}' requested to be async, but has no valid cache age",
                 path());
         return {};
@@ -1218,7 +1217,6 @@ void PluginEntry::correctRetry() {
         return;
     }
 
-    const auto retry = retry_;
     if (timeout_ > 0) {
         // add 1 to reserve time for start process
         auto max_retries = cache_age_ / (timeout_ + 1);
@@ -1330,7 +1328,7 @@ void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists) {
     for (auto it = plugin_map.begin(); it != plugin_map.end();) {
         fs::path p = it->first;
 
-        if (it->second.path().empty() || (check_exists && !fs::exists(p, ec))) {
+        if (it->second.path().empty() || check_exists && !fs::exists(p, ec)) {
             it = plugin_map.erase(it);
             continue;
         }
@@ -1345,13 +1343,11 @@ void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists) {
 }
 
 namespace provider::config {
-const bool g_async_plugin_without_cache_age_run_async = true;
-const bool g_set_logwatch_pos_to_end = true;
 
 bool IsRunAsync(const PluginEntry &plugin) noexcept {
     const auto run_async = plugin.async();
 
-    if (g_async_plugin_without_cache_age_run_async) {
+    if constexpr (g_async_plugin_without_cache_age_run_async) {
         return run_async;
     }
 
@@ -1401,18 +1397,8 @@ DataBlock RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
     return out;
 }
 
-void RunDetachedPlugins(const PluginMap &plugins_map, int &start_count) {
-    start_count = 0;
-
-    int count = 0;
-    for (const auto &[_, entry] : plugins_map) {
-        if (!entry.async()) {
-            continue;
-        }
-    }
-    XLOG::t.i("Detached started: [{}]", count);
-    start_count = count;
-}
+void RunDetachedPlugins(const PluginMap & /*plugins_map*/,
+                        int & /*start_count*/) {}
 
 // To get data from async plugins with cache_age=0
 void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,

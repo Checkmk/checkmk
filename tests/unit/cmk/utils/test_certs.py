@@ -16,6 +16,8 @@ from tests.testlib.certs import (
     check_cn,
 )
 
+from livestatus import SiteId
+
 from cmk.utils.certs import (
     _make_csr,
     _make_private_key,
@@ -23,6 +25,7 @@ from cmk.utils.certs import (
     _make_subject_name,
     _rsa_public_key_from_cert_or_csr,
     _sign_csr,
+    CN_TEMPLATE,
     load_cert_and_private_key,
     RootCA,
 )
@@ -141,6 +144,17 @@ YHMnEteGimP99xWR6e0tf4aRTTMx10dIwKzTXPsYNcqX/yntDcNz16Kz1HncnzTi
 EA2I5TbsU6LAEfx6vA==
 -----END CERTIFICATE-----
 """
+
+
+class Test_CNTemplate:
+    def test_site_name_matches(self) -> None:
+        assert CN_TEMPLATE.extract_site("CN=Site 'heute' local CA") == SiteId("heute")
+
+    def test_site_name_does_not_match(self) -> None:
+        assert CN_TEMPLATE.extract_site("CN=This is not a CA of a site") is None
+
+    def test_format_site(self) -> None:
+        assert CN_TEMPLATE.format(SiteId("hurz")) == "Site 'hurz' local CA"
 
 
 @pytest.mark.parametrize(

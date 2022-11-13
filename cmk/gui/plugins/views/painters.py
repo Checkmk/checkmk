@@ -26,6 +26,17 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import paint_age, painter_option_registry, PainterOption
+from cmk.gui.painters.v0.base import Cell, Painter, Painter2, painter_registry
+from cmk.gui.painters.v0.helpers import (
+    get_label_sources,
+    get_tag_groups,
+    paint_host_list,
+    paint_nagiosflag,
+    render_cache_info,
+    replace_action_url_macros,
+    transform_action_url,
+)
+from cmk.gui.painters.v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
 from cmk.gui.plugins.views.icons.utils import (
@@ -35,28 +46,8 @@ from cmk.gui.plugins.views.icons.utils import (
     iconpainter_columns,
     LegacyIconEntry,
 )
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    CSVExportError,
-    format_plugin_output,
-    get_label_sources,
-    get_perfdata_nth_value,
-    get_tag_groups,
-    is_stale,
-    JSONExportError,
-    paint_host_list,
-    paint_nagiosflag,
-    paint_stalified,
-    Painter,
-    Painter2,
-    painter_registry,
-    render_cache_info,
-    replace_action_url_macros,
-    transform_action_url,
-    VisualLinkSpec,
-)
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.type_defs import ColumnName, Row, SorterName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -75,7 +66,16 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.view_utils import CellSpec, CSSClass, get_labels, render_labels, render_tag_groups
+from cmk.gui.view_utils import (
+    CellSpec,
+    CSSClass,
+    CSVExportError,
+    format_plugin_output,
+    get_labels,
+    JSONExportError,
+    render_labels,
+    render_tag_groups,
+)
 from cmk.gui.visual_link import render_link_to_view
 
 #   .--Painter Options-----------------------------------------------------.

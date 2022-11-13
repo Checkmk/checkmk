@@ -19,12 +19,9 @@ from cmk.snmplib.type_defs import (
     SNMPRowInfo,
 )
 
-try:
-    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
-except ImportError:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc]
-
 from cmk.core_helpers.snmp_backend.classic import ClassicSNMPBackend
+
+from .conftest import InlineSNMPBackend
 
 logger = logging.getLogger(__name__)
 

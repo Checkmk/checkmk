@@ -7,11 +7,14 @@
 #![allow(dead_code)]
 mod common;
 
+#[cfg(unix)]
 use anyhow::Result as AnyhowResult;
-use assert_cmd::{prelude::OutputAssertExt, Command};
+use assert_cmd::prelude::OutputAssertExt;
+use cmk_agent_ctl::configuration::config;
+#[cfg(unix)]
 use predicates::prelude::predicate;
-
-const BINARY: &str = "cmk-agent-ctl";
+use std::fs;
+use std::path::Path;
 
 const SUPPORTED_MODES: [&str; 12] = [
     "daemon",
@@ -54,7 +57,7 @@ fn test_supported_modes(help_stdout: String) -> bool {
 
 #[test]
 fn test_help() {
-    let output = Command::cargo_bin(BINARY).unwrap().arg("-h").unwrap();
+    let output = common::controller_command().arg("-h").unwrap();
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
     assert!(stdout.contains("Checkmk agent controller"));
     assert!(test_supported_modes(String::from(stdout)));
@@ -62,48 +65,25 @@ fn test_help() {
     output.assert().success();
 }
 
-/// Generates `random` port in the range 30'000..32'000
-/// The reason is to avoid re-using expiring ports which may make troubles
-/// if we are testing too often
-/// `/ 4` - in windows PID is multiple of 4
-fn get_pseudo_random_port() -> u16 {
-    (std::process::id() / 4 % 2_000u32) as u16 + 30_000u16
-}
-
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
-        // SK: There is no better method to avoid annoying failures if your
-        // IDE is not elevated. Do not worry, that you may occasionally do not
-        // test something - the testing script will require elevation in any case.
-        println!("Test is skipped, must be in elevated mode");
-        return Ok(());
-    }
-    let port = get_pseudo_random_port();
     let test_dir = common::setup_test_dir("cmk_agent_ctl_test_dump-");
 
     let test_agent_output = "some test agent output";
-    #[cfg(unix)]
     let agent_socket_address = common::setup_agent_socket_path(test_dir.path());
-    #[cfg(unix)]
     let expected_remote_address = Some("\n");
-    #[cfg(windows)]
-    let agent_socket_address = format!("localhost:{}", &port);
-    #[cfg(windows)]
-    let expected_remote_address: Option<&str> = None;
     let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(
         agent_socket_address,
         test_agent_output,
         expected_remote_address,
     ));
 
-    let mut cmd = Command::cargo_bin(BINARY)?;
+    let mut cmd = common::controller_command();
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
-        .env("DEBUG_WINDOWS_INTERNAL_PORT", port.to_string())
-        .arg("dump")
         .arg("-vv")
+        .arg("dump")
         .unwrap()
         .assert()
         .success()
@@ -122,7 +102,7 @@ fn test_fail_become_user() {
         if mode == "help" {
             continue;
         }
-        let mut cmd = Command::cargo_bin(BINARY).unwrap();
+        let mut cmd = common::controller_command();
         let err = cmd
             .arg(mode)
             .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
@@ -142,7 +122,7 @@ fn test_fail_socket_missing() {
     let error_message_socket = "Something seems wrong with the agent socket";
 
     for mode in SUPPORTED_MODES {
-        let mut cmd = Command::cargo_bin(BINARY).unwrap();
+        let mut cmd = common::controller_command();
         let output_res = cmd
             .timeout(std::time::Duration::from_secs(1))
             .env("DEBUG_HOME_DIR", "whatever")
@@ -166,4 +146,82 @@ fn test_fail_socket_missing() {
             }
         }
     }
+}
+
+fn write_legacy_registry(path: impl AsRef<Path>) {
+    fs::write(
+        path,
+        r#"{
+        "push": {},
+        "pull": {
+          "server:8000/site": {
+            "uuid": "9a2c4eb5-35f5-4bf7-82c0-e2f2c06215ea",
+            "private_key": "private_key",
+            "certificate": "certificate",
+            "root_cert": "root_cert"
+          }
+        },
+        "pull_imported": []
+      }"#,
+    )
+    .unwrap();
+}
+
+#[test]
+#[cfg_attr(target_os = "windows", ignore)] // skipped in windows as a flaky
+fn test_migration_is_always_triggered() {
+    let test_dir = common::setup_test_dir("cmk-agent-ctl_test_migration_is_always_triggered");
+    let path_registry = test_dir.path().join("registered_connections.json");
+
+    for mode in SUPPORTED_MODES {
+        if mode == "help" {
+            continue;
+        }
+        write_legacy_registry(&path_registry);
+        assert!(config::Registry::from_file(&path_registry).is_err());
+        let mut cmd = common::controller_command();
+        cmd.timeout(std::time::Duration::from_secs(5))
+            .env("DEBUG_HOME_DIR", test_dir.path())
+            .arg(mode)
+            .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
+            .assert();
+        assert!(config::Registry::from_file(&path_registry).is_ok())
+    }
+}
+
+fn build_status_command_with_log(
+    test_dir: &tempfile::TempDir,
+    with_log_file: bool,
+) -> assert_cmd::Command {
+    let mut cmd = common::controller_command();
+    cmd.timeout(std::time::Duration::from_secs(5))
+        .env("DEBUG_HOME_DIR", test_dir.path())
+        .env("MK_LOGDIR", test_dir.path())
+        .env(
+            "CMK_AGENT_CTL_LOG_TO_FILE",
+            if with_log_file { "1" } else { "0" },
+        )
+        .arg("-vv")
+        .arg("status")
+        .arg("--no-query-remote");
+    cmd
+}
+
+#[cfg(windows)]
+#[test]
+fn test_log_to_file() {
+    if !is_elevated::is_elevated() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+
+    let test_dir = common::setup_test_dir("cmk-agent-ctl-logging");
+    let log_file = test_dir.path().join("cmk-agent-ctl_rCURRENT.log");
+
+    build_status_command_with_log(&test_dir, false).assert();
+    assert!(!log_file.exists());
+    build_status_command_with_log(&test_dir, true).assert();
+    assert!(fs::read_to_string(&log_file)
+        .unwrap()
+        .contains("Mode status"));
 }

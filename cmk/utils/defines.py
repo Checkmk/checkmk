@@ -5,8 +5,6 @@
 """This module serves constants which are needed in several components
 of Check_MK."""
 
-from typing import Dict, List, Tuple, Union
-
 from cmk.utils.i18n import _
 
 # TODO: Investigate Checkmk code for more defines and other places
@@ -15,7 +13,7 @@ from cmk.utils.i18n import _
 
 
 # TODO: Rename to service_state_names()
-def core_state_names() -> Dict[int, str]:
+def core_state_names() -> dict[int, str]:
     return {
         -1: _("NODATA"),
         0: _("OK"),
@@ -29,7 +27,7 @@ def service_state_name(state_num: int, deflt: str = "") -> str:
     return core_state_names().get(state_num, deflt)
 
 
-def short_service_state_names() -> Dict[int, str]:
+def short_service_state_names() -> dict[int, str]:
     return {
         -1: _("PEND"),
         0: _("OK"),
@@ -62,12 +60,12 @@ def weekday_name(day_num: int) -> str:
     return weekdays()[day_num]
 
 
-def weekday_ids() -> List[str]:
+def weekday_ids() -> list[str]:
     """Returns a list of the internal week day names"""
     return [d[0] for d in weekdays_by_name()]
 
 
-def weekdays() -> Dict[int, str]:
+def weekdays() -> dict[int, str]:
     """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
     return {
         0: _("Monday"),
@@ -80,7 +78,7 @@ def weekdays() -> Dict[int, str]:
     }
 
 
-def weekdays_by_name() -> List[Tuple[str, str]]:
+def weekdays_by_name() -> list[tuple[str, str]]:
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
         ("monday", _("Monday")),
@@ -118,7 +116,7 @@ def interface_oper_state_name(state_num: int, deflt: str = "") -> str:
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
-def interface_oper_states() -> Dict[Union[str, int], str]:
+def interface_oper_states() -> dict[str | int, str]:
     return {
         1: _("up"),
         2: _("down"),
@@ -133,7 +131,7 @@ def interface_oper_states() -> Dict[Union[str, int], str]:
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
 # perhaps move the function to cmk.gui, so we can use the real type.
-def interface_port_types() -> Dict[Union[str, int], str]:
+def interface_port_types() -> dict[str | int, str]:
     return {
         1: "other",
         2: "regular1822",

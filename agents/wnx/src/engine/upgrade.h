@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef upgrade_h__
-#define upgrade_h__
+#ifndef UPGRADE_H
+#define UPGRADE_H
 
 #pragma once
 
@@ -37,22 +37,22 @@ bool UpdateProtocolFile(std::wstring_view new_location,
 // accepts only "checkmk\\agent" ending path as program data
 // return count of files copied
 enum class CopyFolderMode { keep_old, remove_old };
-int CopyAllFolders(const std::filesystem::path &LegacyRoot,
-                   const std::filesystem::path &ProgramData,
-                   CopyFolderMode mode);
+int CopyAllFolders(const std::filesystem::path &legacy_root,
+                   const std::filesystem::path &program_data,
+                   CopyFolderMode copy_mode);
 
-int CopyRootFolder(const std::filesystem::path &LegacyRoot,
-                   const std::filesystem::path &ProgramData);
+int CopyRootFolder(const std::filesystem::path &legacy_root,
+                   const std::filesystem::path &program_data);
 
 // INI --------------------------------------------
 // Intermediate API used in indirectly in production
-bool ConvertIniFiles(const std::filesystem::path &LegacyRoot,
-                     const std::filesystem::path &ProgramData);
-bool ConvertLocalIniFile(const std::filesystem::path &LegacyRoot,
-                         const std::filesystem::path &ProgramData);
-bool ConvertUserIniFile(const std::filesystem::path &LegacyRoot,
-                        const std::filesystem::path &ProgramData,
-                        bool LocalFileExists);
+bool ConvertIniFiles(const std::filesystem::path &legacy_root,
+                     const std::filesystem::path &program_data);
+bool ConvertLocalIniFile(const std::filesystem::path &legacy_root,
+                         const std::filesystem::path &program_data);
+bool ConvertUserIniFile(const std::filesystem::path &legacy_root,
+                        const std::filesystem::path &program_data,
+                        bool local_ini_exists);
 
 std::filesystem::path CreateUserYamlFromIni(
     const std::filesystem::path &ini_file,      // ini file to use
@@ -73,13 +73,13 @@ bool CreateProtocolFile(const std::filesystem::path &dir,
 // gtest [+]
 std::optional<YAML::Node> LoadIni(std::filesystem::path File);
 // gtest [+]
-bool StoreYaml(const std::filesystem::path &File, YAML::Node Yaml,
-               const std::string &Comment) noexcept;
+bool StoreYaml(const std::filesystem::path &filename, YAML::Node yaml_node,
+               const std::string &comment) noexcept;
 // gtest [+]
 bool IsBakeryIni(const std::filesystem::path &Path) noexcept;
 // gtest [+]
-std::string MakeComments(const std::filesystem::path &SourceFilePath,
-                         bool Bakery) noexcept;
+std::string MakeComments(const std::filesystem::path &source_file_path,
+                         bool file_from_bakery) noexcept;
 
 [[nodiscard]] bool CreateFolderSmart(const std::filesystem::path &tgt) noexcept;
 bool IsPathProgramData(const std::filesystem::path &program_data);
@@ -98,8 +98,8 @@ bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 
 // Low Level API
 std::wstring FindLegacyAgent();
-int GetServiceStatusByName(const std::wstring &Name);
-int GetServiceStatus(SC_HANDLE ServiceHandle);
+std::optional<DWORD> GetServiceStatusByName(const std::wstring &name);
+std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle);
 // this is full-featured function
 // may be used in production as part of top level API
 bool StopWindowsService(std::wstring_view service_name);
@@ -109,11 +109,13 @@ bool ActivateLegacyAgent();
 bool DeactivateLegacyAgent();
 
 // limited function, just to have for testing
-bool StartWindowsService(const std::wstring &Name);
+bool StartWindowsService(const std::wstring &service_name);
 
 // used to wait for some long starting/stopping drivers
-int WaitForStatus(std::function<int(const std::wstring &)> StatusChecker,
-                  std::wstring_view ServiceName, int ExpectedStatus, int Time);
+std::optional<DWORD> WaitForStatus(
+    const std::function<std::optional<DWORD>(const std::wstring &)>
+        &status_checker,
+    std::wstring_view service_name, int expected_status, int millisecs);
 
 // used to copy folders from legacy agent to programdata
 int CopyFolderRecursive(
@@ -162,4 +164,4 @@ void Execute();
 
 }  // namespace cma::cfg::rm_lwa
 
-#endif  // upgrade_h__
+#endif  // UPGRADE_H

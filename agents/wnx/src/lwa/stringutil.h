@@ -6,9 +6,8 @@
 #ifndef stringutil_h
 #define stringutil_h
 
-#include <stdint.h>
-
 #include <codecvt>
+#include <cstdint>
 #include <iostream>
 //#include <locale>
 #include <array>
@@ -41,7 +40,7 @@ inline void rtrim(std::string &s) {
 }
 
 template <typename CharT>
-inline std::vector<std::basic_string<CharT>> tokenizeBase(
+std::vector<std::basic_string<CharT>> tokenizeBase(
     const std::basic_string<CharT> &input, const std::basic_regex<CharT> &re,
     int submatch) {
     return {std::regex_token_iterator<
@@ -59,7 +58,7 @@ inline std::vector<std::basic_string<CharT>> tokenizeBase(
  * @return                 A vector of tokens
  */
 template <typename CharT>
-inline std::vector<std::basic_string<CharT>> tokenize(
+std::vector<std::basic_string<CharT>> tokenize(
     const std::basic_string<CharT> &input,
     const std::basic_string<CharT> &delimiter) {
     return tokenizeBase(input, std::basic_regex<CharT>{delimiter}, -1);
@@ -73,13 +72,13 @@ inline std::vector<std::basic_string<CharT>> tokenize(
  * @return                 A vector of tokens
  */
 template <typename CharT>
-inline std::vector<std::basic_string<CharT>> tokenize(
+std::vector<std::basic_string<CharT>> tokenize(
     const std::basic_string<CharT> &input, const CharT *delimiter) {
     return tokenizeBase(input, std::basic_regex<CharT>{delimiter}, -1);
 }
 
 template <typename CharT>
-inline std::basic_regex<CharT> possiblyQuotedRegex();
+std::basic_regex<CharT> possiblyQuotedRegex();
 template <>
 std::regex possiblyQuotedRegex<char>();
 template <>
@@ -98,7 +97,7 @@ std::wregex possiblyQuotedRegex<wchar_t>();
  * @return                 A vector of tokens
  */
 template <typename CharT>
-inline std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
+std::vector<std::basic_string<CharT>> tokenizePossiblyQuoted(
     const std::basic_string<CharT> &input) {
     return tokenizeBase(input, possiblyQuotedRegex<CharT>(), 1);
 }
@@ -141,37 +140,37 @@ bool ci_compare(const std::string &lhs, const std::string &rhs);
 
 // clang-format off
 // Start-of-line char: '^' or L'^'
-template <class CharT> inline CharT sol();
+template <class CharT> CharT sol();
 template <> char sol<char>();
 template <> wchar_t sol<wchar_t>();
 
 // End-of-line char: '$' or L'$'
-template <class CharT> inline CharT eol();
+template <class CharT> CharT eol();
 template <> char eol<char>();
 template <> wchar_t eol<wchar_t>();
 
 // Any single char: '.' or L'.'
-template <class CharT> inline CharT anyS();
+template <class CharT> CharT anyS();
 template <> char anyS<char>();
 template <> wchar_t anyS<wchar_t>();
 
 // Any single char in glob patterns: '?' or L'?'
-template <class CharT> inline CharT anySGlob();
+template <class CharT> CharT anySGlob();
 template <> char anySGlob<char>();
 template <> wchar_t anySGlob<wchar_t>();
 
 // Any number of chars: '*' or L'*'
-template <class CharT> inline CharT anyN();
+template <class CharT> CharT anyN();
 template <> char anyN<char>();
 template <> wchar_t anyN<wchar_t>();
 
 // Escape char: '\\' or L'\\'
-template <class CharT> inline CharT esc();
+template <class CharT> CharT esc();
 template <> char esc<char>();
 template <> wchar_t esc<wchar_t>();
 
 // Is given character one of the regex special characters: 
-template <class CharT> inline bool needsEscape(CharT c);
+template <class CharT> bool needsEscape(CharT c);
 template <> bool needsEscape<char>(char c);
 template <> bool needsEscape<wchar_t>(wchar_t c);
 
@@ -184,7 +183,7 @@ template <class CharT>
 using MatchT = std::match_results<typename StringT<CharT>::const_iterator>;
 
 template <class CharT>
-inline void escape(StringT<CharT> &rPatt) {
+void escape(StringT<CharT> &rPatt) {
     // Escape special characters (apart from '*' and '?')
     for (size_t pos = 0; pos != rPatt.size(); ++pos) {
         if (needsEscape(rPatt[pos])) {
@@ -194,7 +193,7 @@ inline void escape(StringT<CharT> &rPatt) {
 }
 
 template <class CharT>
-inline void globCharReplace(StringT<CharT> &rPatt) {
+void globCharReplace(StringT<CharT> &rPatt) {
     // Regex needs '.' instead of glob '?'
     std::replace(rPatt.begin(), rPatt.end(), anySGlob<CharT>(), anyS<CharT>());
 
@@ -207,7 +206,7 @@ inline void globCharReplace(StringT<CharT> &rPatt) {
 }
 
 template <class CharT>
-inline RegexT<CharT> globToRegex(const StringT<CharT> &glob) {
+RegexT<CharT> globToRegex(const StringT<CharT> &glob) {
     const auto escCnt = std::count_if(glob.cbegin(), glob.cend(), [](CharT c) {
         return c == anyN<CharT>() || needsEscape<CharT>(c);
     });
@@ -225,8 +224,7 @@ inline RegexT<CharT> globToRegex(const StringT<CharT> &glob) {
 // Do a simple pattern matching with the jokers * and ?.
 // This is case insensitive (windows-like).
 template <class CharT>
-inline bool globmatch(const StringT<CharT> &glob,
-                      const StringT<CharT> &target) {
+bool globmatch(const StringT<CharT> &glob, const StringT<CharT> &target) {
     const auto reg = globToRegex(glob);
     MatchT<CharT> match;
     return std::regex_match(target, match, reg);
@@ -234,7 +232,7 @@ inline bool globmatch(const StringT<CharT> &glob,
 
 #if defined(_MSC_BUILD)
 template <class T>
-inline bool globmatch(const T *glob, const T *target) {
+bool globmatch(const T *glob, const T *target) {
     const auto reg = globToRegex(std::basic_string<T>(glob));
     MatchT<T> match;
     return std::regex_match(std::basic_string<T>(target), match, reg);
@@ -320,26 +318,5 @@ std::string IPAddrToString(const sockaddr_storage &addr);
  * @return                 The extracted IP address as a string
  */
 std::string extractIPAddress(const std::string &inputAddr);
-
-// to_string and to_wstring supplied in C++11 but not before
-#if _cplusplus < 201103L
-
-namespace std {
-template <typename T>
-std::wstring to_wstring(const T &source) {
-    std::wostringstream str;
-    str << source;
-    return str.str();
-}
-
-template <typename T>
-std::string to_string(const T &source) {
-    std::ostringstream str;
-    str << source;
-    return str.str();
-}
-}  // namespace std
-
-#endif  // _cplusplus < 201103L
 
 #endif  // stringutil_h

@@ -7,20 +7,10 @@ import errno
 import logging
 import os
 import tempfile
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
-from typing import (
-    Container,
-    Dict,
-    Final,
-    Iterable,
-    Iterator,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Final, NamedTuple
 
 import cmk.utils
 import cmk.utils.paths
@@ -47,11 +37,11 @@ class PiggybackRawDataInfo(NamedTuple):
     raw_data: AgentRawData
 
 
-_PiggybackTimeSetting = Tuple[Optional[str], str, int]
+_PiggybackTimeSetting = tuple[str | None, str, int]
 
 PiggybackTimeSettings = Sequence[_PiggybackTimeSetting]
 
-_PiggybackTimeSettingsMap = Mapping[Tuple[Optional[str], str], int]
+_PiggybackTimeSettingsMap = Mapping[tuple[str | None, str], int]
 
 # ***** Terminology *****
 # "piggybacked_host_folder":
@@ -72,7 +62,7 @@ _PiggybackTimeSettingsMap = Mapping[Tuple[Optional[str], str], int]
 
 
 def get_piggyback_raw_data(
-    piggybacked_hostname: Optional[HostName],
+    piggybacked_hostname: HostName | None,
     time_settings: PiggybackTimeSettings,
 ) -> Sequence[PiggybackRawDataInfo]:
     """Returns the usable piggyback data for the given host
@@ -101,7 +91,7 @@ def get_piggyback_raw_data(
             # 'encoding' in section options.
             raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
 
-        except IOError as e:
+        except OSError as e:
             reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
@@ -146,7 +136,7 @@ def get_piggyback_raw_data(
 
 def get_source_and_piggyback_hosts(
     time_settings: PiggybackTimeSettings,
-) -> Iterator[Tuple[HostName, HostName]]:
+) -> Iterator[tuple[HostName, HostName]]:
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
@@ -178,7 +168,7 @@ class _TimeSettingsMap:
         piggybacked_hostname: HostName,
         time_settings: PiggybackTimeSettings,
     ) -> None:
-        matching_time_settings: Dict[Tuple[Optional[str], str], int] = {}
+        matching_time_settings: dict[tuple[str | None, str], int] = {}
         for expr, key, value in time_settings:
             # expr may be
             #   - None (global settings) or
@@ -211,7 +201,7 @@ class _TimeSettingsMap:
         self,
         source_hostname: HostName,
         piggybacked_hostname: HostName,
-    ) -> Optional[int]:
+    ) -> int | None:
         try:
             return self._match("validity_period", source_hostname, piggybacked_hostname)
         except KeyError:
@@ -311,7 +301,7 @@ def _get_piggyback_processed_file_info(
 
 def _validity_period_message(
     file_age: float,
-    validity_period: Optional[int],
+    validity_period: int | None,
 ) -> str:
     if validity_period is None or (time_left := validity_period - file_age) <= 0:
         return ""
@@ -426,7 +416,7 @@ def _store_status_file_of(
 #   '----------------------------------------------------------------------'
 
 
-def get_source_hostnames(piggybacked_hostname: Optional[HostName] = None) -> Sequence[HostName]:
+def get_source_hostnames(piggybacked_hostname: HostName | None = None) -> Sequence[HostName]:
     if piggybacked_hostname is None:
         return [
             HostName(source_host.name)
@@ -497,7 +487,7 @@ def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
 
 def _get_piggybacked_hosts_settings(
     time_settings: PiggybackTimeSettings,
-) -> Sequence[Tuple[Path, Sequence[Path], _TimeSettingsMap]]:
+) -> Sequence[tuple[Path, Sequence[Path], _TimeSettingsMap]]:
     piggybacked_hosts_settings = []
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         source_hosts = _files_in(piggybacked_host_folder)
@@ -513,13 +503,13 @@ def _get_piggybacked_hosts_settings(
 
 
 def _cleanup_old_source_status_files(
-    piggybacked_hosts_settings: Iterable[Tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
 ) -> None:
     """Remove source status files which exceed configured maximum cache age.
     There may be several 'Piggybacked Host Files' rules where the max age is configured.
     We simply use the greatest one per source."""
 
-    max_cache_age_by_sources: Dict[str, int] = {}
+    max_cache_age_by_sources: dict[str, int] = {}
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for source_host in source_hosts:
             max_cache_age = time_settings.max_cache_age(
@@ -561,7 +551,7 @@ def _cleanup_old_source_status_files(
 
 
 def _cleanup_old_piggybacked_files(
-    piggybacked_hosts_settings: Iterable[Tuple[Path, Iterable[Path], _TimeSettingsMap]]
+    piggybacked_hosts_settings: Iterable[tuple[Path, Iterable[Path], _TimeSettingsMap]]
 ) -> None:
     """Remove piggybacked data files which exceed configured maximum cache age."""
 

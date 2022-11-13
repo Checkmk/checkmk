@@ -114,10 +114,7 @@ def fixture_sample_host(  # type:ignore[no-untyped-def]
     sample_host_name: str,
 ) -> Generator[CREHost, None, None]:
     hostname = sample_host_name
-    hosts_and_folders.CREFolder.root_folder().create_hosts(
-        [(hostname, {}, None)],
-        bake=lambda *args: None,
-    )
+    hosts_and_folders.CREFolder.root_folder().create_hosts([(hostname, {}, None)])
     host = hosts_and_folders.CREFolder.root_folder().host(hostname)
     assert host is not None
     yield host

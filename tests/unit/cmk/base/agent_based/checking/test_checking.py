@@ -8,12 +8,16 @@
 from typing import Iterable
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
+from tests.testlib.base import Scenario
 
 from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import LegacyCheckParameters
+from cmk.utils.type_defs import HostKey, HostName, LegacyCheckParameters, SourceType
 
-import cmk.base.agent_based.checking as checking
+import cmk.base.agent_based.checking._checking as checking
+import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 
 
@@ -219,3 +223,91 @@ def test_aggregate_result(  # type:ignore[no-untyped-def]
     subresults, aggregated_results: ServiceCheckResult
 ) -> None:
     assert checking._aggregate_results(subresults) == aggregated_results
+
+
+def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+
+    config_cache = ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        config,
+        "lookup_ip_address",
+        lambda *args, **kw: "dummy.test.ip.0",
+    )
+    # empty, we have no cluster:
+    assert [] == checking._get_clustered_service_node_keys(
+        config_cache, HostName("cluster.test"), SourceType.HOST, "Test Service"
+    )
+
+
+def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    cluster_test = HostName("cluster.test")
+    ts = Scenario()
+    ts.add_cluster(cluster_test, nodes=["node1.test", "node2.test"])
+    config_cache = ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        config,
+        "lookup_ip_address",
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
+    # empty for a node:
+    assert [] == checking._get_clustered_service_node_keys(
+        config_cache, HostName("node1.test"), SourceType.HOST, "Test Service"
+    )
+
+    # empty for cluster (we have not clustered the service)
+    assert [
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+    ] == checking._get_clustered_service_node_keys(
+        config_cache, cluster_test, SourceType.HOST, "Test Service"
+    )
+
+
+def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: MonkeyPatch) -> None:
+    node1 = HostName("node1.test")
+    node2 = HostName("node2.test")
+    cluster = HostName("cluster.test")
+
+    ts = Scenario()
+    ts.add_host(node1)
+    ts.add_host(node2)
+    ts.add_cluster(cluster, nodes=["node1.test", "node2.test"])
+    # add a fake rule, that defines a cluster
+    ts.set_option(
+        "clustered_services_mapping",
+        [
+            {
+                "value": "cluster.test",
+                "condition": {"service_description": ["Test Service"]},
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        config,
+        "lookup_ip_address",
+        lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
+    )
+    assert checking._get_clustered_service_node_keys(
+        config_cache, cluster, SourceType.HOST, "Test Service"
+    ) == [
+        HostKey(node1, SourceType.HOST),
+        HostKey(node2, SourceType.HOST),
+    ]
+    monkeypatch.setattr(
+        config,
+        "lookup_ip_address",
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
+    assert [
+        HostKey(hostname="node1.test", source_type=SourceType.HOST),
+        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+    ] == checking._get_clustered_service_node_keys(
+        config_cache, cluster, SourceType.HOST, "Test Unclustered"
+    )

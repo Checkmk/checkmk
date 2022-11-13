@@ -95,7 +95,7 @@ def test_pod_init_container_specs() -> None:
                         limits=api.ResourcesRequirements(memory=2, cpu=10),
                         requests=api.ResourcesRequirements(memory=None, cpu=1),
                     ),
-                    name="init_container",
+                    name=api.ContainerName("init_container"),
                     image_pull_policy="Never",
                 )
             ]
@@ -105,7 +105,9 @@ def test_pod_init_container_specs() -> None:
 
     assert isinstance(section_pod_init_container_specs, section.ContainerSpecs)
     assert section_pod_init_container_specs == section.ContainerSpecs(
-        containers={"init_container": section.ContainerSpec(image_pull_policy="Never")}
+        containers={
+            api.ContainerName("init_container"): section.ContainerSpec(image_pull_policy="Never")
+        }
     )
 
 
@@ -116,11 +118,11 @@ def test_pod_start_time_with_no_start_time_present() -> None:
 
 
 def test_pod_start_time_with_start_time_present() -> None:
-    pod = APIPodFactory.build(status=PodStatusFactory.build(start_time=100.0))
+    pod = APIPodFactory.build(status=PodStatusFactory.build(start_time=100))
     section_pod_start_time = agent.pod_start_time(pod.status)
 
     assert isinstance(section_pod_start_time, section.StartTime)
-    assert section_pod_start_time == section.StartTime(start_time=100.0)
+    assert section_pod_start_time == section.StartTime(start_time=api.Timestamp(100))
 
 
 def test_pod_lifecycle_phase() -> None:
@@ -168,20 +170,19 @@ def test_pod_info() -> None:
     assert isinstance(section_pod_info, section.PodInfo)
     assert section_pod_info == section.PodInfo(
         name="pod-name",
-        namespace="namespace-name",
-        creation_timestamp=100.0,
-        annotations={},
+        namespace=api.NamespaceName("namespace-name"),
+        creation_timestamp=api.Timestamp(100.0),
+        annotations=section.FilteredAnnotations({}),
         labels={},
-        node="node-name",
-        host_ip="127.0.0.1",
-        pod_ip="11.1.1.1",
+        node=api.NodeName("node-name"),
+        host_ip=api.IpAddress("127.0.0.1"),
+        pod_ip=api.IpAddress("11.1.1.1"),
         qos_class="besteffort",
-        cluster_name="cluster-name",
         host_network=None,
         dns_policy="ClusterFirst",
         restart_policy="Always",
         controllers=[section.Controller(type_="CronJob", name="cronjob-name")],
         cluster="cluster-name",
-        uid="pod-uid",
+        uid=api.PodUID("pod-uid"),
         kubernetes_cluster_hostname="host",
     )

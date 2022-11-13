@@ -8,11 +8,10 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <limits>
+#include <fstream>
 #include <ranges>
 #include <regex>
 #include <string>
-#include <tuple>
 
 #include "cfg.h"
 #include "cfg_engine.h"
@@ -38,11 +37,11 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
     std::string val(required_level);
     tools::StringLower(val);
 
-    constexpr std::array<EventLevels, 5> levels = {
-        EventLevels::kIgnore, EventLevels::kOff, EventLevels::kAll,
-        EventLevels::kWarn, EventLevels::kCrit};
+    constexpr std::array levels = {EventLevels::kIgnore, EventLevels::kOff,
+                                   EventLevels::kAll, EventLevels::kWarn,
+                                   EventLevels::kCrit};
 
-    for (auto level : levels) {
+    for (const auto level : levels) {
         if (val == ConvertLogWatchLevelToString(level)) {
             return level;
         }
@@ -609,7 +608,9 @@ std::string GenerateOutputFromStates(EvlType type, StateVector &states,
                 // this is NOT log, just stupid entries in registry
                 continue;
 
-            default:
+            case cfg::EventLevels::kAll:
+            case cfg::EventLevels::kWarn:
+            case cfg::EventLevels::kCrit:
                 if (state.in_config_) {
                     auto log_data = ReadDataFromLog(type, state, lwl);
                     if (log_data.has_value()) {

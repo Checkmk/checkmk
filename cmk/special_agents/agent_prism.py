@@ -44,6 +44,7 @@ def output_containers(requester: Requester) -> None:
     LOGGING.debug("do request..")
     obj = requester.get("containers")
     LOGGING.debug("got %d containers", len(obj["entities"]))
+
     write_title("containers")
     print(obj)
 
@@ -63,6 +64,7 @@ def output_cluster(requester: Requester) -> None:
     LOGGING.debug("do request..")
     obj = requester.get("cluster")
     LOGGING.debug("got %d keys", len(obj.keys()))
+
     write_title("info")
     print(obj)
 
@@ -71,6 +73,7 @@ def output_storage_pools(requester: Requester) -> None:
     LOGGING.debug("do request..")
     obj = requester.get("storage_pools")
     LOGGING.debug("got %d entities", len(obj["entities"]))
+
     write_title("storage_pools")
     print(obj)
 

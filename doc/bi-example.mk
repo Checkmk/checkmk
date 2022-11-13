@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[name-defined]
+# mypy: disable-error-code=name-defined
 # pylint: disable=undefined-variable
 
 aggregation_rules["host"] = (

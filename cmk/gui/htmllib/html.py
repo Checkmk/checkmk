@@ -9,7 +9,7 @@ import json
 import pprint
 import re
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -70,7 +70,7 @@ class HTMLGenerator(HTMLWriter):
         self.have_help = False
 
         # Forms
-        self.form_name: Optional[str] = None
+        self.form_name: str | None = None
         self.form_vars: list[str] = []
         self.form_has_submit_button: bool = False
 
@@ -103,7 +103,7 @@ class HTMLGenerator(HTMLWriter):
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
 
-    def reload_whole_page(self, url: Optional[str] = None) -> None:
+    def reload_whole_page(self, url: str | None = None) -> None:
         if not self.request.has_var("_ajaxid"):
             return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
         return None
@@ -126,7 +126,7 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
-    def help(self, text: Union[None, HTML, str]) -> None:
+    def help(self, text: None | HTML | str) -> None:
         """Embed help box, whose visibility is controlled by a global button in the page.
 
         You may add macros like this to the help texts to create links to the user
@@ -135,7 +135,7 @@ class HTMLGenerator(HTMLWriter):
         """
         self.write_html(self.render_help(text))
 
-    def render_help(self, text: Union[None, HTML, str]) -> HTML:
+    def render_help(self, text: None | HTML | str) -> HTML:
         if isinstance(text, str):
             text = escaping.escape_text(text)
         elif isinstance(text, HTML):
@@ -159,7 +159,7 @@ class HTMLGenerator(HTMLWriter):
         # text = ".*[<page_name>#<anchor_name>|<link_title>].*"
         # e.g. text = "[intro_setup#install|Welcome]" returns
         #      <a href="https://docs.checkmk.com/master/en/intro_setup.html#install">Welcome</a>
-        urls: list[Optional[str]] = []
+        urls: list[str | None] = []
         if matches := re.findall(r"(\[([a-z0-9_-]+#?[a-z0-9_-]+|)\|([^\]]+)\])", text):
             for match in matches:
                 try:
@@ -200,7 +200,7 @@ class HTMLGenerator(HTMLWriter):
             )
         )
 
-    def _head(self, title: str, javascripts: Optional[Sequence[str]] = None) -> None:
+    def _head(self, title: str, javascripts: Sequence[str] | None = None) -> None:
         javascripts = javascripts if javascripts else []
 
         self.open_head()
@@ -270,7 +270,7 @@ class HTMLGenerator(HTMLWriter):
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     @staticmethod
-    def javascript_filename_for_browser(jsname: str) -> Optional[str]:
+    def javascript_filename_for_browser(jsname: str) -> str | None:
         filename_for_browser = None
         rel_path = "share/check_mk/web/htdocs/js"
         if active_config.debug:
@@ -289,7 +289,7 @@ class HTMLGenerator(HTMLWriter):
         return filename_for_browser
 
     @staticmethod
-    def _css_filename_for_browser(css: str) -> Optional[str]:
+    def _css_filename_for_browser(css: str) -> str | None:
         rel_path = f"share/check_mk/web/htdocs/{css}.css"
         if (cmk.utils.paths.omd_root / rel_path).exists() or (
             cmk.utils.paths.omd_root / "local" / rel_path
@@ -298,7 +298,7 @@ class HTMLGenerator(HTMLWriter):
         return None
 
     def html_head(
-        self, title: str, javascripts: Optional[Sequence[str]] = None, force: bool = False
+        self, title: str, javascripts: Sequence[str] | None = None, force: bool = False
     ) -> None:
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
@@ -307,7 +307,7 @@ class HTMLGenerator(HTMLWriter):
             self._header_sent = True
 
     def body_start(
-        self, title: str = "", javascripts: Optional[Sequence[str]] = None, force: bool = False
+        self, title: str = "", javascripts: Sequence[str] | None = None, force: bool = False
     ) -> None:
         self.html_head(title, javascripts, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
@@ -345,9 +345,9 @@ class HTMLGenerator(HTMLWriter):
     def begin_form(
         self,
         name: str,
-        action: Optional[str] = None,
+        action: str | None = None,
         method: str = "GET",
-        onsubmit: Optional[str] = None,
+        onsubmit: str | None = None,
         add_transid: bool = True,
     ) -> None:
         self.form_name = name
@@ -412,7 +412,7 @@ class HTMLGenerator(HTMLWriter):
     # field. (this is the reason why you must not add any further
     # input fields after this method has been called).
     def hidden_fields(
-        self, varlist: Optional[Sequence[str]] = None, add_action_vars: bool = False
+        self, varlist: Sequence[str] | None = None, add_action_vars: bool = False
     ) -> None:
         if varlist is not None:
             for var in varlist:
@@ -428,9 +428,9 @@ class HTMLGenerator(HTMLWriter):
         self,
         var: str,
         value: HTMLTagValue,
-        id_: Optional[str] = None,
+        id_: str | None = None,
         add_var: bool = False,
-        class_: Optional[CSSSpec] = None,
+        class_: CSSSpec | None = None,
     ) -> None:
         self.write_html(
             self.render_hidden_field(var=var, value=value, id_=id_, add_var=add_var, class_=class_)
@@ -440,9 +440,9 @@ class HTMLGenerator(HTMLWriter):
         self,
         var: str,
         value: HTMLTagValue,
-        id_: Optional[str] = None,
+        id_: str | None = None,
         add_var: bool = False,
-        class_: Optional[CSSSpec] = None,
+        class_: CSSSpec | None = None,
     ) -> HTML:
         if value is None:
             return HTML("")
@@ -463,7 +463,7 @@ class HTMLGenerator(HTMLWriter):
     # Check if the given form is currently filled in (i.e. we display
     # the form a second time while showing value typed in at the first
     # time and complaining about invalid user input)
-    def form_submitted(self, form_name: Optional[str] = None) -> bool:
+    def form_submitted(self, form_name: str | None = None) -> bool:
         if form_name is None:
             return self.request.has_var("filled_in")
         return self.request.var("filled_in") == form_name
@@ -472,7 +472,7 @@ class HTMLGenerator(HTMLWriter):
     # that no form has been submitted. The problem here is the distintion
     # between False and None. The browser does not set the variables for
     # Checkboxes that are not checked :-(
-    def get_checkbox(self, varname: str) -> Optional[bool]:
+    def get_checkbox(self, varname: str) -> bool | None:
         if self.request.has_var(varname):
             return bool(self.request.var(varname))
         if self.form_submitted(self.form_name):
@@ -483,10 +483,10 @@ class HTMLGenerator(HTMLWriter):
         self,
         varname: str,
         title: str,
-        cssclass: Optional[str] = None,
-        style: Optional[str] = None,
-        help_: Optional[str] = None,
-        form: Optional[str] = None,
+        cssclass: str | None = None,
+        style: str | None = None,
+        help_: str | None = None,
+        form: str | None = None,
         formnovalidate: bool = False,
     ) -> None:
         self.write_html(
@@ -505,10 +505,10 @@ class HTMLGenerator(HTMLWriter):
         self,
         varname: str,
         title: str,
-        cssclass: Optional[str] = None,
-        style: Optional[str] = None,
-        help_: Optional[str] = None,
-        form: Optional[str] = None,
+        cssclass: str | None = None,
+        style: str | None = None,
+        help_: str | None = None,
+        form: str | None = None,
         formnovalidate: bool = False,
     ) -> HTML:
         self.add_form_var(varname)
@@ -529,11 +529,11 @@ class HTMLGenerator(HTMLWriter):
         href: str,
         text: str,
         add_transid: bool = False,
-        obj_id: Optional[str] = None,
-        style: Optional[str] = None,
-        title: Optional[str] = None,
-        disabled: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        obj_id: str | None = None,
+        style: str | None = None,
+        title: str | None = None,
+        disabled: str | None = None,
+        class_: CSSSpec | None = None,
     ) -> None:
         if add_transid:
             href += "&_transid=%s" % transactions.get()
@@ -574,10 +574,10 @@ class HTMLGenerator(HTMLWriter):
         text: str,
         onclick: str,
         style: str = "",
-        cssclass: Optional[str] = None,
+        cssclass: str | None = None,
         title: str = "",
         disabled: bool = False,
-        class_: Optional[CSSSpec] = None,
+        class_: CSSSpec | None = None,
     ) -> None:
         classes = (
             ["button"]
@@ -587,7 +587,7 @@ class HTMLGenerator(HTMLWriter):
 
         if disabled:
             classes.append("disabled")
-            disabled_arg: Optional[str] = ""
+            disabled_arg: str | None = ""
         else:
             disabled_arg = None
 
@@ -627,22 +627,22 @@ class HTMLGenerator(HTMLWriter):
         varname: str,
         default_value: str = "",
         cssclass: str = "text",
-        size: Union[None, str, int] = None,
-        label: Optional[str] = None,
-        id_: Optional[str] = None,
-        submit: Optional[str] = None,
+        size: None | str | int = None,
+        label: str | None = None,
+        id_: str | None = None,
+        submit: str | None = None,
         try_max_width: bool = False,
         read_only: bool = False,
-        autocomplete: Optional[str] = None,
-        style: Optional[str] = None,
-        type_: Optional[str] = None,
-        onkeyup: Optional[str] = None,
-        onblur: Optional[str] = None,
-        placeholder: Optional[str] = None,
-        data_world: Optional[str] = None,
-        data_max_labels: Optional[int] = None,
+        autocomplete: str | None = None,
+        style: str | None = None,
+        type_: str | None = None,
+        onkeyup: str | None = None,
+        onblur: str | None = None,
+        placeholder: str | None = None,
+        data_world: str | None = None,
+        data_max_labels: int | None = None,
         required: bool = False,
-        title: Optional[str] = None,
+        title: str | None = None,
     ) -> None:
 
         # Model
@@ -659,7 +659,7 @@ class HTMLGenerator(HTMLWriter):
         # Until we get there: Try to simplify these width stylings and put them in a helper function
         # that's shared by text_input and text_area
         style_size: list[str] = []
-        field_size: Optional[str] = None
+        field_size: str | None = None
 
         if size is not None:
             if try_max_width:
@@ -720,7 +720,7 @@ class HTMLGenerator(HTMLWriter):
         content: HTMLContent,
         status: str,
         title: str,
-        onclick: Optional[str],
+        onclick: str | None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
         """Shows a colored button with text (used in site and customer status snapins)"""
@@ -736,7 +736,7 @@ class HTMLGenerator(HTMLWriter):
         self,
         enabled: bool,
         help_txt: str,
-        class_: Optional[CSSSpec] = None,
+        class_: CSSSpec | None = None,
         href: str = "javascript:void(0)",
         **attrs: HTMLTagAttributeValue,
     ) -> None:
@@ -761,14 +761,14 @@ class HTMLGenerator(HTMLWriter):
         varname: str,
         default_value: str = "",
         cssclass: str = "text",
-        size: Union[None, str, int] = None,
-        label: Optional[str] = None,
-        id_: Optional[str] = None,
-        submit: Optional[str] = None,
+        size: None | str | int = None,
+        label: str | None = None,
+        id_: str | None = None,
+        submit: str | None = None,
         try_max_width: bool = False,
         read_only: bool = False,
-        autocomplete: Optional[str] = None,
-        placeholder: Optional[str] = None,
+        autocomplete: str | None = None,
+        placeholder: str | None = None,
     ) -> None:
         self.text_input(
             varname,
@@ -874,12 +874,12 @@ class HTMLGenerator(HTMLWriter):
     def dropdown(  # pylint: disable=too-many-branches
         self,
         varname: str,
-        choices: Union[Iterable[Choice], Iterable[ChoiceGroup]],
-        locked_choice: Optional[ChoiceText] = None,
+        choices: Iterable[Choice] | Iterable[ChoiceGroup],
+        locked_choice: ChoiceText | None = None,
         deflt: ChoiceId = "",
         ordered: bool = False,
-        label: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        label: str | None = None,
+        class_: CSSSpec | None = None,
         size: int = 1,
         read_only: bool = False,
         **attrs: HTMLTagAttributeValue,
@@ -988,7 +988,7 @@ class HTMLGenerator(HTMLWriter):
         if self.mobile:
             self._write(render_end_tag("fieldset"))
 
-    def radiobutton(self, varname: str, value: str, checked: bool, label: Optional[str]) -> None:
+    def radiobutton(self, varname: str, value: str, checked: bool, label: str | None) -> None:
         self.form_vars.append(varname)
 
         if self.request.has_var(varname):
@@ -1014,7 +1014,7 @@ class HTMLGenerator(HTMLWriter):
         varname: str,
         deflt: bool = False,
         label: HTMLContent = "",
-        id_: Optional[str] = None,
+        id_: str | None = None,
         **add_attr: HTMLTagAttributeValue,
     ) -> None:
         self._write(self.render_checkbox(varname, deflt, label, id_, **add_attr))
@@ -1024,7 +1024,7 @@ class HTMLGenerator(HTMLWriter):
         varname: str,
         deflt: bool = False,
         label: HTMLContent = "",
-        id_: Optional[str] = None,
+        id_: str | None = None,
         **add_attr: HTMLTagAttributeValue,
     ) -> HTML:
         # Problem with checkboxes: The browser will add the variable
@@ -1058,7 +1058,7 @@ class HTMLGenerator(HTMLWriter):
         self,
         name: str,
         height: str,
-        title: Optional[str],
+        title: str | None,
         renderer: Callable[[], None],
     ) -> None:
         self.open_div(class_=["floatfilter", height, name])
@@ -1068,23 +1068,23 @@ class HTMLGenerator(HTMLWriter):
         self.close_div()
         self.close_div()
 
-    def render_input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
+    def render_input(self, name: str | None, type_: str, **attrs: HTMLTagAttributeValue) -> HTML:
         if type_ == "submit":
             self.form_has_submit_button = True
         attrs["type_"] = type_
         attrs["name"] = name
         return render_start_tag("input", close_tag=True, **attrs)
 
-    def input(self, name: Optional[str], type_: str, **attrs: HTMLTagAttributeValue) -> None:
+    def input(self, name: str | None, type_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(self.render_input(name, type_, **attrs))
 
     def icon(
         self,
         icon: Icon,
-        title: Optional[str] = None,
-        id_: Optional[str] = None,
-        cssclass: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        title: str | None = None,
+        id_: str | None = None,
+        cssclass: str | None = None,
+        class_: CSSSpec | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon(
@@ -1102,10 +1102,10 @@ class HTMLGenerator(HTMLWriter):
     @staticmethod
     def render_icon(
         icon: Icon,
-        title: Optional[str] = None,
-        id_: Optional[str] = None,
-        cssclass: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        title: str | None = None,
+        id_: str | None = None,
+        cssclass: str | None = None,
+        class_: CSSSpec | None = None,
     ) -> HTML:
         classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
@@ -1139,9 +1139,9 @@ class HTMLGenerator(HTMLWriter):
     @staticmethod
     def render_emblem(
         emblem: str,
-        title: Optional[str],
-        id_: Optional[str],
-        icon_element: Optional[HTML] = None,
+        title: str | None,
+        id_: str | None,
+        icon_element: HTML | None = None,
     ) -> HTML:
         """Render emblem to corresponding icon (icon_element in function call)
         or render emblem itself as icon image, used e.g. in view options."""
@@ -1164,15 +1164,15 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def render_icon_button(
-        url: Union[None, str, str],
+        url: None | str | str,
         title: str,
         icon: Icon,
-        id_: Optional[str] = None,
-        onclick: Optional[HTMLTagAttributeValue] = None,
-        style: Optional[str] = None,
-        target: Optional[str] = None,
-        cssclass: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        id_: str | None = None,
+        onclick: HTMLTagAttributeValue | None = None,
+        style: str | None = None,
+        target: str | None = None,
+        cssclass: str | None = None,
+        class_: CSSSpec | None = None,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1197,15 +1197,15 @@ class HTMLGenerator(HTMLWriter):
 
     def icon_button(
         self,
-        url: Optional[str],
+        url: str | None,
         title: str,
         icon: Icon,
-        id_: Optional[str] = None,
-        onclick: Optional[HTMLTagAttributeValue] = None,
-        style: Optional[str] = None,
-        target: Optional[str] = None,
-        cssclass: Optional[str] = None,
-        class_: Optional[CSSSpec] = None,
+        id_: str | None = None,
+        onclick: HTMLTagAttributeValue | None = None,
+        style: str | None = None,
+        target: str | None = None,
+        cssclass: str | None = None,
+        class_: CSSSpec | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
@@ -1243,13 +1243,13 @@ class HTMLGenerator(HTMLWriter):
         ident: str,
         method: PopupMethod,
         data: Any = None,
-        style: Optional[str] = None,
-        cssclass: Optional[CSSSpec] = None,
-        onclose: Optional[str] = None,
-        onopen: Optional[str] = None,
+        style: str | None = None,
+        cssclass: CSSSpec | None = None,
+        onclose: str | None = None,
+        onopen: str | None = None,
         resizable: bool = False,
-        popup_group: Optional[str] = None,
-        hover_switch_delay: Optional[int] = None,
+        popup_group: str | None = None,
+        hover_switch_delay: int | None = None,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_popup_trigger(
@@ -1273,13 +1273,13 @@ class HTMLGenerator(HTMLWriter):
         ident: str,
         method: PopupMethod,
         data: Any = None,
-        style: Optional[str] = None,
-        cssclass: Optional[CSSSpec] = None,
-        onclose: Optional[str] = None,
-        onopen: Optional[str] = None,
+        style: str | None = None,
+        cssclass: CSSSpec | None = None,
+        onclose: str | None = None,
+        onopen: str | None = None,
         resizable: bool = False,
-        popup_group: Optional[str] = None,
-        hover_switch_delay: Optional[int] = None,
+        popup_group: str | None = None,
+        hover_switch_delay: int | None = None,
     ) -> HTML:
 
         onclick = "cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s,  %s);" % (
@@ -1292,11 +1292,11 @@ class HTMLGenerator(HTMLWriter):
         )
 
         if popup_group:
-            onmouseenter: Optional[str] = "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" % (
+            onmouseenter: str | None = "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" % (
                 json.dumps(popup_group),
                 json.dumps(hover_switch_delay),
             )
-            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
+            onmouseleave: str | None = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:
             onmouseenter = None
             onmouseleave = None

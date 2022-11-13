@@ -11,9 +11,9 @@
 #include <iterator>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "modules.h"
 #include "test_tools.h"
-#include "zip.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -44,8 +44,6 @@ bool Compare(const T &t, const T &v) {
 }
 
 TEST(ModuleCommander, CheckSystemAuto) {
-    namespace fs = std::filesystem;
-
     auto sys_exts = ModuleCommander::GetSystemExtensions();
     ASSERT_TRUE(sys_exts.size() == 1);
     ASSERT_TRUE(sys_exts[0].first == "python");
@@ -188,7 +186,7 @@ TEST(ModulesTest, Loader) {
         "exec: {}\n"
         "{}\n";
 
-    for (auto s : good_sets) {
+    for (const auto &s : good_sets) {
         Module m;
         auto text = fmt::format(base, s.name, s.exts, s.exec, s.dir);
         auto node = YAML::Load(text);
@@ -222,7 +220,7 @@ TEST(ModulesTest, Loader) {
         EXPECT_EQ(m.exts()[0], ".e1");
     }
 
-    for (auto s : bad_sets) {
+    for (const auto &s : bad_sets) {
         Module m;
         auto text = fmt::format(base, s.name, s.exts, s.exec, s.dir);
         auto node = YAML::Load(text);
@@ -236,8 +234,6 @@ TEST(ModulesTest, Loader) {
 }
 
 TEST(ModulesTest, IsMyScript) {
-    namespace fs = std::filesystem;
-
     Module m;
     EXPECT_FALSE(m.isMyScript("z"));
     EXPECT_FALSE(m.isMyScript("z.ix"));
@@ -348,8 +344,8 @@ protected:
 
     tst::TempCfgFs::ptr temp_fs_;
 
-    std::pair<fs::path, fs::path> CreateModulesAndBackup() {
-        fs::path user = temp_fs_->data();
+    [[nodiscard]] std::pair<fs::path, fs::path> CreateModulesAndBackup() const {
+        const fs::path user = temp_fs_->data();
         auto modules_dir = user / dirs::kUserModules;
         auto backup_dir =
             user / dirs::kUserInstallDir / dirs::kInstalledModules;
@@ -358,8 +354,8 @@ protected:
         return {modules_dir, backup_dir};
     }
 
-    ::testing::AssertionResult IsPresented(const fs::path &file,
-                                           const fs::path &dir) {
+    [[nodiscard]] ::testing::AssertionResult IsPresented(
+        const fs::path &file, const fs::path &dir) const {
         if (!fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " is absent";
@@ -383,8 +379,8 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    ::testing::AssertionResult IsAbsent(const fs::path &file,
-                                        const fs::path &dir) {
+    [[nodiscard]] ::testing::AssertionResult IsAbsent(
+        const fs::path &file, const fs::path &dir) const {
         if (fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " should be absent";
@@ -398,8 +394,9 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path &zip_file) {
-        auto name{zip_file.filename()};
+    [[nodiscard]] std::pair<fs::path, fs::path> makeExpectedPair(
+        const fs::path &zip_file) const {
+        const auto name{zip_file.filename()};
         auto target_folder = temp_fs_->data() / dirs::kUserModules / name;
         target_folder.replace_extension();
         auto backup_file = temp_fs_->data() / dirs::kUserInstallDir /
@@ -555,7 +552,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
     ASSERT_EQ(mc.findModuleFiles(root), 0);
 
     EXPECT_EQ(mc.getExtensions(),
-              std::vector<std::string>({".test"s, ".test2"s, "test3.tt"s}));
+              std::vector({".test"s, ".test2"s, "test3.tt"s}));
 
     tst::CreateTextFile(install / ("real_module_module"s + kExtension.data()),
                         "zip");
@@ -612,7 +609,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
 
     tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip",
                         "OKYYYYSSD");  // not null file should fail
-    (mc.InstallModule(bad_module, root, user, InstallMode::normal));
+    ModuleCommander::InstallModule(bad_module, root, user, InstallMode::normal);
 
     // Clean install store
     auto move_dir = ModuleCommander::GetMoveLocation(tst::install_cab_to_test);
@@ -703,7 +700,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
                              move_dir / mc.modules_[0].name()));
 
         // Move modules to store, this is part of deinstall process
-        mc.moveModulesToStore(user);
+        ModuleCommander::moveModulesToStore(user);
         EXPECT_TRUE(IsAbsent(backup_file, target_folder));
 
         // Check that files removed from the quick uninstall

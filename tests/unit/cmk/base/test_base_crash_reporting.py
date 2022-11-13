@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-
 from tests.testlib.base import Scenario
 
 import cmk.utils.crash_reporting
 from cmk.utils.type_defs import HostName
 
 import cmk.base.crash_reporting as crash_reporting
-from cmk.base.config import HostConfig
 
 
 def test_base_crash_report_registry() -> None:
@@ -80,43 +77,23 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_check(
-            host_config=HostConfig.make_host_config(hostname),
-            check_plugin_name="uptime",
-            check_plugin_kwargs={"item": None, "params": None},
-            is_enforced_service=False,
-            description="Uptime",
-            text="Output",
-            rtc_package=None,
+        crash = crash_reporting.CheckCrashReport.from_exception(
+            details={
+                "check_output": "Output",
+                "host": hostname,
+                "is_cluster": False,
+                "description": "Uptime",
+                "check_type": "uptime",
+                "inline_snmp": False,
+                "enforced_service": False,
+            },
+            type_specific_attributes={},
         )
 
     _check_generic_crash_info(crash)
     assert crash.type() == "check"
     assert crash.crash_info["exc_type"] == "Exception"
     assert crash.crash_info["exc_value"] == "DING"
-
-    for key, (ty, value) in {
-        "check_output": (str, "Output"),
-        "host": (str, hostname),
-        "is_cluster": (bool, False),
-        "description": (str, "Uptime"),
-        "check_type": (str, "uptime"),
-        "item": (type(None), None),
-        "params": (type(None), None),
-        "inline_snmp": (bool, False),
-        "enforced_service": (bool, False),
-    }.items():
-        assert key in crash.crash_info["details"]
-        assert isinstance(  # pylint: disable= isinstance-second-argument-not-valid-type
-            crash.crash_info["details"][key], ty
-        ), (
-            "Key %r has wrong type: %r"
-            % (  # pylint: disable=isinstance-second-argument-not-valid-type
-                key,
-                type(crash.crash_info["details"][key]),
-            )
-        )
-        assert crash.crash_info["details"][key] == value, "%r has invalid value" % key
 
 
 def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped-def]
@@ -126,70 +103,19 @@ def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped
     try:
         raise Exception("DING")
     except Exception:
-        crash = crash_reporting.CheckCrashReport.from_check(
-            host_config=HostConfig.make_host_config(hostname),
-            check_plugin_name="uptime",
-            check_plugin_kwargs={},
-            is_enforced_service=False,
-            description="Uptime",
-            text="Output",
-            rtc_package=None,
+        crash = crash_reporting.CheckCrashReport.from_exception(
+            details={
+                "check_output": "Output",
+                "host": hostname,
+                "is_cluster": False,
+                "description": "Uptime",
+                "check_type": "uptime",
+                "inline_snmp": False,
+                "enforced_service": False,
+            },
+            type_specific_attributes={},
         )
         store.save(crash)
 
     crash2 = store.load_from_directory(crash.crash_dir())
     assert crash2.crash_info["exc_value"] == "DING"
-
-
-def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
-    cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-    with cache_path.open("w", encoding="utf-8") as f:
-        f.write("<<<abc>>>\nblablub\n")
-
-    crash = None
-    try:
-        raise Exception("DING")
-    except Exception:
-        crash = crash_reporting.CheckCrashReport.from_check(
-            host_config=HostConfig.make_host_config(hostname),
-            check_plugin_name="uptime",
-            check_plugin_kwargs={},
-            is_enforced_service=False,
-            description="Uptime",
-            text="Output",
-            rtc_package=None,
-        )
-
-    assert isinstance(crash, crash_reporting.CheckCrashReport)
-    assert crash.agent_output == b"<<<abc>>>\nblablub\n"
-    assert crash.snmp_info is None
-
-
-def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    hostname = HostName("testhost")
-    Scenario().apply(monkeypatch)
-    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", str(hostname))
-    cache_path.parent.mkdir(parents=True, exist_ok=True)
-    with cache_path.open("w", encoding="utf-8") as f:
-        f.write("[]\n")
-
-    crash = None
-    try:
-        raise Exception("DING")
-    except Exception:
-        crash = crash_reporting.CheckCrashReport.from_check(
-            host_config=HostConfig.make_host_config(hostname),
-            check_plugin_name="snmp_uptime",
-            check_plugin_kwargs={},
-            is_enforced_service=False,
-            description="Uptime",
-            text="Output",
-            rtc_package=None,
-        )
-
-    assert isinstance(crash, crash_reporting.CheckCrashReport)
-    assert crash.agent_output is None
-    assert crash.snmp_info == b"[]\n"

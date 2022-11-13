@@ -15,4 +15,4 @@ We're currently supporting the following Python versions: 2.6, 2.7, 3.3, 3.4, 3.
 The WATO rule "PostgreSQL database and sessions" configures the agent plugin for the bakery. The bakery will then bake plugins for Linux and Windows as well as the respective .cfg files.
 
 In order to be able to use it under Linux, a Python environment including the module "psutil" must be installed.
-In order to be able to use it under Windows, the user needs to deploy the Windows Agent from checkmk v1.7 or manually install a Python environment.
+In order to be able to use it under Windows, the user needs to deploy the Windows Agent from checkmk v2.0 or manually install a Python environment.

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-import responses  # type: ignore[import]
+import responses
 
 from cmk.special_agents.agent_cisco_prime import main
 

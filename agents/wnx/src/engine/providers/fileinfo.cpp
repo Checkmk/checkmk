@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 
 #include <filesystem>
+#include <ranges>
 #include <regex>
 #include <string>
 #include <tuple>
@@ -159,7 +160,6 @@ void GatherMatchingFilesAndDirs(
             if (fs::is_directory(status) &&
                 tools::GlobMatch(dir_pattern.wstring(), path.wstring())) {
                 dirs_found.push_back(path);
-                continue;
             }
         } catch (const std::exception &e) {
             XLOG::l("Exception GatherMatchingFilesAndDirs '{}'", e.what());
@@ -384,7 +384,7 @@ std::tuple<uint64_t, int64_t, bool> GetFileStats(const fs::path &file_path) {
 
     auto file_last_touch = GetFileTimeSinceEpoch(file_path);
     if (file_last_touch.has_value()) {
-        auto duration =
+        const auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(*file_last_touch);
         seconds = duration.count();
         CorrectSeconds(seconds);
@@ -556,7 +556,7 @@ const std::string g_modern_sub_header{
     "[[[content]]]\n"};
 }  // namespace
 
-std::string FileInfo::generateFileList(const YAML::Node &path_array) {
+std::string FileInfo::generateFileList(const YAML::Node &path_array) const {
     int i_pos = 0;  // logging variable
     std::string out;
     for (const auto &p : path_array) {
@@ -594,10 +594,11 @@ std::string FileInfo::generateFileList(const YAML::Node &path_array) {
 }  // namespace provider
 
 std::string FileInfo::makeBody() {
-    auto out = std::to_string(tools::SecondsSinceEpoch()) + "\n";
     auto path_array_val = GetPathArray(cfg::GetLoadedConfig());
-    return path_array_val.has_value() ? out + generateFileList(*path_array_val)
-                                      : out;
+    auto file_list = generateFileList(*path_array_val);
+    auto ref_timestamp = std::to_string(tools::SecondsSinceEpoch()) + "\n";
+    return path_array_val.has_value() ? ref_timestamp + file_list
+                                      : ref_timestamp;
 }
 
 bool FileInfo::ContainsGlobSymbols(std::string_view name) {

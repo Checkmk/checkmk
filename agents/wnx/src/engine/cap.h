@@ -5,18 +5,16 @@
 
 // engine to install/remove cap files
 
-#ifndef cap_h__
-#define cap_h__
+#ifndef CAP_H
+#define CAP_H
 
 #pragma once
 
 #include <filesystem>
 #include <string>
-#include <string_view>
 #include <tuple>
 
 #include "cfg.h"
-#include "common/cfg_info.h"
 
 namespace cma::cfg::cap {
 
@@ -36,11 +34,11 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view source_dir,  // @root/install
                        Mode mode);
 
-bool NeedReinstall(const std::filesystem::path &Target,
-                   const std::filesystem::path &Src);
+bool NeedReinstall(const std::filesystem::path &target,
+                   const std::filesystem::path &source);
 
-using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
-                          const std::filesystem::path &SrcCap);
+using ProcFunc = bool (*)(const std::filesystem::path &target_cap,
+                          const std::filesystem::path &source_cap);
 
 bool ReinstallCaps(const std::filesystem::path &target_cap,
                    const std::filesystem::path &source_cap);
@@ -102,4 +100,4 @@ PairOfPath GetExampleYmlNames();
 PairOfPath GetInstallPair(std::wstring_view name);
 }  // namespace cma::cfg::cap
 
-#endif  // cap_h__
+#endif  // CAP_H

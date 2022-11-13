@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Callable, Sequence, Type, Union
+from collections.abc import Callable, Sequence
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -38,7 +38,7 @@ class PermissionSection(abc.ABC):
         return False
 
 
-class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[Type[PermissionSection]]):
+class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[type[PermissionSection]]):
     def plugin_name(self, instance):
         return instance().name
 
@@ -54,11 +54,11 @@ class Permission(abc.ABC):
 
     def __init__(
         self,
-        section: Type[PermissionSection],
+        section: type[PermissionSection],
         name: str,
-        title: Union[str, LazyString],
-        description: Union[str, LazyString],
-        defaults: Sequence[str],
+        title: str | LazyString,
+        description: str | LazyString,
+        defaults: Sequence[RoleName],
     ) -> None:
         self._section = section
         self._name = name
@@ -68,7 +68,7 @@ class Permission(abc.ABC):
         self._sort_index = 0
 
     @property
-    def section(self) -> Type[PermissionSection]:
+    def section(self) -> type[PermissionSection]:
         return self._section
 
     @property
@@ -152,7 +152,7 @@ def declare_permission(
     name: PermissionName,
     title: str | LazyString,
     description: str | LazyString,
-    defaults: Sequence[PermissionName],
+    defaults: Sequence[RoleName],
 ) -> None:
     section_name, permission_name = name.split(".", 1)
 

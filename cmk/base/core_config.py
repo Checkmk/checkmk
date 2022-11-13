@@ -176,9 +176,9 @@ def _get_host_check_command(
 
 
 def _cluster_ping_command(
-    config_cache: ConfigCache, host_config: HostConfig, ip: HostAddress
+    config_cache: ConfigCache, host_name: HostName, ip: HostAddress
 ) -> Optional[CoreCommand]:
-    ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
+    ping_args = check_icmp_arguments_of(config_cache, host_name)
     if ip:  # Do check cluster IP address if one is there
         return "check-mk-host-ping!%s" % ping_args
     if ping_args:  # use check_icmp in cluster mode
@@ -189,6 +189,7 @@ def _cluster_ping_command(
 def host_check_command(
     config_cache: ConfigCache,
     host_config: HostConfig,
+    host_name: HostName,
     ip: HostAddress,
     is_clust: bool,
     default_host_check_command: str,
@@ -199,13 +200,13 @@ def host_check_command(
 
     if value == "smart":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_config, ip)
+            return _cluster_ping_command(config_cache, host_name, ip)
         return "check-mk-host-smart"
 
     if value == "ping":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_config, ip)
-        ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
+            return _cluster_ping_command(config_cache, host_name, ip)
+        ping_args = check_icmp_arguments_of(config_cache, host_name)
         if ping_args:  # use special arguments
             return "check-mk-host-ping!%s" % ping_args
         return None
@@ -232,7 +233,7 @@ def host_check_command(
         )
 
     raise MKGeneralException(
-        "Invalid value %r for host_check_command of host %s." % (value, host_config.hostname)
+        "Invalid value %r for host_check_command of host %s." % (value, host_name)
     )
 
 
@@ -497,6 +498,7 @@ def iter_active_check_services(
     hostname: str,
     host_attrs: config.ObjectAttributes,
     params: Dict[Any, Any],
+    stored_passwords: Mapping[str, str],
 ) -> Iterator[Tuple[str, str]]:
     """Iterate active service descriptions and arguments
 
@@ -512,17 +514,23 @@ def iter_active_check_services(
         return
 
     description = config.active_check_service_description(
-        host_config.hostname, host_config.alias, check_name, params
+        hostname, host_config.alias, check_name, params
     )
     arguments = commandline_arguments(
-        host_config.hostname, description, active_info["argument_function"](params)
+        hostname,
+        description,
+        active_info["argument_function"](params),
+        stored_passwords,
     )
 
     yield description, arguments
 
 
 def _prepare_check_command(
-    command_spec: CheckCommandArguments, hostname: HostName, description: Optional[ServiceName]
+    command_spec: CheckCommandArguments,
+    hostname: HostName,
+    description: Optional[ServiceName],
+    stored_passwords: Mapping[str, str],
 ) -> str:
     """Prepares a check command for execution by Checkmk
 
@@ -532,7 +540,6 @@ def _prepare_check_command(
     """
     passwords: List[Tuple[str, str, str]] = []
     formated: List[str] = []
-    stored_passwords = cmk.utils.password_store.load()
     for arg in command_spec:
         if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
@@ -611,6 +618,7 @@ def commandline_arguments(
     hostname: HostName,
     description: Optional[ServiceName],
     commandline_args: config.SpecialAgentInfoFunctionResult,
+    stored_passwords: Mapping[str, str] | None = None,
 ) -> str:
     """Commandline arguments for special agents or active checks."""
     if isinstance(commandline_args, str):
@@ -626,7 +634,12 @@ def commandline_arguments(
             % (hostname, description)
         )
 
-    return _prepare_check_command(args, hostname, description)
+    return _prepare_check_command(
+        args,
+        hostname,
+        description,
+        cmk.utils.password_store.load() if stored_passwords is None else stored_passwords,
+    )
 
 
 def make_special_agent_cmdline(
@@ -693,12 +706,12 @@ def make_special_agent_stdin(
 
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
-    host_config: HostConfig,
+    host_name: HostName,
     service: ConfiguredService,
     check_mk_attrs: ObjectAttributes,
 ) -> ObjectAttributes:
     attrs = get_service_attributes(
-        host_config.hostname,
+        host_name,
         service.description,
         config_cache,
         service.check_plugin_name,
@@ -723,11 +736,14 @@ def get_service_attributes(
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
     attrs.update(
-        _get_tag_attributes(config_cache.labels_of_service(hostname, description), "LABEL")
+        _get_tag_attributes(
+            config_cache.ruleset_matcher.labels_of_service(hostname, description), "LABEL"
+        )
     )
     attrs.update(
         _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description), "LABELSOURCE"
+            config_cache.ruleset_matcher.label_sources_of_service(hostname, description),
+            "LABELSOURCE",
         )
     )
     return attrs
@@ -750,7 +766,7 @@ def _extra_service_attributes(
     attrs.update(config_cache.extra_attributes_of_service(hostname, description))
 
     # Add explicit custom_variables
-    for varname, value in config_cache.get_explicit_service_custom_variables(
+    for varname, value in ConfigCache.get_explicit_service_custom_variables(
         hostname, description
     ).items():
         attrs["_%s" % varname.upper()] = value
@@ -810,7 +826,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = ip_address_of(host_config, socket.AF_INET)
+        v4address = ip_address_of(hostname, host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -818,7 +834,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = ip_address_of(host_config, socket.AF_INET6)
+        v6address = ip_address_of(hostname, host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -873,7 +889,7 @@ def get_cluster_attributes(
         family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, family)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -884,7 +900,7 @@ def get_cluster_attributes(
         family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, family)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -900,34 +916,35 @@ def get_cluster_attributes(
 
 def get_cluster_nodes_for_config(
     config_cache: ConfigCache,
+    host_name: HostName,
     host_config: HostConfig,
 ) -> List[HostName]:
-
-    if host_config.nodes is None:
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
         return []
 
-    nodes = host_config.nodes[:]
-    _verify_cluster_address_family(nodes, config_cache, host_config)
-    _verify_cluster_datasource(nodes, config_cache, host_config)
+    _verify_cluster_address_family(host_name, nodes, config_cache, host_config)
+    _verify_cluster_datasource(host_name, nodes, config_cache, host_config)
+    nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
             warning(
                 "Node '%s' of cluster '%s' is not a monitored host in this site."
-                % (node, host_config.hostname)
+                % (node, host_name)
             )
             nodes.remove(node)
     return nodes
 
 
 def _verify_cluster_address_family(
-    nodes: List[HostName],
+    host_name: HostName,
+    nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> None:
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
-
     address_families = [
-        "%s: %s" % (host_config.hostname, cluster_host_family),
+        "%s: %s" % (host_name, cluster_host_family),
     ]
 
     address_family = cluster_host_family
@@ -944,42 +961,45 @@ def _verify_cluster_address_family(
     if mixed:
         warning(
             "Cluster '%s' has different primary address families: %s"
-            % (host_config.hostname, ", ".join(address_families))
+            % (host_name, ", ".join(address_families))
         )
 
 
 def _verify_cluster_datasource(
-    nodes: List[HostName],
+    host_name: HostName,
+    nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> None:
     cluster_tg = host_config.tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
-
     for nodename in nodes:
         node_tg = config_cache.get_host_config(nodename).tag_groups
         node_agent_ds = node_tg.get("agent")
         node_snmp_ds = node_tg.get("snmp_ds")
-        warn_text = "Cluster '%s' has different datasources as its node" % host_config.hostname
+        warn_text = "Cluster '%s' has different datasources as its node" % host_name
         if node_agent_ds != cluster_agent_ds:
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_agent_ds, node_agent_ds))
         if node_snmp_ds != cluster_snmp_ds:
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: HostConfig, family: socket.AddressFamily) -> Optional[str]:
+def ip_address_of(
+    host_name: HostName, host_config: HostConfig, family: socket.AddressFamily
+) -> Optional[str]:
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
-        if host_config.is_cluster:
+        config_cache = config.get_config_cache()
+        if config_cache.is_cluster(host_name):
             return ""
 
-        _failed_ip_lookups.append(host_config.hostname)
+        _failed_ip_lookups.append(host_name)
         if not _ignore_ip_lookup_failures:
             warning(
                 "Cannot lookup IP address of '%s' (%s). "
-                "The host will not be monitored correctly." % (host_config.hostname, e)
+                "The host will not be monitored correctly." % (host_name, e)
             )
         return ip_lookup.fallback_ip_for(family)
 
@@ -1041,17 +1061,15 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
 
 def translate_ds_program_source_cmdline(
     template: str,
+    host_name: HostName,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
 ) -> str:
     def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
         config_cache = config.get_config_cache()
-        attrs = get_host_attributes(host_config.hostname, config_cache)
-        if host_config.is_cluster:
-            parents_list = get_cluster_nodes_for_config(
-                config_cache,
-                host_config,
-            )
+        attrs = get_host_attributes(host_name, config_cache)
+        if config_cache.is_cluster(host_name):
+            parents_list = get_cluster_nodes_for_config(config_cache, host_name, host_config)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
             attrs.update(
                 get_cluster_attributes(
@@ -1061,12 +1079,12 @@ def translate_ds_program_source_cmdline(
                 )
             )
 
-        macros = get_host_macros_from_attributes(host_config.hostname, attrs)
+        macros = get_host_macros_from_attributes(host_name, attrs)
         return replace_macros(cmd, macros)
 
     def _translate_legacy_macros(
         cmd: str,
-        hostname: HostName,
+        host_name: HostName,
         ipaddress: Optional[HostAddress],
     ) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
@@ -1074,11 +1092,11 @@ def translate_ds_program_source_cmdline(
             cmd,
             {
                 "<IP>": ipaddress or "",
-                "<HOST>": hostname,
+                "<HOST>": host_name,
             },
         )
 
     return _translate_host_macros(
-        _translate_legacy_macros(template, host_config.hostname, ipaddress),
+        _translate_legacy_macros(template, host_name, ipaddress),
         host_config,
     )

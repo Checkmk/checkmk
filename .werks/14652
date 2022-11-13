@@ -1,0 +1,38 @@
+Title: Real-time checks: Simplify encryption setup
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1666897947
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This Werk is incompatible for users of the <i>real-time check (RTC)</i> feature.
+
+We incompatibly change the way the encryption for RTC is configured.
+Since we cannot guarantee a compatible migration in all cases, we play it safe:
+All rulesets of the rule <i>"Real-time checks"</i> are extended by a randomly generated secret, used for (and enabling) encryption.
+Users have to reconfigure the rules to get the old behavior (or deploy the agents to use the created password).
+
+<b>In detail:</b>
+
+The setup of the RTC encryption had become confusing over time.
+
+We now radically simplify it.
+The setup is exclusively done via a new configuration option <i>"Encryption"</i>, added to the ruleset <i>"Real-time checks"</i> (formally known as <i>"Send data for real-time checks"</i>).
+
+LI: The Checkmk agent for Linux encrypts real-time data if and only if the parameter <tt>RTC_SECRET</tt> is set (not empty) in <tt>/etc/check_mk/real_time_checks.cfg</tt>.
+LI: The Checkmk site expects encrypted data if and only if a pre-shared secret is configured via the ruleset <i>"Real-time checks"</i>.
+LI: If the site expects encrypted data, unencrypted data is discarded (and vice versa).
+
+For users of the Agent Bakery the configuration of the ruleset is sufficient.
+The configuration of the agent is taken care of by the bakery.
+However, even if you do not use the agent bakery, you still have to set up the rule, such that the site knows which secret to use for decryption.
+
+All other encryption settings (distributed across the rules <i>"Encryption (Linux, Windows)"</i> and <i>"Enable handling of Real-Time Checks"</i>) have no effect on the RTC encryption anymore.
+
+Unfortunately, we can't make this change compatible via automatic configuration update.
+Since we do not want to make users send unencrypted data by accident, we populate the encryption setting for <b>all existing rules</b> with a random value.
+To make the RTC work again either update the baked agents, or adapt the configured rules to reflect the behavior of the deployed agent.
+

@@ -66,7 +66,7 @@ def test_registered_modules() -> None:
             "alert_handlers",
             "dcd_connections",
             "influxdb_connections",
-            "license_usage",
+            "licensing",
             "mkps",
         ]
 

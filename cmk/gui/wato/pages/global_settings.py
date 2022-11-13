@@ -433,9 +433,11 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         dropdowns = []
 
         if cmk_version.is_managed_edition():
-            import cmk.gui.cme.plugins.wato.managed  # pylint: disable=no-name-in-module,import-outside-toplevel
+            import cmk.gui.cme.plugins.wato.cme_global_settings  # pylint: disable=no-name-in-module,import-outside-toplevel
 
-            dropdowns.append(cmk.gui.cme.plugins.wato.managed.cme_global_settings_dropdown())
+            dropdowns.append(
+                cmk.gui.cme.plugins.wato.cme_global_settings.cme_global_settings_dropdown()
+            )
 
         dropdowns.append(
             PageMenuDropdown(

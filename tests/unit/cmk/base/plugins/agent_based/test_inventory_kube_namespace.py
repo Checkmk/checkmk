@@ -9,7 +9,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_namespace import inventory_kube_namespace
-from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo
+from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo, NamespaceName
 
 from .utils_inventory import sort_inventory_result
 
@@ -19,7 +19,7 @@ from .utils_inventory import sort_inventory_result
     [
         pytest.param(
             NamespaceInfo(
-                name="Liam",  # first result when googling: 'best names'
+                name=NamespaceName("Liam"),  # first result when googling: 'best names'
                 labels={},
                 annotations={},
                 creation_timestamp=None,

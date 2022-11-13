@@ -6,8 +6,8 @@
 #include <VersionHelpers.h>
 
 #include <filesystem>
+#include <fstream>
 #include <iosfwd>
-#include <iostream>
 #include <ranges>
 
 #include "cfg.h"
@@ -16,6 +16,7 @@
 #include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "read_file.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -25,28 +26,27 @@ using namespace std::string_literals;
 namespace cma::ac {
 
 namespace {
-const std::vector<Modus> start_controller_moduses{Modus::service,
-                                                  Modus::integration};
+const std::vector g_start_controller_moduses{Modus::service,
+                                             Modus::integration};
 
 bool AllowUseController(Modus modus) {
-    return rs::find(start_controller_moduses, modus) !=
-           start_controller_moduses.end();
+    return rs::find(g_start_controller_moduses, modus) !=
+           g_start_controller_moduses.end();
 }
-const std::vector<Modus> use_special_port_moduses{Modus::app,
-                                                  Modus::integration};
+const std::vector g_use_special_port_moduses{Modus::app, Modus::integration};
 
 bool UseSpecialPort(Modus modus) {
-    return rs::find(use_special_port_moduses, modus) !=
-           use_special_port_moduses.end();
+    return rs::find(g_use_special_port_moduses, modus) !=
+           g_use_special_port_moduses.end();
 }
 }  // namespace
 
 fs::path LegacyPullFile() {
-    return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
+    return fs::path{cfg::GetUserDir()} / kLegacyPullFile;
 }
 
 fs::path ControllerFlagFile() {
-    return fs::path{cfg::GetUserDir()} / ac::kControllerFlagFile;
+    return fs::path{cfg::GetUserDir()} / kControllerFlagFile;
 }
 
 fs::path TomlConfigFile() {
@@ -102,7 +102,7 @@ YAML::Node GetControllerNode() {
 }
 
 uint16_t GetPortFromString(const std::string &str) {
-    auto table = tools::SplitString(str, ":");
+    const auto table = tools::SplitString(str, ":");
     if (table.size() != 2) {
         return 0;
     }
@@ -133,7 +133,7 @@ std::string FormatAddressFor(AddrType ff, std::string_view addr) {
 }
 
 std::string GetConfiguredAgentChannel(Modus modus) {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
@@ -157,7 +157,7 @@ std::string GetConfiguredAgentChannel(Modus modus) {
 }
 
 bool GetConfiguredForceLegacy() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerForceLegacy,
                        cfg::defaults::kControllerForceLegacy);
 }
@@ -169,26 +169,26 @@ uint16_t GetConfiguredAgentChannelPort(Modus modus) {
 }
 
 bool GetConfiguredLocalOnly() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerLocalOnly,
                        cfg::defaults::kControllerLocalOnly);
 }
 
 bool GetConfiguredAllowElevated() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerAllowElevated,
                        cfg::defaults::kControllerAllowElevated);
 }
 
 bool IsConfiguredEmergencyOnCrash() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerOnCrash,
                        std::string{cfg::defaults::kControllerOnCrashDefault}) ==
            cfg::values::kControllerOnCrashEmergency;
 }
 
 bool GetConfiguredCheck() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerCheck,
                        cfg::defaults::kControllerCheck);
 }
@@ -206,8 +206,9 @@ bool DeleteControllerInBin() {
 }
 
 bool IsRunController(const YAML::Node &node) {
-    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
-                                        std::string{cfg::vars::kController});
+    const auto controller =
+        cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
+                          std::string{cfg::vars::kController});
     return cfg::GetVal(controller, cfg::vars::kControllerRun, false);
 }
 
@@ -233,8 +234,8 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         "# lose your changes next time when you update the agent.\n\n"};
     auto port =
         cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
-    auto pull_port = fmt::format("pull_port = {}\n", port);
-    auto only_from =
+    const auto pull_port = fmt::format("pull_port = {}\n", port);
+    const auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     std::string allowed_ip;
     if (!only_from.empty()) {
@@ -247,9 +248,19 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         allowed_ip.pop_back();
         allowed_ip += "]\n";
     }
+    auto controller_config = GetControllerNode();
+    auto detect_proxy =
+        fmt::format("{} = {}\n", cfg::vars::kControllerDetectProxy,
+                    cfg::GetVal(controller_config,
+                                cfg::vars::kControllerDetectProxy, false));
+    auto valid_api_cert =
+        fmt::format("{} = {}\n", cfg::vars::kControllerValidApiCert,
+                    cfg::GetVal(controller_config,
+                                cfg::vars::kControllerValidApiCert, false));
     try {
         std::ofstream ofs(toml_file);
-        ofs << text << pull_port << allowed_ip;
+        ofs << text << pull_port << allowed_ip << detect_proxy
+            << valid_api_cert;
     } catch (const std::exception &e) {
         XLOG::l("Failed to create TOML config with exception {}", e.what());
         return false;
@@ -263,7 +274,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     auto agent_channel = GetConfiguredAgentChannel(GetModus());
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //
+           wtools::ConvertToUTF16(fmt::format(" -vv {} {} {}",   //
                                               kCmdLineAsDaemon,  // daemon
                                               kCmdLineChannel, agent_channel));
 }
@@ -289,12 +300,12 @@ std::optional<uint32_t> StartAgentController() {
         return {};
     }
 
-    ac::CreateTomlConfig(ac::TomlConfigFile());
+    CreateTomlConfig(TomlConfigFile());
 
     wtools::AppRunner ar;
     if (GetModus() == Modus::integration) {
-        auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
-        if (env_value.empty()) {
+        if (auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
+            env_value.empty()) {
             XLOG::d.i("Set DEBUG_HOME_DIR to '{}'",
                       wtools::ToUtf8(cfg::GetUserDir()));
             tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
@@ -304,7 +315,7 @@ std::optional<uint32_t> StartAgentController() {
     }
     const auto cmdline = BuildCommandLine(controller_name);
 
-    if (auto proc_id = ar.goExecAsDetached(cmdline); proc_id != 0) {
+    if (auto proc_id = ar.goExecAsController(cmdline); proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]",
                   wtools::ToUtf8(cmdline), proc_id);
         return proc_id;
@@ -315,8 +326,7 @@ std::optional<uint32_t> StartAgentController() {
 
 // TODO(sk): make public API and replace all Trailing/trim with this one
 void TrimRight(std::string &s, std::string_view chars) {
-    const auto end = s.find_last_not_of(chars);
-    if (end != std::string::npos) {
+    if (const auto end = s.find_last_not_of(chars); end != std::string::npos) {
         s.erase(end + 1);
     }
 }
@@ -367,26 +377,25 @@ bool KillAgentController() {
         std::this_thread::sleep_for(200ms);
     }
     std::error_code ec;
-    fs::remove(ac::TomlConfigFile(), ec);
+    fs::remove(TomlConfigFile(), ec);
     return success;
 }
 
 namespace {
 void CreateLegacyFile() {
-    auto file_name = LegacyPullFile();
-    std::ofstream ofs(file_name.u8string());
+    std::ofstream ofs(wtools::ToStr(LegacyPullFile()));
     ofs << "Created by Windows agent";
 }
-const std::string legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
+const std::string g_legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
 
 bool ConditionallyCreateLegacyFile(const fs::path &marker,
                                    std::string_view message) {
     bool created{false};
-    if (!ac::IsControllerFlagFileExists()) {
+    if (!IsControllerFlagFileExists()) {
         CreateLegacyFile();
         created = true;
     }
-    XLOG::l.i(legacy_pull_text, marker, message, created ? "ON" : "OFF");
+    XLOG::l.i(g_legacy_pull_text, marker, message, created ? "ON" : "OFF");
 
     return created;
 }
@@ -417,7 +426,7 @@ bool CreateLegacyModeFile(const fs::path &marker) {
             marker, "is too old, assuming fresh install");
     }
 
-    auto data = tools::ReadFileInString(marker.wstring());
+    const auto data = tools::ReadFileInString(marker.wstring());
     if (!data.has_value()) {
         return ConditionallyCreateLegacyFile(marker,
                                              "is bad, assuming fresh install");
@@ -434,8 +443,7 @@ bool CreateLegacyModeFile(const fs::path &marker) {
 }
 
 void CreateControllerFlagFile() {
-    auto file_name = ControllerFlagFile();
-    std::ofstream ofs(file_name.u8string());
+    std::ofstream ofs(wtools::ToStr(ControllerFlagFile()));
     ofs << "Created by Windows agent";
 }
 
@@ -451,7 +459,7 @@ void CreateArtifacts(const fs::path &marker, bool controller_exists) noexcept {
         return;
     }
     if (GetConfiguredForceLegacy()) {
-        XLOG::l.i(legacy_pull_text, marker,
+        XLOG::l.i(g_legacy_pull_text, marker,
                   " is ignored, configured to always create file", "ON");
         CreateLegacyFile();
     } else if (!IsControllerFlagFileExists()) {

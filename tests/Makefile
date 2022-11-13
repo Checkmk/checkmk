@@ -8,7 +8,6 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-CYCLES_THRESHOLD := 14
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
@@ -58,6 +57,7 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
+BROWSER_ENGINES = "chromium" "firefox"
 
 .PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -202,8 +202,10 @@ prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
 prepare-playwright:
-	../scripts/run-pipenv run playwright install-deps chromium
-	../scripts/run-pipenv run playwright install chromium
+	@for browser_engine in $(BROWSER_ENGINES); do \
+		../scripts/run-pipenv run playwright install-deps $$browser_engine; \
+		../scripts/run-pipenv run playwright install $$browser_engine; \
+	done
 
 test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
@@ -324,7 +326,7 @@ test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files sync-legacy-checks
-	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+	cd .. ; scripts/run-mypy --no-incremental $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -353,9 +355,7 @@ test-cycles:
 		--packages cmk enterprise managed plus \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \
-		--verbose 2>&1 | tee .py-import-cycles.txt || true
-	(cat .py-import-cycles.txt && rm .py-import-cycles.txt) \
-	| perl -ne '/Found (\d+)/ && exit ($$1 > $(CYCLES_THRESHOLD))'
+		--verbose
 
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
@@ -430,10 +430,10 @@ test-iwyu-docker:
 	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-unit-livestatus:
-	cd ../livestatus/src && ./.f12
+	cd ../livestatus/src/test && ./.f12
 
 test-unit-core:
-	cd ../enterprise/core/src && ./.f12
+	cd ../enterprise/core/src/test && ./.f12
 
 test-cargo-check:
 	$(SCRIPTS)/run-cargo-command-in-projects check --all-targets

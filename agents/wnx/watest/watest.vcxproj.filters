@@ -70,9 +70,6 @@
     <ClCompile Include="test-player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test-player-cmdline.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test-plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

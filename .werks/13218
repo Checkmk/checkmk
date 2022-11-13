@@ -10,7 +10,7 @@ Version: 2.1.0b1
 
 A clustered service should only have the parameters from
 rules matching the cluster host applied.
-From Checkmk version 1.6.0 to 2.0.0p11 however, the rules
+In Checkmk versions 1.6.0 to 2.0.0p11 however, the rules
 configured for one certain node where applied as well,
 with the rules matching the cluster taking precedence.
 

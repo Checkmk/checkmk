@@ -12,7 +12,7 @@ from typing import Literal
 
 from livestatus import LivestatusRow, lqencode, MKLivestatusNotFoundError, SiteId
 
-from cmk.utils.type_defs import HostName, Tuple
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
@@ -29,10 +29,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.sites import live, only_sites
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 
 @cmk.gui.pages.page_registry.register_page("robotmk")
@@ -204,7 +204,7 @@ def robotmk_download_page() -> None:
     site_id, host_name, service_description = _get_mandatory_request_vars()
     report_type: str = request.get_str_input_mandatory("report_type")
 
-    filename = "Robot_Framework_log_%s_%s_%s_%s.tar.gz" % (
+    filename = "Robot_Framework_log_{}_{}_{}_{}.tar.gz".format(
         urlencode(site_id),
         urlencode(host_name),
         urlencode(service_description),
@@ -231,7 +231,7 @@ def _pack_html_content(name: str, html_content: bytes) -> bytes:
     return buf.getvalue()
 
 
-def _get_mandatory_request_vars() -> Tuple[SiteId, HostName, str]:
+def _get_mandatory_request_vars() -> tuple[SiteId, HostName, str]:
     site_id: SiteId = SiteId(request.get_str_input_mandatory("site"))
     host_name: HostName = request.get_str_input_mandatory("host")
     service_description: str = request.get_str_input_mandatory("service")

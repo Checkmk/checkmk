@@ -7,7 +7,6 @@
 import os
 import sys
 import traceback
-from typing import Optional
 
 import cmk.utils.crash_reporting as crash_reporting
 import cmk.utils.debug
@@ -19,8 +18,8 @@ CrashReportStore = crash_reporting.CrashReportStore
 
 
 def create_fetcher_crash_dump(
-    serial: Optional[str],
-    host: Optional[HostName],
+    serial: str | None,
+    host: HostName | None,
 ) -> str:
     """Create a crash dump from an exception occured during fetcher execution
 
@@ -52,8 +51,8 @@ class CMKFetcherCrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def from_exception_and_context(
         cls,
-        serial: Optional[str],
-        host: Optional[HostName],
+        serial: str | None,
+        host: HostName | None,
     ) -> crash_reporting.ABCCrashReport:
         return super().from_exception(
             details={

@@ -5,6 +5,7 @@
 // library for uploading packages
 package lib
 
+hashfile_extension = ".hash"
 def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
@@ -70,6 +71,7 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
         ||======================================================================
         """.stripMargin());
 
+    create_hash(archive_base + "/" + cmk_version + "/" + filename)
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
         sh("""
             rsync -av --relative \
@@ -77,15 +79,18 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
                 -e "ssh -o StrictHostKeyChecking=no \
                 -i ${RELEASE_KEY} -p ${upload_port}" \
                 ${archive_base}/./${cmk_version}/${filename} \
+                ${archive_base}/./${cmk_version}/${filename}${hashfile_extension} \
                 ${upload_dest}
         """);
     }
 }
 
-def create_hashes(ARCHIVE_DIR) {
-    stage("Create file hashes") {
-        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
-        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
+def create_hash(FILE_PATH) {
+    stage("Create file hash") {
+        sh("""
+            cd \$(dirname ${FILE_PATH});
+            sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
+        """);
     }
 }
 

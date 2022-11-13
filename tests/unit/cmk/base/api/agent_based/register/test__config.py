@@ -5,13 +5,15 @@
 
 # pylint: disable=protected-access
 
+from pytest import MonkeyPatch
+
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
-def test_get_registered_check_plugins(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:
     test_plugin = CheckPlugin(
         CheckPluginName("check_unit_test"),
         [],

@@ -4,7 +4,6 @@
 #include "encryption.h"
 
 #include <string>
-#include <string_view>
 #include <tuple>
 
 #include "cfg.h"
@@ -103,9 +102,13 @@ std::tuple<bool, size_t> Commander::decode(void *in_out, size_t size,
     return {true, input_size};
 }
 
-static bool IsAesAlgorithm(Algorithm algorithm) {
-    return (algorithm == CALG_AES_128) || (algorithm == CALG_AES_192) ||
-           (algorithm == CALG_AES_256);
+DWORD ToDword(Algorithm algorithm) noexcept {
+    return static_cast<DWORD>(algorithm);
+}
+
+bool IsAesAlgorithm(Algorithm algorithm) noexcept {
+    const auto a = ToDword(algorithm);
+    return a == CALG_AES_128 || a == CALG_AES_192 || a == CALG_AES_256;
 }
 
 // called from ctor
@@ -115,7 +118,7 @@ HCRYPTPROV Commander::obtainContext() const {
     const auto *provider =
         IsAesAlgorithm(algorithm_) ? MS_ENH_RSA_AES_PROV : MS_DEF_PROV;
 
-    auto provider_type =
+    const auto provider_type =
         IsAesAlgorithm(algorithm_) ? PROV_RSA_AES : PROV_RSA_FULL;
 
     if (::CryptAcquireContext(&handle, nullptr, provider, provider_type,
@@ -166,7 +169,7 @@ HCRYPTKEY Commander::generateKey(Length key_length) const {
         return 0;
     }
     if (FALSE ==
-        ::CryptGenKey(crypt_provider_, algorithm_,
+        ::CryptGenKey(crypt_provider_, ToDword(algorithm_),
                       static_cast<unsigned>(key_length) | CRYPT_EXPORTABLE,
                       &hkey)) {
         XLOG::l.crit(XLOG_FLINE + "Cannot generate key, error is [{}]",
@@ -189,21 +192,20 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     hdr.bType = PLAINTEXTKEYBLOB;
     hdr.bVersion = CUR_BLOB_VERSION;
     hdr.reserved = 0;
-    hdr.aiKeyAlg = algorithm_;
+    hdr.aiKeyAlg = ToDword(algorithm_);
 
     auto *insert_ptr = reinterpret_cast<BYTE *>(&hdr);
-    key_blob.insert(key_blob.end(), insert_ptr,
-                    insert_ptr + sizeof(BLOBHEADER));
+    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof BLOBHEADER);
 
     // insert size field
     insert_ptr = reinterpret_cast<BYTE *>(&key_size);
-    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof(DWORD));
+    key_blob.insert(key_blob.end(), insert_ptr, insert_ptr + sizeof DWORD);
 
     // insert the actual key
     key_blob.insert(key_blob.end(), key, key + key_size);
 
     HCRYPTKEY crypt_key = 0;
-    if (::CryptImportKey(crypt_provider_, &key_blob[0],
+    if (::CryptImportKey(crypt_provider_, key_blob.data(),
                          static_cast<DWORD>(key_blob.size()), 0, 0,
                          &crypt_key) == FALSE) {
         XLOG::l.crit(XLOG_FLINE + " Cannot import key, error is [{}]",
@@ -227,14 +229,14 @@ size_t Commander::keySize(ALG_ID algorithm) {
 std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
     HCRYPTHASH hash = 0;
 
-    if (::CryptCreateHash(crypt_provider, Algorithm::kHash, 0, 0, &hash) ==
-        FALSE) {
+    if (::CryptCreateHash(crypt_provider, ToDword(Algorithm::kHash), 0, 0,
+                          &hash) == FALSE) {
         XLOG::l("Can't create hash [{}]", GetLastError());
         return {};
     }
     DWORD hash_size = 0;
 
-    if (DWORD sizeof_hashsize = sizeof(DWORD);
+    if (DWORD sizeof_hashsize = sizeof DWORD;
         ::CryptGetHashParam(hash, HP_HASHSIZE,
                             reinterpret_cast<BYTE *>(&hash_size),
                             &sizeof_hashsize, 0) == FALSE) {
@@ -246,7 +248,7 @@ std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider) {
 }
 
 template <typename T>
-auto HashData(HCRYPTHASH Hash, T &Value) {
+auto HashData(HCRYPTHASH Hash, const T &Value) {
     return ::CryptHashData(Hash, reinterpret_cast<const BYTE *>(&Value[0]),
                            static_cast<DWORD>(Value.size()), 0);
 }
@@ -258,7 +260,7 @@ auto GetHashData(HCRYPTHASH Hash, T &Value) {
 }
 
 HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
-    HCRYPTHASH hash_out = 0;
+    HCRYPTHASH hash_out;
     if (::CryptDuplicateHash(hash, nullptr, 0, &hash_out) == 0) {
         return 0;
     }
@@ -268,7 +270,7 @@ HCRYPTHASH DuplicateHash(HCRYPTHASH hash) {
 std::optional<uint32_t> BlockSize(HCRYPTKEY key) {
     DWORD block_length = 0;
 
-    if (DWORD param_length = sizeof(block_length);
+    if (DWORD param_length = sizeof block_length;
         ::CryptGetKeyParam(key, KP_BLOCKLEN,
                            reinterpret_cast<BYTE *>(&block_length),
                            &param_length, 0) == FALSE) {
@@ -284,6 +286,26 @@ std::optional<uint32_t> Commander::blockSize() const {
     return BlockSize(key_);
 }
 
+namespace {
+bool HashBuffer(ByteVector &buffer, HCRYPTHASH base_hash, int iterations) {
+    for (int i = 1; i < iterations; ++i) {
+        if (auto hash_inner = DuplicateHash(base_hash); hash_inner != 0) {
+            ON_OUT_OF_SCOPE(::CryptDestroyHash(hash_inner));
+
+            if (HashData(hash_inner, buffer) == FALSE) {
+                return false;
+            }
+            if (GetHashData(hash_inner, buffer) == FALSE) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+}  // namespace
+
 // Stupid function from the LWA
 HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
                                       Length key_length, int iterations) const {
@@ -292,7 +314,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
 
     auto [base_hash, hash_size] = GetHash(crypt_provider_);
 
-    auto to_kill_base_hash = base_hash;
+    const auto to_kill_base_hash = base_hash;
     ON_OUT_OF_SCOPE(
         if (to_kill_base_hash)::CryptDestroyHash(to_kill_base_hash););
     if (hash_size == 0) {
@@ -307,14 +329,14 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
-    auto key_size = (key_length == Length::kDefault)
-                        ? keySize(algorithm_) / kBlockALign
-                        : static_cast<size_t>(key_length);
+    const auto key_size = key_length == Length::kDefault
+                              ? keySize(ToDword(algorithm_)) / kBlockALign
+                              : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
     std::vector<BYTE> iv;
 
-    while ((key_offset < key.size()) || (iv_offset < iv.size())) {
+    while (key_offset < key.size() || iv_offset < iv.size()) {
         HCRYPTHASH hash = DuplicateHash(base_hash);
         if (hash == 0) {
             return 0;
@@ -340,34 +362,22 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
             return 0;
         }
 
-        for (int i = 1; i < iterations; ++i) {
-            auto hash_inner = DuplicateHash(base_hash);
-            if (hash_inner == FALSE) {
-                return 0;
-            }
-
-            ON_OUT_OF_SCOPE(::CryptDestroyHash(hash_inner));
-
-            if (HashData(hash_inner, buffer) == FALSE) {
-                return 0;
-            }
-            if (GetHashData(hash_inner, buffer) == FALSE) {
-                return 0;
-            }
+        if (!HashBuffer(buffer, base_hash, iterations)) {
+            return 0;
         }
 
         size_t usable_bytes = buffer.size();
-        size_t key_bytes =
+        const size_t key_bytes =
             std::min<size_t>(usable_bytes, key.size() - key_offset);
 
         if (key_bytes > 0) {
-            memcpy(&key[key_offset], &buffer[0], key_bytes);
+            memcpy(&key[key_offset], buffer.data(), key_bytes);
             key_offset += key_bytes;
             if (key_offset == key.size()) {
                 // apply key. we do this right away so that we can query the
                 // necessary
                 // size for the iv and don't need own logic to deduce it.
-                hkey = importKey(&key[0], static_cast<DWORD>(key.size()));
+                hkey = importKey(key.data(), static_cast<DWORD>(key.size()));
                 auto block_size = BlockSize(hkey);
                 if (!block_size) {
                     ::CryptDestroyKey(hkey);
@@ -378,15 +388,15 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
         }
 
         if (usable_bytes > key_bytes) {
-            auto iv_bytes = std::min<size_t>(usable_bytes - key_bytes,
-                                             iv.size() - iv_offset);
+            const auto iv_bytes = std::min<size_t>(usable_bytes - key_bytes,
+                                                   iv.size() - iv_offset);
             memcpy(&iv[iv_offset], &buffer[key_bytes], iv_bytes);
             iv_offset += iv_bytes;
         }
     }
 
     // apply iv
-    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0) == FALSE) {
+    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, iv.data(), 0) == FALSE) {
         ::CryptDestroyKey(hkey);
         XLOG::l("Failure applying key [{}]", GetLastError());
         return 0;
@@ -416,14 +426,14 @@ std::optional<cma::ByteVector> Commander::getKey() const {
 
     std::vector<BYTE> result;
     result.resize(key_size);
-    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size) ==
-        FALSE) {
+    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, result.data(),
+                         &key_size) == FALSE) {
         XLOG::l("Failed to export key, error [{}]", GetLastError());
         return {};
     }
 
     // return only the key, not the meta info
-    return std::vector<BYTE>(result.begin() + sizeof(BLOBHEADER), result.end());
+    return std::vector(result.begin() + sizeof BLOBHEADER, result.end());
 }
 
 bool Commander::randomizeBuffer(void *buffer, size_t buffer_size) const {
@@ -462,9 +472,9 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const {
         return {};
     }
 
-    auto block_size = blockSize().value();
+    const auto block_size = blockSize().value();
 
-    return block_size - (data_size % block_size);
+    return block_size - data_size % block_size;
 }
 
 }  // namespace cma::encrypt

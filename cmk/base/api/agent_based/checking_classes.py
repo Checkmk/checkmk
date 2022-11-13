@@ -5,7 +5,7 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Tuple, Union
+from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Sequence, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
@@ -37,7 +37,7 @@ class Service(
         [
             ("item", Optional[str]),
             ("parameters", ParametersTypeAlias),
-            ("labels", List[ServiceLabel]),
+            ("labels", Sequence[ServiceLabel]),
         ],
     )
 ):
@@ -62,7 +62,7 @@ class Service(
         *,
         item: Optional[str] = None,
         parameters: Optional[ParametersTypeAlias] = None,
-        labels: Optional[List[ServiceLabel]] = None,
+        labels: Optional[Sequence[ServiceLabel]] = None,
     ) -> "Service":
         return super().__new__(
             cls,
@@ -88,7 +88,7 @@ class Service(
         raise TypeError("'parameters' must be dict or None, got %r" % (parameters,))
 
     @staticmethod
-    def _parse_labels(labels: Optional[List[ServiceLabel]]) -> List[ServiceLabel]:
+    def _parse_labels(labels: Optional[Sequence[ServiceLabel]]) -> Sequence[ServiceLabel]:
         if not labels:
             return []
         if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):

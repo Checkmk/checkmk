@@ -113,10 +113,9 @@ public:
     bool addGroup(ContainerT &list, const char *key, const char *value) {
         if (list.empty()) {
             return false;
-        } else {
-            _function(*(_insert_pos - 1), key, value);
-            return true;
         }
+        _function(*(_insert_pos - 1), key, value);
+        return true;
     }
 
 private:

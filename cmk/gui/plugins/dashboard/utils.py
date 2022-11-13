@@ -41,7 +41,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.hooks import request_memoize
@@ -61,10 +61,11 @@ from cmk.gui.type_defs import (
     Icon,
     LinkFromSpec,
     PainterSpec,
+    RoleName,
     Row,
     SingleInfos,
     SorterSpec,
-    TypedVisual,
+    Visual,
     VisualContext,
 )
 from cmk.gui.utils.html import HTML
@@ -89,7 +90,7 @@ from cmk.gui.view_store import get_all_views, get_permitted_views, internal_view
 DashboardName = str
 
 
-class DashboardConfig(TypedVisual):
+class DashboardConfig(Visual):
     mtime: int
     dashlets: list[DashletConfig]
     show_title: bool
@@ -334,8 +335,8 @@ class Dashlet(abc.ABC, Generic[T]):
         return None
 
     @classmethod
-    def allowed_roles(cls) -> List[str]:
-        return builtin_role_ids
+    def allowed_roles(cls) -> list[RoleName]:
+        return default_authorized_builtin_role_ids
 
     @classmethod
     def add_url(cls) -> str:
@@ -565,11 +566,13 @@ def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[s
         yield from single_info_to_macros.get(single_info, [])
 
 
-def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
+def _title_help_text_for_macros(
+    single_infos: SingleInfos, additional_title_macros: Iterable[str]
+) -> str:
     available_macros = chain(
         ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
-        _get_title_macros_from_single_infos(dashlet_type.single_infos()),
-        dashlet_type.get_additional_title_macros(),
+        _get_title_macros_from_single_infos(single_infos),
+        additional_title_macros,
     )
     macros_as_list = (
         f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
@@ -638,7 +641,10 @@ def dashlet_vs_general_settings(
                                 "displays the title of the view. If you like to use any other title, set it "
                                 "here."
                             ),
-                            _title_help_text_for_macros(dashlet_type),
+                            _title_help_text_for_macros(
+                                dashlet_type.single_infos(),
+                                dashlet_type.get_additional_title_macros(),
+                            ),
                         )
                     ),
                     size=75,

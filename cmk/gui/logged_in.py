@@ -11,8 +11,8 @@ import errno
 import logging
 import os
 import time
-from collections.abc import Container
-from typing import Any, ContextManager, Final, Iterator
+from collections.abc import Container, Iterator
+from typing import Any, ContextManager, Final
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -23,25 +23,13 @@ from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui import hooks
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
-
-# TODO(ml): Any is but a stop gab.  The type should actually be
-#           `cmk.gui.plugins.openapi.restful_objects.Endpoint`.
-#           However, this pulls the REST API into our GUI code and
-#           is responsible for a huge layering violation resulting
-#           in 100+ cyclic dependencies.
-#
-#           Also note that the Endpoint is only used in a branch of
-#           the `may()` method.  The proper solution would be to keep
-#           the code under `is_rest_api_call` in the openapi plugin.
-#
-endpoint: Any = request_local_attr("endpoint")
 
 _logger = logging.getLogger(__name__)
 
@@ -60,12 +48,10 @@ class LoggedInUser:
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
         self.id = UserId(user_id) if user_id else None
-        self.transactions = TransactionManager(request, self)
+        self.transactions = TransactionManager(self.transids, self.save_transids)
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
-        baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
-        self.baserole_id = _most_permissive_baserole_id(baserole_ids)
         self._attributes = self._load_attributes(self.id, self.role_ids)
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)
@@ -122,11 +108,11 @@ class LoggedInUser:
             pass
 
     @property
-    def language(self) -> str | None:
+    def language(self) -> str:
         return self.get_attribute("language", active_config.default_language)
 
     @language.setter
-    def language(self, value: str | None) -> None:
+    def language(self, value: str) -> None:
         self._set_attribute("language", value)
 
     def reset_language(self) -> None:
@@ -387,32 +373,7 @@ class LoggedInUser:
         they_may = (pname in self.explicitly_given_permissions) or may_with_roles(
             self.role_ids, pname
         )
-
-        is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
-        if is_rest_api_call and endpoint.track_permissions:
-            # We need to remember this, in oder to later check if the set of required permissions
-            # actually fits the declared permission schema.
-            endpoint.remember_checked_permission(pname)
-            permission_not_declared = (
-                endpoint.permissions_required is not None
-                and pname not in endpoint.permissions_required
-            )
-            if permission_not_declared:
-                _logger.error(
-                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                    endpoint,
-                    pname,
-                )
-
-                if request.environ.get("paste.testing"):
-                    raise PermissionError(
-                        f"Required permissions not declared for this endpoint.\n"
-                        f"Endpoint: {endpoint}\n"
-                        f"Permission: {pname}\n"
-                        f"Used permission: {endpoint._used_permissions}\n"
-                        f"Declared: {endpoint.permissions_required}\n"
-                    )
-
+        hooks.call("permission-checked", pname)
         return they_may
 
     def need_permission(self, pname: str) -> None:
@@ -543,24 +504,6 @@ def _confdir_for_user_id(user_id: UserId | None) -> str | None:
     confdir = cmk.utils.paths.profile_dir / user_id
     store.mkdir(confdir)
     return str(confdir)
-
-
-def _baserole_ids_from_role_ids(role_ids: list[str]) -> list[str]:
-    base_roles = set()
-    for r in role_ids:
-        if r in builtin_role_ids:
-            base_roles.add(r)
-        else:
-            base_roles.add(active_config.roles[r]["basedon"])
-    return list(base_roles)
-
-
-def _most_permissive_baserole_id(baserole_ids: list[str]) -> str:
-    if "admin" in baserole_ids:
-        return "admin"
-    if "user" in baserole_ids:
-        return "user"
-    return "guest"
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:

@@ -27,7 +27,7 @@ from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from hashlib import md5
 from pathlib import Path
-from typing import Any, IO, Literal, NamedTuple, NewType, NoReturn, TypedDict
+from typing import Any, IO, NamedTuple, NoReturn
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
@@ -38,6 +38,8 @@ import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
+from cmk.utils.backup.type_defs import BackupInfo as RawBackupInfo
+from cmk.utils.backup.type_defs import Config, JobConfig, TargetId
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
@@ -77,6 +79,29 @@ class State:
 
     def load(self) -> dict[str, Any]:
         return _load_state(self.path)
+
+
+class ProgressLogger:
+    def __init__(self, state: State):
+        self._state = state
+        self._last_state_update = time.time()
+        self._last_bps: float | None = None
+
+    def update(self, bytes_copied: int) -> None:
+        timedif = time.time() - self._last_state_update
+        if timedif >= 1:
+            this_bps = bytes_copied / timedif
+
+            if self._last_bps is None:
+                bps = this_bps  # initialize the value
+            else:
+                percentile, backlog_sec = 0.50, 10
+                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
+                weight = weight_per_sec**timedif
+                bps = self._last_bps * weight + this_bps * (1 - weight)
+
+            self._state.save(new_attrs={"bytes_per_second": bps})
+            self._last_state_update, self._last_bps = time.time(), bps
 
 
 def _load_state(path: Path) -> dict[str, Any]:
@@ -186,7 +211,7 @@ def _ensure_lock_file(lock_file_path: Path) -> None:
             dir=str(lock_file_path.parent),
             delete=False,
         ) as backup_lock:
-            set_permissions(path=backup_lock.name, gid=grp.getgrnam("omd").gr_gid, mode=0o660)
+            set_permissions(path=Path(backup_lock.name), gid=grp.getgrnam("omd").gr_gid, mode=0o660)
             os.rename(backup_lock.name, lock_file_path)
     except OSError as e:
         raise MKGeneralException(f'Failed to open lock file "{lock_file_path}": {e}')
@@ -233,7 +258,7 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
 
 
 def set_permissions(
-    *, path: str, uid: int | None = None, gid: int | None = None, mode: int | None = None
+    *, path: Path, uid: int | None = None, gid: int | None = None, mode: int | None = None
 ) -> None:
     try:
         os.chown(path, uid if uid is not None else -1, gid if gid is not None else -1)
@@ -265,7 +290,7 @@ def set_permissions(
 
 # TODO: Move to cmklib?
 def makedirs(
-    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     head, tail = os.path.split(path)
     if not tail:
@@ -273,7 +298,7 @@ def makedirs(
 
     if head and tail and not os.path.exists(head):
         try:
-            makedirs(head, user, group, mode)
+            makedirs(Path(head), user, group, mode)
         except OSError as e:
             # be happy if someone already created the path
             if e.errno != errno.EEXIST:
@@ -285,7 +310,7 @@ def makedirs(
 
 # TODO: Move to cmklib?
 def makedir(
-    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     if os.path.exists(path):
         return
@@ -313,18 +338,13 @@ def file_checksum(path: Path) -> str:
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, state: State
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
         self._cipher: CbcMode | None = None
         self._key_ident = key_ident
-
-        self._last_state_update = time.time()
-        self._last_bps: float | None = None
-        self._bytes_copied = 0
         self._next_chunk: bytes | None = None
-        self._state = state
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
@@ -337,17 +357,11 @@ class MKBackupStream:
         if head is not None:
             yield head
 
-        self._next_chunk = None
-
         while True:
             chunk, finished = self._read_chunk()
-            self._bytes_copied += len(chunk)
             yield self._process_chunk(chunk)
-
             if finished and not self._is_alive():
                 break  # end of stream reached
-
-            self._update_state()
 
     def _init_processing(self) -> bytes | None:
         raise NotImplementedError()
@@ -365,22 +379,6 @@ class MKBackupStream:
 
     def _process_chunk(self, chunk: bytes) -> bytes:
         raise NotImplementedError()
-
-    def _update_state(self) -> None:
-        timedif = time.time() - self._last_state_update
-        if timedif >= 1:
-            this_bps = float(self._bytes_copied) / timedif
-
-            if self._last_bps is None:
-                bps = this_bps  # initialize the value
-            else:
-                percentile, backlog_sec = 0.50, 10
-                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec**timedif
-                bps = self._last_bps * weight + this_bps * (1 - weight)
-
-            self._state.save(new_attrs={"bytes_per_second": bps})
-            self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
 
     def _get_key_spec(self, key_id: bytes) -> dict[str, bytes]:
         keys = self._load_backup_keys()
@@ -470,6 +468,7 @@ class BackupStream(MKBackupStream):
 
 class RestoreStream(MKBackupStream):
     def _init_processing(self) -> bytes | None:
+        self._next_chunk = None
         if self._key_ident is None:
             return None
 
@@ -581,61 +580,6 @@ class RestoreStream(MKBackupStream):
         return cipher_rsa.decrypt(encrypted_secret_key)
 
 
-#########################################
-# Schemas to share with CMA Backup tool #
-# DO NOT CHANGE!                        #
-#########################################
-
-TargetId = NewType("TargetId", str)
-
-
-class ScheduleConfig(TypedDict):
-    disabled: bool
-    period: str
-    timeofday: Sequence[tuple[int, int]]
-
-
-class JobConfig(TypedDict):
-    title: str
-    encrypt: str | None
-    target: TargetId
-    compress: bool
-    schedule: ScheduleConfig | None
-    no_history: bool
-    without_sites: bool
-
-
-class LocalTargetParams(TypedDict):
-    path: str
-    is_mountpoint: bool
-
-
-LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
-
-
-class TargetConfig(TypedDict):
-    title: str
-    remote: LocalTargetConfig
-
-
-class Config(TypedDict):
-    targets: dict[str, TargetConfig]
-    jobs: dict[str, JobConfig]
-
-
-class BackupInfo(TypedDict):
-    config: JobConfig
-    files: Sequence[tuple[str, int, str]]
-    finished: float
-    hostname: str
-    job_id: str
-    site_id: str
-    site_version: str
-    size: int
-    type: str
-    backup_id: str | None
-
-
 #########################################################
 # Lock files are shared with cma backup tool            #
 # We want to avoid running two backups at the same time #
@@ -657,42 +601,116 @@ def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Seq
 
 
 @dataclass
+class BackupInfo:
+    config: JobConfig
+    filename: str
+    checksum: str
+    finished: float
+    hostname: str
+    job_id: str
+    site_id: str
+    site_version: str
+    size: int
+    backup_id: str | None
+    type: str = "Check_MK"
+
+
+@dataclass
 class Job:
     config: JobConfig
     local_id: str
     id: str
 
 
-@dataclass(frozen=True)
-class BackupAction:
-    config: Config
-    job: Job
+@dataclass
+class Backup:
+    info: BackupInfo
+    id: str
+    _path: Path
 
-    @property
-    def base_path(self) -> Path:
-        return target_path(self.job.config["target"], self.config) / f"{self.job.id}-incomplete"
-
-    @property
-    def target_id(self) -> str:
-        return self.job.config["target"]
-
-    @property
-    def completed_path(self) -> Path:
-        return target_path(self.job.config["target"], self.config) / f"{self.job.id}-complete"
+    @contextmanager
+    def open(self) -> Iterator[IO[bytes]]:
+        with self._path.open(mode="rb") as fh:
+            yield fh
 
 
-@dataclass(frozen=True)
-class RestoreAction:
-    target_id: TargetId
-    backup_id: str
-    config: Config
+class LocalTarget:
+    def __init__(self, target_id: TargetId, params: Mapping[str, Any]) -> None:
+        self.id = target_id
+        self.path = Path(params["path"])
+        self.is_mountpoint = bool(params["is_mountpoint"])
 
-    @property
-    def base_path(self) -> Path:
-        return target_path(self.target_id, self.config) / self.backup_id
+    def check_ready(self) -> None:
+        if not self.path.exists():
+            raise MKGeneralException(f"Local target path does not exist: {self.path}")
+        if self.is_mountpoint and not os.path.ismount(self.path):
+            raise MKGeneralException(
+                "The backup target path is configured to be a mountpoint, but nothing is mounted."
+            )
+
+    def list_backups(self) -> Iterator[tuple[str, BackupInfo]]:
+        for backup_id in self.path.iterdir():
+            # if backup_id is a directory not owned by the current user
+            # any attempt to get information about files in the folder will
+            # result in a permission error. In that case do not show a backup
+            try:
+                if backup_id.is_dir() and (backup_id / "mkbackup.info").exists():
+                    yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
+            except PermissionError:
+                continue
+
+    def get_backup(self, backup_id: str) -> Backup:
+        backup_path = self.path / backup_id
+        info_path = backup_path / "mkbackup.info"
+        if not backup_path.exists() or not info_path.exists():
+            raise MKGeneralException(
+                f"This backup does not exist (Use 'mkbackup list {self.id}' to "
+                "show a list of available backups)."
+            )
+        info = load_backup_info(info_path)
+        archive_file = backup_path / info.filename
+        verify_backup_file(info, archive_file)
+        return Backup(info, backup_id, archive_file)
+
+    def _working_dir(self, job: Job) -> Path:
+        return self.path / f"{job.id}-incomplete"
+
+    def start_backup(self, job: Job) -> Path:
+        site = current_site_id()
+        working_dir = self._working_dir(job)
+        if working_dir.exists():
+            try:
+                shutil.rmtree(working_dir)
+            except OSError as e:
+                if e.errno == errno.EACCES:
+                    raise MKGeneralException(f"Failed to write the backup directory: {working_dir}")
+                raise
+        path = working_dir / f"site-{site}{archive_suffix(job.config)}"
+        makedirs(path.parent, group="omd", mode=0o775)
+        return path
+
+    def finish_backup(self, info: BackupInfo, job: Job) -> None:
+        save_backup_info(info, self._working_dir(job) / "mkbackup.info")
+        completed_path = self.path / f"{job.id}-complete"
+        if completed_path.exists():
+            log("Cleaning up previously completed backup")
+            shutil.rmtree(completed_path)
+        os.rename(self._working_dir(job), completed_path)
 
 
-Action = BackupAction | RestoreAction
+Target = LocalTarget
+target_classes = {"local": LocalTarget}
+
+
+def load_target(config: Config, target_id: TargetId) -> Target:
+    target_config = config["targets"][target_id]
+    target_type, params = target_config["remote"]
+    try:
+        return target_classes[target_type](target_id, params)
+    except KeyError:
+        raise MKGeneralException(
+            f"Target type, {target_type}, not implemented. Choose one of {target_classes}"
+        )
 
 
 def backup_state(job: Job) -> State:
@@ -724,13 +742,6 @@ def site_config_path() -> Path:
     return Path(os.environ["OMD_ROOT"]) / "etc" / "check_mk" / "backup.mk"
 
 
-# Wenn als root ausgeführt:
-# - System-Konfiguration laden
-# Wenn als Site-User ausgeführt:
-# - TargetIds aus System-Konfiguration laden
-# - Site-Konfiguration laden
-
-
 def load_config() -> Config:
     def load_file(path: Path) -> Any:
         with path.open("r", encoding="utf-8") as f:
@@ -754,52 +765,43 @@ def load_config() -> Config:
     return config
 
 
-# TODO: Duplicate code with htdocs/backup.py
-def load_backup_info(path: str) -> BackupInfo:
+def load_backup_info(path: Path) -> BackupInfo:
     with open(path) as f:
-        info = json.load(f)
-
+        raw_info: RawBackupInfo = json.load(f)
     # Load the backup_id from the second right path component. This is the
     # base directory of the mkbackup.info file. The user might have moved
     # the directory, e.g. for having multiple backups. Allow that.
     # Maybe we need to changed this later when we allow multiple generations
     # of backups.
-    info["backup_id"] = os.path.basename(os.path.dirname(path))
+    filename, _, checksum = raw_info["files"][0]
+    return BackupInfo(
+        config=raw_info["config"],
+        filename=filename,
+        checksum=checksum,
+        finished=raw_info["finished"],
+        hostname=raw_info["hostname"],
+        job_id=raw_info["job_id"],
+        site_id=raw_info["site_id"],
+        site_version=raw_info["site_version"],
+        size=raw_info["size"],
+        backup_id=os.path.basename(os.path.dirname(path)),
+    )
 
-    return info
 
-
-def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
-    with open(backup_info_path(action), "w") as f:
-        json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
-
-
-def create_backup_info(action: BackupAction) -> BackupInfo:
-    files = get_files_for_backup_info(action)
-
-    info: BackupInfo = {
-        "type": "Check_MK",
-        "job_id": action.job.local_id,
-        "config": action.job.config,
-        "hostname": hostname(),
-        "files": files,
-        "finished": time.time(),
-        "size": sum(f[1] for f in files),
-        "site_id": current_site_id(),
-        "site_version": site_version(current_site_id()),
-        "backup_id": None,
+def save_backup_info(info: BackupInfo, path: Path) -> None:
+    raw_info: RawBackupInfo = {
+        "config": info.config,
+        "files": [(info.filename, info.size, info.checksum)],
+        "hostname": info.hostname,
+        "job_id": info.job_id,
+        "site_id": info.site_id,
+        "site_version": info.site_version,
+        "size": info.size,
+        "type": info.type,
+        "finished": info.finished,
     }
-
-    return info
-
-
-def get_files_for_backup_info(action: BackupAction) -> list[tuple[str, int, str]]:
-    backup_path = action.base_path
-    dir_entries: list[str] = os.listdir(backup_path)
-    files = []
-    for f in sorted(dir_entries):
-        files.append((f, os.path.getsize(backup_path / f), file_checksum(backup_path / f)))
-    return files
+    with path.open("w") as f:
+        json.dump(raw_info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
 #   List: Alle Backups auflisten
@@ -886,7 +888,6 @@ modes = {
             "no-verify": Opt(
                 description="Disable verification of the backup files to restore from."
             ),
-            "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
         },
         runner=lambda args, opts, config: mode_restore(args[0], args[1], opts=opts, config=config),
     ),
@@ -918,7 +919,8 @@ modes = {
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     job = load_job(local_job_id, config)
-    action = BackupAction(config, job)
+    target = load_target(config, job.config["target"])
+    target.check_ready()
     state = backup_state(job)
 
     with ExitStack() as stack:
@@ -927,8 +929,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             for lock_file_path in get_needed_lock_files(opts, job.config)
         ]:
             stack.enter_context(cm)
-        target_ident = job.config["target"]
-        verify_target_is_ready(target_ident, config)
 
         init_new_run(state)
         save_next_run(job, state)
@@ -938,20 +938,19 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             state.save({"pid": os.getpid()})
 
         start_logging(state)
-        log(f"--- Starting backup ({job.id} to {target_ident}) ---")
+        log(f"--- Starting backup ({job.id} to {target.id}) ---")
 
         success = False
         try:
-            cleanup_previous_incomplete_backup(action)
-
             state.save(
                 {
                     "state": "running",
                 },
             )
-
-            do_site_backup(action, state)
-            complete_backup(action, state)
+            temp_path = target.start_backup(job)
+            info = do_site_backup(temp_path, job, state)
+            target.finish_backup(info, job)
+            complete_backup(state, info)
             success = True
 
         except MKGeneralException as e:
@@ -976,28 +975,40 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             )
 
 
-def do_site_backup(
-    action: BackupAction,
-    state: State,
-    site: str | None = None,
-    try_stop: bool = True,
-) -> None:  # pylint: disable=too-many-branches
+class InfoCalculator:
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.hash = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+        self.size = 0
+
+    def update(self, chunk: bytes) -> None:
+        self.hash.update(chunk)
+        self.size += len(chunk)
+
+    def info(self, job: Job, site_id: str) -> BackupInfo:
+        return BackupInfo(
+            config=job.config,
+            filename=self.filename,
+            checksum=self.hash.hexdigest(),
+            finished=time.time(),
+            hostname=hostname(),
+            job_id=job.local_id,
+            site_id=site_id,
+            site_version=site_version(site_id),
+            size=self.size,
+            backup_id=None,
+        )
+
+
+def do_site_backup(backup_path: Path, job: Job, state: State) -> BackupInfo:
     cmd = ["omd", "backup"]
-
-    if not action.job.config["compress"]:
+    if not job.config["compress"]:
         cmd.append("--no-compression")
-
-    if action.job.config.get("no_history", False):
+    if job.config.get("no_history", False):
         cmd.append("--no-past")
-
-    site = current_site_id()
     cmd.append("-")
-
-    backup_path = site_backup_archive_path(site, action, action.job.config)
-
-    # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
-
+    site = current_site_id()
+    info = InfoCalculator(backup_path.name)
     verbose("Command: %s" % " ".join(cmd))
     with subprocess.Popen(
         cmd,
@@ -1013,26 +1024,20 @@ def do_site_backup(
             s = BackupStream(
                 stream=p.stdout,
                 is_alive=lambda: p.poll() is None,
-                key_ident=action.job.config["encrypt"],
-                state=state,
+                key_ident=job.config["encrypt"],
             )
+            progess_logger = ProgressLogger(state)
             for chunk in s.process():
                 backup_file.write(chunk)
+                progess_logger.update(len(chunk))
+                info.update(chunk)
 
         err = p.stderr.read().decode()
 
     if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % err)
 
-
-# Returns the base path for the backup to work with. In backup mode, this is
-# the directory of the target+job. In restore mode it is the target+backup path.
-def backup_info_path(action: Action) -> str:
-    return f"{action.base_path}/mkbackup.info"
-
-
-def site_backup_archive_path(site_id: str, action: Action, job_config: JobConfig) -> Path:
-    return action.base_path / f"site-{site_id}{archive_suffix(job_config)}"
+    return info.info(job, site_id=site)
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -1044,129 +1049,29 @@ def archive_suffix(config: JobConfig) -> str:
     return suffix
 
 
-def needed_backup_archive_files(info: BackupInfo) -> Sequence[str]:
-    # Care about restore from a backup made in a site with another site_id
-    site = info.get("site_id", current_site_id())
-    needed_files = ["site-%s" % site]
-
-    return [f + archive_suffix(info["config"]) for f in needed_files]
-
-
-def target_cfg(target_ident: str, config: Config) -> Mapping[str, Any]:
-    return config["targets"][target_ident]
-
-
-def target_path(target_ident: str, config: Config) -> Path:
-    cfg = target_cfg(target_ident, config)
-    if cfg["remote"][0] != "local":
-        raise NotImplementedError()
-
-    return Path(cfg["remote"][1]["path"])
-
-
-# TODO: Duplicate code with htdocs/backup.py
-def verify_target_is_ready(target_ident: str, config: Config) -> None:
-    try:
-        cfg = target_cfg(target_ident, config)
-    except KeyError:
-        raise MKGeneralException('The backup target "%s" does not exist.' % target_ident)
-
-    if cfg["remote"][0] != "local":
-        raise NotImplementedError()
-
-    if cfg["remote"][1]["is_mountpoint"] and not os.path.ismount(cfg["remote"][1]["path"]):
+def verify_backup_file(info: BackupInfo, archive_path: Path) -> None:
+    checksum = info.checksum
+    this_checksum = file_checksum(archive_path)
+    if this_checksum != checksum:
         raise MKGeneralException(
-            "The backup target path is configured to be a mountpoint, but nothing is mounted."
+            "The backup seems to be damaged and can not be restored. "
+            "The checksum of the archive %s is wrong (got %s but "
+            "expected %s)." % (archive_path, this_checksum, checksum)
         )
 
 
-def verify_backup_exists(action: Action) -> None:
-    if not os.path.exists(action.base_path) or not os.path.exists(backup_info_path(action)):
-        raise MKGeneralException(
-            f'This backup does not exist (Use "mkbackup list {action.target_id}" to '
-            "show a list of available backups)."
-        )
-
-
-def verify_backup_consistency(info: BackupInfo, action: Action) -> None:
-    log("Verifying backup consistency")
-    needed_files = needed_backup_archive_files(info)
-    optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
-
-    verify_backup_files(info, needed_files, needed=True, action=action)
-    verify_backup_files(info, optional_files, needed=False, action=action)
-
-
-def verify_backup_files(
-    info: BackupInfo, files: Sequence[str], needed: bool, action: Action
-) -> None:
-    for archive_file in files:
-        size, checksum = None, None
-        for entry in info["files"]:
-            if entry[0] == archive_file:
-                size, checksum = entry[1:]
-                break
-
-        if size is None:
-            if needed:
-                raise MKGeneralException(
-                    "The backup is missing the needed archive %s." % archive_file
-                )
-            continue  # missing optional files are OK
-
-        archive_path = action.base_path / archive_file
-        this_checksum = file_checksum(archive_path)
-        if this_checksum != checksum:
-            raise MKGeneralException(
-                "The backup seems to be damaged and can not be restored. "
-                "The checksum of the archive %s is wrong (got %s but "
-                "expected %s)." % (archive_path, this_checksum, checksum)
-            )
-
-
-def complete_backup(action: BackupAction, state: State) -> None:
-    info = create_backup_info(action)
-    save_backup_info(info, action)
-
-    state.save(
-        {
-            "size": info["size"],
-        },
-    )
-
-    verify_backup_consistency(info, action=action)
-
-    # Now we can be sure this new backup is a good one. Remove eventual old
-    # backup and move from "incomplete" to "complete".
-
-    if os.path.exists(action.completed_path):
-        log("Cleaning up previously completed backup")
-        shutil.rmtree(action.completed_path)
-
-    os.rename(action.base_path, action.completed_path)
-
+def complete_backup(state: State, info: BackupInfo) -> None:
+    state.save({"size": info.size})
     state_content = state.load()
     duration = time.time() - state_content["started"]
-
     log(
         "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
         % (
             render.timespan(duration),
-            render.fmt_bytes(info["size"]),
+            render.fmt_bytes(info.size),
             render.fmt_bytes(state_content["bytes_per_second"]),
         )
     )
-
-
-def cleanup_previous_incomplete_backup(action: BackupAction) -> None:
-    if os.path.exists(action.base_path):
-        log("Found previous incomplete backup. Cleaning up those files.")
-        try:
-            shutil.rmtree(action.base_path)
-        except OSError as e:
-            if e.errno == errno.EACCES:
-                raise MKGeneralException("Failed to write the backup directory: %s" % e)
-            raise
 
 
 def load_job(local_job_id: str, config: Config) -> Job:
@@ -1226,22 +1131,17 @@ def cleanup_backup_job_states() -> None:
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
-    action = RestoreAction(TargetId(target_id), backup_id, config)
-    info = load_backup_info(backup_info_path(action))
+    target = load_target(config, TargetId(target_id))
+    target.check_ready()
+    backup = target.get_backup(backup_id)
     state = restore_state()
 
     with ExitStack() as stack:
         for cm in [
             acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, info["config"])
+            for lock_file_path in get_needed_lock_files(opts, backup.info.config)
         ]:
             stack.enter_context(cm)
-
-        verify_target_is_ready(target_id, config)
-        verify_backup_exists(action)
-
-        if "no-verify" not in opts:
-            verify_backup_consistency(info, action)
 
         init_new_run(state)
 
@@ -1261,7 +1161,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 },
             )
 
-            do_site_restore(info, action, state)
+            do_site_restore(backup, state)
             complete_restore(state)
             success = True
 
@@ -1288,30 +1188,28 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
 
 def do_site_restore(
-    info: BackupInfo,
-    action: RestoreAction,
+    backup: Backup,
     state: State,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
 
     cmd.append("-")
 
-    backup_path = action.base_path / info["files"][0][0]
-
     with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
         assert p.stdin is not None
         assert p.stderr is not None
 
-        with open(backup_path, "rb") as backup_file:
+        with backup.open() as backup_file:
             s = RestoreStream(
                 stream=backup_file,
                 is_alive=lambda: False,
-                key_ident=info["config"]["encrypt"],
-                state=state,
+                key_ident=backup.info.config["encrypt"],
             )
+            progress_logger = ProgressLogger(state)
             try:
                 for chunk in s.process():
                     p.stdin.write(chunk)
+                    progress_logger.update(len(chunk))
             except OSError as e:
                 log("Error while sending data to restore process: %s" % e)
 
@@ -1341,25 +1239,23 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
             "This backup target does not exist. Choose one of: %s"
             % ", ".join(config["targets"].keys())
         )
-
-    verify_target_is_ready(target_id, config)
+    target = load_target(config, TargetId(target_id))
+    target.check_ready()
 
     fmt = "%-9s %-20s %-16s %52s\n"
     fmt_detail = (" " * 30) + " %-20s %48s\n"
     sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 100))
-    for path in sorted(glob.glob("%s/*/mkbackup.info" % target_path(target_id, config))):
-        info = load_backup_info(path)
-        from_info = info["hostname"]
-        if "site_id" in info:
-            from_info += " (Site: %s)" % info["site_id"]
-        sys.stdout.write(fmt % (info["type"], info["job_id"], "Backup-ID:", info["backup_id"]))
+    for backup_id, info in target.list_backups():
+        from_info = info.hostname
+        from_info += " (Site: %s)" % info.site_id
+        sys.stdout.write(fmt % (info.type, info.job_id, "Backup-ID:", backup_id))
 
         sys.stdout.write(fmt_detail % ("From:", from_info))
-        sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info["finished"])))
-        sys.stdout.write(fmt_detail % ("Size:", render.fmt_bytes(info["size"])))
-        if info["config"]["encrypt"] is not None:
-            sys.stdout.write(fmt_detail % ("Encrypted:", info["config"]["encrypt"]))
+        sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info.finished)))
+        sys.stdout.write(fmt_detail % ("Size:", render.fmt_bytes(info.size)))
+        if info.config["encrypt"] is not None:
+            sys.stdout.write(fmt_detail % ("Encrypted:", info.config["encrypt"]))
         else:
             sys.stdout.write(fmt_detail % ("Encrypted:", "No"))
         sys.stdout.write("\n")
@@ -1502,7 +1398,7 @@ def main() -> None:
     except KeyError:
         raise MKGeneralException("Running outside of site context.")
     # Ensure the backup lock path exists and has correct permissions
-    makedirs(str(mkbackup_lock_dir), group="omd", mode=0o770)
+    makedirs(mkbackup_lock_dir, group="omd", mode=0o770)
     opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
     mode.runner(mode_args, opt_dict, config)
 

@@ -6,8 +6,6 @@
 // Assorted routines
 #pragma once
 
-#include <fmt/format.h>
-
 #include <cctype>
 #include <chrono>
 #include <cwctype>
@@ -20,7 +18,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "tools/_raii.h"
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"
 
@@ -32,13 +29,13 @@ using ByteVector = std::vector<unsigned char>;
 
 namespace cma::tools {
 
-inline void sleep(int milliseconds) noexcept {
+inline void sleep(uint32_t milliseconds) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() +
                                   std::chrono::milliseconds(milliseconds));
 }
 
 template <typename T, typename B>
-inline void sleep(std::chrono::duration<T, B> dur) noexcept {
+void sleep(std::chrono::duration<T, B> dur) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() + dur);
 }
 
@@ -61,19 +58,15 @@ concept UniStringLike = StringLike<T> || WideStringLike<T>;
 
 template <class T>
 requires StringLike<T>
-[[nodiscard]] inline auto AsView(const T &p) noexcept {
-    return std::string_view{p};
-}
+[[nodiscard]] auto AsView(const T &p) noexcept { return std::string_view{p}; }
 
 template <class T>
 requires WideStringLike<T>
-[[nodiscard]] inline auto AsView(const T &p) noexcept {
-    return std::wstring_view{p};
-}
+[[nodiscard]] auto AsView(const T &p) noexcept { return std::wstring_view{p}; }
 
 template <class T, class V>
 requires UniStringLike<T> && UniStringLike<V>
-[[nodiscard]] inline bool IsEqual(const T &lhs, const V &rhs) {
+[[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
         return CompareIgnoreCase(l, r);
     });
@@ -103,8 +96,8 @@ inline void WideUpper(std::wstring &str) {
         CharUpperW(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](wchar_t ch) { return std::towupper(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](wchar_t ch) { return std::towupper(ch); });
     }
 }
 
@@ -114,8 +107,8 @@ inline void StringLower(std::string &str) {
         CharLowerA(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::tolower(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](char ch) { return std::tolower(ch); });
     }
 }
 
@@ -126,8 +119,8 @@ inline void StringUpper(std::string &str) {
 
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::toupper(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](char ch) { return std::toupper(ch); });
     }
 }
 
@@ -137,8 +130,9 @@ inline void WideLower(std::wstring &str) {
         CharLowerW(work_string);
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](const wchar_t ch) { return std::towlower(ch); });
+        std::ranges::transform(str, str.begin(), [](const wchar_t ch) {
+            return std::towlower(ch);
+        });
     }
 }
 
@@ -156,7 +150,7 @@ std::vector<std::wstring> ConstructVectorWstring(Args &&...args) {
 template <typename... Args>
 auto ConstructVector(Args &...str) {
     return std::vector{str...};
-};
+}
 
 inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
     std::error_code ec;
@@ -165,7 +159,7 @@ inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
 }
 
 template <typename T>
-inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
+void AddVector(std::vector<char> &accu, const T &add) noexcept {
     const auto add_size = add.size();
     if (add_size == 0) {
         return;
@@ -176,7 +170,6 @@ inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
         memcpy(accu.data() + old_size, add.data(), add_size);
     } catch (const std::exception &e) {
         xlog::l(XLOG_FLINE + " Exception %s", e.what());
-        return;
     }
 }
 
@@ -216,8 +209,7 @@ void *GetOffsetInBytes(T *object, size_t offset) {
 // returns const void*, never fails
 template <typename T>
 const void *GetOffsetInBytes(const T *object, size_t offset) {
-    return static_cast<const void *>(reinterpret_cast<const char *>(object) +
-                                     offset);
+    return reinterpret_cast<const char *>(object) + offset;
 }
 
 template <typename T>
@@ -251,8 +243,8 @@ uint64_t ConvertToUint64(const T &str, uint64_t dflt) noexcept {
 
 namespace win {
 template <typename T>
-inline bool SetEnv(const std::basic_string<T> &name,
-                   const std::basic_string<T> &value) noexcept {
+bool SetEnv(const std::basic_string<T> &name,
+            const std::basic_string<T> &value) noexcept {
     auto cmd = name;
     if constexpr (sizeof(T) == 1) {
         cmd += "=" + value;
@@ -300,6 +292,7 @@ public:
         }
         name_ = rhs.name_;
         rhs.name_.clear();
+        return *this;
     }
 
     auto name() noexcept { return name_; }
@@ -354,13 +347,7 @@ inline void AllTrim(std::string &str) {
 
 inline std::vector<std::string_view> ToView(
     const std::vector<std::string> &table) {
-    std::vector<std::string_view> s_view;
-
-    for (const auto &str : table) {
-        s_view.emplace_back(str);
-    }
-
-    return s_view;
+    return {table.begin(), table.end()};
 }
 
 /// max_count == 0 means inifinite parsing
@@ -546,7 +533,7 @@ inline std::string TimeToString(
     std::chrono::system_clock::time_point time_point) {
     auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
     std::stringstream sss;
-    const auto *loc_time = std::localtime(&in_time_t);
+    const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << std::ends;
     return sss.str();

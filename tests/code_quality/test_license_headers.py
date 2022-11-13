@@ -19,30 +19,33 @@ ignored_files = [
     "omd/packages/maintenance/merge-crontabs",
 ]
 
-enterprise_paths = [
-    "enterprise/",
-    "managed/",
-    "plus/",
-]
-
-enterprise_files = [
-    "cmk/base/automations/cee.py",
-    "cmk/base/modes/cee.py",
-    "cmk/base/default_config/cee.py",
-    "cmk/base/default_config/cme.py",
+# Similar logic to our partial GitHub sync approach. Both select enterprise files or directories
+# based on their name.
+enterprise_names = [
+    "nonfree",
+    "plus",
+    "enterprise",
+    "managed",
+    "cee",
+    "cme",
+    "cpe",
+    "cee.py",
+    "cme.py",
+    "cpe.py",
 ]
 
 
 def needs_enterprise_license(path: str) -> bool:
-    if any(p for p in enterprise_paths if path.startswith(p)):
+    parts = path.split("/")
+    if any(p for p in enterprise_names if p in parts):
         return True
 
-    return path in enterprise_files
+    return False
 
 
-def get_file_header(path: str, lenght=30) -> str:  # type:ignore[no-untyped-def]
+def get_file_header(path: str, length: int = 30) -> str:
     with open(path, "r") as file:
-        head = [file.readline() for x in range(lenght)]
+        head = [file.readline() for x in range(length)]
         return "\n".join(head)
 
 
@@ -58,11 +61,11 @@ def test_license_headers(python_files: Sequence[str]) -> None:
             continue
 
         if needs_enterprise_license(rel_path):
-            header = get_file_header(abs_path, lenght=30)
+            header = get_file_header(abs_path, length=30)
             if "Checkmk Enterprise License" not in header:
                 wrong_enterprise_headers.append(rel_path)
         else:
-            header = get_file_header(abs_path, lenght=25)
+            header = get_file_header(abs_path, length=25)
             if "GNU General Public" not in header:
                 wrong_gpl_headers.append(rel_path)
 

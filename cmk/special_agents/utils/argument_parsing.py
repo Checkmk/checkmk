@@ -12,14 +12,13 @@ Current responsibilities include:
 """
 
 import argparse
-from typing import Optional
 
 from cmk.special_agents.utils import vcrtrace
 
 Args = argparse.Namespace
 
 
-def create_default_argument_parser(description: Optional[str]) -> argparse.ArgumentParser:
+def create_default_argument_parser(description: str | None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(

@@ -11,7 +11,7 @@ import json
 import logging
 import sys
 import traceback
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, TypedDict
 
 import requests
 
@@ -34,18 +34,18 @@ class IgnoreAlerts(TypedDict, total=False):
     # not required when upgrading to Python 3.10:
     # https://www.python.org/dev/peps/pep-0655/
     ignore_na: bool
-    ignore_alert_rules: List[str]
-    ignore_alert_groups: List[str]
+    ignore_alert_rules: list[str]
+    ignore_alert_groups: list[str]
 
 
 class Rule(TypedDict):
     name: str
     state: str
-    severity: Optional[str]
-    message: Optional[str]
+    severity: str | None
+    message: str | None
 
 
-Groups = Dict[str, List[Rule]]
+Groups = dict[str, list[Rule]]
 
 
 class AlertmanagerAPI:
@@ -72,7 +72,7 @@ class AlertmanagerAPI:
 
 def alertmanager_rules_section(
     api_client: AlertmanagerAPI,
-    config: Dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
     rule_groups = retrieve_rule_data(api_client)
     if not rule_groups.get("groups"):
@@ -83,12 +83,12 @@ def alertmanager_rules_section(
             writer.append_json(parsed_data)
 
 
-def retrieve_rule_data(api_client: AlertmanagerAPI) -> Dict[str, Any]:
+def retrieve_rule_data(api_client: AlertmanagerAPI) -> dict[str, Any]:
     endpoint_result = api_client.query_static_endpoint("/rules")
     return json.loads(endpoint_result.content)["data"]
 
 
-def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:
+def parse_rule_data(group_data: list[dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:
     """Parses data from Alertmanager API endpoint
 
     Args:

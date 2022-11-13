@@ -3,15 +3,17 @@
 //
 #include "pch.h"
 
+#include <ranges>
+
 #include "carrier.h"
 #include "cfg.h"
 #include "common/wtools.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 #include "tools/_raii.h"
 using namespace std::chrono_literals;
+namespace rs = std::ranges;
 
 namespace cma::provider {
 class Empty : public Synchronous {
@@ -139,8 +141,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
-    auto processor = new ServiceProcessor(100ms, [&counter]() {
-        xlog::l("pip").print();
+    auto processor = new ServiceProcessor(100ms, [&counter] {
         counter++;
         return true;
     });
@@ -160,8 +161,8 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto cmd_line = groups::winperf.buildCmdLine();
     ASSERT_TRUE(!cmd_line.empty());
     auto count = groups::winperf.countersCount();
-    auto count_of_colon = std::count(cmd_line.begin(), cmd_line.end(), L':');
-    auto count_of_spaces = std::count(cmd_line.begin(), cmd_line.end(), L' ');
+    auto count_of_colon = rs::count(cmd_line, L':');
+    auto count_of_spaces = rs::count(cmd_line, L' ');
     ASSERT_TRUE(count_of_colon == count);
     ASSERT_EQ(count_of_spaces, count - 1);
 
@@ -249,9 +250,9 @@ struct MailData {
 bool MailboxCallback(const cma::mailslot::Slot *slot, const void *data, int len,
                      void *context) {
     auto mail_data = static_cast<MailData *>(context);
-    mail_data->data = std::vector<char>(
-        static_cast<const char *>(data),
-        static_cast<const char *>(data) + static_cast<size_t>(len));
+    mail_data->data =
+        std::vector(static_cast<const char *>(data),
+                    static_cast<const char *>(data) + static_cast<size_t>(len));
     return true;
 }
 }  // namespace
@@ -271,7 +272,7 @@ public:
                                 wtools::SecurityLevel::standard);
         sp.startService();
         ASSERT_TRUE(
-            tst::WaitForSuccessSilent(1000ms, [this]() { return ready; }));
+            tst::WaitForSuccessSilent(1000ms, [this] { return ready; }));
     }
     void TearDown() override {
         cc.shutdownCommunication();
@@ -287,7 +288,7 @@ public:
                     "  id: 0\n",
                     "local_test")};
     bool ready{false};
-    ServiceProcessor sp{100ms, [this]() {
+    ServiceProcessor sp{100ms, [this] {
                             ready = true;
                             return true;
                         }};
@@ -296,7 +297,7 @@ public:
 TEST_F(ServiceProcessorTestFixture, YamlOverMailSlot) {
     ASSERT_TRUE(cc.establishCommunication(sp.getInternalPort()));
     cc.sendYaml("TestSite", cmd);
-    tst::WaitForSuccessSilent(1000ms, [this]() { return !md.data.empty(); });
+    tst::WaitForSuccessSilent(1000ms, [this] { return !md.data.empty(); });
     EXPECT_GE(md.data.size(), 100U);
     std::string s{md.data.data(), md.data.size()};
     EXPECT_TRUE(s.starts_with("<<<check_mk>>>"));

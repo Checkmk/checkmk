@@ -19,7 +19,8 @@ import socket
 import struct
 import sys
 from collections import Counter, OrderedDict
-from functools import lru_cache
+from dataclasses import dataclass
+from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -44,12 +45,15 @@ from typing import (
     Union,
 )
 
+from typing_extensions import assert_never
+
 import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
 import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
+import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -61,7 +65,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
@@ -84,12 +88,10 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostgroupName,
-    HostKey,
     HostName,
     IPMICredentials,
     Item,
     Labels,
-    LabelSources,
     Ruleset,
     RuleSetName,
     Seconds,
@@ -97,7 +99,6 @@ from cmk.utils.type_defs import (
     ServicegroupName,
     ServiceID,
     ServiceName,
-    SourceType,
     TaggroupIDToTagID,
     TagIDs,
     TagIDToTaggroupID,
@@ -202,6 +203,25 @@ class DiscoveryCheckParameters(NamedTuple):
             severity_new_host_labels=1,
             # TODO: defaults are currently all over the place :-(
             rediscovery={},
+        )
+
+
+@dataclass(frozen=True)
+class HWSWInventoryParameters:
+    hw_changes: int
+    sw_changes: int
+    sw_missing: int
+    fail_status: int
+    status_data_inventory: bool
+
+    @classmethod
+    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
+        return cls(
+            hw_changes=int(raw_parameters.get("hw-changes", 0)),
+            sw_changes=int(raw_parameters.get("sw-changes", 0)),
+            sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
+            status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
 
 
@@ -841,26 +861,10 @@ class PackedConfigStore:
             return pickle.load(f)  # nosec B301 # BNS:c3c5e9
 
 
-@lru_cache
-def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "autochecks"
-
-
-def make_core_autochecks_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_autochecks_dir(Path(config_path)) / f"{hostname}.mk"
-
-
-@lru_cache
-def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "discovered_host_labels"
-
-
-def make_core_discovered_host_labels_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_discovered_host_labels_dir(config_path) / f"{hostname}.mk"
-
-
 @contextlib.contextmanager
-def set_use_core_config(use_core_config: bool) -> Iterator[None]:
+def set_use_core_config(
+    *, autochecks_dir: Path, discovered_host_labels_dir: Path
+) -> Iterator[None]:
     """The keepalive helpers should always use the core configuration that
     has been created with "cmk -U". This includes the dynamic configuration
     parts like the autochecks.
@@ -871,23 +875,15 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
 
     We ensure this by changing the global paths in cmk.utils.paths to point
     to the helper paths."""
-    _orig_autochecks_dir = cmk.utils.paths.autochecks_dir
-    _orig_discovered_host_labels_dir = cmk.utils.paths.discovered_host_labels_dir
+    orig_autochecks_dir: Final = cmk.utils.paths.autochecks_dir
+    orig_discovered_host_labels_dir: Final = cmk.utils.paths.discovered_host_labels_dir
     try:
-        if use_core_config:
-            cmk.utils.paths.autochecks_dir = str(make_core_autochecks_dir(LATEST_CONFIG))
-            cmk.utils.paths.discovered_host_labels_dir = make_core_discovered_host_labels_dir(
-                LATEST_CONFIG
-            )
-        else:
-            cmk.utils.paths.autochecks_dir = cmk.utils.paths.base_autochecks_dir
-            cmk.utils.paths.discovered_host_labels_dir = (
-                cmk.utils.paths.base_discovered_host_labels_dir
-            )
+        cmk.utils.paths.autochecks_dir = str(autochecks_dir)
+        cmk.utils.paths.discovered_host_labels_dir = discovered_host_labels_dir
         yield
     finally:
-        cmk.utils.paths.autochecks_dir = _orig_autochecks_dir
-        cmk.utils.paths.discovered_host_labels_dir = _orig_discovered_host_labels_dir
+        cmk.utils.paths.autochecks_dir = orig_autochecks_dir
+        cmk.utils.paths.discovered_host_labels_dir = orig_discovered_host_labels_dir
 
 
 # .
@@ -932,7 +928,7 @@ def _filter_active_hosts(
         return [
             hostname
             for hostname in hostlist
-            if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+            if _host_is_member_of_site(hostname, distributed_wato_site)
         ]
 
     if distributed_wato_site is None:
@@ -947,15 +943,15 @@ def _filter_active_hosts(
     return [
         hostname
         for hostname in hostlist
-        if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+        if _host_is_member_of_site(hostname, distributed_wato_site)
         and (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts))
     ]
 
 
-def _host_is_member_of_site(config_cache: ConfigCache, hostname: HostName, site: str) -> bool:
+def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return (
-        config_cache.tags_of_host(hostname).get("site", distributed_wato_site)
+        ConfigCache.tags_of_host(hostname).get("site", distributed_wato_site)
         == distributed_wato_site
     )
 
@@ -2221,7 +2217,7 @@ def _get_plugin_parameters(
     rules_getter_function: Callable[[RuleSetName], Ruleset],
 ) -> Union[None, Parameters, List[Parameters]]:
     if default_parameters is None:
-        # This means the function will not acctept any params.
+        # This means the function will not accept any params.
         return None
     if ruleset_name is None:
         # This means we have default params, but no rule set.
@@ -2422,64 +2418,69 @@ def _get_checkgroup_parameters(
 class HostConfig:
     def __init__(self, config_cache: ConfigCache, hostname: HostName) -> None:
         super().__init__()
-        self.hostname = hostname
+        self.hostname: Final = hostname
 
-        self._config_cache = config_cache
+        self._config_cache: Final = config_cache
 
         self._explicit_attributes_lookup = None
-        self.is_cluster = self._is_cluster()
-        # TODO: Rename this to self.clusters?
-        self.part_of_clusters = self._config_cache.clusters_of(hostname)
-        self.nodes = self._config_cache.nodes_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
-        self.tags = self._config_cache.tag_list_of_host(hostname)
-        self.tag_groups = self._config_cache.tags_of_host(hostname)
+        self.tags: Final = self._config_cache.tag_list_of_host(hostname)
+        self.tag_groups: Final = ConfigCache.tags_of_host(hostname)
 
-        self.labels = self._config_cache.ruleset_matcher.labels_of_host(hostname)
-        self.label_sources = self._config_cache.ruleset_matcher.label_sources_of_host(hostname)
+        self.labels: Final = self._config_cache.ruleset_matcher.labels_of_host(hostname)
+        self.label_sources: Final = self._config_cache.ruleset_matcher.label_sources_of_host(
+            hostname
+        )
 
-        self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
+        self.computed_datasources: Final = cmk.utils.tags.compute_datasources(self.tag_groups)
 
         # Basic types
-        self.is_tcp_host: bool = self.computed_datasources.is_tcp
-        self.is_snmp_host: bool = self.computed_datasources.is_snmp
-        self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
+        self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
+        self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
+        self.is_usewalk_host: Final[bool] = self._config_cache.in_binary_hostlist(
+            hostname, usewalk_hosts
+        )
 
-        if self.tag_groups["piggyback"] == "piggyback":
-            self.is_piggyback_host = True
-        elif self.tag_groups["piggyback"] == "no-piggyback":
-            self.is_piggyback_host = False
-        else:  # Legacy automatic detection
-            self.is_piggyback_host = self.has_piggyback_data
+        def get_is_piggyback_host() -> bool:
+            if self.tag_groups["piggyback"] == "piggyback":
+                return True
+            if self.tag_groups["piggyback"] == "no-piggyback":
+                return False
+            # Legacy automatic detection
+            return self.has_piggyback_data
+
+        self.is_piggyback_host: Final = get_is_piggyback_host()
 
         # Agent types
-        self.is_agent_host: bool = self.is_tcp_host or self.is_piggyback_host
-        self.management_protocol = management_protocol.get(hostname)
-        self.has_management_board: bool = self.management_protocol is not None
-        self.is_ping_host = not (
+        self.is_agent_host: Final[bool] = self.is_tcp_host or self.is_piggyback_host
+        self.management_protocol: Final = management_protocol.get(hostname)
+        self.has_management_board: Final[bool] = self.management_protocol is not None
+        self.is_ping_host: Final = not (
             self.is_snmp_host or self.is_agent_host or self.has_management_board
         )
 
-        self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = self.computed_datasources.is_all_agents_host
-        self.is_all_special_agents_host = self.computed_datasources.is_all_special_agents_host
+        self.is_dual_host: Final = self.is_tcp_host and self.is_snmp_host
+        self.is_all_agents_host: Final = self.computed_datasources.is_all_agents_host
+        self.is_all_special_agents_host: Final = (
+            self.computed_datasources.is_all_special_agents_host
+        )
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
-        self.is_no_ip_host = self.tag_groups["address_family"] == "no-ip"
-        self.is_ipv6_host = "ip-v6" in self.tag_groups
+        self.is_no_ip_host: Final = self.tag_groups["address_family"] == "no-ip"
+        self.is_ipv6_host: Final = "ip-v6" in self.tag_groups
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host = "ip-v4" in self.tag_groups or (
+        self.is_ipv4_host: Final = "ip-v4" in self.tag_groups or (
             not self.is_ipv6_host and not self.is_no_ip_host
         )
 
-        self.is_ipv4v6_host = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
+        self.is_ipv4v6_host: Final = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
-        self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
+        self.is_ipv6_primary: Final = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
             self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6"
         )
 
@@ -2590,8 +2591,9 @@ class HostConfig:
             return alias
 
         # Alias by rule matching
+        default: Ruleset[HostName] = []
         aliases = self._config_cache.host_extra_conf(
-            self.hostname, extra_host_conf.get("alias", [])
+            self.hostname, extra_host_conf.get("alias", default)
         )
 
         # Fallback alias
@@ -2718,11 +2720,12 @@ class HostConfig:
 
         return not self._config_cache.in_binary_hostlist(self.hostname, snmpv2c_hosts)
 
-    def _is_inline_backend_supported(self) -> bool:
+    @staticmethod
+    def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
     def _get_snmp_backend(self) -> SNMPBackendEnum:
-        with_inline_snmp = self._is_inline_backend_supported()
+        with_inline_snmp = HostConfig._is_inline_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
@@ -2744,13 +2747,6 @@ class HostConfig:
             return SNMPBackendEnum.INLINE
 
         return SNMPBackendEnum.CLASSIC
-
-    def _is_cluster(self) -> bool:
-        """Checks whether or not the given host is a cluster host
-        all_configured_clusters() needs to be used, because this function affects
-        the agent bakery, which needs all configured hosts instead of just the hosts
-        of this site"""
-        return self.hostname in self._config_cache.all_configured_clusters()
 
     def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
         """Return the fetch interval of SNMP sections in seconds
@@ -2810,7 +2806,7 @@ class HostConfig:
     def agent_encryption(self) -> Mapping[str, str]:
         settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
         if not settings:
-            return {"use_regular": "disable", "use_realtime": "enforce"}
+            return {"use_regular": "disable"}
         return settings[0]
 
     @property
@@ -2956,7 +2952,7 @@ class HostConfig:
 
     def discovery_check_parameters(self) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""
-        service_discovery_name = self._config_cache.service_discovery_name()
+        service_discovery_name = ConfigCache.service_discovery_name()
         if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
             return DiscoveryCheckParameters.commandline_only_defaults()
 
@@ -2980,13 +2976,15 @@ class HostConfig:
         return CheckmkCheckParameters(enabled=not self.is_ping_host)
 
     def inventory_parameters(self, ruleset_name: RuleSetName) -> Dict:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
-            self.hostname, inv_parameters.get(str(ruleset_name), [])
+            self.hostname, inv_parameters.get(str(ruleset_name), default)
         )
 
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> Dict:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
-            self.hostname, notification_parameters.get(plugin_name, [])
+            self.hostname, notification_parameters.get(plugin_name, default)
         )
 
     @property
@@ -3196,14 +3194,6 @@ class HostConfig:
         )
 
     @property
-    def host_key(self) -> HostKey:
-        return HostKey(self.hostname, SourceType.HOST)
-
-    @property
-    def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, SourceType.MANAGEMENT)
-
-    @property
     def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
         # TODO Regarding the following configuration variables from WATO
         # there's no inheritance, thus we use 'host_attributes'.
@@ -3221,11 +3211,11 @@ class HostConfig:
         for entry in specs[::-1]:
             spec.update(entry)
 
-        merged_spec = self._extract_data_source_exit_code_spec(spec, data_source_id)
-        return self._merge_with_optional_exit_code_parameters(spec, merged_spec)
+        merged_spec = HostConfig._extract_data_source_exit_code_spec(spec, data_source_id)
+        return HostConfig._merge_with_optional_exit_code_parameters(spec, merged_spec)
 
+    @staticmethod
     def _extract_data_source_exit_code_spec(
-        self,
         spec: _NestedExitSpec,
         data_source_id: Optional[str],
     ) -> ExitSpec:
@@ -3243,8 +3233,8 @@ class HostConfig:
         # Old configuration format
         return spec
 
+    @staticmethod
     def _merge_with_optional_exit_code_parameters(
-        self,
         spec: _NestedExitSpec,
         merged_spec: ExitSpec,
     ) -> ExitSpec:
@@ -3257,26 +3247,28 @@ class HostConfig:
         return merged_spec
 
     @property
-    def do_status_data_inventory(self) -> bool:
-        if self.is_cluster:
-            return False
+    def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
+        if self._config_cache.is_cluster(self.hostname):
+            return HWSWInventoryParameters.from_raw({})
 
         # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get("cmk_inv")
         if rules is None:
-            return False
+            return HWSWInventoryParameters.from_raw({})
 
         # 'host_extra_conf' is already cached thus we can
         # use it after every check cycle.
         entries = self._config_cache.host_extra_conf(self.hostname, rules)
 
         if not entries:
-            return False  # No matching rule -> disable
+            return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
 
         # Convert legacy rules to current dict format (just like the valuespec)
-        params = {} if entries[0] is None else entries[0]
+        return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
 
-        return params.get("status_data_inventory", False)
+    @property
+    def do_status_data_inventory(self) -> bool:
+        return self.hwsw_inventory_parameters.status_data_inventory
 
     @property
     def inv_retention_intervals(self) -> RawIntervalsFromConfig:
@@ -3295,10 +3287,11 @@ class HostConfig:
         new_services: Sequence[AutocheckServiceWithNodes],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
-        if self.is_cluster:
-            if self.nodes:
+        nodes = self._config_cache.nodes_of(self.hostname)
+        if self._config_cache.is_cluster(self.hostname):
+            if nodes:
                 autochecks.set_autochecks_of_cluster(
-                    self.nodes,
+                    nodes,
                     self.hostname,
                     new_services,
                     self._config_cache.host_of_clustered_service,
@@ -3316,7 +3309,7 @@ class HostConfig:
         Cluster aware means that the autocheck files of the nodes are handled. Instead
         of removing the whole file the file is loaded and only the services associated
         with the given cluster are removed."""
-        hostnames = self.nodes if self.nodes else [self.hostname]
+        nodes = self._config_cache.nodes_of(self.hostname) or [self.hostname]
         return sum(
             autochecks.remove_autochecks_of_host(
                 hostname,
@@ -3324,13 +3317,15 @@ class HostConfig:
                 self._config_cache.host_of_clustered_service,
                 service_description,
             )
-            for hostname in hostnames
+            for hostname in nodes
         )
 
     @property
     def max_cachefile_age(self) -> cache_file.MaxAge:
         return max_cachefile_age(
-            checking=None if self.nodes is None else cluster_max_cachefile_age,
+            checking=None
+            if self._config_cache.nodes_of(self.hostname) is None
+            else cluster_max_cachefile_age,
         )
 
     @property
@@ -3370,11 +3365,12 @@ def lookup_ip_address(
 ) -> Optional[HostAddress]:
     if family is None:
         family = host_config.default_address_family
+    host_name = host_config.hostname
     return ip_lookup.lookup_ip_address(
-        host_name=host_config.hostname,
+        host_name=host_name,
         family=family,
         configured_ip_address=(ipaddresses if family is socket.AF_INET else ipv6addresses).get(
-            host_config.hostname
+            host_name
         ),
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
@@ -3409,15 +3405,20 @@ class ConfigCache:
         super().__init__()
         self._initialize_caches()
 
+    def is_cluster(self, host_name: HostName) -> bool:
+        return host_name in self.all_configured_clusters()
+
     def initialize(self) -> None:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_clusters = self._get_all_configured_clusters()
-        self._all_configured_realhosts = self._get_all_configured_realhosts()
-        self._all_configured_hosts = self._get_all_configured_hosts()
+        self._all_configured_clusters = set(strip_tags(list(clusters)))
+        self._all_configured_realhosts = set(strip_tags(all_hosts))
+        self._all_configured_hosts = (
+            self._all_configured_realhosts | self._all_configured_clusters | set(get_shadow_hosts())
+        )
 
-        tag_to_group_map = self.get_tag_to_group_map()
+        tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
         self.labels = LabelManager(
@@ -3434,10 +3435,9 @@ class ConfigCache:
             all_configured_hosts=self._all_configured_hosts,
         )
 
-        # Warning: do not change call order. all_active_hosts relies on the other values
-        self._all_active_clusters = self._get_all_active_clusters()
-        self._all_active_realhosts = self._get_all_active_realhosts()
-        self._all_active_hosts = self._get_all_active_hosts()
+        self._all_active_clusters = set(_filter_active_hosts(self, self._all_configured_clusters))
+        self._all_active_realhosts = set(_filter_active_hosts(self, self._all_configured_realhosts))
+        self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
@@ -3463,7 +3463,7 @@ class ConfigCache:
         self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
-        self._host_paths: Dict[HostName, str] = self._get_host_paths(host_paths)
+        self._host_paths: Dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
 
         # Host tags
         self._hosttags: Dict[HostName, TagIDs] = {}
@@ -3494,7 +3494,8 @@ class ConfigCache:
             ).values()
         }
 
-    def get_tag_to_group_map(self) -> TagIDToTaggroupID:
+    @staticmethod
+    def get_tag_to_group_map() -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -3514,7 +3515,8 @@ class ConfigCache:
         except KeyError:
             pass
 
-    def _get_host_paths(self, config_host_paths: Dict[HostName, str]) -> Dict[HostName, str]:
+    @staticmethod
+    def _get_host_paths(config_host_paths: Dict[HostName, str]) -> Dict[HostName, str]:
         """Reference hostname -> dirname including /"""
         host_dirs = {}
         for hostname, filename in config_host_paths.items():
@@ -3542,13 +3544,13 @@ class ConfigCache:
 
             if hostname in host_tags:
                 # New dict host_tags are available: only need to compute the tag list
-                self._hosttags[hostname] = self._tag_groups_to_tag_list(
+                self._hosttags[hostname] = ConfigCache._tag_groups_to_tag_list(
                     self._host_paths.get(hostname, "/"), host_tags[hostname]
                 )
             else:
                 # Only tag list available. Use it and compute the tag groups.
                 self._hosttags[hostname] = set(parts[1:])
-                host_tags[hostname] = self._tag_list_to_tag_groups(
+                host_tags[hostname] = ConfigCache._tag_list_to_tag_groups(
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
@@ -3556,15 +3558,12 @@ class ConfigCache:
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split()
             )
-            host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
+            host_tags[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
                 tag_to_group_map, self._hosttags[shadow_host_name]
             )
 
-    def _tag_groups_to_tag_list(
-        self,
-        host_path: str,
-        tag_groups: TaggroupIDToTagID,
-    ) -> TagIDs:
+    @staticmethod
+    def _tag_groups_to_tag_list(host_path: str, tag_groups: TaggroupIDToTagID) -> TagIDs:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
@@ -3573,10 +3572,9 @@ class ConfigCache:
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
+    @staticmethod
     def _tag_list_to_tag_groups(
-        self,
-        tag_to_group_map: TagIDToTaggroupID,
-        tag_list: TagIDs,
+        tag_to_group_map: TagIDToTaggroupID, tag_list: TagIDs
     ) -> TaggroupIDToTagID:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
@@ -3607,10 +3605,11 @@ class ConfigCache:
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return self._tag_groups_to_tag_list("/", self.tags_of_host(hostname))
+        return ConfigCache._tag_groups_to_tag_list("/", ConfigCache.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
-    def tags_of_host(self, hostname: HostName) -> TaggroupIDToTagID:
+    @staticmethod
+    def tags_of_host(hostname: HostName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
@@ -3640,21 +3639,6 @@ class ConfigCache:
             for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules)
             for k, v in entry
         }
-
-    def labels_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Labels:
-        """Returns the effective set of service labels from all available sources
-
-        1. Discovered labels
-        2. Ruleset "Service labels"
-
-        Last one wins.
-        """
-        return self.ruleset_matcher.labels_of_service(hostname, svc_desc)
-
-    def label_sources_of_service(self, hostname: HostName, svc_desc: ServiceName) -> LabelSources:
-        """Returns the effective set of service label keys with their source identifier instead of the value
-        Order and merging logic is equal to labels_of_service()"""
-        return self.ruleset_matcher.label_sources_of_service(hostname, svc_desc)
 
     def extra_attributes_of_service(
         self, hostname: HostName, description: ServiceName
@@ -3772,8 +3756,9 @@ class ConfigCache:
             return None
         return entry
 
+    @staticmethod
     def get_explicit_service_custom_variables(
-        self, hostname: HostName, description: ServiceName
+        hostname: HostName, description: ServiceName
     ) -> Dict[str, str]:
         try:
             return explicit_service_custom_variables[(hostname, description)]
@@ -3934,43 +3919,15 @@ class ConfigCache:
         """Returns a set of all active hosts"""
         return self._all_active_hosts
 
-    def _get_all_active_hosts(self) -> Set[HostName]:
-        hosts: Set[HostName] = set()
-        hosts.update(self.all_active_realhosts(), self.all_active_clusters())
-        return hosts
-
     def all_active_realhosts(self) -> Set[HostName]:
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_realhosts
 
-    def _get_all_active_realhosts(self) -> Set[HostName]:
-        return set(_filter_active_hosts(self, self._all_configured_realhosts))
-
     def all_configured_realhosts(self) -> Set[HostName]:
         return self._all_configured_realhosts
 
-    def _get_all_configured_realhosts(self) -> Set[HostName]:
-        """Returns a set of all host names, regardless if currently disabled or
-        monitored on a remote site. Does not return cluster hosts."""
-        return set(strip_tags(all_hosts))
-
-    def _get_all_configured_shadow_hosts(self) -> Set[HostName]:
-        """Returns a set of all shadow host names, regardless if currently disabled or
-        monitored on a remote site"""
-        return set(get_shadow_hosts())
-
     def all_configured_hosts(self) -> Set[HostName]:
         return self._all_configured_hosts
-
-    def _get_all_configured_hosts(self) -> Set[HostName]:
-        """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
-        hosts: Set[HostName] = set()
-        hosts.update(
-            self.all_configured_realhosts(),
-            self.all_configured_clusters(),
-            self._get_all_configured_shadow_hosts(),
-        )
-        return hosts
 
     def _setup_clusters_nodes_cache(self) -> None:
         for cluster, hosts in clusters.items():
@@ -3988,26 +3945,18 @@ class ConfigCache:
 
     # TODO: cleanup None case
     def nodes_of(self, hostname: HostName) -> Optional[List[HostName]]:
-        """Returns the nodes of a cluster. Returns None if no match.
-
-        Use host_config.nodes instead of this method to get the node list"""
+        """Returns the nodes of a cluster. Returns None if no match."""
         return self._nodes_of_cache.get(hostname)
 
     def all_active_clusters(self) -> Set[HostName]:
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
 
-    def _get_all_active_clusters(self) -> Set[HostName]:
-        return set(_filter_active_hosts(self, self.all_configured_clusters()))
-
     def all_configured_clusters(self) -> Set[HostName]:
         """Returns a set of all cluster names
         Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
         """
         return self._all_configured_clusters
-
-    def _get_all_configured_clusters(self) -> Set[HostName]:
-        return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(
         self,
@@ -4085,32 +4034,6 @@ class ConfigCache:
 
         raise NotImplementedError(effective_mode)
 
-    def get_clustered_service_node_keys(
-        self,
-        host_config: HostConfig,
-        source_type: SourceType,
-        service_descr: ServiceName,
-    ) -> Sequence[HostKey]:
-        """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        used_nodes = (
-            [
-                nn
-                for nn in (host_config.nodes or ())
-                if host_config.hostname == self.host_of_clustered_service(nn, service_descr)
-            ]
-            or host_config.nodes
-            or ()
-        )
-
-        return [
-            HostKey(
-                nc.hostname,
-                source_type,
-            )
-            for nodename in used_nodes
-            if (nc := self.get_host_config(nodename))
-        ]
-
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: Optional[HostName] = None
     ) -> Sequence[Tuple[Optional[str], str, int]]:
@@ -4123,7 +4046,8 @@ class ConfigCache:
         return time_settings
 
     # TODO: Remove old name one day
-    def service_discovery_name(self) -> ServiceName:
+    @staticmethod
+    def service_discovery_name() -> ServiceName:
         if "cmk_inventory" in use_new_descriptions_for:
             return "Check_MK Discovery"
         return "Check_MK inventory"
@@ -4135,6 +4059,69 @@ def get_config_cache() -> ConfigCache:
         cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
         config_cache["cache"] = cache_class()
     return config_cache["cache"]
+
+
+# TODO(au): Find a way to retreive the matchtype_information directly from the
+# rulespecs. This is not possible atm because they live in cmk.gui
+class _Matchtype(Enum):
+    LIST = "list"
+    FIRST = "first"
+    DICT = "dict"
+    ALL = "all"
+
+
+_BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES = {
+    "agent_paths": _Matchtype.DICT,
+    "cmk_update_agent": _Matchtype.DICT,
+    "custom_files": _Matchtype.LIST,
+    "fileinfo": _Matchtype.LIST,
+    "logging": _Matchtype.DICT,
+    "lnx_remote_alert_handlers": _Matchtype.ALL,
+    "mk_logwatch": _Matchtype.ALL,
+    "mk_oracle": _Matchtype.DICT,
+    "mrpe": _Matchtype.LIST,
+    "bakery_packages": _Matchtype.DICT,
+    "real_time_checks": _Matchtype.DICT,
+    "runas": _Matchtype.LIST,
+    "win_script_cache_age": _Matchtype.ALL,
+    "win_script_execution": _Matchtype.ALL,
+    "win_script_retry_count": _Matchtype.ALL,
+    "win_script_runas": _Matchtype.ALL,
+    "win_script_timeout": _Matchtype.ALL,
+    "unix_plugins_cache_age": _Matchtype.ALL,
+}
+
+
+def _boil_down_agent_rules(
+    *, defaults: Mapping[str, Any], rulesets: Mapping[str, Any]
+) -> Mapping[str, Any]:
+    boiled_down = {**defaults}
+
+    # TODO: Better move whole computation to cmk.base.config for making
+    # ruleset matching transparent
+    for varname, entries in rulesets.items():
+
+        if not entries:
+            continue
+
+        match_type = _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES.get(varname, _Matchtype.FIRST)
+        if match_type is _Matchtype.FIRST:
+            boiled_down[varname] = entries[0]
+        elif match_type is _Matchtype.LIST:
+            boiled_down[varname] = [it for entry in entries for it in entry]
+        elif match_type is _Matchtype.DICT:
+            # Watch out! In this case we have to merge all rules on top of the defaults!
+            # Compare #14868
+            boiled_down[varname] = {
+                **defaults.get(varname, {}),
+                **{k: v for entry in entries[::-1] for k, v in entry.items()},
+            }
+        elif match_type is _Matchtype.ALL:
+            boiled_down[varname] = entries
+        else:
+            assert_never(match_type)
+
+    return boiled_down
 
 
 # TODO: Find a clean way to move this to cmk.base.cee. This will be possible once the
@@ -4252,23 +4239,31 @@ class CEEConfigCache(ConfigCache):
     def matched_agent_config_entries(self, hostname: HostName) -> Dict[str, Any]:
         return {
             varname: self.host_extra_conf(hostname, ruleset)
-            for varname, ruleset in self._agent_config_rulesets()
+            for varname, ruleset in CEEConfigCache._agent_config_rulesets()
         }
 
-    def generic_agent_config_entries(self) -> Iterable[tuple[str, Mapping[str, Any]]]:
+    def generic_agent_config_entries(
+        self, *, defaults: Mapping[str, Any]
+    ) -> Iterable[tuple[str, Mapping[str, Any]]]:
         yield from (
             (
                 match_path,
-                {
-                    varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, match_path)
-                    for varname, ruleset in self._agent_config_rulesets()
-                },
+                _boil_down_agent_rules(
+                    defaults=defaults,
+                    rulesets={
+                        varname: self.ruleset_matcher.get_values_for_generic_agent(
+                            ruleset, match_path
+                        )
+                        for varname, ruleset in CEEConfigCache._agent_config_rulesets()
+                    },
+                ),
             )
             for match_path, attributes in folder_attributes.items()
             if attributes.get("bake_agent_package", False)
         )
 
-    def _agent_config_rulesets(self) -> Iterable[tuple[str, Any]]:
+    @staticmethod
+    def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:
         return list(agent_config.items()) + [
             ("agent_port", agent_ports),
             ("agent_encryption", agent_encryption),
@@ -4339,6 +4334,33 @@ class CEEHostConfig(HostConfig):
 
     @property
     def lnx_remote_alert_handlers(self) -> List[Dict[str, str]]:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf(
-            self.hostname, agent_config.get("lnx_remote_alert_handlers", [])
+            self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )
+
+    def rtc_secret(self) -> str | None:
+        default: Ruleset[object] = []
+        if not (
+            settings := self._config_cache.host_extra_conf(
+                self.hostname, agent_config.get("real_time_checks", default)
+            )
+        ):
+            return None
+        match settings[0]["encryption"]:
+            case ("disabled", None):
+                return None
+            case ("enabled", password_spec):
+                return password_store.extract(password_spec)
+            case unknown_value:
+                raise ValueError(unknown_value)
+
+    def agent_config(self, default: Mapping[str, Any]) -> Mapping[str, Any]:
+        assert isinstance(self._config_cache, CEEConfigCache)
+        return {
+            **_boil_down_agent_rules(
+                defaults=default,
+                rulesets=self._config_cache.matched_agent_config_entries(self.hostname),
+            ),
+            "is_ipv6_primary": self.is_ipv6_primary,
+        }

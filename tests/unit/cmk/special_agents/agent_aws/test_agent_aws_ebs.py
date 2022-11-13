@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Sequence
+
 import pytest
 
 from cmk.special_agents.agent_aws import (
@@ -13,6 +15,7 @@ from cmk.special_agents.agent_aws import (
     EBSLimits,
     EBSSummary,
     EC2Summary,
+    OverallTags,
     ResultDistributor,
 )
 
@@ -61,9 +64,14 @@ class FakeEC2Client:
         }
 
 
+EBSSections = Callable[[object | None, OverallTags], tuple[EC2Summary, EBSLimits, EBSSummary, EBS]]
+
+
 @pytest.fixture()
-def get_ebs_sections():
-    def _create_ebs_sections(names, tags):
+def get_ebs_sections() -> EBSSections:
+    def _create_ebs_sections(
+        names: object | None, tags: OverallTags
+    ) -> tuple[EC2Summary, EBSLimits, EBSSummary, EBS]:
         region = "region"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("ebs_names", names)
@@ -104,8 +112,11 @@ ebs_params = [
 
 
 @pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
-def test_agent_aws_ebs_limits(  # type:ignore[no-untyped-def]
-    get_ebs_sections, names, tags, found_ebs
+def test_agent_aws_ebs_limits(
+    get_ebs_sections: EBSSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ebs: int,
 ) -> None:
     ec2_summary, ebs_limits, _ebs_summary, _ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
@@ -137,8 +148,11 @@ def test_agent_aws_ebs_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
-def test_agent_aws_ebs_summary(  # type:ignore[no-untyped-def]
-    get_ebs_sections, names, tags, found_ebs
+def test_agent_aws_ebs_summary(
+    get_ebs_sections: EBSSections,
+    names: list[str] | None,
+    tags: OverallTags,
+    found_ebs: int,
 ) -> None:
     ec2_summary, ebs_limits, ebs_summary, _ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
@@ -153,8 +167,11 @@ def test_agent_aws_ebs_summary(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_ebs", ebs_params)
-def test_agent_aws_ebs(  # type:ignore[no-untyped-def]
-    get_ebs_sections, names, tags, found_ebs
+def test_agent_aws_ebs(
+    get_ebs_sections: EBSSections,
+    names: list[str] | None,
+    tags: OverallTags,
+    found_ebs: int,
 ) -> None:
     ec2_summary, ebs_limits, ebs_summary, ebs = get_ebs_sections(names, tags)
     _ec2_summary_results = ec2_summary.run().results
@@ -174,8 +191,8 @@ def test_agent_aws_ebs(  # type:ignore[no-untyped-def]
         assert len(result.content) >= 5
 
 
-def test_agent_aws_ebs_summary_without_limits(  # type:ignore[no-untyped-def]
-    get_ebs_sections,
+def test_agent_aws_ebs_summary_without_limits(
+    get_ebs_sections: EBSSections,
 ) -> None:
     ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None))
     _ec2_summary_results = ec2_summary.run().results
@@ -188,7 +205,7 @@ def test_agent_aws_ebs_summary_without_limits(  # type:ignore[no-untyped-def]
     assert len(ebs_summary_results) == 3
 
 
-def test_agent_aws_ebs_without_limits(get_ebs_sections) -> None:  # type:ignore[no-untyped-def]
+def test_agent_aws_ebs_without_limits(get_ebs_sections: EBSSections) -> None:
     ec2_summary, _ebs_limits, ebs_summary, ebs = get_ebs_sections(None, (None, None))
     _ec2_summary_results = ec2_summary.run().results
     _ebs_summary_results = ebs_summary.run().results

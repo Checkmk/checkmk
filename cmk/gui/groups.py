@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, get_args, Literal
+from typing import Any, get_args, Literal
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -17,9 +17,9 @@ GroupName = str
 # optional: inventory_paths
 # optional: nagvis_maps
 # optional (CME): customer
-GroupSpec = Dict[str, Any]  # TODO: Improve this type
-GroupSpecs = Dict[GroupName, GroupSpec]
-AllGroupSpecs = Dict[GroupType, GroupSpecs]
+GroupSpec = dict[str, Any]  # TODO: Improve this type
+GroupSpecs = dict[GroupName, GroupSpec]
+AllGroupSpecs = dict[GroupType, GroupSpecs]
 
 
 def load_host_group_information() -> GroupSpecs:
@@ -40,7 +40,7 @@ def load_group_information() -> AllGroupSpecs:
     gui_groups = _load_gui_groups()
 
     # Merge information from Checkmk and Multisite worlds together
-    groups: Dict[GroupType, Dict[GroupName, GroupSpec]] = {}
+    groups: dict[GroupType, dict[GroupName, GroupSpec]] = {}
     for what in get_args(GroupType):
         groups[what] = {}
         for gid, alias in cmk_base_groups["define_%sgroups" % what].items():
@@ -52,9 +52,9 @@ def load_group_information() -> AllGroupSpecs:
     return groups
 
 
-def _load_cmk_base_groups() -> Dict[GroupName, Dict[GroupName, str]]:
+def _load_cmk_base_groups() -> dict[GroupName, dict[GroupName, str]]:
     """Load group alias maps from Checkmk world"""
-    group_specs: Dict[str, Dict[GroupName, str]] = {
+    group_specs: dict[str, dict[GroupName, str]] = {
         "define_hostgroups": {},
         "define_servicegroups": {},
         "define_contactgroups": {},
@@ -65,9 +65,9 @@ def _load_cmk_base_groups() -> Dict[GroupName, Dict[GroupName, str]]:
     )
 
 
-def _load_gui_groups() -> Dict[str, GroupSpecs]:
+def _load_gui_groups() -> dict[str, GroupSpecs]:
     # Now load information from the Web world
-    group_specs: Dict[str, GroupSpecs] = {
+    group_specs: dict[str, GroupSpecs] = {
         "multisite_hostgroups": {},
         "multisite_servicegroups": {},
         "multisite_contactgroups": {},
@@ -76,3 +76,7 @@ def _load_gui_groups() -> Dict[str, GroupSpecs]:
     return store.load_mk_file(
         cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs
     )
+
+
+def clear_group_information_request_cache() -> None:
+    load_group_information.cache_clear()  # type: ignore[attr-defined]

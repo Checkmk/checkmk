@@ -9,19 +9,15 @@
 #include "cap.h"
 #include "cfg.h"
 #include "cfg_details.h"
-#include "commander.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
 #include "install_api.h"
-#include "providers/mrpe.h"
 #include "read_file.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 #include "upgrade.h"
 
 using namespace std::chrono_literals;
@@ -166,14 +162,14 @@ TEST(CmaCfg, Modules) {
     ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
     auto all_dir = details::AllDirTable();
 
-    ASSERT_TRUE(std::any_of(
-        std::begin(all_dir), std::end(all_dir),
-        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+    ASSERT_TRUE(rs::any_of(all_dir, [](std::wstring_view dir) {
+        return dir == dirs::kUserModules;
+    }));
 
     auto removable_dir = details::AllDirTable();
-    ASSERT_TRUE(std::any_of(
-        std::begin(removable_dir), std::end(removable_dir),
-        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+    ASSERT_TRUE(rs::any_of(removable_dir, [](std::wstring_view dir) {
+        return dir == dirs::kUserModules;
+    }));
 }
 
 TEST(CmaCfg, ProcessPluginEnvironment) {
@@ -228,7 +224,6 @@ TEST(CmaToolsDetails, ExtractPathFromServiceName) {
     auto x = ExtractPathFromServiceName(L"check_mk_agent");
     if (x.empty()) {
         GTEST_SKIP() << "Legacy agent not installed test is not possible";
-        return;
     }
     std::error_code ec;
     EXPECT_TRUE(fs::exists(x, ec));
@@ -241,7 +236,6 @@ TEST(CmaToolsDetails, FindRootByExePath) {
     std::error_code ec;
     if (!fs::exists(x, ec)) {
         GTEST_SKIP() << "The agent not installed test is not possible";
-        return;
     }
 
     auto x_no_ext = x / "check_mk_agent";
@@ -296,10 +290,10 @@ TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
 
 TEST(CmaCfg, ReloadCfg) {
     OnStartTest();
-    auto id = GetCfg().uniqId();
+    auto id = details::ConfigInfo::uniqId();
     EXPECT_TRUE(id > 0);
     LoadConfigFull({});
-    auto id2 = GetCfg().uniqId();
+    auto id2 = details::ConfigInfo::uniqId();
     EXPECT_TRUE(id2 > id);
 }
 
@@ -328,7 +322,6 @@ TEST(Cma, PushPop) {
     fs::path root{r.wstring()};
     fs::path user{u.wstring()};
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-    std::error_code ec;
 
     auto old_root = GetRootDir();
     auto old_user = GetUserDir();
@@ -361,8 +354,8 @@ TEST(Cma, PushPop) {
 namespace cma::srv {
 TEST(CmaCfg, RestartBinaries) {
     srv::ServiceProcessor sp;
-    uint64_t id = cfg::GetCfg().uniqId();
-    auto old_id = id;
+    auto id = cfg::details::ConfigInfo::uniqId();
+    const auto old_id = id;
     EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
     EXPECT_EQ(old_id, id);
     ReloadConfig();
@@ -400,8 +393,10 @@ protected:
         return std::make_tuple(pd, table, table_removed);
     }
 
-    fs::path capBase() const { return cap_base_; }
-    size_t userFoldersCount() const { return user_folders_count_; };
+    [[nodiscard]] fs::path capBase() const { return cap_base_; }
+    [[nodiscard]] size_t userFoldersCount() const {
+        return user_folders_count_;
+    }
 
 private:
     std::wstring root_;
@@ -476,7 +471,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
 
     std::vector<std::wstring> files;
     cap::Process(wtools::ToUtf8(tgt.wstring()), cap::ProcMode::install, files);
-    ASSERT_TRUE(files.size() > 0);
+    ASSERT_FALSE(files.empty());
     for (const auto &f : files) {
         EXPECT_TRUE(fs::exists(f));
     }
@@ -558,10 +553,10 @@ private:
         ofs << bat_file;
     }
 
-    std::vector<std::string> runScript() const {
+    [[nodiscard]] std::vector<std::string> runScript() const {
         auto [pid, job, process] =
             tools::RunStdCommandAsJob(cmd_file_.wstring());
-        tst::WaitForSuccessSilent(1000ms, [process]() {
+        tst::WaitForSuccessSilent(1000ms, [process] {
             DWORD code = 0;
             auto success = ::GetExitCodeProcess(process, &code);
             return success == TRUE && code != STILL_ACTIVE;

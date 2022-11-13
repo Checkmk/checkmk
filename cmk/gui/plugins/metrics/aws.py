@@ -967,6 +967,29 @@ metric_info["aws_cloudfront_5xx_error_rate"] = {
     "color": "42/a",
 }
 
+metric_info["aws_ecs_clusters"] = {
+    "title": _l("Clusters"),
+    "unit": "count",
+    "color": "35/a",
+}
+
+metric_info["aws_elasticache_nodes"] = {
+    "title": _l("Nodes"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["aws_elasticache_parameter_groups"] = {
+    "title": _l("Parameter groups"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info["aws_elasticache_subnet_groups"] = {
+    "title": _l("Subnet groups"),
+    "unit": "count",
+    "color": "42/a",
+}
 
 # .
 #   .--Graphs--------------------------------------------------------------.

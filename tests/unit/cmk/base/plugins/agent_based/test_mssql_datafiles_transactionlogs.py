@@ -92,7 +92,7 @@ def test_discovery_mssql_transactionlogs(  # type:ignore[no-untyped-def]
 ) -> None:
     assert sorted(
         msdt.discover_mssql_transactionlogs([{}], section_mssql, section_df),
-        key=lambda s: s.item or "",  # type: ignore[attr-defined]
+        key=lambda s: s.item or "",
     ) == [
         Service(item="MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log"),
         Service(item="MSSQL46.DASH_CONFIG_T.DASH_CONFIG_T_log"),

@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterator, List, Optional
-from typing import Tuple as _Tuple
+from collections.abc import Iterator
 
 import cmk.utils.version as cmk_version
 
@@ -37,7 +36,7 @@ from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visu
 from cmk.gui.visuals import view_title
 
 
-def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> List[PageMenuDropdown]:
+def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> list[PageMenuDropdown]:
     """For the given visual find other visuals to link to
 
     Based on the (single_infos and infos of the data source) we have different categories,
@@ -66,7 +65,7 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> Lis
 
     # Now get the "info+single object" combinations to show dropdown menus for
     for info_name, is_single_info in _get_relevant_infos(view):
-        ident = "%s_%s" % (info_name, "single" if is_single_info else "multiple")
+        ident = "{}_{}".format(info_name, "single" if is_single_info else "multiple")
         info = visual_info_registry[info_name]()
 
         dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
@@ -210,13 +209,13 @@ def _get_context_page_menu_topics(
     view: View,
     info: VisualInfo,
     is_single_info: bool,
-    topics: Dict[str, pagetypes.PagetypeTopics],
-    dropdown_visuals: Iterator[_Tuple[VisualType, Visual]],
-    singlecontext_request_vars: Dict[str, str],
+    topics: dict[str, pagetypes.PagetypeTopics],
+    dropdown_visuals: Iterator[tuple[VisualType, Visual]],
+    singlecontext_request_vars: dict[str, str],
     mobile: bool,
 ) -> Iterator[PageMenuTopic]:
     """Create the page menu topics for the given dropdown from the flat linked visuals list"""
-    by_topic: Dict[pagetypes.PagetypeTopics, List[PageMenuEntry]] = {}
+    by_topic: dict[pagetypes.PagetypeTopics, list[PageMenuEntry]] = {}
 
     for visual_type, visual in sorted(
         dropdown_visuals, key=lambda i: (i[1]["sort_index"], i[1]["title"])
@@ -254,8 +253,8 @@ def _get_context_page_menu_topics(
 
 
 def _get_visuals_for_page_menu_dropdown(
-    linked_visuals: List[_Tuple[VisualType, Visual]], info: VisualInfo, is_single_info: bool
-) -> Iterator[_Tuple[VisualType, Visual]]:
+    linked_visuals: list[tuple[VisualType, Visual]], info: VisualInfo, is_single_info: bool
+) -> Iterator[tuple[VisualType, Visual]]:
     """Extract the visuals for the given dropdown from the flat linked visuals list"""
     for visual_type, visual in linked_visuals:
         if is_single_info and info.ident in visual["single_infos"]:
@@ -263,7 +262,7 @@ def _get_visuals_for_page_menu_dropdown(
             continue
 
 
-def _get_relevant_infos(view: View) -> List[_Tuple[InfoName, bool]]:
+def _get_relevant_infos(view: View) -> list[tuple[InfoName, bool]]:
     """Gather the infos that are relevant for this view"""
     dropdowns = [(info_name, True) for info_name in view.spec["single_infos"]]
     dropdowns += [(info_name, False) for info_name in view.datasource.infos]
@@ -295,10 +294,10 @@ def collect_context_links(
 def _collect_linked_visuals(
     view: View,
     rows: Rows,
-    singlecontext_request_vars: Dict[str, str],
+    singlecontext_request_vars: dict[str, str],
     mobile: bool,
     visual_types: SingleInfos,
-) -> Iterator[_Tuple[VisualType, Visual]]:
+) -> Iterator[tuple[VisualType, Visual]]:
     for type_name in visual_type_registry.keys():
         if type_name in visual_types:
             yield from _collect_linked_visuals_of_type(
@@ -307,8 +306,8 @@ def _collect_linked_visuals(
 
 
 def _collect_linked_visuals_of_type(
-    type_name: str, view: View, rows: Rows, singlecontext_request_vars: Dict[str, str], mobile: bool
-) -> Iterator[_Tuple[VisualType, Visual]]:
+    type_name: str, view: View, rows: Rows, singlecontext_request_vars: dict[str, str], mobile: bool
+) -> Iterator[tuple[VisualType, Visual]]:
     visual_type = visual_type_registry[type_name]()
     visual_type.load_handler()
     available_visuals = visual_type.permitted_visuals
@@ -352,14 +351,14 @@ def _collect_linked_visuals_of_type(
 def _make_page_menu_entry_for_visual(
     visual_type: VisualType,
     visual: Visual,
-    singlecontext_request_vars: Dict[str, str],
+    singlecontext_request_vars: dict[str, str],
     mobile: bool,
     external_link: bool = False,
 ) -> PageMenuEntry:
     url: str = make_linked_visual_url(visual_type, visual, singlecontext_request_vars, mobile)
     link: PageMenuLink = make_external_link(url) if external_link else make_simple_link(url)
     return PageMenuEntry(
-        title=visual["title"],
+        title=str(visual["title"]),
         icon_name=visual.get("icon") or "trans",
         item=link,
         name="cb_" + visual["name"],
@@ -369,7 +368,7 @@ def _make_page_menu_entry_for_visual(
 
 def _get_availability_entry(
     view: View, info: VisualInfo, is_single_info: bool
-) -> Optional[PageMenuEntry]:
+) -> PageMenuEntry | None:
     """Detect whether or not to add an availability link to the dropdown currently being rendered
 
     In which dropdown to expect the "show availability for current view" link?
@@ -416,7 +415,7 @@ def _show_current_view_availability_context_button(view: View) -> bool:
 
 def _get_combined_graphs_entry(
     view: View, info: VisualInfo, is_single_info: bool
-) -> Optional[PageMenuEntry]:
+) -> PageMenuEntry | None:
     """Detect whether or not to add a combined graphs link to the dropdown currently being rendered
 
     In which dropdown to expect the "All metrics of same type in one graph" link?
@@ -484,11 +483,11 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
 
     # This is not generic enough. Generalize once we hit this
     raise ValueError(
-        "Can not decide whether or not to show this button: %s, %s" % (info_name, datasource.ident)
+        f"Can not decide whether or not to show this button: {info_name}, {datasource.ident}"
     )
 
 
-def _page_menu_host_setup_topic(view: View) -> List[PageMenuTopic]:
+def _page_menu_host_setup_topic(view: View) -> list[PageMenuTopic]:
     if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
         return []
 

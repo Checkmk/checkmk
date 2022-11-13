@@ -7,7 +7,8 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import Iterable, List, MutableSequence, NamedTuple, Optional, Union
+from collections.abc import Iterable, MutableSequence
+from typing import NamedTuple
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.type_defs import MegaMenu
@@ -16,14 +17,14 @@ from cmk.gui.utils.speaklater import LazyString
 
 
 class BreadcrumbItem(NamedTuple):
-    title: Union[str, LazyString]
-    url: Optional[str]
+    title: str | LazyString
+    url: str | None
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors
-    def __init__(self, items: Optional[Iterable[BreadcrumbItem]] = None) -> None:
+    def __init__(self, items: Iterable[BreadcrumbItem] | None = None) -> None:
         super().__init__()
-        self._items: List[BreadcrumbItem] = list(items) if items else []
+        self._items: list[BreadcrumbItem] = list(items) if items else []
 
     def __len__(self) -> int:
         return len(self._items)
@@ -79,7 +80,7 @@ def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
 
 def make_topic_breadcrumb(
     menu: MegaMenu,
-    topic_title: Union[str, LazyString],
+    topic_title: str | LazyString,
 ) -> Breadcrumb:
     """Helper to create a breadcrumb down to topic level"""
     # 1. Main menu level

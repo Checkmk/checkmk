@@ -98,14 +98,3 @@ def test_get(basic_registry: PluginRegistry) -> None:
 class InstanceRegistry(cmk.utils.plugin_registry.Registry[Plugin]):
     def plugin_name(self, instance):
         return instance.__class__.__name__
-
-
-def test_decorate_classes_for_instance_registry() -> None:
-    registry = InstanceRegistry()
-    assert list(registry.items()) == []
-
-    @registry.register_instance
-    class DecoratedPlugin(Plugin):
-        pass
-
-    assert isinstance(registry.get("DecoratedPlugin"), DecoratedPlugin)

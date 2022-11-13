@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import gettext as gettext_module
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import NamedTuple
 
 import cmk.utils.paths
 
@@ -34,7 +34,7 @@ class Translation(NamedTuple):
     name: str
 
 
-def _translation() -> Optional[Translation]:
+def _translation() -> Translation | None:
     try:
         return request_local_attr().translation
     except RuntimeError:
@@ -71,21 +71,21 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     return str(plural)
 
 
-def get_current_language() -> Optional[str]:
+def get_current_language() -> str:
     if translation := _translation():
         return translation.name
-    return None
+    return "en"
 
 
-def _get_language_dirs() -> List[Path]:
+def _get_language_dirs() -> list[Path]:
     return _get_base_language_dirs() + _get_package_language_dirs()
 
 
-def _get_base_language_dirs() -> List[Path]:
+def _get_base_language_dirs() -> list[Path]:
     return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
 
 
-def _get_package_language_dirs() -> List[Path]:
+def _get_package_language_dirs() -> list[Path]:
     """Return a list of extension package specific localization directories
 
     It's possible for extension packages to provide custom localization files
@@ -98,8 +98,8 @@ def _get_package_language_dirs() -> List[Path]:
     return list(package_locale_dir.iterdir())
 
 
-def get_language_alias(lang: Optional[str]) -> str:
-    if lang is None:
+def get_language_alias(lang: str) -> str:
+    if lang == "en":
         return _("English")
 
     alias = lang
@@ -107,16 +107,16 @@ def get_language_alias(lang: Optional[str]) -> str:
         try:
             with (lang_dir / lang / "alias").open(encoding="utf-8") as f:
                 alias = f.read().strip()
-        except (OSError, IOError):
+        except OSError:
             pass
     return alias
 
 
-def get_languages() -> List[Tuple[str, str]]:
+def get_languages() -> list[tuple[str, str]]:
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = {("", _("English"))}
+    languages = {("en", _("English"))}
 
     for lang_dir in _get_language_dirs():
         try:
@@ -139,9 +139,9 @@ def _unlocalize() -> None:
     request_local_attr().translation = None
 
 
-def localize(lang: Optional[str]) -> None:
+def localize(lang: str) -> None:
     _.cache_clear()  # type:ignore[attr-defined]
-    if lang is None:
+    if lang == "en":
         _unlocalize()
         return
 
@@ -153,19 +153,19 @@ def localize(lang: Optional[str]) -> None:
     request_local_attr().translation = Translation(translation=gettext_translation, name=lang)
 
 
-def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
+def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     """Load all available "multisite" translation files. All are loaded first.
     The builtin ones are used as "fallback" for the local files which means that
     the texts in the local files have precedence.
     """
-    translations: List[gettext_module.NullTranslations] = []
+    translations: list[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
             translation = gettext_module.translation(
                 "multisite", str(locale_base_dir), languages=[lang]
             )
 
-        except IOError:
+        except OSError:
             continue
 
         # Create a chain of fallback translations
@@ -179,9 +179,9 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     return translations[-1]
 
 
-def is_community_translation(lang: Optional[str]) -> bool:
-    """All languages but English (None/"en") and German ("de") are community translations."""
-    return lang not in [None, "en", "de"]
+def is_community_translation(lang: str) -> bool:
+    """All languages but English ("en") and German ("de") are community translations."""
+    return lang not in ["en", "de"]
 
 
 # .
@@ -196,7 +196,7 @@ def is_community_translation(lang: Optional[str]) -> bool:
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations: Dict[str, Dict[str, str]] = {}
+_user_localizations: dict[str, dict[str, str]] = {}
 
 
 # Localization of user supplied texts
@@ -204,7 +204,7 @@ def _u(text: str) -> str:
     ldict = _user_localizations.get(text)
     if ldict:
         current_language = get_current_language()
-        if current_language is None:
+        if current_language == "en":
             return text
         return ldict.get(current_language, text)
     if translation := _translation():
@@ -212,6 +212,6 @@ def _u(text: str) -> str:
     return text
 
 
-def set_user_localizations(localizations: Dict[str, Dict[str, str]]) -> None:
+def set_user_localizations(localizations: dict[str, dict[str, str]]) -> None:
     _user_localizations.clear()
     _user_localizations.update(localizations)

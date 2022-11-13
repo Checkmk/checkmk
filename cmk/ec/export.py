@@ -6,20 +6,17 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
-from .config import ConfigFromWATO
+from .config import ConfigFromWATO, ECRulePack, ECRulePackSpec, MkpRulePackProxy, Rule, TextPattern
 from .defaults import default_config, default_rule_pack
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
 from .main import SyslogFacility
 from .rule_packs import (
     add_rule_pack_proxies,
-    ECRulePack,
-    ECRulePackSpec,
     ECRuleSpec,
     export_rule_pack,
     load_config,
     load_rule_packs,
     mkp_rule_pack_dir,
-    MkpRulePackProxy,
     override_rule_pack_proxy,
     release_packaged_rule_packs,
     remove_exported_rule_pack,

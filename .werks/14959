@@ -1,0 +1,16 @@
+Title: cmk-update-agent: Limit update interval
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1667890436
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The agent update interval (configurable in ruleset <i>Agent updater</i>) is now
+limited to a maximum value of 30 days.
+
+Existing rules with a higher interval will continue to work, but can't be
+edited without adapting the value.
+

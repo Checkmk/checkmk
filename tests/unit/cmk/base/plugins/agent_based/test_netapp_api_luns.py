@@ -82,7 +82,7 @@ def test_checks(section: SectionSingleInstance) -> None:
             "fs_used",
             513958.37890625,
             levels=(491551.34765625, 552995.2661132812),
-            boundaries=(0, None),
+            boundaries=(0, 614439.1845703125),
         ),
         Metric("fs_free", 100480.8056640625, boundaries=(0, None)),
         Metric("fs_used_percent", 83.64674516415643, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),

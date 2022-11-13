@@ -5,7 +5,6 @@
 """SNMP caching"""
 
 import os
-from typing import Dict, List, Optional
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -15,11 +14,11 @@ from cmk.utils.type_defs import HostAddress, HostName
 from .type_defs import OID, SNMPDecodedString, SNMPHostConfig
 
 # TODO: Replace this by generic caching
-_g_single_oid_hostname: Optional[HostName] = None
-_g_single_oid_ipaddress: Optional[HostAddress] = None
-_g_single_oid_cache: Optional[Dict[OID, Optional[SNMPDecodedString]]] = None
+_g_single_oid_hostname: HostName | None = None
+_g_single_oid_ipaddress: HostAddress | None = None
+_g_single_oid_cache: dict[OID, SNMPDecodedString | None] | None = None
 # TODO: Move to StoredWalkSNMPBackend?
-_g_walk_cache: Dict[HostName, List[str]] = {}
+_g_walk_cache: dict[HostName, list[str]] = {}
 
 
 def initialize_single_oid_cache(snmp_config: SNMPHostConfig, from_disk: bool = False) -> None:
@@ -47,12 +46,12 @@ def write_single_oid_cache(snmp_config: SNMPHostConfig) -> None:
     cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
-    cache_path = "%s/%s.%s" % (cache_dir, snmp_config.hostname, snmp_config.ipaddress)
+    cache_path = f"{cache_dir}/{snmp_config.hostname}.{snmp_config.ipaddress}"
     store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
-def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> Dict[OID, Optional[SNMPDecodedString]]:
-    cache_path = "%s/%s.%s" % (
+def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> dict[OID, SNMPDecodedString | None]:
+    cache_path = "{}/{}.{}".format(
         cmk.utils.paths.snmp_scan_cache_dir,
         snmp_config.hostname,
         snmp_config.ipaddress,
@@ -60,12 +59,12 @@ def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> Dict[OID, Optional[SN
     return store.load_object_from_file(cache_path, default={})
 
 
-def single_oid_cache() -> Dict[OID, Optional[SNMPDecodedString]]:
+def single_oid_cache() -> dict[OID, SNMPDecodedString | None]:
     assert _g_single_oid_cache is not None
     return _g_single_oid_cache
 
 
-def host_cache() -> Dict[HostName, List[str]]:
+def host_cache() -> dict[HostName, list[str]]:
     return _g_walk_cache
 
 
@@ -77,7 +76,7 @@ def cleanup_host_caches() -> None:
 cmk.utils.cleanup.register_cleanup(cleanup_host_caches)
 
 
-def _clear_other_hosts_oid_cache(hostname: Optional[HostName]) -> None:
+def _clear_other_hosts_oid_cache(hostname: HostName | None) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
     if _g_single_oid_hostname != hostname:
         _g_single_oid_cache = None

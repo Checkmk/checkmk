@@ -65,7 +65,7 @@ class FilterInvText(InputTextFilter):
             is_show_more=is_show_more,
         )
 
-    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
 
 
@@ -271,12 +271,11 @@ class FilterInvBool(FilterOption):
             is_show_more=is_show_more,
         )
 
-    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-@filter_registry.register_instance
-class FilterHasInv(FilterOption):
+class _FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
             title=_l("Has Inventory Data"),
@@ -290,12 +289,14 @@ class FilterHasInv(FilterOption):
             is_show_more=True,
         )
 
-    def need_inventory(self, value) -> bool:  # type:ignore[no-untyped-def]
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-@filter_registry.register_instance
-class FilterInvHasSoftwarePackage(Filter):
+filter_registry.register(_FilterHasInv())
+
+
+class _FilterInvHasSoftwarePackage(Filter):
     def __init__(self) -> None:
         self._varprefix = "invswpac_host_"
         super().__init__(
@@ -411,6 +412,9 @@ class FilterInvHasSoftwarePackage(Filter):
 
     def version_is_higher(self, a: Optional[str], b: Optional[str]) -> bool:
         return cmp_version(a, b) == 1
+
+
+filter_registry.register(_FilterInvHasSoftwarePackage())
 
 
 @visual_info_registry.register

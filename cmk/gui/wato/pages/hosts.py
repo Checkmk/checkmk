@@ -607,17 +607,11 @@ class CreateHostMode(ABCHostMode):
         Hostname().validate_value(hostname, "host")
 
         folder = Folder.current()
-
         if transactions.check_transaction():
-            # Note:  `folder` is a CREFolder but it will still try to bake,
-            # although the bakery is a CEE feature.  The code under
-            # `hosts_and_folders` is very convoluted.
-            folder.create_hosts(
-                [(hostname, attributes, cluster_nodes)],
-                bake=bakery.try_bake_agents_for_hosts,
-            )
+            folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
         self._host = folder.load_host(hostname)
+        bakery.try_bake_agents_for_hosts([hostname])
 
         inventory_url = folder_preserving_link(
             [

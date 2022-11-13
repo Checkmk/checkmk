@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::{certs, cli, constants, setup, site_spec, types};
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
@@ -17,29 +17,33 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
-#[derive(StringEnum, PartialEq, Eq)]
-pub enum ConnectionType {
-    /// `push-agent`
-    Push,
-    /// `pull-agent`
-    Pull,
-}
-
-pub trait JSONLoader: DeserializeOwned + Default {
+pub trait JSONLoader: DeserializeOwned {
     fn load(path: &Path) -> AnyhowResult<Self> {
-        if !path.exists() {
-            return Ok(Self::default());
-        }
         Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
-pub trait TOMLLoader: DeserializeOwned + Default {
-    fn load(path: &Path) -> AnyhowResult<Self> {
+pub trait JSONLoaderMissingSafe: JSONLoader + Default {
+    fn load_missing_safe(path: &Path) -> AnyhowResult<Self> {
         if !path.exists() {
             return Ok(Self::default());
         }
+        Self::load(path)
+    }
+}
+
+pub trait TOMLLoader: DeserializeOwned {
+    fn load(path: &Path) -> AnyhowResult<Self> {
         Ok(toml::from_str(&fs::read_to_string(path)?)?)
+    }
+}
+
+pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
+    fn load_missing_safe(path: &Path) -> AnyhowResult<Self> {
+        if !path.exists() {
+            return Ok(Self::default());
+        }
+        Self::load(path)
     }
 }
 
@@ -51,14 +55,14 @@ pub struct RegistrationConfigHostName {
 impl RegistrationConfigHostName {
     pub fn new(
         runtime_config: RuntimeConfig,
-        reg_args_host_name: cli::RegistrationArgsHostName,
+        register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             connection_config: RegistrationConnectionConfig::new(
                 runtime_config,
-                reg_args_host_name.connection_args,
+                register_opts.connection_opts,
             )?,
-            host_name: reg_args_host_name.host_name,
+            host_name: register_opts.hostname,
         })
     }
 }
@@ -70,17 +74,12 @@ pub struct RegistrationConfigAgentLabels {
 
 impl RegistrationConfigAgentLabels {
     pub fn new(
-        runtime_config: RuntimeConfig,
-        reg_args_agent_labels: cli::RegistrationArgsAgentLabels,
+        connection_config: RegistrationConnectionConfig,
+        agent_labels: types::AgentLabels,
     ) -> AnyhowResult<Self> {
         Ok(Self {
-            connection_config: RegistrationConnectionConfig::new(
-                runtime_config,
-                reg_args_agent_labels.connection_args,
-            )?,
-            agent_labels: Self::enrich_with_automatic_agent_labels(
-                reg_args_agent_labels.agent_labels_raw.into_iter().collect(),
-            )?,
+            connection_config,
+            agent_labels: Self::enrich_with_automatic_agent_labels(agent_labels)?,
         })
     }
 
@@ -121,16 +120,17 @@ pub struct RegistrationConnectionConfig {
 }
 
 impl RegistrationConnectionConfig {
-    fn new(
+    pub fn new(
         runtime_config: RuntimeConfig,
-        reg_args_conn: cli::RegistrationArgsConnection,
+        registration_conncection_opts: cli::RegistrationConnectionOpts,
     ) -> AnyhowResult<Self> {
         let site_id = site_spec::SiteID {
-            server: reg_args_conn.server_spec.server,
-            site: reg_args_conn.site,
+            server: registration_conncection_opts.server_spec.server,
+            site: registration_conncection_opts.site,
         };
-        let client_config = ClientConfig::new(runtime_config, reg_args_conn.client_opts);
-        let receiver_port = (if let Some(p) = reg_args_conn.server_spec.port {
+        let client_config =
+            ClientConfig::new(runtime_config, registration_conncection_opts.client_opts);
+        let receiver_port = (if let Some(p) = registration_conncection_opts.server_spec.port {
             Ok(p)
         } else {
             site_spec::discover_receiver_port(&site_id, &client_config)
@@ -138,13 +138,29 @@ impl RegistrationConnectionConfig {
         Ok(Self {
             site_id,
             receiver_port,
-            username: reg_args_conn.user,
-            password: reg_args_conn.password,
+            username: registration_conncection_opts.user,
+            password: registration_conncection_opts.password,
             root_certificate: None,
-            trust_server_cert: reg_args_conn.trust_server_cert,
+            trust_server_cert: registration_conncection_opts.trust_server_cert,
             client_config,
         })
     }
+}
+
+#[derive(Deserialize)]
+pub struct PreConfiguredConnections {
+    pub connections: HashMap<site_spec::SiteID, PreConfiguredConnection>,
+    pub agent_labels: types::AgentLabels,
+    pub keep_vanished_connections: bool,
+}
+
+impl JSONLoader for PreConfiguredConnections {}
+
+#[derive(Deserialize, Clone)]
+pub struct PreConfiguredConnection {
+    pub port: Option<u16>,
+    pub credentials: types::Credentials,
+    pub root_cert: String,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -163,44 +179,9 @@ pub struct RuntimeConfig {
 }
 
 impl TOMLLoader for RuntimeConfig {}
+impl TOMLLoaderMissingSafe for RuntimeConfig {}
 
-#[derive(Debug)]
-pub struct LegacyPullMarker(std::path::PathBuf);
-
-impl LegacyPullMarker {
-    pub fn new<P>(path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
-        Self(path.as_ref().to_owned())
-    }
-
-    pub fn exists(&self) -> bool {
-        self.0.exists()
-    }
-
-    pub fn remove(&self) -> std::io::Result<()> {
-        if !&self.exists() {
-            return Ok(());
-        }
-
-        fs::remove_file(&self.0)
-    }
-
-    pub fn create(&self) -> std::io::Result<()> {
-        fs::write(
-            &self.0,
-            "This file has been placed as a marker for cmk-agent-ctl\n\
-            to allow unencrypted legacy agent pull mode.\n\
-            It will be removed automatically on first successful agent registration.\n\
-            You can remove it manually to disallow legacy mode, but note that\n\
-            for regular operation you need to register the agent anyway.\n\
-            \n\
-            To secure the connection run `cmk-agent-ctl register`.\n",
-        )
-    }
-}
-
+#[derive(Clone)]
 pub struct ClientConfig {
     pub use_proxy: bool,
     pub validate_api_cert: bool,
@@ -222,15 +203,13 @@ pub struct PullConfig {
     pub max_connections: usize,
     pub connection_timeout: u64,
     pub agent_channel: types::AgentChannel,
-    pub legacy_pull_marker: LegacyPullMarker,
-    pub registry: Registry,
+    registry: Registry,
 }
 
 impl PullConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
         pull_opts: cli::PullOpts,
-        legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
         let allowed_ip = runtime_config.allowed_ip.unwrap_or_default();
@@ -248,7 +227,6 @@ impl PullConfig {
             max_connections: setup::max_connections(),
             connection_timeout: setup::connection_timeout(),
             agent_channel,
-            legacy_pull_marker,
             registry,
         })
     }
@@ -258,7 +236,7 @@ impl PullConfig {
     }
 
     pub fn allow_legacy_pull(&self) -> bool {
-        self.registry.is_empty() && self.legacy_pull_marker.exists()
+        self.registry.legacy_pull_active()
     }
 
     pub fn connections(&self) -> impl Iterator<Item = &TrustedConnection> {
@@ -267,6 +245,249 @@ impl PullConfig {
 
     pub fn has_connections(&self) -> bool {
         !self.registry.pull_is_empty()
+    }
+}
+
+#[derive(Clone)]
+pub struct Registry {
+    connections: RegisteredConnections,
+    path: PathBuf,
+    last_reload: Option<SystemTime>,
+    legacy_pull_marker: LegacyPullMarker,
+}
+
+impl Registry {
+    #[cfg(test)]
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn new(path: &Path) -> AnyhowResult<Self> {
+        Ok(Self {
+            connections: RegisteredConnections::default(),
+            path: PathBuf::from(path),
+            last_reload: None,
+            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
+        })
+    }
+
+    pub fn from_file(path: &Path) -> AnyhowResult<Self> {
+        Ok(Self {
+            connections: RegisteredConnections::load_missing_safe(path)?,
+            path: PathBuf::from(path),
+            last_reload: mtime(path)?,
+            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
+        })
+    }
+
+    pub fn refresh(&mut self) -> AnyhowResult<bool> {
+        match (mtime(&self.path)?, self.last_reload) {
+            (Some(now), Some(then)) => {
+                match now.duration_since(then) {
+                    Ok(time) if time.is_zero() => {
+                        // No change.
+                        Ok(false)
+                    }
+                    _ => {
+                        // This also covers Err(_), which means "negative time".
+                        // This may occur due to clock adjustments.
+                        // Force reload in this case.
+                        // Otherwise, we have a regular posive duration, which means
+                        // that our registration was touched.
+                        self.reload()?;
+                        Ok(true)
+                    }
+                }
+            }
+
+            (None, None) => {
+                // Still no file there -> No change.
+                Ok(false)
+            }
+
+            _ => {
+                // File was deleted or is new
+                self.reload()?;
+                Ok(true)
+            }
+        }
+    }
+
+    pub fn save(&self) -> io::Result<()> {
+        fs::write(
+            &self.path,
+            &serde_json::to_string_pretty(&self.connections)?,
+        )?;
+        #[cfg(unix)]
+        fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))?;
+        self.legacy_pull_marker.remove()
+    }
+
+    pub fn pull_standard_is_empty(&self) -> bool {
+        self.connections.pull.is_empty()
+    }
+
+    pub fn pull_imported_is_empty(&self) -> bool {
+        self.connections.pull_imported.is_empty()
+    }
+
+    pub fn pull_is_empty(&self) -> bool {
+        self.pull_standard_is_empty() & self.pull_imported_is_empty()
+    }
+
+    pub fn push_is_empty(&self) -> bool {
+        self.connections.push.is_empty()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.push_is_empty() & self.pull_is_empty()
+    }
+
+    pub fn standard_pull_connections(
+        &self,
+    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
+        self.connections.pull.iter()
+    }
+
+    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
+        self.connections.pull_imported.iter()
+    }
+
+    pub fn pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
+        self.connections
+            .pull
+            .values()
+            .map(|c| &c.trust)
+            .chain(self.connections.pull_imported.iter())
+    }
+
+    pub fn push_connections(
+        &self,
+    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
+        self.connections.push.iter()
+    }
+
+    pub fn registered_site_ids(&self) -> impl Iterator<Item = &site_spec::SiteID> {
+        self.connections
+            .pull
+            .keys()
+            .chain(self.connections.push.keys())
+    }
+
+    pub fn get_mutable(
+        &mut self,
+        site_id: &site_spec::SiteID,
+    ) -> Option<&mut TrustedConnectionWithRemote> {
+        self.connections
+            .pull
+            .get_mut(site_id)
+            .or_else(|| self.connections.push.get_mut(site_id))
+    }
+
+    pub fn register_connection(
+        &mut self,
+        connection_type: &ConnectionType,
+        site_id: &site_spec::SiteID,
+        connection: TrustedConnectionWithRemote,
+    ) {
+        let (insert_connections, remove_connections) = match connection_type {
+            ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
+            ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
+        };
+        remove_connections.remove(site_id);
+        insert_connections.insert(site_id.clone(), connection);
+    }
+
+    pub fn register_imported_connection(&mut self, connection: TrustedConnection) {
+        self.connections.pull_imported.insert(connection);
+    }
+
+    pub fn delete_standard_connection(&mut self, site_id: &site_spec::SiteID) -> AnyhowResult<()> {
+        if self.connections.push.remove(site_id).is_some() {
+            println!("Deleted push connection '{}'", site_id);
+            return Ok(());
+        }
+        if self.connections.pull.remove(site_id).is_some() {
+            println!("Deleted pull connection '{}'", site_id);
+            return Ok(());
+        }
+        Err(anyhow!("Connection '{}' not found", site_id))
+    }
+
+    pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
+        if self.connections.pull_imported.remove(uuid) {
+            println!("Deleted imported connection '{}'", uuid);
+            return Ok(());
+        };
+        Err(anyhow!(
+            "Imported pull connection with UUID {} not found",
+            uuid
+        ))
+    }
+
+    pub fn clear(&mut self) {
+        self.connections.push.clear();
+        self.connections.pull.clear();
+        self.clear_imported();
+    }
+
+    pub fn clear_imported(&mut self) {
+        self.connections.pull_imported.clear();
+    }
+
+    pub fn legacy_pull_active(&self) -> bool {
+        self.is_empty() && self.legacy_pull_marker.exists()
+    }
+
+    pub fn activate_legacy_pull(&self) -> AnyhowResult<()> {
+        if !self.is_empty() {
+            bail!("Cannot enable legacy pull mode since there are registered connections")
+        }
+        self.legacy_pull_marker
+            .create()
+            .context("Failed to activate legacy pull mode")
+    }
+
+    fn path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
+        Ok(registry_path
+            .as_ref()
+            .parent()
+            .context("Failed to determine parent path of connection registry")?
+            .join("allow-legacy-pull"))
+    }
+
+    fn reload(&mut self) -> AnyhowResult<()> {
+        self.connections = RegisteredConnections::load_missing_safe(&self.path)?;
+        self.last_reload = mtime(&self.path)?;
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
+struct RegisteredConnections {
+    #[serde(default)]
+    push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+
+    #[serde(default)]
+    pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+
+    #[serde(default)]
+    pull_imported: std::collections::HashSet<TrustedConnection>,
+}
+
+impl JSONLoader for RegisteredConnections {}
+impl JSONLoaderMissingSafe for RegisteredConnections {}
+
+#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
+pub struct TrustedConnectionWithRemote {
+    #[serde(flatten)]
+    pub trust: TrustedConnection,
+    pub receiver_port: u16,
+}
+
+impl PartialEq for TrustedConnectionWithRemote {
+    fn eq(&self, other: &Self) -> bool {
+        self.trust == other.trust
     }
 }
 
@@ -314,32 +535,50 @@ impl TrustedConnection {
     }
 }
 
-#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
-pub struct TrustedConnectionWithRemote {
-    #[serde(flatten)]
-    pub trust: TrustedConnection,
-    pub receiver_port: u16,
-}
+#[derive(Debug, Clone)]
+struct LegacyPullMarker(std::path::PathBuf);
 
-impl PartialEq for TrustedConnectionWithRemote {
-    fn eq(&self, other: &Self) -> bool {
-        self.trust == other.trust
+impl LegacyPullMarker {
+    fn new<P>(path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
+        Self(path.as_ref().to_owned())
+    }
+
+    fn exists(&self) -> bool {
+        self.0.exists()
+    }
+
+    fn remove(&self) -> std::io::Result<()> {
+        if !&self.exists() {
+            return Ok(());
+        }
+
+        fs::remove_file(&self.0)
+    }
+
+    fn create(&self) -> std::io::Result<()> {
+        fs::write(
+            &self.0,
+            "This file has been placed as a marker for cmk-agent-ctl\n\
+            to allow unencrypted legacy agent pull mode.\n\
+            It will be removed automatically on first successful agent registration.\n\
+            You can remove it manually to disallow legacy mode, but note that\n\
+            for regular operation you need to register the agent anyway.\n\
+            \n\
+            To secure the connection run `cmk-agent-ctl register`.\n",
+        )
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
-pub struct RegisteredConnections {
-    #[serde(default)]
-    pub push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
-
-    #[serde(default)]
-    pub pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
-
-    #[serde(default)]
-    pub pull_imported: std::collections::HashSet<TrustedConnection>,
+#[derive(StringEnum, PartialEq, Eq)]
+pub enum ConnectionType {
+    /// `push-agent`
+    Push,
+    /// `pull-agent`
+    Pull,
 }
-
-impl JSONLoader for RegisteredConnections {}
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
@@ -348,192 +587,13 @@ fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
         None
     })
 }
-#[derive(PartialEq, Debug, Clone)]
-pub struct Registry {
-    connections: RegisteredConnections,
-    path: PathBuf,
-    last_reload: Option<SystemTime>,
-}
-
-impl Registry {
-    #[cfg(test)]
-    pub fn new<P>(connections: RegisteredConnections, path: P) -> AnyhowResult<Registry>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref().to_owned();
-        let last_reload = mtime(&path)?;
-        Ok(Registry {
-            connections,
-            path,
-            last_reload,
-        })
-    }
-
-    #[cfg(test)]
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-
-    pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
-        Ok(Registry {
-            connections: RegisteredConnections::load(path)?,
-            path: PathBuf::from(path),
-            last_reload: mtime(path)?,
-        })
-    }
-
-    pub fn refresh(&mut self) -> AnyhowResult<bool> {
-        match (mtime(&self.path)?, self.last_reload) {
-            (Some(now), Some(then)) => {
-                match now.duration_since(then) {
-                    Ok(time) if time.is_zero() => {
-                        // No change.
-                        Ok(false)
-                    }
-                    _ => {
-                        // This also covers Err(_), which means "negative time".
-                        // This may occur due to clock adjustments.
-                        // Force reload in this case.
-                        // Otherwise, we have a regular posive duration, which means
-                        // that our registration was touched.
-                        self.reload()?;
-                        Ok(true)
-                    }
-                }
-            }
-
-            (None, None) => {
-                // Still no file there -> No change.
-                Ok(false)
-            }
-
-            _ => {
-                // File was deleted or is new
-                self.reload()?;
-                Ok(true)
-            }
-        }
-    }
-
-    pub fn save(&self) -> io::Result<()> {
-        let write_op_result = fs::write(
-            &self.path,
-            &serde_json::to_string_pretty(&self.connections)?,
-        );
-        #[cfg(windows)]
-        return write_op_result;
-        #[cfg(unix)]
-        {
-            write_op_result?;
-            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))
-        }
-    }
-
-    pub fn pull_standard_is_empty(&self) -> bool {
-        self.connections.pull.is_empty()
-    }
-
-    pub fn pull_imported_is_empty(&self) -> bool {
-        self.connections.pull_imported.is_empty()
-    }
-
-    pub fn pull_is_empty(&self) -> bool {
-        self.pull_standard_is_empty() & self.pull_imported_is_empty()
-    }
-
-    pub fn push_is_empty(&self) -> bool {
-        self.connections.push.is_empty()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.push_is_empty() & self.pull_is_empty()
-    }
-
-    pub fn standard_pull_connections(
-        &self,
-    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
-        self.connections.pull.iter()
-    }
-
-    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
-        self.connections.pull_imported.iter()
-    }
-
-    pub fn pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
-        self.connections
-            .pull
-            .values()
-            .map(|c| &c.trust)
-            .chain(self.connections.pull_imported.iter())
-    }
-
-    pub fn push_connections(
-        &self,
-    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
-        self.connections.push.iter()
-    }
-
-    pub fn register_connection(
-        &mut self,
-        connection_type: ConnectionType,
-        site_id: &site_spec::SiteID,
-        connection: TrustedConnectionWithRemote,
-    ) {
-        let (insert_connections, remove_connections) = match connection_type {
-            ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
-            ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
-        };
-        remove_connections.remove(site_id);
-        insert_connections.insert(site_id.clone(), connection);
-    }
-
-    pub fn register_imported_connection(&mut self, connection: TrustedConnection) {
-        self.connections.pull_imported.insert(connection);
-    }
-
-    pub fn delete_standard_connection(&mut self, site_id: &site_spec::SiteID) -> AnyhowResult<()> {
-        if self.connections.push.remove(site_id).is_some() {
-            println!("Deleted push connection '{}'", site_id);
-            return Ok(());
-        }
-        if self.connections.pull.remove(site_id).is_some() {
-            println!("Deleted pull connection '{}'", site_id);
-            return Ok(());
-        }
-        Err(anyhow!("Connection '{}' not found", site_id))
-    }
-
-    pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
-        if self.connections.pull_imported.remove(uuid) {
-            println!("Deleted imported connection '{}'", uuid);
-            return Ok(());
-        };
-        Err(anyhow!(
-            "Imported pull connection with UUID {} not found",
-            uuid
-        ))
-    }
-
-    pub fn clear(&mut self) {
-        self.connections.push.clear();
-        self.connections.pull.clear();
-        self.connections.pull_imported.clear();
-    }
-
-    fn reload(&mut self) -> AnyhowResult<()> {
-        self.connections = RegisteredConnections::load(&self.path)?;
-        self.last_reload = mtime(&self.path)?;
-        Ok(())
-    }
-}
 
 #[cfg(test)]
 mod test_registration_config {
     use super::*;
 
-    fn registration_args_connection() -> cli::RegistrationArgsConnection {
-        cli::RegistrationArgsConnection {
+    fn registration_connection_opts() -> cli::RegistrationConnectionOpts {
+        cli::RegistrationConnectionOpts {
             server_spec: site_spec::ServerSpec {
                 server: String::from("server"),
                 port: Some(8000),
@@ -561,7 +621,7 @@ mod test_registration_config {
     #[test]
     fn test_connection_config() {
         let connection_config =
-            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap();
         assert_eq!(connection_config.site_id.server, "server");
         assert_eq!(connection_config.site_id.site, "site");
@@ -575,10 +635,9 @@ mod test_registration_config {
         assert_eq!(
             RegistrationConfigHostName::new(
                 runtime_config(),
-                cli::RegistrationArgsHostName {
-                    connection_args: registration_args_connection(),
-                    logging_opts: cli::LoggingOpts { verbose: 0 },
-                    host_name: String::from("host_name"),
+                cli::RegisterOpts {
+                    connection_opts: registration_connection_opts(),
+                    hostname: String::from("host_name"),
                 },
             )
             .unwrap()
@@ -590,12 +649,9 @@ mod test_registration_config {
     #[test]
     fn test_automatic_agent_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            runtime_config(),
-            cli::RegistrationArgsAgentLabels {
-                connection_args: registration_args_connection(),
-                logging_opts: cli::LoggingOpts { verbose: 0 },
-                agent_labels_raw: vec![],
-            },
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
+                .unwrap(),
+            types::AgentLabels::new(),
         )
         .unwrap()
         .agent_labels;
@@ -608,18 +664,15 @@ mod test_registration_config {
     #[test]
     fn test_user_defined_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            runtime_config(),
-            cli::RegistrationArgsAgentLabels {
-                connection_args: registration_args_connection(),
-                logging_opts: cli::LoggingOpts { verbose: 0 },
-                agent_labels_raw: vec![
-                    (
-                        String::from("cmk/hostname-simple"),
-                        String::from("custom-name"),
-                    ),
-                    (String::from("a"), String::from("b")),
-                ],
-            },
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
+                .unwrap(),
+            types::AgentLabels::from([
+                (
+                    String::from("cmk/hostname-simple"),
+                    String::from("custom-name"),
+                ),
+                (String::from("a"), String::from("b")),
+            ]),
         )
         .unwrap()
         .agent_labels;
@@ -763,29 +816,19 @@ mod test_registry {
     }
 
     fn registry() -> Registry {
-        let mut push = std::collections::HashMap::new();
-        let mut pull = std::collections::HashMap::new();
-        let mut pull_imported = std::collections::HashSet::new();
-
-        push.insert(
-            site_spec::SiteID::from_str("server/push-site").unwrap(),
+        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        registry.register_connection(
+            &ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
-        pull.insert(
-            site_spec::SiteID::from_str("server/pull-site").unwrap(),
+        registry.register_connection(
+            &ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
-        pull_imported.insert(trusted_connection());
-
-        Registry::new(
-            RegisteredConnections {
-                push,
-                pull,
-                pull_imported,
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        registry.register_imported_connection(trusted_connection());
+        registry
     }
 
     fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
@@ -836,10 +879,17 @@ mod test_registry {
     }
 
     #[test]
+    fn test_new() {
+        let reg = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
+        assert!(reg.pull_is_empty() && reg.push_is_empty());
+        assert!(reg.last_reload.is_none());
+    }
+
+    #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Push,
+            &ConnectionType::Push,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -852,7 +902,7 @@ mod test_registry {
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Push,
+            &ConnectionType::Push,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -865,7 +915,7 @@ mod test_registry {
     fn test_register_pull_connection_new() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Pull,
+            &ConnectionType::Pull,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -878,7 +928,7 @@ mod test_registry {
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Pull,
+            &ConnectionType::Pull,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -926,6 +976,35 @@ mod test_registry {
                     .trust
         );
         assert!(reg.connections.pull_imported.contains(pull_conns[1]));
+    }
+
+    #[test]
+    fn test_registered_site_ids() {
+        let reg = registry();
+        let mut reg_site_ids: Vec<String> =
+            reg.registered_site_ids().map(|s| s.to_string()).collect();
+        reg_site_ids.sort_unstable();
+        assert_eq!(reg_site_ids, vec!["server/pull-site", "server/push-site"]);
+    }
+
+    #[test]
+    fn test_get_mutable() {
+        let mut reg = registry();
+        let pull_conn = reg.standard_pull_connections().next().unwrap().1.clone();
+        let push_conn = reg.push_connections().next().unwrap().1.clone();
+        assert_eq!(
+            reg.get_mutable(&site_spec::SiteID::from_str("server/pull-site").unwrap())
+                .unwrap(),
+            &pull_conn
+        );
+        assert_eq!(
+            reg.get_mutable(&site_spec::SiteID::from_str("server/push-site").unwrap())
+                .unwrap(),
+            &push_conn
+        );
+        assert!(reg
+            .get_mutable(&site_spec::SiteID::from_str("a/b").unwrap())
+            .is_none());
     }
 
     #[test]
@@ -1002,5 +1081,32 @@ mod test_registry {
         let mut reg = registry();
         reg.clear();
         assert!(reg.is_empty());
+    }
+
+    #[test]
+    fn test_clear_imported() {
+        let mut reg = registry();
+        reg.clear_imported();
+        assert!(reg.pull_imported_is_empty());
+        assert!(!reg.is_empty());
+    }
+
+    #[test]
+    fn test_legacy_pull_marker_handling() {
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let mut registry = Registry::new(&tmp_dir.path().join("registry.json")).unwrap();
+        assert!(!registry.legacy_pull_active());
+        assert!(registry.activate_legacy_pull().is_ok());
+        assert!(registry.legacy_pull_active());
+        registry.register_connection(
+            &ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
+            trusted_connection_with_remote(),
+        );
+        assert!(!registry.legacy_pull_active());
+        assert!(registry.activate_legacy_pull().is_err());
+        registry.save().unwrap();
+        assert!(!registry.legacy_pull_marker.exists());
+        tmp_dir.close().unwrap();
     }
 }

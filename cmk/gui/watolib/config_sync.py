@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Preparing the site configuration in distributed setups for synchronization"""
 
+import abc
 import ast
 import errno
 import hashlib
@@ -20,12 +21,17 @@ from pathlib import Path
 from tarfile import TarFile, TarInfo
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
+from livestatus import SiteConfiguration, SiteId
+
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.plugins.userdb.utils import user_sync_default_config
+from cmk.gui.plugins.watolib.utils import wato_fileheader
 
 Command = List[str]
 
@@ -60,6 +66,50 @@ class ReplicationPath(
             site_path=cleaned_path,
             excludes=final_excludes,
         )
+
+
+class SnapshotSettings(NamedTuple):
+    # TODO: Refactor to Path
+    snapshot_path: str
+    # TODO: Refactor to Path
+    work_dir: str
+    # TODO: Clarify naming (-> replication path or snapshot component?)
+    snapshot_components: list[ReplicationPath]
+    component_names: set[str]
+    site_config: SiteConfiguration
+
+
+class ABCSnapshotDataCollector(abc.ABC):
+    """Prepares files to be synchronized to the remote sites"""
+
+    def __init__(self, site_snapshot_settings: dict[SiteId, SnapshotSettings]) -> None:
+        super().__init__()
+        self._site_snapshot_settings = site_snapshot_settings
+        self._logger = logger.getChild(self.__class__.__name__)
+
+    @abc.abstractmethod
+    def prepare_snapshot_files(self) -> None:
+        """Site independent preparation of files to be used for the sync snapshots
+        This will be called once before iterating over all sites.
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_generic_components(self) -> list[ReplicationPath]:
+        """Return the site independent snapshot components
+        These will be collected by the SnapshotManager once when entering the context manager
+        """
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_site_components(
+        self, snapshot_settings: SnapshotSettings
+    ) -> tuple[list[ReplicationPath], list[ReplicationPath]]:
+        """Split the snapshot components into generic and site specific components
+
+        The generic components have the advantage that they only need to be created once for all
+        sites and can be shared between the sites to optimize processing."""
+        raise NotImplementedError()
 
 
 class SnapshotCreationBase:
@@ -593,3 +643,47 @@ def _update_contacts_dict(master: Dict, site: Dict) -> Dict:
         site_contacts.update({user_id: settings})
 
     return site_contacts
+
+
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
+    site_globals = site_config.get("globals", {}).copy()
+    site_globals.update(
+        {
+            "wato_enabled": not site_config.get("disable_wato", True),
+            "userdb_automatic_sync": site_config.get(
+                "user_sync", user_sync_default_config(site_id)
+            ),
+            "user_login": site_config.get("user_login", False),
+        }
+    )
+    return site_globals
+
+
+def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
+    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
+    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
+
+
+def _create_distributed_wato_file_for_base(
+    base_dir: Path, site_id: SiteId, is_remote: bool
+) -> None:
+    output = wato_fileheader()
+    output += (
+        "# This file has been created by the master site\n"
+        "# push the configuration to us. It makes sure that\n"
+        "# we only monitor hosts that are assigned to our site.\n\n"
+    )
+    output += "distributed_wato_site = '%s'\n" % site_id
+    output += "is_wato_slave_site = %r\n" % is_remote
+
+    store.save_text_to_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
+
+
+def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
+    if cmk_version.is_raw_edition():
+        return
+
+    output = wato_fileheader()
+    output += "dcd_is_wato_remote_site = %r\n" % is_remote
+
+    store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)

@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
+import pprint
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard
+import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -57,19 +59,27 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
+@cmk.gui.pages.register("export_views")
+def ajax_export_views() -> None:
+    for view in get_permitted_views().values():
+        view["owner"] = ""
+        view["public"] = True
+    response.set_data(pprint.pformat(get_permitted_views()))
+
+
 @request_memoize()
-def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
+def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
     # The page types that are implementing the PageRenderer API should also be
     # part of the menu. Bring them into a visual like structure to make it easy to
     # integrate them.
-    page_type_items: List[Tuple[str, Tuple[str, Visual]]] = []
+    page_type_items: list[tuple[str, tuple[str, Visual]]] = []
     for page_type in pagetypes.all_page_types().values():
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
         for page in page_type.load().pages():
             if page._show_in_sidebar():
-                visual = page.internal_representation().copy()
+                visual: Visual = page.internal_representation().copy()
                 visual["hidden"] = False  # Is currently to configurable for pagetypes
                 visual["icon"] = None  # Is currently to configurable for pagetypes
 
@@ -86,18 +96,18 @@ def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
 
-    visuals_to_show = [("views", (k, dict(v))) for k, v in views_to_show]
+    visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
+        ("views", (k, v)) for k, v in views_to_show
+    ]
     visuals_to_show += [
-        ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
+        ("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()
     ]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 
     if reporting and include_reports:
         reporting.load_reports()
-        visuals_to_show += [
-            ("reports", (k, dict(v))) for k, v in reporting.permitted_reports().items()
-        ]
+        visuals_to_show += [("reports", (k, v)) for k, v in reporting.permitted_reports().items()]
 
     return make_topic_menu(visuals_to_show)
 

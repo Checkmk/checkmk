@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Type, Union
+from __future__ import annotations
+
+from typing import Any
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -16,6 +18,7 @@ from cmk.bi.lib import (
     ABCWithSchema,
     ActionArgument,
     ActionArguments,
+    ActionKind,
     bi_action_registry,
     BIHostSearchMatch,
     BIParams,
@@ -44,21 +47,21 @@ from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
 @bi_action_registry.register
 class BICallARuleAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "call_a_rule"
 
     @classmethod
-    def schema(cls) -> Type["BICallARuleActionSchema"]:
+    def schema(cls) -> type[BICallARuleActionSchema]:
         return BICallARuleActionSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "rule_id": self.rule_id,
             "params": self.params.serialize(),
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
@@ -72,7 +75,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         return bi_rule_id_registry[self.rule_id].compile(argument, bi_searcher)
 
     def preview_rule_title(self, search_result: SearchResult) -> str:
@@ -85,7 +88,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
 
 class BICallARuleActionSchema(Schema):
-    type = ReqConstant(BICallARuleAction.type())
+    type = ReqConstant(BICallARuleAction.kind())
     rule_id = ReqString(dump_default="", example="test_rule_1")
     params = ReqNested(
         BIParamsSchema, dump_default=BIParamsSchema().dump({}), example=BIParamsSchema().dump({})
@@ -105,20 +108,20 @@ class BICallARuleActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_host"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfHostActionSchema"]:
+    def schema(cls) -> type[BIStateOfHostActionSchema]:
         return BIStateOfHostActionSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
@@ -129,7 +132,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -137,7 +140,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfHostActionSchema(Schema):
-    type = ReqConstant(BIStateOfHostAction.type())
+    type = ReqConstant(BIStateOfHostAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
 
 
@@ -154,21 +157,21 @@ class BIStateOfHostActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_service"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfServiceActionSchema"]:
+    def schema(cls) -> type[BIStateOfServiceActionSchema]:
         return BIStateOfServiceActionSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
             "service_regex": self.service_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
@@ -186,7 +189,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         matched_hosts, match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -206,7 +209,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfServiceActionSchema(Schema):
-    type = ReqConstant(BIStateOfServiceAction.type())
+    type = ReqConstant(BIStateOfServiceAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
     service_regex = ReqString(dump_default="", example="testservice")
 
@@ -224,20 +227,20 @@ class BIStateOfServiceActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_remaining_services"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfRemainingServicesActionSchema"]:
+    def schema(cls) -> type[BIStateOfRemainingServicesActionSchema]:
         return BIStateOfRemainingServicesActionSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
@@ -248,7 +251,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -256,7 +259,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfRemainingServicesActionSchema(Schema):
-    type = ReqConstant(BIStateOfRemainingServicesAction.type())
+    type = ReqConstant(BIStateOfRemainingServicesAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
 
 
@@ -273,7 +276,7 @@ class BIStateOfRemainingServicesActionSchema(Schema):
 class BIActionSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = dict((k, v.schema()) for k, v in bi_action_registry.items())
+    type_schemas = {k: v.schema() for k, v in bi_action_registry.items()}
 
     # type_schemas = {
     #    "call_a_rule": BICallARuleActionSchema,
@@ -282,7 +285,7 @@ class BIActionSchema(OneOfSchema):
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
     # }
 
-    def get_obj_type(self, obj: Union[ABCBIAction, dict]) -> str:
+    def get_obj_type(self, obj: ABCBIAction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
-        return obj.type()
+        return obj.kind()

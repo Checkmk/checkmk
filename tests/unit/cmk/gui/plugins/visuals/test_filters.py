@@ -1089,16 +1089,32 @@ filter_table_tests = [
         ident="svc_service_level",
         request_vars=[("svc_service_level_lower", "1"), ("svc_service_level_upper", "3")],
         rows=[
-            {"service_custom_variable_values": ["custom_2", "custom_1", "0"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "1"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "2"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "3"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "4"]},
+            {
+                "custom_variables": {"EC_SL": "0"},
+            },
+            {
+                "custom_variables": {"EC_SL": "1"},
+            },
+            {
+                "custom_variables": {"EC_SL": "2"},
+            },
+            {
+                "custom_variables": {"EC_SL": "3"},
+            },
+            {
+                "custom_variables": {"EC_SL": "4"},
+            },
         ],
         expected_rows=[
-            {"service_custom_variable_values": ["custom_2", "custom_1", "1"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "2"]},
-            {"service_custom_variable_values": ["custom_2", "custom_1", "3"]},
+            {
+                "custom_variables": {"EC_SL": "1"},
+            },
+            {
+                "custom_variables": {"EC_SL": "2"},
+            },
+            {
+                "custom_variables": {"EC_SL": "3"},
+            },
         ],
     ),
     FilterTableTest(
@@ -1106,58 +1122,18 @@ filter_table_tests = [
         request_vars=[("hst_service_level_lower", "1")],
         rows=[
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "0",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "0"},
             },
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "1",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "1"},
             },
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "2",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "2"},
             },
         ],
         expected_rows=[
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "1",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "1"},
             },
         ],
     ),
@@ -1166,58 +1142,18 @@ filter_table_tests = [
         request_vars=[("hst_service_level_upper", "2")],
         rows=[
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "0",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "0"},
             },
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "1",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "1"},
             },
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "2",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "2"},
             },
         ],
         expected_rows=[
             {
-                "host_custom_variable_values": [
-                    "",
-                    "",
-                    "127.0.0.1",
-                    "/wato/hosts.mk",
-                    "2",
-                    "",
-                    "",
-                    "/wato/ auto-piggyback cmk-agent",
-                    "/wato/hosts.mk",
-                ]
+                "custom_variables": {"EC_SL": "2"},
             },
         ],
     ),
@@ -1275,7 +1211,7 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
-        if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
+        if not cmk_version.is_raw_edition() or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
             assert filt.filter_table(context, test.rows) == test.expected_rows
 

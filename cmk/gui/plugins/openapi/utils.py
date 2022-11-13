@@ -6,7 +6,7 @@ import json
 from typing import Any, Dict, Iterable, Literal, Optional
 from urllib.parse import quote_plus
 
-import docstring_parser  # type: ignore[import]
+import docstring_parser
 from werkzeug.exceptions import HTTPException
 
 from livestatus import SiteId

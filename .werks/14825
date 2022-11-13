@@ -1,0 +1,18 @@
+Title: Agent controller: Change in command line interface regarding verbosity flag
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1667210380
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The command line interface has been changed from
+C+:
+cmk-agent-ctl <sub-command> ... -vv ...
+C-:
+to
+C+:
+cmk-agent-ctl -vv <sub-command> ...
+C-:

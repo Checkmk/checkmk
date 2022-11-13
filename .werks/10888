@@ -9,5 +9,5 @@ Level: 1
 Version: 2.0.0i1
 
 The vanilla agent RPM packages shipped with Checkmk (e.g.
-check-mk-agent-1.7.0i1-1.noarch.rpm) are now signed during
+check-mk-agent-2.0.0i1-1.noarch.rpm) are now signed during
 our build procedure, just like the Checkmk version packages.

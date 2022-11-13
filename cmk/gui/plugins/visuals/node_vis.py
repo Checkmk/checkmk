@@ -70,7 +70,6 @@ class FilterRange(Filter):
         )
 
 
-@filter_registry.register_instance
 class FilterTopologyMeshDepth(FilterRange):
     def __init__(self) -> None:
         super().__init__(
@@ -85,7 +84,9 @@ class FilterTopologyMeshDepth(FilterRange):
         )
 
 
-@filter_registry.register_instance
+filter_registry.register(FilterTopologyMeshDepth())
+
+
 class FilterTopologyMaxNodes(FilterRange):
     def __init__(self) -> None:
         super().__init__(
@@ -98,3 +99,6 @@ class FilterTopologyMaxNodes(FilterRange):
                 max=10000,
             )
         )
+
+
+filter_registry.register(FilterTopologyMaxNodes())

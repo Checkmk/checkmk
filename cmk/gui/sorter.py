@@ -6,21 +6,19 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Type, TYPE_CHECKING
+from collections.abc import Sequence
+from typing import Any, NamedTuple
 
 from cmk.utils.plugin_registry import Registry
 
-from cmk.gui.type_defs import ColumnName, SorterFunction
-from cmk.gui.valuespec import ValueSpec
-
-if TYPE_CHECKING:
-    from cmk.gui.plugins.views.utils import Cell
+from cmk.gui.num_split import cmp_num_split as _cmp_num_split
+from cmk.gui.type_defs import ColumnName, Row, SorterFunction
 
 
 class SorterEntry(NamedTuple):
     sorter: Sorter
     negate: bool
-    join_key: Optional[str]
+    join_key: str | None
 
 
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
@@ -50,7 +48,7 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def cmp(self, r1: Dict, r2: Dict) -> int:
+    def cmp(self, r1: dict, r2: dict) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -65,7 +63,7 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def _args(self) -> Optional[List]:
+    def _args(self) -> list | None:
         """Optional list of arguments for the cmp function"""
         return None
 
@@ -76,57 +74,8 @@ class Sorter(abc.ABC):
         return False
 
 
-class DerivedColumnsSorter(Sorter):
-    # TODO(ml): This really looks wrong.  `derived_columns` is most certainly
-    #           on the wrong class (it should be on `Cell` or `Painter`, just
-    #           look at the few places it is implemented) and without this new
-    #           method, this class is just a regular `Sorter`.  We should get
-    #           rid of this useless piece of code.
-    """
-    Can be used to transfer an additional parameter to the Sorter instance.
-
-    To transport the additional parameter through the url and other places the
-    parameter is added to the sorter name seperated by a colon.
-
-    This mechanism is used by the Columns "Service: Metric History", "Service:
-    Metric Forecast": Those columns can be sorted by "Sorting"-section in
-    the "Edit View" only after you added the column to the columns list and
-    saved the view, or by clicking on the column header in the view.
-
-    It's also used by host custom attributes: Those can be sorted by the
-    "Sorting"-section in the "Edit View" options independent of the column
-    section.
-    """
-
-    # TODO: should somehow be harmonized. this is probably not possible as the
-    # metric sorting options can not be serialized into a short/simple string,
-    # this is why the uuid option was introduced. Now there are basically three
-    # different ways to subselect sorting options:
-    # * don't use subselect at all (see Inventory): simply put all the posible
-    #   values with a prefix into the sorting list (drawback: long list)
-    # * don't use explicit options for sorting (see Metrics): link between
-    #   columns and sorting via uuid (drawback: have to display column to
-    #   activate sorting)
-    # * use explicit options for sorting (see Custom Attributes): Encode the
-    #   choosen value in the name (possible because it's only a simple string
-    #   instead of complex options as with the metrics) and append it to the
-    #   name of the column (drawback: it's the third hack)
-
-    @abc.abstractmethod
-    def derived_columns(self, cells: Iterable["Cell"], uuid: Optional[str]) -> None:
-        # TODO: rename uuid, as this is no longer restricted to uuids
-        raise NotImplementedError()
-
-    def get_parameters(self) -> Optional[ValueSpec]:
-        """
-        If not None, this ValueSpec will be visible after selecting this Sorter
-        in the section "Sorting" in the "Edit View" form
-        """
-        return None
-
-
-class SorterRegistry(Registry[Type[Sorter]]):
-    def plugin_name(self, instance: Type[Sorter]) -> str:
+class SorterRegistry(Registry[type[Sorter]]):
+    def plugin_name(self, instance: type[Sorter]) -> str:
         return instance().ident
 
 
@@ -135,7 +84,7 @@ sorter_registry = SorterRegistry()
 
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
-def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
+def register_sorter(ident: str, spec: dict[str, Any]) -> None:
     cls = type(
         "LegacySorter%s" % str(ident).title(),
         (Sorter,),
@@ -157,3 +106,73 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
         name,
         {"title": title, "columns": [column], "cmp": lambda self, r1, r2: func(column, r1, r2)},
     )
+
+
+def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:
+    v1 = r1[column]
+    v2 = r2[column]
+    return (v1 > v2) - (v1 < v2)
+
+
+def cmp_num_split(column: ColumnName, r1: Row, r2: Row) -> int:
+    return _cmp_num_split(r1[column].lower(), r2[column].lower())
+
+
+def cmp_simple_string(column: ColumnName, r1: Row, r2: Row) -> int:
+    v1, v2 = r1.get(column, ""), r2.get(column, "")
+    return cmp_insensitive_string(v1, v2)
+
+
+def cmp_insensitive_string(v1: str, v2: str) -> int:
+    c = (v1.lower() > v2.lower()) - (v1.lower() < v2.lower())
+    # force a strict order in case of equal spelling but different
+    # case!
+    if c == 0:
+        return (v1 > v2) - (v1 < v2)
+    return c
+
+
+def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
+    v1 = "".join(r1.get(column, []))
+    v2 = "".join(r2.get(column, []))
+    return cmp_insensitive_string(v1, v2)
+
+
+def cmp_service_name_equiv(r: str) -> int:
+    if r == "Check_MK":
+        return -6
+    if r == "Check_MK Agent":
+        return -5
+    if r == "Check_MK Discovery":
+        return -4
+    if r == "Check_MK inventory":
+        return -3  # FIXME: Remove old name one day
+    if r == "Check_MK HW/SW Inventory":
+        return -2
+    return 0
+
+
+def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:
+    return (_get_custom_var(r1, key) > _get_custom_var(r2, key)) - (
+        _get_custom_var(r1, key) < _get_custom_var(r2, key)
+    )
+
+
+def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
+    return compare_ips(r1.get(column, ""), r2.get(column, ""))
+
+
+def compare_ips(ip1: str, ip2: str) -> int:
+    def split_ip(ip: str) -> tuple:
+        try:
+            return tuple(int(part) for part in ip.split("."))
+        except ValueError:
+            # Make hostnames comparable with IPv4 address representations
+            return (255, 255, 255, 255, ip)
+
+    v1, v2 = split_ip(ip1), split_ip(ip2)
+    return (v1 > v2) - (v1 < v2)
+
+
+def _get_custom_var(row: Row, key: str) -> str:
+    return row["custom_variables"].get(key, "")

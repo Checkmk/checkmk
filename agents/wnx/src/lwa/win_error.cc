@@ -19,8 +19,8 @@ std::string get_win_error_as_string(DWORD error_id /* = GET_LAST_ERROR */) {
     size_t size = ::FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, error_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&messageBuffer, 0, NULL);
+        nullptr, error_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPSTR)&messageBuffer, 0, nullptr);
     ON_OUT_OF_SCOPE(LocalFree(messageBuffer));
     std::string message(messageBuffer, size);
 

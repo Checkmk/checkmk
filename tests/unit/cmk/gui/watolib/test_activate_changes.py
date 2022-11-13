@@ -373,7 +373,11 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
 def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
     to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
-        logger, central, remote, None
+        site_id=SiteId("remote"),
+        site_logger=logger,
+        central_file_infos=central,
+        remote_file_infos=remote,
+        file_filter_func=None,
     )
 
     assert sorted(to_sync_new + to_sync_changed) == sorted(

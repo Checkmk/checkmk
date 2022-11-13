@@ -24,10 +24,15 @@ def get_kube_agent_section_models() -> frozenset[type[agent.Section]]:
     - a subclass of agent.Section and
     - contained in the agent module.
     """
+    # TODO: This is a cruel hack. Unless you are writing a debugger/profiler/JIT/...,
+    # iterating over the __dict__ of something is a highly fragile no-go.
     return frozenset(
         m
         for m in agent.__dict__.values()
-        if isinstance(m, type) and issubclass(m, agent.Section) and not m == agent.Section
+        if isinstance(m, type)
+        and not m.__name__ == "Sequence"  # HACK to avoid an exception in issubclass
+        and issubclass(m, agent.Section)
+        and not m == agent.Section
     )
 
 

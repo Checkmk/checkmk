@@ -46,7 +46,8 @@ class TestAPINamespace:
         assert isinstance(metadata.creation_timestamp, float)
         assert metadata.labels == {
             "kubernetes.io/metadata.name": api.Label(
-                name="kubernetes.io/metadata.name", value="checkmk-monitoring"
+                name=api.LabelName("kubernetes.io/metadata.name"),
+                value=api.LabelValue("checkmk-monitoring"),
             )
         }
         assert metadata.annotations == {}

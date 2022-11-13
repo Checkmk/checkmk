@@ -8,9 +8,10 @@ from __future__ import annotations
 import abc
 import os
 import shutil
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Final, Iterator
+from typing import Any, Final
 
 import cmk.utils.paths
 import cmk.utils.store as store

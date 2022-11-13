@@ -41,7 +41,7 @@ impl std::convert::AsRef<Path> for AgentChannel {
 #[cfg(windows)]
 impl std::convert::From<&str> for AgentChannel {
     fn from(s: &str) -> Self {
-        AgentChannel(s.to_string())
+        Self(s.to_string())
     }
 }
 
@@ -85,6 +85,7 @@ impl AgentChannel {
     }
 }
 
+#[derive(serde::Deserialize, Clone)]
 pub struct Credentials {
     pub username: String,
     pub password: String,

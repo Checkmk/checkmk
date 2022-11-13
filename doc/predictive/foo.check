@@ -4,10 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example check. Put this into local/share/check_mk/checks
-# And then remove these two lines:
-# type: ignore[name-defined]
-# pylint: disable=undefined-variable,disable=blacklisted-name
 
+# pylint: disable=blacklisted-name
 
 # Inventory function without any specialities. Return
 # None as a default parameter (meaning: no levels).
@@ -35,7 +33,7 @@ def check_foo(_no_item, params, info):
     # WARN/CRIT or a dictionary with the parameters for the prediction.
     # In return we get the resulting Nagios state and in case of prediciton
     # an extra text and extra perfdata (the predicted reference).
-    state, extratext, extraperf = check_levels(value, "fooval", params)
+    state, extratext, extraperf = check_levels(value, "fooval", params)  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
     # Put that extratext together with our own text
     if extratext:
@@ -45,7 +43,7 @@ def check_foo(_no_item, params, info):
     return state, text, perfdata + extraperf
 
 
-check_info["foo"] = {
+check_info["foo"] = {  # type: ignore[name-defined] # pylint: disable=undefined-variable
     "check_function": check_foo,
     "inventory_function": inventory_foo,
     "service_description": "FOO",

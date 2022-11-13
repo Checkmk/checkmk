@@ -5,7 +5,8 @@
 
 import json
 import time
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 import livestatus
 
@@ -20,18 +21,18 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import make_service_breadcrumb
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 graph_size = 2000, 700
 
 
 def _load_prediction_information(
     *,
-    tg_name: Optional[str],
+    tg_name: str | None,
     prediction_store: prediction.PredictionStore,
-) -> Tuple[prediction.PredictionInfo, Sequence[Tuple[str, str]]]:
-    selected_timegroup: Optional[prediction.PredictionInfo] = None
-    timegroups: List[prediction.PredictionInfo] = []
+) -> tuple[prediction.PredictionInfo, Sequence[tuple[str, str]]]:
+    selected_timegroup: prediction.PredictionInfo | None = None
+    timegroups: list[prediction.PredictionInfo] = []
     now = time.time()
     for tg_info in prediction_store.available_predictions():
         timegroups.append(tg_info)
@@ -166,7 +167,7 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
         factor = 1024.0**5
 
     v = 0.0
-    vert_scala: List[List[Any]] = []
+    vert_scala: list[list[Any]] = []
     steps = (max(0, high) - min(0, low)) / factor  # fixed: true-division
     if steps < 3:
         step = 0.2 * factor
@@ -180,12 +181,12 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
         step = factor
 
     while v <= max(0, high):
-        vert_scala.append([v, "%.1f%s" % (v / factor, letter)])  # fixed: true-division
+        vert_scala.append([v, f"{v / factor:.1f}{letter}"])  # fixed: true-division
         v += step
 
     v = -factor
     while v >= min(0, low):
-        vert_scala = [[v, "%.1f%s" % (v / factor, letter)]] + vert_scala  # fixed: true-division
+        vert_scala = [[v, f"{v / factor:.1f}{letter}"]] + vert_scala  # fixed: true-division
         v -= step
 
     # Remove trailing ".0", if that is present for *all* entries
@@ -198,7 +199,7 @@ def compute_vertical_scala(low, high):  # pylint: disable=too-many-branches
     return vert_scala
 
 
-def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[float]:
+def get_current_perfdata(host: HostName, service: str, dsname: str) -> float | None:
     perf_data = sites.live().query_value(
         "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
         "Columns: perf_data" % (livestatus.lqencode(str(host)), livestatus.lqencode(service))
@@ -214,7 +215,7 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
     columns = tg_data.columns
-    swapped: Dict[Any, List[Any]] = {c: [] for c in columns}
+    swapped: dict[Any, list[Any]] = {c: [] for c in columns}
     for step in tg_data.points:
         row = dict(zip(columns, step))
         for k, v in row.items():
@@ -283,7 +284,7 @@ def create_graph(name, size, bounds, v_range, legend):
 
 def render_coordinates(v_scala, t_scala) -> None:  # type:ignore[no-untyped-def]
     html.javascript(
-        "cmk.prediction.render_coordinates(%s, %s);" % (json.dumps(v_scala), json.dumps(t_scala))
+        f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
@@ -303,7 +304,7 @@ def render_point(t, v, color) -> None:  # type:ignore[no-untyped-def]
 
 def render_area(points, color, alpha=1.0) -> None:  # type:ignore[no-untyped-def]
     html.javascript(
-        "cmk.prediction.render_area(%s, %s, %f);" % (json.dumps(points), json.dumps(color), alpha)
+        f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 

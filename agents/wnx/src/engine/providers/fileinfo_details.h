@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef fileinfo_details_h__
-#define fileinfo_details_h__
+#ifndef FILEINFO_DETAILS_H
+#define FILEINFO_DETAILS_H
 
 #include <filesystem>
 #include <string>
@@ -15,7 +15,6 @@
 
 #include "cma_core.h"
 #include "providers/internal.h"
-#include "section_header.h"
 
 namespace cma::provider::details {
 
@@ -34,7 +33,7 @@ void GatherMatchingFilesRecursive(
                                                 // funny recursive search
     const std::filesystem::path &file_pattern,  // full mask from yaml
                                                 // fileinfo.path
-    PathVector &Files);                         // input and output
+    PathVector &files);                         // input and output
 
 void GatherMatchingFilesAndDirs(
     const std::filesystem::path &search_dir,    // c:\windows
@@ -92,4 +91,4 @@ inline auto SplitFileInfoPathSmart(const std::filesystem::path &file_path) {
 
 }  // namespace cma::provider::details
 
-#endif  // fileinfo_details_h__
+#endif  // FILEINFO_DETAILS_H

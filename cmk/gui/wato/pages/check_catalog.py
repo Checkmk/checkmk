@@ -469,7 +469,7 @@ class ModeCheckManPage(WatoMode):
                 f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
             )
 
-        elif self._check_type in check_builtins:
+        elif self._check_plugin_name in check_builtins:
             self._check_type = "check_mk"
             self._service_description = (
                 "Check_MK" if self._check_plugin_name == "check-mk" else "Check_MK Discovery"

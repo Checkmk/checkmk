@@ -4558,7 +4558,7 @@ def process_cluster_info(args_dict, opt_demo, opt_cert):
     for child in tbody:
         name = child[0].text
         value = child[1].text
-        output_lines.append("%s\t%s" % (name, value))
+        output_lines.append(f"{name}\t{value}")
     return output_lines
 
 
@@ -4585,7 +4585,7 @@ def process_servicesets(args_dict, opt_demo, opt_cert):
         for child in tbody:
             name = child[0].text
             value = child[1].text
-            output_lines.append("%s\t%s" % (name, value))
+            output_lines.append(f"{name}\t{value}")
     return output_lines
 
 
@@ -4605,11 +4605,11 @@ def process_stores_info(args_dict, opt_demo, opt_cert):
         for element in stores:
             tbody = element.find("table").find("tbody")
             store_id = tbody[0][1].text
-            output_lines.append("[%s/%s]" % (serviceset_id, store_id))
+            output_lines.append(f"[{serviceset_id}/{store_id}]")
             for child in tbody:
                 name = child[0].text
                 value = child[1].text
-                output_lines.append("%s\t%s" % (name, value))
+                output_lines.append(f"{name}\t{value}")
     return output_lines
 
 

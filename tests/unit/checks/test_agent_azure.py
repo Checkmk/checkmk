@@ -20,6 +20,7 @@ from tests.testlib import SpecialAgent
                 "client": "blueberry",
                 "secret": ("password", "vurystrong"),
                 "config": {},
+                "services": ["users_count", "Microsoft.DBforMySQL/servers"],
             },
             [
                 "--tenant",
@@ -30,6 +31,9 @@ from tests.testlib import SpecialAgent
                 "vurystrong",
                 "--subscription",
                 "banana",
+                "--services",
+                "users_count",
+                "Microsoft.DBforMySQL/servers",
             ],
             id="explicit_password",
         ),

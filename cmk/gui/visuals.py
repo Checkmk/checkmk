@@ -12,26 +12,10 @@ import pickle
 import re
 import sys
 import traceback
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from itertools import chain, starmap
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Final,
-    Generic,
-    get_args,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, cast, Final, Generic, get_args, TypeVar
 
 from livestatus import LivestatusTestingError
 
@@ -48,7 +32,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.ctx_stack import g
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
@@ -93,7 +77,6 @@ from cmk.gui.type_defs import (
     InfoName,
     PermissionName,
     SingleInfos,
-    TypedVisual,
     ViewSpec,
     Visual,
     VisualContext,
@@ -139,9 +122,8 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-# Remove Visual once all visual types have been moved over To TypedVisual
-T = TypeVar("T", bound=Visual | TypedVisual)
-CustomUserVisuals = Dict[Tuple[UserId, VisualName], T]
+T = TypeVar("T", bound=Visual)
+CustomUserVisuals = dict[tuple[UserId, VisualName], T]
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -154,13 +136,9 @@ CustomUserVisuals = Dict[Tuple[UserId, VisualName], T]
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-title_functions: List[Callable] = []
-
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    global title_functions
-    title_functions = []
     _register_pre_21_plugin_api()
     utils.load_web_plugins("visuals", globals())
 
@@ -235,7 +213,7 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
         "general.see_user_" + what,
         _("See user %s") % what_plural,
         _("Is needed for seeing %s that other users have created.") % what_plural,
-        ["admin", "user", "guest"],
+        default_authorized_builtin_role_ids,
     )
 
     declare_permission(
@@ -292,7 +270,6 @@ def load(
     what: VisualTypeName,
     builtin_visuals: dict[VisualName, T],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool] = lambda _v: False,
 ) -> dict[tuple[UserId, VisualName], T]:
     visuals: dict[tuple[UserId, VisualName], T] = {}
 
@@ -314,7 +291,6 @@ def load(
     visuals.update(
         _CombinedVisualsCache[T](what).load(
             internal_to_runtime_transformer,
-            skip_func,
         )
     )
 
@@ -323,7 +299,7 @@ def load(
 
 def transform_pre_2_1_discovery_state(
     fident: FilterName, vals: FilterHTTPVariables
-) -> Tuple[FilterName, FilterHTTPVariables]:
+) -> tuple[FilterName, FilterHTTPVariables]:
     # Fix context into type VisualContext
     if fident == "discovery_state":
         return "discovery_state", {key: "on" if val else "" for key, val in vals.items()}
@@ -333,14 +309,14 @@ def transform_pre_2_1_discovery_state(
 def transform_pre_2_1_single_infos(
     single_infos: SingleInfos,
 ) -> Callable[
-    [FilterName, Union[str, int, FilterHTTPVariables]], Tuple[FilterName, FilterHTTPVariables]
+    [FilterName, str | int | FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]
 ]:
     # Remove the old single infos
     single_info_keys = get_single_info_keys(single_infos)
 
     def unsingle(
-        fident: FilterName, vals: Union[str, int, FilterHTTPVariables]
-    ) -> Tuple[FilterName, FilterHTTPVariables]:
+        fident: FilterName, vals: str | int | FilterHTTPVariables
+    ) -> tuple[FilterName, FilterHTTPVariables]:
         if isinstance(vals, dict):  # Alredy FilterHTTPVariables
             return fident, vals
         # Single infos come from VisualInfo children. They have a str or int valuespec
@@ -371,14 +347,14 @@ def _get_range_filters():
 
 
 def transform_pre_2_1_range_filters() -> Callable[
-    [FilterName, FilterHTTPVariables], Tuple[FilterName, FilterHTTPVariables]
+    [FilterName, FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]
 ]:
     # Update Visual Range Filters
     range_filters = _get_range_filters()
 
     def transform_range_vars(
         fident: FilterName, vals: FilterHTTPVariables
-    ) -> Tuple[FilterName, FilterHTTPVariables]:
+    ) -> tuple[FilterName, FilterHTTPVariables]:
         if fident in range_filters:
             return fident, {
                 re.sub("_to(_|$)", "_until\\1", request_var): value
@@ -429,13 +405,12 @@ class _CombinedVisualsCache(Generic[T]):
     def load(
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
 
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
                 return content
-        return self._compute_and_write_cache(internal_to_runtime_transformer, skip_func)
+        return self._compute_and_write_cache(internal_to_runtime_transformer)
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -454,15 +429,12 @@ class _CombinedVisualsCache(Generic[T]):
     def _compute_and_write_cache(
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
-        visuals = _load_custom_user_visuals(
-            self._visual_type, internal_to_runtime_transformer, skip_func
-        )
+        visuals = _load_custom_user_visuals(self._visual_type, internal_to_runtime_transformer)
         self._write_to_cache(visuals)
         return visuals
 
-    def _read_from_cache(self) -> Optional[CustomUserVisuals]:
+    def _read_from_cache(self) -> CustomUserVisuals | None:
         try:
             return store.load_object_from_pickle_file(self._content_filename, default={})
         except (TypeError, pickle.UnpicklingError):
@@ -481,7 +453,6 @@ hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate
 def _load_custom_user_visuals(
     what: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool],
 ) -> CustomUserVisuals:
     """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
     measurably slower (7 times), due to path object creation and concatenation. This function
@@ -512,7 +483,6 @@ def _load_custom_user_visuals(
                 load_visuals_of_a_user(
                     what,
                     internal_to_runtime_transformer,
-                    skip_func,
                     Path(visual_path),
                     UserId(user_id),
                 )
@@ -527,16 +497,12 @@ def _load_custom_user_visuals(
 def load_visuals_of_a_user(
     what: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool],
     path: Path,
     user_id: UserId,
 ) -> CustomUserVisuals[T]:
     user_visuals: CustomUserVisuals[T] = {}
     for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
         visual = internal_to_runtime_transformer(raw_visual)
-        if skip_func(visual):
-            continue
-
         visual["owner"] = user_id
         visual["name"] = name
 
@@ -549,10 +515,10 @@ def load_visuals_of_a_user(
 
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
-    permname = PermissionName("%s.%s" % (what[:-1], name))
+    permname = PermissionName(f"{what[:-1]}.{name}")
     if visual["public"] and permname not in permission_registry:
         declare_permission(
-            permname, visual["title"], visual["description"], ["admin", "user", "guest"]
+            permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
 
 
@@ -578,7 +544,7 @@ def declare_custom_permissions(what: VisualTypeName) -> None:
 def available(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], T],
-) -> Dict[VisualName, T]:
+) -> dict[VisualName, T]:
     visuals = {}
     permprefix = what[:-1]
 
@@ -592,7 +558,7 @@ def available(
         return False
 
     def restricted_visual(visualname: VisualName):  # type:ignore[no-untyped-def]
-        permname = "%s.%s" % (permprefix, visualname)
+        permname = f"{permprefix}.{visualname}"
         return permname in permission_registry and not user.may(permname)
 
     # 1. user's own visuals, if allowed to edit visuals
@@ -614,7 +580,7 @@ def available(
 
     # 3. Builtin visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == "" and n not in visuals and user.may("%s.%s" % (permprefix, n)):
+        if u == "" and n not in visuals and user.may(f"{permprefix}.{n}"):
             visuals[n] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
@@ -636,10 +602,10 @@ def available(
 
 def get_permissioned_visual(
     item: str,
-    owner: Optional[UserId],
+    owner: UserId | None,
     what: str,
-    permitted_visuals: Dict[str, T],
-    all_visuals: Dict[Tuple[UserId, str], T],
+    permitted_visuals: dict[str, T],
+    all_visuals: dict[tuple[UserId, str], T],
 ) -> T:
     if (
         owner is not None
@@ -682,12 +648,12 @@ def get_permissioned_visual(
 def page_list(  # pylint: disable=too-many-branches
     what: VisualTypeName,
     title: str,
-    visuals: dict[Tuple[UserId, VisualName], Visual],
-    custom_columns: Iterable[tuple[HTMLContent, Callable[[Visual], HTMLContent]]] | None = None,
-    render_custom_buttons: Callable[[VisualName, Visual], None] | None = None,
-    render_custom_columns: Callable[[Table, VisualName, Visual], None] | None = None,
+    visuals: dict[tuple[UserId, VisualName], T],
+    custom_columns: Iterable[tuple[HTMLContent, Callable[[T], HTMLContent]]] | None = None,
+    render_custom_buttons: Callable[[VisualName, T], None] | None = None,
+    render_custom_columns: Callable[[Table, VisualName, T], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], Visual], UserId, str], bool]
+    check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], T], UserId, str], bool]
     | None = None,
 ) -> None:
 
@@ -736,7 +702,7 @@ def page_list(  # pylint: disable=too-many-branches
     delname = request.var("_delete")
     if delname and transactions.check_transaction():
         if user.may("general.delete_foreign_%s" % what):
-            user_id: Optional[UserId] = request.get_validated_type_input_mandatory(
+            user_id: UserId | None = request.get_validated_type_input_mandatory(
                 UserId, "_user_id", user.id
             )
         else:
@@ -818,7 +784,7 @@ def page_list(  # pylint: disable=too-many-branches
 
                 # Title
                 table.cell(_("Title"))
-                title2 = _u(visual["title"])
+                title2 = _u(str(visual["title"]))
                 if _visual_can_be_linked(what, visual_name, available_visuals, visual, owner):
                     show_url = makeuri_contextless(
                         request,
@@ -832,7 +798,7 @@ def page_list(  # pylint: disable=too-many-branches
                     )
                 else:
                     html.write_text(title2)
-                html.help(_u(visual["description"]))
+                html.help(_u(str(visual["description"])))
 
                 # Custom cols
                 for title3, renderer in custom_columns:
@@ -865,13 +831,13 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
 
 
 def _partition_visuals(
-    visuals: Dict[Tuple[UserId, VisualName], Visual], what: str
-) -> List[Tuple[str, List[Tuple[UserId, VisualName, Visual]]]]:
+    visuals: dict[tuple[UserId, VisualName], T], what: str
+) -> list[tuple[str, list[tuple[UserId, VisualName, T]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
-        if owner == "" and not user.may("%s.%s" % (what[:-1], visual_name)):
+        if owner == "" and not user.may(f"{what[:-1]}.{visual_name}"):
             continue  # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
@@ -980,17 +946,13 @@ def page_create_visual(
 #   '----------------------------------------------------------------------'
 
 
-def get_context_specs(visual, info_handler):
-    info_keys = list(visual_info_registry.keys())
-    if info_handler:
-        handler_keys = info_handler(visual)
-        if handler_keys is not None:
-            info_keys = handler_keys
-
-    single_info_keys = [key for key in info_keys if key in visual["single_infos"]]
+def get_context_specs(
+    single_infos: Sequence[InfoName], info_keys: Sequence[InfoName]
+) -> list[tuple[InfoName, Transform[dict] | VisualFilterList]]:
+    single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
-    def host_service_lead(val):
+    def host_service_lead(val: tuple[InfoName, Transform[dict] | VisualFilterList]) -> int:
         # Sort is stable in python, thus only prioritize host>service>rest
         if val[0] == "host":
             return 0
@@ -999,23 +961,26 @@ def get_context_specs(visual, info_handler):
         return 2
 
     # single infos first, the rest afterwards
-    context_specs = [(info_key, visual_spec_single(info_key)) for info_key in single_info_keys] + [
-        (info_key, visual_spec_multi(info_key))
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]] = [
+        (info_key, _visual_spec_single(info_key)) for info_key in single_info_keys
+    ] + [
+        (info_key, spec)
         for info_key in multi_info_keys
-        if visual_spec_multi(info_key)
+        for spec in [_visual_spec_multi(info_key)]
+        if spec is not None
     ]
 
     return sorted(context_specs, key=host_service_lead)
 
 
-def visual_spec_single(info_key):
+def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
     # VisualInfos have a single_spec, which might declare multiple filters.
     # In this case each spec is as filter value and it is typed(at the moment only Integer & TextInput).
     # Filters at the moment, due to use of url_vars, are string only.
     # At the moment single_info_spec relation to filters is:
     #     for all (i): info.single_spec[i][0]==filter.ident==filter.htmlvars[0]
 
-    # This visual_spec_single stores direct into the VisualContext, thus it needs to dissosiate
+    # This _visual_spec_single stores direct into the VisualContext, thus it needs to dissosiate
     # the single_spec into separate filters. This transformations are the equivalent of flattening
     # the values into the url, but now they preserve the VisualContext type.
 
@@ -1023,7 +988,7 @@ def visual_spec_single(info_key):
     # either they are saved or they corrupt the VisualContext during merges.
 
     def from_valuespec(
-        values: Dict[str, Union[str, int]], single_spec: List[Tuple[FilterName, ValueSpec]]
+        values: dict[str, str | int], single_spec: list[tuple[FilterName, ValueSpec]]
     ) -> VisualContext:
         return {
             ident: {ident: str(value)}
@@ -1033,8 +998,8 @@ def visual_spec_single(info_key):
         }
 
     def to_valuespec(
-        context: VisualContext, single_spec: List[Tuple[FilterName, ValueSpec]]
-    ) -> Dict[str, Union[str, int]]:
+        context: VisualContext, single_spec: list[tuple[FilterName, ValueSpec]]
+    ) -> dict[str, str | int]:
         return {
             ident: value
             for ident, vs in single_spec
@@ -1056,7 +1021,7 @@ def visual_spec_single(info_key):
     )
 
 
-def visual_spec_multi(info_key):
+def _visual_spec_multi(info_key: InfoName) -> VisualFilterList | None:
     info = visual_info_registry[info_key]()
     filter_list = VisualFilterList([info_key], title=info.title)
     filter_names = filter_list.filter_names()
@@ -1064,23 +1029,25 @@ def visual_spec_multi(info_key):
     return filter_list if filter_names else None
 
 
-def process_context_specs(context_specs) -> VisualContext:  # type:ignore[no-untyped-def]
-    context = {}
+def process_context_specs(
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]]
+) -> VisualContext:
+    context: dict[str, Any] = {}
     for info_key, spec in context_specs:
         ident = "context_" + info_key
 
         attrs = spec.from_html_vars(ident)
-        spec.validate_value(attrs, ident)
+        spec.validate_value(dict(attrs), ident)
         context.update(attrs)
     return context
 
 
-def render_context_specs(  # type:ignore[no-untyped-def]
-    visual,
-    context_specs,
+def render_context_specs(
+    context: VisualContext,
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]],
     isopen: bool = True,
-    help_text: Union[str, HTML, None] = None,
-):
+    help_text: str | HTML | None = None,
+) -> None:
     if not context_specs:
         return
 
@@ -1093,7 +1060,6 @@ def render_context_specs(  # type:ignore[no-untyped-def]
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
-    value = visual.get("context", {})
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
@@ -1102,7 +1068,7 @@ def render_context_specs(  # type:ignore[no-untyped-def]
             else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None),
         )
         ident = "context_" + info_key
-        spec.render_input(ident, value)
+        spec.render_input(ident, context)
 
 
 def _vs_general(
@@ -1171,7 +1137,7 @@ def _vs_general(
                         "Dashboards will be visible in the ‘Monitor’ main menu. "
                         "With this option, you can select in which section of the menu this "
                         "dashboard should be accessible. If you want to define a new "
-                        "topic name you can do this here <a href='%s'>here</a>."
+                        "topic name you can do this <a href='%s'>here</a>."
                     )
                     % "pagetype_topics.py",
                     choices=pagetypes.PagetypeTopics.choices(),
@@ -1235,22 +1201,22 @@ def _vs_general(
 
 def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     what: VisualTypeName,
-    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    all_visuals: dict[tuple[UserId, VisualName], T],
     custom_field_handler=None,
     create_handler=None,
-    load_handler=None,
     info_handler=None,
-    sub_pages: Optional[pagetypes.SubPagesSpec] = None,
-    help_text_context: Union[str, HTML, None] = None,
-):
+    sub_pages: pagetypes.SubPagesSpec | None = None,
+    help_text_context: str | HTML | None = None,
+) -> None:
     if sub_pages is None:
         sub_pages = []
 
     visual_type = visual_type_registry[what]()
     if not user.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type.plural_title)
-    visual: Dict[str, Any] = {
+    visual: dict[str, Any] = {
         "link_from": {},
+        "context": {},
     }
 
     mode = request.get_str_input_mandatory("mode", "edit")
@@ -1326,7 +1292,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
     # A few checkboxes concerning the visibility of the visual. These will
     # appear as boolean-keys directly in the visual dict, but encapsulated
     # in a list choice in the value spec.
-    visibility_elements: List[Tuple[str, ValueSpec]] = [
+    visibility_elements: list[tuple[str, ValueSpec]] = [
         (
             "hidden",
             FixedValue(
@@ -1380,7 +1346,10 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         mode,
         what,
     )
-    context_specs = get_context_specs(visual, info_handler)
+    context_specs = get_context_specs(
+        visual["single_infos"],
+        info_handler(visual) if info_handler else list(visual_info_registry.keys()),
+    )
 
     # handle case of save or try or press on search button
     save_and_go = None
@@ -1444,7 +1413,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                             back_url_from_vars
                         )
                         back_vars = [(varname, value[0]) for varname, value in query_vars.items()]
-                    visual_name_var: Tuple[str, str] = (visual_type.ident_attr, visual["name"])
+                    visual_name_var: tuple[str, str] = (visual_type.ident_attr, visual["name"])
                     if visual_name_var not in back_vars:
                         back_vars.append(visual_name_var)
 
@@ -1456,7 +1425,12 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
 
                 if transactions.check_transaction():
                     assert owner_user_id is not None
-                    all_visuals[(owner_user_id, visual["name"])] = visual
+                    # Since we have no way to parse the raw dictionary and Dictionary is also not
+                    # typable, we need to hope here that page_dict fits with T. On the mission to at
+                    # least add some typing here, we take this shortcut for now. There are way
+                    # bigger problems in this class hierarchy than the edit dialog we should solve
+                    # first.
+                    all_visuals[(owner_user_id, visual["name"])] = cast(T, visual)
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry
@@ -1494,18 +1468,14 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             visib[key] = visual[key]
     visual["visibility"] = visib
 
+    visual["topic"] = visual.get("topic") or "other"  # default to "other" (in case of empty string)
     vs_general.render_input("general", visual)
-
-    # TODO: Only views are using it. Looks like we can move it to the view custom field handler in a
-    # follow up clean up
-    if load_handler:
-        load_handler(visual)
 
     if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
         custom_field_handler(visual)
 
     render_context_specs(
-        visual,
+        visual["context"],
         context_specs,
         isopen=what != "dashboards",
         help_text=help_text_context,
@@ -1554,7 +1524,9 @@ def show_filter(f: Filter, value: FilterHTTPVariables) -> None:
         tb = sys.exc_info()[2]
         tbs = ["Traceback (most recent call last):\n"]
         tbs += traceback.format_tb(tb)
-        html.icon("alert", _("This filter cannot be displayed") + " (%s)\n%s" % (e, "".join(tbs)))
+        html.icon(
+            "alert", _("This filter cannot be displayed") + " ({})\n{}".format(e, "".join(tbs))
+        )
         html.write_text(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
@@ -1577,8 +1549,8 @@ def get_filter(name: str) -> Filter:
 def get_link_filter_names(
     single_infos: SingleInfos,
     info_keys: SingleInfos,
-    link_filters: Dict[FilterName, FilterName],
-) -> Iterator[Tuple[FilterName, FilterName]]:
+    link_filters: dict[FilterName, FilterName],
+) -> Iterator[tuple[FilterName, FilterName]]:
     for info_key in single_infos:
         if info_key not in info_keys:
             for key in info_params(info_key):
@@ -1587,15 +1559,15 @@ def get_link_filter_names(
 
 
 def filters_of_visual(
-    visual: Visual | TypedVisual,
+    visual: Visual,
     info_keys: SingleInfos,
-    link_filters: Optional[Dict[FilterName, FilterName]] = None,
-) -> List[Filter]:
+    link_filters: dict[FilterName, FilterName] | None = None,
+) -> list[Filter]:
     """Collects all filters to be used for the given visual"""
     if link_filters is None:
         link_filters = {}
 
-    filters: Dict[FilterName, Filter] = {}
+    filters: dict[FilterName, Filter] = {}
 
     for info_key in info_keys:
         if info_key in visual["single_infos"]:
@@ -1628,7 +1600,7 @@ def filters_of_visual(
 
 
 # TODO: Cleanup this special case
-def get_ubiquitary_filters() -> List[FilterName]:
+def get_ubiquitary_filters() -> list[FilterName]:
     return ["wato_folder"]
 
 
@@ -1636,9 +1608,7 @@ def get_ubiquitary_filters() -> List[FilterName]:
 # which are really presented to the user later.
 # For the moment we only remove the single context filters which have a
 # hard coded default value which is treated as enforced value.
-def visible_filters_of_visual(
-    visual: Visual | TypedVisual, use_filters: List[Filter]
-) -> List[Filter]:
+def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list[Filter]:
     show_filters = []
 
     single_keys = get_single_info_keys(visual["single_infos"])
@@ -1657,7 +1627,7 @@ def context_to_uri_vars(context: VisualContext) -> list[tuple[str, str]]:
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos: Optional[SingleInfos] = None) -> VisualContext:
+def get_context_from_uri_vars(only_infos: SingleInfos | None = None) -> VisualContext:
     context = {}
     for filter_name, filter_object in filter_registry.items():
         if only_infos is not None and filter_object.info not in only_infos:
@@ -1740,13 +1710,13 @@ class VisualFilterList(ListOfMultiple):
     """
 
     @classmethod
-    def get_choices(cls, info: str) -> Sequence[Tuple[str, VisualFilter]]:
+    def get_choices(cls, info: str) -> Sequence[tuple[str, VisualFilter]]:
         return sorted(
             cls._get_filter_specs(info), key=lambda x: (x[1]._filter.sort_index, x[1].title())
         )
 
     @classmethod
-    def _get_filter_specs(cls, info: str) -> Iterator[Tuple[str, VisualFilter]]:
+    def _get_filter_specs(cls, info: str) -> Iterator[tuple[str, VisualFilter]]:
         for fname, filter_ in filters_allowed_for_info(info):
             yield fname, VisualFilter(name=fname, title=filter_.title)
 
@@ -1843,7 +1813,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
                         json.dumps(self._page_request_vars),
                         json.dumps(filter_list_selected_id),
                     ),
-                    id_="%s_add_%s" % (varprefix, filter_name),
+                    id_=f"{varprefix}_add_{filter_name}",
                 )
 
                 html.close_li()
@@ -1931,7 +1901,7 @@ def show_filter_form(
 def _show_filter_form_buttons(
     varprefix: str,
     filter_list_id: str,
-    page_request_vars: Optional[Mapping[str, Any]],
+    page_request_vars: Mapping[str, Any] | None,
     view_name: str,
     reset_ajax_page: str,
 ) -> None:
@@ -1972,10 +1942,10 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         *,
         name: str,
         # ValueSpec
-        title: Optional[str] = None,
-        help: Optional[ValueSpecHelp] = None,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[FilterHTTPVariables] = DEF_VALUE,
-        validate: Optional[ValueSpecValidateFunc[FilterHTTPVariables]] = None,
+        validate: ValueSpecValidateFunc[FilterHTTPVariables] | None = None,
     ):
         self._name = name
         self._filter = filter_registry[name]
@@ -2017,7 +1987,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         raise NotImplementedError()  # FIXME! Violates LSP!
 
 
-def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
+def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> tuple[str, Sequence[str]]:
     if not restrictions:
         choice_name = "no_restriction"
     elif restrictions == ["host"]:
@@ -2028,7 +1998,7 @@ def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> Tuple[st
 
 
 def _single_info_selection_from_valuespec(
-    name_and_restrictions: Tuple[str, Sequence[str]]
+    name_and_restrictions: tuple[str, Sequence[str]]
 ) -> Sequence[str]:
     return name_and_restrictions[1]
 
@@ -2040,7 +2010,7 @@ def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
         for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))
     ]
 
-    cascading_dropdown_choices: List[Tuple[str, str, ValueSpec]] = [
+    cascading_dropdown_choices: list[tuple[str, str, ValueSpec]] = [
         (
             "no_restriction",
             _("No restrictions to specific objects"),
@@ -2092,21 +2062,15 @@ def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
 
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
-def pack_context_for_editing(
-    visual: Visual, info_handler: Optional[Callable[[Visual], SingleInfos]]
-) -> Dict:
+def pack_context_for_editing(context: VisualContext, info_keys: Sequence[InfoName]) -> dict:
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
     # we pack into every info every filter. The dict valuespec will
     # pick out what it needs. Yurks.
-    packed_context = {}
-    info_keys = info_handler(visual) if info_handler else visual_info_registry.keys()
-    for info_name in info_keys:
-        packed_context[info_name] = visual.get("context", {})
-    return packed_context
+    return {info_name: context for info_name in info_keys}
 
 
-def unpack_context_after_editing(packed_context: Dict) -> VisualContext:
+def unpack_context_after_editing(packed_context: dict) -> VisualContext:
     return get_merged_context(*(its_context for _info_type, its_context in packed_context.items()))
 
 
@@ -2140,7 +2104,7 @@ def is_single_site_info(info_key: InfoName) -> bool:
     return visual_info_registry[info_key]().single_site
 
 
-def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
+def single_infos_spec(single_infos: SingleInfos) -> tuple[str, FixedValue]:
     return (
         "single_infos",
         FixedValue(
@@ -2153,13 +2117,13 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
     )
 
 
-def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> Set[FilterName]:
+def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> set[FilterName]:
     return missing_context_filters(get_single_info_keys(single_infos), context)
 
 
 def missing_context_filters(
-    require_filters: Set[FilterName], context: VisualContext
-) -> Set[FilterName]:
+    require_filters: set[FilterName], context: VisualContext
+) -> set[FilterName]:
     set_filters = (
         filter_name
         for filter_name, filter_context in context.items()
@@ -2171,7 +2135,7 @@ def missing_context_filters(
 
 def visual_title(
     what: str,
-    visual: Visual | TypedVisual,
+    visual: Visual,
     context: VisualContext,
     skip_title_context: bool = False,
 ) -> str:
@@ -2185,15 +2149,6 @@ def visual_title(
     if visual["add_context_to_title"] and not skip_title_context:
         title = _add_context_title(context, visual["single_infos"], title)
 
-    # Execute title plugin functions which might be added by the user to
-    # the visuals plugins. When such a plugin function returns None, the regular
-    # title of the page is used, otherwise the title returned by the plugin
-    # function is used.
-    for func in title_functions:
-        result = func(what, visual, title)
-        if result is not None:
-            return result
-
     return title
 
 
@@ -2205,7 +2160,7 @@ def _add_context_title(context: VisualContext, single_infos: Sequence[str], titl
     def filter_heading(
         filter_name: FilterName,
         filter_vars: FilterHTTPVariables,
-    ) -> Optional[str]:
+    ) -> str | None:
         try:
             filt = get_filter(filter_name)
         except KeyError:
@@ -2241,15 +2196,15 @@ def _add_context_title(context: VisualContext, single_infos: Sequence[str], titl
 # the variables "event_id" and "history_line" to be set in order
 # to exactly specify one history entry.
 @request_memoize()
-def info_params(info_key: InfoName) -> List[FilterName]:
+def info_params(info_key: InfoName) -> list[FilterName]:
     return [key for key, _vs in visual_info_registry[info_key]().single_spec]
 
 
-def get_single_info_keys(single_infos: SingleInfos) -> Set[FilterName]:
+def get_single_info_keys(single_infos: SingleInfos) -> set[FilterName]:
     return set(chain.from_iterable(map(info_params, single_infos)))
 
 
-def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> Dict[str, str]:
+def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) -> dict[str, str]:
     # Link filters only happen when switching from (host/service)group
     # datasource to host/service datasource. As this function is datasource
     # unaware we optionally test for this posibility when (host/service)group
@@ -2276,7 +2231,7 @@ def may_add_site_hint(
     visual_name: str,
     info_keys: SingleInfos,
     single_info_keys: SingleInfos,
-    filter_names: Tuple[FilterName, ...],
+    filter_names: tuple[FilterName, ...],
 ) -> bool:
     """Whether or not the site hint may be set when linking to a visual with the given details"""
     # When there is one non single site info used don't add the site hint
@@ -2329,7 +2284,7 @@ def ajax_popup_add() -> None:
             html.open_li()
 
             if not isinstance(entry.item, PageMenuLink):
-                html.write_text("Unhandled entry type '%s': %s" % (type(entry.item), entry.name))
+                html.write_text(f"Unhandled entry type '{type(entry.item)}': {entry.name}")
                 continue
 
             html.open_a(
@@ -2345,7 +2300,7 @@ def ajax_popup_add() -> None:
     html.close_ul()
 
 
-def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuDropdown]:
+def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuDropdown]:
     """Create the dropdown menu for adding a visual to other visuals / pagetypes
 
     Please not that this data structure is not only used for rendering the dropdown
@@ -2406,7 +2361,7 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> List[PageMenuD
 
 # TODO: VisualContext can't be part of the types, VisualContext has neither
 # None nor str on the values. Thus unhelpfully set to Dict
-def _encode_page_context(page_context: Dict) -> Dict:
+def _encode_page_context(page_context: dict) -> dict:
     return {k: "" if v is None else v for k, v in page_context.items()}
 
 

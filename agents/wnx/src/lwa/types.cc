@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <sstream>
 #include <string>
 
 #include "cfg.h"
@@ -44,14 +43,14 @@ ipspec from_string<ipspec>(const std::string &value) {
     ipspec result;
 
     auto slash_pos = strchr(value.c_str(), '/');
-    if (slash_pos != NULL) {
+    if (slash_pos != nullptr) {
         // ipv4/ipv6 agnostic
-        result.bits = strtol(slash_pos + 1, NULL, 10);
+        result.bits = strtol(slash_pos + 1, nullptr, 10);
     } else {
         result.bits = 0;
     }
 
-    result.ipv6 = strchr(value.c_str(), ':') != NULL;
+    result.ipv6 = strchr(value.c_str(), ':') != nullptr;
 
     if (result.ipv6) {
         if (result.bits == 0) {
@@ -73,7 +72,7 @@ ipspec from_string<ipspec>(const std::string &value) {
             result.ip.v4.address) {
             std::cerr << "Invalid only_hosts entry: host part not 0: " << value
                       << std::endl;
-            exit(1);
+            exit(1);  // NOLINT
         }
     }
     return result;
@@ -130,7 +129,7 @@ template <>
 winperf_counter from_string<winperf_counter>(const std::string &value) {
     using namespace wtools;
 
-    size_t colonIdx = value.find_last_of(":");
+    size_t colonIdx = value.find_last_of(':');
     if (colonIdx == std::string::npos) {
         XLOG::l() << "Invalid counter '" << value
                   << "' in section [winperf]: need number(or "
@@ -204,11 +203,11 @@ inline bool quoted(QuoteType qt) { return qt != QuoteType::none; }
 inline QuoteType getQuoteType(const std::string &s) {
     if (s.front() == '\'' && s.back() == '\'') {
         return QuoteType::singleQuoted;
-    } else if (s.front() == '"' && s.back() == '"') {
-        return QuoteType::doubleQuoted;
-    } else {
-        return QuoteType::none;
     }
+    if (s.front() == '"' && s.back() == '"') {
+        return QuoteType::doubleQuoted;
+    }
+    return QuoteType::none;
 }
 
 void removeQuotes(std::string &s, QuoteType qt) {
@@ -289,8 +288,6 @@ std::string ToYamlString(const winperf_counter &WinPerfCounter, bool) {
 
 template <>
 std::string ToYamlString(const mrpe_entry &Entry, bool) {
-    namespace fs = std::filesystem;
-
     std::string out = "- check = ";
     std::string p = Entry.command_line;
     auto data_path = wtools::ToUtf8(cma::cfg::GetUserDir());

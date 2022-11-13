@@ -2,18 +2,17 @@
 #include "stdafx.h"
 
 #include <shellapi.h>
-#include <shlobj.h>  // known path
 
 #include <filesystem>
 #include <ranges>
 #include <string>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
-#include "tools/_raii.h"  // on out
-#include "tools/_tgt.h"   // we need IsDebug
+#include "tools/_tgt.h"  // we need IsDebug
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;
@@ -115,8 +114,6 @@ void Global::loadLogging() {
     windbg_ = GetLoggingVal(vars::kLogWinDbg, true);
     event_log_ = GetLoggingVal(vars::kLogEvent, true);
     log_file_name_ = GetLoggingVal(vars::kLogFile, ""s);
-    log_file_max_count_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
-    log_file_max_size_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
     updateLogNames();
 }
 
@@ -202,7 +199,7 @@ void Global::setLogFolder(const fs::path &forced_path) {
 }
 
 // transfer global data into app environment
-void Global::setupLogEnvironment() {
+void Global::setupLogEnvironment() const {
     XLOG::setup::Configure(logfile_as_string_, debug_level_, windbg_,
                            event_log_);
     GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());
@@ -234,7 +231,7 @@ void WinPerf::loadFromMainConfig() {
     trace_ = GetWinPerfVal(vars::kWinPerfTrace, cfg::kDefaultWinPerfTrace);
     enabled_in_cfg_ = GetWinPerfVal(vars::kEnabled, exist_in_cfg_.load());
     auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-    for (const auto [id, name] : counters) {
+    for (const auto &[id, name] : counters) {
         counters_.emplace_back(id, name);
     }
 }

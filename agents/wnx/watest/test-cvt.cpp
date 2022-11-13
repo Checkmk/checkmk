@@ -14,13 +14,12 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
 
 template <class T>
 std::string type_name() {
-    typedef typename std::remove_reference<T>::type TR;
+    typedef std::remove_reference_t<T> TR;
     std::unique_ptr<char, void (*)(void *)> own(
 #ifndef _MSC_VER
         abi::__cxa_demangle(typeid(TR).name(), nullptr, nullptr, nullptr),
@@ -29,12 +28,17 @@ std::string type_name() {
 #endif
         std::free);
     std::string r = own != nullptr ? own.get() : typeid(TR).name();
-    if (std::is_const<TR>::value) r += " const";
-    if (std::is_volatile<TR>::value) r += " volatile";
-    if (std::is_lvalue_reference<T>::value)
+    if (std::is_const_v<TR>) {
+        r += " const";
+    }
+    if (std::is_volatile_v<TR>) {
+        r += " volatile";
+    }
+    if (std::is_lvalue_reference_v<T>) {
         r += "&";
-    else if (std::is_rvalue_reference<T>::value)
+    } else if (std::is_rvalue_reference_v<T>) {
         r += "&&";
+    }
     return r;
 }
 
@@ -102,10 +106,8 @@ std::string type_name() {
 // { "mrpe", "include", KeyedListConfigurable<std::string>}
 // clang-format on
 
-#include "cvt.h"
-
 template <typename T>
-void printType(T x) {
+void printType(T /*x*/) {
     std::cout << type_name<T>();
 }
 
@@ -133,14 +135,14 @@ TEST(CvtTest, CrLf) {
         std::ofstream ofs(p);
         ofs << yaml;
     }
-    std::ifstream in(p.u8string(), std::ios::binary);
+    std::ifstream in(wtools::ToStr(p), std::ios::binary);
     std::stringstream sstr;
     sstr << in.rdbuf();
     auto content = sstr.str();
     EXPECT_TRUE(content.find("\r\n") != std::string::npos);
 }
 
-void AddKeyedPattern(YAML::Node Node, const std::string Key,
+void AddKeyedPattern(YAML::Node Node, const std::string &Key,
                      const std::string &Pattern, const std::string &Value);
 
 TEST(CvtTest, Keyed) {

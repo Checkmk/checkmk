@@ -7,7 +7,6 @@
 
 #include "logger.h"
 #include "tools/_misc.h"
-#include "tools/_raii.h"
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the
@@ -18,9 +17,13 @@ namespace cma::evl {
 
 namespace win {
 // This safe wrapper for Vista API when Vista API is not accessible(XP/2003)
-struct EvtFunctionMap {
+class EvtFunctionMap {
 public:
     explicit EvtFunctionMap();
+    EvtFunctionMap(const EvtFunctionMap &) = delete;
+    EvtFunctionMap &operator=(const EvtFunctionMap &) = delete;
+    EvtFunctionMap(EvtFunctionMap &&) = delete;
+    EvtFunctionMap &operator=(EvtFunctionMap &&) = delete;
     ~EvtFunctionMap();
 
     decltype(&EvtOpenLog) openLog;
@@ -38,7 +41,7 @@ public:
     decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
     decltype(&EvtGetLogInfo) getLogInfo;
 
-    bool ready() const noexcept {
+    [[nodiscard]] bool ready() const noexcept {
         return module_handle_ != nullptr && openLog != nullptr &&
                close != nullptr;
     }
@@ -95,7 +98,7 @@ EvtFunctionMap g_evt;
     if (g_evt.next == nullptr) {
         return nullptr;
     }
-    EVT_HANDLE h{0};
+    EVT_HANDLE h{nullptr};
     DWORD num_events{0};
     if (g_evt.next(subscription, 1, &h, INFINITE, 0, &num_events) == TRUE) {
         return EvtHandle{h};
@@ -104,8 +107,8 @@ EvtFunctionMap g_evt;
     return nullptr;
 }
 
-[[nodiscard]] void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
-                                std::vector<BYTE> &buffer) noexcept {
+void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
+                  std::vector<BYTE> &buffer) noexcept {
     if (g_evt.render == nullptr) {
         return;
     }
@@ -125,13 +128,13 @@ EvtFunctionMap g_evt;
         return nullptr;
     }
 
-    std::vector<LPCWSTR> fields{L"/Event/System/Provider/@Name",
-                                L"/Event/System/EventID",
-                                L"/Event/System/EventID/@Qualifiers",
-                                L"/Event/System/EventRecordID",
-                                L"/Event/System/Level",
-                                L"/Event/System/TimeCreated/@SystemTime",
-                                L"/Event/EventData/Data"};
+    std::vector fields{L"/Event/System/Provider/@Name",
+                       L"/Event/System/EventID",
+                       L"/Event/System/EventID/@Qualifiers",
+                       L"/Event/System/EventRecordID",
+                       L"/Event/System/Level",
+                       L"/Event/System/TimeCreated/@SystemTime",
+                       L"/Event/EventData/Data"};
 
     return g_evt.createRenderContext(static_cast<DWORD>(fields.size()),
                                      fields.data(), EvtRenderContextValues);
@@ -288,13 +291,14 @@ public:
 
     };
 
-    const EVT_VARIANT &getValByType(int index) const {
-        const auto *values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
+    [[nodiscard]] const EVT_VARIANT &getValByType(int index) const {
+        const auto *values =
+            reinterpret_cast<const EVT_VARIANT *>(buffer_.data());
 
         return values[index];
     }
 
-    uint16_t eventId() const override {
+    [[nodiscard]] uint16_t eventId() const override {
         // I believe type is always UInt16 but since MS can't do documentation
         // I'm not sure
         auto val = getValByType(kEventId);
@@ -308,7 +312,7 @@ public:
         }
     }
 
-    uint16_t eventQualifiers() const override {
+    [[nodiscard]] uint16_t eventQualifiers() const override {
         auto val = getValByType(kEventQualifiers);
         switch (val.Type) {
             case EvtVarTypeUInt16:
@@ -320,24 +324,24 @@ public:
         }
     }
 
-    uint64_t recordId() const override {
+    [[nodiscard]] uint64_t recordId() const override {
         return getValByType(kRecordId).UInt64Val;
     }
 
-    time_t timeGenerated() const override {
-        auto val = getValByType(kTimeGenerated);
-        auto ullTimeStamp = val.FileTimeVal;
-        constexpr ULONGLONG time_offset = 116444736000000000;
-        return (ullTimeStamp - time_offset) / 10000000;
+    [[nodiscard]] time_t timeGenerated() const override {
+        const auto val = getValByType(kTimeGenerated);
+        const auto time_stamp = val.FileTimeVal;
+        constexpr ULONGLONG time_offset = 116444736000000000ULL;
+        return (time_stamp - time_offset) / 10000000;
     }
 
-    std::wstring source() const override {
+    [[nodiscard]] std::wstring source() const override {
         return getValByType(kSource).StringVal;
     }
 
-    Level eventLevel() const override {
-        auto val = getValByType(kLevel);
-        auto b = static_cast<WinEventLevel>(val.ByteVal);
+    [[nodiscard]] Level eventLevel() const override {
+        const auto val = getValByType(kLevel);
+        const auto b = static_cast<WinEventLevel>(val.ByteVal);
         switch (b) {
             case WinEventLevel::Error:
             case WinEventLevel::Critical:
@@ -350,19 +354,19 @@ public:
                 return Level::audit_success;
             case WinEventLevel::Verbose:
                 return Level::success;
-            default:
-                return Level::error;
         }
+        // unreachable
+        return Level::error;
     }
 
-    std::wstring makeMessage() const override {
+    [[nodiscard]] std::wstring makeMessage() const override {
         std::wstring result = formatMessage();
         postProcessMessage(result);
         return result;
     }
 
 private:
-    std::wstring formatMessage() const {
+    [[nodiscard]] std::wstring formatMessage() const {
         std::wstring result;
         auto publisher_meta = win::OpenPublisherMetadata(source());
 
@@ -394,7 +398,7 @@ private:
     }
 
     // logic from 1.5
-    std::wstring eventData() const {
+    [[nodiscard]] std::wstring eventData() const {
         constexpr size_t IDX = 6;  // six :)
 
         const auto *values =
@@ -460,9 +464,9 @@ std::optional<int64_t> SeekPos(EVT_HANDLE render_context,
         return {};
     }
 
-    EventLogRecordVista record(event.get(), render_context);
-    if ((record_id < record.recordId()) ||
-        (record_id == std::numeric_limits<uint64_t>::max())) {
+    const EventLogRecordVista record(event.get(), render_context);
+    if (record_id < record.recordId() ||
+        record_id == std::numeric_limits<uint64_t>::max()) {
         record_id = record.recordId();
     } else {
         --record_id;
@@ -514,8 +518,8 @@ void EventLogVista::seek(uint64_t record_id) {
 }
 
 bool EventLogVista::isNoMoreData() const noexcept {
-    return (index_in_table_ == event_table_.size()) ||
-           (event_table_[index_in_table_] == nullptr);
+    return index_in_table_ == event_table_.size() ||
+           event_table_[index_in_table_] == nullptr;
 }
 
 EventLogRecordBase *EventLogVista::readRecord() {

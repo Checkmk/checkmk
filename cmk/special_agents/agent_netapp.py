@@ -57,18 +57,8 @@ import re
 import sys
 import time
 import warnings
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any
 from xml.dom import minidom
 
 import requests
@@ -91,7 +81,7 @@ QUERY_MAX_RECORDS = 500
 COUNTERS_CLUSTERMODE_MAX_INSTANCES_PER_REQUEST = 500
 
 Section = Iterable[str]
-Query = Tuple[str, Any]
+Query = tuple[str, Any]
 Args = argparse.Namespace
 LicenseInformation = MutableMapping[str, MutableMapping[str, Any]]
 
@@ -114,7 +104,7 @@ warnings.filterwarnings("ignore")
 
 def parse_arguments(argv: Sequence[str]) -> Args:
     class Formatter(argparse.RawDescriptionHelpFormatter):
-        def _get_help_string(self, action: argparse.Action) -> Optional[str]:
+        def _get_help_string(self, action: argparse.Action) -> str | None:
             return action.help
 
     def positive_int(value: str) -> int:
@@ -199,7 +189,7 @@ def prettify(elem: ET._Element) -> str:
 
 class ErrorMessages:
     def __init__(self) -> None:
-        self.messages: Set[str] = set()
+        self.messages: set[str] = set()
 
     def add_message(self, message: str) -> None:
         self.messages.add(message)
@@ -217,7 +207,7 @@ class ErrorMessages:
 
 
 class NetAppNode:
-    def __init__(self, xml_element: Union[ET._Element, str]) -> None:
+    def __init__(self, xml_element: ET._Element | str) -> None:
         if isinstance(xml_element, str):
             xml_element = ET.Element(xml_element)
         self.node: ET._Element = xml_element
@@ -233,13 +223,13 @@ class NetAppNode:
     def __getattr__(self, what: str) -> Any:
         return object.__getattribute__(self, what)
 
-    def child_get_string(self, what: str) -> Optional[str]:
+    def child_get_string(self, what: str) -> str | None:
         for element in self.node:
             if element.tag.split("}")[-1] == what:
                 return None if element.text is None else str(element.text)
         return None
 
-    def child_get(self, what: str) -> Optional[NetAppNode]:
+    def child_get(self, what: str) -> NetAppNode | None:
         for element in self.node:
             if element.tag.split("}")[-1] == what:
                 return NetAppNode(element)
@@ -266,7 +256,7 @@ class NetAppNode:
 
 
 class NetAppRootNode(NetAppNode):
-    def __init__(self, vfiler: Optional[str]) -> None:
+    def __init__(self, vfiler: str | None) -> None:
         root_node = ET.Element(
             "netapp",
             version="1.8",
@@ -324,10 +314,10 @@ class NetAppResponse:
         if self.status != "passed":
             self.reason = str(results.node.attrib["reason"])
 
-    def results_status(self) -> Optional[str]:
+    def results_status(self) -> str | None:
         return self.status
 
-    def results_reason(self) -> Optional[str]:
+    def results_reason(self) -> str | None:
         return self.reason
 
     def get_results(self) -> NetAppNode:
@@ -357,7 +347,7 @@ class NetAppConnection:
         self.user = user
         self.password = password
         self.timeout = timeout
-        self.vfiler: Optional[str] = None
+        self.vfiler: str | None = None
 
         self.status = None
         self.error_messages = ErrorMessages()
@@ -385,7 +375,7 @@ class NetAppConnection:
     #        </instance-uuids>
     #    </perf-object-get-instances>
     def create_node_from_list(
-        self, the_list: Query, parent_node: Optional[ET._Element]
+        self, the_list: Query, parent_node: ET._Element | None
     ) -> ET._Element:
         name, elements = (the_list[0], the_list[1] if len(the_list) > 1 else [])
         new_node = ET.Element(name)
@@ -445,12 +435,12 @@ class NetAppConnection:
             assert reason
             if not reason.startswith("Unable to find API"):
                 self.add_error_message(
-                    "Querying class %s: %s" % (node.tag, netapp_response.results_reason())
+                    f"Querying class {node.tag}: {netapp_response.results_reason()}"
                 )
 
         return netapp_response
 
-    def invoke(self, *args_: str) -> Optional[NetAppNode]:
+    def invoke(self, *args_: str) -> NetAppNode | None:
         invoke_list = (args_[0], list(zip(args_[1::2], args_[2::2])))
         response = self.get_response(invoke_list)
         if response:
@@ -462,8 +452,8 @@ class NetAppConnection:
 
 
 def create_dict(  # pylint: disable=too-many-branches
-    instances: Optional[NetAppNode],
-    custom_key: Optional[Union[Sequence[str], str]] = None,
+    instances: NetAppNode | None,
+    custom_key: Sequence[str] | str | None = None,
     is_counter: bool = True,
 ) -> MutableMapping[str, Any]:
     if custom_key is None:
@@ -507,12 +497,12 @@ def create_dict(  # pylint: disable=too-many-branches
 def format_config(  # pylint: disable=too-many-branches
     instances: NetAppNode,
     prefix: str,
-    config_key: Union[Sequence[str], str],
-    config_report: Union[Sequence[str], str] = "all",
-    config_scale: Optional[Mapping[str, int]] = None,
-    config_rename: Optional[Mapping[str, str]] = None,
-    extra_info: Optional[Mapping[str, Mapping[str, str]]] = None,
-    extra_info_report: Union[Sequence[str], str] = "all",
+    config_key: Sequence[str] | str,
+    config_report: Sequence[str] | str = "all",
+    config_scale: Mapping[str, int] | None = None,
+    config_rename: Mapping[str, str] | None = None,
+    extra_info: Mapping[str, Mapping[str, str]] | None = None,
+    extra_info_report: Sequence[str] | str = "all",
     delimeter: str = "\t",
     skip_missing_config_key: bool = False,
 ) -> str:
@@ -530,7 +520,7 @@ def format_config(  # pylint: disable=too-many-branches
             collect_values(entry, namespace + node.element["name"] + ".")
 
         if node.element["content"]:
-            values["%s%s" % (namespace, node.element["name"])] = node.element["content"]
+            values["{}{}".format(namespace, node.element["name"])] = node.element["content"]
 
     if instances is None:
         return ""
@@ -556,18 +546,18 @@ def format_config(  # pylint: disable=too-many-branches
                 instance_key_list.append(values.get(entry, ""))
             instance_key = ".".join(instance_key_list)
 
-        line.append("%s %s" % (prefix, instance_key))
+        line.append(f"{prefix} {instance_key}")
         for key, value in values.items():
             if config_report == "all" or key in config_report:
                 if key in config_scale:
                     value = str(int(value) * config_scale[key])
                 key = config_rename.get(key, key)
-                line.append("%s %s" % (key, value))
+                line.append(f"{key} {value}")
 
         if instance_key in extra_info:
             for key, value in extra_info[instance_key].items():
                 if value and (extra_info_report == "all" or key in extra_info_report):
-                    line.append("%s %s" % (key, value))
+                    line.append(f"{key} {value}")
 
         result.append(("%s" % delimeter).join(line))
     return "\n".join(result)
@@ -577,7 +567,7 @@ def format_config(  # pylint: disable=too-many-branches
 def format_as_key_value(
     plain_instance: NetAppNode,
     prefix: str = "",
-    report: Union[Sequence[str], str] = "all",
+    report: Sequence[str] | str = "all",
     delimeter: str = "\t",
 ) -> str:
     result = []
@@ -585,7 +575,9 @@ def format_as_key_value(
         if report == "all" or node.element["name"] in report:
             if node.element["content"]:
                 result.append(
-                    "%s%s%s%s" % (prefix, node.element["name"], delimeter, node.element["content"])
+                    "{}{}{}{}".format(
+                        prefix, node.element["name"], delimeter, node.element["content"]
+                    )
                 )
     return "\n".join(result)
 
@@ -594,7 +586,7 @@ def format_as_key_value(
 def format_dict(
     the_dict: Mapping[str, Any],
     prefix: str = "",
-    report: Union[Sequence[str], str] = "all",
+    report: Sequence[str] | str = "all",
     delimeter: str = "\t",
     as_line: bool = False,
 ) -> str:
@@ -610,10 +602,10 @@ def format_dict(
         if prefix:
             line.append(prefix)
         for key, value in values.items():
-            line.append("%s %s" % (key, value))
+            line.append(f"{key} {value}")
         return ("%s" % delimeter).join(line)
     for key, value in values.items():
-        result.append("%s%s%s%s" % (prefix, key, delimeter, value))
+        result.append(f"{prefix}{key}{delimeter}{value}")
     return "\n".join(result)
 
 
@@ -642,7 +634,7 @@ def query_nodes(
             # NOTE(frans) - is this intentional?
             return {}
         value = response.get_results()
-        results["%s.%s" % (what, node)] = value
+        results[f"{what}.{node}"] = value
 
     return results
 
@@ -651,7 +643,7 @@ def query(
     server: NetAppConnection,
     what: str,
     return_toplevel_node: bool = False,
-) -> Optional[NetAppNode]:
+) -> NetAppNode | None:
     if isinstance(what, str):
         if what.endswith("iter"):
             response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
@@ -766,9 +758,9 @@ def process_vserver_status(server: NetAppConnection) -> None:
 
 
 def process_interfaces(
-    interfaces: Optional[NetAppNode],
-    ports: Optional[NetAppNode],
-    if_counters: Optional[NetAppNode],
+    interfaces: NetAppNode | None,
+    ports: NetAppNode | None,
+    if_counters: NetAppNode | None,
 ) -> None:
     if not interfaces:
         return
@@ -903,7 +895,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
             print("<<<netapp_api_systemtime:sep(9)>>>")
             for node, entry in cluster_status.items():
                 node_current_time = entry.child_get_string("current-time")
-                print("%s\t%s\t%s" % (node[10:], current_time, node_current_time))
+                print(f"{node[10:]}\t{current_time}\t{node_current_time}")
 
     # Disk
     disks = query(server, "storage-disk-get-iter")
@@ -1326,7 +1318,7 @@ def process_7mode(  # pylint: disable=too-many-branches
             vfiler_names.append(name)
             response = server.invoke("vfiler-get-status", "vfiler", name)
             assert response
-            print("%s\t%s" % (name, response.child_get_string("status")))
+            print("{}\t{}".format(name, response.child_get_string("status")))
 
     # Snapvaults
     if "sv_ontap_sec" not in licenses["v1_disabled"]:
@@ -1425,7 +1417,7 @@ def process_7mode(  # pylint: disable=too-many-branches
                 print("<<<netapp_api_systemtime:sep(9)>>>")
                 node_current_time = cluster_status.child_get_string("current-time")
                 current_time = int(time.time())
-                print("%s\t%s\t%s" % (system_name, current_time, node_current_time))
+                print(f"{system_name}\t{current_time}\t{node_current_time}")
 
     # Sensors: Temp, Fan, PSU
     # Definition: all sensors are always monitored by one of the filers
@@ -1551,7 +1543,7 @@ def fetch_netapp_mode(server: NetAppConnection) -> str:
     # version_info = query(server, "system-api-list")
 
 
-def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[NetAppNode]:
+def query_counters_clustermode(server: NetAppConnection, what: str) -> NetAppNode | None:
     response = server.get_response(
         (
             "perf-object-instance-list-info-iter",
@@ -1634,7 +1626,7 @@ def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[
     return initial_results.child_get("instances")
 
 
-def query_counters_7mode(server: NetAppConnection, what: str) -> Optional[NetAppNode]:
+def query_counters_7mode(server: NetAppConnection, what: str) -> NetAppNode | None:
     perfobject_node = ("perf-object-get-instances-iter-start", [("objectname", what)])
     response = server.get_response(perfobject_node)
     results = response.get_results()
@@ -1646,7 +1638,7 @@ def query_counters_7mode(server: NetAppConnection, what: str) -> Optional[NetApp
     if not records or records == "0":
         return None
 
-    responses: List[NetAppResponse] = []
+    responses: list[NetAppResponse] = []
     while records != "0":
         perfobject_node = (
             "perf-object-get-instances-iter-next",
@@ -1674,7 +1666,7 @@ def query_counters(
     netapp_mode: str,
     server: NetAppConnection,
     what: str,
-) -> Optional[NetAppNode]:
+) -> NetAppNode | None:
     if netapp_mode == "clustermode":
         return query_counters_clustermode(server, what)
     return query_counters_7mode(server, what)

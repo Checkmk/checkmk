@@ -22,15 +22,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostKey,
-    HostName,
-    RuleSetName,
-    SectionName,
-    ServiceID,
-    SourceType,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
 
 from cmk.core_helpers.type_defs import Mode
 
@@ -143,8 +135,8 @@ def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_tag_to_group_map() == {
+    ts.apply(monkeypatch)
+    assert ConfigCache.get_tag_to_group_map() == {
         "all-agents": "agent",
         "auto-piggyback": "piggyback",
         "cmk-agent": "agent",
@@ -676,8 +668,8 @@ def test_host_config_tcp_connect_timeout(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", {"use_regular": "disable", "use_realtime": "enforce"}),
-        ("testhost2", {"use_regular": "enforce", "use_realtime": "disable"}),
+        ("testhost1", {"use_regular": "disable"}),
+        ("testhost2", {"use_regular": "enforce"}),
     ],
 )
 def test_host_config_agent_encryption(
@@ -691,7 +683,7 @@ def test_host_config_agent_encryption(
         [
             {
                 "condition": {"host_name": ["testhost2"]},
-                "value": {"use_regular": "enforce", "use_realtime": "disable"},
+                "value": {"use_regular": "enforce"},
             }
         ],
     )
@@ -1655,22 +1647,22 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     return ts.apply(monkeypatch)
 
 
-def test_host_config_is_cluster(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).is_cluster is False
-    assert cluster_config.get_host_config(HostName("host1")).is_cluster is False
-    assert cluster_config.get_host_config(HostName("cluster1")).is_cluster is True
+def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
+    assert cluster_config.is_cluster(HostName("node1")) is False
+    assert cluster_config.is_cluster(HostName("host1")) is False
+    assert cluster_config.is_cluster(HostName("cluster1")) is True
 
 
-def test_host_config_part_of_clusters(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).part_of_clusters == ["cluster1"]
-    assert cluster_config.get_host_config(HostName("host1")).part_of_clusters == []
-    assert cluster_config.get_host_config(HostName("cluster1")).part_of_clusters == []
+def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
+    assert cluster_config.clusters_of(HostName("node1")) == ["cluster1"]
+    assert cluster_config.clusters_of(HostName("host1")) == []
+    assert cluster_config.clusters_of(HostName("cluster1")) == []
 
 
-def test_host_config_nodes(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).nodes is None
-    assert cluster_config.get_host_config(HostName("host1")).nodes is None
-    assert cluster_config.get_host_config(HostName("cluster1")).nodes == ["node1"]
+def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
+    assert cluster_config.nodes_of(HostName("node1")) is None
+    assert cluster_config.nodes_of(HostName("host1")) is None
+    assert cluster_config.nodes_of(HostName("cluster1")) == ["node1"]
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
@@ -1886,76 +1878,6 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
 
 def test_service_label_rules_default() -> None:
     assert isinstance(config.service_label_rules, list)
-
-
-def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
-    test_host = HostName("test-host")
-    xyz_host = HostName("xyz")
-    ts = Scenario()
-    ts.set_ruleset(
-        "service_label_rules",
-        [
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
-                },
-                "value": {"label1": "val1"},
-            },
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
-                },
-                "value": {"label2": "val2"},
-            },
-        ],
-    )
-
-    ts.add_host(test_host, tags={"agent": "no-agent"})
-    config_cache = ts.apply(monkeypatch)
-
-    assert config_cache.labels_of_service(xyz_host, "CPU load") == {}
-    assert config_cache.label_sources_of_service(xyz_host, "CPU load") == {}
-
-    assert config_cache.labels_of_service(test_host, "CPU load") == {
-        "label1": "val1",
-        "label2": "val2",
-    }
-    assert config_cache.label_sources_of_service(test_host, "CPU load") == {
-        "label1": "ruleset",
-        "label2": "ruleset",
-    }
-
-
-@pytest.mark.usefixtures("fix_register")
-def test_labels_of_service_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    test_host = HostName("test-host")
-    xyz_host = HostName("xyz")
-    ts = Scenario()
-    ts.add_host(test_host)
-
-    monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
-    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
-    with autochecks_file.open("w", encoding="utf-8") as f:
-        f.write(
-            """[
-    {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
-]"""
-        )
-
-    config_cache = ts.apply(monkeypatch)
-
-    service = config_cache.get_autochecks_of(test_host)[0]
-    assert service.description == "CPU load"
-
-    assert config_cache.labels_of_service(xyz_host, "CPU load") == {}
-    assert config_cache.label_sources_of_service(xyz_host, "CPU load") == {}
-
-    assert config_cache.labels_of_service(test_host, service.description) == {"äzzzz": "eeeeez"}
-    assert config_cache.label_sources_of_service(test_host, service.description) == {
-        "äzzzz": "discovered"
-    }
 
 
 @pytest.mark.parametrize(
@@ -2361,8 +2283,9 @@ def test_host_config_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> N
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
-    host_config = HostConfig.make_host_config(xyz_host)
-    assert not host_config.is_cluster
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(xyz_host)
+    assert not config_cache.is_cluster(xyz_host)
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.cluster_max_cachefile_age
 
@@ -2373,8 +2296,9 @@ def test_host_config_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
-    host_config = HostConfig.make_host_config(clu)
-    assert host_config.is_cluster
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(clu)
+    assert config_cache.is_cluster(clu)
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.cluster_max_cachefile_age
 
@@ -2392,107 +2316,9 @@ def test_config_cache_service_discovery_name(
     ts = Scenario()
     if use_new_descr:
         ts.set_option("use_new_descriptions_for", ["cmk_inventory"])
-    config_cache = ts.apply(monkeypatch)
+    ts.apply(monkeypatch)
 
-    assert config_cache.service_discovery_name() == result
-
-
-def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-
-    config_cache = ts.apply(monkeypatch)
-
-    monkeypatch.setattr(
-        config,
-        "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.0",
-    )
-    # empty, we have no cluster:
-    assert [] == config_cache.get_clustered_service_node_keys(
-        config_cache.get_host_config(HostName("cluster.test")),
-        SourceType.HOST,
-        "Test Service",
-    )
-
-
-def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
-    monkeypatch: MonkeyPatch,
-) -> None:
-    cluster_test = HostName("cluster.test")
-    ts = Scenario()
-    ts.add_cluster(cluster_test, nodes=["node1.test", "node2.test"])
-    config_cache = ts.apply(monkeypatch)
-
-    monkeypatch.setattr(
-        config,
-        "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.0",
-    )
-    # empty for a node:
-    assert [] == config_cache.get_clustered_service_node_keys(
-        config_cache.get_host_config(HostName("node1.test")),
-        SourceType.HOST,
-        "Test Service",
-    )
-
-    # empty for cluster (we have not clustered the service)
-    assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
-    ] == config_cache.get_clustered_service_node_keys(
-        config_cache.get_host_config(cluster_test),
-        SourceType.HOST,
-        "Test Service",
-    )
-
-
-def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: MonkeyPatch) -> None:
-    node1 = HostName("node1.test")
-    node2 = HostName("node2.test")
-    cluster = HostName("cluster.test")
-
-    ts = Scenario()
-    ts.add_host(node1)
-    ts.add_host(node2)
-    ts.add_cluster(cluster, nodes=["node1.test", "node2.test"])
-    # add a fake rule, that defines a cluster
-    ts.set_option(
-        "clustered_services_mapping",
-        [
-            {
-                "value": "cluster.test",
-                "condition": {"service_description": ["Test Service"]},
-            }
-        ],
-    )
-    config_cache = ts.apply(monkeypatch)
-
-    monkeypatch.setattr(
-        config,
-        "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
-    )
-    assert config_cache.get_clustered_service_node_keys(
-        config_cache.get_host_config(cluster),
-        SourceType.HOST,
-        "Test Service",
-    ) == [
-        HostKey(node1, SourceType.HOST),
-        HostKey(node2, SourceType.HOST),
-    ]
-    monkeypatch.setattr(
-        config,
-        "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.0",
-    )
-    assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
-    ] == config_cache.get_clustered_service_node_keys(
-        config_cache.get_host_config(cluster),
-        SourceType.HOST,
-        "Test Unclustered",
-    )
+    assert ConfigCache.service_discovery_name() == result
 
 
 def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
@@ -2516,13 +2342,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service(xyz_host, "bla blä")
-    assert isinstance(obj, RulesetMatchObject)
-    assert obj.to_dict() == {
-        "host_name": "xyz",
-        "service_description": "bla blä",
-        "service_labels": {},
-        "service_cache_id": ("bla blä", hash(frozenset([]))),
-    }
+    assert obj == RulesetMatchObject("xyz", "bla blä", {})
 
     # Funny service description because the plugin isn't loaded.
     # We could patch config.service_description, but this is easier:
@@ -2530,13 +2350,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
 
     obj = config_cache.ruleset_match_object_of_service(test_host, description)
     service_labels = {"abc": "xä"}
-    assert isinstance(obj, RulesetMatchObject)
-    assert obj.to_dict() == {
-        "host_name": "test-host",
-        "service_description": description,
-        "service_labels": service_labels,
-        "service_cache_id": (description, hash(frozenset(service_labels.items()))),
-    }
+    assert obj == RulesetMatchObject("test-host", description, service_labels)
 
 
 @pytest.mark.parametrize(

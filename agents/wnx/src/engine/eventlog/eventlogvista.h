@@ -28,21 +28,24 @@ bool IsEvtApiAvailable() noexcept;
 
 class EventLogVista : public EventLogBase {
 public:
-    EventLogVista(const std::wstring &path);
-    ~EventLogVista();
+    explicit EventLogVista(const std::wstring &path);
+    EventLogVista(const EventLogVista &) = delete;
+    EventLogVista operator=(const EventLogVista &) = delete;
+    EventLogVista(EventLogVista &&) = delete;
+    EventLogVista operator=(EventLogVista &&) = delete;
+    ~EventLogVista() override;
 
-    virtual std::wstring getName() const override;
-    virtual void seek(uint64_t record_id) override;
-    virtual EventLogRecordBase *readRecord() override;
-    virtual uint64_t getLastRecordId() override;
-    virtual bool isLogValid() const override;
+    [[nodiscard]] std::wstring getName() const override;
+    void seek(uint64_t record_id) override;
+    EventLogRecordBase *readRecord() override;
+    uint64_t getLastRecordId() override;
+    [[nodiscard]] bool isLogValid() const override;
 
 private:
     bool fillBuffer();
     bool processEvents();
     void resetData();
-    bool isNoMoreData() const noexcept;
-    std::wstring renderBookmark(EVT_HANDLE bookmark) const;
+    [[nodiscard]] bool isNoMoreData() const noexcept;
 
     std::wstring log_name_;
     EvtHandle subscription_handle_;

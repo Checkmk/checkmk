@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Type
+from __future__ import annotations
+
+from typing import Any
 
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -26,6 +28,7 @@ from cmk.bi.lib import (
     BIHostStatusInfoRow,
     BIServiceWithFullState,
     BIStates,
+    CompiledNodeKind,
     create_nested_schema_for_class,
     NodeComputeResult,
     NodeResultBundle,
@@ -55,7 +58,7 @@ from cmk.bi.schema import Schema
 
 class BICompiledLeaf(ABCBICompiledNode):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> CompiledNodeKind:
         return "leaf"
 
     def __init__(
@@ -97,7 +100,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
     def __str__(self) -> str:
-        return "BICompiledLeaf[Site %s, Host: %s, Service %s]" % (
+        return "BICompiledLeaf[Site {}, Host: {}, Service {}]".format(
             self.site_id,
             self.host_name,
             self.service_description,
@@ -188,12 +191,12 @@ class BICompiledLeaf(ABCBICompiledNode):
         return entity.services_with_fullstate.get(self.service_description)
 
     @classmethod
-    def schema(cls) -> Type["BICompiledLeafSchema"]:
+    def schema(cls) -> type[BICompiledLeafSchema]:
         return BICompiledLeafSchema
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "required_hosts": list(
                 map(lambda x: {"site_id": x[0], "host_name": x[1]}, self.required_hosts)
             ),
@@ -214,7 +217,7 @@ class BISiteHostPairSchema(Schema):
 
 
 class BICompiledLeafSchema(Schema):
-    type = ReqConstant(BICompiledLeaf.type())
+    type = ReqConstant(BICompiledLeaf.kind())
     required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
     site_id = ReqString()
     host_name = ReqString()
@@ -233,7 +236,7 @@ class BICompiledLeafSchema(Schema):
 
 class BICompiledRule(ABCBICompiledNode):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> CompiledNodeKind:
         return "rule"
 
     def __init__(
@@ -258,9 +261,9 @@ class BICompiledRule(ABCBICompiledNode):
     def __str__(self) -> str:
         return "BICompiledRule[%s, %d rules, %d leaves %d remaining]" % (
             self.properties.title,
-            len([x for x in self.nodes if x.type() == "rule"]),
-            len([x for x in self.nodes if x.type() == "leaf"]),
-            len([x for x in self.nodes if x.type() == "remaining"]),
+            len([x for x in self.nodes if x.kind() == "rule"]),
+            len([x for x in self.nodes if x.kind() == "leaf"]),
+            len([x for x in self.nodes if x.kind() == "remaining"]),
         )
 
     def _get_comparable_name(self) -> str:
@@ -366,14 +369,14 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
     @classmethod
-    def schema(cls) -> Type["BICompiledRuleSchema"]:
+    def schema(cls) -> type[BICompiledRuleSchema]:
         return BICompiledRuleSchema
 
     def serialize(self):
         return {
             "id": self.id,
             "pack_id": self.pack_id,
-            "type": self.type(),
+            "type": self.kind(),
             "required_hosts": list(
                 map(lambda x: {"site_id": x[0], "host_name": x[1]}, self.required_hosts)
             ),
@@ -387,7 +390,7 @@ class BICompiledRule(ABCBICompiledNode):
 class BICompiledRuleSchema(Schema):
     id = ReqString()
     pack_id = ReqString()
-    type = ReqConstant(BICompiledRule.type())
+    type = ReqConstant(BICompiledRule.kind())
     required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
     nodes = ReqList(fields.Nested("BIResultSchema"))
     aggregation_function = ReqNested(
@@ -414,7 +417,7 @@ class BIRemainingResult(ABCBICompiledNode):
     # The BIRemainingResult lacks a serializable schema, since it is resolved into
     # BICompiledLeaf(s) during the compilation
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> CompiledNodeKind:
         return "remaining"
 
     def __init__(self, host_names: list[HostName]) -> None:
@@ -577,7 +580,7 @@ class BICompiledAggregation:
             result["title"] = (
                 node.host_name
                 if node.service_description is None
-                else "%s - %s" % (node.host_name, node.service_description)
+                else f"{node.host_name} - {node.service_description}"
             )
             return result
 
@@ -596,7 +599,7 @@ class BICompiledAggregation:
         raise NotImplementedError("Unknown node type %r" % node)
 
     @classmethod
-    def schema(cls) -> Type["BICompiledAggregationSchema"]:
+    def schema(cls) -> type["BICompiledAggregationSchema"]:
         return BICompiledAggregationSchema
 
     def serialize(self):
@@ -633,4 +636,4 @@ class BIResultSchema(OneOfSchema):
     }
 
     def get_obj_type(self, obj: ABCBICompiledNode) -> str:
-        return obj.type()
+        return obj.kind()

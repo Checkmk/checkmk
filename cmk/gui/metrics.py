@@ -17,7 +17,8 @@ import abc
 import json
 import math
 import string
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
+from collections.abc import Callable, Sequence
+from typing import Any
 
 import cmk.utils
 import cmk.utils.plugin_registry
@@ -47,8 +48,8 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.type_defs import CombinedGraphSpec, PerfometerSpec
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-PerfometerExpression = Union[str, int, float]
-RequiredMetricNames = Set[str]
+PerfometerExpression = str | int | float
+RequiredMetricNames = set[str]
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -144,9 +145,7 @@ def fixup_perfometer_info() -> None:
 # old known formats from tuple to dict.
 # All shipped perfometers have been converted to the dict format with 1.5.0i3.
 # TODO: Remove this one day.
-def _convert_legacy_tuple_perfometers(
-    perfometers: List[Union[LegacyPerfometer, PerfometerSpec]]
-) -> None:
+def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:
     for index, perfometer in reversed(list(enumerate(perfometers))):
         if isinstance(perfometer, dict):
             continue
@@ -184,8 +183,8 @@ def _convert_legacy_tuple_perfometers(
 
 
 def _lookup_required_expressions(
-    perfometer: Union[LegacyPerfometer, PerfometerSpec]
-) -> List[PerfometerExpression]:
+    perfometer: LegacyPerfometer | PerfometerSpec,
+) -> list[PerfometerExpression]:
 
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
@@ -200,8 +199,8 @@ def _lookup_required_expressions(
 
 
 def _lookup_required_names(
-    perfometer: Union[LegacyPerfometer, PerfometerSpec]
-) -> Optional[RequiredMetricNames]:
+    perfometer: LegacyPerfometer | PerfometerSpec,
+) -> RequiredMetricNames | None:
 
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
@@ -219,11 +218,11 @@ def _lookup_required_names(
     )
 
 
-def _perfometer_expressions(perfometer: PerfometerSpec) -> List[PerfometerExpression]:
+def _perfometer_expressions(perfometer: PerfometerSpec) -> list[PerfometerExpression]:
     """Returns all metric expressions of a perfometer
     This is used for checking which perfometer can be displayed for a given service later.
     """
-    required: List[PerfometerExpression] = []
+    required: list[PerfometerExpression] = []
 
     if perfometer["type"] == "linear":
         required += perfometer["segments"][:]
@@ -253,8 +252,8 @@ def _perfometer_expressions(perfometer: PerfometerSpec) -> List[PerfometerExpres
 
 
 def _required_trivial_metric_names(
-    required_expressions: List[PerfometerExpression],
-) -> Optional[RequiredMetricNames]:
+    required_expressions: list[PerfometerExpression],
+) -> RequiredMetricNames | None:
     """Extract the trivial metric names from a list of expressions.
     Ignores numeric parts. Returns None in case there is a non trivial
     metric found. This means the trivial filtering can not be used.
@@ -288,7 +287,7 @@ def _required_trivial_metric_names(
 # A few helper function to be used by the definitions
 
 
-def metric_to_text(metric: Dict[str, Any], value: Optional[Union[int, float]] = None) -> str:
+def metric_to_text(metric: dict[str, Any], value: int | float | None = None) -> str:
     if value is None:
         value = metric["value"]
     return metric["unit"]["render"](value)
@@ -312,7 +311,7 @@ age_human_readable = cmk.utils.render.approx_age
 
 
 def translate_perf_data(
-    perf_data_string: str, check_command: Optional[str] = None
+    perf_data_string: str, check_command: str | None = None
 ) -> TranslatedMetrics:
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
@@ -334,7 +333,7 @@ def translate_perf_data(
 class Perfometers:
     def get_first_matching_perfometer(
         self, translated_metrics: TranslatedMetrics
-    ) -> Optional[PerfometerSpec]:
+    ) -> PerfometerSpec | None:
         for perfometer in perfometer_info:
             if not isinstance(perfometer, dict):
                 continue
@@ -373,7 +372,7 @@ class Perfometers:
 
     def _skip_perfometer_by_trivial_metrics(
         self,
-        required_metric_names: Optional[RequiredMetricNames],
+        required_metric_names: RequiredMetricNames | None,
         translated_metrics: TranslatedMetrics,
     ) -> bool:
         """Whether or not a perfometer can be skipped by simple metric name matching instead of expression evaluation
@@ -391,7 +390,7 @@ class Perfometers:
         return not required_metric_names.issubset(available_metric_names)
 
     def _total_values_exists(
-        self, value: Union[str, int, float], translated_metrics: TranslatedMetrics
+        self, value: str | int | float, translated_metrics: TranslatedMetrics
     ) -> bool:
         """
         Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
@@ -410,7 +409,7 @@ class Perfometers:
         return True
 
 
-MetricRendererStack = List[List[Tuple[Union[int, float], str]]]
+MetricRendererStack = list[list[tuple[int | float, str]]]
 
 
 class MetricometerRenderer(abc.ABC):
@@ -466,7 +465,7 @@ class MetricometerRenderer(abc.ABC):
         raise NotImplementedError()
 
 
-class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[Type[MetricometerRenderer]]):
+class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[type[MetricometerRenderer]]):
     def plugin_name(self, instance):
         return instance.type_name()
 
@@ -514,11 +513,11 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
     @staticmethod
     def get_stack_from_values(
-        value: Union[str, int, float],
-        half_value: Union[int, float],
-        base: Union[int, float],
+        value: str | int | float,
+        half_value: int | float,
+        base: int | float,
         color: str,
-    ) -> List[Tuple[Union[int, float], str]]:
+    ) -> list[tuple[int | float, str]]:
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
@@ -634,7 +633,7 @@ class MetricometerRendererDual(MetricometerRenderer):
             )
 
     def get_stack(self) -> MetricRendererStack:
-        content: List[Tuple[Union[int, float], str]] = []
+        content: list[tuple[int | float, str]] = []
         for nr, sub_perfometer in enumerate(self._perfometer["perfometers"]):
             renderer = renderer_registry.get_renderer(sub_perfometer, self._translated_metrics)
 

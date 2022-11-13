@@ -8,6 +8,7 @@ import ast
 import errno
 import glob
 import io
+import logging
 import operator
 import os
 import shlex
@@ -23,6 +24,7 @@ from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
+import cmk.utils.password_store
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
@@ -65,9 +67,11 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
 import cmk.core_helpers.cache
-from cmk.core_helpers import factory
+from cmk.core_helpers import factory, FetcherType, get_raw_data
 from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.summarize import summarize
+from cmk.core_helpers.tcp import TCPFetcher
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -99,7 +103,9 @@ HistoryFilePair = Tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(self, config_cache: ConfigCache, host_config: HostConfig) -> None:
+    def _trigger_discovery_check(
+        self, config_cache: ConfigCache, host_name: HostName, host_config: HostConfig
+    ) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
@@ -107,10 +113,10 @@ class DiscoveryAutomation(Automation):
         if host_config.discovery_check_parameters().commandline_only:
             return
 
-        if host_config.is_cluster:
+        if config_cache.is_cluster(host_name):
             return
 
-        discovery.schedule_discovery_check(host_config.hostname)
+        discovery.schedule_discovery_check(host_name)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -156,6 +162,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
             results[hostname] = discovery.automation_discovery(
+                hostname,
                 config_cache=config_cache,
                 host_config=host_config,
                 mode=mode,
@@ -168,7 +175,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
                 # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(config_cache, host_config)
+                self._trigger_discovery_check(config_cache, hostname, host_config)
 
         return automation_results.DiscoveryResult(results)
 
@@ -272,7 +279,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # checks for host_config.set_autochecks, because it needs to calculate the
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
-        if host_config.is_cluster:
+        if config_cache.is_cluster(hostname):
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
             )
@@ -295,7 +302,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             )
 
         host_config.set_autochecks(new_services)
-        self._trigger_discovery_check(config_cache, host_config)
+        self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.SetAutochecksResult()
 
 
@@ -346,7 +353,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        self._trigger_discovery_check(config_cache, host_config)
+        self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.UpdateHostLabelsResult()
 
 
@@ -694,10 +701,10 @@ class AutomationGetServicesLabels(Automation):
 
     def execute(self, args: List[str]) -> automation_results.GetServicesLabelsResult:
         hostname, services = HostName(args[0]), args[1:]
-        config_cache = config.get_config_cache()
+        ruleset_matcher = config.get_config_cache().ruleset_matcher
 
         return automation_results.GetServicesLabelsResult(
-            {service: config_cache.labels_of_service(hostname, service) for service in services}
+            {service: ruleset_matcher.labels_of_service(hostname, service) for service in services}
         )
 
 
@@ -716,12 +723,15 @@ class AutomationAnalyseServices(Automation):
         return (
             automation_results.AnalyseServiceResult(
                 service_info=service_info,
-                labels=config_cache.labels_of_service(hostname, servicedesc),
-                label_sources=config_cache.label_sources_of_service(hostname, servicedesc),
+                labels=config_cache.ruleset_matcher.labels_of_service(hostname, servicedesc),
+                label_sources=config_cache.ruleset_matcher.label_sources_of_service(
+                    hostname, servicedesc
+                ),
             )
             if (
                 service_info := self._get_service_info(
                     config_cache=config_cache,
+                    host_name=hostname,
                     host_config=config_cache.get_host_config(hostname),
                     host_attrs=core_config.get_host_attributes(hostname, config_cache),
                     servicedesc=servicedesc,
@@ -740,12 +750,11 @@ class AutomationAnalyseServices(Automation):
     def _get_service_info(
         self,
         config_cache: ConfigCache,
+        host_name: HostName,
         host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
-        hostname = host_config.hostname
-
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
         # 1. enforced services (currently overriding discovered services)
@@ -768,7 +777,7 @@ class AutomationAnalyseServices(Automation):
         # our service there
         if (
             autocheck_service := self._get_service_info_from_autochecks(
-                config_cache, host_config, servicedesc
+                config_cache, host_name, servicedesc
             )
         ) is not None:
             return autocheck_service
@@ -785,11 +794,11 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        with plugin_contexts.current_host(hostname):
+        with plugin_contexts.current_host(host_name):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
                     for description in core_config.get_active_check_descriptions(
-                        hostname,
+                        host_name,
                         host_config.alias,
                         host_attrs,
                         plugin_name,
@@ -806,23 +815,22 @@ class AutomationAnalyseServices(Automation):
 
     @staticmethod
     def _get_service_info_from_autochecks(
-        config_cache: ConfigCache, host_config: HostConfig, servicedesc: str
+        config_cache: ConfigCache, host_name: HostName, servicedesc: str
     ) -> Optional[automation_results.ServiceInfo]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # differen information. Also: check table forgets wether it's an *auto*check.
-        table = check_table.get_check_table(host_config.hostname)
+        table = check_table.get_check_table(host_name)
         services = (
             [
                 service
-                for node in host_config.nodes or []
+                for node in config_cache.nodes_of(host_name) or []
                 for service in config_cache.get_autochecks_of(node)
-                if host_config.hostname
-                == config_cache.host_of_clustered_service(node, service.description)
+                if host_name == config_cache.host_of_clustered_service(node, service.description)
             ]
-            if host_config.is_cluster
-            else config_cache.get_autochecks_of(host_config.hostname)
+            if config_cache.is_cluster(host_name)
+            else config_cache.get_autochecks_of(host_name)
         )
 
         for service in services:
@@ -1306,6 +1314,7 @@ class AutomationDiagHost(Automation):
             if test == "agent":
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
+                        hostname,
                         host_config,
                         ipaddress,
                         agent_port=agent_port,
@@ -1371,6 +1380,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
+        host_name: HostName,
         host_config: HostConfig,
         ipaddress: HostAddress,
         agent_port: int,
@@ -1378,55 +1388,40 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        for source in sources.make_non_cluster_sources(
-            host_config,
+        for source, file_cache, fetcher in sources.make_non_cluster_sources(
+            host_name,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = sources.programs.DSProgramSource(
-                    host_config.hostname,
-                    ipaddress,
-                    source_type=source.source_type,
-                    fetcher_type=source.fetcher_type,
-                    id_="agent",
-                    cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd,
-                        host_config,
-                        ipaddress,
-                    ),
-                    stdin=None,
-                    cache_dir=Path(data_source_cache_dir) / "agent",
-                    simulation_mode=config.simulation_mode,
-                    is_cmc=config.is_cmc(),
-                    file_cache_max_age=config.max_cachefile_age(),
-                )
-            elif isinstance(source, sources.tcp.TCPSource):
-                agent_port = agent_port or source.agent_port
-                tcp_connect_timeout = tcp_connect_timeout or source.tcp_connect_timeout
-                source = sources.tcp.TCPSource(
-                    source.hostname,
-                    source.ipaddress,
-                    source_type=source.source_type,
-                    fetcher_type=source.fetcher_type,
-                    id_="agent",
-                    cache_dir=source.file_cache_base_path,
-                    simulation_mode=source.simulation_mode,
-                    address_family=source.address_family,
-                    agent_port=agent_port,
-                    tcp_connect_timeout=tcp_connect_timeout,
-                    agent_encryption=source.agent_encryption,
-                    file_cache_max_age=source.file_cache_max_age,
-                )
-            elif isinstance(source, sources.snmp.SNMPSource):
+            if source.fetcher_type is FetcherType.SNMP:
                 continue
 
-            raw_data = source.fetch(Mode.CHECKING)
+            if source.fetcher_type is FetcherType.PROGRAM and cmd:
+                assert isinstance(fetcher, ProgramFetcher)
+                fetcher = ProgramFetcher(
+                    cmdline=core_config.translate_ds_program_source_cmdline(
+                        cmd, host_name, host_config, ipaddress
+                    ),
+                    stdin=fetcher.stdin,
+                    is_cmc=fetcher.is_cmc,
+                )
+            elif source.fetcher_type is FetcherType.TCP:
+                assert isinstance(fetcher, TCPFetcher)
+                port = agent_port or fetcher.address[1]
+                timeout = tcp_connect_timeout or fetcher.timeout
+                fetcher = TCPFetcher(
+                    family=fetcher.family,
+                    address=(fetcher.address[0], port),
+                    timeout=timeout,
+                    host_name=fetcher.host_name,
+                    encryption_settings=fetcher.encryption_settings,
+                )
+
+            raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
@@ -1621,11 +1616,12 @@ class AutomationActiveCheck(Automation):
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
+        stored_passwords = cmk.utils.password_store.load()
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
 
                 for description, command_args in core_config.iter_active_check_services(
-                    plugin, act_info, hostname, host_attrs, params
+                    plugin, act_info, hostname, host_attrs, params, stored_passwords
                 ):
                     if description != item:
                         continue
@@ -1730,33 +1726,30 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
-                for source in sources.make_non_cluster_sources(
-                    host_config,
+                for source, file_cache, fetcher in sources.make_non_cluster_sources(
+                    hostname,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_config.hostname,
-                        config.snmp_without_sys_descr,
+                        hostname, config.snmp_without_sys_descr
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    if isinstance(source, sources.snmp.SNMPSource):
+                    if source.fetcher_type is FetcherType.SNMP:
                         continue
 
-                    raw_data = source.fetch(Mode.CHECKING)
+                    raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
+                        source,
                         raw_data,
-                        hostname=source.hostname,
-                        fetcher_type=source.fetcher_type,
-                        ident=source.id,
                         selection=NO_SELECTION,
-                        logger=source._logger,
+                        logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(
                         source.hostname,
                         source.ipaddress,
                         host_sections,
-                        exit_spec=host_config.exit_code_spec(source.id),
+                        exit_spec=host_config.exit_code_spec(source.ident),
                         time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
@@ -1766,7 +1759,9 @@ class AutomationGetAgentOutput(Automation):
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += f"[{source.id}] {', '.join(r.summary for r in source_results)}\n"
+                        output += (
+                            f"[{source.ident}] {', '.join(r.summary for r in source_results)}\n"
+                        )
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

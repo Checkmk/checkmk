@@ -56,7 +56,7 @@ def parse_ucd_cpu_util(info):
 
     try:
         return {
-            "error": error,
+            "error": error or None,
             "cpu_ticks": CPUInfo("cpu", *raw_cpu_ticks),
             "raw_io_send": raw_io_send,
             "raw_io_received": raw_io_received,

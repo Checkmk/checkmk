@@ -27,7 +27,9 @@ powershell Write-Host "root folders" -foreground white
 rd /q /s libs
 rd /q /s tools
 rd /q /s include
-rd /q /s DLLs
+del /Q DLLs/*.ico
+del /Q DLLs/*.cat
+del /Q DLLs/*.cat
 rd /q /s scripts
 powershell Write-Host "pycaches" -foreground white
 del /Q Lib\__pycache__\*.*

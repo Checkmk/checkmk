@@ -2088,3 +2088,27 @@ perfometer_info.append(
         "total": "power_usage:max",
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["cpu_reservation"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["memory_reservation"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["num_user"],
+        "total": "max_user",
+    }
+)

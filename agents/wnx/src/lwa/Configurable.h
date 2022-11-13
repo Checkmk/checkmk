@@ -51,7 +51,7 @@ public:
         config.reg(section, key, this);
     }
 
-    virtual ~Configurable() = default;
+    ~Configurable() override = default;
 
     ValueT *operator->() { return &_value; }
 
@@ -61,21 +61,20 @@ public:
 
     const ValueT &operator*() const { return _value; }
 
-    virtual void startFile() override {}
-    virtual void startBlock() override {}
+    void startFile() override {}
+    void startBlock() override {}
 
-    virtual void feed(const std::string &, const std::string &value) override {
+    void feed(const std::string &, const std::string &value) override {
         startBlock();
         string_value_ = value;
         _value = from_string<ValueT>(value);
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         out << key << " = " << _value << "\n";
     }
 
-    virtual std::string outputForYaml() {
+    std::string outputForYaml() override {
         std::stringstream ss;
         ss << _value;
         return ss.str();
@@ -92,7 +91,7 @@ T2 RemoveFilesystemPath(const T &val) {
     return val;
 }
 
-std::string RemoveFilesystemPath(const std::filesystem::path &val) {
+inline std::string RemoveFilesystemPath(const std::filesystem::path &val) {
     return val.string<char, std::char_traits<char>>();
 }
 
@@ -112,7 +111,7 @@ public:
         config.reg(section, key, this);
     }
 
-    virtual ~ListConfigurable() = default;
+    ~ListConfigurable() override = default;
 
     ContainerT *operator->() { return &_values; }
 
@@ -121,16 +120,16 @@ public:
     ContainerT &operator*() { return _values; }
 
     const ContainerT &operator*() const { return _values; }
-    virtual bool isListed() const { return true; }
+    bool isListed() const override { return true; }
 
-    virtual void startFile() {
+    void startFile() override {
         _add_mode.startFile(_values);
         _block_mode.startFile(_values);
     }
 
-    virtual void startBlock() { _block_mode.startBlock(_values); }
+    void startBlock() override { _block_mode.startBlock(_values); }
 
-    virtual void feed(const std::string &, const std::string &value) override {
+    void feed(const std::string &, const std::string &value) override {
         try {
             this->add(from_string<DataT>(value));
         } catch (const StringConversionError &e) {
@@ -138,8 +137,7 @@ public:
         }
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         for (const DataT &data : _values) {
             auto v = RemoveFilesystemPath(data);
             out << key << " = " << v << "\n";
@@ -211,6 +209,13 @@ private:
     bool _was_assigned{false};
 };
 
+template <typename T>
+std::string toString(const T &source) {
+    std::ostringstream str;
+    str << source;
+    return str.str();
+}
+
 template <typename DataT>
 class KeyedListConfigurable : public ConfigurableBase {
     using ContainerT = std::vector<std::pair<std::string, DataT>>;
@@ -221,19 +226,19 @@ public:
         config.reg(section, key, this);
     }
 
-    virtual ~KeyedListConfigurable() = default;
+    ~KeyedListConfigurable() override = default;
 
-    virtual bool isKeyed() const { return true; }
-    virtual std::vector<std::pair<std::string, std::string>> generateKeys() {
+    bool isKeyed() const override { return true; }
+    std::vector<std::pair<std::string, std::string>> generateKeys() override {
         std::vector<std::pair<std::string, std::string>> out;
-        for (auto &v : _values)
-            out.push_back({v.first, std::to_string(v.second)});
+        for (auto &v : _values) {
+            out.push_back({v.first, toString(v.second)});
+        }
         return out;
     }
 
-    virtual void feed(const std::string &var,
-                      const std::string &value) override {
-        size_t pos = var.find_first_of(" ");
+    void feed(const std::string &var, const std::string &value) override {
+        size_t pos = var.find_first_of(' ');
         std::string key;
         if (pos != std::string::npos) {
             key = std::string(var.begin() + pos + 1, var.end());
@@ -260,8 +265,8 @@ public:
 
     const ContainerT &operator*() const { return _values; }
 
-    virtual void startFile() override { _add_mode.startFile(_values); }
-    virtual void startBlock() override {}
+    void startFile() override { _add_mode.startFile(_values); }
+    void startBlock() override {}
 
     void clear() { _values.clear(); }
 
@@ -298,10 +303,9 @@ public:
         , _mapFunction(mapFunction)
         , _split_char(split_char) {}
 
-    virtual ~SplittingListConfigurable() = default;
+    ~SplittingListConfigurable() override = default;
 
-    virtual void feed(const std::string &key,
-                      const std::string &value) override {
+    void feed(const std::string &key, const std::string &value) override {
         SuperT::clear();
         std::stringstream str(value);
         std::string item;
@@ -310,8 +314,7 @@ public:
         }
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         out << key << " =";
         for (const DataT &data : this->values()) {
             out << " " << data;

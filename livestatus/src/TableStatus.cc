@@ -54,6 +54,12 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
                       Counter::service_checks);
     addCounterColumns("host_checks", "host checks", offsets,
                       Counter::host_checks);
+    addCounterColumns("perf_data_count",
+                      "number of performance data processed by the core",
+                      offsets, Counter::perf_data);
+    addCounterColumns("metrics_count",
+                      "number of metrics processed by the core", offsets,
+                      Counter::metrics);
     addCounterColumns("forks", "process creations", offsets, Counter::forks);
     addCounterColumns("log_messages", "new log messages", offsets,
                       Counter::log_messages);
@@ -64,10 +70,39 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     // NOTE: The NEB queues accepted connections, so we never have overflows
     // here. Nevertheless, we provide these columns for consistency with CMC,
     // always returning zero.
+    addCounterColumns("carbon_bytes_sent",
+                      "number of bytes sent over the carbon connections",
+                      offsets, Counter::carbon_bytes_sent);
+    addCounterColumns("carbon_overflows",
+                      "times a Carbon connection could not send the metrics",
+                      offsets, Counter::carbon_overflows);
+    addCounterColumns("carbon_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::carbon_queue_usage);
+    addCounterColumns(
+        "influxdb_bytes_sent",
+        "number of bytes sent over the InfluxDB connections (payload only)",
+        offsets, Counter::influxdb_bytes_sent);
+    addCounterColumns("influxdb_overflows",
+                      "times an InfluxDB connection could not send the metrics",
+                      offsets, Counter::influxdb_overflows);
+    addCounterColumns("influxdb_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::influxdb_queue_usage);
     addCounterColumns(
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
-        offsets, Counter::overflows);
+        offsets, Counter::livestatus_overflows);
+    addCounterColumns("rrdcached_bytes_sent",
+                      "number of bytes sent over to the RRDs", offsets,
+                      Counter::rrdcached_bytes_sent);
+    addCounterColumns(
+        "rrdcached_overflows",
+        "times an RRDCacheD connection could not send the metrics", offsets,
+        Counter::rrdcached_overflows);
+    addCounterColumns("rrdcached_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::rrdcached_queue_usage);
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "nagios_pid", "The process ID of the monitoring core", offsets,

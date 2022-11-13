@@ -55,6 +55,7 @@ def test_registered_background_jobs() -> None:
         "SearchIndexBackgroundJob",
         "DiscoveredHostLabelSyncJob",
         "GetRemoteAuditLogsBackgroundJob",
+        "HostRemovalBackgroundJob",
     ]
 
     if not cmk_version.is_raw_edition():

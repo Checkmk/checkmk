@@ -46,15 +46,11 @@ pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowRes
     Ok(())
 }
 
-pub fn delete_all(
-    registry: &mut config::Registry,
-    enable_legacy_mode: bool,
-    legacy_pull_marker: &config::LegacyPullMarker,
-) -> AnyhowResult<()> {
+pub fn delete_all(registry: &mut config::Registry, enable_legacy_mode: bool) -> AnyhowResult<()> {
     registry.clear();
     registry.save()?;
     if enable_legacy_mode {
-        legacy_pull_marker.create()?;
+        registry.activate_legacy_pull()?;
     }
     Ok(())
 }
@@ -70,34 +66,29 @@ mod tests {
     const UUID_PULL_IMP1: &str = "00c21714-5086-46d7-848e-5be72c715cfd";
     const UUID_PULL_IMP2: &str = "3bf83706-8e47-4e38-beb6-b1ce83a4eee1";
 
-    fn registry() -> config::Registry {
-        let mut push = std::collections::HashMap::new();
-        let mut pull = std::collections::HashMap::new();
-        let mut pull_imported = std::collections::HashSet::new();
-        push.insert(
-            site_spec::SiteID::from_str("server/push-site").unwrap(),
+    fn registry(path: Option<std::path::PathBuf>) -> config::Registry {
+        let mut registry = config::Registry::new(
+            &path.unwrap_or_else(|| tempfile::NamedTempFile::new().unwrap().path().to_path_buf()),
+        )
+        .unwrap();
+        registry.register_connection(
+            &config::ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PUSH),
         );
-        pull.insert(
-            site_spec::SiteID::from_str("server/pull-site").unwrap(),
+        registry.register_connection(
+            &config::ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PULL),
         );
-        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP1));
-        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP2));
-        config::Registry::new(
-            config::RegisteredConnections {
-                push,
-                pull,
-                pull_imported,
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP1));
+        registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP2));
+        registry
     }
 
     #[test]
     fn test_delete_by_site_id_ok() {
-        let mut reg = registry();
+        let mut reg = registry(None);
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, "server/push-site").is_ok());
         assert!(reg.path().exists());
@@ -108,7 +99,7 @@ mod tests {
         assert_eq!(
             format!(
                 "{}",
-                delete(&mut registry(), "someserver/site").unwrap_err()
+                delete(&mut registry(None), "someserver/site").unwrap_err()
             ),
             "Connection 'someserver/site' not found"
         );
@@ -116,7 +107,7 @@ mod tests {
 
     #[test]
     fn test_delete_pull_by_uuid_ok() {
-        let mut reg = registry();
+        let mut reg = registry(None);
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PULL).is_ok());
         assert!(reg.pull_standard_is_empty());
@@ -125,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_delete_push_by_uuid_ok() {
-        let mut reg = registry();
+        let mut reg = registry(None);
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PUSH).is_ok());
         assert!(reg.push_is_empty());
@@ -134,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_delete_pull_imported_ok() {
-        let mut reg = registry();
+        let mut reg = registry(None);
         assert!(!reg.path().exists());
         assert!(delete(&mut reg, UUID_PULL_IMP1).is_ok());
         assert!(reg.path().exists());
@@ -146,7 +137,7 @@ mod tests {
         assert_eq!(
             format!(
                 "{}",
-                delete(&mut registry(), &uuid.to_string()).unwrap_err()
+                delete(&mut registry(None), &uuid.to_string()).unwrap_err()
             ),
             format!("No connection with UUID '{}'", &uuid),
         );
@@ -154,23 +145,21 @@ mod tests {
 
     #[test]
     fn test_delete_all_no_legacy_pull() {
-        let mut reg = registry();
-        let lpm = config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap());
+        let mut reg = registry(None);
         assert!(!reg.path().exists());
-        assert!(!lpm.exists());
-        assert!(delete_all(&mut reg, false, &lpm).is_ok());
+        assert!(delete_all(&mut reg, false).is_ok());
         assert!(reg.path().exists());
-        assert!(!lpm.exists());
+        assert!(!reg.legacy_pull_active());
     }
 
     #[test]
     fn test_delete_all_with_legacy_pull() {
-        let mut reg = registry();
-        let lpm = config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap());
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let mut reg = registry(Some(tmp_dir.path().join("registry.json")));
         assert!(!reg.path().exists());
-        assert!(!lpm.exists());
-        assert!(delete_all(&mut reg, true, &lpm).is_ok());
+        assert!(delete_all(&mut reg, true).is_ok());
         assert!(reg.path().exists());
-        assert!(lpm.exists());
+        assert!(reg.legacy_pull_active());
+        tmp_dir.close().unwrap();
     }
 }

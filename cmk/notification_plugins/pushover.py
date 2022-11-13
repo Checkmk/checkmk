@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Union
 
 import requests
 
@@ -80,7 +79,7 @@ def get_text(context: dict[str, str]) -> str:
 def send_push_notification(
     api_key: str, recipient_key: str, subject: str, text: str, context: dict[str, str]
 ) -> int:
-    params: list[tuple[str, Union[str, int, bytes]]] = [
+    params: list[tuple[str, str | int | bytes]] = [
         ("token", api_key),
         ("user", recipient_key),
         ("title", subject.encode("utf-8")),

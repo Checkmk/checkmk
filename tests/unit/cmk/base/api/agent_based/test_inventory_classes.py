@@ -9,9 +9,9 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 @pytest.mark.parametrize("class_", [TableRow, Attributes])
 @pytest.mark.parametrize("path", [["a", 23], ("a", "b")])
-def test_common_raise_path_type(class_, path) -> None:  # type:ignore[no-untyped-def]
+def test_common_raise_path_type(class_: object, path: object) -> None:
     with pytest.raises(TypeError):
-        _ = class_(path=path)
+        _ = class_(path=path)  # type: ignore[operator]
 
 
 def test_common_kwarg_only() -> None:

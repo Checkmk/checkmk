@@ -26,7 +26,7 @@ factory_settings["levels_azure_storageaccounts"] = {}
 
 @get_data_or_go_stale
 def check_azure_storageaccounts(_item, params, resource):
-    iter_attrs = azure_iter_informative_attrs(resource, include_keys=("kind", "location"))
+    iter_attrs = iter_resource_attributes(resource, include_keys=("kind", "location"))
     # kind first
     try:
         yield 0, "%s: %s" % next(iter_attrs)

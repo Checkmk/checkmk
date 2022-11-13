@@ -19,11 +19,16 @@ from cmk.base.plugins.agent_based.utils.kube import (
     CollectorProcessingLogs,
     CollectorState,
     CollectorType,
+    HostName,
     IdentificationError,
     NodeCollectorReplica,
     NodeComponent,
     NodeMetadata,
+    NodeName,
+    OsName,
     PlatformMetadata,
+    PythonCompiler,
+    Version,
 )
 
 
@@ -62,7 +67,7 @@ def test_parse_collector_metadata() -> None:
                 },
                 "checkmk_kube_agent": {"project_version": "package"},
             },
-            "node_collectors": [
+            "nodes": [
                 {
                     "name": "minikube",
                     "components": {
@@ -84,25 +89,27 @@ def test_parse_collector_metadata() -> None:
             status=CollectorState.OK, title="title", detail="detail"
         ),
         cluster_collector=ClusterCollectorMetadata(
-            node="node",
-            host_name="host",
+            node=NodeName("node"),
+            host_name=HostName("host"),
             container_platform=PlatformMetadata(
-                os_name="os",
-                os_version="version",
-                python_version="pversion",
-                python_compiler="compiler",
+                os_name=OsName("os"),
+                os_version=Version("version"),
+                python_version=Version("pversion"),
+                python_compiler=PythonCompiler("compiler"),
             ),
-            checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="package"),
+            checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version=Version("package")),
         ),
-        node_collectors=[
+        nodes=[
             NodeMetadata(
-                name="node",
+                name=NodeName("minikube"),
                 components={
                     "checkmk_agent_version": NodeComponent(
                         collector_type=CollectorType.MACHINE_SECTIONS,
-                        checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="package"),
+                        checkmk_kube_agent=CheckmkKubeAgentMetadata(
+                            project_version=Version("0.1.0")
+                        ),
                         name="checkmk_agent_version",
-                        version="version",
+                        version=Version("version"),
                     ),
                 },
             )

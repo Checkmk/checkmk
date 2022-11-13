@@ -13,7 +13,7 @@ from tests.testlib.site import Site
 
 
 def test_protobuf_api_implementation_is_cpp() -> None:
-    from google.protobuf.internal import api_implementation  # type: ignore[attr-defined]
+    from google.protobuf.internal import api_implementation
 
     assert api_implementation.Type() == "cpp"
 

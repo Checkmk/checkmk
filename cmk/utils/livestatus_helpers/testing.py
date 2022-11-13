@@ -20,9 +20,9 @@ import re
 import socket
 import statistics
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, Iterator, Literal
+from typing import Any, Literal
 from unittest import mock
 
 from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
@@ -73,16 +73,15 @@ def repr2(obj: object) -> str:
         A string representation of the object, like Python2 would do.
 
     """
-    if isinstance(obj, dict):  # pylint: disable=no-else-return
+    if isinstance(obj, dict):
         return "{" + ", ".join(f"{repr2(k)}: {repr2(v)}" for k, v in obj.items()) + "}"
-    elif isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple)):
         return "[" + ", ".join(repr2(x) for x in obj) + "]"
-    elif isinstance(obj, str):
+    if isinstance(obj, str):
         return f"u'{obj}'"
-    elif isinstance(obj, bytes):
+    if isinstance(obj, bytes):
         return f"'{obj.decode('utf-8')}'"
-    else:
-        return repr(obj)
+    return repr(obj)
 
 
 class FakeSocket:

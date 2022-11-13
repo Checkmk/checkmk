@@ -1,0 +1,25 @@
+Title: Timesyncd check plugin: Include metrics for sync times, change check behavior when NTP server not reachable and future-proofing
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1666769141
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Since at least systemd v250 <tt>/var/lib/systemd/timesync/clock</tt> should no longer be used to determine the time since the last synchronisation, instead the modification time of <tt>/run/systemd/timesync/synchronized</tt> is now used.
+To monitor the reliability of this time, this werk also introduces two new metrics:
+
+LI: Time since last synchronisation: The modification time of <tt>/run/systemd/timesync/synchronized</tt>  if available, otherwise <tt>/var/lib/systemd/timesync/clock</tt>.
+LI: Time since last NTPMessage: When the last message from the NTP server was received.
+
+To have these metrics available, the Checkmk linux agent needs to be updated, otherwise only the time since last synchronisation based on <tt>/var/lib/systemd/timesync/clock</tt> will be shown.
+
+Since the modification time of <tt>/var/lib/systemd/timesync/clock</tt>  can at times be unsuitable to monitor when synchronization occurred (due to limited error handling in earlier systemd version), the default threshold for the allowed duration since last synchronisation has been removed.
+If you want to apply thresholds to the time since last synchronisation you now have to enable them manually in the rule "Systemd Timesyncd time synchronisation".
+In the same rule, the default thresholds for the allowed duration since last NTPMessage have been set to 1h (WARN) and 2h (CRIT).
+
+Additionally, the behavior of the check was changed to go to CRIT when the NTP server could not be reached for synchronisation.
+
+In the course of the werk the rendering of the jitter was also corrected to show a time span instead of a date.

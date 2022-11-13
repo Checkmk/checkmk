@@ -173,7 +173,7 @@ class CouchbaseClient:
         self._timeout = timeout
         if None not in (user, password):
             self._session.auth = (user, password)
-        self._base = "http://%s:%s/pools/default" % (host, port)
+        self._base = f"http://{host}:{port}/pools/default"
 
     def _get_suburi(self, suburi):
         uri = self._base + suburi
@@ -213,7 +213,9 @@ def sections_node(client):
     node_list = [(node["hostname"].split(":")[0], node) for node in pool.get("nodes", ())]
 
     sections = {
-        "couchbase_nodes_uptime": ["%s %s" % (node["uptime"], name) for name, node in node_list],
+        "couchbase_nodes_uptime": [
+            "{} {}".format(node["uptime"], name) for name, node in node_list
+        ],
         "couchbase_nodes_info:sep(0)": [
             _get_dump(name, node, SECTION_KEYS_INFO) for name, node in node_list
         ],
@@ -232,7 +234,7 @@ def sections_node(client):
             for name, node in node_list
         ],
         "couchbase_nodes_operations": [
-            "%s %s" % (node.get("interestingStats", {}).get("ops"), name)
+            "{} {}".format(node.get("interestingStats", {}).get("ops"), name)
             for name, node in node_list
         ],
         "couchbase_nodes_items:sep(0)": [

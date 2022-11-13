@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from cmk.utils import store
 
@@ -25,11 +25,11 @@ class BILayoutManagement:
         )
 
     @classmethod
-    def load_bi_template_layout(cls, template_id: Optional[str]) -> Any:
+    def load_bi_template_layout(cls, template_id: str | None) -> Any:
         return active_config.bi_layouts["templates"].get(template_id)
 
     @classmethod
-    def load_bi_aggregation_layout(cls, aggregation_name: Optional[str]) -> Any:
+    def load_bi_aggregation_layout(cls, aggregation_name: str | None) -> Any:
         return active_config.bi_layouts["aggregations"].get(aggregation_name)
 
     @classmethod

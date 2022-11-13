@@ -4,24 +4,18 @@
 //
 #include "pch.h"
 
-#include <time.h>
-
 #include <chrono>
 #include <filesystem>
 #include <future>
-#include <string_view>
 
 #include "carrier.h"
 #include "cfg.h"
-#include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
 #include "common/wtools.h"
 #include "logger.h"
-#include "providers/p_perf_counters.h"
 #include "providers/perf_counters_cl.h"
-#include "read_file.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_raii.h"
@@ -29,46 +23,46 @@
 constexpr const wchar_t *kUniqueTestId = L"0345246";
 struct TestStorage {
     std::vector<uint8_t> buffer_;
-    bool delivered_;
-    uint64_t answer_id_;
+    bool delivered_{false};
+    uint64_t answer_id_{0};
     std::string peer_name_;
 };
 
 static TestStorage g_mailslot_storage;
 
 // testing callback
-bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
-                             int Len, void *Context) {
+bool MailboxCallbackPerfTest(const cma::mailslot::Slot *mail_slot,
+                             const void *data, int length, void *context) {
     using namespace std::chrono;
-    auto storage = (TestStorage *)Context;
+    const auto storage = static_cast<TestStorage *>(context);
     if (!storage) {
         XLOG::l.bp("error in param");
         return false;
     }
 
     // your code is here
-    XLOG::l.i("Received [{}] bytes", Len);
+    XLOG::l.i("Received [{}] bytes", length);
 
-    auto fname = cma::cfg::GetCurrentLogFileName();
+    const auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
+    const auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             XLOG::l(XLOG::kNoPrefix)(  // command to out to file
-                "{} : {}", dt->providerId(), (const char *)dt->data());
+                "{} : {}", dt->providerId(),
+                static_cast<const char *>(dt->data()));
             break;
 
         case cma::carrier::DataType::kSegment:
             // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
-                nanoseconds duration_since_epoch(dt->answerId());
-                time_point<steady_clock> tp(duration_since_epoch);
-                auto data_source = static_cast<const uint8_t *>(dt->data());
-                auto data_end = data_source + dt->length();
-                std::vector<uint8_t> vectorized_data(data_source, data_end);
+                const auto data_source =
+                    static_cast<const uint8_t *>(dt->data());
+                const auto data_end = data_source + dt->length();
+                const std::vector vectorized_data(data_source, data_end);
                 g_mailslot_storage.buffer_ = vectorized_data;
                 g_mailslot_storage.answer_id_ = dt->answerId();
                 g_mailslot_storage.peer_name_ = dt->providerId();
@@ -77,6 +71,7 @@ bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
             }
 
         case cma::carrier::DataType::kYaml:
+        case cma::carrier::DataType::kCommand:
             break;
     }
 
@@ -111,7 +106,7 @@ TEST(SectionPerf, Runner) {
     auto accu = AccumulateCounters(prefix, counters);
 
     {
-        ASSERT_TRUE(accu.size() > 0);
+        ASSERT_TRUE(!accu.empty());
 
         auto table = cma::tools::SplitString(accu, "\n");
 
@@ -128,13 +123,13 @@ TEST(SectionPerf, Runner) {
     auto ret = RunPerf(prefix, port_param, L"12345", 20, counters);
     ASSERT_EQ(ret, 0);
     ASSERT_TRUE(tst::WaitForSuccessIndicate(
-        4s, []() { return g_mailslot_storage.delivered_; }));
+        4s, [] { return g_mailslot_storage.delivered_; }));
 
     auto data = g_mailslot_storage.buffer_.data();
     auto data_end = data + g_mailslot_storage.buffer_.size();
     accu = std::string(data, data_end);
     {
-        ASSERT_TRUE(accu.size() > 0);
+        ASSERT_TRUE(!accu.empty());
 
         auto table = cma::tools::SplitString(accu, "\n");
 

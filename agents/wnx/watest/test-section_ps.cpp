@@ -19,7 +19,7 @@ namespace cma::provider {
 namespace {
 long long convert(const std::string &value) {
     try {
-        return std::stoull(value);
+        return std::stoll(value);
     } catch (const std::invalid_argument &) {
         return -1;
     }
@@ -104,13 +104,13 @@ namespace {
 
 auto ToTm(const std::string &in) {
     auto check_time = ConvertWmiTimeToHumanTime(in);
-    return *std::localtime(&check_time);
+    return *std::localtime(&check_time);  // NOLINT
 }
 
 bool IsAccountExist(const std::string &account) {
     SID_NAME_USE snu;
     SID sid{0};
-    auto sz = static_cast<DWORD>(sizeof(sid));
+    auto sz = static_cast<DWORD>(sizeof sid);
     DWORD rd_size{0};
     char *rd{nullptr};
     auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,

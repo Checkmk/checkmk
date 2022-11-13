@@ -256,7 +256,7 @@ class ABCBIMode(WatoMode):
     def aggregation_sub_rule_ids(self, bi_rule):
         sub_rule_ids = []
         for bi_node in bi_rule.get_nodes():
-            if bi_node.action.type() == BICallARuleAction.type():
+            if bi_node.action.kind() == BICallARuleAction.kind():
                 sub_rule_ids.append(bi_node.action.rule_id)
         return sub_rule_ids
 
@@ -980,7 +980,7 @@ class ModeBIRules(ABCBIMode):
                         bi_rule.aggregation_function
                     )
                     aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-                        bi_rule.aggregation_function.type()
+                        bi_rule.aggregation_function.kind()
                     ]
 
                     table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
@@ -1103,7 +1103,7 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
-        schema_validated_config = BIRuleSchema().load(vs_rule_config)
+        schema_validated_config = BIRuleSchema().dump(vs_rule_config)
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
@@ -1192,10 +1192,10 @@ class ModeBIEditRule(ABCBIMode):
 
         self._add_rule_arguments_lookup()
 
-    def _may_use_rules_from_packs(self, bi_rule):
+    def _may_use_rules_from_packs(self, bi_rule: BIRule) -> None:
         rules_without_permissions: Dict[_Tuple[str, str], Any] = {}
         for bi_node in bi_rule.get_nodes():
-            if bi_node.action.type() != "call_a_rule":
+            if bi_node.action.kind() != "call_a_rule":
                 continue
 
             bi_pack = self._bi_packs.get_pack_of_rule(bi_rule.id)
@@ -1654,7 +1654,8 @@ class BIModeEditAggregation(ABCBIMode):
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
 
-        new_bi_aggregation = BIAggregation(vs_aggregation_config)
+        schema_validated_config = BIAggregationSchema().dump(vs_aggregation_config)
+        new_bi_aggregation = BIAggregation(schema_validated_config)
 
         aggregation_ids = self._get_aggregations_by_id()
         if (

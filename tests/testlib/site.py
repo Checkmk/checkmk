@@ -7,8 +7,8 @@ import ast
 import glob
 import logging
 import os
-import pipes
 import pwd
+import shlex
 import shutil
 import subprocess
 import sys
@@ -27,6 +27,7 @@ from tests.testlib.utils import (
     cme_path,
     cmk_path,
     current_base_branch_name,
+    is_containerized,
     virtualenv_path,
 )
 from tests.testlib.version import CMKVersion
@@ -86,6 +87,10 @@ class Site:
     def internal_url(self) -> str:
         """This gives the address-port combination where the site-Apache process listens."""
         return f"{self.http_proto}://{self.http_address}:{self.apache_port}/{self.id}/check_mk/"
+
+    @property
+    def internal_url_mobile(self) -> str:
+        return self.internal_url + "mobile.py"
 
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
@@ -325,7 +330,7 @@ class Site:
                     "-l",
                     self.id,
                     "-c",
-                    pipes.quote(" ".join(pipes.quote(p) for p in cmd)),
+                    shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
                 ]
             )
         )
@@ -755,7 +760,7 @@ class Site:
         for file_name in os.listdir(str(packages_dir)):
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
-                if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) or os.path.exists(
+                if os.path.exists(
                     f"{self.root}/lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages/{file_name}"
                 ):
                     continue
@@ -769,9 +774,7 @@ class Site:
             )
 
     def rm(self, site_id: str | None = None) -> None:
-        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.run(
+        completed_process = subprocess.run(
             [
                 "/usr/bin/sudo",
                 "/usr/bin/omd",
@@ -783,6 +786,7 @@ class Site:
             ],
             check=False,
         )
+        assert completed_process.returncode == 0
 
     def start(self) -> None:
         if not self.is_running():
@@ -990,8 +994,8 @@ class Site:
         return port
 
     def save_results(self) -> None:
-        if not _is_dockerized():
-            logger.info("Not dockerized: not copying results")
+        if not is_containerized():
+            logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
 
@@ -1074,10 +1078,6 @@ class Site:
             site.wait_for_core_reloaded(old_t)
 
         self.ensure_running()
-
-
-def _is_dockerized() -> bool:
-    return Path("/.dockerenv").exists()
 
 
 class SiteFactory:

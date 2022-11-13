@@ -19,17 +19,14 @@ from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
-from tests.testlib.utils import (
-    cmk_path,
-    get_cmk_download_credentials,
-    get_cmk_download_credentials_file,
-)
+from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
 
 import docker  # type: ignore[import]
 
 build_path = str(testlib.repo_path() / "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
+distro_codename = "jammy"
 
 logger = logging.getLogger()
 
@@ -57,7 +54,7 @@ def _image_name(version: testlib.CMKVersion) -> str:
 
 
 def _package_name(version: testlib.CMKVersion) -> str:
-    return f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
+    return f"check-mk-{version.edition()}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build() -> None:
@@ -141,7 +138,6 @@ def _build(
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(get_cmk_download_credentials()),
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -468,7 +464,8 @@ def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.Docker
     cmds = [p[-1] for p in c.top()["Processes"]]
 
     assert "syslogd" in cmds
-    assert "/usr/lib/postfix/sbin/master" in cmds
+    # Might have a param like `-w`
+    assert "/usr/lib/postfix/sbin/master" in " ".join(cmds)
 
     assert _exec_run(c, ["which", "mail"], user="cmk")[0] == 0
 

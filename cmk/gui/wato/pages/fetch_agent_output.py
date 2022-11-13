@@ -28,11 +28,11 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.plugins.views.utils import make_host_breadcrumb
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output

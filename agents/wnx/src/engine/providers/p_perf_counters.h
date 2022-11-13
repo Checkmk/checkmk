@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef p_perf_counters_h__
-#define p_perf_counters_h__
+#ifndef P_PERF_COUNTERS_H
+#define P_PERF_COUNTERS_H
 
 #include <string>
 #include <string_view>
@@ -18,7 +18,7 @@
 namespace cma::provider {
 class UptimeSync : public Synchronous {
 public:
-    UptimeSync() noexcept : Synchronous(cma::section::kUptimeName, 0) {}
+    UptimeSync() noexcept : Synchronous(section::kUptimeName, 0) {}
 
     UptimeSync(const std::string &name, char separator) noexcept
         : Synchronous(name, separator) {}
@@ -32,7 +32,7 @@ protected:
 
 class UptimeAsync : public Asynchronous {
 public:
-    UptimeAsync() noexcept : Asynchronous(cma::section::kUptimeName, 0) {}
+    UptimeAsync() noexcept : Asynchronous(section::kUptimeName, 0) {}
 
     UptimeAsync(const std::string &name, char separator) noexcept
         : Asynchronous(name, separator) {}
@@ -63,4 +63,4 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
 
 }  // namespace cma::provider
 
-#endif  // p_perf_counters_h__
+#endif  // P_PERF_COUNTERS_H

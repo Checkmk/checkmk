@@ -6,7 +6,7 @@
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
-from cmk.gui.watolib.snapshots import backup_domains
+from cmk.gui.watolib.backup_snapshots import backup_domains
 
 backup_domains.update(
     {

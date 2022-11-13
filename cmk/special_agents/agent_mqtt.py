@@ -23,9 +23,9 @@ useful or probably only when directly connecting to single nodes - not sure abou
 import logging
 import sys
 import time
+from collections.abc import Mapping, MutableMapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
-from typing import Mapping, MutableMapping, Optional, Sequence, Set
 
 import paho.mqtt.client as mqtt  # type: ignore[import]
 
@@ -78,10 +78,10 @@ class ReceivedData:
     connected: bool = False
     subscribed_to_sys: bool = False
     topics: MutableMapping[str, str] = field(default_factory=dict)
-    remaining_topics: Set[str] = field(default_factory=lambda: set(EXPECTED_SYS_TOPICS))
+    remaining_topics: set[str] = field(default_factory=lambda: set(EXPECTED_SYS_TOPICS))
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "address",

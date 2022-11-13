@@ -18,9 +18,10 @@ import logging
 import pprint
 import sys
 import time
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, Generator, List
+from typing import Any
 
 import requests
 
@@ -79,7 +80,7 @@ USAGE: agent_%s --section_url [{section_name},{url}]
             self.usage()
             sys.exit(0)
 
-        content: Dict[str, List[str]] = {}
+        content: dict[str, list[str]] = {}
         for section_name, url in sections:
             content.setdefault(section_name, [])
             content[section_name].append(requests.get(url).text.replace("\n", newline_replacement))
@@ -161,7 +162,7 @@ class DataCache(abc.ABC):
         try:
             with self._cache_file.open(encoding="utf-8") as f:
                 raw_content = f.read().strip()
-        except IOError as exc:
+        except OSError as exc:
             if exc.errno == errno.ENOENT:
                 logging.info("No such file or directory %s (read from cache)", self._cache_file)
             else:
@@ -180,7 +181,7 @@ class DataCache(abc.ABC):
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
                 return self.get_cached_data()
-            except (OSError, IOError, ValueError) as exc:
+            except (OSError, ValueError) as exc:
                 logging.info("Getting live data (failed to read from cache: %s).", exc)
                 if self.debug:
                     raise
@@ -188,7 +189,7 @@ class DataCache(abc.ABC):
         live_data = self.get_live_data(*args)
         try:
             self._write_to_cache(live_data)
-        except (OSError, IOError, TypeError) as exc:
+        except (OSError, TypeError) as exc:
             logging.info("Failed to write data to cache file: %s", exc)
             if self.debug:
                 raise
@@ -245,7 +246,7 @@ def vcrtrace(**vcr_init_kwargs):
         def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
             kwargs.setdefault("metavar", "TRACEFILE")
             help_part = "" if vcrtrace.__doc__ is None else vcrtrace.__doc__.split("\n\n")[3]
-            kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
+            kwargs["help"] = "{} {}".format(help_part, kwargs.get("help", ""))
             # NOTE: There are various mypy issues around the kwargs Kung Fu
             # below, see e.g. https://github.com/python/mypy/issues/6799.
             super().__init__(*args, nargs=None, default=False, **kwargs)  # type: ignore[misc]
@@ -333,12 +334,11 @@ def JsonCachedData(
         cache = {}
 
     dirty = False
-    if cutoff_condition:
-        # note: this must not be a generator - otherwise we modify a dict while iterating it
-        for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
-            dirty = True
-            LOG.debug("Cache: erase log cache for %r", key)
-            del cache[key]
+    # note: this must not be a generator - otherwise we modify a dict while iterating it
+    for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
+        dirty = True
+        LOG.debug("Cache: erase log cache for %r", key)
+        del cache[key]
 
     def setdefault(key: str, value_fn: Callable[[], Any]) -> Any:
         nonlocal dirty

@@ -8,7 +8,6 @@
 #include <ShlObj.h>  // known path
 #include <VersionHelpers.h>
 #include <direct.h>  // known path
-#include <shellapi.h>
 
 #include <atomic>
 #include <filesystem>
@@ -27,7 +26,6 @@
 #include "read_file.h"
 #include "tools/_misc.h"     // setenv
 #include "tools/_process.h"  // GetSomeFolder...
-#include "tools/_raii.h"     // on out
 #include "tools/_tgt.h"      // we need IsDebug
 #include "upgrade.h"
 #include "windows_service_api.h"
@@ -46,14 +44,14 @@ void SetModus(Modus m) {
 }
 }  // namespace details
 
-Modus GetModus() { return details::g_modus; }
+Modus GetModus() noexcept { return details::g_modus; }
 
-};  // namespace cma
+}  // namespace cma
 
 namespace cma::cfg {
 
 InstallationType DetermineInstallationType() {
-    fs::path source_install_yml{cma::cfg::GetRootInstallDir()};
+    fs::path source_install_yml{GetRootInstallDir()};
     source_install_yml /= files::kInstallYmlFileW;
 
     try {
@@ -239,7 +237,7 @@ const uint64_t g_registered_performance_freq{
 fs::path GetDefaultLogPath() {
     fs::path dir = GetUserDir();
     if (dir.empty()) {
-        return tools::win::GetSomeSystemFolder(cfg::kPublicFolderId);
+        return tools::win::GetSomeSystemFolder(kPublicFolderId);
     }
 
     return dir / dirs::kLog;
@@ -267,7 +265,7 @@ WinPerf winperf;     // NOLINT
 Plugins plugins;     // NOLINT
 Plugins localGroup;  // NOLINT
 
-};  // namespace groups
+}  // namespace groups
 
 // API
 
@@ -384,7 +382,7 @@ bool StoreUserYamlToCache() {
         return false;
     }
 
-    auto user_file = cma::cfg::GetCfg().getUserYamlPath();
+    auto user_file = GetCfg().getUserYamlPath();
 
     StoreFileToCache(user_file);
     return true;
@@ -413,7 +411,6 @@ std::wstring StoreFileToCache(const fs::path &file_name) {
             return cache_file.wstring();
         }
 
-        std::error_code ec;
         fs::copy(fs::path(file_name), cache_file,
                  fs::copy_options::overwrite_existing, ec);
         if (ec.value() == 0) {
@@ -483,7 +480,7 @@ std::wstring FindServiceImagePath(std::wstring_view service_name) {
     auto service_path_new =
         wtools::GetRegistryValue(key_path, L"ImagePath"sv, L"");
 
-    return cma::tools::RemoveQuotes(service_path_new);
+    return tools::RemoveQuotes(service_path_new);
 }
 
 fs::path ExtractPathFromServiceName(std::wstring_view service_name) {
@@ -634,15 +631,15 @@ void Folders::cleanAll() {
 CleanMode GetCleanDataFolderMode() {
     auto mode_text = GetVal(groups::kSystem, vars::kCleanupUninstall,
                             std::string(values::kCleanupSmart));
-    if (cma::tools::IsEqual(mode_text, values::kCleanupNone)) {
+    if (tools::IsEqual(mode_text, values::kCleanupNone)) {
         return CleanMode::none;
     }
 
-    if (cma::tools::IsEqual(mode_text, values::kCleanupSmart)) {
+    if (tools::IsEqual(mode_text, values::kCleanupSmart)) {
         return CleanMode::smart;
     }
 
-    if (cma::tools::IsEqual(mode_text, values::kCleanupAll)) {
+    if (tools::IsEqual(mode_text, values::kCleanupAll)) {
         return CleanMode::all;
     }
 
@@ -675,7 +672,7 @@ void RemoveOwnGeneratedFiles() {
     fs::path user_yml{GetUserDir()};
     user_yml /= files::kUserYmlFile;
     std::vector<fs::path> files;
-    if (cma::tools::AreFilesSame(target_yml_example, user_yml)) {
+    if (tools::AreFilesSame(target_yml_example, user_yml)) {
         files.emplace_back(user_yml);
     }
 
@@ -692,13 +689,13 @@ void RemoveOwnGeneratedFiles() {
 
 void RemoveDirs(const fs::path &path) {
     std::error_code ec;
-    auto del_dirs = details::RemovableDirTable();
+    auto del_dirs = RemovableDirTable();
     for (auto &d : del_dirs) {
         fs::remove_all(path / d, ec);
         XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
     }
 
-    auto std_dirs = details::AllDirTable();
+    auto std_dirs = AllDirTable();
     for (auto &d : std_dirs) {
         fs::remove(path / d, ec);
         XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
@@ -732,7 +729,7 @@ bool CleanDataFolder(CleanMode mode) {
                 "Removing SMART from the Program Data Folder");
             RemoveCapGeneratedFile();
             RemoveOwnGeneratedFiles();
-            if (g_remove_dirs_on_clean) {
+            if constexpr (g_remove_dirs_on_clean) {
                 XLOG::l.i("cleaning dirs...");
                 RemoveDirs(path);
             } else {
@@ -808,11 +805,11 @@ int CreateTree(const fs::path &base_path) {
 fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
                                         Protection protection) {
     if (data_folder.empty()) {
-        using cma::tools::win::GetSomeSystemFolder;
+        using tools::win::GetSomeSystemFolder;
         auto draw_folder = [](std::wstring_view DataFolder) -> auto{
             fs::path app_data = DataFolder;
-            app_data /= cma::cfg::kAppDataCompanyName;
-            app_data /= cma::cfg::kAppDataAppName;
+            app_data /= kAppDataCompanyName;
+            app_data /= kAppDataAppName;
             return app_data;
         };
 
@@ -825,9 +822,8 @@ fs::path Folders::makeDefaultDataFolder(std::wstring_view data_folder,
             XLOG::d.i("Protection requested");
             std::vector<std::wstring> commands;
 
-            cma::security::ProtectAll(
-                fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName,
-                commands);
+            security::ProtectAll(
+                fs::path(app_data_folder) / kAppDataCompanyName, commands);
             wtools::ExecuteCommandsAsync(L"all", commands);
         }
 
@@ -946,7 +942,7 @@ std::wstring FindConfigFile(const fs::path &dir_name,
             ec.value(), ec.message());
     return {};
 }
-};  // namespace cma::cfg
+}  // namespace cma::cfg
 
 namespace cma::cfg {
 
@@ -959,7 +955,7 @@ std::string GetCurrentLogFileName() {
     static std::string s_log_filename;
     if (s_first_start) {
         s_first_start = false;
-        fs::path p{tools::win::GetSomeSystemFolder(cma::cfg::kPublicFolderId)};
+        fs::path p{tools::win::GetSomeSystemFolder(kPublicFolderId)};
         p /= kDefaultLogFileName;
         s_log_filename = wtools::ToUtf8(p.wstring());
     }
@@ -1036,10 +1032,10 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name) {
 }
 
 std::vector<std::string> StringToTable(const std::string &WholeValue) {
-    auto table = cma::tools::SplitString(WholeValue, " ");
+    auto table = tools::SplitString(WholeValue, " ");
 
     for (auto &value : table) {
-        cma::tools::AllTrim(value);
+        tools::AllTrim(value);
     }
 
     return table;
@@ -1066,7 +1062,7 @@ std::vector<std::string> GetInternalArray(std::string_view section_name,
 
 // opposite operation for the GetInternalArray
 void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
-                      std::vector<std::string> &arr) {
+                      const std::vector<std::string> &arr) {
     try {
         auto section = yaml_node[value_name];
         if (arr.empty()) {
@@ -1074,7 +1070,7 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
             return;
         }
 
-        auto result = cma::tools::JoinVector(arr, " ");
+        auto result = tools::JoinVector(arr, " ");
         if (result.back() == ' ') {
             result.pop_back();
         }
@@ -1088,13 +1084,13 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
 // opposite operation for the GetInternalArray
 void PutInternalArray(std::string_view section_name,
                       std::string_view value_name,
-                      std::vector<std::string> &arr) {
+                      const std::vector<std::string> &arr) {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         return;
     }
     try {
-        auto section = yaml[section_name];
+        const auto section = yaml[section_name];
         PutInternalArray(section, value_name, arr);
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
@@ -1133,12 +1129,12 @@ std::vector<std::string> GetInternalArray(const YAML::Node &yaml_node,
                 if (node.IsScalar()) {
                     auto str = node.as<std::string>();
                     auto sub_result = StringToTable(str);
-                    cma::tools::ConcatVector(result, sub_result);
+                    tools::ConcatVector(result, sub_result);
                     continue;
                 }
                 if (node.IsSequence()) {
                     auto sub_result = GetArray<std::string>(node);
-                    cma::tools::ConcatVector(result, sub_result);
+                    tools::ConcatVector(result, sub_result);
                     continue;
                 }
                 XLOG::d("Invalid node structure '{}'", name);
@@ -1212,7 +1208,7 @@ void SetupRemoteHostEnvironment(const std::string &ip_address) {
     tools::win::SetEnv(std::string(envs::kRemoteHost), ip_address);
 }
 
-};  // namespace cma::cfg
+}  // namespace cma::cfg
 
 namespace cma::cfg::details {
 
@@ -1348,7 +1344,7 @@ bool ConfigInfo::popFolders() {
 }
 
 std::wstring FindMsiExec() {
-    fs::path p = cma::tools::win::GetSystem32Folder();
+    fs::path p = tools::win::GetSystem32Folder();
     p /= "msiexec.exe";
 
     std::error_code ec;
@@ -1455,11 +1451,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                     continue;
                 }
 
-                if (std::none_of(std::begin(target_value),
-                                 std::end(target_value),
-                                 [s_name](const YAML::Node &Node) {
-                                     return s_name == GetMapNodeName(Node);
-                                 })) {
+                if (rs::none_of(target_value, [s_name](const YAML::Node &node) {
+                        return s_name == GetMapNodeName(node);
+                    })) {
                     target_value.push_back(entry);
                 }
             }
@@ -1474,11 +1468,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                     continue;
                 }
 
-                if (std::none_of(std::begin(source_value),
-                                 std::end(source_value),
-                                 [s_name](const YAML::Node &node) {
-                                     return s_name == GetMapNodeName(node);
-                                 })) {
+                if (rs::none_of(source_value, [s_name](const YAML::Node &node) {
+                        return s_name == GetMapNodeName(node);
+                    })) {
                     new_seq.push_back(entry);
                 }
             }
@@ -1738,7 +1730,7 @@ void ConfigInfo::mergeYamlData(YAML::Node &config_node,
     user_yaml_path_ = user_data.path_;
 
     aggregated_ = true;
-    g_uniq_id++;
+    ++g_uniq_id;
     ok_ = true;
 }
 
@@ -1845,7 +1837,7 @@ bool ConfigInfo::loadDirect(const fs::path &file) {
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;
-    g_uniq_id++;
+    ++g_uniq_id;
     return true;
 }
 
@@ -1858,7 +1850,7 @@ bool ConfigInfo::loadDirect(std::string_view text) {
     std::lock_guard lk(lock_);
     yaml_ = new_yaml;
 
-    g_uniq_id++;
+    ++g_uniq_id;
     return true;
 }
 
@@ -1875,7 +1867,7 @@ std::string ConstructTimeString() {
     const auto ms =
         duration_cast<std::chrono::milliseconds>(cur_time.time_since_epoch()) %
         k1000;
-    auto *loc_time = std::localtime(&in_time_t);
+    auto *loc_time = std::localtime(&in_time_t);  // NOLINT
     const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
         << std::ends;
@@ -1892,7 +1884,7 @@ fs::path ConstructInstallFileName(const fs::path &dir) {
     }
 
     fs::path protocol_file = dir;
-    protocol_file /= cma::cfg::files::kInstallProtocol;
+    protocol_file /= files::kInstallProtocol;
     return protocol_file;
 }
 
@@ -1958,10 +1950,10 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
     return f;
 }
 
-// converts "any/relative/path" into
-// "marker\\any\\relative\\path"
-// return false if yaml is not suitable for patching
-// normally used only by cvt
+/// converts "any/relative/path" into
+/// "marker\\any\\relative\\path"
+/// return false if yaml is not suitable for patching
+/// normally used only by cvt
 bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
                        std::string_view key_name, std::string_view subkey_name,
                        std::string_view marker) {
@@ -1994,16 +1986,16 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
             continue;
         }
 
-        fs::path path = entry;
-        auto p = path.lexically_normal();
-        if (p.u8string()[0] == fs::path::preferred_separator) {
+        fs::path path = fs::path{entry}.lexically_normal();
+        auto p = wtools::ToStr(path);
+        if (path.wstring()[0] == fs::path::preferred_separator) {
             continue;
         }
-        if (p.u8string()[0] == marker[0]) {
+        if (p[0] == marker[0]) {
             continue;
         }
-        if (p.is_relative()) {
-            key[k][name] = std::string(marker) + "\\" + entry;
+        if (path.is_relative()) {
+            key[k][name] = std::string{marker} + "\\" + entry;
         }
     }
     return true;
@@ -2045,7 +2037,7 @@ fs::path CreateWmicUninstallFile(const fs::path &temp_dir,
 }
 
 bool UninstallProduct(std::string_view name) {
-    fs::path temp{cfg::GetTempDir()};
+    fs::path temp{GetTempDir()};
     auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;

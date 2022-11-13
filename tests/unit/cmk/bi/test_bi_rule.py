@@ -5,16 +5,16 @@
 
 # pylint: disable=redefined-outer-name
 
-
-from tests.unit.cmk.bi.conftest import MockBIAggregationPack
-
 from cmk.bi.actions import BIStateOfServiceAction
+from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.rule import BIRule
+from cmk.bi.searcher import BISearcher
 
 from .bi_test_data import sample_config
 
 
-def test_load_sample_config_rule(bi_packs_sample_config: MockBIAggregationPack) -> None:
+def test_load_sample_config_rule(bi_packs_sample_config: BIAggregationPacks) -> None:
     applications_rule = bi_packs_sample_config.get_rule("networking")
     assert isinstance(applications_rule, BIRule)
     action = applications_rule.nodes[0].action
@@ -23,15 +23,17 @@ def test_load_sample_config_rule(bi_packs_sample_config: MockBIAggregationPack) 
 
 
 def test_sample_config_networking_rule(
-    bi_packs_sample_config,
-    bi_searcher_with_sample_config,
-    bi_status_fetcher,
-):
+    bi_packs_sample_config: BIAggregationPacks,
+    bi_searcher_with_sample_config: BISearcher,
+    bi_status_fetcher: BIStatusFetcher,
+) -> None:
     bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(sample_config.bi_status_rows)
 
     bi_aggregation = bi_packs_sample_config.get_aggregation("default_aggregation")
+    assert bi_aggregation is not None
     applications_rule = bi_packs_sample_config.get_rule("networking")
-    results = applications_rule.compile(["heute"], bi_searcher_with_sample_config)
+    assert applications_rule is not None
+    results = applications_rule.compile(("heute",), bi_searcher_with_sample_config)
     assert len(results) == 1
     compiled_rule = results[0]
     assert compiled_rule.required_elements() == {
@@ -40,6 +42,7 @@ def test_sample_config_networking_rule(
         ("heute", "heute", "Interface 4"),
     }
     computed_tree = compiled_rule.compute(bi_aggregation.computation_options, bi_status_fetcher)
+    assert computed_tree is not None
     assert computed_tree.assumed_result is None
     assert computed_tree.actual_result.state == 1
     assert computed_tree.actual_result.downtime_state == 0
@@ -58,6 +61,7 @@ def test_sample_config_networking_rule(
     computed_tree = compiled_rule.compute(
         bi_aggregation.computation_options, bi_status_fetcher, use_assumed=True
     )
+    assert computed_tree is not None
     assert computed_tree.assumed_result is not None
     assert computed_tree.assumed_result.state == 0
     assert computed_tree.assumed_result.downtime_state == 0

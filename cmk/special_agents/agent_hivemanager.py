@@ -25,7 +25,7 @@ def main(sys_argv=None):
         sys.stderr.write("Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>\n")
         return 2
 
-    auth = "%s:%s" % (user, password)
+    auth = f"{user}:{password}"
     auth_encoded = base64.encodebytes(auth.encode("utf-8")).decode("utf-8").replace("\n", "")
     headers = {
         "Authorization": "Basic %s" % auth_encoded,
@@ -58,5 +58,5 @@ def main(sys_argv=None):
     for line in json.loads(data):
         if line["upTime"] == "":
             line["upTime"] = "down"
-        print("|".join(map(str, ["%s::%s" % (x, y) for x, y in line.items() if x in informations])))
+        print("|".join(map(str, [f"{x}::{y}" for x, y in line.items() if x in informations])))
     return None

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
-
 from cmk.gui.http import Request, Response
 
 
@@ -12,12 +10,8 @@ def del_language_cookie(response: Response) -> None:
     response.delete_cookie("language")
 
 
-def set_language_cookie(request: Request, response: Response, lang: Optional[str]) -> None:
+def set_language_cookie(request: Request, response: Response, lang: str) -> None:
     cookie_lang = request.cookie("language")
     if cookie_lang == lang:
         return
-
-    if lang is None:
-        del_language_cookie(response)
-    else:
-        response.set_http_cookie("language", lang, secure=request.is_secure)
+    response.set_http_cookie("language", lang, secure=request.is_secure)

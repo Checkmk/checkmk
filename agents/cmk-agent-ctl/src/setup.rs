@@ -9,6 +9,8 @@ use super::{cli, constants, types};
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
 use clap::Parser;
+#[cfg(windows)]
+use flexi_logger::FileSpec;
 use log::debug;
 #[cfg(windows)]
 use log::info;
@@ -47,25 +49,19 @@ fn is_os_supported() -> bool {
 pub struct PathResolver {
     pub home_dir: PathBuf,
     pub config_path: PathBuf,
-    pub registration_preset_path: PathBuf,
+    pub pre_configured_connections_path: PathBuf,
     pub registry_path: PathBuf,
-    pub legacy_pull_path: PathBuf,
 }
 
 #[cfg(unix)]
 impl PathResolver {
     pub fn new(home_dir: &Path) -> PathResolver {
-        let etc_dir = PathBuf::from(constants::ETC_DIR);
         PathResolver {
             home_dir: PathBuf::from(home_dir),
-            config_path: home_dir
-                .join(constants::CONFIG_FILE)
-                .exists_or(etc_dir.join(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir
-                .join(constants::REGISTRATION_PRESET_FILE)
-                .exists_or(etc_dir.join(constants::REGISTRATION_PRESET_FILE)),
+            config_path: home_dir.join(constants::CONFIG_FILE),
+            pre_configured_connections_path: home_dir
+                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
-            legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
     }
 }
@@ -76,9 +72,9 @@ impl PathResolver {
         PathResolver {
             home_dir: PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir.join(Path::new(constants::REGISTRATION_PRESET_FILE)),
+            pre_configured_connections_path: home_dir
+                .join(Path::new(constants::PRE_CONFIGURED_CONNECTIONS_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
-            legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
     }
 }
@@ -135,19 +131,11 @@ pub fn agent_channel() -> types::AgentChannel {
 }
 
 #[cfg(windows)]
-fn agent_port() -> String {
-    match env::var(constants::ENV_WINDOWS_INTERNAL_PORT) {
-        Err(_) => String::from(constants::WINDOWS_INTERNAL_PORT),
-        Ok(port) => {
-            debug!("Using debug WINDOWS_INTERNAL_PORT: {}", port);
-            port
-        }
-    }
-}
-
-#[cfg(windows)]
 pub fn agent_channel() -> types::AgentChannel {
-    types::AgentChannel::from(format!("ip/localhost:{}", agent_port()).as_str())
+    use crate::mailslot_transport;
+    types::AgentChannel::from(
+        format!("ms/{}", mailslot_transport::service_mailslot_name()).as_ref(),
+    )
 }
 
 #[cfg(unix)]
@@ -156,6 +144,14 @@ fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger:
         .log_to_stderr()
         .format(flexi_logger::default_format)
         .start()
+}
+
+#[cfg(windows)]
+fn make_log_file_spec() -> FileSpec {
+    FileSpec::default()
+        .directory(env::var(constants::ENV_AGENT_LOG_DIR).unwrap_or_else(|_| ".".to_owned()))
+        .suppress_timestamp()
+        .basename("cmk-agent-ctl")
 }
 
 #[cfg(windows)]
@@ -171,6 +167,9 @@ fn init_logging(
         }
         _ => logger.log_to_stderr(),
     };
+    if env::var(constants::ENV_LOG_TO_FILE).unwrap_or_default() == "1" {
+        logger = logger.log_to_file(make_log_file_spec());
+    }
     logger
         .append()
         .format(flexi_logger::detailed_format)
@@ -184,20 +183,31 @@ fn init_logging(
 
 #[cfg(unix)]
 fn become_user(username: &str) -> AnyhowResult<unistd::User> {
-    let user = unistd::User::from_name(username)?.context(format!(
+    let target_user = unistd::User::from_name(username)?.context(format!(
         "Could not find dedicated Checkmk agent user {}",
         username
     ))?;
 
-    unistd::setgid(user.gid).context(format!(
+    // If we already are the right user, return early. Otherwise, eg. setting the supplementary
+    // group ids will fail due to insufficient permissions.
+    if target_user.uid == unistd::getuid() {
+        return Ok(target_user);
+    }
+
+    unistd::setgroups(&[target_user.gid]).context(format!(
+        "Failed to set supplementary group id {} corresponding to user {}",
+        target_user.gid, target_user.name,
+    ))?;
+    unistd::setgid(target_user.gid).context(format!(
         "Failed to set group id {} corresponding to user {}",
-        user.gid, user.name,
+        target_user.gid, target_user.name,
     ))?;
-    unistd::setuid(user.uid).context(format!(
+    unistd::setuid(target_user.uid).context(format!(
         "Failed to set user id {} corresponding to user {}",
-        user.uid, user.name,
+        target_user.uid, target_user.name,
     ))?;
-    Ok(user)
+
+    Ok(target_user)
 }
 
 #[cfg(unix)]
@@ -221,8 +231,8 @@ fn determine_paths() -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(unix)]
-fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
-    if let Err(err) = init_logging(&args.logging_level()) {
+fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
+    if let Err(err) = init_logging(&cli.logging_level()) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -243,14 +253,14 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(windows)]
-fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
+fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     let paths = determine_paths()?;
-    let duplicate_level = if let cli::Args::Daemon(_) = args {
+    let duplicate_level = if let cli::Mode::Daemon(_) = cli.mode {
         flexi_logger::Duplicate::None
     } else {
         flexi_logger::Duplicate::All
     };
-    if let Err(err) = init_logging(&args.logging_level(), duplicate_level) {
+    if let Err(err) = init_logging(&cli.logging_level(), duplicate_level) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -258,18 +268,18 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
     Ok(paths)
 }
 
-pub fn init() -> AnyhowResult<(cli::Args, PathResolver)> {
+pub fn init() -> AnyhowResult<(cli::Cli, PathResolver)> {
     if !is_os_supported() {
         eprintln!("This OS is unsupported");
         std::process::exit(1);
     }
     // Parse args as first action to directly exit from --help or malformatted arguments
-    let args = cli::Args::parse();
+    let cli = cli::Cli::parse();
     #[cfg(windows)]
     misc::validate_elevation()?;
 
-    let paths = setup(&args)?;
-    Ok((args, paths))
+    let paths = setup(&cli)?;
+    Ok((cli, paths))
 }
 
 #[cfg(test)]
@@ -289,16 +299,21 @@ mod tests {
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(
-            p.registration_preset_path,
-            std::path::PathBuf::from(&home).join("registration_preset.json")
+            p.pre_configured_connections_path,
+            std::path::PathBuf::from(&home).join("pre_configured_connections.json")
         );
         assert_eq!(
             p.registry_path,
             std::path::PathBuf::from(&home).join("registered_connections.json")
         );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_make_log_file_spec() {
         assert_eq!(
-            p.legacy_pull_path,
-            std::path::PathBuf::from(&home).join("allow-legacy-pull")
-        );
+            make_log_file_spec().as_pathbuf(None).to_str().unwrap(),
+            ".\\cmk-agent-ctl.log".to_owned()
+        )
     }
 }

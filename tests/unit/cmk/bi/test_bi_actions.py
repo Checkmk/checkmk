@@ -12,6 +12,8 @@ from cmk.bi.actions import (
     BIStateOfRemainingServicesAction,
     BIStateOfServiceAction,
 )
+from cmk.bi.rule import BIRule
+from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule, BIRemainingResult
 
 
@@ -25,8 +27,11 @@ from cmk.bi.trees import BICompiledLeaf, BICompiledRule, BIRemainingResult
     ],
 )
 def test_state_of_host_execute(
-    host_regex, num_results, num_results_unknown, bi_searcher_with_sample_config
-):
+    host_regex: str,
+    num_results: int,
+    num_results_unknown: int,
+    bi_searcher_with_sample_config: BISearcher,
+) -> None:
     schema_config = BIStateOfHostAction.schema()().dump({"host_regex": host_regex})
     action = BIStateOfHostAction(schema_config)
     results = list(
@@ -56,8 +61,11 @@ def test_state_of_host_execute(
     ],
 )
 def test_state_of_service_execute(
-    host_regex, num_results, num_results_unknown, bi_searcher_with_sample_config
-):
+    host_regex: str,
+    num_results: int,
+    num_results_unknown: int,
+    bi_searcher_with_sample_config: BISearcher,
+) -> None:
     schema_config = BIStateOfServiceAction.schema()().dump(
         {"host_regex": host_regex, "service_regex": "Uptime"}
     )
@@ -81,8 +89,8 @@ def test_state_of_service_execute(
         assert result.service_description == "Uptime"
 
 
-def test_call_a_rule_execute(  # type:ignore[no-untyped-def]
-    dummy_bi_rule, bi_searcher_with_sample_config
+def test_call_a_rule_execute(
+    dummy_bi_rule: BIRule, bi_searcher_with_sample_config: BISearcher
 ) -> None:
     schema_config = BICallARuleAction.schema()().dump({"rule_id": dummy_bi_rule.id})
     action = BICallARuleAction(schema_config)
@@ -101,8 +109,11 @@ def test_call_a_rule_execute(  # type:ignore[no-untyped-def]
     ],
 )
 def test_state_of_remaining(
-    host_regex, num_host_matches, num_host_matches_unknown, bi_searcher_with_sample_config
-):
+    host_regex: str,
+    num_host_matches: int,
+    num_host_matches_unknown: int,
+    bi_searcher_with_sample_config: BISearcher,
+) -> None:
     # TODO: Test misses compile_postprocess (reveals number of services)
     #       this requires a more complicated setup -> bi_aggregation_test
     schema_config = BIStateOfRemainingServicesAction.schema()().dump({"host_regex": host_regex})

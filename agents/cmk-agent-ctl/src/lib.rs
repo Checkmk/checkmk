@@ -20,7 +20,7 @@ mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use configuration::config;
-use configuration::config::TOMLLoader;
+use configuration::config::TOMLLoaderMissingSafe;
 use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
@@ -35,78 +35,58 @@ pub use setup::init;
 #[cfg(windows)]
 pub use misc::validate_elevation;
 
-pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
-    agent_socket_operational(&args)?;
+pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowResult<()> {
+    configuration::migrate::migrate_registered_connections(&paths.registry_path)?;
+    agent_socket_operational(&cli.mode)?;
 
-    let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
+    let runtime_config = config::RuntimeConfig::load_missing_safe(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
         format!(
             "Error while loading registered connections from {:?}.",
             &paths.registry_path
         )
     })?;
-    let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
     info!(
-        "Loaded config from '{:?}', legacy pull '{:?}' {}",
-        &paths.config_path,
-        legacy_pull_marker,
-        if legacy_pull_marker.exists() {
-            "exists"
-        } else {
-            "absent"
-        }
+        "Loaded config from '{:?}', connection registry from '{:?}'",
+        &paths.config_path, &paths.registry_path
     );
-    match args {
-        cli::Args::RegisterHostName(reg_args) => {
-            registration::register_host_name(
-                &config::RegistrationConfigHostName::new(runtime_config, reg_args)?,
-                &mut registry,
-            )?;
-            legacy_pull_marker.remove().context(
-                "Registration successful, but could not delete marker for legacy pull mode",
-            )
-        }
-        cli::Args::RegisterAgentLabels(reg_args) => {
-            registration::register_agent_labels(
-                &config::RegistrationConfigAgentLabels::new(runtime_config, reg_args)?,
-                &mut registry,
-            )?;
-            legacy_pull_marker.remove().context(
-                "Registration successful, but could not delete marker for legacy pull mode",
-            )
-        }
-        cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
-            &config::RegistrationConfigHostName::new(runtime_config, proxy_reg_args)?,
+    match cli.mode {
+        cli::Mode::Register(reg_opts) => registration::register_host_name(
+            &config::RegistrationConfigHostName::new(runtime_config, reg_opts)?,
+            &mut registry,
         ),
-        cli::Args::Import(import_args) => {
-            import(&mut registry, &import_args)?;
-            legacy_pull_marker
-                .remove()
-                .context("Import successful, but could not delete marker for legacy pull mode")
-        }
-        cli::Args::Push(push_args) => push(
+        cli::Mode::RegisterNew(reg_new_opts) => registration::register_agent_labels(
+            &config::RegistrationConfigAgentLabels::new(
+                config::RegistrationConnectionConfig::new(
+                    runtime_config,
+                    reg_new_opts.connection_opts,
+                )?,
+                reg_new_opts.agent_labels_raw.into_iter().collect(),
+            )?,
+            &mut registry,
+        ),
+        cli::Mode::ProxyRegister(reg_opts) => registration::proxy_register(
+            &config::RegistrationConfigHostName::new(runtime_config, reg_opts)?,
+        ),
+        cli::Mode::Import(import_opts) => import(&mut registry, &import_opts),
+        cli::Mode::Push(client_opts) => push(
             &registry,
-            &config::ClientConfig::new(runtime_config, push_args.client_opts),
+            &config::ClientConfig::new(runtime_config, client_opts),
             &setup::agent_channel(),
         ),
-        cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
+        cli::Mode::Pull(pull_opts) => pull(config::PullConfig::new(
             runtime_config,
-            pull_args.pull_opts,
-            legacy_pull_marker,
+            pull_opts,
             registry,
         )?),
-        cli::Args::Daemon(daemon_args) => daemon(
+        cli::Mode::Daemon(daemon_opts) => daemon(
+            &paths.pre_configured_connections_path,
             registry.clone(),
-            config::PullConfig::new(
-                runtime_config.clone(),
-                daemon_args.pull_opts,
-                legacy_pull_marker,
-                registry,
-            )?,
-            config::ClientConfig::new(runtime_config, daemon_args.client_opts),
+            config::PullConfig::new(runtime_config.clone(), daemon_opts.pull_opts, registry)?,
+            config::ClientConfig::new(runtime_config, daemon_opts.client_opts),
         ),
-        cli::Args::Dump { .. } => dump(),
-        cli::Args::Status(status_args) => status(
+        cli::Mode::Dump => dump(),
+        cli::Mode::Status(status_opts) => status(
             &registry,
             &config::PullConfig::new(
                 runtime_config.clone(),
@@ -116,36 +96,33 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                     #[cfg(windows)]
                     agent_channel: None,
                 },
-                legacy_pull_marker,
                 registry.clone(),
             )?,
-            config::ClientConfig::new(runtime_config, status_args.client_opts),
-            status_args.json,
-            !status_args.no_query_remote,
+            config::ClientConfig::new(runtime_config, status_opts.client_opts),
+            status_opts.json,
+            !status_opts.no_query_remote,
         ),
-        cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
-        cli::Args::DeleteAll(delete_all_args) => delete_all(
-            &mut registry,
-            delete_all_args.enable_insecure_connections,
-            &legacy_pull_marker,
-        ),
+        cli::Mode::Delete(delete_opts) => delete(&mut registry, &delete_opts.connection),
+        cli::Mode::DeleteAll(delete_all_opts) => {
+            delete_all(&mut registry, delete_all_opts.enable_insecure_connections)
+        }
     }
 }
 
 // This check is currently only useful on Unix. On Windows, the internal agent address can be passed
 // on the command line, so we cannot easily check this for any mode.
-fn agent_socket_operational(args: &cli::Args) -> AnyhowResult<()> {
+fn agent_socket_operational(mode: &cli::Mode) -> AnyhowResult<()> {
     let agent_channel = setup::agent_channel();
-    match *args {
-        cli::Args::RegisterHostName { .. }
-        | cli::Args::RegisterAgentLabels { .. }
-        | cli::Args::Import { .. } => match agent_channel.operational() {
-            true => Ok(()),
-            false => Err(anyhow!(format!(
-                "Something seems wrong with the agent socket ({}), aborting",
-                agent_channel
-            ))),
-        },
+    match mode {
+        cli::Mode::Register(_) | cli::Mode::RegisterNew(_) | cli::Mode::Import(_) => {
+            match agent_channel.operational() {
+                true => Ok(()),
+                false => Err(anyhow!(format!(
+                    "Something seems wrong with the agent socket ({}), aborting",
+                    agent_channel
+                ))),
+            }
+        }
         _ => Ok(()),
     }
 }

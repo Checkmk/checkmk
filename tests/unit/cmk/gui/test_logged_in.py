@@ -16,10 +16,16 @@ from tests.testlib.users import create_and_destroy_user
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
+from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import (
+    active_config,
+    builtin_role_ids,
+    default_authorized_builtin_role_ids,
+    default_unauthorized_builtin_role_ids,
+)
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
@@ -111,7 +117,6 @@ def test_unauthenticated_users(
 
     assert user.role_ids == role_ids
     assert user.get_attribute("roles") == role_ids
-    assert user.baserole_id == baserole_id
 
     assert user.get_attribute("baz", "default") == "default"
     assert user.get_attribute("foo") is None
@@ -245,7 +250,13 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     # Favorites set in the commands menu:
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
-    assert builtin_role_ids == ["user", "admin", "guest"]
+    assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
+    assert default_unauthorized_builtin_role_ids == (
+        ["agent_registration"] if cmk_version.is_plus_edition() else []
+    )
+    assert builtin_role_ids == ["user", "admin", "guest"] + (
+        ["agent_registration"] if cmk_version.is_plus_edition() else []
+    )
     assert "test" not in active_config.admin_users
 
     with create_and_destroy_user(username="test") as user:
@@ -261,7 +272,6 @@ def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
 
     assert monitoring_user.role_ids == ["user"]
     assert monitoring_user.get_attribute("roles") == ["user"]
-    assert monitoring_user.baserole_id == "user"
 
     assert monitoring_user.get_attribute("ui_theme") == "modern-dark"
 

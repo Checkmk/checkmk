@@ -27,12 +27,29 @@ class _HostConfigLike(Protocol):
     """This is what we expect from a HostConfig in *this* module"""
 
     # Importing of the HostConfig class repeatedly lead to import cycles at various places.
-    hostname: HostName
-    is_ipv4_host: bool
-    is_ipv6_host: bool
-    is_no_ip_host: bool
-    is_snmp_host: bool
-    is_usewalk_host: bool
+    @property
+    def hostname(self) -> HostName:
+        ...
+
+    @property
+    def is_ipv4_host(self) -> bool:
+        ...
+
+    @property
+    def is_ipv6_host(self) -> bool:
+        ...
+
+    @property
+    def is_no_ip_host(self) -> bool:
+        ...
+
+    @property
+    def is_snmp_host(self) -> bool:
+        ...
+
+    @property
+    def is_usewalk_host(self) -> bool:
+        ...
 
     @property
     def default_address_family(self) -> socket.AddressFamily:
@@ -352,17 +369,17 @@ def update_dns_cache(
         ip_lookup_cache.clear()
 
         console.verbose("Updating DNS cache...\n")
-        for host_config, family in _annotate_family(host_configs):
-            console.verbose(f"{host_config.hostname} ({family})...")
+        for host_name, host_config, family in _annotate_family(host_configs):
+            console.verbose(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
-                    host_name=host_config.hostname,
+                    host_name=host_name,
                     family=family,
                     configured_ip_address=(
                         configured_ipv4_addresses
                         if family is socket.AF_INET
                         else configured_ipv4_addresses
-                    ).get(host_config.hostname),
+                    ).get(host_name),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                     override_dns=override_dns,
@@ -377,11 +394,11 @@ def update_dns_cache(
                 # could drop this special handling here
                 raise
             except MKIPAddressLookupError as e:
-                failed.append(host_config.hostname)
+                failed.append(host_name)
                 console.verbose("lookup failed: %s\n" % e)
                 continue
             except Exception as e:
-                failed.append(host_config.hostname)
+                failed.append(host_name)
                 console.verbose("lookup failed: %s\n" % e)
                 if cmk.utils.debug.enabled():
                     raise
@@ -394,11 +411,11 @@ def update_dns_cache(
 
 def _annotate_family(
     host_configs: Iterable[_HostConfigLike],
-) -> Iterable[Tuple[_HostConfigLike, socket.AddressFamily]]:
+) -> Iterable[Tuple[HostName, _HostConfigLike, socket.AddressFamily]]:
     for host_config in host_configs:
 
         if host_config.is_ipv4_host:
-            yield host_config, socket.AF_INET
+            yield host_config.hostname, host_config, socket.AF_INET
 
         if host_config.is_ipv6_host:
-            yield host_config, socket.AF_INET6
+            yield host_config.hostname, host_config, socket.AF_INET6

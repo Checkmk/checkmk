@@ -2,7 +2,7 @@
 
 //
 #include "pch.h"
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING  // NOLINT
 #include <experimental/filesystem>
 #include <filesystem>
 #include <ranges>
@@ -37,7 +37,7 @@ static void CheckString(std::string &x) {
     x.pop_back();
 }
 
-static void CheckTableMissing(std::vector<std::string> &table,
+static void CheckTableMissing(const std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     ASSERT_TRUE(table.size() >= 2);
     EXPECT_EQ(table[0], name.data());
@@ -48,7 +48,7 @@ static void CheckTableMissing(std::vector<std::string> &table,
     }
 }
 
-static void CheckTablePresent(std::vector<std::string> &table,
+static void CheckTablePresent(const std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     auto shift = mode == FileInfo::Mode::modern ? 1 : 0;
 
@@ -139,16 +139,16 @@ TEST(FileInfoTest, ValidateConfig) {
 
 class FileInfoFixture : public ::testing::Test {
 public:
-    void loadFilesInConfig() {
+    void loadFilesInConfig() const {
         auto cfg = cfg::GetLoadedConfig();
 
         cfg[cfg::groups::kFileInfo][cfg::vars::kFileInfoPath] = YAML::Load(
             "['c:\\windows\\notepad.exe','c:\\windows\\explorer.exe']");
     }
 
-    std::vector<std::string> generate() {
+    [[nodiscard]] std::vector<std::string> generate() const {
         FileInfo fi;
-        auto result = fi.generateContent();
+        const auto result = fi.generateContent();
 
         EXPECT_EQ(result.back(), '\n');
         return tools::SplitString(result, "\n");
@@ -247,8 +247,8 @@ TEST(FileInfoTest, CheckDriveLetter) {
     auto fileinfo_node = cfg[cfg::groups::kFileInfo];
     ASSERT_TRUE(fileinfo_node.IsDefined());
     ASSERT_TRUE(fileinfo_node.IsMap());
-    auto value = a.u8string();
-    value[0] = std::tolower(value[0]);
+    auto value = wtools::ToStr(a);
+    value[0] = static_cast<char>(std::tolower(value[0]));
     auto str = fmt::format("['{}\\*.txt', 'c:\\weirdfile' ]", value);
     fileinfo_node[cfg::vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[cfg::vars::kFileInfoPath].IsSequence());
@@ -261,7 +261,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
         EXPECT_EQ(table[2][0], value[0]);
         EXPECT_EQ(table[3][0], value[0]);
     }
-    value[0] = std::toupper(value[0]);
+    value[0] = static_cast<char>(std::toupper(value[0]));
     str = fmt::format("['{}\\*.txt', 'C:\\weirdfile']", value);
     fileinfo_node[cfg::vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[cfg::vars::kFileInfoPath].IsSequence());
@@ -314,17 +314,16 @@ TEST(FileInfoTest, CheckOutput) {
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
-        for (auto line : table) {
+        for (const auto &line : table) {
             auto values = tools::SplitString(line, "|");
             ASSERT_TRUE(values.size() == 3);
             EXPECT_TRUE(fs::exists(values[0], ec));
             EXPECT_TRUE(std::atoll(values[1].c_str()) == 2);
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
-            auto f = std::any_of(
-                std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> entry) {
+            auto f = rs::any_of(
+                data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
-                    return tools::IsEqual(path.u8string(), values[0]);
+                    return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
             EXPECT_TRUE(f);
         }
@@ -350,18 +349,17 @@ TEST(FileInfoTest, CheckOutput) {
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
-        for (auto line : table) {
+        for (const auto &line : table) {
             auto values = tools::SplitString(line, "|");
             ASSERT_TRUE(values.size() == 4);
             EXPECT_TRUE(fs::exists(values[0], ec));
             EXPECT_EQ(values[1], FileInfo::kOk);
             EXPECT_TRUE(std::atoll(values[2].c_str()) == 2);
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
-            auto f = std::any_of(
-                std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> entry) {
+            auto f = rs::any_of(
+                data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
-                    return tools::IsEqual(path.u8string(), values[0]);
+                    return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
             EXPECT_TRUE(f);
         }
@@ -442,7 +440,7 @@ TEST_F(FileInfoTestFixture, Glob) {
 }
 
 TEST(FileInfoTest, WindowsResources) {
-    fs::path win_res_path = "c:\\windows\\Resources\\";
+    fs::path win_res_path = R"(c:\windows\Resources\)";
     auto files = details::FindFilesByMask(
         (win_res_path / "**" / "aero" / "aero*.*").wstring());
     EXPECT_TRUE(files.size() == 2)
@@ -457,14 +455,12 @@ TEST(FileInfoTest, Unicode) {
         try {
             auto files = details::FindFilesByMask(p.wstring() + L"\\*.*");
             EXPECT_TRUE(files.size() >= 2);  // syswow64 and system32
-            EXPECT_TRUE(std::find(files.begin(), files.end(), p / "test.txt") !=
-                        std::end(files));
+            EXPECT_TRUE(rs::find(files, p / "test.txt") != std::end(files));
             auto russian_file = p / test_russian_file;
             auto w_name = russian_file.wstring();
             auto ut8_name = russian_file.u8string();
             auto utf8_name_2 = wtools::ToUtf8(w_name);
-            EXPECT_TRUE(std::find(files.begin(), files.end(), w_name) !=
-                        std::end(files));
+            EXPECT_TRUE(rs::find(files, fs::path{w_name}) != std::end(files));
         } catch (const std::exception &e) {
             XLOG::l("Error {} ", e.what());
         }

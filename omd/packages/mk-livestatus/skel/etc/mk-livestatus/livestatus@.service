@@ -1,5 +1,6 @@
 [Unit]
 Description=Service for Livestatus Connection from %I
+Documentation=https://docs.checkmk.com/latest/en/livestatus.html
 
 [Service]
 ; See `omdlib.contexts::SiteContext.replacements`.

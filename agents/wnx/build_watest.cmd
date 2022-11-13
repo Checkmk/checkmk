@@ -13,10 +13,8 @@ set LOCAL_IMAGES_EXE=%build_dir%
 set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
 
 powershell Write-Host "Building WATEST with default msbuild..." -Foreground Green
-set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\msbuild.exe"
-if exist %msbuild% powershell Write-Host "MSBUILD found" -Foreground Green && goto execute
-set msbuild="C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install MSBUILD, please" -Foreground Red && exit /b 99
+if "%msbuild%" == "" set msbuild="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
+if not exist "%msbuild%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
 :execute
 set exec=watest
 powershell Write-Host "Building WATEST-32..." -Foreground Green

@@ -17,7 +17,8 @@ import logging
 import re
 import sys
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Mapping, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import requests
 import urllib3
@@ -27,7 +28,7 @@ from cmk.utils.password_store import replace_passwords
 
 from cmk.special_agents.utils import vcrtrace
 
-ElementAttributes = Dict[str, str]
+ElementAttributes = dict[str, str]
 
 # TODO Add functionality in the future
 # import cmk.utils.password_store
@@ -47,8 +48,8 @@ ElementAttributes = Dict[str, str]
 #   |                  \___|_| |_|\__|_|\__|_|\___||___/                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-Entry = Tuple[str, Sequence[str]]
-Entities = List[Tuple[str, re.Pattern[str], Sequence[Entry]]]
+Entry = tuple[str, Sequence[str]]
+Entities = list[tuple[str, re.Pattern[str], Sequence[Entry]]]
 
 B_SERIES_REGEX = re.compile(r"^UCSB$")
 # As of SUP-11234 hyperflex systems share the same hardware with UCSC systems.
@@ -413,13 +414,13 @@ class Server:
 
     def get_data_from_entities(
         self, entities: Entities, model_info: Mapping[str, str]
-    ) -> Dict[str, List[Tuple[Any, Any]]]:
+    ) -> dict[str, list[tuple[Any, Any]]]:
         """
-        Returns dict[k: header, v: List[Tuple[class_id, List[Tuple[attribute, attribute data]]]]]
+        Returns dict[k: header, v: list[tuple[class_id, list[tuple[attribute, attribute data]]]]]
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
-        data: Dict[str, List[Tuple[Any, Any]]] = {}
+        data: dict[str, list[tuple[Any, Any]]] = {}
         for header, model_pattern, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
@@ -640,7 +641,7 @@ def main(args=None):
         sys.stdout.write("<<<%s:sep(9)>>>\n" % header)
         for class_id, values in class_data:
             values_str = "\t".join(["%s %s" % v for v in values])
-            sys.stdout.write("%s\t%s\n" % (class_id, values_str))
+            sys.stdout.write(f"{class_id}\t{values_str}\n")
 
     handle.logout()
     return 0

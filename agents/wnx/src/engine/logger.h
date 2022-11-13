@@ -16,6 +16,7 @@
 #include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "fmt/color.h"
+#include "tools/_tgt.h"
 #include "tools/_xlog.h"
 
 #if defined(WIN32) && defined(FMT_FORMAT_H_)
@@ -108,7 +109,7 @@ void LogWindowsEventInfo(int code, std::string_view format_str,
                     std::forward<Args>(args)...);
 }
 
-};  // namespace XLOG::details
+}  // namespace XLOG::details
 #endif
 
 #if defined(FMT_FORMAT_H_)
@@ -181,9 +182,11 @@ constexpr uint16_t GetColorAttribute(Colors color) {
         case Colors::white:
             return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE |
                    FOREGROUND_INTENSITY;
-        default:
+        case Colors::dflt:
             return 0;
     }
+    // unreachable
+    return 0;
 }
 
 constexpr int GetBitOffset(uint16_t color_mask) {
@@ -209,11 +212,11 @@ constexpr uint16_t CalculateColor(Colors color, uint16_t old_color_attributes) {
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    constexpr const int bg_bit_offset = GetBitOffset(background_mask);
-    constexpr const int fg_bit_offset = GetBitOffset(foreground_mask);
+    constexpr int bg_bit_offset = GetBitOffset(background_mask);
+    constexpr int fg_bit_offset = GetBitOffset(foreground_mask);
 
-    if (((new_color & background_mask) >> bg_bit_offset) ==
-        ((new_color & foreground_mask) >> fg_bit_offset)) {
+    if ((new_color & background_mask) >> bg_bit_offset ==
+        (new_color & foreground_mask) >> fg_bit_offset) {
         new_color ^= FOREGROUND_INTENSITY;  // invert intensity
     }
     return new_color;
@@ -266,7 +269,7 @@ constexpr size_t factory_max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
 void DuplicateOnStdio(bool on) noexcept;
-void ColoredOutputOnStdio(bool On) noexcept;
+void ColoredOutputOnStdio(bool on) noexcept;
 void SetContext(std::string_view context) noexcept;
 
 }  // namespace setup
@@ -325,8 +328,7 @@ enum class LogType {
     log = 0,  // this is logger for user
     debug,    // this is logger for developer
     trace,    // this is TEMPORARY logger for developer
-    stdio,
-    last = stdio
+    stdio,    // must be last one
 };
 
 class Emitter {
@@ -361,8 +363,6 @@ public:
                 log_param_.setFileName({});
                 log_param_.initPrefix({});
                 break;
-            default:
-                log_param_.type_ = xlog::Type::kDebugOut;
         }
         if (breakpoint) {
             mods_ |= Mods::kBp;
@@ -391,7 +391,7 @@ public:
         }
 
         std::lock_guard lk(lock_);
-        return (os_ << value);
+        return os_ << value;
     }
 
     template <>
@@ -402,7 +402,7 @@ public:
         }
 
         std::lock_guard lk(lock_);
-        return (os_ << s);
+        return os_ << s;
     }
 
     std::ostream &operator<<(const wchar_t *value) {
@@ -411,11 +411,11 @@ public:
             return os_;
         }
         std::lock_guard lk(lock_);
-        return (os_ << s);
+        return os_ << s;
     }
     // **********************************
 
-    static inline std::string SafePrintToDebuggerAndEventLog(
+    static std::string SafePrintToDebuggerAndEventLog(
         const std::string &text) noexcept {
         try {
             return fmt::format(
@@ -429,14 +429,15 @@ public:
     }
 
     template <typename... Args>
-    auto operator()(const std::string &format, Args &&...args) const noexcept {
+    [[maybe_unused]] auto operator()(const std::string &format,
+                                     Args &&...args) noexcept {
         const auto va = fmt::make_format_args(args...);
         return sendToLogModding({}, format, va);
     }
 
     template <typename... Args>
-    auto operator()(int mods, const std::string &format,
-                    Args &&...args) const noexcept {
+    [[maybe_unused]] auto operator()(int mods, const std::string &format,
+                                     Args &&...args) noexcept {
         auto va = fmt::make_format_args(args...);
         return sendToLogModding(
             ModData{.mods = mods, .type = ModData::ModType::assign}, format,
@@ -522,31 +523,31 @@ public:
         return e;
     }
 
-    [[maybe_unused]] Emitter t() noexcept {
+    [[maybe_unused]] Emitter t() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kTrace;
         return e;
     }
 
-    [[maybe_unused]] Emitter w() noexcept {
+    [[maybe_unused]] Emitter w() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kWarning;
         return e;
     }
 
-    [[maybe_unused]] Emitter i() noexcept {
+    [[maybe_unused]] Emitter i() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kInfo;
         return e;
     }
 
-    [[maybe_unused]] Emitter e() noexcept {
+    [[maybe_unused]] Emitter e() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kError;
         return e;
     }
 
-    [[maybe_unused]] Emitter crit() noexcept {
+    [[maybe_unused]] Emitter crit() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kCritError;
         return e;
@@ -596,11 +597,11 @@ public:
     }
 
     bool isWinDbg() const noexcept {
-        return (log_param_.directions_ | xlog::Directions::kDebuggerPrint) != 0;
+        return (log_param_.directions_ & xlog::Directions::kDebuggerPrint) != 0;
     }
 
     bool isFileDbg() const noexcept {
-        return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
+        return (log_param_.directions_ & xlog::Directions::kFilePrint) != 0;
     }
 
     const xlog::LogParam &getLogParam() const noexcept { return log_param_; }
@@ -659,7 +660,7 @@ private:
     int mods_{Mods::kCopy};  // here we keep modifications to fixed base
 
     static constexpr bool bp_allowed_{tgt::IsDebug()};
-};  // namespace XLOG
+};
 
 // Global Log Engines
 
@@ -690,7 +691,7 @@ void EnableTraceLog(bool enable) noexcept;
 void ChangeLogFileName(const std::string &log_file_name) noexcept;
 
 /// \brief change debug level
-void ChangeDebugLogLevel(int level) noexcept;
+void ChangeDebugLogLevel(int debug_level) noexcept;
 
 /// \brief disable enable windbg for all loggers
 void EnableWinDbg(bool enable) noexcept;

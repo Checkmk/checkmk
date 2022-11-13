@@ -1,0 +1,14 @@
+Title: cmk-update-config now removes unused host attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1664185832
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+cmk-update-config will now remove host attributes that are no longer in use
+according to an internally kept list.
+Initially this list only contains the "snmp_v3_credentials" key, which might
+have been wrongly added by the Host Diagnose page.

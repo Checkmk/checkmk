@@ -8,22 +8,19 @@ given function arguments."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Type
+from collections.abc import Callable, Container
+from typing import Any
+
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
-# pylint: disable=redefined-builtin
-
-
 # Algorithm borrowed from Python 3 functools
 # + Add support for "list" args
-# pylint: disable=dangerous-default-value
-def _make_key(
+def _make_key(  # pylint: disable=redefined-builtin
     args: tuple,
     kwds: dict,
     kwd_mark: tuple = (object(),),
-    fasttypes: set[Type] = {int, str},
+    fasttypes: Container[type] = (int, str),
     type: Callable = type,
     len: Callable = len,
 ) -> int | str | _HashedSeq:
@@ -57,7 +54,9 @@ class _HashedSeq(list):
 
     __slots__ = ["hashvalue"]
 
-    def __init__(self, tup: tuple, hash: Callable[[object], int] = hash) -> None:
+    def __init__(  # pylint: disable=redefined-builtin
+        self, tup: tuple, hash: Callable[[object], int] = hash
+    ) -> None:
         super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)

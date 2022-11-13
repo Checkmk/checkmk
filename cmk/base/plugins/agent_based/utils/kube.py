@@ -532,7 +532,7 @@ class PerformanceUsage(Section):
 class StartTime(Section):
     """section: kube_start_time_v1"""
 
-    start_time: int
+    start_time: Timestamp
 
 
 class PodCondition(BaseModel):

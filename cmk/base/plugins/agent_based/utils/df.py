@@ -509,7 +509,7 @@ def check_filesystem_levels(
     status = (
         State.CRIT if used_space >= crit_mb else State.WARN if used_space >= warn_mb else State.OK
     )
-    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, None))
+    yield Metric("fs_used", used_space, levels=(warn_mb, crit_mb), boundaries=(0, filesystem_size))
     yield Metric("fs_free", free_space, boundaries=(0, None))
 
     used_space_percent = (used_space / allocatable_filesystem_size) * 100.0

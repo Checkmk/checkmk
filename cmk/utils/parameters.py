@@ -6,12 +6,13 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Final, Iterable, Optional, Sequence, Tuple, TypedDict, Union
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any, Final, TypedDict
 
 import cmk.utils.debug
 from cmk.utils.type_defs import LegacyCheckParameters, TimeperiodName
 
-_IsTimeperiodActiveCallback = Callable[[TimeperiodName], Optional[bool]]
+_IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 
 
 class _InnerTimespecificParametersPreview(TypedDict):
@@ -56,7 +57,7 @@ class TimespecificParameters:
 
     def preview(
         self, is_active: _IsTimeperiodActiveCallback
-    ) -> Union[TimespecificParametersPreview, LegacyCheckParameters]:
+    ) -> TimespecificParametersPreview | LegacyCheckParameters:
         """Create a serializeable version for preview via automation call"""
         if self.is_constant():
             return self.evaluate(is_active)
@@ -74,7 +75,7 @@ class TimespecificParameterSet:
     def __init__(
         self,
         default: LegacyCheckParameters,
-        timeperiod_values: Sequence[Tuple[TimeperiodName, LegacyCheckParameters]],
+        timeperiod_values: Sequence[tuple[TimeperiodName, LegacyCheckParameters]],
     ) -> None:
         # LegacyCheckParameters is almost as usefull as `object`.
         # I hope we end up with a more useful type at some point :-(
@@ -133,7 +134,7 @@ def boil_down_parameters(
     for par in parameters:
         if not isinstance(par, dict):
             return par
-        merged.update((item for item in par.items() if item[0] not in merged))
+        merged.update(item for item in par.items() if item[0] not in merged)
 
     try:
         # TODO: We could get rid of the suppression if we used a "isinstance(default, Mapping)"

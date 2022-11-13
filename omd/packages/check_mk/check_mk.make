@@ -34,6 +34,26 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	  $(MAKE)
 	$(TOUCH) $@
 
+EDITION_EXCLUDE=
+ifeq ($(EDITION),raw)
+	EDITION_EXCLUDE += \
+	    --exclude "enterprise" \
+	    --exclude "cee" \
+	    --exclude "cee.py"
+endif
+ifneq ($(EDITION),managed)
+	EDITION_EXCLUDE += \
+	    --exclude "managed" \
+	    --exclude "cme" \
+	    --exclude "cme.py"
+endif
+ifneq ($(EDITION),plus)
+	EDITION_EXCLUDE += \
+	    --exclude "plus" \
+	    --exclude "cpe" \
+	    --exclude "cpe.py"
+endif
+
 $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk
 
@@ -69,9 +89,15 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/bin/Makefile $(DESTDIR)$(OMD_ROOT)/bin/*.cc
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
-	tar -xz -C $(DESTDIR)$(OMD_ROOT)/lib/python3 -f $(CHECK_MK_BUILD_DIR)/lib.tar.gz
+	tar -C $(REPO_PATH) -c \
+	    --exclude=.svn --exclude=*~ \
+            --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+            --exclude=__pycache__ --exclude=*.pyc \
+	    $(EDITION_EXCLUDE) \
+	    cmk | tar -x -C $(DESTDIR)$(OMD_ROOT)/lib/python3
+
 	# cmk needs to be a namespace package (CMK-3979)
-	rm \
+	rm -f \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py \
@@ -80,8 +106,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/__init__.py \
-    	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
-    	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/raw/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/raw/plugins/__init__.py \
@@ -104,7 +130,34 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/actions/__init__.py
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/actions/__init__.py \
+	    \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
+	    \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/check_parameters/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/watolib/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cpe/plugins/agent_based/__init__.py
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk

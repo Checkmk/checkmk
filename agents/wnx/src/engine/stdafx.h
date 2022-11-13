@@ -7,8 +7,8 @@
 // THIS is pre-compiled header for Engine Project
 //
 #pragma once
-#ifndef ENGINE_STDAFX_H__
-#define ENGINE_STDAFX_H__
+#ifndef ENGINE_STDAFX_H
+#define ENGINE_STDAFX_H
 
 #if defined(_MSC_VER)
 // more aggressive warning
@@ -18,7 +18,7 @@
 #include "stdafx_defines.h"  // shared use, watest!
 
 // settings for the LWA
-#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING  // NOLINT
 #define SI_SUPPORT_IOSTREAMS
 
 #include "common/cfg_info.h"

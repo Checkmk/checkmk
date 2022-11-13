@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Container, Mapping, Sequence
 from datetime import time as dt_time
 from logging import Logger
-from typing import Container, Mapping, Sequence
 
 from cmk.utils import debug
 from cmk.utils.log import VERBOSE
@@ -71,7 +71,7 @@ def _transform_replaced_wato_rulesets(
         if not new_ruleset.is_empty():
             logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
 
-        logger.log(VERBOSE, "Replacing ruleset %s with %s" % (ruleset_name, new_ruleset.name))
+        logger.log(VERBOSE, f"Replacing ruleset {ruleset_name} with {new_ruleset.name}")
         for folder, _folder_index, rule in ruleset.get_rules():
             new_ruleset.append_rule(folder, rule)
 
@@ -151,7 +151,7 @@ def _validate_rule_values(
 
 
 def _format_warning(msg: str) -> str:
-    return "\033[93m {}\033[00m".format(msg)
+    return f"\033[93m {msg}\033[00m"
 
 
 def _remove_removed_check_plugins_from_ignored_checks(

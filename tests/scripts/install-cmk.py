@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, NewType, Optional
 
 import requests
 
@@ -30,6 +30,8 @@ from tests.testlib.version import CMKVersion
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
+PackageUrl = NewType("PackageUrl", str)
+
 
 def main():
     add_python_paths()
@@ -44,7 +46,7 @@ def main():
     version = CMKVersion(version_spec, edition, branch)
 
     if version.is_installed():
-        logger.info("Version %s is already installed. Terminating.")
+        logger.info("Version %s is already installed. Terminating.", version_spec)
         return 0
 
     manager = ABCPackageManager.factory()
@@ -137,8 +139,19 @@ class ABCPackageManager(abc.ABC):
             self._install_package(build_system_path)
 
         else:
-            logger.info("Install from download portal")
-            package_path = self._download_package(version, package_name)
+            try:
+                # Prefer downloading from tstbuild: This is the place where also sandbox builds
+                # should be found.
+                logger.info("Try install from tstbuild")
+                package_path = self._download_package(
+                    package_name, self.package_url_internal(version, package_name)
+                )
+            except requests.exceptions.HTTPError:
+                logger.info("Could not Install from tstbuild, trying download portal...")
+                package_path = self._download_package(
+                    package_name, self.package_url_public(version, package_name)
+                )
+
             self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
@@ -155,9 +168,8 @@ class ABCPackageManager(abc.ABC):
         """On Jenkins inside a container the previous built packages get mounted into /packages."""
         return Path("/packages", version, package_name)
 
-    def _download_package(self, version: str, package_name: str) -> Path:
+    def _download_package(self, package_name: str, package_url: PackageUrl) -> Path:
         temp_package_path = Path("/tmp", package_name)
-        package_url = self._package_url(version, package_name)
 
         logger.info("Downloading from: %s", package_url)
         response = requests.get(  # nosec
@@ -170,8 +182,11 @@ class ABCPackageManager(abc.ABC):
 
         return temp_package_path
 
-    def _package_url(self, version: str, package_name: str) -> str:
-        return "https://download.checkmk.com/checkmk/%s/%s" % (version, package_name)
+    def package_url_public(self, version: str, package_name: str) -> PackageUrl:
+        return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")
+
+    def package_url_internal(self, version: str, package_name: str) -> PackageUrl:
+        return PackageUrl(f"https://tstbuilds-artifacts.lan.tribe29.com/{version}/{package_name}")
 
     @abc.abstractmethod
     def _install_package(self, package_path: Path) -> None:

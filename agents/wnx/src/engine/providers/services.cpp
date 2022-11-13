@@ -7,18 +7,21 @@
 
 #include "providers/services.h"
 
+#include <ranges>
 #include <string>
 #include <utility>
 
 #include "tools/_raii.h"
 
+namespace rs = std::ranges;
+
 namespace cma::provider {
 namespace {
 
-DWORD GetServiceStartDWORD(SC_HANDLE manager_handle,
-                           const wchar_t* service_name) {
+DWORD GetServiceStartDword(SC_HANDLE manager_handle,
+                           const wchar_t *service_name) {
     // Query the start type of the service
-    auto* handle =
+    auto *handle =
         ::OpenServiceW(manager_handle, service_name, SERVICE_QUERY_CONFIG);
     if (handle == nullptr) {
         return -1;
@@ -36,7 +39,7 @@ DWORD GetServiceStartDWORD(SC_HANDLE manager_handle,
     }
 
     auto buffer = std::make_unique<unsigned char[]>(bytes_required);
-    auto* query_service_config =
+    auto *query_service_config =
         reinterpret_cast<LPQUERY_SERVICE_CONFIGW>(buffer.get());
 
     if (::QueryServiceConfig(handle, query_service_config, bytes_required,
@@ -48,8 +51,8 @@ DWORD GetServiceStartDWORD(SC_HANDLE manager_handle,
 }
 
 std::string_view GetServiceStartType(SC_HANDLE manager_handle,
-                                     const wchar_t* service_name) {
-    switch (GetServiceStartDWORD(manager_handle, service_name)) {
+                                     const wchar_t *service_name) {
+    switch (GetServiceStartDword(manager_handle, service_name)) {
         case SERVICE_AUTO_START:
             return "auto";
         case SERVICE_BOOT_START:
@@ -66,7 +69,7 @@ std::string_view GetServiceStartType(SC_HANDLE manager_handle,
 }
 
 // simple state-string converter
-std::string_view ConvertState2Name(int state) {
+std::string_view ConvertState2Name(unsigned long state) {
     switch (state) {
         case SERVICE_CONTINUE_PENDING:
             return "continuing";
@@ -100,7 +103,7 @@ std::pair<DWORD, DWORD> EnumAllServices(SC_HANDLE handle) {
 }  // namespace
 
 std::string Services::makeBody() {
-    auto* handle = ::OpenSCManager(
+    auto *handle = ::OpenSCManager(
         nullptr, nullptr, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
 
     if (handle == nullptr) {
@@ -129,18 +132,17 @@ std::string Services::makeBody() {
     }
 
     // according to MSDN buffer is ENUM_SERVICE_STATUS_PROCESSW[]
-    auto* service =
-        reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW*>(buffer.get());
+    auto *service =
+        reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW *>(buffer.get());
 
     std::string out;
     for (unsigned i = 0; i < num_services; i++) {
-        auto state = service->ServiceStatusProcess.dwCurrentState;
+        const auto state = service->ServiceStatusProcess.dwCurrentState;
 
         auto state_name = ConvertState2Name(state);
 
-        // replace in name ' ' with  '_'
         auto service_name = wtools::ToUtf8(service->lpServiceName);
-        std::replace(service_name.begin(), service_name.end(), ' ', '_');
+        rs::replace(service_name, ' ', '_');
 
         auto start_type = GetServiceStartType(handle, service->lpServiceName);
 

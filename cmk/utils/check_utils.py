@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, List, Mapping, Sequence, Tuple, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.utils.type_defs import HostKey, MetricTuple, state_markers
 
@@ -77,11 +78,11 @@ class ServiceCheckResult:
 class ActiveCheckResult:
     state: int = 0
     summary: str = ""
-    details: Union[Tuple[str, ...], List[str]] = ()  # Sequence, but not str...
-    metrics: Union[Tuple[str, ...], List[str]] = ()
+    details: tuple[str, ...] | list[str] = ()  # Sequence, but not str...
+    metrics: tuple[str, ...] | list[str] = ()
 
     @classmethod
-    def from_subresults(cls, *subresults: "ActiveCheckResult") -> "ActiveCheckResult":
+    def from_subresults(cls, *subresults: ActiveCheckResult) -> ActiveCheckResult:
         return cls(
             state=worst_service_state(*(s.state for s in subresults), default=0),
             summary=", ".join(

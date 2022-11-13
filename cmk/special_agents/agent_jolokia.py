@@ -7,7 +7,6 @@
 import argparse
 import os
 import sys
-from typing import List
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
@@ -31,7 +30,7 @@ def parse_arguments(argv):
         "--vcrtrace", action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE)
     )
 
-    opts_with_help: List[List[str]] = []
+    opts_with_help: list[list[str]] = []
     for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
         if len(opt) == 3:
             opts_with_help.append([str(elem) for elem in opt])

@@ -5,8 +5,8 @@
 
 // C++ cross platform support for OS and compilers and targets
 #pragma once
-#if !defined(___TGT_H)
-#define ___TGT_H
+#ifndef TGT_H
+#define TGT_H
 
 #if defined(DEBUG) || defined(DBG) || defined(_DEBUG)
 #define DEBUG_TARGET 1
@@ -46,4 +46,4 @@ constexpr bool IsWindows() {
 
 }  // namespace tgt
 
-#endif  // ___TGT_H
+#endif  // TGT_H

@@ -100,9 +100,7 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
     )
 
 
-def test_files_not_in_version_path(  # type:ignore[no-untyped-def]
-    package_path: str, cmk_version: str
-) -> None:
+def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -275,6 +273,12 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
         os.path.dirname(__file__), "../../agents/windows/check_mk_agent.msi"
     )
     assert os.path.isfile(msi_file_path)
+
+    if os.stat(msi_file_path).st_size == 0:
+        pytest.skip(
+            f"The file {msi_file_path} was most likely faked by fake-windows-artifacts, "
+            f"so there is no reason to check it with msiinfo"
+        )
 
     output = subprocess.check_output(["msiinfo", "export", msi_file_path, "Property"], text=True)
     assert "ProductVersion" in output

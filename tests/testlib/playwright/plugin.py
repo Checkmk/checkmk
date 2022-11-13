@@ -6,13 +6,14 @@
 """some fixtures
 
 the pytest-playwright addon's fixtures are too "aggressive" and are loaded in
-all tests. So some functionality is inspierd from this module
+all tests. So some functionality is inspired from this module
 See: https://github.com/microsoft/playwright-pytest
 """
 import logging
 import os
 import typing as t
 
+import _pytest
 import pytest
 from playwright.sync_api import (
     Browser,
@@ -25,6 +26,8 @@ from playwright.sync_api import (
 )
 
 logger = logging.getLogger(__name__)
+_browser_engines = ["chromium", "firefox"]  # to align with what playwright installs (see Makefile).
+_mobile_devices = ["iPhone 6", "Galaxy S8"]
 
 
 @pytest.fixture(scope="session", name="browser_type_launch_args")
@@ -74,7 +77,30 @@ def _context(
     request: pytest.FixtureRequest,
 ) -> t.Generator[BrowserContext, None, None]:
     pages: t.List[Page] = []
-    context = browser.new_context()
+    context = browser.new_context(locale=pytestconfig.getoption("--locale"))
+    context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
+    yield context
+    try:
+        _may_create_screenshot(request, pytestconfig, pages)
+    finally:
+        context.close()
+
+
+@pytest.fixture(name="context_mobile", params=_mobile_devices)
+def _context_mobile(
+    playwright: Playwright,
+    browser: Browser,
+    pytestconfig: t.Any,
+    request: pytest.FixtureRequest,
+    is_chromium: bool,  # pylint: disable=redefined-outer-name
+) -> t.Generator[BrowserContext, None, None]:
+    if not is_chromium:
+        pytest.skip("Mobile emulation currently not supported on Firefox.")
+
+    devices = playwright.devices[str(request.param)]
+    pages: t.List[Page] = []
+
+    context = browser.new_context(locale=pytestconfig.getoption("--locale"), **devices)
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
     yield context
     try:
@@ -130,14 +156,22 @@ def is_chromium(browser_name: str) -> bool:
     return browser_name == "chromium"
 
 
-@pytest.fixture(name="browser_name", scope="session")
-def _browser_name(pytestconfig: t.Any) -> str:
-    browser_names = t.cast(list[str], pytestconfig.getoption("--browser"))
-    if len(browser_names) == 0:
-        return "chromium"
-    if len(browser_names) == 1:
-        return browser_names[0]
-    raise NotImplementedError("When using unittest specifying multiple browsers is not supported")
+@pytest.fixture(name="browser_name", scope="session", params=_browser_engines)
+def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.config.Config) -> str:
+    """Returns the browser name(s).
+
+    Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
+    can be selected via the --browser flag in the CLI.
+    """
+    browser_name_param = str(request.param)
+    browser_names_cli = t.cast(list[str], pytestconfig.getoption("--browser"))
+
+    if browser_name_param not in browser_names_cli and not len(browser_names_cli) == 0:
+        pytest.skip(
+            f"Only {', '.join(str(browser) for browser in browser_names_cli)} engine(s) selected "
+            f"from the CLI"
+        )
+    return browser_name_param
 
 
 # Making test result information available in fixtures
@@ -162,7 +196,7 @@ def pytest_addoption(parser: t.Any) -> None:
         action="append",
         default=[],
         help="Browser engine which should be used",
-        choices=["chromium", "firefox", "webkit"],
+        choices=_browser_engines,
     )
     group.addoption(
         "--headed",
@@ -188,3 +222,4 @@ def pytest_addoption(parser: t.Any) -> None:
         help="Whether to automatically capture a screenshot after each test. "
         "If you choose only-on-failure, a screenshot of the failing page only will be created.",
     )
+    group.addoption("--locale", default="en-US", help="The default locale of the browser.")

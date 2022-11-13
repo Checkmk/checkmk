@@ -29,7 +29,7 @@ def check_winperf_ts_sessions(_unused, params, info):
 
     # Tom Moore said, that the order of the columns has recently changed
     # in newer Windows versions (hooray!) and is now active, inactive, total.
-    # We try to accomodate for that.
+    # We try to accommodate for that.
     if active + inactive != total:
         active, inactive, total = total, active, inactive
 

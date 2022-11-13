@@ -5,8 +5,9 @@
 
 import abc
 import logging
+from collections.abc import Mapping
 from functools import partial
-from typing import Any, Final, final, Generic, Literal, Mapping, Optional, Type, TypeVar
+from typing import Any, final, Generic, Literal, TypeVar
 
 from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
@@ -30,20 +31,19 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
 
-    def __init__(self, ident: str, *, logger: logging.Logger) -> None:
+    def __init__(self, *, logger: logging.Logger) -> None:
         super().__init__()
-        self.ident: Final = ident
         self._logger = logger
 
     @final
     @classmethod
-    def from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
+    def from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         """Deserialize from JSON."""
         return cls._from_json(serialized)
 
     @classmethod
     @abc.abstractmethod
-    def _from_json(cls: Type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
+    def _from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -129,7 +129,7 @@ class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
         raise NotImplementedError
 
 
-def verify_ipaddress(address: Optional[HostAddress]) -> None:
+def verify_ipaddress(address: HostAddress | None) -> None:
     if not address:
         raise MKIPAddressLookupError("Host has no IP address configured.")
 

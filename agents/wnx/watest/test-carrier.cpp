@@ -8,7 +8,6 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
@@ -79,11 +78,9 @@ protected:
                 break;
 
             case DataType::kSegment: {
-                nanoseconds duration_since_epoch(dt->answerId());
-                time_point<steady_clock> tp(duration_since_epoch);
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
-                std::vector<uint8_t> vectorized_data(data_source, data_end);
+                std::vector vectorized_data(data_source, data_end);
                 storage->buffer_ = vectorized_data;
                 storage->answer_id_ = dt->answerId();
                 storage->peer_name_ = dt->providerId();
@@ -192,9 +189,8 @@ TEST_F(CarrierTestFixture, MailSlotIntegration) {
     sendSetOfCommands(summary_output);
     cc_.shutdownCommunication();
 
-    tst::WaitForSuccessSilent(10'000ms, [this]() {
-        return mailslot_storage.correct_commands_ == 3U;
-    });
+    tst::WaitForSuccessSilent(
+        10'000ms, [this] { return mailslot_storage.correct_commands_ == 3U; });
 
     ASSERT_TRUE(mailslot_storage.delivered_);
     EXPECT_EQ(mailslot_storage.answer_id_, 11);
@@ -213,12 +209,12 @@ std::string GetRunCommand() {
     std::scoped_lock l(g_lock_command);
     return g_last_command;
 }
-bool TestRunCommand(std::string_view peer, std::string_view cmd) {
+bool TestRunCommand(std::string_view /*peer*/, std::string_view cmd) {
     std::scoped_lock l(g_lock_command);
     g_last_command = cmd;
     return true;
 }
-};  // namespace
+}  // namespace
 
 class CarrierTestInformFixture : public ::testing::Test {
 public:
@@ -246,8 +242,8 @@ private:
     std::string internal_port{BuildPortName(
         kCarrierMailslotName, mailbox_server.GetName())};  // port here
     srv::ServiceProcessor processor;
-    carrier::CoreCarrier cc;
-    cma::commander::RunCommandProcessor save_rcp;
+    CoreCarrier cc;
+    commander::RunCommandProcessor save_rcp{nullptr};
 };
 
 TEST_F(CarrierTestInformFixture, InformByMailSlot) {
@@ -255,7 +251,7 @@ TEST_F(CarrierTestInformFixture, InformByMailSlot) {
     for (const auto &cmd : {"xxx"s, "zzz"s}) {
         InformByMailSlot(mailbox_client.GetName(), cmd);
         EXPECT_TRUE(tst::WaitForSuccessSilent(
-            100ms, [cmd]() { return GetRunCommand() == cmd; }))
+            100ms, [cmd] { return GetRunCommand() == cmd; }))
             << "FAILED= " << cmd;
     }
 }

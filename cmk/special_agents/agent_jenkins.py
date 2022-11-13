@@ -6,7 +6,7 @@
 import argparse
 import json
 import sys
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import requests
 
@@ -17,7 +17,7 @@ from cmk.special_agents.utils import vcrtrace
 
 class Section(NamedTuple):
     name: str
-    key: Optional[str]
+    key: str | None
     uri: str
 
 
@@ -62,7 +62,7 @@ def main(argv=None):
 
 
 def handle_request(args, sections):
-    url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
+    url_base = f"{args.proto}://{args.hostname}:{args.port}"
     # labels = {}
 
     for section in sections:

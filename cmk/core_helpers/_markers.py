@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, MutableMapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Iterable, MutableMapping, Sequence
+from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
@@ -54,11 +55,11 @@ class PiggybackMarker(NamedTuple):
 
 class SectionMarker(NamedTuple):
     name: SectionName
-    cached: Optional[Tuple[int, int]]
+    cached: tuple[int, int] | None
     encoding: str
     nostrip: bool
-    persist: Optional[int]
-    separator: Optional[str]
+    persist: int | None
+    separator: str | None
 
     @staticmethod
     def is_header(line: bytes) -> bool:
@@ -87,7 +88,7 @@ class SectionMarker(NamedTuple):
 
     @classmethod
     def from_headerline(cls, headerline: bytes) -> "SectionMarker":
-        def parse_options(elems: Iterable[str]) -> Iterable[Tuple[str, str]]:
+        def parse_options(elems: Iterable[str]) -> Iterable[tuple[str, str]]:
             for option in elems:
                 if "(" not in option:
                     continue
@@ -100,7 +101,7 @@ class SectionMarker(NamedTuple):
 
         headerparts = headerline[3:-3].decode().split(":")
         options = dict(parse_options(headerparts[1:]))
-        cached: Optional[Tuple[int, int]]
+        cached: tuple[int, int] | None
         try:
             cached_ = tuple(map(int, options["cached"].split(",")))
             cached = cached_[0], cached_[1]
@@ -110,13 +111,13 @@ class SectionMarker(NamedTuple):
         encoding = options.get("encoding", "utf-8")
         nostrip = options.get("nostrip") is not None
 
-        persist: Optional[int]
+        persist: int | None
         try:
             persist = int(options["persist"])
         except KeyError:
             persist = None
 
-        separator: Optional[str]
+        separator: str | None
         try:
             separator = chr(int(options["sep"]))
         except KeyError:
@@ -145,9 +146,9 @@ class SectionMarker(NamedTuple):
             opts["sep"] = str(ord(self.separator))
         if not opts:
             return f"<<<{self.name}>>>"
-        return "<<<%s:%s>>>" % (self.name, ":".join("%s(%s)" % (k, v) for k, v in opts.items()))
+        return "<<<{}:{}>>>".format(self.name, ":".join(f"{k}({v})" for k, v in opts.items()))
 
-    def cache_info(self, cached_at: int) -> Optional[Tuple[int, int]]:
+    def cache_info(self, cached_at: int) -> tuple[int, int] | None:
         # If both `persist` and `cached` are present, `cached` has priority
         # over `persist`.  I do not know whether this is correct.
         if self.cached:

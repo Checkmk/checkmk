@@ -1,0 +1,29 @@
+Title: HW/SW Inventory: Add cluster property if the tree is not empty
+Class: fix
+Compatible: incomp
+Component: inv
+Date: 1665565459
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously the cluster property was added in any case even if the newly
+computed tree was empty (ie. no data or inventory plugins did not add any
+entries).
+
+This led to a rather confusing result message of the {{HW/SW Inventory}}
+service: {{Cannot update tree, Found 1 inventory entries, Got no data, ...}}.
+
+Moreover there was no possibility for removing the {{HW/SW Inventory}} tree at
+all, ie. the icon {{Show hardware/software inventory of this host}} in the
+dropdown menu of the {{HW/SW Inventory}} stays all the time.
+
+Now the mechanism works as follows:
+LI: Apply all related inventory plugins
+LI: Apply configured retention intervals
+LI: If the tree is not empty then set the cluster property and store the tree.
+LI: Otherwise remove the icon which means: no current inventory tree
+
+Note: The retention intervals worked incidentally before because the tree never
+was empty. Thus they were always applied.

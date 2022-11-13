@@ -1,5 +1,6 @@
 [Unit]
 Description=Local Checkmk agent socket
+Documentation=https://docs.checkmk.com/latest/en/agent_linux.html
 
 [Socket]
 ListenStream=/run/check-mk-agent.socket

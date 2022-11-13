@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from logging import Logger
 from typing import Any, Literal
 
@@ -32,7 +32,7 @@ class Query:
             return QueryREPLICATE(status_server, raw_query, logger)
         if method == "COMMAND":
             return QueryCOMMAND(status_server, raw_query, logger)
-        raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
+        raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
         super().__init__()
@@ -75,7 +75,7 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
 def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
     name_and_func = _filter_operators.get(name)
     if name_and_func is None:
-        raise MKClientError("Unknown filter operator '%s'" % name)
+        raise MKClientError(f"Unknown filter operator '{name}'")
     return name_and_func
 
 
@@ -104,7 +104,7 @@ class QueryGET(Query):
         if header == "OutputFormat":
             if argument not in ["python", "plain", "json"]:
                 raise MKClientError(
-                    'Invalid output format "%s" (allowed are: python, plain, json)' % argument
+                    f'Invalid output format "{argument}" (allowed are: python, plain, json)'
                 )
             self.output_format = argument
         elif header == "Columns":
@@ -118,7 +118,7 @@ class QueryGET(Query):
         elif header == "Limit":
             self.limit = int(argument)
         else:
-            logger.info("Ignoring not-implemented header %s" % header)
+            logger.info("Ignoring not-implemented header %s", header)
 
     def _parse_filter(self, textspec: str) -> tuple[str, OperatorName, Callable[[Any], bool], Any]:
         # Examples:
@@ -159,7 +159,7 @@ class QueryGET(Query):
             self.table.column_indices.get(column_name) for column_name in self.requested_columns  #
         ]
 
-    def filter_row(self, row: list[Any]) -> bool:
+    def filter_row(self, row: Sequence[Any]) -> bool:
         return all(
             predicate(row[self.table.column_indices[column_name]])
             for column_name, _operator_name, predicate, _argument in self.filters

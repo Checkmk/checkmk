@@ -536,10 +536,6 @@ msgid "%s instances"
 msgstr "instâncias do BD"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%s em %s"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s não é um UNIX timestamp válido"
 
@@ -1899,13 +1895,6 @@ msgstr "Já existe um pacote de BI com esta identificação."
 
 msgid "A Multisite view"
 msgstr "Uma visão Multisite"
-
-msgid ""
-"A bulk discovery job is already running. Please use the "
-"\"bulk_discovery_status\" call to get the curent status."
-msgstr ""
-"Um trabalho de descoberta em massa já está a decorrer. Por favor, use a "
-"chamada \"bulk_discovery_status\" para obter o status de curent."
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -3706,6 +3695,9 @@ msgstr "Endereços IPv6 adicionais"
 msgid "Additional Plugin Output"
 msgstr "Saída de Plugin Adicional"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Linhas de cabeçalho adicionais"
 
@@ -4163,6 +4155,10 @@ msgstr "Plugins baseados em agentes (Checks, Inventory)"
 msgid "Agent controller"
 msgstr "autenticação do Windows"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "Versão agente"
+
 msgid "Agent deployment"
 msgstr "Implantação de agentes"
 
@@ -4191,10 +4187,6 @@ msgid "Agent output"
 msgstr "Saída do agente"
 
 #, fuzzy
-msgid "Agent pairing"
-msgstr "Agente de cozimento"
-
-#, fuzzy
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "Expressão regular a esperar no conteúdo"
 
@@ -4203,7 +4195,15 @@ msgid "Agent plugins: versions"
 msgstr "Partida necessária (expressão regular)"
 
 #, fuzzy
+msgid "Agent receiver port"
+msgstr "Erro de Agente"
+
+#, fuzzy
 msgid "Agent registration"
+msgstr "Versão agente"
+
+#, fuzzy
+msgid "Agent registration user"
 msgstr "Versão agente"
 
 msgid "Agent rules"
@@ -4630,6 +4630,9 @@ msgstr "Todos os usuários online"
 msgid "All package types are signed with the key '%s'"
 msgstr "Todos os tipos de pacotes são assinados com a chave \"%s\"."
 
+msgid "All packages (enabled or disabled)"
+msgstr ""
+
 msgid "All pages"
 msgstr "Todas as páginas"
 
@@ -4647,6 +4650,10 @@ msgstr "Todos os protocolos"
 
 msgid "All queues listed here will be skipped."
 msgstr "Todas as filas listadas aqui serão ignoradas."
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr "Mostrar informações sobre o uso da licença dos sites Checkmk."
 
 msgid "All resource groups are running on a different node (none)"
 msgstr ""
@@ -5707,14 +5714,6 @@ msgstr "Atto Fibrebridge FC porto"
 msgid "Attribute"
 msgstr "Atributo"
 
-#, python-format
-msgid ""
-"Attribute \"%s\" of user \"%s\" can not be changed, because it is locked by "
-"the user connection."
-msgstr ""
-"O atributo \"%s\" do usuário \"%s\" não pode ser alterado, porque está "
-"bloqueado pela conexão do usuário."
-
 msgid "Attribute Sync Plugins"
 msgstr "Atribuir Plugins de Sincronização"
 
@@ -5825,10 +5824,6 @@ msgstr "Autor"
 msgid "Authorization"
 msgstr "Autorização"
 
-#, python-format
-msgid "Authorization Error. Insufficent permissions for '%s'"
-msgstr "Erro de Autorização. Permissões insuficientes para '%s"
-
 #, fuzzy
 msgid "Authorization Header"
 msgstr "Autorização"
@@ -5918,11 +5913,6 @@ msgstr "Recarga automática da página"
 msgid "Automatic page reload in %d seconds."
 msgstr "Recarga automática da página em %d segundos."
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-
 msgid "Automatic takeover"
 msgstr "Aquisição automática"
 
@@ -5951,10 +5941,6 @@ msgstr ""
 "Executar automaticamente uma descoberta de serviço em todos os novos hosts "
 "criados por esta conexão. Novos serviços serão adicionados ao monitoramento "
 "nesta etapa."
-
-#, fuzzy
-msgid "Automatically execute pairing"
-msgstr "Ativar mudanças automaticamente"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -6006,9 +5992,6 @@ msgstr "Segredo de automação para contas de máquinas"
 
 msgid "Automation user rejected"
 msgstr "Utilizador de automação rejeitado"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
 
 msgid "Autostart Services"
 msgstr "Serviços Autostart"
@@ -6430,18 +6413,12 @@ msgstr "Voltar para ver com as caixas de seleção zeradas"
 msgid "Backend Conn. %s"
 msgstr "Backend Conn. %s"
 
-msgid "Background Job"
-msgstr "Trabalho de base"
-
 #, python-format
 msgid "Background Job %s already running"
 msgstr "Antecedentes Emprego %s já em execução"
 
 msgid "Background in status color and label"
 msgstr "Fundo em cor de status e etiqueta"
-
-msgid "Background job"
-msgstr "Trabalho de base"
 
 msgid "Background job acknowledged"
 msgstr "Trabalho de base reconhecido"
@@ -7379,7 +7356,11 @@ msgid ""
 "By default the server will try to contact the monitored host and pull the "
 "data by initializing a TCP connection. On the %s you can configure a push "
 "configuration, where the monitored host is expected to send the data to the "
-"monitoring server without being actively triggered."
+"monitoring server without being actively triggered.\n"
+"\n"
+"If you are configuring this, you might want to also set the \"%s\" attribute "
+"to \"%s\". The host not being reachable by the site is one of the main "
+"reason why you want to use the push connection in the first place."
 msgstr ""
 
 msgid ""
@@ -8135,6 +8116,13 @@ msgstr ""
 "Não é possível exibir esta vista no layout da matriz. Você precisa de pelo "
 "menos duas colunas!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"Para descarregar relatórios de utilização de licenças deve adicionar "
+"detalhes de subscrição."
+
 #, fuzzy, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -8343,6 +8331,14 @@ msgstr ""
 msgid "Case insensitive"
 msgstr "Insensível a maiúsculas e minúsculas"
 
+#, fuzzy
+msgid "Case sensitive"
+msgstr "Insensível a maiúsculas e minúsculas"
+
+#, fuzzy
+msgid "Case sensitivity"
+msgstr "Insensível a maiúsculas e minúsculas"
+
 msgid "Case translation"
 msgstr "Tradução do caso"
 
@@ -8534,25 +8530,11 @@ msgstr "Alteração das propriedades do cliente"
 msgid "Changed properties of installed extension package %s"
 msgstr "Propriedades alteradas do pacote de extensão instalado %s"
 
-#, fuzzy, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
-"\"%s\"."
-
 #, python-format
 msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
-"\"%s\"."
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Propriedades alteradas da regra #%d no conjunto de regras \"%s\" na pasta "
 "\"%s\"."
 
 #, python-format
@@ -9085,12 +9067,6 @@ msgid ""
 "that support SNMPv2c may be buggy. In such cases, you may want to try "
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
-
-#, fuzzy, python-format
-msgid ""
-"Checkmk exception: %s\n"
-"%s"
-msgstr "Exceção Checkmk: %s"
 
 msgid "Checkmk fetcher usage"
 msgstr "Uso do Checkmk fetcher"
@@ -9759,11 +9735,6 @@ msgstr "Clonar tópico"
 #, fuzzy
 msgid "Clone view"
 msgstr "Vistas lentas"
-
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regra clonada da regra %s no conjunto de regras \"%s\" na pasta \"%s\"."
 
 msgid "Close Timewarp"
 msgstr "Fechar Timewarp"
@@ -10585,10 +10556,10 @@ msgstr ""
 "Configurar o nome da variável do cabeçalho da solicitação HTTP para ler a "
 "partir das solicitações HTTP de entrada"
 
+#, fuzzy, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 "Configure a porta para onde enviar os dados em tempo real. O Microcore "
 "precisa de ser <a href=\"wato.py?"
@@ -11612,10 +11583,6 @@ msgstr "Criar novas %s"
 msgid "Create new %s attribute %s"
 msgstr "Criar novo atributo %s %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "Criar novas %s grupo %s"
-
 msgid "Create new auxiliary tag"
 msgstr "Criar nova etiqueta auxiliar"
 
@@ -11656,7 +11623,9 @@ msgstr "Criar dados de monitoramento aleatórios"
 msgid "Create random secret"
 msgstr "Criar segredo aleatório"
 
-msgid "Create real-time data executing the following agent plugins"
+#, fuzzy
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr "Criar dados em tempo real executando os seguintes plugins de agente"
 
 msgid "Create regular time-schedule for this report"
@@ -11747,14 +11716,6 @@ msgid "Created new extension package %s"
 msgstr "Criado novo pacote de extensão %s"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "Criada nova pasta %s"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "Criado novo anfitrião %s."
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Criado novo grupo de tags de anfitrião '%s'."
 
@@ -11784,10 +11745,6 @@ msgstr "Criado novo pacote de regras com id %s"
 #, python-format
 msgid "Created new time period %s"
 msgstr "Criado novo período de tempo %s"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "Novos usuários criados: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11994,6 +11951,10 @@ msgstr ""
 "Criticidade do serviço quando os sensores detectam que a energia está "
 "desligada."
 
+#, fuzzy
+msgid "CronJobs"
+msgstr "Empregos"
+
 msgid "Current"
 msgstr "Corrente"
 
@@ -12101,9 +12062,6 @@ msgstr "Actualmente em inactividade"
 
 msgid "Currently indexing, please try again shortly."
 msgstr "Actualmente a indexar, por favor tente novamente em breve."
-
-msgid "Currently not supported with this Checkmk Edition"
-msgstr "Actualmente não suportado com esta edição Checkmk"
 
 msgid "Currently open connections"
 msgstr "Ligações actualmente abertas"
@@ -13134,6 +13092,10 @@ msgstr "O valor padrão é 389 para conexões normais e 636 para conexões SSL."
 msgid "Default is Windows authentication"
 msgstr "O padrão é autenticação do Windows"
 
+#, fuzzy
+msgid "Default language"
+msgstr "Valor por defeito"
+
 msgid "Default layout"
 msgstr "Layout predefinido"
 
@@ -13642,10 +13604,6 @@ msgid "Deleted %s %d"
 msgstr "Eliminado %s %d"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "Grupo %s eliminado %s"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "%s de agregação do BI eliminado"
 
@@ -13677,24 +13635,12 @@ msgid "Deleted custom GUI logo"
 msgstr "Logotipo GUI personalizado eliminado"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "Pasta eliminada %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "Eliminado %s do anfitrião"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Eliminada regra de notificação %d de usuário %s"
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "Função eliminada '%s'."
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr "Eliminada a regra #%d no conjunto de regras \"%s\" na pasta \"%s\"."
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13705,20 +13651,12 @@ msgid "Deleted rule pack %s"
 msgstr "Pacote de regras eliminado %s"
 
 #, python-format
-msgid "Deleted ruleset '%s' for '%s'"
-msgstr "Conjunto de regras eliminado \"%s\" para \"%s\"."
-
-#, python-format
 msgid "Deleted site %s"
 msgstr "Site eliminado %s"
 
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "Período de tempo eliminado %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "Usuário excluído: %s"
 
 msgid "Deletes"
 msgstr "Elimina"
@@ -14420,10 +14358,6 @@ msgstr "Desactivar a validação do certificado SSL"
 msgid "Disable configuration via WATO on this site"
 msgstr "Desactivar a configuração via WATO neste site"
 
-#, python-format
-msgid "Disable extension package %s"
-msgstr "Desabilitar pacote de extensão %s"
-
 msgid "Disable flap detection"
 msgstr "Desactivar a detecção de aba"
 
@@ -14522,8 +14456,9 @@ msgstr "Serviços em cluster para deficientes (localizados em cluster host)"
 msgid "Disabled custom checks - defined via rule"
 msgstr "Verificações personalizadas deficientes (definidas através de regra)"
 
-msgid "Disabled extensions"
-msgstr "Extensões para deficientes"
+#, fuzzy, python-format
+msgid "Disabled extension package %s"
+msgstr "Desabilitar pacote de extensão %s"
 
 #, fuzzy
 msgid "Disabled legacy services - defined in main.mk"
@@ -15395,6 +15330,9 @@ msgstr "Não imponha níveis"
 msgid "Do not impose levels, always be OK"
 msgstr "Não imponha níveis, esteja sempre OK."
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "Não corresponder aos alertas do Console de Eventos"
 
@@ -15681,8 +15619,9 @@ msgid ""
 "Do you really want to remove the TLS registration of the selected hosts?"
 msgstr "Você realmente quer apagar os anfitriões selecionados?"
 
-#, python-format
-msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the package file <tt>%s</tt> from your system?"
 msgstr "Você realmente quer remover o pacote <tt>%s</tt> do seu sistema?"
 
 #, fuzzy
@@ -16522,6 +16461,10 @@ msgstr "Editar grupo de serviços"
 msgid "Edit services"
 msgstr "Editar serviços"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d Configurações de filtro"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "Editar conexão ao site %s"
@@ -16532,9 +16475,6 @@ msgstr "Editar configurações globais específicas do site de %s"
 
 msgid "Edit stored report"
 msgstr "Editar relatório armazenado"
-
-msgid "Edit subscription settings"
-msgstr "Editar configurações de assinatura"
 
 msgid "Edit tag group"
 msgstr "Editar grupo de etiquetas"
@@ -16642,10 +16582,6 @@ msgid "Edited host tag group %s (%s)"
 msgstr "Edited host tag group %s (%s)"
 
 #, python-format
-msgid "Edited properties of folder %s"
-msgstr "Propriedades editadas da pasta %s"
-
-#, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
 msgstr "Regra editada no conjunto de regras \"%s\" na pasta \"%s\"."
 
@@ -16702,11 +16638,19 @@ msgstr ""
 "qualquer certificado oferecido pelo servidor. É altamente recomendável "
 "deixar isso ativado."
 
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
+
 msgid "Elastic Block Storage (EBS)"
 msgstr "Armazenamento em Bloco Elástico (EBS)"
 
 msgid "Elastic Compute Cloud (EC2)"
 msgstr "Elastic Compute Cloud (EC2)"
+
+#, fuzzy
+msgid "Elastic Container Service (ECS)"
+msgstr "Serviço de Base de Dados Relacionais (RDS)"
 
 msgid "Elastic IP Addresses"
 msgstr "Endereços elásticos IP"
@@ -16892,6 +16836,12 @@ msgstr "Habilitar atualizações automáticas de agentes"
 msgid "Enable automatic host key acceptance"
 msgstr "Activar a aceitação automática da chave do anfitrião"
 
+msgid "Enable community translated languages"
+msgstr ""
+
+msgid "Enable community translated languages (not supported)"
+msgstr ""
+
 msgid "Enable core dumps"
 msgstr "Habilitar lixeiras de núcleo"
 
@@ -17039,9 +16989,13 @@ msgstr "Habilitar/desabilitar o processamento de perfdados para serviços"
 msgid "Enabled"
 msgstr "Habilitado"
 
-#, python-format
-msgid "Enabled extension package %s"
-msgstr "Pacote de extensão habilitado %s"
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "activar este site"
+
+#, fuzzy
+msgid "Enabled (inactive on this site)"
+msgstr "activar este site"
 
 msgid "Enabled in time range"
 msgstr "Ativado no intervalo de tempo"
@@ -18430,10 +18384,6 @@ msgstr ""
 msgid "Failed to determine origin rule of %s / %s"
 msgstr "Falha na determinação da regra de origem de %s / %s"
 
-#, python-format
-msgid "Failed to discover %s: %s"
-msgstr "Falha em descobrir %s: %s"
-
 #, fuzzy
 msgid "Failed to estimate the Apache process size"
 msgstr "Falha ao estimar o tamanho do processo apache"
@@ -19204,10 +19154,6 @@ msgstr "Folder"
 
 #, fuzzy, python-format
 msgid "Folder %r does not exist."
-msgstr "Pasta %s não existe"
-
-#, python-format
-msgid "Folder %s does not exist"
 msgstr "Pasta %s não existe"
 
 #, python-format
@@ -21883,10 +21829,6 @@ msgid "Host"
 msgstr "Anfitrião"
 
 #, python-format
-msgid "Host %s already exists in the folder %s"
-msgstr "Host %s já existe na pasta %s"
-
-#, python-format
 msgid ""
 "Host %s does not exist on remote site %s. This may be caused by a failed "
 "configuration synchronization. Have a look at the <a href=\"wato.py?"
@@ -21971,10 +21913,6 @@ msgstr "Famílias de acolhimento"
 
 msgid "Host address family (Primary)"
 msgstr "Endereço da família anfitriã (Primária)"
-
-#, fuzzy
-msgid "Host address of the monitoring server"
-msgstr "Nome do local de monitoramento"
 
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Endereços de anfitrião (IPv4/IPv6)"
@@ -23485,6 +23423,11 @@ msgstr ""
 "sempre que a agregação o fizer. Este tempo de inatividade também é limpo "
 "automaticamente quando a agregação deixa o tempo de inatividade. Os tempos "
 "de inatividade definidos manualmente para esta verificação não são afetados."
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -25477,9 +25420,6 @@ msgid ""
 "\">Checkmk Exchange</a>  for packages reviewed by tribe29."
 msgstr ""
 
-msgid "Install this package"
-msgstr "Instale este pacote"
-
 msgid "Installation"
 msgstr "Instalação"
 
@@ -25496,9 +25436,6 @@ msgstr "Agente Instalado"
 #, python-format
 msgid "Installed extension package %s-%s (%s)"
 msgstr "Pacote de extensão instalada %s-%s (%s)"
-
-msgid "Installed extension packages"
-msgstr "Pacotes de extensão instalados"
 
 msgid "Installed, stopped and running services"
 msgstr "Serviços instalados, parados e em funcionamento"
@@ -25894,10 +25831,6 @@ msgstr "Ident inválido"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "Ident inválido: %s"
-
-#, python-format
-msgid "Invalid key(s): %s"
-msgstr "Chave(s) inválida(s): %s"
 
 #, fuzzy
 msgid "Invalid login"
@@ -26573,6 +26506,10 @@ msgstr "Manter o nível de serviço da mensagem (se disponível)"
 msgid "Keep special characters"
 msgstr "Manter caracteres especiais"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "Conexões estabelecidas"
+
 msgid "Keepalived Parameters"
 msgstr "Parâmetros Guardalivados"
 
@@ -26917,10 +26854,6 @@ msgid ""
 msgstr ""
 "Os rótulos precisam estar no formato <tt>[KEY]:[VALUE]</tt>. Por exemplo "
 "<tt>os:windows</tt>."
-
-#, fuzzy
-msgid "Labels to set on the paired hosts"
-msgstr "Também é definido o tempo de inactividade das crianças hospedeiras"
 
 msgid "Lambda"
 msgstr ""
@@ -27782,6 +27715,10 @@ msgstr "Estado da licença"
 
 msgid "License usage"
 msgstr "Utilização da licença"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "Status do licenciamento"
 
 msgid "Licensing Status"
 msgstr "Status do licenciamento"
@@ -29305,6 +29242,10 @@ msgstr ""
 msgid "Manage the Dynamic configuration connections"
 msgstr "Gerir as ligações de configuração dinâmica"
 
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "autenticação do Windows"
+
 msgid "Manage users of the monitoring system."
 msgstr "Gerencie os usuários do sistema de monitoramento."
 
@@ -30708,11 +30649,9 @@ msgstr "Relatórios agendados"
 msgid "Missing Prerequisite"
 msgstr "Pré-requisito a cumprir"
 
-msgid "Missing config file for agent {}"
-msgstr ""
-
-msgid "Missing config file for agent {}/{}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Missing config file for agent %s%s"
+msgstr "Parâmetro de ligação em falta: %s"
 
 #, python-format
 msgid "Missing connection parameter: %s"
@@ -30778,10 +30717,6 @@ msgstr "Informações de contato do serviço"
 #, fuzzy
 msgid "Missing required context information"
 msgstr "Informações de contato do serviço"
-
-#, python-format
-msgid "Missing required key(s): %s"
-msgstr "Chave(s) necessária(s) em falta: %s"
 
 #, fuzzy
 msgid "Missing required selection."
@@ -30925,10 +30860,6 @@ msgstr ""
 "modificadas: %d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "Modificado %s do hospedeiro."
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "Pacote de regras modificadas %s"
 
@@ -30943,10 +30874,6 @@ msgstr "Período de tempo modificado %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "Função do usuário modificada '%s'."
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "Utilizadores modificados: %s"
 
 msgid "Modify"
 msgstr "Modificar"
@@ -31173,6 +31100,10 @@ msgstr "Monitorização de software de orquestração de contentores e contentor
 msgid "Monitoring of forwarded logfiles"
 msgstr "Monitorização dos ficheiros de registo enviados"
 
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "Estado de monitorização"
+
 msgid "Monitoring state"
 msgstr "Estado de monitorização"
 
@@ -31389,12 +31320,6 @@ msgid "Moved %d hosts to %s"
 msgstr "Movido %d hospedeiros para %s"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"Movido %s grupo %s para cliente %s. Propriedades adicionais podem ter mudado."
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "Agregação de BI movida com ID %s para BI pack %s"
 
@@ -31402,23 +31327,8 @@ msgstr "Agregação de BI movida com ID %s para BI pack %s"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "Movido regra BI com ID %s para BI pack %s"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "Pasta movida %s para %s"
-
 msgid "Moved from"
 msgstr "Movido de"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "Mudou o anfitrião de \"%s\" para \"%s"
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
-"pasta \"%s\"."
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -32545,9 +32455,6 @@ msgstr "Sem pesquisa, especificar lista de argumentos"
 msgid "No service level is set in event"
 msgstr "Nenhum nível de serviço é definido em caso de"
 
-msgid "No site given."
-msgstr "Nenhum site dado."
-
 msgid "No status host"
 msgstr "Sem status de anfitrião"
 
@@ -32556,13 +32463,6 @@ msgstr "Nenhuma sincronização bem sucedida até agora."
 
 msgid "No such file"
 msgstr "Não existe tal arquivo"
-
-msgid "No such host"
-msgstr "Não existe tal anfitrião"
-
-#, python-format
-msgid "No such host(s): %s"
-msgstr "Não há hospedeiro(s): %s"
 
 #, python-format
 msgid ""
@@ -34542,9 +34442,6 @@ msgstr ""
 "energia serão agrupadas em um serviço (resumo) ou se cada unidade recebe um "
 "serviço individual (único)."
 
-msgid "Optional extension packages"
-msgstr "Pacotes de extensão opcionais"
-
 msgid "Optional general information"
 msgstr "Informações gerais opcionais"
 
@@ -34642,7 +34539,15 @@ msgid "Order"
 msgstr "Encomenda"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Use os estados do dispositivo"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Visão geral das aplicações"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Visão geral das aplicações"
 
 #, fuzzy
@@ -35087,8 +34992,9 @@ msgstr "Nome do pacote"
 msgid "Package name:"
 msgstr "Nome do pacote:"
 
-msgid "Package not installed or corrupt"
-msgstr "Pacote não instalado ou corrompido"
+#, fuzzy
+msgid "Package not found"
+msgstr "Página não encontrada"
 
 msgid "Package properties"
 msgstr "Propriedades do pacote"
@@ -35215,14 +35121,6 @@ msgstr "Páginas"
 
 msgid "Pages per second"
 msgstr "Páginas por segundo"
-
-#, fuzzy
-msgid "Pair manually"
-msgstr "Especificar manualmente"
-
-#, fuzzy
-msgid "Pair on installation"
-msgstr "Instalação"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Sessões Ativas de Palo Alto"
@@ -35422,10 +35320,6 @@ msgstr "Frase de passagem"
 msgid "Password"
 msgstr "Senha"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "Senha alterada (sincronização falhada: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "A senha não existe ou o uso não é permitido"
 
@@ -35488,6 +35382,10 @@ msgstr "Caminho para a sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Caminho para o diretório temporário (será criado)"
+
+#, fuzzy
+msgid "Path to unix socket"
+msgstr "Caminho para o arquivo .env"
 
 msgid "Path-patterns where to search for Jar files"
 msgstr "Caminhos-padrão onde procurar por arquivos Jar"
@@ -37316,10 +37214,6 @@ msgstr "Produto"
 msgid "Profile"
 msgstr "Perfil"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "Perfil alterado (sincronização falhou: %s)"
-
 msgid "Profile requests"
 msgstr "Pedidos de perfil"
 
@@ -38268,10 +38162,6 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "Configuração de verificação renovada de \"%s\" do host"
 
 #, python-format
-msgid "Refreshed check configuration of host [%s] with %d services"
-msgstr "Configuração de verificação atualizada do host [%s] com %d serviços"
-
-#, python-format
 msgid "Refusing to read file not owned by site user: \"%s\""
 msgstr ""
 
@@ -38369,6 +38259,10 @@ msgstr "Chaves de Registro para procurar por software (Windows)"
 msgid "Regular expression"
 msgstr "Expressão regular"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "Expressões regulares para classificação de mensagens"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr "Expressão regular para combinar a tag syslog (insenstivo de caso)"
 
@@ -38409,6 +38303,11 @@ msgstr "Expressão regular a esperar no conteúdo"
 
 msgid "Regular expression to expect in content"
 msgstr "Expressão regular a esperar no conteúdo"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "Expressão regular: "
@@ -38666,23 +38565,11 @@ msgid "Removed"
 msgstr "Removido"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "Removido %s do grupo %s do cliente %s"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "Removido o tag auxiliar %s (%s)"
 
-#, python-format
-msgid "Removed disabled extension package %s"
-msgstr "Removido pacote de extensão para deficientes %s"
-
 msgid "Removed entries"
 msgstr "Entradas removidas"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "Removido atributos explícitos de %s anfitrião."
 
 #, python-format
 msgid "Removed extension package %s"
@@ -38728,34 +38615,6 @@ msgstr "Renomear múltiplos anfitriões"
 #, fuzzy, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "Renomeado %d hospeda nos seguintes lugares:<br>>ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "Renomeado nó de cluster de %s para %s."
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "Renomeado %s anfitrião"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "Renomeado hospedeiro de %s para %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Renomeado hospedeiro de %s para %s"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr "Renomeado host em %d conjuntos de regras da pasta %s"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "Renomeado pai de %s para %s."
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "Renomeado pai de %s para %s na pasta \"%s\"."
 
 msgid "Renaming Operations"
 msgstr "Operações de Renomeamento"
@@ -40386,10 +40245,6 @@ msgstr "Salve este anfitrião e vá para"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "Configuração de verificação salva de \"%s\" de host com serviços %d"
 
-#, python-format
-msgid "Saved check configuration of host [%s] with %d services"
-msgstr "Configuração de verificação salva do host [%s] com %d serviços"
-
 msgid "Saved read only settings"
 msgstr "Configurações salvas apenas para leitura"
 
@@ -41297,14 +41152,6 @@ msgstr "Regras de descoberta de serviços"
 msgid "Service discovery rules"
 msgstr "Regras de descoberta de serviços"
 
-#, python-format
-msgid ""
-"Service discovery successful. Added %d, removed %d, kept %d, total %d "
-"services and %d new, %d total host labels"
-msgstr ""
-"Descoberta de serviços bem sucedida. Adicionado %d, removido %d, mantido %d, "
-"total %d serviços e %d novos, %d total de rótulos do host"
-
 msgid "Service discovery triggers service discovery check"
 msgstr ""
 "A descoberta de serviços aciona a verificação da descoberta de serviços"
@@ -41733,10 +41580,6 @@ msgstr "Definir nova contagem de tentativas para plugins e verificações locais
 msgid "Set roles"
 msgstr "Definir papéis"
 
-#, python-format
-msgid "Set ruleset '%s' for '%s' with %d rules"
-msgstr "Estabeleça regras de conjunto \"%s\" para \"%s\" com regras %d"
-
 msgid ""
 "Set service names or regular expression patterns here to allow only matching "
 "services to be activated automatically. If you set both this and 'Don't "
@@ -42027,10 +41870,6 @@ msgstr ""
 "removidas serão substituídas pelo valor padrão para o grupo de tags (para "
 "hosts e pastas). O que as regras dizem respeito, você tem que decidir como "
 "proceder."
-
-#, fuzzy
-msgid "Setup is disabled on this site."
-msgstr "A WATO está desactivada neste site."
 
 msgid "Setup is disabled."
 msgstr "A configuração está desativada."
@@ -42329,9 +42168,6 @@ msgstr "Mostrar lenda"
 msgid "Show less"
 msgstr "Mostrar menos"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr "Mostrar informações sobre o uso da licença dos sites Checkmk."
-
 msgid "Show margin round the graph"
 msgstr "Mostrar margem ao redor do gráfico"
 
@@ -42510,6 +42346,14 @@ msgstr "Mostrar eixo vertical"
 #, fuzzy
 msgid "Show volume name in service output"
 msgstr "Aparência de membros do grupo na saída de serviço"
+
+msgid ""
+"Show/Hide community translated languages in the \"Language\" dropdown (User "
+"> Edit profile). Note that these translations are contributed by the Checkmk "
+"community and thus no liability is assumed for their validity.<br>If this "
+"setting is turned from 'on' to 'off' while a user has set a community "
+"translated language, the user's language is changed to 'English'."
+msgstr ""
 
 msgid "Show/Hide password"
 msgstr "Mostrar/ocultar senha"
@@ -42798,10 +42642,6 @@ msgstr "Identificação de campo personalizada do local"
 msgid "Site icon"
 msgstr "Ícone do local"
 
-#, python-format
-msgid "Site id not found: %s"
-msgstr "Identificação do local não encontrada: %s"
-
 msgid "Site is disabled"
 msgstr "O site está desativado"
 
@@ -42849,6 +42689,10 @@ msgstr "O estado do local é desconhecido"
 msgid "Site status"
 msgstr "Status do local"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "Largura de banda site a site"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "Configuração global específica do local para %s"
@@ -42864,6 +42708,10 @@ msgstr "Nome do Sitename"
 
 msgid "Sites"
 msgstr "Sites"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "Largura de banda site a site"
 
 msgid "Size"
 msgstr "Tamanho"
@@ -43877,6 +43725,11 @@ msgid "Specify the site that should monitor this host."
 msgstr "Especifique o site que deve monitorar esse host."
 
 msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
+
+msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
 "that site is being processed."
 msgstr ""
@@ -44163,10 +44016,6 @@ msgstr "A partir de"
 #, fuzzy
 msgid "Starting VMs"
 msgstr "A partir de"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "Ativação inicial (Sites: %s)"
 
 msgid "Starting from period number"
 msgstr "A partir do número do período"
@@ -45329,9 +45178,6 @@ msgstr "Conseguido"
 msgid "Success"
 msgstr "Sucesso"
 
-msgid "Successfully baked agents"
-msgstr "Agentes cozidos com sucesso"
-
 msgid "Successfully changed password."
 msgstr "Mudança de senha com sucesso."
 
@@ -45838,9 +45684,6 @@ msgstr "TLS/SSL/Https desativado"
 #, fuzzy, python-format
 msgid "TNS Alias %s"
 msgstr "TNS Alias"
-
-msgid "TODO"
-msgstr ""
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Memória usada via SNMP"
@@ -46900,10 +46743,6 @@ msgstr "A Descrição do Porto"
 msgid "The SAP system ID."
 msgstr "O ID do sistema SAP."
 
-#, python-format
-msgid "The SLA id %s is unknown or not visible to this user"
-msgstr "O SLA id %s é desconhecido ou não visível para este usuário"
-
 msgid ""
 "The SQL-statement or procedure name which is executed on the DBMS. It must "
 "return a result table with one row and at least two columns. The first "
@@ -47274,9 +47113,6 @@ msgstr ""
 msgid "The average utilization of memory on the active supervisor"
 msgstr "A utilização média de memória no supervisor ativo"
 
-msgid "The background job is missing a logger instance"
-msgstr "O trabalho de fundo está faltando uma instância de logger"
-
 msgid "The backup has been deleted."
 msgstr "O backup foi apagado."
 
@@ -47484,17 +47320,6 @@ msgstr ""
 msgid "The complete hardware- and software inventory of a host"
 msgstr "O inventário completo de hardware e software de um host"
 
-msgid ""
-"The configuration has changed in the meantime. You need to load the "
-"configuration and start another update. If the existing configuration should "
-"not be checked, you can remove the configuration_hash value from the request "
-"object."
-msgstr ""
-"A configuração mudou entretanto. Você precisa carregar a configuração e "
-"iniciar outra atualização. Se a configuração existente não deve ser "
-"verificada, o usuário pode remover o valor da configuração_hash do objeto de "
-"solicitação."
-
 msgid "The configuration is currently in read only mode. "
 msgstr "A configuração está atualmente em modo somente leitura. "
 
@@ -47572,6 +47397,12 @@ msgstr ""
 "outro site. Se você quiser modificar este host, você terá que mudar o "
 "atributo do site para o site local. Mas isto pode fazer com que o host seja "
 "monitorado a partir de vários sites."
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -48136,10 +47967,6 @@ msgid ""
 "https) and the port. Be aware that a trailing slash at the end of the URL is "
 "likely to result in an error."
 msgstr ""
-
-#, python-format
-msgid "The function %s is not in the snapshotted functions."
-msgstr "A função %s não se encontra nas funções fotografadas."
 
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
@@ -49093,9 +48920,11 @@ msgstr ""
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr "O número de elementos no tuple deve ser exactamente %d."
 
+#, python-format
 msgid ""
 "The number of incoming and processed agent registration requests are not the "
-"same."
+"same:\n"
+"%s"
 msgstr ""
 
 msgid ""
@@ -49247,6 +49076,10 @@ msgstr ""
 "etc.) de componentes de um dispositivo (por exemplo, unidades de rack como "
 "componentes de um servidor de rack como dispositivo) no último intervalo de "
 "verificação."
+
+#, python-format
+msgid "The package is now enabled, but could not be installed on this site: %s"
+msgstr ""
 
 msgid "The pager address is optional "
 msgstr "O endereço do pager é opcional "
@@ -50675,6 +50508,12 @@ msgstr ""
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Estes anfitriões instalaram a versão correcta do seu agente."
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -51292,13 +51131,6 @@ msgid "This check monitors count and age of mails in mailboxes."
 msgstr ""
 "Este cheque monitora a contagem e a idade dos e-mails nas caixas de correio."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Esta verificação monitora a freqüência com que os objetos de banco de dados "
-"em um banco de dados PostgreSQL são acessados"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 "Esta verificação monitoriza a informação relacionada com o bloqueio de "
@@ -51335,6 +51167,13 @@ msgstr ""
 "Esta verificação monitoriza o número de interruptores de registo de uma "
 "instância da base de dados ORACLE nos últimos 60 minutos. Você pode definir "
 "níveis para os limites superior e inferior."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Esta verificação monitora o número atual de sessões ativas e ociosas no "
+"PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "Esta verificação devolve o CRIT se a ligação ao local remoto falhar."
@@ -51751,11 +51590,6 @@ msgstr ""
 "define quem muitos por cento das métricas de tempo precisam estar "
 "disponíveis para não tornar o período desconhecido. Isto é relevante para "
 "agregações que são muito maiores do que um minuto."
-
-msgid "This is rule pack can be packaged with the Extension Packages module."
-msgstr ""
-"Este é um pacote de regras que pode ser empacotado com o módulo Pacotes de "
-"Extensão."
 
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
@@ -52348,8 +52182,8 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-#, python-format
-msgid "This package cannot be installed: %s"
+#, fuzzy, python-format
+msgid "This package cannot be uploaded: %s"
 msgstr "Este pacote não pode ser instalado: %s"
 
 msgid "This package does not exist."
@@ -52906,6 +52740,19 @@ msgstr ""
 "do agente. Regras múltiplas podem ser aplicadas, isto significa que os "
 "pacotes de regras múltiplas são fundidos."
 
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
+
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
 "at once. You can also assign aggregations to specific hosts through the "
@@ -53290,6 +53137,12 @@ msgstr "Esta regra corresponde."
 #, fuzzy, python-format
 msgid "This rule matches: %s"
 msgstr "Esta regra corresponde"
+
+#, fuzzy
+msgid "This rule pack can be packaged with the Extension Packages module."
+msgstr ""
+"Este é um pacote de regras que pode ser empacotado com o módulo Pacotes de "
+"Extensão."
 
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
@@ -54171,9 +54024,6 @@ msgstr "Este site está actualmente em baixo."
 
 msgid "This site is currently not reachable."
 msgstr "Este site não está disponível no momento."
-
-msgid "This site is not a distributed WATO site."
-msgstr "Este site não é um site distribuído da WATO."
 
 msgid "This site is not responding."
 msgstr "Este site não está a responder."
@@ -56147,14 +55997,6 @@ msgstr ""
 "Impossível analisar a correspondência, porque falta o parâmetro \"serviço\"."
 
 #, python-format
-msgid ""
-"Unable to apply new hosttag configuration. The following tags are still in "
-"use, but not mentioned in the updated configuration: %s"
-msgstr ""
-"Incapaz de aplicar uma nova configuração de hosttag. As seguintes tags ainda "
-"estão em uso, mas não mencionadas na configuração atualizada: %s"
-
-#, python-format
 msgid "Unable to authenticate with LDAP (%s)"
 msgstr "Incapaz de autenticar com LDAP (%s)"
 
@@ -56175,15 +56017,9 @@ msgstr ""
 "Incapaz de se conectar a exemplo %s. Por favor verifique as credenciais em "
 "Global Settings."
 
-msgid "Unable to create parent folder(s)."
-msgstr "Impossível criar a(s) pasta(s) mãe(s)."
-
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Incapaz de apagar grupo. Ainda está em uso por: %s"
-
-msgid "Unable to delete root folder"
-msgstr "Impossível apagar a pasta raiz"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -56414,9 +56250,6 @@ msgstr "Tarifas de pacotes nãounicast"
 msgid "Unidirectional UDP Traffic"
 msgstr "Tráfego unidireccional UDP"
 
-msgid "Uninstall and remove this package"
-msgstr "Desinstale e remova este pacote"
-
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -56450,6 +56283,10 @@ msgstr "Unidade de medida"
 msgid "Unix Timestamp (Epoch)"
 msgstr "Unix Timestamp (Epoc)"
 
+#, fuzzy
+msgid "Unix-Socket"
+msgstr "Tomada"
+
 msgid "Unknown"
 msgstr "Desconhecido"
 
@@ -56457,16 +56294,16 @@ msgstr "Desconhecido"
 msgid "Unknown %s group: %s"
 msgstr "Desconhecido %s grupo: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "Secundário - DUnknown"
+
 msgid "Unknown agent configuration"
 msgstr "Configuração de agente desconhecido"
 
 #, fuzzy
 msgid "Unknown aggregation"
 msgstr "Configuração de agente desconhecido"
-
-#, python-format
-msgid "Unknown attribute: %s"
-msgstr "Atributo desconhecido: %s"
 
 msgid "Unknown configuration change"
 msgstr "Alteração de configuração desconhecida"
@@ -56498,16 +56335,8 @@ msgid "Unknown site (%s)"
 msgstr "Site desconhecido (%s)"
 
 #, python-format
-msgid "Unknown tag %s"
-msgstr "Tag desconhecido %s"
-
-#, python-format
 msgid "Unknown tag group \"%s\""
 msgstr "Grupo de etiquetas desconhecido \"%s\"."
-
-#, python-format
-msgid "Unknown tag group %s"
-msgstr "Grupo de etiquetas desconhecido %s"
 
 #, python-format
 msgid "Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>"
@@ -56655,9 +56484,6 @@ msgstr "Atributos actualizados: "
 msgid "Updated discovered host labels of '%s' with %d labels"
 msgstr "Descobertas etiquetas de \"%s\" com etiquetas %d actualizadas"
 
-msgid "Updated host tags through Web-API"
-msgstr "Tags de anfitrião actualizadas através de Web-API"
-
 msgid ""
 "Updated metrics are written to disk in the configured interval. The write "
 "operation is only performed for metrics that are being updated. Old metrics "
@@ -56666,14 +56492,6 @@ msgstr ""
 "As métricas atualizadas são gravadas em disco no intervalo configurado. A "
 "operação de gravação só é realizada para métricas que estão sendo "
 "atualizadas. As métricas antigas não são afetadas por esta opção."
-
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "Propriedades actualizadas de %s grupo %s"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "Propriedades actualizadas do %s grupo %s"
 
 msgid "Updates"
 msgstr "Actualizações"
@@ -56697,9 +56515,6 @@ msgstr "Carregar"
 #, python-format
 msgid "Upload %s"
 msgstr "Upload %s"
-
-msgid "Upload & install"
-msgstr "Carregar e instalar"
 
 msgid "Upload CRT/PEM File"
 msgstr "Upload do arquivo CRT/PEM"
@@ -56736,6 +56551,10 @@ msgstr "Upload do pacote"
 
 msgid "Uploaded a custom GUI logo"
 msgstr "Upload de um logotipo GUI personalizado"
+
+#, fuzzy, python-format
+msgid "Uploaded extension package %s-%s (%s)"
+msgstr "Pacote de extensão instalada %s-%s (%s)"
 
 msgid "Upper"
 msgstr "Alto"
@@ -57325,6 +57144,14 @@ msgstr "Use o controle da versão GIT para WATO"
 msgid "Use Hard States"
 msgstr "Usar Estados Difíceis"
 
+#, fuzzy
+msgid "Use IP Address of assigned host"
+msgstr "Endereço IP do Host"
+
+#, fuzzy
+msgid "Use IP address of assigned host"
+msgstr "Endereço IP do Host"
+
 msgid "Use IPMItool"
 msgstr "Use o IPMItool"
 
@@ -57512,6 +57339,10 @@ msgstr "Usar título do gráfico"
 
 msgid "Use host address"
 msgstr "Use o endereço do anfitrião"
+
+#, fuzzy
+msgid "Use host name of assigned host"
+msgstr "Número total de cacos não atribuídos"
 
 msgid "Use hostname"
 msgstr "Usar hostname"
@@ -62559,9 +62390,6 @@ msgstr "Você tem que fornecer um caminho canônico."
 msgid "You have to select at least one element."
 msgstr "Você tem que selecionar pelo menos um elemento."
 
-msgid "You have to specify some hosts"
-msgstr "Você tem que especificar alguns anfitriões"
-
 msgid "You have used an invalid character"
 msgstr "Você usou um personagem inválido"
 
@@ -63333,6 +63161,10 @@ msgstr "intervalo de confiança"
 msgid "configuration"
 msgstr "configuração"
 
+#, fuzzy
+msgid "configure"
+msgstr "Configure"
+
 msgid "connection"
 msgstr "conexão"
 
@@ -63450,6 +63282,10 @@ msgstr "adiado"
 
 msgid "demand"
 msgstr "procura"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "O evento foi apagado automaticamente"
 
 msgid "detections/s"
 msgstr "detecções/s"
@@ -64349,6 +64185,14 @@ msgstr "online"
 msgid "online canisters"
 msgstr "latas on-line"
 
+#, fuzzy
+msgid "only messages"
+msgstr "mensagens de registo"
+
+#, fuzzy
+msgid "only requests"
+msgstr "solicitações"
+
 msgid "only v4"
 msgstr "apenas v4"
 
@@ -65021,6 +64865,391 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%s em %s"
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s"
+#~| "\""
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
+#~ "\"%s\"."
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Propriedades alteradas da regra #%d no conjunto de regras \"%s\" na pasta "
+#~ "\"%s\"."
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regra clonada da regra %s no conjunto de regras \"%s\" na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "Criar novas %s grupo %s"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "Criada nova pasta %s"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "Criado novo anfitrião %s."
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "Novos usuários criados: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "Grupo %s eliminado %s"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "Pasta eliminada %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "Eliminado %s do anfitrião"
+
+#, python-format
+#~ msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Eliminada a regra #%d no conjunto de regras \"%s\" na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "Usuário excluído: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "Propriedades editadas da pasta %s"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "Modificado %s do hospedeiro."
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "Utilizadores modificados: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "Movido %s grupo %s para cliente %s. Propriedades adicionais podem ter "
+#~ "mudado."
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "Pasta movida %s para %s"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "Mudou o anfitrião de \"%s\" para \"%s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
+#~ "pasta \"%s\"."
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "Senha alterada (sincronização falhada: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "Perfil alterado (sincronização falhou: %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "Removido %s do grupo %s do cliente %s"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "Removido atributos explícitos de %s anfitrião."
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "Renomeado nó de cluster de %s para %s."
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "Renomeado %s anfitrião"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "Renomeado hospedeiro de %s para %s."
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Renomeado hospedeiro de %s para %s"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr "Renomeado host em %d conjuntos de regras da pasta %s"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "Renomeado pai de %s para %s."
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "Renomeado pai de %s para %s na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "Ativação inicial (Sites: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "Propriedades actualizadas de %s grupo %s"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "Propriedades actualizadas do %s grupo %s"
+
+#, fuzzy
+#~| msgid "Agent baking"
+#~ msgid "Agent pairing"
+#~ msgstr "Agente de cozimento"
+
+#, fuzzy
+#~| msgid "Automatically activate changes"
+#~ msgid "Automatically execute pairing"
+#~ msgstr "Ativar mudanças automaticamente"
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "Editar configurações de assinatura"
+
+#, fuzzy
+#~| msgid "Name of the monitoring site"
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "Nome do local de monitoramento"
+
+#, fuzzy
+#~| msgid "Also set downtime on child hosts"
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "Também é definido o tempo de inactividade das crianças hospedeiras"
+
+#, fuzzy
+#~| msgid "Specify manually"
+#~ msgid "Pair manually"
+#~ msgstr "Especificar manualmente"
+
+#, fuzzy
+#~| msgid "Installation"
+#~ msgid "Pair on installation"
+#~ msgstr "Instalação"
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "Ativar em locais selecionados"
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Esta verificação monitora a freqüência com que os objetos de banco de "
+#~ "dados em um banco de dados PostgreSQL são acessados"
+
+#~ msgid "Disabled extensions"
+#~ msgstr "Extensões para deficientes"
+
+#, python-format
+#~ msgid "Enabled extension package %s"
+#~ msgstr "Pacote de extensão habilitado %s"
+
+#~ msgid "Install this package"
+#~ msgstr "Instale este pacote"
+
+#~ msgid "Installed extension packages"
+#~ msgstr "Pacotes de extensão instalados"
+
+#~ msgid "Optional extension packages"
+#~ msgstr "Pacotes de extensão opcionais"
+
+#~ msgid "Package not installed or corrupt"
+#~ msgstr "Pacote não instalado ou corrompido"
+
+#, python-format
+#~ msgid "Removed disabled extension package %s"
+#~ msgstr "Removido pacote de extensão para deficientes %s"
+
+#~ msgid "Uninstall and remove this package"
+#~ msgstr "Desinstale e remova este pacote"
+
+#~ msgid "Upload & install"
+#~ msgstr "Carregar e instalar"
+
+#~ msgid "Background Job"
+#~ msgstr "Trabalho de base"
+
+#~ msgid "Background job"
+#~ msgstr "Trabalho de base"
+
+#~ msgid "The background job is missing a logger instance"
+#~ msgstr "O trabalho de fundo está faltando uma instância de logger"
+
+#, python-format
+#~ msgid "The function %s is not in the snapshotted functions."
+#~ msgstr "A função %s não se encontra nas funções fotografadas."
+
+#~ msgid ""
+#~ "A bulk discovery job is already running. Please use the "
+#~ "\"bulk_discovery_status\" call to get the curent status."
+#~ msgstr ""
+#~ "Um trabalho de descoberta em massa já está a decorrer. Por favor, use a "
+#~ "chamada \"bulk_discovery_status\" para obter o status de curent."
+
+#, python-format
+#~ msgid ""
+#~ "Attribute \"%s\" of user \"%s\" can not be changed, because it is locked "
+#~ "by the user connection."
+#~ msgstr ""
+#~ "O atributo \"%s\" do usuário \"%s\" não pode ser alterado, porque está "
+#~ "bloqueado pela conexão do usuário."
+
+#, python-format
+#~ msgid "Authorization Error. Insufficent permissions for '%s'"
+#~ msgstr "Erro de Autorização. Permissões insuficientes para '%s"
+
+#, fuzzy, python-format
+#~| msgid "Checkmk exception: %s"
+#~ msgid ""
+#~ "Checkmk exception: %s\n"
+#~ "%s"
+#~ msgstr "Exceção Checkmk: %s"
+
+#~ msgid "Currently not supported with this Checkmk Edition"
+#~ msgstr "Actualmente não suportado com esta edição Checkmk"
+
+#, python-format
+#~ msgid "Deleted ruleset '%s' for '%s'"
+#~ msgstr "Conjunto de regras eliminado \"%s\" para \"%s\"."
+
+#, python-format
+#~ msgid "Failed to discover %s: %s"
+#~ msgstr "Falha em descobrir %s: %s"
+
+#, python-format
+#~ msgid "Folder %s does not exist"
+#~ msgstr "Pasta %s não existe"
+
+#, python-format
+#~ msgid "Host %s already exists in the folder %s"
+#~ msgstr "Host %s já existe na pasta %s"
+
+#, python-format
+#~ msgid "Invalid key(s): %s"
+#~ msgstr "Chave(s) inválida(s): %s"
+
+#, python-format
+#~ msgid "Missing required key(s): %s"
+#~ msgstr "Chave(s) necessária(s) em falta: %s"
+
+#~ msgid "No site given."
+#~ msgstr "Nenhum site dado."
+
+#~ msgid "No such host"
+#~ msgstr "Não existe tal anfitrião"
+
+#, python-format
+#~ msgid "No such host(s): %s"
+#~ msgstr "Não há hospedeiro(s): %s"
+
+#, python-format
+#~ msgid "Refreshed check configuration of host [%s] with %d services"
+#~ msgstr "Configuração de verificação atualizada do host [%s] com %d serviços"
+
+#, python-format
+#~ msgid "Saved check configuration of host [%s] with %d services"
+#~ msgstr "Configuração de verificação salva do host [%s] com %d serviços"
+
+#, python-format
+#~ msgid ""
+#~ "Service discovery successful. Added %d, removed %d, kept %d, total %d "
+#~ "services and %d new, %d total host labels"
+#~ msgstr ""
+#~ "Descoberta de serviços bem sucedida. Adicionado %d, removido %d, mantido "
+#~ "%d, total %d serviços e %d novos, %d total de rótulos do host"
+
+#, python-format
+#~ msgid "Set ruleset '%s' for '%s' with %d rules"
+#~ msgstr "Estabeleça regras de conjunto \"%s\" para \"%s\" com regras %d"
+
+#, fuzzy
+#~| msgid "WATO is disabled on this site."
+#~ msgid "Setup is disabled on this site."
+#~ msgstr "A WATO está desactivada neste site."
+
+#, python-format
+#~ msgid "Site id not found: %s"
+#~ msgstr "Identificação do local não encontrada: %s"
+
+#~ msgid "Successfully baked agents"
+#~ msgstr "Agentes cozidos com sucesso"
+
+#, python-format
+#~ msgid "The SLA id %s is unknown or not visible to this user"
+#~ msgstr "O SLA id %s é desconhecido ou não visível para este usuário"
+
+#~ msgid ""
+#~ "The configuration has changed in the meantime. You need to load the "
+#~ "configuration and start another update. If the existing configuration "
+#~ "should not be checked, you can remove the configuration_hash value from "
+#~ "the request object."
+#~ msgstr ""
+#~ "A configuração mudou entretanto. Você precisa carregar a configuração e "
+#~ "iniciar outra atualização. Se a configuração existente não deve ser "
+#~ "verificada, o usuário pode remover o valor da configuração_hash do objeto "
+#~ "de solicitação."
+
+#~ msgid "This site is not a distributed WATO site."
+#~ msgstr "Este site não é um site distribuído da WATO."
+
+#, python-format
+#~ msgid ""
+#~ "Unable to apply new hosttag configuration. The following tags are still "
+#~ "in use, but not mentioned in the updated configuration: %s"
+#~ msgstr ""
+#~ "Incapaz de aplicar uma nova configuração de hosttag. As seguintes tags "
+#~ "ainda estão em uso, mas não mencionadas na configuração atualizada: %s"
+
+#~ msgid "Unable to create parent folder(s)."
+#~ msgstr "Impossível criar a(s) pasta(s) mãe(s)."
+
+#~ msgid "Unable to delete root folder"
+#~ msgstr "Impossível apagar a pasta raiz"
+
+#, python-format
+#~ msgid "Unknown attribute: %s"
+#~ msgstr "Atributo desconhecido: %s"
+
+#, python-format
+#~ msgid "Unknown tag %s"
+#~ msgstr "Tag desconhecido %s"
+
+#, python-format
+#~ msgid "Unknown tag group %s"
+#~ msgstr "Grupo de etiquetas desconhecido %s"
+
+#~ msgid "Updated host tags through Web-API"
+#~ msgstr "Tags de anfitrião actualizadas através de Web-API"
+
+#~ msgid "You have to specify some hosts"
+#~ msgstr "Você tem que especificar alguns anfitriões"
 
 #~ msgid "Search result(s) preview"
 #~ msgstr "Pré-visualização do(s) resultado(s) da pesquisa"
@@ -68025,9 +68254,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 #~ msgstr ""
 #~ "O evento foi arquivado porque nenhuma regra correspondeu e o arquivamento "
 #~ "é ativado em configurações globais."
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "O evento foi apagado automaticamente"
 
 #~ msgid "Exchanges"
 #~ msgstr "Trocas"

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from tests.testlib import Check  # type: ignore[import]
+from tests.testlib import Check
 
 
 def _get_and_try_cast_to_int(key, container, default_value=None):

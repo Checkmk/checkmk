@@ -8,7 +8,7 @@ import functools
 import http.client as http_client
 import json
 import traceback
-from typing import Callable, Dict, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING
 
 import livestatus
 
@@ -39,7 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.logging_filters import PrependURLFilter
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
@@ -155,7 +155,7 @@ def _render_exception(e: Exception, title: str) -> Response:
     return response
 
 
-def default_response_headers(req: http.Request) -> Dict[str, str]:
+def default_response_headers(req: http.Request) -> dict[str, str]:
     headers = {
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh

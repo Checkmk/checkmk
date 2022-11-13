@@ -4,14 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disallow_untyped_defs
-
 from typing import Tuple
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_daemonset_info import check_kube_daemonset_info
-from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo, Selector, ThinContainers
+from cmk.base.plugins.agent_based.utils.kube import (
+    DaemonSetInfo,
+    NamespaceName,
+    Selector,
+    ThinContainers,
+    Timestamp,
+)
 
 
 @pytest.mark.parametrize(
@@ -20,12 +25,12 @@ from cmk.base.plugins.agent_based.utils.kube import DaemonSetInfo, Selector, Thi
         pytest.param(
             DaemonSetInfo(
                 name="oh-lord",
-                namespace="have-mercy",
+                namespace=NamespaceName("have-mercy"),
                 labels={},
                 annotations={},
                 selector=Selector(match_labels={}, match_expressions=[]),
-                creation_timestamp=1600000000.0,
-                containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
+                creation_timestamp=Timestamp(1600000000.0),
+                containers=ThinContainers(images=frozenset({"i/name:0.5"}), names=["name"]),
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
             ),

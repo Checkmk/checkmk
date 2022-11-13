@@ -16,8 +16,7 @@
 
 namespace cma::tools {
 
-namespace {
-void ClosePi(PROCESS_INFORMATION &pi) noexcept {
+inline void ClosePi(PROCESS_INFORMATION &pi) noexcept {
     if (pi.hProcess != nullptr) {
         ::CloseHandle(pi.hProcess);
         pi.hProcess = nullptr;
@@ -27,17 +26,16 @@ void ClosePi(PROCESS_INFORMATION &pi) noexcept {
         pi.hThread = nullptr;
     }
 }
-}  // namespace
 
 inline bool RunCommandAndWait(const std::wstring &command,
                               const std::wstring_view work_dir) {
     STARTUPINFOW si{0};
-    ::memset(&si, 0, sizeof(si));
-    si.cb = sizeof(STARTUPINFO);
+    ::memset(&si, 0, sizeof si);
+    si.cb = sizeof STARTUPINFO;
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi{nullptr};
-    ::memset(&pi, 0, sizeof(pi));
+    ::memset(&pi, 0, sizeof pi);
     // CREATE_NEW_CONSOLE
 
     const auto *working_folder = work_dir.empty() ? nullptr : work_dir.data();
@@ -67,12 +65,12 @@ inline bool RunCommandAndWait(const std::wstring &command) {
 
 inline bool RunDetachedCommand(const std::string &command) {
     STARTUPINFOA si{0};
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(STARTUPINFO);
+    memset(&si, 0, sizeof si);
+    si.cb = sizeof STARTUPINFO;
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi{nullptr};
-    memset(&pi, 0, sizeof(pi));
+    memset(&pi, 0, sizeof pi);
 
     if (std::string c{command};
         ::CreateProcessA(nullptr,   // stupid windows want null here
@@ -103,8 +101,8 @@ inline uint32_t RunStdCommand(
     DWORD start_flags) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(STARTUPINFO);
+    memset(&si, 0, sizeof si);
+    si.cb = sizeof STARTUPINFO;
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
@@ -113,7 +111,7 @@ inline uint32_t RunStdCommand(
     }
 
     PROCESS_INFORMATION pi{nullptr};
-    memset(&pi, 0, sizeof(pi));
+    memset(&pi, 0, sizeof pi);
 
     if (std::wstring c{command};
         ::CreateProcessW(nullptr,         // stupid windows want null here
@@ -150,8 +148,8 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     DWORD start_flags) noexcept {
     // windows "boiler plate"
     STARTUPINFOW si{0};
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(STARTUPINFO);
+    memset(&si, 0, sizeof si);
+    si.cb = sizeof STARTUPINFO;
     si.dwFlags = start_flags;
     si.hStdOutput = stdio_handle;
     si.hStdError = stderr_handle;
@@ -159,7 +157,7 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
     }
     PROCESS_INFORMATION pi{nullptr};
-    memset(&pi, 0, sizeof(pi));
+    memset(&pi, 0, sizeof pi);
     // -end-
 
     auto *job_handle = ::CreateJobObjectA(nullptr, nullptr);
@@ -215,8 +213,8 @@ inline bool IsElevated() {
 
     TOKEN_ELEVATION elevation{0};
 
-    if (DWORD size = sizeof(TOKEN_ELEVATION); ::GetTokenInformation(
-            token, TokenElevation, &elevation, sizeof(elevation), &size)) {
+    if (DWORD size = sizeof TOKEN_ELEVATION; ::GetTokenInformation(
+            token, TokenElevation, &elevation, sizeof elevation, &size)) {
         return elevation.TokenIsElevated == TRUE;
     }
     return false;

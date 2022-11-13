@@ -31,6 +31,8 @@ RUN \
     PYMONGO="pymongo==3.7.2" ; \
     elif [ "$PYTHON_VERSION" = "3.3" ]; then \
     PYMONGO="pymongo==3.5.1" ; \
+    elif [ "$PYTHON_VERSION" = "3.4" ]; then \
+    PYMONGO="pymongo==3.12" ; \
     else \
     PYMONGO="pymongo" ; \
     fi && \

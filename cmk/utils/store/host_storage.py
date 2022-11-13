@@ -221,7 +221,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
             if len(entries) > 0:
                 out.write("\n# Explicit settings for %s\n" % varname)
                 out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
-                out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
+                out.write(f"explicit_host_conf['{varname}'].update({entries!r})\n")
 
         if folder_host_contactgroups := contact_groups["folder_hosts"]:
             out.write("\nhost_contactgroups.insert(0, \n%r)\n" % folder_host_contactgroups)
@@ -385,7 +385,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             global_dict[global_key].clear()
             global_dict[global_key].extend(new_cgs)
 
-        # Dict based settings with {key: value}
+        # dict-based settings with {key: value}
         for key in [
             "clusters",
             "host_tags",
@@ -401,7 +401,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
         ]:
             global_dict[key].update(data.get(key, {}))
 
-        # Dict based setting with {key: {another_key: value}}
+        # dict-based setting with {key: {another_key: value}}
         for explicit_name, values in data.get("explicit_host_conf", {}).items():
             global_dict["explicit_host_conf"].setdefault(explicit_name, {}).update(values)
 

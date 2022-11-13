@@ -505,9 +505,9 @@ def test_inventory_verbose(execute) -> None:  # type:ignore[no-untyped-def]
         assert p.stderr == ""
         assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
         stdout_words = p.stdout.split()
-        assert "check_mk" in stdout_words
-        assert "lnx_if" in stdout_words
-        assert "mem" in stdout_words
+        for expected_word in ("check_mk:", "lnx_if:", "mem:"):
+            assert expected_word in stdout_words
+            assert stdout_words[stdout_words.index(expected_word) + 1] == "ok"
 
 
 # .

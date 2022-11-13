@@ -12,7 +12,7 @@
 namespace cma::evl {
 std::vector<std::wstring> MessageResolver::getMessageFiles(
     LPCWSTR source) const {
-    static const std::wstring base =
+    static const auto base =
         std::wstring(L"SYSTEM\\CurrentControlSet\\Services\\EventLog");
     std::wstring regpath = base + L"\\" + _name + L"\\" + source;
 
@@ -47,7 +47,7 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
 
     // result may be multiple dlls
     std::vector<std::wstring> result;
-    std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
+    std::wstringstream str(reinterpret_cast<wchar_t *>(buffer.data()));
     std::wstring dll_path;
     while (std::getline(str, dll_path, L';')) {
         result.push_back(dll_path);
@@ -69,7 +69,8 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            XLOG::l("Failed to load dll '{}' error = [{}]", wtools::ToUtf8(dllpath), ::GetLastError());
+            XLOG::l("Failed to load dll '{}' error = [{}]",
+                    wtools::ToUtf8(dllpath), ::GetLastError());
             return {};
         }
     }
@@ -77,15 +78,15 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
     std::wstring result;
     result.resize(8192);
 
-    DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
+    DWORD flags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
     if (dll) {
-        dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+        flags |= FORMAT_MESSAGE_FROM_HMODULE;
     }
 
-    DWORD len = ::FormatMessageW(dwFlags, dll, event_id,
-                                 0,  // accept any language
-                                 &result[0], static_cast<DWORD>(result.size()),
-                                 (char **)parameters);
+    DWORD len = ::FormatMessageW(
+        flags, dll, event_id,
+        0,  // accept any language
+        result.data(), static_cast<DWORD>(result.size()), (char **)parameters);
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);
@@ -123,27 +124,27 @@ public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}
 
-    virtual uint64_t recordId() const override {
+    [[nodiscard]] uint64_t recordId() const override {
         return static_cast<uint64_t>(_record->RecordNumber);
     }
 
-    virtual uint16_t eventId() const override {
-        return _record->EventID % 65536;
+    [[nodiscard]] uint16_t eventId() const override {
+        return static_cast<uint16_t>(_record->EventID % 65536);
     }
 
-    virtual uint16_t eventQualifiers() const override {
-        return (uint16_t)(_record->EventID / 65536);
+    [[nodiscard]] uint16_t eventQualifiers() const override {
+        return static_cast<uint16_t>(_record->EventID / 65536);
     }
 
-    virtual time_t timeGenerated() const override {
+    [[nodiscard]] time_t timeGenerated() const override {
         return _record->TimeGenerated;
     }
 
-    virtual std::wstring source() const override {
-        return std::wstring(reinterpret_cast<LPCWSTR>(_record + 1));
+    [[nodiscard]] std::wstring source() const override {
+        return {reinterpret_cast<LPCWSTR>(_record + 1)};
     }
 
-    virtual Level eventLevel() const override {
+    [[nodiscard]] Level eventLevel() const override {
         switch (_record->EventType) {
             case EVENTLOG_ERROR_TYPE:
                 return Level::error;
@@ -162,11 +163,11 @@ public:
         }
     }
 
-    virtual std::wstring makeMessage() const override {
+    [[nodiscard]] std::wstring makeMessage() const override {
         // prepare array of zero terminated strings to be inserted
         // into message template.
         std::vector<LPCWSTR> strings;
-        LPCWSTR string = (WCHAR *)(((char *)_record) + _record->StringOffset);
+        LPCWSTR string = (WCHAR *)((char *)_record + _record->StringOffset);
         for (int i = 0; i < _record->NumStrings; ++i) {
             strings.push_back(string);
             string += wcslen(string) + 1;
@@ -179,7 +180,7 @@ public:
         strings.push_back(nullptr);
 
         return _resolver.resolve(_record->EventID, source().c_str(),
-                                 &strings[0]);
+                                 strings.data());
     }
 
 private:
@@ -187,8 +188,8 @@ private:
     const MessageResolver &_resolver;
 };
 
-EventLog::EventLog(const std::wstring &Name)
-    : name_(Name), message_resolver_(Name) {
+EventLog::EventLog(const std::wstring &name)
+    : name_(name), message_resolver_(name) {
     handle_ = OpenEventLogW(nullptr, name_.c_str());
 
     if (handle_ == nullptr) {
@@ -206,11 +207,11 @@ void EventLog::seek(uint64_t record_number) {
     DWORD recordCount = 0;
 
     if (GetOldestEventLogRecord(handle_, &oldestRecord) &&
-        (record_number < oldestRecord)) {
+        record_number < oldestRecord) {
         // Beyond the oldest record:
         record_offset_ = oldestRecord;
     } else if (GetNumberOfEventLogRecords(handle_, &recordCount) &&
-               (record_number >= oldestRecord + recordCount)) {
+               record_number >= oldestRecord + recordCount) {
         // Beyond the newest record. Note: set offset intentionally to the next
         // record after the currently last one!
         record_offset_ = oldestRecord + recordCount;
@@ -226,7 +227,7 @@ EventLogRecordBase *EventLog::readRecord() {
     while (result == nullptr) {
         while (buffer_offset_ < buffer_used_) {
             auto temp =
-                reinterpret_cast<EVENTLOGRECORD *>(&(buffer_[buffer_offset_]));
+                reinterpret_cast<EVENTLOGRECORD *>(&buffer_[buffer_offset_]);
             buffer_offset_ += temp->Length;
             // as long as seeking on this event log is possible this will
             // always be true.
@@ -280,7 +281,7 @@ bool EventLog::fillBuffer() {
     }
 
     DWORD flags = EVENTLOG_FORWARDS_READ;
-    if ((record_offset_ != 0) && (seek_possible_)) {
+    if (record_offset_ != 0 && seek_possible_) {
         flags |= EVENTLOG_SEEK_READ;
     } else {
         flags |= EVENTLOG_SEQUENTIAL_READ;
@@ -307,8 +308,7 @@ bool EventLog::fillBuffer() {
         return fillBuffer();
     }
 
-    if ((error == ERROR_INVALID_PARAMETER) &&
-        0 != (flags & EVENTLOG_SEEK_READ)) {
+    if (error == ERROR_INVALID_PARAMETER && 0 != (flags & EVENTLOG_SEEK_READ)) {
         // if error during "seek_read" we should retry with
         // sequential read
         // the most likely cause for this error (since our

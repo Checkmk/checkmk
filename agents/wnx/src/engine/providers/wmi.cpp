@@ -9,7 +9,6 @@
 
 #include <chrono>
 #include <iostream>
-#include <ranges>
 #include <string>
 #include <unordered_map>
 
@@ -33,7 +32,7 @@ bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator) {
     // for very old servers
-    if (!g_add_wmi_status_column) {
+    if constexpr (!g_add_wmi_status_column) {
         return wmi_data;
     }
 
@@ -70,6 +69,8 @@ struct WmiSource {
     std::vector<std::wstring> service_names;
 };
 
+#if 0
+/// reference
 const std::vector<std::wstring> msexch_service_all_names = {
     L"MSExchangeADTopology",
     L"MSExchangeAntispamUpdate",
@@ -101,7 +102,7 @@ const std::vector<std::wstring> msexch_service_all_names = {
     L"MSExchangeUM",
     L"MSExchangeUMCR",
 };
-
+#endif
 const std::vector<std::wstring> msexch_service_reasonable_names = {
     L"MSExchangeDiagnostics",
     L"MSExchangeHM",
@@ -303,7 +304,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
     const auto object_name = wtools::ToUtf8(wmi_object);
     tools::TimeLog tl(object_name);  // start measure
-    const auto id = [&]() {
+    const auto id = [&] {
         return fmt::format(R"("{}\{}")", wtools::ToUtf8(wmi_namespace),
                            object_name);
     };
@@ -474,4 +475,4 @@ std::string SubSection::generateContent(Mode mode) {
     }
     return {};
 }
-};  // namespace cma::provider
+}  // namespace cma::provider

@@ -4,10 +4,9 @@
 // source code package.
 
 #pragma once
-#ifndef wmi_h__
-#define wmi_h__
+#ifndef WMI_H
+#define WMI_H
 
-#include <chrono>
 #include <string>
 #include <string_view>
 
@@ -39,7 +38,7 @@ class SubSection {
 public:
     enum class Type {
         sub,  // [name]
-        full  //<<<name>>>
+        full  // <<<name>>>
     };
 
     enum class Mode {
@@ -50,15 +49,14 @@ public:
         : uniq_name_(name), type_(type) {
         setupByName();
     }
-    virtual ~SubSection() = default;
 
     [[nodiscard]] std::string getUniqName() const noexcept {
         return uniq_name_;
     }
 
     std::string generateContent(Mode mode);
-    auto object() const noexcept { return object_; }
-    auto nameSpace() const noexcept { return name_space_; }
+    [[nodiscard]] auto object() const noexcept { return object_; }
+    [[nodiscard]] auto nameSpace() const noexcept { return name_space_; }
 
 protected:
     // internal function which correctly sets all parameters
@@ -136,6 +134,6 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator);
-};  // namespace cma::provider
+}  // namespace cma::provider
 
-#endif  // wmi_h__
+#endif  // WMI_H

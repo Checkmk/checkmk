@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, List, Optional, Sequence, Tuple, TypeGuard, TypeVar, Union
+from collections.abc import Callable, Sequence
+from typing import Literal, TypeGuard, TypeVar
 
 from livestatus import OnlySites, SiteId
 
@@ -12,9 +13,8 @@ from cmk.utils.defines import short_service_state_name
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.data_source import ABCDataSource, data_source_registry, row_id
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -23,27 +23,16 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import RowTableLivestatus
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
+from cmk.gui.painters.v0.base import Cell, declare_1to1_sorter, Painter, painter_registry
+from cmk.gui.painters.v0.helpers import paint_nagiosflag
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashletConfig,
     LinkedViewDashletConfig,
     ViewDashletConfig,
 )
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    cmp_num_split,
-    cmp_simple_number,
-    cmp_simple_string,
-    Command,
-    command_registry,
-    CommandActionResult,
-    CommandSpec,
-    declare_1to1_sorter,
-    paint_nagiosflag,
-    Painter,
-    painter_registry,
-)
 from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.sorter import cmp_num_split, cmp_simple_number, cmp_simple_string
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -53,15 +42,16 @@ from cmk.gui.type_defs import (
     SingleInfos,
     SorterSpec,
     ViewSpec,
+    VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
-from cmk.gui.view import View
 from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -76,18 +66,22 @@ from cmk.gui.view_utils import CellSpec
 class RowTableEC(RowTableLivestatus):
     def query(
         self,
-        view: View,
-        columns: List[ColumnName],
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)
 
-        row_data = super().query(view, columns, headers, only_sites, limit, all_active_filters)
+        row_data = super().query(
+            datasource, cells, columns, context, headers, only_sites, limit, all_active_filters
+        )
 
         if isinstance(row_data, tuple):
             rows, _unfiltered_amount_of_rows = row_data
@@ -169,7 +163,7 @@ permission_registry.register(
             "If a user lacks this permission then he/she can see only those events that "
             "originate from a host that he/she is a contact for."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 
@@ -183,7 +177,7 @@ permission_registry.register(
             "controls wether he/she can see events that are not related to a host in the monitoring "
             "and that do not have been assigned specific contact groups to via the event rule."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 
@@ -196,7 +190,7 @@ permission_registry.register(
             "Whether or not the user is permitted to see the number of open events in the "
             "sidebar element 'Overview'."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 
@@ -636,7 +630,7 @@ class PainterEventPid(Painter):
 T = TypeVar("T")
 
 
-def _deref(x: Union[T, Callable[[], T]]) -> T:
+def _deref(x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
@@ -762,7 +756,7 @@ def paint_event_icons(row, history=False):
     return "", ""
 
 
-def render_event_phase_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
+def render_event_phase_icons(row: Row) -> str | HTML:
     phase = row["event_phase"]
 
     if phase == "ack":
@@ -777,14 +771,14 @@ def render_event_phase_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
     return html.render_icon(phase, title=title)
 
 
-def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
+def render_delete_event_icons(row: Row) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    filename: Optional[str] = None
+    filename: str | None = None
     if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
@@ -1116,7 +1110,7 @@ class ECCommand(Command):
     def tables(self):
         return ["event"]
 
-    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
+    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
         assert isinstance(command, str)
@@ -1137,7 +1131,9 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1169,7 +1165,7 @@ class CommandECUpdateEvent(ECCommand):
         html.button("_mkeventd_update", _("Update"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
@@ -1227,7 +1223,9 @@ class CommandECChangeState(ECCommand):
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" of the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1239,11 +1237,12 @@ class CommandECChangeState(ECCommand):
         MonitoringState().render_input("_mkeventd_state", 2)
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
+            events = ",".join([str(entry["event_id"]) for entry in action_rows])
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], user.id, state), _("change the state")
+            return "CHANGESTATE;%s;%s;%s" % (events, user.id, state), _("change the state")
         return None
 
 
@@ -1275,7 +1274,9 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" for the following %d Event Console  %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1287,7 +1288,7 @@ class CommandECCustomAction(ECCommand):
             html.br()
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
@@ -1321,7 +1322,9 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1331,7 +1334,7 @@ class CommandECArchiveEvent(ECCommand):
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
@@ -1381,26 +1384,10 @@ class CommandECArchiveEventsOfHost(ECCommand):
         html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
-            if cmdtag == "HOST":
-                tag: Optional[str] = "host"
-            elif cmdtag == "SVC":
-                tag = "service"
-            else:
-                tag = None
-
-            commands = []
-            if tag and row.get("%s_check_command" % tag, "").startswith("check_mk_active-mkevents"):
-                data = sites.live().query(
-                    "GET eventconsoleevents\n"
-                    + "Columns: event_id\n"
-                    + "Filter: host_name = %s" % row["host_name"]
-                )
-                events = ",".join([str(entry[0]) for entry in data])
-                commands = ["DELETE;%s;%s" % (events, user.id)]
-
+            commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
             return commands, "<b>archive all events</b> of"
         return None
 

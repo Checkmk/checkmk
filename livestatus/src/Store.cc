@@ -217,7 +217,8 @@ void Store::answerCommandRequest(const ExternalCommand &command) {
         return;
     }
     if (mk::starts_with(command.name(), "EC_")) {
-        answerCommandEventConsole(command);
+        answerCommandEventConsole("COMMAND " + command.name().substr(3) +
+                                  command.arguments());
         return;
     }
     // Nagios doesn't have a LOG command, so we map it to the custom command
@@ -259,16 +260,15 @@ private:
 };
 }  // namespace
 
-void Store::answerCommandEventConsole(const ExternalCommand &command) {
+void Store::answerCommandEventConsole(const std::string &command) {
     if (!_mc->mkeventdEnabled()) {
         Notice(logger()) << "event console disabled, ignoring command '"
-                         << command.str() << "'";
+                         << command << "'";
         return;
     }
     try {
-        ECTableConnection(
-            logger(), _mc->mkeventdSocketPath(),
-            "COMMAND " + command.name().substr(3) + command.arguments())
+        ECTableConnection(_mc->loggerLivestatus(), _mc->mkeventdSocketPath(),
+                          command)
             .run();
     } catch (const std::runtime_error &err) {
         Alert(logger()) << err.what();

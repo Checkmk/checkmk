@@ -5,7 +5,6 @@
 
 from typing import Callable, TypeVar
 
-import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
@@ -29,6 +28,12 @@ from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.page_edit_view import (
+    create_view_from_valuespec,
+    render_view_config,
+    view_choices,
+)
+from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -73,7 +78,6 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         # valued filters(UX). Those need to be cleared out. Otherwise those
         # empty filters are the highest priority filters and the user can never
         # filter the view.
-
         view_context = {
             filtername: filtervalues
             for filtername, filtervalues in view_spec["context"].items()
@@ -87,17 +91,19 @@ class ABCViewDashlet(IFrameDashlet[VT]):
                 or (not var.startswith("is_") and value)  # Rest of filters with some value
             }
         }
-        context = visuals.get_merged_context(self.context, view_context)
+        # context of dashlet has to be merged after view context, otherwise the
+        # context of the view is always used
+        context = visuals.get_merged_context(view_context, self.context)
 
         # We are only interested in the ViewSpec specific attributes here. Once we have the full
         # picture (dashlets typed (already done) and reports typed), we can better decide how to do
         # it
         view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
-        view.row_limit = views.get_limit()
+        view.row_limit = get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
-        view.user_sorters = views.get_user_sorters()
+        view.user_sorters = get_user_sorters()
 
-        views.process_view(GUIViewRenderer(view, show_buttons=False))
+        process_view(GUIViewRenderer(view, show_buttons=False))
 
         html.close_div()
 
@@ -130,12 +136,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         Callable[[DashletId, ViewDashletConfig, ViewDashletConfig], ViewDashletConfig],
     ]:
         def _render_input(dashlet: ViewDashletConfig) -> None:
-            # TODO: Don't modify the self._dashlet data structure here!
-            views.transform_view_to_valuespec_value(dashlet)
-            # We are only interested in the ViewSpec specific attributes here. Once we have the full
-            # picture (dashlets typed (already done) and reports typed), we can better decide how to do
-            # it
-            views.render_view_config(dashlet)  # type: ignore[arg-type]
+            render_view_config(dashlet)
 
         def _handle_input(
             ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig
@@ -150,7 +151,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             dashlet.setdefault("add_context_to_title", True)
             dashlet.setdefault("is_show_more", False)
 
-            return views.create_view_from_valuespec(old_dashlet, dashlet)
+            return create_view_from_valuespec(old_dashlet, dashlet)
 
         return _render_input, _handle_input
 
@@ -205,7 +206,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
                         "In case a user is not permitted to see a view, an error message will be "
                         "displayed."
                     ),
-                    choices=views.view_choices,
+                    choices=view_choices,
                     sorted=True,
                 ),
             ),
@@ -231,7 +232,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return view_spec
 
     def default_display_title(self) -> str:
-        return visuals.visual_title("view", dict(self._get_view_spec()), self.context)
+        return visuals.visual_title("view", self._get_view_spec(), self.context)
 
     def title_url(self) -> str:
         view_name = self._dashlet_spec["name"]

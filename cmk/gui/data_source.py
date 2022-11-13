@@ -7,30 +7,33 @@ from __future__ import annotations
 
 import abc
 import hashlib
-from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from livestatus import OnlySites
 
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 
 if TYPE_CHECKING:
-    from cmk.gui.view import View
+    from cmk.gui.painters.v0.base import Cell
 
 
 class RowTable(abc.ABC):
     @abc.abstractmethod
     def query(
         self,
-        view: "View",
-        columns: List[ColumnName],
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         raise NotImplementedError()
 
 
@@ -51,7 +54,7 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def table(self) -> "RowTable":
+    def table(self) -> RowTable:
         """Returns a table object that can provide a list of rows for the provided
         query using the query() method."""
         raise NotImplementedError()
@@ -68,7 +71,7 @@ class ABCDataSource(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def merge_by(self) -> Optional[str]:
+    def merge_by(self) -> str | None:
         """
         1. Results in fetching these columns from the datasource.
         2. Rows from different sites are merged together. For example members
@@ -78,13 +81,13 @@ class ABCDataSource(abc.ABC):
         return None
 
     @property
-    def add_columns(self) -> List[ColumnName]:
+    def add_columns(self) -> list[ColumnName]:
         """These columns are requested automatically in addition to the
         other needed columns."""
         return []
 
     @property
-    def unsupported_columns(self) -> List[ColumnName]:
+    def unsupported_columns(self) -> list[ColumnName]:
         """These columns are ignored, e.g. 'site' for DataSourceBIAggregations"""
         return []
 
@@ -95,7 +98,7 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         """columns which must be fetched in order to execute commands on
         the items (= in order to identify the items and gather all information
         needed for constructing Nagios commands)
@@ -104,13 +107,13 @@ class ABCDataSource(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         """These are used to generate a key which is unique for each data row
         is used to identify an item between http requests"""
         raise NotImplementedError()
 
     @property
-    def join(self) -> Optional[Tuple[str, str]]:
+    def join(self) -> tuple[str, str] | None:
         """A view can display e.g. host-rows and include information from e.g.
         the service table to create a column which shows e.g. the state of one
         service.
@@ -122,7 +125,7 @@ class ABCDataSource(abc.ABC):
         return None
 
     @property
-    def join_key(self) -> Optional[str]:
+    def join_key(self) -> str | None:
         """Each joined column in the view can have a 4th attribute which is
         used as value for this column to filter the datasource query
         to get the matching row of the slave table."""
@@ -143,11 +146,11 @@ class ABCDataSource(abc.ABC):
         return "read"
 
     @property
-    def time_filters(self) -> List[str]:
+    def time_filters(self) -> list[str]:
         return []
 
     @property
-    def link_filters(self) -> Dict[str, str]:
+    def link_filters(self) -> dict[str, str]:
         """When the single info "hostgroup" is used, use the "opthostgroup" filter
         to handle the data provided by the single_spec value of the "hostgroup"
         info, which is in fact the name of the wanted hostgroup"""
@@ -160,12 +163,12 @@ class ABCDataSource(abc.ABC):
         return rows
 
 
-class DataSourceRegistry(Registry[Type[ABCDataSource]]):
-    def plugin_name(self, instance: Type[ABCDataSource]) -> str:
+class DataSourceRegistry(Registry[type[ABCDataSource]]):
+    def plugin_name(self, instance: type[ABCDataSource]) -> str:
         return instance().ident
 
     # TODO: Sort the datasources by (assumed) common usage
-    def data_source_choices(self) -> List[Tuple[str, str]]:
+    def data_source_choices(self) -> list[tuple[str, str]]:
         datasources = []
         for ident, ds_class in self.items():
             datasources.append((ident, ds_class().title))

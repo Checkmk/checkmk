@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef onlyfrom_h__
-#define onlyfrom_h__
+#ifndef ONLYFROM_H
+#define ONLYFROM_H
 
 #include <string>
 #include <string_view>
@@ -31,4 +31,4 @@ std::string MapToV6Network(std::string_view network);
 
 }  // namespace cma::cfg::of
 
-#endif  // onlyfrom_h__
+#endif  // ONLYFROM_H

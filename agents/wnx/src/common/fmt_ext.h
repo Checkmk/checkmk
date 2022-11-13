@@ -30,12 +30,12 @@ struct fmt::formatter<YAML::NodeType::value> {
                 return "Scalar";
             case YAML::NodeType::value::Sequence:
                 return "Sequence";
-            default:
-                return "Unknown";
         }
+        // unreachable
+        return "Unknown";
     }
 
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -48,7 +48,7 @@ struct fmt::formatter<YAML::NodeType::value> {
 
 template <>
 struct fmt::formatter<std::exception> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -68,7 +68,7 @@ struct fmt::formatter<std::system_error> : fmt::formatter<std::exception> {};
 
 template <>
 struct fmt::formatter<std::filesystem::path> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -81,7 +81,7 @@ struct fmt::formatter<std::filesystem::path> {
 
 template <>
 struct fmt::formatter<std::chrono::milliseconds> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -94,7 +94,7 @@ struct fmt::formatter<std::chrono::milliseconds> {
 
 template <>
 struct fmt::formatter<std::chrono::seconds> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -107,7 +107,7 @@ struct fmt::formatter<std::chrono::seconds> {
 
 template <>
 struct fmt::formatter<std::chrono::microseconds> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -120,7 +120,7 @@ struct fmt::formatter<std::chrono::microseconds> {
 
 template <>
 struct fmt::formatter<std::chrono::nanoseconds> {
-    static constexpr auto parse(format_parse_context &ctx) {
+    static constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }
@@ -133,7 +133,7 @@ struct fmt::formatter<std::chrono::nanoseconds> {
 
 template <typename T>
 struct fmt::formatter<std::optional<T>> {
-    constexpr auto parse(format_parse_context &ctx) {
+    constexpr auto parse(const format_parse_context &ctx) {
         // Return an iterator past the end of the parsed range:
         return ctx.end();
     }

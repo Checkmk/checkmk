@@ -6,7 +6,7 @@
 import subprocess
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from six import ensure_str
 
@@ -88,7 +88,7 @@ def save_gui_messages(messages, user_id=None):
     store.save_object_to_file(path, messages)
 
 
-def _messaging_methods() -> Dict[str, Dict[str, Any]]:
+def _messaging_methods() -> dict[str, dict[str, Any]]:
     return {
         "gui_popup": {
             "title": _("Show popup message"),
@@ -188,7 +188,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
 
 
 def _vs_message():
-    dest_choices: List[CascadingDropdownChoice] = [
+    dest_choices: list[CascadingDropdownChoice] = [
         ("all_users", _("All users")),
         (
             "list",
@@ -301,12 +301,12 @@ def _process_message_message(msg):  # pylint: disable=too-many-branches
 
     num_recipients = len(recipients)
 
-    num_success: Dict[str, int] = {}
+    num_success: dict[str, int] = {}
     for method in msg["methods"]:
         num_success[method] = 0
 
     # Now loop all messaging methods to send the messages
-    errors: Dict[str, List[Tuple]] = {}
+    errors: dict[str, list[tuple]] = {}
     for user_id in recipients:
         for method in msg["methods"]:
             try:

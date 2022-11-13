@@ -9,23 +9,18 @@
 
 #include <filesystem>
 #include <random>
-#include <ranges>
 #include <string>
-#include <string_view>
 
 #include "algorithm"  // for remove_if
 #include "cfg.h"
+#include "cfg_details.h"
 #include "corecrt_terminate.h"  // for terminate
-#include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
 #include "fmt/xchar.h"
 #include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
-#include "tools/_tgt.h"          // for IsDebug
-#include "yaml-cpp/emitter.h"    // for Emitter
-#include "yaml-cpp/node/emit.h"  // for operator<<
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;
@@ -59,7 +54,6 @@ std::string GetFabricYmlContent() {
 class TestEnvironment : public ::testing::Environment {
 public:
     static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
-    ~TestEnvironment() override = default;
 
     void SetUp() override {
         if (fs::path base_dir =
@@ -75,7 +69,7 @@ public:
     }
 
     void TearDown() override {
-        if (temp_dir_.u8string().find(temp_test_prefix_)) {
+        if (wtools::ToStr(temp_dir_).find(temp_test_prefix_)) {
             std::error_code ec;
             fs::remove_all(temp_dir_, ec);
             if (ec) {
@@ -170,23 +164,6 @@ void SafeCleanTempDir() {
         XLOG::l("error removing '{}' with {} ", temp_dir, ec.message());
     }
     fs::create_directory(temp_dir);
-}
-
-void SafeCleanTmpxDir() {
-    if (very_temp != "tmpx") {
-        XLOG::l.crit(
-            "Recursive folder remove is allowed only for very temporary folders");
-        std::terminate();
-        return;
-    }
-
-    // clean
-    std::error_code ec;
-    fs::remove_all(very_temp, ec);
-    if (ec) {
-        XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(very_temp),
-                ec.message());
-    }
 }
 
 void SafeCleanTempDir(std::string_view sub_dir) {
@@ -309,7 +286,7 @@ std::wstring GenerateRandomFileName() noexcept {
     std::random_device rd;
     std::mt19937 generator(rd());
 
-    std::uniform_int_distribution<> dist(
+    std::uniform_int_distribution dist(
         0, static_cast<int>(possible_characters.size()) - 1);
     std::wstring ret;
     constexpr size_t kMaxLen{12};
@@ -463,7 +440,7 @@ bool WaitForSuccess(std::chrono::milliseconds ms, WaitForSuccessMode mode,
     auto success = false;
 
     for (int i = 0; i < count; i++) {
-        if ((mode == WaitForSuccessMode::indicate) && (i % 10 == 9)) {
+        if (mode == WaitForSuccessMode::indicate && i % 10 == 9) {
             xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
         }
         if (predicat()) {

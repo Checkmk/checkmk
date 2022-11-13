@@ -6,7 +6,7 @@
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, NamedTuple, Type
+from typing import Any, NamedTuple
 
 from marshmallow import fields, pre_dump
 
@@ -29,6 +29,22 @@ from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.sample_configs import bi_sample_config
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
+
+
+class DeleteErrorUsedByAggregation(MKGeneralException):
+    pass
+
+
+class DeleteErrorUsedByRule(MKGeneralException):
+    pass
+
+
+class RuleNotFoundException(MKGeneralException):
+    pass
+
+
+class AggregationNotFoundException(MKGeneralException):
+    pass
 
 
 class RuleReferencesResult(NamedTuple):
@@ -62,7 +78,7 @@ class BIAggregationPack:
         }
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationPackSchema"]:
+    def schema(cls) -> type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
 
     def serialize(self):
@@ -121,7 +137,7 @@ class BIAggregationPacks:
         self._bi_configuration_file = bi_configuration_file
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationPacksSchema"]:
+    def schema(cls) -> type["BIAggregationPacksSchema"]:
         return BIAggregationPacksSchema
 
     def cleanup(self) -> None:
@@ -157,17 +173,17 @@ class BIAggregationPacks:
         bi_rule = self.get_rule(rule_id)
         if bi_rule:
             return bi_rule
-        raise MKGeneralException(_("The requested BI rule does not exist."))
+        raise RuleNotFoundException(_("The requested BI rule does not exist."))
 
     def delete_rule(self, rule_id: str) -> None:
         # Only delete a rule if it is not referenced by other rules/aggregations
         references = self.count_rule_references(rule_id)
         if references.aggr_refs:
-            raise MKGeneralException(
+            raise DeleteErrorUsedByAggregation(
                 _("You cannot delete this rule: it is still used by other aggregations.")
             )
         if references.rule_refs:
-            raise MKGeneralException(
+            raise DeleteErrorUsedByRule(
                 _("You cannot delete this rule: it is still used by other rules.")
             )
 
@@ -218,7 +234,7 @@ class BIAggregationPacks:
         bi_aggregation = self.get_aggregation(aggregation_id)
         if bi_aggregation:
             return bi_aggregation
-        raise MKGeneralException(_("The requested BI aggregation does not exist."))
+        raise AggregationNotFoundException(_("The requested BI aggregation does not exist."))
 
     def get_all_aggregations(self) -> list[BIAggregation]:
         aggregations: list[BIAggregation] = []

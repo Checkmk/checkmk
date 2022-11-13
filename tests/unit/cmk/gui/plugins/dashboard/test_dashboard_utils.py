@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Sequence
+
 import pytest
 
+from cmk.utils.macros import MacroMapping
+
 from cmk.gui.plugins.dashboard import utils
+from cmk.gui.type_defs import SingleInfos, VisualContext
 
 
 @pytest.mark.parametrize(
@@ -18,7 +23,7 @@ from cmk.gui.plugins.dashboard import utils
         ),
     ],
 )
-def test_migrate_dashlet_status_display(entry, result) -> None:  # type:ignore[no-untyped-def]
+def test_migrate_dashlet_status_display(entry: dict[str, object], result: str) -> None:
     assert utils.ABCFigureDashlet._migrate_vs(entry) == result
 
 
@@ -113,13 +118,13 @@ def test_migrate_dashlet_status_display(entry, result) -> None:  # type:ignore[n
     ],
 )
 def test_macro_mapping_from_context(
-    monkeypatch,
-    context,
-    single_infos,
-    title,
-    result,
-    additional_macros,
-):
+    monkeypatch: pytest.MonkeyPatch,
+    context: VisualContext,
+    single_infos: SingleInfos,
+    title: str,
+    result: MacroMapping,
+    additional_macros: dict[str, str],
+) -> None:
     monkeypatch.setattr(
         utils,
         "get_alias_of_host",
@@ -157,8 +162,8 @@ def test_macro_mapping_from_context(
         ),
     ],
 )
-def test_get_title_macros_from_single_infos(  # type:ignore[no-untyped-def]
-    single_infos, result
+def test_get_title_macros_from_single_infos(
+    single_infos: SingleInfos, result: Sequence[str]
 ) -> None:
     assert list(utils._get_title_macros_from_single_infos(single_infos)) == result
 
@@ -212,18 +217,7 @@ def test_get_title_macros_from_single_infos(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_title_help_text_for_macros(  # type:ignore[no-untyped-def]
-    monkeypatch, single_infos, additional_macros, result
+def test_title_help_text_for_macros(
+    single_infos: SingleInfos, additional_macros: Iterable[str], result: str
 ) -> None:
-    monkeypatch.setattr(
-        utils.ABCFigureDashlet,
-        "single_infos",
-        lambda: single_infos,
-    )
-    monkeypatch.setattr(
-        utils.ABCFigureDashlet,
-        "get_additional_title_macros",
-        lambda: additional_macros,
-    )
-    # mypy: Only concrete class can be given where "Type[Dashlet]" is expected [misc]
-    assert utils._title_help_text_for_macros(utils.ABCFigureDashlet) == result  # type: ignore[misc]
+    assert utils._title_help_text_for_macros(single_infos, additional_macros) == result

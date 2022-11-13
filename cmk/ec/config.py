@@ -3,10 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import (
+    Collection,
+    Iterable,
+    Iterator,
+    KeysView,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
+from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str] | None
@@ -148,7 +157,10 @@ class Rule(TypedDict, total=False):
     cancel_application: str
     cancel_priority: tuple[int, int]
     contact_groups: ContactGroups
+    count: int
+    disabled: bool
     expect: Expect
+    hits: int
     id: str
     invert_matching: bool
     livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
@@ -171,6 +183,87 @@ class Rule(TypedDict, total=False):
     sl: ServiceLevel
     state: State
 
+
+class ECRulePackSpec(TypedDict, total=False):
+    id: str
+    title: str
+    disabled: bool
+    rules: Collection[Any]  # TODO: This should acutally be Collection[Rule]
+    hits: int  # TODO: This is a GUI-only feature, which doesn't belong here at all.
+    customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
+
+
+class MkpRulePackBindingError(MKException):
+    """Base class for exceptions related to rule pack binding"""
+
+
+class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
+    """
+    An object of this class represents an entry (i.e. a rule pack) in
+    mkp_rule_packs. It is used as a reference to an EC rule pack
+    that either can be exported or is already exported in a MKP.
+
+    A newly created instance is not yet connected to a specific rule pack.
+    This is achieved via the method bind_to.
+    """
+
+    def __init__(self, rule_pack_id: str) -> None:
+        super().__init__()
+        # Ideally the 'id_' would not be necessary and the proxy object would
+        # be bound to it's referenced object upon initialization. Unfortunately,
+        # this is not possible because the mknotifyd.mk could specify referenced
+        # objects as well.
+        self.id_ = rule_pack_id
+        self.rule_pack: ECRulePackSpec | None = None
+
+    def __getitem__(self, key: str) -> Any:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        return self.rule_pack[key]  # type: ignore[literal-required] # TODO: Nuke this!
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        self.rule_pack[key] = value  # type: ignore[literal-required] # TODO: Nuke this!
+
+    def __delitem__(self, key: str) -> None:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        del self.rule_pack[key]  # type: ignore[misc] # TODO: Nuke this!
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}("{self.id_}")'
+
+    # __iter__ and __len__ are only defined as a workaround for a buggy entry
+    # in the typeshed
+    def __iter__(self) -> Iterator[str]:
+        yield from self.keys()
+
+    def __len__(self) -> int:
+        return len(self.keys())
+
+    def keys(self) -> KeysView[str]:
+        """List of keys of this rule pack"""
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        return self.rule_pack.keys()
+
+    def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
+        """Binds this rule pack to the given MKP rule pack"""
+        if self.id_ != mkp_rule_pack["id"]:
+            raise MkpRulePackBindingError(
+                f"The IDs of {self} and {mkp_rule_pack} cannot be different."
+            )
+
+        self.rule_pack = mkp_rule_pack
+
+    @property
+    def is_bound(self) -> bool:
+        """Has this rule pack been bound via bind_to()?"""
+        return self.rule_pack is not None
+
+
+ECRulePack = ECRulePackSpec | MkpRulePackProxy
 
 AuthenticationProtocol = Union[
     Literal["md5"],
@@ -229,13 +322,12 @@ class ConfigFromWATO(TypedDict):
     log_level: LogConfig  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
-    mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
     remote_status: tuple[int, bool, Sequence[str] | None] | None
     replication: Replication | None
     retention_interval: int
     rule_optimizer: bool
-    rule_packs: Sequence[dict[str, Any]]  # TODO: Mutable??? TypedDict
-    rules: Iterable[Rule]
+    rule_packs: Sequence[ECRulePack]
+    rules: Collection[Rule]
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int

@@ -2,8 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::{agent_receiver_api, certs, config, constants, site_spec, types};
+use crate::{agent_receiver_api, certs, config, constants, misc, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
+use log::{error, info};
 
 trait TrustEstablishing {
     fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()>;
@@ -259,7 +260,7 @@ fn direct_registration(
     };
 
     registry.register_connection(
-        post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
+        &post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
         &config.site_id,
         connection,
     );
@@ -308,6 +309,8 @@ pub struct ProxyPullData {
     pub connection: config::TrustedConnection,
 }
 
+impl config::JSONLoader for ProxyPullData {}
+
 pub fn register_host_name(
     config: &config::RegistrationConfigHostName,
     registry: &mut config::Registry,
@@ -346,6 +349,137 @@ pub fn register_agent_labels(
     Ok(())
 }
 
+pub fn register_pre_configured(
+    pre_configured_connections: &config::PreConfiguredConnections,
+    client_config: &config::ClientConfig,
+    registry: &mut config::Registry,
+) -> AnyhowResult<()> {
+    _register_pre_configured(
+        pre_configured_connections,
+        client_config,
+        registry,
+        &RegistrationWithAgentLabelsImpl {},
+    )
+}
+
+fn _register_pre_configured(
+    pre_configured_connections: &config::PreConfiguredConnections,
+    client_config: &config::ClientConfig,
+    registry: &mut config::Registry,
+    registration_with_labels: &impl RegistrationWithAgentLabels,
+) -> AnyhowResult<()> {
+    for (site_id, pre_configured_connection) in pre_configured_connections.connections.iter() {
+        if let Err(error) = process_pre_configured_connection(
+            site_id,
+            pre_configured_connection,
+            &pre_configured_connections.agent_labels,
+            client_config,
+            registry,
+            registration_with_labels,
+        ) {
+            error!(
+                "Error while processing connection {}: {}",
+                site_id,
+                misc::anyhow_error_to_human_readable(&error)
+            )
+        }
+    }
+
+    if !pre_configured_connections.keep_vanished_connections {
+        delete_vanished_connections(
+            registry,
+            registry
+                .registered_site_ids()
+                .filter(|site_id| !pre_configured_connections.connections.contains_key(site_id))
+                .cloned()
+                .collect::<Vec<site_spec::SiteID>>()
+                .iter(),
+        )
+    }
+
+    registry
+        .save()
+        .context("Failed to save registered connections")
+}
+
+trait RegistrationWithAgentLabels {
+    fn register(
+        &self,
+        config: &config::RegistrationConfigAgentLabels,
+        registry: &mut config::Registry,
+    ) -> AnyhowResult<()>;
+}
+
+struct RegistrationWithAgentLabelsImpl;
+
+impl RegistrationWithAgentLabels for RegistrationWithAgentLabelsImpl {
+    fn register(
+        &self,
+        config: &config::RegistrationConfigAgentLabels,
+        registry: &mut config::Registry,
+    ) -> AnyhowResult<()> {
+        register_agent_labels(config, registry)
+    }
+}
+
+fn process_pre_configured_connection(
+    site_id: &site_spec::SiteID,
+    pre_configured: &config::PreConfiguredConnection,
+    agent_labels: &types::AgentLabels,
+    client_config: &config::ClientConfig,
+    registry: &mut config::Registry,
+    registration_with_labels: &impl RegistrationWithAgentLabels,
+) -> AnyhowResult<()> {
+    let receiver_port = match pre_configured.port {
+        Some(receiver_port) => receiver_port,
+        None => site_spec::discover_receiver_port(site_id, client_config)?,
+    };
+
+    if let Some(registered_connection) = registry.get_mutable(site_id) {
+        registered_connection.receiver_port = receiver_port;
+        info!(
+            "Updated agent receiver port for existing connection {}",
+            site_id
+        );
+        return Ok(());
+    }
+
+    let registration_config = config::RegistrationConfigAgentLabels::new(
+        config::RegistrationConnectionConfig {
+            site_id: site_id.clone(),
+            receiver_port,
+            username: pre_configured.credentials.username.clone(),
+            password: Some(pre_configured.credentials.password.clone()),
+            root_certificate: Some(pre_configured.root_cert.clone()),
+            trust_server_cert: false,
+            client_config: client_config.clone(),
+        },
+        agent_labels.clone(),
+    )?;
+
+    registration_with_labels.register(&registration_config, registry)?;
+    info!("Registered new connection {}", site_id);
+
+    Ok(())
+}
+
+fn delete_vanished_connections<'a>(
+    registry: &mut config::Registry,
+    site_ids_to_delete: impl Iterator<Item = &'a site_spec::SiteID>,
+) {
+    for site_id in site_ids_to_delete {
+        if let Err(error) = registry.delete_standard_connection(site_id) {
+            error!(
+                "Error deleting vanished connection {}: {}",
+                site_id,
+                misc::anyhow_error_to_human_readable(&error)
+            )
+        }
+    }
+
+    registry.clear_imported();
+}
+
 pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResult<()> {
     proxy_registration(
         config,
@@ -359,6 +493,7 @@ pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     const SERVER: &str = "server";
     const PORT: u16 = 8000;
@@ -477,11 +612,7 @@ mod tests {
     }
 
     fn registry() -> config::Registry {
-        config::Registry::new(
-            config::RegisteredConnections::default(),
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap()
     }
 
     fn agent_labels() -> types::AgentLabels {
@@ -581,7 +712,7 @@ mod tests {
         }
     }
 
-    mod test_register {
+    mod test_register_manual {
         use super::*;
 
         #[test]
@@ -635,24 +766,299 @@ mod tests {
             assert!(!registry.is_empty());
             assert!(registry.path().exists());
         }
+
+        #[test]
+        fn test_proxy() {
+            assert!(proxy_registration(
+                &config::RegistrationConfigHostName {
+                    connection_config: registration_connection_config(None, None, true),
+                    host_name: String::from(HOST_NAME),
+                },
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: Some(RegistrationMethod::HostName),
+                },
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: true,
+                },
+            )
+            .is_ok());
+        }
     }
 
-    #[test]
-    fn test_proxy() {
-        assert!(proxy_registration(
-            &config::RegistrationConfigHostName {
-                connection_config: registration_connection_config(None, None, true),
-                host_name: String::from(HOST_NAME),
-            },
-            &MockApi {
-                expect_root_cert_for_pairing: false,
-                expected_registration_method: Some(RegistrationMethod::HostName),
-            },
-            &MockInteractiveTrust {
-                expect_server_cert_prompt: false,
-                expect_password_prompt: true,
-            },
-        )
-        .is_ok());
+    mod test_register_pre_configured {
+        use super::*;
+
+        fn registry() -> config::Registry {
+            let mut registry = super::registry();
+            registry.register_connection(
+                &config::ConnectionType::Pull,
+                &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
+                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
+            );
+            registry.register_connection(
+                &config::ConnectionType::Pull,
+                &site_spec::SiteID::from_str("server/other-pull-site").unwrap(),
+                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
+            );
+            registry.register_connection(
+                &config::ConnectionType::Push,
+                &site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap(),
+                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
+            );
+            registry.register_connection(
+                &config::ConnectionType::Push,
+                &site_spec::SiteID::from_str("server/other-push-site").unwrap(),
+                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
+            );
+            registry.register_imported_connection(config::TrustedConnection::from(
+                uuid::Uuid::new_v4(),
+            ));
+            registry
+        }
+
+        fn pre_configured_connections(
+            keep_vanished_connections: bool,
+        ) -> config::PreConfiguredConnections {
+            config::PreConfiguredConnections {
+                connections: std::collections::HashMap::from([
+                    (
+                        site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
+                        config::PreConfiguredConnection {
+                            port: Some(1001),
+                            credentials: types::Credentials {
+                                username: String::from("user"),
+                                password: String::from("password"),
+                            },
+                            root_cert: String::from("root_cert"),
+                        },
+                    ),
+                    (
+                        site_spec::SiteID::from_str("server/pre-baked-pull-site-2").unwrap(),
+                        config::PreConfiguredConnection {
+                            port: Some(1002),
+                            credentials: types::Credentials {
+                                username: String::from("user"),
+                                password: String::from("password"),
+                            },
+                            root_cert: String::from("root_cert"),
+                        },
+                    ),
+                    (
+                        site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap(),
+                        config::PreConfiguredConnection {
+                            port: Some(1003),
+                            credentials: types::Credentials {
+                                username: String::from("user"),
+                                password: String::from("password"),
+                            },
+                            root_cert: String::from("root_cert"),
+                        },
+                    ),
+                    (
+                        site_spec::SiteID::from_str("server/pre-baked-push-site-2").unwrap(),
+                        config::PreConfiguredConnection {
+                            port: Some(1004),
+                            credentials: types::Credentials {
+                                username: String::from("user"),
+                                password: String::from("password"),
+                            },
+                            root_cert: String::from("root_cert"),
+                        },
+                    ),
+                ]),
+                agent_labels: types::AgentLabels::from([(
+                    String::from("key"),
+                    String::from("value"),
+                )]),
+                keep_vanished_connections,
+            }
+        }
+
+        struct MockRegistrationWithAgentLabelsImpl;
+
+        impl RegistrationWithAgentLabels for MockRegistrationWithAgentLabelsImpl {
+            fn register(
+                &self,
+                config: &config::RegistrationConfigAgentLabels,
+                registry: &mut config::Registry,
+            ) -> AnyhowResult<()> {
+                assert!(config.connection_config.password.is_some());
+                assert!(config.connection_config.root_certificate.is_some());
+                assert!(!config.connection_config.trust_server_cert);
+                assert_eq!(config.agent_labels.get("key").unwrap(), "value");
+                registry.register_connection(
+                    std::collections::HashMap::from([
+                        ("server/pre-baked-pull-site", config::ConnectionType::Pull),
+                        ("server/pre-baked-pull-site-2", config::ConnectionType::Pull),
+                        ("server/pre-baked-push-site", config::ConnectionType::Push),
+                        ("server/pre-baked-push-site-2", config::ConnectionType::Push),
+                    ])
+                    .get(config.connection_config.site_id.to_string().as_str())
+                    .unwrap(),
+                    &config.connection_config.site_id,
+                    config::TrustedConnectionWithRemote {
+                        trust: config::TrustedConnection {
+                            uuid: uuid::Uuid::new_v4(),
+                            private_key: String::from("private_key"),
+                            certificate: String::from("certificate"),
+                            root_cert: String::from("root_cert"),
+                        },
+                        receiver_port: config.connection_config.receiver_port,
+                    },
+                );
+                Ok(())
+            }
+        }
+
+        fn test_registered_standard_connections<'a>(
+            expected_site_ids: impl Iterator<Item = &'a str>,
+            registered_connections: impl Iterator<
+                Item = (
+                    &'a site_spec::SiteID,
+                    &'a config::TrustedConnectionWithRemote,
+                ),
+            >,
+        ) {
+            let mut exp_site_ids: Vec<&str> = expected_site_ids.collect();
+            exp_site_ids.sort_unstable();
+            let mut reg_site_ids: Vec<String> = registered_connections
+                .map(|site_id_and_conn| site_id_and_conn.0.to_string())
+                .collect();
+            reg_site_ids.sort_unstable();
+            assert_eq!(exp_site_ids, reg_site_ids);
+        }
+
+        fn test_registry_after_registration(
+            keep_vanished_connections: bool,
+            registry: &mut config::Registry,
+        ) {
+            // We reload to ensure that the changes were written to disk
+            let mut registry = config::Registry::from_file(registry.path()).unwrap();
+
+            let mut expected_pull_site_ids =
+                vec!["server/pre-baked-pull-site", "server/pre-baked-pull-site-2"];
+            let mut expected_push_site_ids =
+                vec!["server/pre-baked-push-site", "server/pre-baked-push-site-2"];
+            if keep_vanished_connections {
+                expected_pull_site_ids.push("server/other-pull-site");
+                expected_push_site_ids.push("server/other-push-site");
+            }
+            test_registered_standard_connections(
+                expected_pull_site_ids.into_iter(),
+                registry.standard_pull_connections(),
+            );
+            test_registered_standard_connections(
+                expected_push_site_ids.into_iter(),
+                registry.push_connections(),
+            );
+
+            assert_eq!(
+                registry
+                    .get_mutable(
+                        &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap()
+                    )
+                    .unwrap()
+                    .receiver_port,
+                1001
+            );
+            assert_eq!(
+                registry
+                    .get_mutable(
+                        &site_spec::SiteID::from_str("server/pre-baked-push-site").unwrap()
+                    )
+                    .unwrap()
+                    .receiver_port,
+                1003
+            );
+
+            assert_eq!(
+                registry.imported_pull_connections().count(),
+                if keep_vanished_connections { 1 } else { 0 }
+            );
+        }
+
+        #[test]
+        fn test_keep_vanished_connections() {
+            let mut registry = registry();
+            assert!(_register_pre_configured(
+                &pre_configured_connections(true),
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut registry,
+                &MockRegistrationWithAgentLabelsImpl {},
+            )
+            .is_ok());
+            test_registry_after_registration(true, &mut registry)
+        }
+
+        #[test]
+        fn test_remove_vanished_connections() {
+            let mut registry = registry();
+            assert!(_register_pre_configured(
+                &pre_configured_connections(false),
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut registry,
+                &MockRegistrationWithAgentLabelsImpl {},
+            )
+            .is_ok());
+            test_registry_after_registration(false, &mut registry)
+        }
+
+        #[test]
+        fn test_port_update_only() {
+            let mut registry = super::registry();
+            registry.register_connection(
+                &config::ConnectionType::Pull,
+                &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
+                config::TrustedConnectionWithRemote::from(uuid::Uuid::new_v4()),
+            );
+            let pre_configured_connections = config::PreConfiguredConnections {
+                connections: std::collections::HashMap::from([(
+                    site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap(),
+                    config::PreConfiguredConnection {
+                        port: Some(1001),
+                        credentials: types::Credentials {
+                            username: String::from("user"),
+                            password: String::from("password"),
+                        },
+                        root_cert: String::from("root_cert"),
+                    },
+                )]),
+                agent_labels: types::AgentLabels::from([(
+                    String::from("key"),
+                    String::from("value"),
+                )]),
+                keep_vanished_connections: true,
+            };
+            assert!(_register_pre_configured(
+                &pre_configured_connections,
+                &config::ClientConfig {
+                    use_proxy: false,
+                    validate_api_cert: false,
+                },
+                &mut registry,
+                &MockRegistrationWithAgentLabelsImpl {},
+            )
+            .is_ok());
+
+            // We reload to ensure that the changes were written to disk
+            let mut registry = config::Registry::from_file(registry.path()).unwrap();
+            assert_eq!(
+                registry
+                    .get_mutable(
+                        &site_spec::SiteID::from_str("server/pre-baked-pull-site").unwrap()
+                    )
+                    .unwrap()
+                    .receiver_port,
+                1001
+            );
+        }
     }
 }

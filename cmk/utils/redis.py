@@ -2,8 +2,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, Optional, TYPE_CHECKING, TypeVar
+from typing import Any, TypeVar
 
 from redis import Redis
 from redis.client import Pipeline
@@ -11,14 +14,10 @@ from redis.client import Pipeline
 from .exceptions import MKTimeout
 from .paths import omd_root
 
-# See tests/typeshed/redis
-if TYPE_CHECKING:
-    RedisDecoded = Redis[str]
-
 QueryData = TypeVar("QueryData")
 
 
-def get_redis_client() -> "RedisDecoded":
+def get_redis_client() -> Redis[str]:
     return Redis.from_url(
         f"unix://{omd_root}/tmp/run/redis",
         db=0,
@@ -39,12 +38,12 @@ class DataUnavailableException(Exception):
 
 
 def query_redis(
-    client: "RedisDecoded",
+    client: Redis[str],
     data_key: str,
     integrity_callback: Callable[[], IntegrityCheckResponse],
     update_callback: Callable[[Pipeline], Any],
     query_callback: Callable[[], QueryData],
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     ttl_query_lock: int = 5,
     ttl_update_lock: int = 10,
 ) -> QueryData:

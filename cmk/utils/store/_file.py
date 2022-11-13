@@ -6,11 +6,12 @@ import pickle
 import pprint
 import tempfile
 from ast import literal_eval
+from collections.abc import Iterator
 from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Iterator, Protocol, TypeVar
+from typing import Any, Final, Generic, Protocol, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -64,7 +65,7 @@ class DimSerializer:
 
     def serialize(self, data: Any) -> bytes:
         data_str = pprint.pformat(data) if self.pretty else repr(data)
-        return f"{data_str}\n".encode("utf-8")
+        return f"{data_str}\n".encode()
 
     @staticmethod
     def deserialize(raw: bytes) -> Any:
@@ -127,39 +128,12 @@ class ObjectStore(Generic[TObject]):
             with tempfile.NamedTemporaryFile(
                 "wb",
                 dir=str(self.path.parent),
-                prefix=".%s.new" % self.path.name,
+                prefix=f".{self.path.name}.new",
                 delete=False,
             ) as tmp:
-
                 tmp_path = Path(tmp.name)
-                # note that ObjectStore will refuse to read world-writable files
-                tmp_path.chmod(0o660)
+                tmp_path.chmod(0o660)  # otherwise ObjectStore refuse to read world-writable files
                 tmp.write(data)
-
-                # The goal of the fsync would be to ensure that there is a consistent file after a
-                # crash. Without the fsync it may happen that the file renamed below is just an empty
-                # file. That may lead into unexpected situations during loading.
-                #
-                # Don't do a fsync here because this may run into IO performance issues. Even when
-                # we can specify the fsync on a fd, the disk cache may be flushed completely because
-                # the disk does not know anything about fds, only about blocks.
-                #
-                # For Checkmk 1.4 we can not introduce a good solution for this, because the changes
-                # would affect too many parts of Checkmk with possible new issues. For the moment we
-                # stick with the IO behaviour of previous Checkmk versions.
-                #
-                # In the future we'll find a solution to deal better with OS crash recovery situations.
-                # for example like this:
-                #
-                # TODO(lm): The consistency of the file will can be ensured using copies of the
-                # original file which are made before replacing it with the new one. After first
-                # successful loading of the just written fille the possibly existing copies of this
-                # file are deleted.
-                # We can archieve this by calling os.link() before the os.rename() below. Then we need
-                # to define in which situations we want to check out the backup open(s) and in which
-                # cases we can savely delete them.
-                # tmp.flush()
-                # os.fsync(tmp.fileno())
 
             tmp_path.rename(self.path)
 

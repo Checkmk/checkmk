@@ -5,7 +5,8 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any
 
 import pytest
 from google.cloud import asset_v1, monitoring_v3
@@ -45,7 +46,7 @@ TS2 = datetime.datetime(2016, 4, 6, 22, 5, 2, 42)
 
 
 class FakeMonitoringClient:
-    def __init__(self, timeseries: Optional[Iterable[str]] = None) -> None:
+    def __init__(self, timeseries: Iterable[str] | None = None) -> None:
         self._timeseries = timeseries
 
     def list_time_series(self, request: Any) -> Iterable[TimeSeries]:
@@ -100,7 +101,7 @@ class FakeMonitoringClient:
 
 
 class FakeAssetClient:
-    def __init__(self, assets: Optional[Iterable[str]] = None) -> None:
+    def __init__(self, assets: Iterable[str] | None = None) -> None:
         if assets is None:
             self._assets: Iterable[str] = [
                 '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
@@ -134,7 +135,7 @@ class FakeClient:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset_client.list_assets(request)
 
-    def list_costs(self, tableid: str) -> Tuple[agent_gcp.Schema, agent_gcp.Pages]:
+    def list_costs(self, tableid: str) -> tuple[agent_gcp.Schema, agent_gcp.Pages]:
         schema = [
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
             {"name": "cost", "type": "FLOAT", "mode": "NULLABLE"},
@@ -178,6 +179,7 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
         cost=None,
         serializer=collector,
         monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(sections)
 
@@ -220,7 +222,15 @@ def test_metric_retrieval() -> None:
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, [agent_gcp.RUN], [], cost=None, serializer=collector, monitor_health=True)
+    agent_gcp.run(
+        client,
+        [agent_gcp.RUN],
+        [],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
+    )
     result_section = next(
         s for s in sections if isinstance(s, agent_gcp.ResultSection) and s.name == "cloud_run"
     )
@@ -256,7 +266,7 @@ def test_health_serialization(
 
 @pytest.fixture(name="asset_and_piggy_back_sections")
 def asset_and_piggy_back_sections_fixture() -> Sequence[
-    Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
+    agent_gcp.PiggyBackSection | agent_gcp.AssetSection
 ]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
@@ -288,7 +298,13 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
         ],
     )
     agent_gcp.run(
-        client, [], [piggy_back_section], cost=None, serializer=collector, monitor_health=True
+        client,
+        [],
+        [piggy_back_section],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(
         s for s in sections if isinstance(s, (agent_gcp.PiggyBackSection, agent_gcp.AssetSection))
@@ -296,9 +312,7 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
 
 
 def test_piggy_back_config_in_assets(
-    asset_and_piggy_back_sections: Sequence[
-        Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
-    ]
+    asset_and_piggy_back_sections: Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection],
 ) -> None:
     section = list(
         s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.AssetSection)
@@ -309,9 +323,7 @@ def test_piggy_back_config_in_assets(
 
 @pytest.fixture(name="piggy_back_sections")
 def piggy_back_sections_fixture(
-    asset_and_piggy_back_sections: Sequence[
-        Union[agent_gcp.PiggyBackSection, agent_gcp.AssetSection]
-    ]
+    asset_and_piggy_back_sections: Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection],
 ) -> Sequence[agent_gcp.PiggyBackSection]:
     return list(
         s for s in asset_and_piggy_back_sections if isinstance(s, agent_gcp.PiggyBackSection)
@@ -326,8 +338,8 @@ def test_can_hash_client() -> None:
 def test_piggyback_identify_hosts(
     piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
 ) -> None:
-    assert piggy_back_sections[0].name == "a"
-    assert piggy_back_sections[1].name == "b"
+    assert piggy_back_sections[0].name == "custom-prefix_a"
+    assert piggy_back_sections[1].name == "custom-prefix_b"
 
 
 def test_serialize_piggy_back_section(
@@ -387,7 +399,15 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    agent_gcp.run(client, [], [agent_gcp.GCE], cost=None, serializer=collector, monitor_health=True)
+    agent_gcp.run(
+        client,
+        [],
+        [agent_gcp.GCE],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
+    )
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
@@ -396,7 +416,7 @@ def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> 
 
 
 def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert gce_sections[0].name == "instance-1"
+    assert gce_sections[0].name == "custom-prefix_instance-1"
 
 
 def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
@@ -481,6 +501,7 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
         cost=cost,
         serializer=collector,
         monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(sections)
 

@@ -52,8 +52,8 @@ White-box overall system and interfaces
 
 .. _arch-comp-hosts-agent:
 
-Agent-based hosts
-~~~~~~~~~~~~~~~~~
+Pull agent based hosts
+~~~~~~~~~~~~~~~~~~~~~~
 
 The data on the agent-based hosts are collected by a so-called agent.
 The monitoring core requests these data to the hosts, typically over
@@ -92,6 +92,11 @@ TCP, and they are treated by the :doc:`check engine<arch-comp-checkengine>`.
    end note
 
 .. _arch-comp-hosts-snmp:
+
+Push agent based hosts
+~~~~~~~~~~~~~~~~~~~~~~
+
+See :doc:`arch-comp-push-agent`.
 
 SNMP hosts
 ~~~~~~~~~~

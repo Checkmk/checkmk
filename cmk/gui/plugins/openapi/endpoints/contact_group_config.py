@@ -36,9 +36,9 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     update_groups,
     updated_group_details,
 )
+from cmk.gui.plugins.openapi.permission_tracking import disable_permission_tracking
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
-    endpoint,
     Endpoint,
     permissions,
     request_schemas,
@@ -96,7 +96,7 @@ def create(params: Mapping[str, Any]) -> Response:
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
-    """Bulk create host groups"""
+    """Bulk create contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
@@ -161,7 +161,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     check_modify_group_permissions("contact")
-    with endpoint.do_not_track_permissions(), SuperUserContext():
+    with disable_permission_tracking(), SuperUserContext():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
         delete_group(name, "contact")
     return Response(status=204)
@@ -182,13 +182,13 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
     for group_name in entries:
-        _group = fetch_group(
+        fetch_group(
             group_name,
             "contact",
             status=400,
             message=f"contact group {group_name} was not found",
         )
-    with endpoint.do_not_track_permissions(), SuperUserContext():
+    with disable_permission_tracking(), SuperUserContext():
         for group_name in entries:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.

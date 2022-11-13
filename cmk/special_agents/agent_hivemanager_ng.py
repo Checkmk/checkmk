@@ -91,5 +91,5 @@ def main():
     }
 
     for device in json["data"]:
-        device_txt = "|".join(["%s::%s" % (k, v) for (k, v) in device.items() if k in used])
+        device_txt = "|".join([f"{k}::{v}" for (k, v) in device.items() if k in used])
         print(device_txt)

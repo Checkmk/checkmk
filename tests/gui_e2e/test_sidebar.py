@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from playwright.sync_api import BrowserContext, expect
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.helpers import Keys, PPage
 
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])
@@ -23,3 +24,21 @@ def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
     logged_in_page.locator(f"div#check_mk_sidebar >> div#{snapin_id}").wait_for(state="detached")
 
     logged_in_page.main_frame.locator(f"div#{snapin_id}").wait_for(state="attached")
+
+
+def test_monitor_searchbar(logged_in_page: PPage, context: BrowserContext) -> None:
+    """Navigate to the CPU inventory from the monitor searchbar."""
+
+    megamenu = logged_in_page.megamenu_monitoring
+    megamenu.click()
+    search_bar = logged_in_page.monitor_searchbar
+    search_bar.fill("all hosts")
+
+    expect(logged_in_page.locator("#Monitor")).to_contain_text("All hosts")
+    expect(logged_in_page.locator("#Monitor")).to_contain_text("CPU inventory of all hosts")
+
+    logged_in_page.press_keyboard(Keys.ArrowDown)
+    logged_in_page.press_keyboard(Keys.ArrowDown)
+    logged_in_page.press_keyboard(Keys.Enter)
+
+    logged_in_page.main_frame.check_page_title("CPU inventory of all hosts")

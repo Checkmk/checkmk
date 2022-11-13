@@ -14,7 +14,11 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.type_defs import TagID
 
-from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
+from cmk.gui.config import (
+    active_config,
+    default_authorized_builtin_role_ids,
+    register_post_config_load_hook,
+)
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -123,7 +127,7 @@ class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
             "icons_and_actions.%s" % ident,
             ident,
             _("Allow to see the icon %s in the host and service views") % ident,
-            builtin_role_ids,
+            default_authorized_builtin_role_ids,
         )
 
 

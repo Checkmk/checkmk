@@ -7,13 +7,13 @@ import importlib
 import os
 import pkgutil
 import sys
+from collections.abc import Callable, Iterator
 from itertools import chain
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, Iterator, List, Optional, Tuple
 
 
-def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseException]]:
+def load_plugins_with_exceptions(package_name: str) -> Iterator[tuple[str, BaseException]]:
     """Load all specified packages
 
     This function accepts a package name in Python's dotted syntax (e.g.
@@ -35,7 +35,7 @@ def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseE
         ...     print("Importing %s failed: %s" % (mod_name, exc))
 
     """
-    walk_errors: List[Tuple[str, BaseException]] = []
+    walk_errors: list[tuple[str, BaseException]] = []
 
     def onerror_func(name: str) -> None:
         if exc := sys.exc_info()[1]:
@@ -51,7 +51,7 @@ def load_plugins_with_exceptions(package_name: str) -> Iterator[Tuple[str, BaseE
     yield from walk_errors
 
 
-def _find_modules(pkg: ModuleType, onerror: Callable[[str], None]) -> List[str]:
+def _find_modules(pkg: ModuleType, onerror: Callable[[str], None]) -> list[str]:
     """Replacement for pkgutil.walk_packages
 
     We used `pkgutil.walk_packages` before, but that was not able to correctly detect and walk into
@@ -116,10 +116,10 @@ def load_plugins(
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path: Optional[List[str]] = getattr(package, "__path__")
+    module_path: list[str] | None = getattr(package, "__path__")
     if module_path:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
-            importlib.import_module("%s.%s" % (package_name, plugin_name))
+            importlib.import_module(f"{package_name}.{plugin_name}")
 
     for _loader, plugin_name, _is_pkg in pkgutil.walk_packages([init_file_path]):
-        importlib.import_module("%s.%s" % (package_name, plugin_name))
+        importlib.import_module(f"{package_name}.{plugin_name}")

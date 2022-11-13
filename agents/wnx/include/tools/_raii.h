@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#if !defined(___RAII_H)
-#define ___RAII_H
+#ifndef RAII_H
+#define RAII_H
 // **********************************************************
 // ON_OUT_OF_SCOPE: Usage example
 // NOTE 1: This is a SUPPLEMENT for full-featured RAAI.

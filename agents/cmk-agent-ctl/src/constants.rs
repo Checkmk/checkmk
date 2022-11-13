@@ -12,18 +12,19 @@ pub const CONNECTION_TIMEOUT: u64 = 20;
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]
 pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
-#[cfg(windows)]
-pub const WINDOWS_INTERNAL_PORT: &str = "28250";
 
 // FILES
-pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";
+pub const PRE_CONFIGURED_CONNECTIONS_FILE: &str = "pre_configured_connections.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
-pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 
+// ENVIRONMENT
+#[cfg(windows)]
+pub const ENV_AGENT_LOG_DIR: &str = "MK_LOGDIR";
+#[cfg(windows)]
+pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
+
 // DIRS
-#[cfg(unix)]
-pub const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
@@ -31,8 +32,6 @@ pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";
-#[cfg(windows)]
-pub const ENV_WINDOWS_INTERNAL_PORT: &str = "DEBUG_WINDOWS_INTERNAL_PORT";
 #[cfg(windows)]
 pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 

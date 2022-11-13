@@ -46,6 +46,7 @@ from cmk.utils.type_defs import TagID
 
 import cmk.gui.bi as bi
 from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -53,9 +54,10 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
+from cmk.gui.painters.v0.helpers import render_cache_info
+from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.utils import display_options, is_stale, render_cache_info
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
@@ -216,7 +218,7 @@ class RescheduleIcon(Icon):
                 if row[what + "_check_command"].startswith("check_mk-"):
                     servicedesc = "Check_MK"
                     icon = "reload_cmk"
-                    txt = _("Reschedule 'Checkmk' service")
+                    txt = _("Reschedule 'Check_MK' service")
 
             url = "onclick:cmk.views.reschedule_check(this, %s, %s, %s, %s);" % (
                 json.dumps(row["site"]),

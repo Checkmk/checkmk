@@ -26,8 +26,8 @@ public:
     static constexpr std::string_view kRegStart = "Start";
 
     // API to simple access to configuration
-    static uint32_t ReadUint32(std::wstring_view service,
-                               std::string_view name);
+    static uint32_t readUint32(std::wstring_view service_name,
+                               std::string_view value_name);
 
     // no copy
     WinService(const WinService &rhs) = delete;
@@ -64,15 +64,15 @@ public:
         std::lock_guard lk(lock_);
         return IsGoodHandle(handle_);
     }
-    LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions();
+    LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions() const;
 
     static std::string pathToRegistry(std::wstring_view service);
 
-    bool configureRestart(bool restart);
+    [[maybe_unused]] bool configureRestart(bool restart) const;  // NOLINT
 
-    bool configureStart(StartMode mode);
+    bool configureStart(StartMode mode) const;
 
-    bool configureError(ErrorMode log_mode);
+    [[maybe_unused]] bool configureError(ErrorMode log_mode) const;
 
 private:
     mutable std::mutex lock_;

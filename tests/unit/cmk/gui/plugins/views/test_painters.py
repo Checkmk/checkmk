@@ -15,11 +15,12 @@ from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.plugins.views.utils import painter_registry
+from cmk.gui.painters.v0.base import painter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
-from cmk.gui.views import painters_of_datasource
+from cmk.gui.views.page_edit_view import painters_of_datasource
+from cmk.gui.visual_link import render_link_to_view
 
 
 @pytest.fixture(name="live")
@@ -860,7 +861,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row)
+        _tdclass, content = cell.render(row, render_link_to_view)
         assert isinstance(content, (str, HTML))
 
         if isinstance(content, str) and "<" in content:

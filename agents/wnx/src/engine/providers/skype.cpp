@@ -14,7 +14,6 @@
 #include "common/wtools.h"
 #include "logger.h"
 #include "providers/p_perf_counters.h"
-#include "tools/_raii.h"
 
 extern bool g_skype_testing;
 

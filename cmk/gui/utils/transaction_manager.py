@@ -7,27 +7,32 @@ from __future__ import annotations
 
 import random
 import time
-from typing import List, Optional, TYPE_CHECKING
+from typing import Callable, List, Protocol
 
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.http import Request
+from cmk.gui.http import request
 
-if TYPE_CHECKING:
-    from cmk.gui.logged_in import LoggedInUser
+
+class ReaderProtocol(Protocol):
+    def __call__(self, lock: bool) -> list[str]:
+        ...
 
 
 class TransactionManager:
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
 
-    def __init__(self, request: Request, user: LoggedInUser) -> None:
-        self._request = request
-        self._user = user
+    def __init__(
+        self,
+        reader: ReaderProtocol,
+        writer: Callable[[List[str]], None],
+    ) -> None:
+        self._reader = reader
+        self._writer = writer
 
-        self._new_transids: List[str] = []
+        self._new_transids: list[str] = []
         self._ignore_transids = False
-        self._current_transid: Optional[str] = None
-        self._user = user
+        self._current_transid: str | None = None
 
     def ignore(self) -> None:
         """Makes the GUI skip all transaction validation steps"""
@@ -61,14 +66,14 @@ class TransactionManager:
         if not self._new_transids:
             return
 
-        valid_ids = self._user.transids(lock=True)
+        valid_ids = self._reader(lock=True)
         cleared_ids = []
         now = time.time()
         for valid_id in valid_ids:
             timestamp = valid_id.split("/")[0]
             if now - int(timestamp) < 86400:  # one day
                 cleared_ids.append(valid_id)
-        self._user.save_transids((cleared_ids[-20:] + self._new_transids))
+        self._writer(cleared_ids[-20:] + self._new_transids)
 
     def transaction_valid(self) -> bool:
         """Checks if the current transaction is valid
@@ -81,10 +86,10 @@ class TransactionManager:
         or -1, then it's always valid (this is used for webservice calls).
         This was also possible for normal users, but has been removed to preven
         security related issues."""
-        if not self._request.has_var("_transid"):
+        if not request.has_var("_transid"):
             return False
 
-        transid = self._request.get_str_input_mandatory("_transid", "")
+        transid = request.get_str_input_mandatory("_transid", "")
         if self._ignore_transids and (not transid or transid == "-1"):
             return True  # automation
 
@@ -101,12 +106,12 @@ class TransactionManager:
             return False
 
         # Now check, if this transid is a valid one
-        return transid in self._user.transids(lock=False)
+        return transid in self._reader(lock=False)
 
     def is_transaction(self) -> bool:
         """Checks, if the current page is a transation, i.e. something that is secured by
         a transid (such as a submitted form)"""
-        return self._request.has_var("_transid")
+        return request.has_var("_transid")
 
     def check_transaction(self) -> bool:
         """called by page functions in order to check, if this was a reload or the original form submission.
@@ -120,7 +125,7 @@ class TransactionManager:
         None:  -> a browser reload or a negative confirmation
         """
         if self.transaction_valid():
-            transid = self._request.var("_transid")
+            transid = request.var("_transid")
             if transid and transid != "-1":
                 self._invalidate(transid)
             return True
@@ -128,12 +133,12 @@ class TransactionManager:
 
     def _invalidate(self, used_id: str) -> None:
         """Remove the used transid from the list of valid ones"""
-        valid_ids = self._user.transids(lock=True)
+        valid_ids = self._reader(lock=True)
         try:
             valid_ids.remove(used_id)
         except ValueError:
             return
-        self._user.save_transids(valid_ids)
+        self._writer(valid_ids)
 
 
 transactions: TransactionManager = request_local_attr("transactions")

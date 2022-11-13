@@ -8,8 +8,6 @@ Send notification messages to Slack
 
 Use a slack webhook to send notification messages
 """
-from typing import Dict
-
 import cmk.notification_plugins.utils as utils
 
 COLORS = {
@@ -23,7 +21,7 @@ COLORS = {
 }
 
 
-def slack_msg(context: Dict) -> Dict:
+def slack_msg(context: dict) -> dict:
     """Build the message for slack"""
 
     if context.get("WHAT", None) == "SERVICE":

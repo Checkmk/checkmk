@@ -4,34 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 import livestatus
-from livestatus import SiteId
+from livestatus import OnlySites, SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.data_source import data_source_registry, RowTable
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import DataSourceLivestatus
 from cmk.gui.painter_options import paint_age
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.commands import PermissionSectionAction
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    cmp_simple_number,
-    Command,
-    command_registry,
-    CommandActionResult,
-    Painter,
-    painter_registry,
-)
-from cmk.gui.sorter import Sorter, sorter_registry
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos
+from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.sorter import cmp_simple_number, Sorter, sorter_registry
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.command import Command, command_registry, CommandActionResult
 
 
 @data_source_registry.register
@@ -63,7 +58,17 @@ class DataSourceCrashReports(DataSourceLivestatus):
 
 class CrashReportsRowTable(RowTable):
     # TODO: Handle headers / all_active_filters, limit, ...
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         rows = []
         for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
             crash_info = raw_row.get("crash_info")
@@ -90,8 +95,8 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(
-        self, only_sites: Optional[List[SiteId]], filter_headers: str
-    ) -> List[Dict[str, str]]:
+        self, only_sites: list[SiteId] | None, filter_headers: str
+    ) -> list[dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -133,8 +138,8 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(
-        self, only_sites: Optional[List[SiteId]], filter_headers: Optional[str] = None
-    ) -> List[Dict[str, str]]:
+        self, only_sites: list[SiteId] | None, filter_headers: str | None = None
+    ) -> list[dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)
@@ -308,7 +313,9 @@ class CommandDeleteCrashReports(Command):
     def tables(self):
         return ["crash"]
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d crash %s") % (
             len_action_rows,
             ungettext("report", "reports", len_action_rows),
@@ -318,7 +325,12 @@ class CommandDeleteCrashReports(Command):
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: dict, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: dict,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]

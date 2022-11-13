@@ -11,15 +11,11 @@
 #include "common/wtools.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
-#include "providers/mem.h"
-#include "providers/p_perf_counters.h"
-#include "providers/services.h"
-#include "providers/system_time.h"
 #include "providers/wmi.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
+
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 using namespace std::chrono_literals;
@@ -223,15 +219,14 @@ TEST(WmiProviderTest, WmiConfiguration) {
     }
 }
 
-constexpr size_t exch_count{7U};
-constexpr std::array<std::string_view, exch_count> exch_names = {
-    kMsExchActiveSync,     //
-    kMsExchAvailability,   //
-    kMsExchOwa,            //
-    kMsExchAutoDiscovery,  //
-    kMsExchIsClientType,   //
-    kMsExchIsStore,        //
-    kMsExchRpcClientAccess};
+constexpr std::array exch_names = {kMsExchActiveSync,     //
+                                   kMsExchAvailability,   //
+                                   kMsExchOwa,            //
+                                   kMsExchAutoDiscovery,  //
+                                   kMsExchIsClientType,   //
+                                   kMsExchIsStore,        //
+                                   kMsExchRpcClientAccess};
+constexpr size_t exch_count{exch_names.size()};
 
 TEST(WmiProviderTest, WmiSubSection_Integration) {
     for (auto n : exch_names) {
@@ -356,7 +351,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
             << body << "\n";  // more than 1 line should be present;
         auto table = cma::tools::SplitString(body, "\n");
         table.erase(table.begin());
-        ASSERT_GT(table.size(), (size_t)(1))
+        ASSERT_GT(table.size(), 1U)
             << "2 bad output from wmi:\n"
             << body << "\n";  // more than 1 line should be present
 
@@ -421,7 +416,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
         EXPECT_EQ(msexch.columns().size(), 0);
 
         // sub section count
-        const int count = 7;
+        constexpr int count = 7;
         auto &subs = msexch.subObjects();
         EXPECT_EQ(subs.size(), count);
         for (int k = 0; k < count; ++k)
@@ -580,8 +575,8 @@ public:
     }
 
 protected:
-    std::vector<std::string> execWmiProvider(std::string_view wmi_name,
-                                             const std::string &test_name) {
+    [[nodiscard]] std::vector<std::string> execWmiProvider(
+        std::string_view wmi_name, const std::string &test_name) const {
         auto f = tst::GetTempDir() / test_name;
 
         cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);
@@ -621,7 +616,6 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
 TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
     if (wtools::GetServiceStatus(web_services_service) != 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
-        return;
     }
 
     const auto table = execWmiProvider(
@@ -633,7 +627,6 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
 TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedIntegration) {
     if (wtools::GetServiceStatus(web_services_service) == 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
-        return;
     }
 
     const auto table = execWmiProvider(

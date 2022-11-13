@@ -4,7 +4,6 @@
 #include "wtools_service.h"
 
 #include <cstdint>
-#include <string_view>
 #include <vector>
 
 #include "logger.h"
@@ -13,7 +12,7 @@
 
 namespace wtools {
 
-uint32_t WinService::ReadUint32(std::wstring_view service_name,
+uint32_t WinService::readUint32(std::wstring_view service_name,
                                 std::string_view value_name) {
     return LocalReadUint32(pathToRegistry(service_name).c_str(),
                            value_name.data(), -1);
@@ -41,9 +40,8 @@ WinService::WinService(std::wstring_view name) {
     }
 }
 
-LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
-    SERVICE_FAILURE_ACTIONS *actions = nullptr;
-
+LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions()
+    const {
     std::lock_guard lk(lock_);
     if (!IsGoodHandle(handle_)) {
         return nullptr;
@@ -64,8 +62,8 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
     }
 
     // allocation
-    auto new_buf_size = bytes_needed;
-    actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
+    const auto new_buf_size = bytes_needed;
+    const auto actions = static_cast<SERVICE_FAILURE_ACTIONS *>(
         ::LocalAlloc(LMEM_FIXED, new_buf_size));
 
     if (::QueryServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
@@ -97,23 +95,26 @@ SERVICE_FAILURE_ACTIONS CreateServiceFailureAction(int delay) {
 }
 
 /// \brief wraps low level win32 API-calls to make service restartable or not
-bool WinService::configureRestart(bool restart) {
-    auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
+bool WinService::configureRestart(bool restart) const {
+    const auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
     constexpr int count_of_actions = 3;  // in windows service
-    std::vector<SC_ACTION> fail_actions(count_of_actions,
-                                        SC_ACTION{action, 2000});
+    std::vector fail_actions(count_of_actions, SC_ACTION{action, 2000});
 
     auto service_fail_actions = CreateServiceFailureAction(3600);
     service_fail_actions.cActions = static_cast<int>(fail_actions.size());
     service_fail_actions.lpsaActions = fail_actions.data();
 
     std::lock_guard lk(lock_);
-    if (!IsGoodHandle(handle_)) return false;
+    if (!IsGoodHandle(handle_)) {
+        return false;
+    }
 
-    auto result =
+    const auto result =
         ::ChangeServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
                                &service_fail_actions);  // Apply above settings
-    if (result == TRUE) return true;
+    if (result == TRUE) {
+        return true;
+    }
 
     XLOG::l("Error [{}] configuring service", ::GetLastError());
     return false;
@@ -124,21 +125,21 @@ bool WinService::configureRestart(bool restart) {
 /// returns last error
 static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
                                         DWORD error_control) {
-    auto ret = ::ChangeServiceConfig(handle,
-                                     SERVICE_NO_CHANGE,  // dwServiceType,
-                                     start_type,         // dwStartType,
-                                     error_control,      // dwErrorControl,
-                                     nullptr,            // lpBinaryPathName,
-                                     nullptr,            // lpLoadOrderGroup,
-                                     nullptr,            // lpdwTagId,
-                                     nullptr,            // lpDependencies,
-                                     nullptr,            // lpServiceStartName,
-                                     nullptr,            // lpPassword,
-                                     nullptr             // lpDisplayName
+    const auto ret = ::ChangeServiceConfig(handle,
+                                           SERVICE_NO_CHANGE,  // dwServiceType,
+                                           start_type,         // dwStartType,
+                                           error_control,  // dwErrorControl,
+                                           nullptr,        // lpBinaryPathName,
+                                           nullptr,        // lpLoadOrderGroup,
+                                           nullptr,        // lpdwTagId,
+                                           nullptr,        // lpDependencies,
+                                           nullptr,  // lpServiceStartName,
+                                           nullptr,  // lpPassword,
+                                           nullptr   // lpDisplayName
     );
 
     return ret == TRUE ? 0 : ::GetLastError();
-};
+}
 
 /// \brief set service delayed flag if configured
 ///
@@ -146,11 +147,11 @@ static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
 static uint32_t CallChangeServiceDelay(SC_HANDLE handle, bool delayed) {
     SERVICE_DELAYED_AUTO_START_INFO dasi;
     dasi.fDelayedAutostart = delayed ? TRUE : FALSE;
-    auto ret = ::ChangeServiceConfig2A(
+    const auto ret = ::ChangeServiceConfig2A(
         handle, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &dasi);
 
     return ret == TRUE ? 0 : ::GetLastError();
-};
+}
 
 static uint32_t StartMode2WinApi(WinService::StartMode mode) {
     switch (mode) {
@@ -178,7 +179,7 @@ static uint32_t LogMode2WinApi(WinService::ErrorMode mode) {
     return SERVICE_NO_CHANGE;
 }
 
-bool WinService::configureStart(StartMode mode) {
+bool WinService::configureStart(StartMode mode) const {
     auto start_mode = StartMode2WinApi(mode);
 
     auto error_code_1 =
@@ -194,11 +195,13 @@ bool WinService::configureStart(StartMode mode) {
     return false;
 }
 
-bool WinService::configureError(ErrorMode log_mode) {
+bool WinService::configureError(ErrorMode log_mode) const {
     auto error_control = LogMode2WinApi(log_mode);
     auto error_code =
         CallChangeServiceConfig(handle_, SERVICE_NO_CHANGE, error_control);
-    if (error_code == 0) return true;
+    if (error_code == 0) {
+        return true;
+    }
 
     XLOG::l("Failed to set service error control to [{}], error isn [{}]",
             error_control, error_code);

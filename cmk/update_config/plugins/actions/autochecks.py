@@ -101,7 +101,7 @@ def _transformed_params(
     if ruleset_name not in all_rulesets.get_rulesets():
         return None
 
-    debug_info = "host=%r, plugin=%r, ruleset=%r, params=%r" % (
+    debug_info = "host={!r}, plugin={!r}, ruleset={!r}, params={!r}".format(
         hostname,
         str(plugin_name),
         str(check_plugin.check_ruleset_name),
@@ -141,7 +141,7 @@ def _transformed_params(
         return {**params, **new_params} if isinstance(params, dict) else new_params
 
     except Exception as exc:
-        msg = "Transform failed: %s, error=%r" % (debug_info, exc)
+        msg = f"Transform failed: {debug_info}, error={exc!r}"
         if debug.enabled():
             raise RuntimeError(msg) from exc
         logger.error(msg)

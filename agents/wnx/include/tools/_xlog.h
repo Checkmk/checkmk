@@ -106,7 +106,7 @@ void somefoo_about_video()
 #define XLOG_DEBUG_TARGET 0
 #define XLOG_RELEASE_TARGET 1
 
-#if DBG || defined(_DEBUG) || defined(DEBUG)
+#if defined(DBG) || defined(_DEBUG) || defined(DEBUG)
 #define XLOG_CUR_TARGET XLOG_DEBUG_TARGET
 #define XLOG_DEBUG
 #else
@@ -186,7 +186,7 @@ namespace xlog {
 
     /// Windows Specific log for App, mildly usable.
     template <typename T, typename... Args>
-    void SysLogEvent(const T *log_name, LogEvents event_level, int code,
+    void SysLogEvent(const T *log_name, LogEvents event_level, DWORD code,
                      const T *event_text, Args &&...args) {
         auto eventSource = ::RegisterEventSource(nullptr, log_name);
         if (eventSource == nullptr) {
@@ -256,14 +256,14 @@ namespace xlog {
     constexpr uint32_t kStdioPrint = 2;
     constexpr uint32_t kFilePrint = 4;
     constexpr uint32_t kEventPrint = 8;
-    };  // namespace Directions
+    }  // namespace Directions
     constexpr auto XLOG_DEFAULT_DIRECTIONS = Directions::kDebuggerPrint;
 
     namespace Flags {
     constexpr uint32_t kNoPrefix = 1;
     constexpr uint32_t kNoCr = 2;
     constexpr uint32_t kAddCr = 4;
-    };  // namespace Flags
+    }  // namespace Flags
 
     inline std::string CurrentTime() {
         using std::chrono::system_clock;
@@ -272,7 +272,7 @@ namespace xlog {
         const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                             cur_time.time_since_epoch()) %
                         1000;
-        const auto *loc_time = std::localtime(&in_time_t);
+        const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
         const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
 
         std::stringstream sss;
@@ -346,16 +346,18 @@ namespace xlog {
         ~TextInfo() = default;
 
         // EXTENDED API
-        [[maybe_unused]] const TextInfo &filelog(
+        [[maybe_unused]] const TextInfo &filelog(  // NOLINT
             std::string_view filename) const {
-            if (filename.empty()) return *this;
+            if (filename.empty()) {
+                return *this;
+            }
             internal_PrintStringFile(filename,
                                      std::basic_string_view<T>{text_});
             return *this;
         }
 
         // LogName is syslog source name.
-        [[maybe_unused]] const TextInfo &syslog(
+        [[maybe_unused]] const TextInfo &syslog(  // NOLINT
             std::basic_string_view<T> log_name, LogEvents log_event,
             int code) const {
             if constexpr (sizeof(T) == 2) {
@@ -371,12 +373,12 @@ namespace xlog {
         }
 
         // print on screen
-        [[maybe_unused]] const TextInfo &print() const noexcept {
+        [[maybe_unused]] const TextInfo &print() const noexcept {  // NOLINT
             return print(true);
-        }  // NOLINT
+        }
 
-        [[maybe_unused]] const TextInfo &print(
-            bool enable) const noexcept {  // NOLINT
+        [[maybe_unused]] const TextInfo &print(  // NOLINT
+            bool enable) const noexcept {
             if (enable) {
                 internal_PrintStringStdio(text());
             }
@@ -449,7 +451,7 @@ namespace xlog {
         AdvancedLog() = default;
         LogParam log_param_;
         template <typename T, typename... Args>
-        inline void d(const T *format_string, Args &&...args) {
+        void d(const T *format_string, Args &&...args) {
 #if defined(XLOG_DEBUG)
             internal_dout(log_param_, format_string,
                           std::forward<Args>(args)...);
@@ -457,7 +459,7 @@ namespace xlog {
         }
 
         template <typename T, typename... Args>
-        inline void v(const T *format_string, Args &&...args) {
+        void v(const T *format_string, Args &&...args) {
 #if defined(XLOG_VERBOSE)
             internal_dout(log_param_, format_string,
                           std::forward<Args>(args)...);
@@ -465,7 +467,7 @@ namespace xlog {
         }
 
         template <typename T, typename... Args>
-        inline void l(const T *format_string, Args &&...args) {
+        void l(const T *format_string, Args &&...args) {
 #if !defined(NO_LOG)
             auto &log_param = log_param_;
             log_param.type_ = Type::kLogOut;
@@ -548,7 +550,7 @@ namespace xlog {
 #pragma warning(push)
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> internal_dout(
+    [[maybe_unused]] TextInfo<T> internal_dout(
         const LogParam &log_param, const T *format_string, Args &&...args) {
         T buf[kInternalMaxOut] = {0};
 
@@ -585,7 +587,7 @@ namespace xlog {
 
     // Common API
     template <typename T, typename... Args>
-    inline void d(const T *format_string, Args &&...args) {
+    void d(const T *format_string, Args &&...args) {
 #if defined(XLOG_DEBUG)
         LogParam log_param;
         auto _ = internal_dout(log_param, format_string,
@@ -594,7 +596,7 @@ namespace xlog {
     }
 
     template <typename T, typename... Args>
-    inline void d(bool enable, const T *format_string, Args &&...args) {
+    void d(bool enable, const T *format_string, Args &&...args) {
 
 #if defined(XLOG_DEBUG)
         if (enable) {
@@ -605,7 +607,7 @@ namespace xlog {
 #endif
     }
     template <typename T, typename... Args>
-    inline void v(const T *format_string, Args &&...args) {
+    void v(const T *format_string, Args &&...args) {
 #if defined(XLOG_VERBOSE)
         LogParam log_param;
         internal_dout(log_param, format_string, std::forward<Args>(args)...);
@@ -614,8 +616,7 @@ namespace xlog {
 #pragma warning(push)
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> l(const T *format_string,
-                                          Args &&...args) {
+    [[maybe_unused]] TextInfo<T> l(const T *format_string, Args &&...args) {
 #if defined(XLOG_NO_LOG)
         return TextInfo<T>((const T *)nullptr);
 #else
@@ -628,8 +629,8 @@ namespace xlog {
     }
 
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> l(bool enable, const T *format_string,
-                                          Args &&...args) {
+    [[maybe_unused]] TextInfo<T> l(bool enable, const T *format_string,
+                                   Args &&...args) {
         if (!enable) return TextInfo<T>((const T *)nullptr);
 
 #if defined(XLOG_NO_LOG)
@@ -646,20 +647,20 @@ namespace xlog {
 #pragma warning(pop)
 
     template <typename T>
-    struct Concatenator {
+    class Concatenator {
     public:
         explicit Concatenator(const T *value) : val_(value) {}
         const T *operator+(const T *y) {
             val_ += ": ";
             val_ += y;
             return val_.c_str();
-        };
+        }
 
         Concatenator &operator+(const Concatenator &y) {
             val_ += " ";
             val_ += y.get();
             return *this;
-        };
+        }
         [[nodiscard]] const WorkString<T> &get() const { return val_; }
 
     private:
@@ -667,7 +668,7 @@ namespace xlog {
     };
 
     template <typename T>
-    inline Concatenator<T> FunctionPrefix(const T *function_name) {
+    Concatenator<T> FunctionPrefix(const T *function_name) {
         return Concatenator<T>(function_name);
     }
 
@@ -677,7 +678,7 @@ namespace xlog {
         char buf[32];
         ConvertInt2Char(buf, 30, line);
         file_line += buf;
-        return Concatenator<char>{file_line.c_str()};
+        return Concatenator{file_line.c_str()};
     }
 } // namespace xlog
 

@@ -20,12 +20,15 @@ import signal
 import socket
 import subprocess
 import time
+from collections.abc import Iterator, Mapping, Sequence
+from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, TypedDict
 
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.backup.type_defs import BackupInfo
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
@@ -95,17 +98,17 @@ def is_site() -> bool:
     return "OMD_ROOT" in os.environ
 
 
-def mkbackup_path():
+def mkbackup_path() -> str:
     if not is_site():
         return "/usr/sbin/mkbackup"
     return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
 
 
-def system_config_path():
+def system_config_path() -> str:
     return "/etc/cma/backup.conf"
 
 
-def site_config_path(site_id=None):
+def site_config_path(site_id: str | None = None) -> str:
     if site_id is None:
         if not is_site():
             raise Exception(_("Not executed in OMD environment!"))
@@ -114,11 +117,11 @@ def site_config_path(site_id=None):
     return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
 
 
-def hostname():
+def hostname() -> str:
     return socket.gethostname()
 
 
-def is_canonical(directory) -> bool:  # type:ignore[no-untyped-def]
+def is_canonical(directory: str) -> bool:  # type:ignore[no-untyped-def]
     if not directory.endswith("/"):
         directory += "/"
     return (
@@ -127,12 +130,16 @@ def is_canonical(directory) -> bool:  # type:ignore[no-untyped-def]
     )
 
 
+# TODO narrow type!
+ConfigData = dict
+
+
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, file_path: str) -> None:
         self._file_path = file_path
 
-    def load(self):
+    def load(self) -> ConfigData:
         return store.load_object_from_file(
             self._file_path,
             default={
@@ -141,7 +148,7 @@ class Config:
             },
         )
 
-    def save(self, config):
+    def save(self, config: ConfigData) -> None:
         store.save_object_to_file(self._file_path, config)
 
 
@@ -157,7 +164,7 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident, config) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, ident: str, config: ConfigData) -> None:
         self._ident = ident
         self._config: dict = {}
 
@@ -166,48 +173,50 @@ class BackupEntity:
     def ident(self) -> str:
         return self._ident
 
-    def config(self):
+    def config(self) -> ConfigData:
         return self._config
 
     def title(self) -> str:
         return self._config["title"]
 
-    def to_config(self):
+    def to_config(self) -> ConfigData:
         return self._config
 
-    def from_config(self, config):
+    def from_config(self, config: ConfigData) -> None:
         self._config = config
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path, cls, config_attr) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, config_file_path: str, cls: type, config_attr: str) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
         self._config_attr = config_attr
         self.objects = {
-            ident: cls(ident, config) for ident, config in self._config[config_attr].items()  #
+            ident: cls(ident, config) for ident, config in self._config[config_attr].items()
         }
 
-    def get(self, ident):
+    def get(self, ident: str | None) -> BackupEntity:
+        if ident is None:
+            raise KeyError
         return self.objects[ident]
 
-    def remove(self, obj):
+    def remove(self, obj: BackupEntity) -> None:
         try:
             del self.objects[obj.ident()]
         except KeyError:
             pass
 
-    def choices(self):
+    def choices(self) -> Sequence[tuple[str, str]]:
         return sorted(
             [(ident, obj.title()) for ident, obj in self.objects.items()],
             key=lambda x_y: x_y[1].title(),
         )
 
-    def add(self, obj):
+    def add(self, obj: BackupEntity) -> None:
         self.objects[obj.ident()] = obj
 
-    def save(self):
+    def save(self) -> None:
         self._config[self._config_attr] = {
             ident: obj.to_config() for ident, obj in self.objects.items()  #
         }
@@ -229,10 +238,18 @@ class BackupEntityCollection:
 #   '----------------------------------------------------------------------'
 
 
+class StateConfig(TypedDict, total=False):
+    state: str | None
+    started: None
+    output: str
+    pid: int
+    success: bool
+
+
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
 class MKBackupJob:
     @classmethod
-    def state_name(cls, state):
+    def state_name(cls, state: str | None) -> str:
         return {
             "started": _("Started"),
             "running": _("Currently running"),
@@ -252,11 +269,11 @@ class MKBackupJob:
             else:
                 raise
 
-    def state(self):
+    def state(self) -> StateConfig:
         try:
             with self.state_file_path().open(encoding="utf-8") as f:
                 state = json.load(f)
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
                     "state": None,
@@ -294,7 +311,7 @@ class MKBackupJob:
             "/proc/%d" % state["pid"]
         )
 
-    def start(self, env=None):
+    def start(self, env: Mapping[str, str] | None = None) -> None:
         completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
@@ -308,10 +325,10 @@ class MKBackupJob:
         if completed_process.returncode != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
-    def _start_command(self):
+    def _start_command(self) -> Sequence[str]:
         raise NotImplementedError()
 
-    def stop(self):
+    def stop(self) -> None:
         state = self.state()
         pgid = os.getpgid(state["pid"])
 
@@ -340,17 +357,17 @@ class MKBackupJob:
 
 
 class Job(MKBackupJob, BackupEntity):
-    def target_ident(self):
+    def target_ident(self) -> str:
         return self._config["target"]
 
-    def key_ident(self):
+    def key_ident(self) -> str:
         return self._config["encrypt"]
 
     def is_encrypted(self) -> bool:
         return self._config["encrypt"] is not None
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
-    def global_ident(self):
+    def global_ident(self) -> str:
         parts = []
         site = os.environ.get("OMD_SITE")
 
@@ -376,20 +393,20 @@ class Job(MKBackupJob, BackupEntity):
 
         return path / ("%s.state" % self.ident())
 
-    def _start_command(self) -> List[str]:
+    def _start_command(self) -> Sequence[str]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
-    def schedule(self) -> Optional[Dict[str, Any]]:
+    def schedule(self) -> dict[str, Any] | None:
         return self._config["schedule"]
 
-    def cron_config(self) -> List[str]:
+    def cron_config(self) -> list[str]:
         if not self._config["schedule"] or self._config["schedule"]["disabled"]:
             return []
         userspec = self._cron_userspec()
         cmdline = self._cron_cmdline()
-        return ["%s %s%s" % (timespec, userspec, cmdline) for timespec in self._cron_timespecs()]
+        return [f"{timespec} {userspec}{cmdline}" for timespec in self._cron_timespecs()]
 
-    def _cron_timespecs(self):
+    def _cron_timespecs(self) -> Sequence[str]:
         period = self._config["schedule"]["period"]
         times = self._config["schedule"]["timeofday"]
 
@@ -414,15 +431,15 @@ class Job(MKBackupJob, BackupEntity):
 
         return timespecs
 
-    def _cron_userspec(self):
+    def _cron_userspec(self) -> str:
         if os.environ.get("OMD_SITE"):
             return ""
         return "root "
 
-    def _cron_cmdline(self):
+    def _cron_cmdline(self) -> str:
         return "mkbackup backup %s >/dev/null" % self.ident()
 
-    def from_config(self, config):
+    def from_config(self, config: ConfigData) -> None:
         # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
         # compatibility.
         schedule = config.get("schedule", {})
@@ -432,13 +449,13 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, config_file_path: str) -> None:
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
-    def show_list(self, editable=True):  # pylint: disable=too-many-branches
+    def show_list(self, editable: bool = True) -> None:  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
@@ -554,18 +571,18 @@ class Jobs(BackupEntityCollection):
 
                     html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
-    def jobs_using_target(self, target):
+    def jobs_using_target(self, target: "Target") -> Sequence[Job]:
         jobs = []
         for job in self.objects.values():
             if job.target_ident() == target.ident():
                 jobs.append(job)
         return jobs
 
-    def save(self):
+    def save(self) -> None:
         super().save()
         self.save_cronjobs()
 
-    def save_cronjobs(self):
+    def save_cronjobs(self) -> None:
         with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
@@ -575,10 +592,10 @@ class Jobs(BackupEntityCollection):
 
         self._apply_cron_config()
 
-    def _write_cronjob_header(self, f):
+    def _write_cronjob_header(self, f: TextIOWrapper) -> None:
         f.write("# Written by mkbackup configuration\n")
 
-    def _apply_cron_config(self):
+    def _apply_cron_config(self) -> None:
         pass
 
 
@@ -586,7 +603,7 @@ class PageBackup:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def home_button(self) -> None:
@@ -658,7 +675,7 @@ class PageBackup:
                 is_suggested=True,
             )
 
-    def _may_edit_config(self):
+    def _may_edit_config(self) -> bool:
         return True
 
     def action(self) -> ActionResult:
@@ -668,6 +685,9 @@ class PageBackup:
             job = jobs.get(ident)
         except KeyError:
             raise MKUserError("_job", _("This backup job does not exist."))
+
+        if not isinstance(job, Job):
+            raise MKGeneralException("Wow this should have been a job object")
 
         action = request.var("_action")
 
@@ -685,7 +705,7 @@ class PageBackup:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def _delete_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _delete_job(self, job: Job) -> None:
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
@@ -695,11 +715,11 @@ class PageBackup:
         jobs.save()
         flash(_("The job has been deleted."))
 
-    def _start_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _start_job(self, job: Job) -> None:
         job.start()
         flash(_("The backup has been started."))
 
-    def _stop_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _stop_job(self, job: Job) -> None:
         job.stop()
         flash(_("The backup has been stopped."))
 
@@ -712,7 +732,7 @@ class PageEditBackupJob:
     def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
-        job_ident = request.var("job")
+        job_ident = request.get_str_input("job")
 
         if job_ident is not None:
             try:
@@ -720,11 +740,14 @@ class PageEditBackupJob:
             except KeyError:
                 raise MKUserError("target", _("This backup job does not exist."))
 
+            if not isinstance(job, Job):
+                raise MKGeneralException("this is impossible. Why would this page have targets?")
+
             if job.is_running():
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident: Optional[str] = job_ident
+            self._ident: str | None = job_ident
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -733,10 +756,10 @@ class PageEditBackupJob:
             self._job_cfg = {}
             self._title = _("New backup job")
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
-    def targets(self):
+    def targets(self) -> "Targets":
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -747,7 +770,7 @@ class PageEditBackupJob:
             _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
         )
 
-    def vs_backup_schedule(self):
+    def vs_backup_schedule(self) -> Alternative:
         return Alternative(
             title=_("Schedule"),
             elements=[
@@ -788,7 +811,7 @@ class PageEditBackupJob:
             ],
         )
 
-    def vs_backup_job(self):
+    def vs_backup_job(self) -> Dictionary:
         if self._new:
             ident_attr = [
                 (
@@ -876,25 +899,25 @@ class PageEditBackupJob:
             render="form",
         )
 
-    def _validate_target(self, value, varprefix):
+    def _validate_target(self, value: Any, varprefix: str) -> None:
         self.targets().validate_target(value, varprefix)
 
     # Can be overridden by subclasses to add custom attributes to the
     # job configuration. e.g. system jobs can exclude sites optionally.
-    def custom_job_attributes(self):
+    def custom_job_attributes(self) -> list[tuple[str, ValueSpec]]:
         return []
 
-    def _validate_backup_job_ident(self, value, varprefix):
+    def _validate_backup_job_ident(self, value: str, varprefix: str) -> None:
         if value == "restore":
             raise MKUserError(varprefix, _("You need to choose another ID."))
 
         if value in self.jobs().objects:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
-    def backup_key_choices(self):
+    def backup_key_choices(self) -> Sequence[tuple[str, str]]:
         return self.key_store.choices()
 
-    def backup_target_choices(self):
+    def backup_target_choices(self) -> Sequence[tuple[str, str]]:
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
     def action(self) -> ActionResult:
@@ -909,13 +932,16 @@ class PageEditBackupJob:
         if "ident" in config:
             self._ident = config.pop("ident")
         self._job_cfg = config
+        if self._ident is None:
+            raise MKGeneralException("Cannot create or modify job without identifier")
 
         jobs = self.jobs()
         if self._new:
             job = Job(self._ident, self._job_cfg)
             jobs.add(job)
         else:
-            job = jobs.get(self._ident)
+            # TODO type the containers more generically
+            job = jobs.get(self._ident)  # type: ignore[assignment]
             job.from_config(self._job_cfg)
 
         jobs.save()
@@ -938,10 +964,10 @@ class PageEditBackupJob:
 class PageAbstractBackupJobState:
     def __init__(self) -> None:
         super().__init__()
-        self._job: Optional[MKBackupJob] = None
-        self._ident: Optional[str] = None
+        self._job: MKBackupJob | None = None
+        self._ident: str | None = None
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -962,10 +988,10 @@ class PageAbstractBackupJobState:
             % (self._update_url(), self._ident, "true" if is_site() else "false")
         )
 
-    def _update_url(self):
+    def _update_url(self) -> str:
         return "ajax_backup_job_state.py?job=%s" % self._ident
 
-    def show_job_details(self):
+    def show_job_details(self) -> None:
         if self._job is None:
             raise Exception("uninitialized PageAbstractBackupJobState")
         job = self._job
@@ -1022,17 +1048,227 @@ class PageBackupJobState(PageAbstractBackupJobState):
         super().__init__()
         self._from_vars()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         job_ident = request.var("job")
         if job_ident is not None:
             try:
-                self._job = self.jobs().get(job_ident)
+                tmp = self.jobs().get(job_ident)
+                if not isinstance(tmp, Job):
+                    raise MKGeneralException("Wow this should have been a job")
+                self._job = tmp
             except KeyError:
                 raise MKUserError("job", _("This backup job does not exist."))
 
             self._ident = job_ident
         else:
             raise MKUserError("job", _("You need to specify a backup job."))
+
+
+# .
+#   .--Target Types--------------------------------------------------------.
+#   |      _____                    _     _____                            |
+#   |     |_   _|_ _ _ __ __ _  ___| |_  |_   _|   _ _ __   ___  ___       |
+#   |       | |/ _` | '__/ _` |/ _ \ __|   | || | | | '_ \ / _ \/ __|      |
+#   |       | | (_| | | | (_| |  __/ |_    | || |_| | |_) |  __/\__ \      |
+#   |       |_|\__,_|_|  \__, |\___|\__|   |_| \__, | .__/ \___||___/      |
+#   |                    |___/                 |___/|_|                    |
+#   +----------------------------------------------------------------------+
+#   | A target type implements the handling of different protocols to use  |
+#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
+#   '----------------------------------------------------------------------'
+
+
+class ABCBackupTargetType(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def choices(cls: Any) -> list[tuple[str, str, ValueSpec]]:
+        choices = []
+        # TODO: subclasses with the same name may be registered multiple times, due to execfile
+        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
+        for type_class in cls.__subclasses__():
+            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
+        return sorted(choices, key=lambda x: x[1])
+
+    @classmethod
+    def get_type(cls, type_ident: str) -> type["ABCBackupTargetType"] | None:
+        # TODO: subclasses with the same name may be registered multiple times, due to execfile
+        for type_class in cls.__subclasses__():
+            # indent is an attribute in the implementations
+            if type_class.ident == type_ident:  # type: ignore[comparison-overlap]
+                return type_class
+        return None
+
+    @classmethod
+    def title(cls) -> str:
+        raise NotImplementedError()
+
+    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
+        self._params = params
+
+    @classmethod
+    @abc.abstractmethod
+    def valuespec(cls) -> Dictionary:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def backups(self) -> Mapping[str, BackupInfo]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_backup(self, backup_ident: str) -> BackupInfo:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def remove_backup(self, backup_ident: str) -> None:
+        raise NotImplementedError()
+
+    @classmethod
+    @abc.abstractmethod
+    def validate(cls, value, varprefix):
+        raise NotImplementedError()
+
+
+class BackupTargetLocal(ABCBackupTargetType):
+    ident = "local"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Local path")
+
+    @classmethod
+    def valuespec(cls) -> Dictionary:
+        return Dictionary(
+            elements=[
+                (
+                    "path",
+                    AbsoluteDirname(
+                        title=_("Directory to save the backup to"),
+                        help=_(
+                            "This can be a local directory of your choice. You can also use this "
+                            "option if you want to save your backup to a network share using "
+                            "NFS, Samba or similar. But you will have to care about mounting the "
+                            "network share on your own."
+                        ),
+                        allow_empty=False,
+                        validate=cls.validate,
+                        size=64,
+                    ),
+                ),
+                (
+                    "is_mountpoint",
+                    Checkbox(
+                        title=_("Mountpoint"),
+                        label=_("Is mountpoint"),
+                        help=_(
+                            "When this is checked, the backup ensures that the configured path "
+                            "is a mountpoint. If there is no active mount on the path, the backup "
+                            "fails with an error message."
+                        ),
+                        default_value=True,
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        )
+
+    @classmethod
+    def validate(cls, value, varprefix):
+        if not is_canonical(value):
+            raise MKUserError(varprefix, _("You have to provide a canonical path."))
+
+        if cmk_version.is_cma() and not value.startswith("/mnt/"):
+            raise MKUserError(
+                varprefix,
+                _(
+                    "You can only use mountpoints below the <tt>/mnt</tt> "
+                    "directory as backup targets."
+                ),
+            )
+
+        if not os.path.isdir(value):
+            raise MKUserError(
+                varprefix,
+                _(
+                    "The path does not exist or is not a directory. You "
+                    "need to specify an already existing directory."
+                ),
+            )
+
+        # Check write access for the site user
+        try:
+            test_file_path = os.path.join(value, "write_test_%d" % time.time())
+            with open(test_file_path, "wb"):
+                pass
+            os.unlink(test_file_path)
+        except OSError:
+            if cmk_version.is_cma():
+                raise MKUserError(
+                    varprefix,
+                    _(
+                        "Failed to write to the configured directory. The target directory needs "
+                        "to be writable."
+                    ),
+                )
+            raise MKUserError(
+                varprefix,
+                _(
+                    "Failed to write to the configured directory. The site user needs to be able to "
+                    "write the target directory. The recommended way is to make it writable by the "
+                    'group "omd".'
+                ),
+            )
+
+    # TODO: Duplicate code with mkbackup
+    def backups(self) -> Mapping[str, BackupInfo]:
+        backups = {}
+
+        self.verify_target_is_ready()
+
+        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
+            try:
+                info = self._load_backup_info(path)
+            except OSError as e:
+                if e.errno == errno.EACCES:
+                    continue  # Silently skip not permitted files
+                raise
+
+            backups[info["backup_id"]] = info
+
+        return backups
+
+    # TODO: Duplocate code with mkbackup
+    def verify_target_is_ready(self):
+        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
+            raise MKGeneralException(
+                "The backup target path is configured to be a mountpoint, "
+                "but nothing is mounted."
+            )
+
+    # TODO: Duplicate code with mkbackup
+    def _load_backup_info(self, path: str) -> BackupInfo:
+        with Path(path).open(encoding="utf-8") as f:
+            info = json.load(f)
+
+        # Load the backup_id from the second right path component. This is the
+        # base directory of the mkbackup.info file. The user might have moved
+        # the directory, e.g. for having multiple backups. Allow that.
+        # Maybe we need to changed this later when we allow multiple generations
+        # of backups.
+        info["backup_id"] = os.path.basename(os.path.dirname(path))
+
+        return info
+
+    def get_backup(self, backup_ident: str) -> BackupInfo:
+        backups = self.backups()
+        return backups[backup_ident]
+
+    def remove_backup(self, backup_ident: str) -> None:
+        self.verify_target_is_ready()
+        shutil.rmtree("{}/{}".format(self._params["path"], backup_ident))
 
 
 # .
@@ -1051,16 +1287,19 @@ class PageBackupJobState(PageAbstractBackupJobState):
 
 
 class Target(BackupEntity):
-    def type_ident(self):
+    def type_ident(self) -> str:
         return self._config["remote"][0]
 
-    def type_class(self):
-        return ABCBackupTargetType.get_type(self.type_ident())
+    def type_class(self) -> type[ABCBackupTargetType]:
+        tclass = ABCBackupTargetType.get_type(self.type_ident())
+        if tclass is not None:
+            return tclass
+        raise NotImplementedError(f"unkown type {self.type_ident()}")
 
-    def type_params(self):
+    def type_params(self) -> Mapping:
         return self._config["remote"][1]
 
-    def type(self):
+    def type(self) -> ABCBackupTargetType:
         if self.type_ident() != "local":
             raise NotImplementedError()
         return self.type_class()(self.type_params())
@@ -1102,7 +1341,7 @@ class Target(BackupEntity):
 
                 from_info = info["hostname"]
                 if "site_id" in info:
-                    from_info += " (Site: %s, Version: %s)" % (
+                    from_info += " (Site: {}, Version: {})".format(
                         info["site_id"],
                         info["site_version"],
                     )
@@ -1130,13 +1369,13 @@ class Target(BackupEntity):
                         else:
                             html.write_text(" (%s)" % _("Standby node"))
 
-    def backups(self):
+    def backups(self) -> Mapping[str, BackupInfo]:
         return self.type().backups()
 
-    def get_backup(self, backup_ident):
+    def get_backup(self, backup_ident: str) -> BackupInfo:
         return self.type().get_backup(backup_ident)
 
-    def remove_backup(self, backup_ident):
+    def remove_backup(self, backup_ident: str) -> None:
         self.type().remove_backup(backup_ident)
 
 
@@ -1144,7 +1383,7 @@ class Targets(BackupEntityCollection):
     def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
         super().__init__(config_file_path, cls=Target, config_attr="targets")
 
-    def show_list(self, title=None, editable=True):
+    def show_list(self, title: str | None = None, editable: bool = True) -> None:
         title = title if title else _("Targets")
         html.h2(title)
         if not editable and is_site():
@@ -1196,20 +1435,22 @@ class Targets(BackupEntityCollection):
                 vs_target = target_class(target.type_params()).valuespec()
                 table.cell(_("Destination"), vs_target.value_to_html(target.type_params()))
 
-    def validate_target(self, value, varprefix):
+    def validate_target(self, value: str, varprefix: str) -> None:
         target = self.get(value)
+        if not isinstance(target, Target):
+            raise MKGeneralException("I cannot use a job here")
         path = target.type_params()["path"]
-        target.type().validate_local_directory(path, varprefix)
+        target.type().validate(path, varprefix)
 
 
 class PageBackupTargets:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def targets(self):
+    def targets(self) -> Targets:
         raise NotImplementedError()
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1291,7 +1532,7 @@ class PageEditBackupTarget:
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident: Optional[str] = target_ident
+            self._ident: str | None = target_ident
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:
@@ -1380,6 +1621,9 @@ class PageEditBackupTarget:
             self._ident = config.pop("ident")
         self._target_cfg = config
 
+        if self._ident is None:
+            raise MKGeneralException("Cannot create or modify job without identifier")
+
         targets = self.targets()
         if self._new:
             target = Target(self._ident, self._target_cfg)
@@ -1413,199 +1657,6 @@ class SystemBackupTargetsReadOnly(Targets):
     def show_list(self, title=None, editable=True):
         if cmk_version.is_cma():
             super().show_list(title, editable)
-
-
-# .
-#   .--Target Types--------------------------------------------------------.
-#   |      _____                    _     _____                            |
-#   |     |_   _|_ _ _ __ __ _  ___| |_  |_   _|   _ _ __   ___  ___       |
-#   |       | |/ _` | '__/ _` |/ _ \ __|   | || | | | '_ \ / _ \/ __|      |
-#   |       | | (_| | | | (_| |  __/ |_    | || |_| | |_) |  __/\__ \      |
-#   |       |_|\__,_|_|  \__, |\___|\__|   |_| \__, | .__/ \___||___/      |
-#   |                    |___/                 |___/|_|                    |
-#   +----------------------------------------------------------------------+
-#   | A target type implements the handling of different protocols to use  |
-#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
-#   '----------------------------------------------------------------------'
-
-
-class ABCBackupTargetType(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
-    @classmethod
-    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
-        choices = []
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
-        for type_class in cls.__subclasses__():
-            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
-        return sorted(choices, key=lambda x: x[1])
-
-    @classmethod
-    def get_type(cls, type_ident):
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():
-            if type_class.ident == type_ident:
-                return type_class
-        return None
-
-    @classmethod
-    def title(cls):
-        raise NotImplementedError()
-
-    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
-        self._params = params
-
-    @classmethod
-    @abc.abstractmethod
-    def valuespec(cls):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def backups(self):
-        raise NotImplementedError()
-
-
-class BackupTargetLocal(ABCBackupTargetType):
-    ident = "local"
-
-    @classmethod
-    def title(cls):
-        return _("Local path")
-
-    @classmethod
-    def valuespec(cls):
-        return Dictionary(
-            elements=[
-                (
-                    "path",
-                    AbsoluteDirname(
-                        title=_("Directory to save the backup to"),
-                        help=_(
-                            "This can be a local directory of your choice. You can also use this "
-                            "option if you want to save your backup to a network share using "
-                            "NFS, Samba or similar. But you will have to care about mounting the "
-                            "network share on your own."
-                        ),
-                        allow_empty=False,
-                        validate=cls.validate_local_directory,
-                        size=64,
-                    ),
-                ),
-                (
-                    "is_mountpoint",
-                    Checkbox(
-                        title=_("Mountpoint"),
-                        label=_("Is mountpoint"),
-                        help=_(
-                            "When this is checked, the backup ensures that the configured path "
-                            "is a mountpoint. If there is no active mount on the path, the backup "
-                            "fails with an error message."
-                        ),
-                        default_value=True,
-                    ),
-                ),
-            ],
-            optional_keys=[],
-        )
-
-    @classmethod
-    def validate_local_directory(cls, value, varprefix):
-        if not is_canonical(value):
-            raise MKUserError(varprefix, _("You have to provide a canonical path."))
-
-        if cmk_version.is_cma() and not value.startswith("/mnt/"):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "You can only use mountpoints below the <tt>/mnt</tt> "
-                    "directory as backup targets."
-                ),
-            )
-
-        if not os.path.isdir(value):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "The path does not exist or is not a directory. You "
-                    "need to specify an already existing directory."
-                ),
-            )
-
-        # Check write access for the site user
-        try:
-            test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            with open(test_file_path, "wb"):
-                pass
-            os.unlink(test_file_path)
-        except IOError:
-            if cmk_version.is_cma():
-                raise MKUserError(
-                    varprefix,
-                    _(
-                        "Failed to write to the configured directory. The target directory needs "
-                        "to be writable."
-                    ),
-                )
-            raise MKUserError(
-                varprefix,
-                _(
-                    "Failed to write to the configured directory. The site user needs to be able to "
-                    "write the target directory. The recommended way is to make it writable by the "
-                    'group "omd".'
-                ),
-            )
-
-    # TODO: Duplicate code with mkbackup
-    def backups(self):
-        backups = {}
-
-        self.verify_target_is_ready()
-
-        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
-            try:
-                info = self._load_backup_info(path)
-            except IOError as e:
-                if e.errno == errno.EACCES:
-                    continue  # Silently skip not permitted files
-                raise
-
-            backups[info["backup_id"]] = info
-
-        return backups
-
-    # TODO: Duplocate code with mkbackup
-    def verify_target_is_ready(self):
-        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
-            raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, "
-                "but nothing is mounted."
-            )
-
-    # TODO: Duplicate code with mkbackup
-    def _load_backup_info(self, path):
-        with Path(path).open(encoding="utf-8") as f:
-            info = json.load(f)
-
-        # Load the backup_id from the second right path component. This is the
-        # base directory of the mkbackup.info file. The user might have moved
-        # the directory, e.g. for having multiple backups. Allow that.
-        # Maybe we need to changed this later when we allow multiple generations
-        # of backups.
-        info["backup_id"] = os.path.basename(os.path.dirname(path))
-
-        return info
-
-    def get_backup(self, backup_ident):
-        backups = self.backups()
-        return backups[backup_ident]
-
-    def remove_backup(self, backup_ident):
-        self.verify_target_is_ready()
-        shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
 
 
 # .

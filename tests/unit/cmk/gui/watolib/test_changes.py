@@ -11,12 +11,20 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import
+    compile_builtin_po_files,
+    locale_base_dir,
+    locale_paths,
+)
+
 from livestatus import SiteId
 
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.i18n as i18n
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -85,6 +93,7 @@ class TestAuditLogStore:
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
+    @pytest.mark.usefixtures("request_context")
     def test_transport_html(self, store, request_context) -> None:  # type:ignore[no-untyped-def]
         entry = AuditLogStore.Entry(
             int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
@@ -206,7 +215,8 @@ class TestSiteChanges:
         assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
 
 
-def test_log_audit_with_object_diff(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_log_audit_with_object_diff() -> None:
     old = {
         "a": "b",
         "b": "c",
@@ -237,7 +247,8 @@ def test_log_audit_with_object_diff(request_context) -> None:  # type:ignore[no-
     ]
 
 
-def test_log_audit_with_html_message(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_log_audit_with_html_message() -> None:
     with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,
@@ -254,6 +265,39 @@ def test_log_audit_with_html_message(request_context) -> None:  # type:ignore[no
             user_id="calvin",
             action="bla",
             text=HTML("Message <b>bla</b>"),
+            diff_text=None,
+        ),
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_log_audit_with_lazystring() -> None:
+    with application_and_request_context():
+        lazy_str = i18n._l("Edit foreign %s") % "zeugs"
+        assert lazy_str == "Edit foreign zeugs"
+
+    # use localized lazy_str as input for log_audit and make sure that it is
+    # written unlocalized to audit log
+    with application_and_request_context():
+        i18n.localize("de")
+        assert lazy_str == "Fremde(n) zeugs editieren"
+
+        with on_time("2018-04-15 16:50", "CET"):
+            log_audit(
+                object_ref=None,
+                user_id=UserId("calvin"),
+                action="bla",
+                message=lazy_str,
+            )
+
+    store = AuditLogStore(AuditLogStore.make_path())
+    assert store.read() == [
+        AuditLogStore.Entry(
+            time=1523811000,
+            object_ref=None,
+            user_id="calvin",
+            action="bla",
+            text="Edit foreign zeugs",
             diff_text=None,
         ),
     ]

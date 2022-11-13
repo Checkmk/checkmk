@@ -6,16 +6,12 @@
 // API "Internal transport"
 
 #pragma once
-#include <chrono>       // timestamps
-#include <cstdint>      // wchar_t when compiler options set weird
-#include <functional>   // callback in the main function
-#include <string_view>  // callback in the main function
+#include <cstdint>     // wchar_t when compiler options set weird
+#include <functional>  // callback in the main function
 
-#include "common/cfg_info.h"  // default logfile name
-#include "common/wtools.h"    // conversion
+#include "common/wtools.h"  // conversion
 #include "logger.h"
 #include "tools/_misc.h"
-#include "tools/_xlog.h"
 
 namespace cma::carrier {
 enum class DataType {
@@ -55,23 +51,21 @@ struct CarrierDataHeader {
                                 std::function<void(CarrierDataHeader *)>>;
 
     /// \brief returns unique ptr with custom deleter
-    static CarrierDataHeader::ptr createPtr(
-        const char *provider_name,  // unique name of provider
-        uint64_t answer_id,         // timestamp of the answer to fill
-        DataType data_type,         // DataType::
-        const void *data,           // data, nullptr is allowed
-        uint64_t length             // data length
-        ) noexcept {
-        return CarrierDataHeader::ptr(
-            createRaw(provider_name, answer_id, data_type, data, length),
-            CarrierDataHeader::destroy);
+    static ptr createPtr(const char *provider_name,  // unique name of provider
+                         uint64_t answer_id,  // timestamp of the answer to fill
+                         DataType data_type,  // DataType::
+                         const void *data,    // data, nullptr is allowed
+                         uint64_t length      // data length
+                         ) noexcept {
+        return {createRaw(provider_name, answer_id, data_type, data, length),
+                destroy};
     }
 
-    const char *asBuf() const noexcept {
+    [[nodiscard]] const char *asBuf() const noexcept {
         return static_cast<const char *>(static_cast<const void *>(this));
     }
 
-    static void destroy(CarrierDataHeader *cdh) noexcept {
+    static void destroy(const CarrierDataHeader *cdh) noexcept {
         if (cdh != nullptr) {
             delete[] cdh->asBuf();
         }
@@ -80,13 +74,13 @@ struct CarrierDataHeader {
     [[nodiscard]] const void *data() const noexcept {
         const auto *p = asBuf();
 
-        return data_length_ != 0U ? static_cast<const void *>(p + sizeof(*this))
+        return data_length_ != 0U ? static_cast<const void *>(p + sizeof *this)
                                   : nullptr;
     }
 
     [[nodiscard]] std::string string() const {
         const auto *p = asBuf();
-        const auto *str = data_length_ != 0U ? p + sizeof(*this) : nullptr;
+        const auto *str = data_length_ != 0U ? p + sizeof *this : nullptr;
         if (str == nullptr) {
             return {};
         }
@@ -97,7 +91,7 @@ struct CarrierDataHeader {
     [[nodiscard]] auto answerId() const noexcept { return data_id_; }
     [[nodiscard]] auto length() const noexcept { return data_length_; }
     [[nodiscard]] auto fullLength() const noexcept {
-        return data_length_ + sizeof(CarrierDataHeader);
+        return data_length_ + sizeof CarrierDataHeader;
     }
     [[nodiscard]] auto info() const noexcept { return info_; }
     [[nodiscard]] auto type() const noexcept {
@@ -120,11 +114,11 @@ private:
         try {
             const auto length = static_cast<size_t>(data_length);
             // data payload
-            auto *block = new char[length + sizeof(CarrierDataHeader)];
-            ::memset(block, 0, +sizeof(CarrierDataHeader));
+            auto *block = new char[length + sizeof CarrierDataHeader];
+            ::memset(block, 0, +sizeof CarrierDataHeader);
             auto *cdh = reinterpret_cast<CarrierDataHeader *>(block);
             cdh->data_length_ = length;
-            if ((data != nullptr) && (cdh->data() != nullptr)) {
+            if (data != nullptr && cdh->data() != nullptr) {
                 memcpy(cdh->data(), data, length);
             } else {
                 cdh->data_length_ = 0;  // clean
@@ -132,7 +126,7 @@ private:
 
             // header
             ::strcpy(cdh->provider_id_, provider_name);
-            ::memset(cdh->reserved_, 0, sizeof(cdh->reserved_));
+            ::memset(cdh->reserved_, 0, sizeof cdh->reserved_);
             cdh->data_id_ = answer_id;
             cdh->info_ = 0;
             cdh->type_ = static_cast<uint64_t>(data_type);
@@ -147,7 +141,7 @@ private:
     void *data() noexcept {
         auto *p = const_cast<char *>(reinterpret_cast<const char *>(this));
 
-        return data_length_ != 0u ? static_cast<void *>(p + sizeof(*this))
+        return data_length_ != 0u ? static_cast<void *>(p + sizeof *this)
                                   : nullptr;
     }
     // DATA IS STARTED HERE ****************************************
@@ -161,7 +155,6 @@ private:
     // DATA ENDED HERE *********************************************
 
     CarrierDataHeader() = default;
-    ~CarrierDataHeader() = default;
 };
 #pragma pack(pop)
 
@@ -186,11 +179,10 @@ public:
         return carrier_address_;
     }
 
-    static inline bool FireSend(
-        const std::wstring &peer_name,  // assigned by caller
-        const std::wstring &port_name,  // standard format
-        const std::wstring &answer_id,  // identifies Answer
-        const void *data, size_t length) {
+    static bool FireSend(const std::wstring &peer_name,  // assigned by caller
+                         const std::wstring &port_name,  // standard format
+                         const std::wstring &answer_id,  // identifies Answer
+                         const void *data, size_t length) {
         if (auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
             auto port = wtools::ToUtf8(port_name);
             CoreCarrier cc;
@@ -236,9 +228,8 @@ private:
     bool mailSlotSend(DataType data_type, const std::string &peer_name,
                       uint64_t answer_id, const void *data,
                       size_t length) const;
-    bool dumpSlotSend(DataType type, const std::string &peer_name,
-                      uint64_t marker, const void *data_in,
-                      size_t length) const;
+    bool dumpSlotSend(DataType data_type, const std::string &peer_name,
+                      uint64_t marker, const void *data, size_t length) const;
     bool fileSlotSend(DataType data_type, const std::string &peer_name,
                       uint64_t answer_id, const void *data,
                       size_t length) const;
@@ -264,4 +255,4 @@ void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 std::string AsString(const CarrierDataHeader *dh) noexcept;
 
 std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept;
-};  // namespace cma::carrier
+}  // namespace cma::carrier

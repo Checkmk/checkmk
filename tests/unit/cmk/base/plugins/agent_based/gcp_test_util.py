@@ -6,8 +6,8 @@
 import datetime
 import json
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Mapping, Optional, Sequence, Tuple
 
 import pytest
 from google.cloud import monitoring_v3
@@ -42,7 +42,7 @@ class DiscoverTester(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+    def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         pass
 
     ###########
@@ -88,7 +88,7 @@ class DiscoverTester(ABC):
         assert len(list(self.discover(parse_assets(string_table)))) == 0
 
 
-def generate_labels(item: str, service_desc: agent_gcp.Service) -> Tuple[Mapping, Mapping]:
+def generate_labels(item: str, service_desc: agent_gcp.Service) -> tuple[Mapping, Mapping]:
     metric_labels = {}
     resource_labels = {"project": "test"}
     if "resource" in service_desc.default_groupby:

@@ -80,7 +80,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
@@ -111,6 +111,7 @@ from cmk.gui.watolib.utils import (
 )
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 HostAttributes = Mapping[str, Any]
@@ -1013,8 +1014,6 @@ class BaseFolder:
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         raise NotImplementedError()
 
@@ -2297,7 +2296,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         new_subfolder.save_hosts()
         add_change(
             "new-folder",
-            _("Created new folder %s") % new_subfolder.alias_path(),
+            _l("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=make_diff_text(
@@ -2337,7 +2336,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         hooks.call("folder-deleted", subfolder)
         add_change(
             "delete-folder",
-            _("Deleted folder %s") % subfolder.alias_path(),
+            _l("Deleted folder %s") % subfolder.alias_path(),
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
         )
@@ -2405,7 +2404,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
             "move-folder",
-            _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+            _l("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
@@ -2456,7 +2455,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change(
             "edit-folder",
-            _("Edited properties of folder %s") % self.title(),
+            _l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
@@ -2470,8 +2469,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         # 1. Check preconditions
         self.prepare_create_hosts()
@@ -2488,14 +2485,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 )
                 for host_name, attributes, _cluster_nodes in entries
             ],
-            bake=bake,
         )
 
     def create_validated_hosts(
         self,
         entries: Collection[tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2504,14 +2498,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
-
-        # 3. Prepare agents for the new hosts
-        #
-        # Note:  CREFolder should not know *anything* about the bakery.
-        #        Instead, the enterprise edition should explicitly try
-        #        to bake *after* the call to `create_hosts()` or
-        #        `create_validated_hosts()`.
-        bake([e[0] for e in entries])
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
@@ -2537,7 +2523,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._num_hosts = len(self._hosts)
         add_change(
             "create-host",
-            _("Created new host %s.") % host_name,
+            _l("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=make_diff_text(
@@ -2578,7 +2564,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = len(self._hosts)
             add_change(
                 "delete-host",
-                _("Deleted host %s") % host_name,
+                _l("Deleted host %s") % host_name,
                 object_ref=host.object_ref(),
                 sites=[host.site_id()],
             )
@@ -2650,7 +2636,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             new_folder_text = target_folder.path() or self.root_folder().title()
             add_change(
                 "move-host",
-                _('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
+                _l('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
                 % (
                     old_folder_text,
                     self._id,
@@ -2684,7 +2670,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._hosts[newname] = host
         add_change(
             "rename-host",
-            _("Renamed host from %s to %s") % (oldname, newname),
+            _l("Renamed host from %s to %s") % (oldname, newname),
             object_ref=host.object_ref(),
             sites=[host.site_id()],
         )
@@ -2703,7 +2689,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         add_change(
             "rename-parent",
-            _('Renamed parent from %s to %s in folder "%s"')
+            _l('Renamed parent from %s to %s in folder "%s"')
             % (oldname, newname, self.alias_path()),
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
@@ -3336,7 +3322,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change(
             "edit-host",
-            _("Modified host %s.") % self.name(),
+            _l("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, new_object),
@@ -3365,7 +3351,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change(
             "edit-host",
-            _("Removed explicit attributes of host %s.") % self.name(),
+            _l("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(
@@ -3415,7 +3401,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change(
             "rename-node",
-            _("Renamed cluster node from %s into %s.") % (oldname, newname),
+            _l("Renamed cluster node from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3430,7 +3416,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change(
             "rename-parent",
-            _("Renamed parent from %s into %s.") % (oldname, newname),
+            _l("Renamed parent from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3440,7 +3426,7 @@ class CREHost(WithPermissions, WithAttributes):
     def rename(self, new_name):
         add_change(
             "rename-host",
-            _("Renamed host from %s into %s.") % (self.name(), new_name),
+            _l("Renamed host from %s into %s.") % (self.name(), new_name),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3557,7 +3543,9 @@ class CMEFolder(CREFolder):
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
         if customer_id not in [managed.default_customer_id(), new_customer_id]:
-            folder_sites = ", ".join(list(managed.get_sites_of_customer(customer_id).keys()))
+            folder_sites = ", ".join(
+                list(managed_helpers.get_sites_of_customer(customer_id).keys())
+            )
             raise MKUserError(
                 None,
                 _(
@@ -3653,15 +3641,13 @@ class CMEFolder(CREFolder):
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super().create_hosts(entries, bake=bake)
+        super().create_hosts(entries)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:
@@ -3671,7 +3657,7 @@ class CMEFolder(CREFolder):
         if customer_id != managed.default_customer_id():
             host_customer_id = managed.get_customer_of_site(attributes["site"])
             if host_customer_id != customer_id:
-                folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+                folder_sites = ", ".join(managed_helpers.get_sites_of_customer(customer_id))
                 raise MKUserError(
                     None,
                     _(
@@ -3695,7 +3681,7 @@ class CMEFolder(CREFolder):
         # Check if the hosts are moved to a provider folder
         target_customer_id = managed.get_customer_of_site(target_site_id)
         if target_customer_id != managed.default_customer_id():
-            allowed_sites = managed.get_sites_of_customer(target_customer_id)
+            allowed_sites = managed_helpers.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
                 host = self.load_host(hostname)
                 host_site = host.attributes().get("site")
@@ -3939,3 +3925,23 @@ match_item_generator_registry.register(
         collect_all_hosts,
     )
 )
+
+
+def rebuild_folder_lookup_cache() -> None:
+    """Rebuild folder lookup cache around ~5AM
+    This needs to be done, since the cachefile might include outdated/vanished hosts"""
+
+    localtime = time.localtime()
+    if not (localtime.tm_hour == 5 and localtime.tm_min < 5):
+        return
+
+    cache_path = Path(Folder.host_lookup_cache_path())
+    if cache_path.exists() and time.time() - cache_path.stat().st_mtime < 300:
+        return
+
+    # Touch the file. The cronjob interval might be faster than the file creation
+    # Note: If this takes longer than the RequestTimeout -> Problem
+    #       On very big configurations, e.g. 300MB this might take 30-50 seconds
+    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cache_path.touch()
+    Folder.build_host_lookup_cache(str(cache_path))

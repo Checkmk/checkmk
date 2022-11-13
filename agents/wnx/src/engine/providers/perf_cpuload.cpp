@@ -8,9 +8,7 @@
 #include "providers/perf_cpuload.h"
 
 #include <pdh.h>
-#include <pdhmsg.h>
 
-#include <ranges>
 #include <string_view>
 #include <unordered_map>
 
@@ -24,11 +22,9 @@
 
 namespace rs = std::ranges;
 
-constexpr std::wstring_view kProcessorQueueLength{
-    L"\\System\\Processor Queue Length"};
 uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
-    if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
+    if (::PdhOpenQuery(nullptr, 0, &query) != ERROR_SUCCESS) {
         XLOG::l("Failed PdhOpenQuery [{}]", ::GetLastError());
         return 0u;
     }
@@ -62,7 +58,7 @@ uint64_t ReadSingleCounter(std::wstring_view path) {
 namespace cma::provider {
 bool CheckSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
-    if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
+    if (::PdhOpenQuery(nullptr, 0, &query) != ERROR_SUCCESS) {
         XLOG::l("Failed PdhOpenQuery [{}]", ::GetLastError());
         return false;
     }
@@ -167,4 +163,4 @@ std::string PerfCpuLoad::makeBody() {
 
     return out;
 }
-};  // namespace cma::provider
+}  // namespace cma::provider

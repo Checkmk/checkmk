@@ -1,6 +1,7 @@
 [Unit]
 Description=Checkmk agent controller daemon
 After=network.target
+Documentation=https://docs.checkmk.com/latest/en/agent_linux.html
 
 [Service]
 ExecStart=/usr/bin/cmk-agent-ctl daemon

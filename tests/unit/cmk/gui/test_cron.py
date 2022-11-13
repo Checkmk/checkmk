@@ -11,14 +11,15 @@ import cmk.gui.cron as cron
 def test_registered_jobs() -> None:
 
     expected = [
-        "cmk.gui.inventory.run",
-        "cmk.gui.plugins.cron.gui_background_job.housekeeping",
-        "cmk.gui.plugins.cron.wato_folder_lookup_cache.rebuild_folder_lookup_cache",
+        "cmk.gui.inventory.execute_inventory_housekeeping_job",
+        "cmk.gui.background_job.execute_housekeeping_job",
+        "cmk.gui.watolib.hosts_and_folders.rebuild_folder_lookup_cache",
         "cmk.gui.userdb.execute_userdb_job",
         "cmk.gui.userdb.execute_user_profile_cleanup_job",
         "cmk.gui.watolib.network_scan.execute_network_scan_job",
         "cmk.gui.watolib.activate_changes.execute_activation_cleanup_background_job",
         "cmk.gui.plugins.wato.remote_audit_logs.execute_get_remote_audit_logs",
+        "cmk.gui.watolib.automatic_host_removal.execute_host_removal_background_job",
     ]
 
     if not cmk_version.is_raw_edition():

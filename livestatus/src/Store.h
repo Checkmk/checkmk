@@ -170,7 +170,7 @@ private:
     void answerCommandRequest(const ExternalCommand &command);
     void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
     void answerCommandDelCrashReport(const ExternalCommand &command);
-    void answerCommandEventConsole(const ExternalCommand &command);
+    void answerCommandEventConsole(const std::string &command);
     void answerCommandNagios(const ExternalCommand &command);
 #endif
 };

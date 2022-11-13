@@ -30,7 +30,7 @@ del %tmpFile%
   call build_the_cached.cmd "%artefact_dir%" %2 %3 3.4 4 || powershell Write-Host "Failed python 1" -foreground red && exit /b 11
   call build_the_cached.cmd "%artefact_dir%" %2 %3 %python_version% || powershell Write-Host "Failed python 2" -foreground red && exit /b 12
   powershell Write-Host "Builds are successfull" -foreground green
-  powershell Write-Host "Integration is temporary disabled. REVERT ME ASAP" -foreground red
+  make integration || powershell Write-Host "Failed integration" -foreground red && exit /b 13
   goto exit
 )
 powershell Write-Host 'Invalid parameters' -Foreground Red 

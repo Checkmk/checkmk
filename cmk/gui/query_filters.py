@@ -8,7 +8,8 @@
 
 import re
 import time
-from typing import Callable, List, Literal, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Literal
 
 import livestatus
 
@@ -26,12 +27,12 @@ from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, Visu
 from cmk.gui.utils.labels import encode_labels_for_livestatus, Label, Labels, parse_labels_value
 from cmk.gui.utils.user_errors import user_errors
 
-SitesOptions = List[Tuple[str, str]]
+SitesOptions = list[tuple[str, str]]
 
 
-def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
+def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
-    conditions = "".join("%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
+    conditions = "".join(f"{filter_condition} {livestatus.lqencode(x)}\n" for x in values)
     connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
     return conditions + connective
 
@@ -43,9 +44,9 @@ class Query:
         self,
         *,
         ident: str,
-        request_vars: List[str],
-        livestatus_query: Optional[Callable[..., FilterHeader]] = None,
-        rows_filter: Optional[Callable[..., Rows]] = None,
+        request_vars: list[str],
+        livestatus_query: Callable[..., FilterHeader] | None = None,
+        rows_filter: Callable[..., Rows] | None = None,
     ):
         self.ident = ident
         self.request_vars = request_vars
@@ -65,8 +66,8 @@ class MultipleOptionsQuery(Query):
         *,
         ident: str,
         options: SitesOptions,
-        livestatus_query: Optional[Callable[[FilterHTTPVariables], FilterHeader]] = None,
-        rows_filter: Optional[Callable[..., Rows]] = None,
+        livestatus_query: Callable[[FilterHTTPVariables], FilterHeader] | None = None,
+        rows_filter: Callable[..., Rows] | None = None,
     ):
         # TODO: options helps with data validation but conflicts with the Filter job
         super().__init__(
@@ -87,7 +88,7 @@ class MultipleOptionsQuery(Query):
         return self.livestatus_query(value)
 
 
-### Tri State filter
+# Tri State filter
 def default_tri_state_options() -> SitesOptions:
     return [("1", _("yes")), ("0", _("no")), ("-1", _("(ignore)"))]
 
@@ -115,7 +116,7 @@ class SingleOptionQuery(Query):
         ident: str,
         options: SitesOptions,
         filter_code: Callable[[str], FilterHeader],
-        filter_row: Optional[Callable[[str, Row], bool]] = None,
+        filter_row: Callable[[str, Row], bool] | None = None,
     ):
         super().__init__(ident=ident, request_vars=[ident])
         # TODO: options helps with data validation but conflicts with the Filter job
@@ -151,7 +152,7 @@ class TristateQuery(SingleOptionQuery):
         *,
         ident,
         filter_code: Callable[[bool], FilterHeader],
-        filter_row: Optional[Callable[[bool, Row], bool]] = None,
+        filter_row: Callable[[bool, Row], bool] | None = None,
         options=None,
     ):
         super().__init__(
@@ -182,7 +183,7 @@ def host_service_perfdata_toggle(on: bool) -> FilterHeader:
 def staleness(obj: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
     def toggler(on: bool) -> FilterHeader:
         operator = ">=" if on else "<"
-        return "Filter: %s_staleness %s %0.2f\n" % (
+        return "Filter: {}_staleness {} {:0.2f}\n".format(
             obj,
             operator,
             active_config.staleness_threshold,
@@ -200,10 +201,7 @@ def log_notification_phase(column: str) -> Callable[[bool], FilterHeader]:
         # Note: this filter also has to work for entries that are no notification.
         # In that case the filter is passive and lets everything through
         if positive:
-            return "Filter: %s = check-mk-notify\nFilter: %s =\nOr: 2\n" % (
-                column,
-                column,
-            )
+            return f"Filter: {column} = check-mk-notify\nFilter: {column} =\nOr: 2\n"
         return "Filter: %s != check-mk-notify\n" % column
 
     return filterheader
@@ -223,15 +221,15 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
             for star in stars:
                 if ";" in star:
                     continue
-                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(star))
+                filters += f"Filter: host_name {eq} {livestatus.lqencode(star)}\n"
                 count += 1
         else:
             for star in stars:
                 if ";" not in star:
                     continue
                 h, s = star.split(";")
-                filters += "Filter: host_name %s %s\n" % (eq, livestatus.lqencode(h))
-                filters += "Filter: service_description %s %s\n" % (eq, livestatus.lqencode(s))
+                filters += f"Filter: host_name {eq} {livestatus.lqencode(h)}\n"
+                filters += f"Filter: service_description {eq} {livestatus.lqencode(s)}\n"
                 filters += "%s: 2\n" % aand
                 count += 1
 
@@ -249,7 +247,7 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
     return filterheader
 
 
-## Filter tables
+# Filter tables
 def inside_inventory(inventory_path: inventory.InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
         return inventory.get_attribute(row["host_inventory"], inventory_path) is on
@@ -261,7 +259,7 @@ def has_inventory(on: bool, row: Row) -> bool:
     return bool(row["host_inventory"]) is on
 
 
-### Filter Time
+# Filter Time
 def time_filter_options() -> SitesOptions:
     ranges = [(86400, _("days")), (3600, _("hours")), (60, _("min")), (1, _("sec"))]
     choices = [(str(sec), title + " " + _("ago")) for sec, title in ranges]
@@ -273,7 +271,7 @@ def time_filter_options() -> SitesOptions:
     return choices
 
 
-MaybeBounds = Tuple[Union[int, float, None], Union[int, float, None]]
+MaybeBounds = tuple[int | float | None, int | float | None]
 
 
 class NumberRangeQuery(Query):
@@ -281,11 +279,11 @@ class NumberRangeQuery(Query):
         self,
         *,
         ident: str,
-        column: Optional[str] = None,
+        column: str | None = None,
         filter_livestatus: bool = True,
-        filter_row: Optional[Callable[[Row, str, MaybeBounds], bool]] = None,
+        filter_row: Callable[[Row, str, MaybeBounds], bool] | None = None,
         request_var_suffix: str = "",
-        bound_rescaling: Union[int, float] = 1,
+        bound_rescaling: int | float = 1,
     ):
         super().__init__(
             ident=ident,
@@ -306,7 +304,7 @@ class NumberRangeQuery(Query):
             self.get_bound(self.ident + "_until" + self.request_var_suffix, value),
         )
 
-    def get_bound(self, var: str, value: FilterHTTPVariables) -> Union[int, float, None]:
+    def get_bound(self, var: str, value: FilterHTTPVariables) -> int | float | None:
         try:
             if isinstance(self.bound_rescaling, int):
                 return int(value.get(var, "")) * self.bound_rescaling
@@ -335,7 +333,7 @@ class NumberRangeQuery(Query):
         return [row for row in rows if self.filter_row(row, self.column, (from_value, to_value))]
 
 
-def value_in_range(value: Union[int, float], bounds: MaybeBounds) -> bool:
+def value_in_range(value: int | float, bounds: MaybeBounds) -> bool:
     from_value, to_value = bounds
 
     if from_value and value < from_value:
@@ -361,7 +359,7 @@ def column_age_in_range(row: Row, column: str, bounds: MaybeBounds) -> bool:
 
 
 def version_in_range(
-    ident: str, request_vars: List[str], context: VisualContext, rows: Rows
+    ident: str, request_vars: list[str], context: VisualContext, rows: Rows
 ) -> Rows:
     values = context.get(ident, {})
     assert not isinstance(values, str)
@@ -380,12 +378,12 @@ def version_in_range(
 
 
 class TimeQuery(NumberRangeQuery):
-    def __init__(self, *, ident: str, column: Optional[str] = None) -> None:
+    def __init__(self, *, ident: str, column: str | None = None) -> None:
 
         super().__init__(ident=ident, column=column)
         self.request_vars.extend([var + "_range" for var in self.request_vars])
 
-    def get_bound(self, var: str, value: FilterHTTPVariables) -> Optional[int]:
+    def get_bound(self, var: str, value: FilterHTTPVariables) -> int | None:
         rangename = value.get(var + "_range")
         if rangename == "ts":
             try:
@@ -426,7 +424,7 @@ class KubernetesQuery(Query):
     ):
         super().__init__(ident=ident, request_vars=[ident])
         self.column = "host_labels"
-        self.link_columns: List[str] = []
+        self.link_columns: list[str] = []
         self.negateable = False
         self._kubernetes_object_type = kubernetes_object_type
 
@@ -452,8 +450,8 @@ class TextQuery(Query):
         ident: str,
         op: str,
         negateable: bool = False,
-        request_var: Optional[str] = None,
-        column: Optional[str] = None,
+        request_var: str | None = None,
+        column: str | None = None,
     ):
 
         request_vars = [request_var or ident]
@@ -475,7 +473,7 @@ class TextQuery(Query):
         return "!" if self.negateable and value.get(self.request_vars[1]) else ""
 
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return "Filter: %s %s%s %s\n" % (
+        return "Filter: {} {}{} {}\n".format(
             self.column,
             self._negate_symbol(value),
             self.op,
@@ -556,7 +554,7 @@ def filter_in_host_inventory_range(
 
 class CheckCommandQuery(TextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
-        return "Filter: %s %s ^%s(!.*)?\n" % (
+        return "Filter: {} {} ^{}(!.*)?\n".format(
             self.column,
             self.op,
             livestatus.lqencode(value[self.request_vars[0]]),
@@ -622,9 +620,9 @@ class IPAddressQuery(Query):
             op = "="
             address = livestatus.lqencode(address_val)
         if self._what == "primary":
-            return "Filter: host_address %s %s\n" % (op, address)
+            return f"Filter: host_address {op} {address}\n"
         varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
-        return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
+        return f"Filter: host_custom_variables {op} {varname} {address}\n"
 
 
 def ip_match_options() -> SitesOptions:
@@ -647,14 +645,14 @@ def address_families(family: str) -> FilterHeader:
         tag = livestatus.lqencode("ip-v4")
     elif family[0] == "6":
         tag = livestatus.lqencode("ip-v6")
-    filt = "Filter: tags = %s %s\n" % (tag, tag)
+    filt = f"Filter: tags = {tag} {tag}\n"
 
     if family.endswith("_only"):
         if family[0] == "4":
             tag = livestatus.lqencode("ip-v6")
         elif family[0] == "6":
             tag = livestatus.lqencode("ip-v4")
-        filt += "Filter: tags != %s %s\n" % (tag, tag)
+        filt += f"Filter: tags != {tag} {tag}\n"
 
     return filt
 
@@ -671,7 +669,7 @@ def ip_address_families_options() -> SitesOptions:
 
 
 class MultipleQuery(TextQuery):
-    def selection(self, value: FilterHTTPVariables) -> List[str]:
+    def selection(self, value: FilterHTTPVariables) -> list[str]:
         if folders := value.get(self.request_vars[0], "").strip():
             return folders.split("|")
         return []
@@ -714,7 +712,7 @@ class TagsQuery(LabelsQuery):
         self.count = 3
         self.var_prefix = "%s_tag" % object_type
 
-        request_vars: List[str] = []
+        request_vars: list[str] = []
         for num in range(self.count):
             request_vars += [
                 "%s_%d_grp" % (self.var_prefix, num),
@@ -882,11 +880,11 @@ def svc_state_min_options(prefix: str):  # type:ignore[no-untyped-def]
     ]
 
 
-def svc_state_options(prefix: str) -> List[Tuple[str, str]]:
+def svc_state_options(prefix: str) -> list[tuple[str, str]]:
     return svc_state_min_options(prefix + "st") + [(prefix + "stp", _("PEND"))]
 
 
-def svc_problems_options(prefix: str) -> List[Tuple[str, str]]:
+def svc_problems_options(prefix: str) -> list[tuple[str, str]]:
     return [
         (prefix + "warn", _("WARN")),
         (prefix + "crit", _("CRIT")),
@@ -903,7 +901,7 @@ def host_problems_options(prefix: str) -> SitesOptions:
     ]
 
 
-def host_state_options() -> List[Tuple[str, str]]:
+def host_state_options() -> list[tuple[str, str]]:
     return [
         ("hst0", _("UP")),
         ("hst1", _("DOWN")),
@@ -912,7 +910,7 @@ def host_state_options() -> List[Tuple[str, str]]:
     ]
 
 
-def discovery_state_options() -> List[Tuple[str, str]]:
+def discovery_state_options() -> list[tuple[str, str]]:
     return [
         ("discovery_state_ignored", _("Hidden")),
         ("discovery_state_vanished", _("Vanished")),
@@ -982,7 +980,7 @@ def cre_sites_options() -> SitesOptions:
 
 def sites_options() -> SitesOptions:
     if cmk_version.is_managed_edition():
-        from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
+        from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
             filter_cme_choices,
         )
 

@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-from typing import Generator
-
 import pytest
 
-from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
+from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery
 
 
 class TestDiscoveryMode:
@@ -36,23 +33,6 @@ class TestDiscoveryMode:
         assert DiscoveryMode.from_str("fixall") is DiscoveryMode.FIXALL
         assert DiscoveryMode.from_str("refresh") is DiscoveryMode.REFRESH
         assert DiscoveryMode.from_str("only-host-labels") == DiscoveryMode.ONLY_HOST_LABELS
-
-
-def test_time_limit_filter_iterates() -> None:
-
-    with TimeLimitFilter(limit=42, grace=0) as limiter:
-        test_list = list(limiter(iter(range(3))))
-    assert test_list == [0, 1, 2]
-
-
-def test_time_limit_filter_stops() -> None:
-    def test_generator() -> Generator:
-        time.sleep(10)
-        yield
-
-    # sorry for for wasting one second of your time
-    with TimeLimitFilter(limit=1, grace=0) as limiter:
-        assert not list(limiter(test_generator()))
 
 
 def test_qualified_discovery() -> None:

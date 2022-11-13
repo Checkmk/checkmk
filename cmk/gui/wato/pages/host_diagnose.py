@@ -39,6 +39,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 
 
@@ -156,12 +157,12 @@ class ModeDiagHost(WatoMode):
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
 
-            # The hostname field used by this dialog is not a host_attribute. Remove it here to
-            # prevent data corruption.
-            new = new.copy()
-            del new["hostname"]
+            # Remove fields in this page that are not host attributes in order to avoid
+            # data corruption.
+            self._host.update_attributes(
+                {k: v for k, v in new.items() if k in host_attribute_registry}
+            )
 
-            self._host.update_attributes(new)
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
                 mode_url(

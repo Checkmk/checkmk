@@ -4,25 +4,17 @@
 
 #include "providers/check_mk.h"
 
-#include <chrono>
 #include <string>
 
 //
 #include "asio.h"
 //
-#include <asio/ip/address_v4.hpp>
-#include <asio/ip/address_v6.hpp>
-#include <asio/ip/network_v4.hpp>
-#include <asio/ip/network_v6.hpp>
 
 #include "agent_controller.h"
 #include "cfg.h"
-#include "check_mk.h"
 #include "common/version.h"
 #include "install_api.h"
 #include "onlyfrom.h"
-
-namespace fs = std::filesystem;
 
 using namespace std::string_literals;
 
@@ -48,9 +40,9 @@ std::string AddressToCheckMkString(std::string_view entry) {
 }
 
 std::string CheckMk::makeOnlyFrom() {
-    auto only_from =
+    const auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
-    if (only_from.empty() || (only_from.size() == 1 && only_from[0] == "~")) {
+    if (only_from.empty() || only_from.size() == 1 && only_from[0] == "~") {
         return {};
     }
 
@@ -107,7 +99,6 @@ std::string MakeDirs() {
     return out;
 }
 
-std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
 }  // namespace
 
 std::string CheckMk::makeBody() {
@@ -136,4 +127,4 @@ std::string CheckMk::makeBody() {
     return out;
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

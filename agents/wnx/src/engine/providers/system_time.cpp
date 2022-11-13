@@ -16,4 +16,4 @@ std::string SystemTime::makeBody() {
     return std::to_string(now) + "\n";
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from logging import Logger
-from typing import Mapping, Sequence
 
 from cmk.utils.log import VERBOSE
 
@@ -95,7 +95,7 @@ def _update_removed_global_config_vars(
     # Replace old settings with new ones
     for old_config_name, new_config_name, replacement in _REMOVED_GLOBALS:
         if old_config_name in global_config:
-            logger.log(VERBOSE, "Replacing %s with %s" % (old_config_name, new_config_name))
+            logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
             old_value = global_config[old_config_name]
             if replacement:
                 global_config.setdefault(new_config_name, replacement[old_value])
@@ -132,14 +132,14 @@ def _handle_community_translations(logger: Logger, global_config: GlobalSettings
     UI language. Otherwise this global setting defaults to False and community translations are not
     choosable as language.
     """
-    enable_ct_ident = ConfigVariableEnableCommunityTranslations().ident()
+    enable_ct_ident: str = ConfigVariableEnableCommunityTranslations().ident()
     if not enable_ct_ident in global_config:
-        enable_ct = False
-        if is_community_translation(global_config.get("default_language", None)):
+        enable_ct: bool = False
+        if is_community_translation(global_config.get("default_language", "en")):
             enable_ct = True
         else:
             for user_config in load_users().values():
-                if is_community_translation(user_config.get("language", None)):
+                if is_community_translation(user_config.get("language", "en")):
                     enable_ct = True
                     break
 

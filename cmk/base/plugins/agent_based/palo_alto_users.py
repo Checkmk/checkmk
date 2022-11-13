@@ -5,24 +5,36 @@
 
 
 from dataclasses import dataclass
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional, Tuple
 
-from .agent_based_api.v1 import Metric, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    check_levels,
+    Metric,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.palo_alto import DETECT_PALO_ALTO
+
+LEVEL_TYPE = Optional[Tuple[float, float]]
 
 
 @dataclass(frozen=True)
 class Section:
     num_users: int
+    max_users: int
 
 
 def parse(string_table: StringTable) -> Section | None:
-    """
-    >>> parse([["40"]])
-    Section(num_users=40)
-    """
-    return Section(int(string_table[0][0])) if string_table else None
+    return (
+        Section(num_users=int(string_table[0][1]), max_users=int(string_table[0][0]))
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(
@@ -30,44 +42,74 @@ register.snmp_section(
     parse_function=parse,
     detect=DETECT_PALO_ALTO,
     fetch=SNMPTree(
-        ".1.3.6.1.4.1.25461.2.1.2.5.1.3",
-        [
-            "0",  # panGPGWUtilizationActiveTunnels
+        base=".1.3.6.1.4.1.25461.2.1.2.5.1",
+        oids=[
+            "2.0",  # panGPGWUtilizationMaxTunnels
+            "3.0",  # panGPGWUtilizationActiveTunnels
         ],
     ),
 )
 
 
 def discover(section: Section) -> DiscoveryResult:
-    """
-    >>> list(discover(Section(num_users=41)))
-    [Service()]
-    """
     yield Service()
 
 
-def check(section: Section) -> CheckResult:
-    """
-    >>> list(check(Section(num_users=42)))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 42'), Metric('num_user', 42.0)]
-    """
-    yield Result(state=State.OK, summary=f"Number of logged in users: {section.num_users}")
-    yield Metric("num_user", section.num_users)
+def _abs_and_rel_levels(levels: Tuple[str, LEVEL_TYPE]) -> Tuple[LEVEL_TYPE, LEVEL_TYPE]:
+    match levels:
+        case "ignore":
+            return None, None
+        case ("abs_user", thresholds):
+            return thresholds, None
+        case ("perc_user", thresholds):
+            return None, thresholds
+    return None, None  # needed for pylint due to https://github.com/PyCQA/pylint/issues/5288
 
 
-def cluster_check(section: Mapping[str, Optional[Section]]) -> CheckResult:
-    """
-    >>> list(cluster_check({'cluster_a': Section(num_users=1), 'cluster_b': Section(num_users=2)}))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 3'), Metric('num_user', 3.0)]
-    >>> list(cluster_check({'cluster_a': Section(num_users=1), 'cluster_b': None}))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 1'), Metric('num_user', 1.0)]
-    """
+def check(params: Mapping[str, Any], section: Section) -> CheckResult:
+    user_perc = section.num_users / section.max_users * 100
+
+    yield Result(
+        state=State.OK,
+        summary=f"Number of logged in users: "
+        f"{render.percent(user_perc)} - {section.num_users} of {section.max_users}",
+    )
+
+    abs_levels, perc_levels = _abs_and_rel_levels(params["levels"])
+
+    yield from check_levels(
+        section.num_users,
+        levels_upper=abs_levels,
+        metric_name="num_user",
+        render_func=str,
+        label="Absolute number of users",
+        notice_only=True,
+    )
+    yield from check_levels(
+        user_perc,
+        levels_upper=perc_levels,
+        render_func=render.percent,
+        label="Relative number of users",
+        notice_only=True,
+    )
+
+    yield Metric("max_user", section.max_users)
+
+
+def cluster_check(
+    params: Mapping[str, Any],
+    section: Mapping[str, Optional[Section]],
+) -> CheckResult:
     yield from check(
+        params,
         Section(
             num_users=sum(
                 (node_section.num_users if node_section else 0 for node_section in section.values())
-            )
-        )
+            ),
+            max_users=sum(
+                (node_section.max_users if node_section else 0 for node_section in section.values())
+            ),
+        ),
     )
 
 
@@ -77,4 +119,6 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     cluster_check_function=cluster_check,
+    check_ruleset_name="palo_alto_users_rule",
+    check_default_parameters={"levels": "ignore"},
 )

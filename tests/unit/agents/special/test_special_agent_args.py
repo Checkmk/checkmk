@@ -137,7 +137,16 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "REMOTE_NAME",
         "ADDRESS",
     ],
-    "agent_gcp": ["--project", "a", "--credentials", "foo", "--services", "gcs"],
+    "agent_gcp": [
+        "--project",
+        "a",
+        "--credentials",
+        "foo",
+        "--services",
+        "gcs",
+        "--piggy-back-prefix",
+        "a",
+    ],
     "agent_cisco_meraki": ["HOSTNAME", "API_KEY"],
 }
 

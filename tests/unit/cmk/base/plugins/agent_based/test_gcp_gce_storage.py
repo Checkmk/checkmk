@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Optional
 
 import pytest
 
@@ -68,7 +67,7 @@ class TestGCSDiscover(DiscoverTester):
             ServiceLabel("gcp/labels/judas", "priest"),
         }
 
-    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+    def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         yield from discover(section_gcp_service_gce_storage=None, section_gcp_assets=assets)
 
 

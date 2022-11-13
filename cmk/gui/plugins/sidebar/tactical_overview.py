@@ -526,7 +526,3 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.write_text(message)
         html.close_div()
         html.close_div()
-
-    @classmethod
-    def allowed_roles(cls):
-        return ["user", "admin", "guest"]

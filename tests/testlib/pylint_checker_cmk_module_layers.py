@@ -215,6 +215,7 @@ _COMPONENTS = (
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allow_default_plus_fetchers_snmplib_and_bakery),
+    (Component("cmk.cmkpasswd"), _is_default_allowed_import),
     (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_bakery),
@@ -235,6 +236,7 @@ _COMPONENTS = (
 _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("web/app/index.wsgi"): Component("cmk.gui"),
     ModulePath("bin/check_mk"): Component("cmk.base"),
+    ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),

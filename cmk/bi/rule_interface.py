@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import Any, Dict, List, Sequence, Type
+from collections.abc import Sequence
+from typing import Any
 
 from cmk.utils.plugin_registry import Registry
 
@@ -31,7 +32,7 @@ class BIRulePropertiesSchema(Schema):
 
 
 class BIRuleProperties(ABCWithSchema):
-    def __init__(self, properties_config: Dict[str, Any]) -> None:
+    def __init__(self, properties_config: dict[str, Any]) -> None:
         super().__init__()
         self.title = properties_config["title"]
         self.comment = properties_config["comment"]
@@ -40,7 +41,7 @@ class BIRuleProperties(ABCWithSchema):
         self.icon = properties_config["icon"]
 
     @classmethod
-    def schema(cls) -> Type["BIRulePropertiesSchema"]:
+    def schema(cls) -> type["BIRulePropertiesSchema"]:
         return BIRulePropertiesSchema
 
     def serialize(self):
@@ -58,12 +59,12 @@ class BIRuleComputationOptionsSchema(Schema):
 
 
 class BIRuleComputationOptions(ABCWithSchema):
-    def __init__(self, computation_config: Dict[str, Any]) -> None:
+    def __init__(self, computation_config: dict[str, Any]) -> None:
         super().__init__()
         self.disabled = computation_config["disabled"]
 
     @classmethod
-    def schema(cls) -> Type[BIRuleComputationOptionsSchema]:
+    def schema(cls) -> type[BIRuleComputationOptionsSchema]:
         return BIRuleComputationOptionsSchema
 
     def serialize(self):
@@ -93,7 +94,7 @@ class ABCBIRule(ABCWithSchema):
 
     @classmethod
     @abstractmethod
-    def schema(cls) -> Type[Schema]:
+    def schema(cls) -> type[Schema]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -111,12 +112,12 @@ class ABCBIRule(ABCWithSchema):
     @abstractmethod
     def compile(
         self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod
     @abstractmethod
-    def create_tree_from_schema(cls, schema_config: Dict[str, Any]) -> Any:
+    def create_tree_from_schema(cls, schema_config: dict[str, Any]) -> Any:
         raise NotImplementedError()
 
 

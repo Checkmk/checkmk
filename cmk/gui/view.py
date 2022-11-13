@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
-from typing import List, Optional, Set
+from collections.abc import Iterable, Sequence
 
 from livestatus import SiteId
 
@@ -14,20 +13,15 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.data_source import ABCDataSource, data_source_registry
+from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    JoinCell,
-    Layout,
-    layout_registry,
-    make_host_breadcrumb,
-    make_service_breadcrumb,
-    painter_exists,
-)
-from cmk.gui.sorter import DerivedColumnsSorter, sorter_registry, SorterEntry
+from cmk.gui.painters.v0.base import Cell, JoinCell, painter_exists
+from cmk.gui.sorter import sorter_registry, SorterEntry
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
@@ -37,6 +31,8 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
+from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.visuals import view_title
 
 
@@ -48,9 +44,9 @@ class View:
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
-        self._row_limit: Optional[int] = None
-        self._only_sites: Optional[List[SiteId]] = None
-        self._user_sorters: Optional[List[SorterSpec]] = None
+        self._row_limit: int | None = None
+        self._only_sites: list[SiteId] | None = None
+        self._user_sorters: list[SorterSpec] | None = None
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
         self.process_tracking = ViewProcessTracking()
@@ -79,9 +75,9 @@ class View:
             )
 
     @property
-    def row_cells(self) -> List[Cell]:
+    def row_cells(self) -> list[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells: List[Cell] = []
+        cells: list[Cell] = []
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue
@@ -94,7 +90,7 @@ class View:
         return cells
 
     @property
-    def group_cells(self) -> List[Cell]:
+    def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         return [
             Cell(self.spec, self._user_sorters, e)
@@ -103,19 +99,19 @@ class View:
         ]
 
     @property
-    def join_cells(self) -> List[JoinCell]:
+    def join_cells(self) -> list[JoinCell]:
         """Join cells are displaying information of a joined source (e.g.service data on host views)"""
         return [x for x in self.row_cells if isinstance(x, JoinCell)]
 
     @property
-    def sorters(self) -> List[SorterEntry]:
+    def sorters(self) -> list[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"]
         )
 
-    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> List[SorterEntry]:
-        sorters: List[SorterEntry] = []
+    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:
+        sorters: list[SorterEntry] = []
         for entry in sorter_list:
             sorter_name = entry.sorter
             uuid = None
@@ -152,11 +148,11 @@ class View:
         return self._row_limit
 
     @row_limit.setter
-    def row_limit(self, row_limit: Optional[int]) -> None:
+    def row_limit(self, row_limit: int | None) -> None:
         self._row_limit = row_limit
 
     @property
-    def only_sites(self) -> Optional[List[SiteId]]:
+    def only_sites(self) -> list[SiteId] | None:
         """Optional list of sites to query instead of all sites
 
         This is a performance feature. It is highly recommended to set the only_sites attribute
@@ -165,7 +161,7 @@ class View:
         return self._only_sites
 
     @only_sites.setter
-    def only_sites(self, only_sites: Optional[List[SiteId]]) -> None:
+    def only_sites(self, only_sites: list[SiteId] | None) -> None:
         self._only_sites = only_sites
 
     # FIXME: The layout should get the view as a parameter by default.
@@ -185,7 +181,7 @@ class View:
         )
 
     @property
-    def user_sorters(self) -> Optional[List[SorterSpec]]:
+    def user_sorters(self) -> list[SorterSpec] | None:
         """Optional list of sorters to use for rendering the view
 
         The user may click on the headers of tables to change the default view sorting. In the
@@ -194,7 +190,7 @@ class View:
         return self._user_sorters
 
     @user_sorters.setter
-    def user_sorters(self, user_sorters: Optional[List[SorterSpec]]) -> None:
+    def user_sorters(self, user_sorters: list[SorterSpec] | None) -> None:
         self._user_sorters = user_sorters
 
     @property
@@ -217,6 +213,28 @@ class View:
         return self.layout.can_display_checkboxes and (
             self.checkboxes_enforced or self.want_checkboxes
         )
+
+    @property
+    def painter_options(self) -> Sequence[str]:
+        """Provides the painter options to be used for this view"""
+        options: set[str] = set()
+
+        for cell in self.group_cells + self.row_cells:
+            options.update(cell.painter_options())
+
+        options.update(self.layout.painter_options)
+
+        # Mandatory options for all views (if permitted)
+        if display_options.enabled(display_options.O):
+            if display_options.enabled(display_options.R) and user.may(
+                "general.view_option_refresh"
+            ):
+                options.add("refresh")
+
+            if user.may("general.view_option_columns"):
+                options.add("num_columns")
+
+        return sorted(options)
 
     def breadcrumb(self) -> Breadcrumb:
         """Render the breadcrumb for the current view
@@ -313,7 +331,7 @@ class View:
         return breadcrumb
 
     @property
-    def missing_single_infos(self) -> Set[FilterName]:
+    def missing_single_infos(self) -> set[FilterName]:
         """Return the missing single infos a view requires"""
         missing_single_infos = visuals.get_missing_single_infos(
             self.spec["single_infos"], self.context

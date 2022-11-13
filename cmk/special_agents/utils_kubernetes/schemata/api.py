@@ -12,18 +12,8 @@ except the python standard library or pydantic.
 """
 
 import enum
-from typing import (
-    Dict,
-    Generic,
-    List,
-    Literal,
-    Mapping,
-    NewType,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from collections.abc import Mapping, Sequence
+from typing import Generic, Literal, NewType, TypeVar
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -138,6 +128,7 @@ class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
 
 
 class MetaData(MetaDataNoNamespace[ObjectName], Generic[ObjectName]):
+    name: ObjectName
     namespace: NamespaceName
 
 
@@ -198,15 +189,15 @@ class ScopedResourceMatchExpression(BaseModel):
 
 
 class HardResourceRequirement(BaseModel):
-    limit: Optional[float] = None
-    request: Optional[float] = None
+    limit: float | None = None
+    request: float | None = None
 
 
 class HardRequirement(BaseModel):
     # the format is different to ResourcesRequirement as resources are not nested within
     # request & limit for RQ
-    memory: Optional[HardResourceRequirement] = None
-    cpu: Optional[HardResourceRequirement] = None
+    memory: HardResourceRequirement | None = None
+    cpu: HardResourceRequirement | None = None
 
 
 class ScopeSelector(BaseModel):
@@ -228,9 +219,9 @@ class ResourceQuotaSpec(BaseModel):
         * PriorityClass scope verifies if the object has any PriorityClass associated with it
     """
 
-    hard: Optional[HardRequirement]
-    scope_selector: Optional[ScopeSelector]
-    scopes: Optional[Sequence[QuotaScope]]
+    hard: HardRequirement | None
+    scope_selector: ScopeSelector | None
+    scopes: Sequence[QuotaScope] | None
 
 
 class ResourceQuota(BaseModel):
@@ -264,9 +255,9 @@ class NodeConditionStatus(str, enum.Enum):
 class NodeCondition(BaseModel):
     status: NodeConditionStatus
     type_: str
-    reason: Optional[str]
-    detail: Optional[str]
-    last_transition_time: Optional[int]
+    reason: str | None
+    detail: str | None
+    last_transition_time: int | None
 
 
 class NodeResources(BaseModel):
@@ -279,7 +270,7 @@ class HealthZ(BaseModel):
     status_code: int
     response: str
     # only set if status_code != 200
-    verbose_response: Optional[str]
+    verbose_response: str | None
 
 
 class APIHealth(BaseModel):
@@ -312,7 +303,7 @@ NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeStatus(BaseModel):
-    conditions: Optional[Sequence[NodeCondition]]
+    conditions: Sequence[NodeCondition] | None
     node_info: NodeInfo
     addresses: NodeAddresses
 
@@ -321,7 +312,7 @@ class Node(BaseModel):
     metadata: MetaDataNoNamespace[NodeName]
     status: NodeStatus
     roles: Sequence[str]
-    resources: Dict[str, NodeResources]
+    resources: dict[str, NodeResources]
     kubelet_info: KubeletInfo
 
 
@@ -404,7 +395,7 @@ class OnDelete(BaseModel):
 
 
 class DeploymentSpec(BaseModel):
-    strategy: Union[Recreate, RollingUpdate] = Field(discriminator="type_")
+    strategy: Recreate | RollingUpdate = Field(discriminator="type_")
     selector: Selector
 
 
@@ -416,7 +407,7 @@ class Deployment(BaseModel):
 
 
 class DaemonSetSpec(BaseModel):
-    strategy: Union[OnDelete, RollingUpdate] = Field(discriminator="type_")
+    strategy: OnDelete | RollingUpdate = Field(discriminator="type_")
     selector: Selector
 
 
@@ -436,7 +427,7 @@ class DaemonSet(BaseModel):
 
 
 class StatefulSetSpec(BaseModel):
-    strategy: Union[OnDelete, StatefulSetRollingUpdate] = Field(discriminator="type_")
+    strategy: OnDelete | StatefulSetRollingUpdate = Field(discriminator="type_")
     selector: Selector
     replicas: int
 
@@ -462,8 +453,8 @@ class Phase(str, enum.Enum):
 
 
 class ResourcesRequirements(BaseModel):
-    memory: Optional[float] = None
-    cpu: Optional[float] = None
+    memory: float | None = None
+    cpu: float | None = None
 
 
 class ContainerResources(BaseModel):
@@ -481,14 +472,14 @@ class ContainerSpec(BaseModel):
 
 
 class PodSpec(BaseModel):
-    node: Optional[NodeName] = None
-    host_network: Optional[str] = None
-    dns_policy: Optional[str] = None
+    node: NodeName | None = None
+    host_network: str | None = None
+    dns_policy: str | None = None
     restart_policy: RestartPolicy
     containers: Sequence[ContainerSpec]
     init_containers: Sequence[ContainerSpec]
-    priority_class_name: Optional[str] = None
-    active_deadline_seconds: Optional[int] = None
+    priority_class_name: str | None = None
+    active_deadline_seconds: int | None = None
 
 
 @enum.unique
@@ -506,23 +497,23 @@ class ContainerRunningState(BaseModel):
 class ContainerWaitingState(BaseModel):
     type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting, const=True)
     reason: str
-    detail: Optional[str]
+    detail: str | None
 
 
 class ContainerTerminatedState(BaseModel):
     type: Literal[ContainerStateType.terminated] = Field(ContainerStateType.terminated, const=True)
     exit_code: int
-    start_time: Optional[int]
-    end_time: Optional[int]
-    reason: Optional[str]
-    detail: Optional[str]
+    start_time: int | None
+    end_time: int | None
+    reason: str | None
+    detail: str | None
 
 
-ContainerState = Union[ContainerTerminatedState, ContainerWaitingState, ContainerRunningState]
+ContainerState = ContainerTerminatedState | ContainerWaitingState | ContainerRunningState
 
 
 class ContainerStatus(BaseModel):
-    container_id: Optional[str]  # container_id of non-ready container is None
+    container_id: str | None  # container_id of non-ready container is None
     image_id: str  # image_id of non-ready container is ""
     name: str
     image: str
@@ -541,11 +532,11 @@ class ConditionType(str, enum.Enum):
 
 class PodCondition(BaseModel):
     status: bool
-    type: Optional[ConditionType]
-    custom_type: Optional[str]
-    reason: Optional[str]
-    detail: Optional[str]
-    last_transition_time: Optional[int]
+    type: ConditionType | None
+    custom_type: str | None
+    reason: str | None
+    detail: str | None
+    last_transition_time: int | None
 
     @validator("custom_type")
     @classmethod
@@ -556,12 +547,12 @@ class PodCondition(BaseModel):
 
 
 class PodStatus(BaseModel):
-    conditions: Optional[List[PodCondition]]
+    conditions: list[PodCondition] | None
     phase: Phase
-    start_time: Optional[Timestamp]  # None if pod is faulty
-    host_ip: Optional[IpAddress] = None
-    pod_ip: Optional[IpAddress] = None
-    qos_class: Optional[QosClass]
+    start_time: Timestamp | None  # None if pod is faulty
+    host_ip: IpAddress | None = None
+    pod_ip: IpAddress | None = None
+    qos_class: QosClass | None
 
 
 class ControllerType(enum.Enum):
@@ -724,7 +715,7 @@ class KubernetesVersion(BaseModel):
 
 class OwnerReference(BaseModel):
     uid: str
-    controller: Optional[bool]  # Optional, since some owner references
+    controller: bool | None  # Optional, since some owner references
     # are user-defined and the controller field can be omitted from the yaml.
     # This model is only intended for parsing. The absence of the controller
     # field can be interpreted as controller=False, but this interpretation is

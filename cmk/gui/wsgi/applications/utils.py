@@ -139,9 +139,9 @@ def _handle_not_authenticated() -> Response:
 
 
 def _localize_request() -> None:
-    user_language = request.get_ascii_input("lang", user.language)
-    set_language_cookie(request, response, user_language)
-    cmk.gui.i18n.localize(user_language)
+    if user_language := request.get_ascii_input("lang", user.language):
+        set_language_cookie(request, response, user_language)
+        cmk.gui.i18n.localize(user_language)
 
 
 def handle_unhandled_exception() -> Response:

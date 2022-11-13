@@ -30,40 +30,6 @@ from cmk.fields import base
 _logger = logging.getLogger(__name__)
 
 
-class ApiError(BaseSchema):
-    """This is the base class for all API errors."""
-
-    cast_to_dict = True
-
-    status = fields.Integer(
-        description="The HTTP status code.",
-        required=True,
-        example=404,
-    )
-    detail = fields.String(
-        description="Detailed information on what exactly went wrong.",
-        required=True,
-        example="The resource could not be found.",
-    )
-    title = fields.String(
-        description="A summary of the problem.",
-        required=True,
-        example="Not found",
-    )
-    _fields = fields.Dict(
-        data_key="fields",  # mypy, due to attribute "fields" being used in marshmallow.Schema
-        attribute="fields",
-        keys=fields.String(description="The key name"),
-        description="Detailed error messages on all fields failing validation.",
-        required=False,
-    )
-    ext: fields.Field = fields.Dict(
-        keys=fields.String(description="The key name"),
-        description="Additional information about the error.",
-        required=False,
-    )
-
-
 class UserSchema(BaseSchema):
     id = fields.Integer(dump_only=True)
     name = fields.String(description="The user's name")
@@ -681,6 +647,19 @@ class DiscoveryBackgroundJobStatusObject(DomainObject):
     )
 
 
+class AuthOption(BaseSchema):
+    auth_type = fields.String(
+        required=False,
+        example="password",
+    )
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access. Defaults to False",
+        example=False,
+    )
+
+
 class BaseUserAttributes(BaseSchema):
     fullname = fields.String(required=True, description="The alias or full name of the user.")
     customer = gui_fields.customer_field(
@@ -728,10 +707,11 @@ class BaseUserAttributes(BaseSchema):
         required=False,
         description="The language used by the user in the user interface",
     )
-    enforce_password_change = fields.Boolean(
+    auth_option = fields.Nested(
+        AuthOption,
         required=False,
-        description="This field indicates if the user is forced to change the password on the "
-        "next login or access.",
+        description="Enforce password change attribute for the user",
+        example={"auth_type": "password", "enforce_password_change": False},
     )
     interface_options = fields.Nested(
         ConcreteUserInterfaceAttributes,

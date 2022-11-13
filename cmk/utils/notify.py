@@ -10,7 +10,7 @@ import time
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType, Optional, TypedDict, Union
+from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
@@ -76,7 +76,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
         state = context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
     else:
@@ -85,7 +85,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
     # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
-    return "%s: %s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -106,12 +106,12 @@ def notification_progress_message(
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION PROGRESS"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
     else:
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return "%s: %s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -132,14 +132,14 @@ def notification_result_message(
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION RESULT"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
     else:
         what = "HOST NOTIFICATION RESULT"
         spec = hostname
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return "%s: %s;%s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -150,7 +150,7 @@ def notification_result_message(
     )
 
 
-def ensure_utf8(logger_: Optional[Logger] = None) -> None:
+def ensure_utf8(logger_: Logger | None = None) -> None:
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
     # available. If e.g. mail detects a non-Ascii character in the mail body and
@@ -158,49 +158,46 @@ def ensure_utf8(logger_: Optional[Logger] = None) -> None:
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
     # and use that.
-    proc: subprocess.Popen = subprocess.Popen(  # pylint:disable=consider-using-with
+    with subprocess.Popen(
         ["locale", "-a"],
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-    )
-    locales_list: list[str] = []
-    std_out: bytes = proc.communicate()[0]
-    exit_code: int = proc.returncode
-    error_msg: str = _("Command 'locale -a' could not be executed. Exit code of command was")
-    not_found_msg: str = _(
-        "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
-    )
-    if exit_code != 0:
-        if not logger_:
-            raise MKGeneralException("%s: %r. %s" % (error_msg, exit_code, not_found_msg))
-        logger_.info("%s: %r" % (error_msg, exit_code))
-        logger_.info(not_found_msg)
-        return
+    ) as proc:
+        std_out = proc.communicate()[0]
+        exit_code = proc.returncode
+        error_msg = _("Command 'locale -a' could not be executed. Exit code of command was")
+        not_found_msg = _(
+            "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
+        )
+        if exit_code != 0:
+            if not logger_:
+                raise MKGeneralException(f"{error_msg}: {exit_code!r}. {not_found_msg}")
+            logger_.info(f"{error_msg}: {exit_code!r}")
+            logger_.info(not_found_msg)
+            return
 
-    locales_list = std_out.decode("utf-8", "ignore").split("\n")
-    for encoding in locales_list:
-        el: str = encoding.lower()
-        if "utf8" in el or "utf-8" in el or "utf.8" in el:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            if logger_:
-                logger_.debug("Setting locale for mail to %s.", encoding)
-            break
-    else:
-        if not logger_:
-            raise MKGeneralException(not_found_msg)
-        logger_.info(not_found_msg)
-
-    return
+        locales_list = std_out.decode("utf-8", "ignore").split("\n")
+        for encoding in locales_list:
+            el: str = encoding.lower()
+            if "utf8" in el or "utf-8" in el or "utf.8" in el:
+                encoding = encoding.strip()
+                os.putenv("LANG", encoding)
+                if logger_:
+                    logger_.debug("Setting locale for mail to %s.", encoding)
+                break
+        else:
+            if not logger_:
+                raise MKGeneralException(not_found_msg)
+            logger_.info(not_found_msg)
 
 
 def create_spoolfile(
     logger_: Logger,
     spool_dir: Path,
-    data: Union[
-        NotificationForward, NotificationResult, NotificationViaPlainMail, NotificationViaPlugin
-    ],
+    data: (
+        NotificationForward | NotificationResult | NotificationViaPlainMail | NotificationViaPlugin
+    ),
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())

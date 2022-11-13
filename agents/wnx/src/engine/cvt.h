@@ -3,24 +3,19 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef cvt_h__
-#define cvt_h__
+#ifndef CVT_H
+#define CVT_H
 
 #pragma once
 
 #include <filesystem>
-#include <string>
-#include <string_view>
 
 #include "cfg.h"
-#include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
-#include "logger.h"
 
 namespace cma::cfg::cvt {
 class ParserImplementation;
-bool CheckIniFile(const std::filesystem::path &Path);
+bool CheckIniFile(const std::filesystem::path &ini_file_path);
 
 // Engine to parse ini and generate YAML
 // implementation in the lwa folder
@@ -47,4 +42,4 @@ private:
 };
 }  // namespace cma::cfg::cvt
 
-#endif  // cvt_h__
+#endif  // CVT_H

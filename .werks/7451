@@ -14,7 +14,7 @@ The easiest way to use a metric data for Forecast is from the service view
 under "Service Metrics" to click in the graph icon and select "Use this
 metric for a forecast graph".
 
-Checkmk 1.7 and onwards. Forecasting engine is native to Checkmk refer to
+Checkmk 2.0 and onwards. Forecasting engine is native to Checkmk refer to
 werk 10767. There are no external dependencies needed. The script
 {{bin/install_fbprophet}} can only uninstall the dependencies installed in
 previous versions.

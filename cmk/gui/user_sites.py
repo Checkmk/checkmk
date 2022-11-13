@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
-
 from livestatus import SiteConfigurations, SiteId
 
 from cmk.utils.site import omd_site
@@ -15,18 +13,18 @@ from cmk.gui.logged_in import user as global_user
 from cmk.gui.site_config import configured_sites, site_is_local
 
 
-def sorted_sites() -> List[Tuple[SiteId, str]]:
+def sorted_sites() -> list[tuple[SiteId, str]]:
     return sorted(
         [(site_id, s["alias"]) for site_id, s in global_user.authorized_sites().items()],
         key=lambda k: k[1].lower(),
     )
 
 
-def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
+def get_configured_site_choices() -> list[tuple[SiteId, str]]:
     return site_choices(global_user.authorized_sites(unfiltered_sites=configured_sites()))
 
 
-def site_attribute_default_value() -> Optional[SiteId]:
+def site_attribute_default_value() -> SiteId | None:
     site_id = omd_site()
     authorized_site_ids = global_user.authorized_sites(unfiltered_sites=configured_sites()).keys()
     if site_id in authorized_site_ids:
@@ -34,7 +32,7 @@ def site_attribute_default_value() -> Optional[SiteId]:
     return None
 
 
-def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
+def site_choices(site_configs: SiteConfigurations) -> list[tuple[SiteId, str]]:
     """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
     choices = []
     for site_id, site_spec in site_configs.items():
@@ -47,7 +45,7 @@ def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
     return sorted(choices, key=lambda s: s[1])
 
 
-def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
+def get_event_console_site_choices() -> list[tuple[SiteId, str]]:
     return site_choices(
         SiteConfigurations(
             {
@@ -61,7 +59,7 @@ def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
     )
 
 
-def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
+def get_activation_site_choices() -> list[tuple[SiteId, str]]:
     return site_choices(activation_sites())
 
 

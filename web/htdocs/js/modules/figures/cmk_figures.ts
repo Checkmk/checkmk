@@ -8,19 +8,26 @@ export interface ElementSize {
 }
 
 // The FigureRegistry holds all figure class templates
-class FigureRegistry {
-    private _figures: Record<string, typeof FigureBase>;
+class FigureRegistry<T extends FigureData> {
+    private _figures: Record<
+        string,
+        new (div_selector, fixed_size?: any) => FigureBase<T>
+    >;
 
     constructor() {
         this._figures = {};
     }
 
-    register(figure_class: typeof FigureBase): void {
-        let instance = new figure_class(null, null);
+    register(
+        figure_class: new (div_selector, fixed_size?: any) => FigureBase<T>
+    ): void {
+        let instance: FigureBase<T> = new figure_class(null, null);
         this._figures[instance.ident()] = figure_class;
     }
 
-    get_figure(ident: string): typeof FigureBase {
+    get_figure(
+        ident: string
+    ): new (div_selector, fixed_size?: any) => FigureBase<T> {
         return this._figures[ident];
     }
 }
@@ -240,7 +247,12 @@ interface ELementMargin {
     left: number;
 }
 
-export class FigureBase {
+export interface FigureData {
+    data;
+    plot_definitions;
+}
+
+export abstract class FigureBase<T extends FigureData> {
     _div_selector;
     _div_selection;
     svg;
@@ -255,7 +267,7 @@ export class FigureBase {
     _post_url: string;
     _post_body: string;
     _dashlet_spec;
-    _data;
+    _data: T;
     _crossfilter;
     scheduler: Scheduler;
     figure_size;
@@ -303,13 +315,15 @@ export class FigureBase {
         this._dashlet_spec = {};
 
         // Current data of this figure
-        this._data = {data: [], plot_definitions: []};
+        this._data = this.getEmptyData();
         this._crossfilter = crossfilter();
         this.scheduler = new Scheduler(
             () => this._fetch_data(),
             this.get_update_interval()
         );
     }
+
+    abstract getEmptyData(): T;
 
     initialize(with_debugging) {
         if (with_debugging) this._add_scheduler_debugging();
@@ -626,10 +640,19 @@ export class FigureBase {
     }
 }
 
-export class TextFigure extends FigureBase {
+export interface TitledFigureData extends FigureData {
+    title?: string;
+    title_url?: string;
+}
+
+export class TextFigure extends FigureBase<TitledFigureData> {
     constructor(div_selector, fixed_size = null) {
         super(div_selector, fixed_size);
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
+    }
+
+    getEmptyData(): TitledFigureData {
+        return getEmptyBasicFigureData();
     }
 
     initialize(debug) {
@@ -695,7 +718,7 @@ export function make_levels(domain, bounds) {
 }
 
 // Base class for dc.js based figures (using crossfilter)
-export class DCFigureBase extends FigureBase {
+export class DCFigureBase extends FigureBase<FigureData> {
     _graph_group;
     _dc_chart;
 
@@ -708,6 +731,10 @@ export class DCFigureBase extends FigureBase {
 
     get_dc_chart() {
         return this._dc_chart;
+    }
+
+    getEmptyData(): FigureData {
+        return getEmptyBasicFigureData();
     }
 }
 
@@ -1049,4 +1076,8 @@ export function metric_value_component_options_big_centered_text(
         font_size: font_size,
         visible: visible,
     };
+}
+
+export function getEmptyBasicFigureData(): FigureData {
+    return {data: [], plot_definitions: []};
 }

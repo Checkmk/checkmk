@@ -76,7 +76,7 @@ int RemoveMainService() {
 // #POC: to be deleted
 static bool execMsi() {
     wchar_t *str = nullptr;
-    if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, NULL, &str) !=
+    if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, nullptr, &str) !=
         S_OK) {
         return false;
     }
@@ -92,20 +92,20 @@ static bool execMsi() {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    ZeroMemory(&pi, sizeof pi);
 
-    if (!CreateProcess(nullptr,                          // application name
-                       (LPWSTR)(exe + options).c_str(),  // Command line options
-                       NULL,   // Process handle not inheritable
-                       NULL,   // Thread handle not inheritable
-                       FALSE,  // Set handle inheritance to FALSE
-                       0,      // No creation flags
-                       NULL,   // Use parent's environment block
-                       NULL,   // Use parent's starting directory
-                       &si,    // Pointer to STARTUPINFO structure
-                       &pi))   // Pointer to PROCESS_INFORMATION structure
+    if (!CreateProcess(nullptr,                 // application name
+                       (exe + options).data(),  // Command line options
+                       nullptr,  // Process handle not inheritable
+                       nullptr,  // Thread handle not inheritable
+                       FALSE,    // Set handle inheritance to FALSE
+                       0,        // No creation flags
+                       nullptr,  // Use parent's environment block
+                       nullptr,  // Use parent's starting directory
+                       &si,      // Pointer to STARTUPINFO structure
+                       &pi))     // Pointer to PROCESS_INFORMATION structure
     {
         return false;
     }
@@ -119,9 +119,9 @@ static void CheckForCommand(std::string &Command) {
     Command = "";
     std::error_code ec;
     auto dir = fs::current_path(ec);
-    std::cout << dir.u8string() << ": tick\n";
+    std::cout << wtools::ToStr(dir) << ": tick\n";
     try {
-        constexpr const char *kUpdateFileCommandDone = "update.command.done";
+        constexpr auto kUpdateFileCommandDone = "update.command.done";
         std::string done_file_name = kUpdateFileCommandDone;
         std::ifstream done_file(done_file_name.c_str(), std::ios::binary);
 
@@ -135,7 +135,7 @@ static void CheckForCommand(std::string &Command) {
                 return;
             }
         }
-        constexpr const char *kUpdateFileCommand = "update.command";
+        constexpr auto kUpdateFileCommand = "update.command";
         std::string command_file_name = kUpdateFileCommand;
         std::ifstream command_file(command_file_name.c_str(), std::ios::binary);
 
@@ -172,7 +172,6 @@ static void CheckForCommand(std::string &Command) {
                 done_file_name.c_str(), GetLastError());
     } catch (...) {
     }
-    return;
 }
 
 // on -test self
@@ -185,8 +184,8 @@ int TestMainServiceSelf(int interval) {
         interval = 0;
     }
     // not a best method to call thread, but this is only for VISUAL testing
-    std::thread kick_and_print([&stop, interval]() {
-        auto port = cfg::groups::global.port();
+    std::thread kick_and_print([&stop, interval] {
+        auto port = static_cast<uint16_t>(cfg::groups::global.port());
 
         using namespace asio;
 
@@ -306,8 +305,8 @@ int TestMt() {
     // to find file, read and start update POC.
     try {
         XLOG::setup::ColoredOutputOnStdio(true);
-        std::string command = "";
-        srv::ServiceProcessor sp(2000ms, [&command]() {
+        std::string command;
+        ServiceProcessor sp(2000ms, [&command] {
             CheckForCommand(command);
             if (command[0]) {
                 tools::RunDetachedCommand(command);
@@ -331,7 +330,7 @@ int TestLegacy() {
     try {
         // test for main thread. will be disabled in production
         // to find file, read and start update POC.
-        ServiceProcessor sp(2000ms, []() { return true; });
+        ServiceProcessor sp(2000ms, [] { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService(wtools::StopMode::cancel);
     } catch (const std::exception &e) {
@@ -450,8 +449,8 @@ int ExecExtractCap(std::wstring_view cap_file, std::wstring_view to) {
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
-int ExecCvtIniYaml(fs::path ini_file_name, fs::path yaml_file_name,
-                   StdioLog stdio_log) {
+int ExecCvtIniYaml(const fs::path &ini_file_name,
+                   const fs::path &yaml_file_name, StdioLog stdio_log) {
     auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
@@ -529,7 +528,7 @@ int ExecMainService(StdioLog stdio_log) {
         "press any key to stop execution\n",
         XLOG::Colors::cyan);
     auto delay = 1000ms;
-    auto processor = std::make_unique<ServiceProcessor>(delay, []() {
+    auto processor = std::make_unique<ServiceProcessor>(delay, [] {
     // default embedded callback for exec
     // At the moment does nothing
     // optional commands should be placed here
@@ -585,10 +584,10 @@ constexpr bool g_duplicate_updater_output_on_stdio = false;
 // Unit(easy, but public)/Integration(difficult but private) Tests.
 //
 void ModifyStdio(bool yes) {
-    if (g_use_colored_output_for_agent_updater) {
+    if constexpr (g_use_colored_output_for_agent_updater) {
         XLOG::setup::ColoredOutputOnStdio(yes);
     }
-    if (g_duplicate_updater_output_on_stdio) {
+    if constexpr (g_duplicate_updater_output_on_stdio) {
         XLOG::setup::DuplicateOnStdio(yes);
     }
 }
@@ -657,7 +656,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
 
     cma::cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
-    auto command_to_run = mc.buildCommandLine(updater_file.u8string());
+    auto command_to_run = mc.buildCommandLine(wtools::ToStr(updater_file));
     if (command_to_run.empty()) {
         ReportNoPythonModule(params);
         return 1;
@@ -729,27 +728,6 @@ int ExecUninstallAlert() {
     carrier::InformByMailSlot(mailbox_service.GetName(),
                               commander::kUninstallAlert);
     return 0;
-}
-
-// only as testing
-static bool CreateTheFile(const fs::path &dir, std::string_view content) {
-    try {
-        auto protocol_file = dir / "check_mk_agent.log.tmp";
-        std::ofstream ofs(protocol_file, std::ios::binary);
-
-        if (ofs) {
-            ofs << "Info Log from check mk agent:\n";
-            ofs << "  time: '" << cfg::ConstructTimeString() << "'\n";
-            if (!content.empty()) {
-                ofs << content;
-                ofs << "\n";
-            }
-        }
-    } catch (const std::exception &e) {
-        XLOG::l.crit("Exception during creatin protocol file {}", e.what());
-        return false;
-    }
-    return true;
 }
 
 // returns codes for main
@@ -927,8 +905,7 @@ int ExecResetOhm() {
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::SendStringToStdio("Resetting OHM internally\n", XLOG::Colors::yellow);
-    ServiceProcessor sp;
-    sp.resetOhm();
+    ServiceProcessor::resetOhm();
     return 0;
 }
 
@@ -1106,7 +1083,6 @@ void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
             XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
                       wtools::ToUtf8(rule_name));
         }
-        return;
     }
 }
 
@@ -1186,7 +1162,7 @@ bool IsServiceProcess() {
     auto success = ::GetUserObjectInformation(win_station, UOI_FLAGS, &uof,
                                               sizeof(USEROBJECTFLAGS), nullptr);
     // service should be NON-VISIBLE
-    return success && ((uof.dwFlags & WSF_VISIBLE) == 0);
+    return success && (uof.dwFlags & WSF_VISIBLE) == 0;
 }
 }  // namespace
 
@@ -1195,7 +1171,7 @@ bool IsServiceProcess() {
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
-int ServiceAsService(std::wstring_view app_name,
+int ServiceAsService(std::wstring_view /*app_name*/,
                      std::chrono::milliseconds delay,
                      const std::function<bool()> &internal_callback) {
     if (!IsServiceProcess()) {
@@ -1306,7 +1282,7 @@ SERVICE_FAILURE_ACTIONS *GetServiceFailureActions(SC_HANDLE handle) {
 
         // allocation
         new_buf_size = bytes_needed;
-        actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
+        actions = static_cast<SERVICE_FAILURE_ACTIONS *>(
             ::LocalAlloc(LMEM_FIXED, new_buf_size));
     }
 

@@ -107,7 +107,7 @@ def _decrypt_aes_256_cbc_pbkdf2(
 def _decrypt_aes_256_cbc_legacy(
     ciphertext: bytes,
     password: str,
-    digest: Callable[..., "hashlib._Hash"],
+    digest: Callable[..., hashlib._Hash],
 ) -> bytes:
     """Decrypt an openssl encrypted bytesting:
     Cipher: AES256-CBC
@@ -124,7 +124,7 @@ def _decrypt_aes_256_cbc_legacy(
 
 def _derive_openssl_key_and_iv(
     password: bytes,
-    digest: Callable[..., "hashlib._Hash"],
+    digest: Callable[..., hashlib._Hash],
     key_length: int,
     iv_length: int,
 ) -> tuple[bytes, bytes]:
@@ -157,7 +157,7 @@ def raw_certificates_from_file(path: Path) -> list[str]:
                 for match in _PEM_RE.finditer(f.read())
                 if (content := match.group(0)).isascii()
             ]
-    except IOError as e:
+    except OSError as e:
         if e.errno == errno.ENOENT:
             # Silently ignore e.g. dangling symlinks
             return []

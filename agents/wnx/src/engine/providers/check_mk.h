@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef check_mk_h__
-#define check_mk_h__
+#ifndef CHECK_MK_H
+#define CHECK_MK_H
 
 #include <string>
 #include <string_view>
@@ -34,6 +34,6 @@ private:
     static std::string makeOnlyFrom();
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
-#endif  // check_mk_h__
+#endif  // CHECK_MK_H

@@ -734,10 +734,6 @@ class QuicksearchSnapin(SidebarSnapin):
         html.div("", id_="mk_side_clear")
         html.javascript(f"cmk.quicksearch.register_search_field('{id_}');")
 
-    @classmethod
-    def allowed_roles(cls):
-        return ["user", "admin", "guest"]
-
     def page_handlers(self) -> PageHandlers:
         return {
             "ajax_search": self._ajax_search,

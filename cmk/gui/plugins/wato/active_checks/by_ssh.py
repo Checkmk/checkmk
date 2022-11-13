@@ -89,10 +89,13 @@ def _valuespec_active_checks_by_ssh():
                         "accept_new_host_keys",
                         FixedValue(
                             value=True,
-                            title=_("Enable automatic host key acceptance"),
+                            title=_(
+                                "Enable automatic host key acceptance (OpenSSH version >= 7.6)"
+                            ),
                             help=_(
                                 "This will automatically accept hitherto-unseen keys"
-                                "but will refuse connections for changed or invalid hostkeys"
+                                "but will refuse connections for changed or invalid hostkeys. "
+                                "This option only works with OpenSSH version >= 7.6."
                             ),
                             totext=_(
                                 "Automatically stores the host key with no manual input requirement"

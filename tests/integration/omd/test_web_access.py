@@ -103,11 +103,11 @@ def test_trace_disabled(site: Site) -> None:
 
 def test_track_disabled(site: Site) -> None:
     web = CMKWebSession(site)
-    # TRACE is not supported by apache at all by apache, so there is no need to
-    # disable this. The HTTP code is just different from TRACE.
-    web.request("TRACK", "/", expected_code=403)
+    # all methods but GET, POST, HEAD are disabled in the apache config.
+    web.request("TRACK", "/", expected_code=405)
 
 
 def test_options_disabled(site: Site) -> None:
     web = CMKWebSession(site)
-    web.request("OPTIONS", "/", expected_code=403)
+    # all methods but GET, POST, HEAD are disabled in the apache config.
+    web.request("OPTIONS", "/", expected_code=405)

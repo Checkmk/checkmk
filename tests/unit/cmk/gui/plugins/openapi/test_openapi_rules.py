@@ -16,6 +16,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
 from cmk.utils.store import load_mk_file
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKAuthException
 
@@ -31,13 +32,13 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
     )
 
 
-def _create_rule(  # type:ignore[no-untyped-def]
-    wsgi_app,
-    folder,
-    comment="",
-    description="",
-    documentation_url="",
-    disabled=False,
+def _create_rule(
+    wsgi_app: WebTestAppForCMK,
+    folder: str,
+    comment: str = "",
+    description: str = "",
+    documentation_url: str = "",
+    disabled: bool = False,
 ) -> tuple[webtest.TestResponse, dict[str, typing.Any]]:
     base = "/NO_SITE/check_mk/api/1.0"
     properties = {
@@ -108,8 +109,8 @@ def _create_folder(wsgi_app, base, folder_name, parent="/"):
     )
 
 
-def test_openapi_create_rule_regression(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_openapi_create_rule_regression(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -128,8 +129,8 @@ def test_openapi_create_rule_regression(  # type:ignore[no-untyped-def]
     )
 
 
-def test_openapi_value_raw_is_unaltered(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_openapi_value_raw_is_unaltered(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     value_raw = "{'levels': (10.0, 5.0)}"
@@ -158,8 +159,8 @@ def test_openapi_value_raw_is_unaltered(  # type:ignore[no-untyped-def]
     assert value_raw == resp_value
 
 
-def test_openapi_rules_href_escaped(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_openapi_rules_href_escaped(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -175,8 +176,8 @@ def test_openapi_rules_href_escaped(  # type:ignore[no-untyped-def]
     )
 
 
-def test_openapi_create_rule_failure(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_openapi_create_rule_failure(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -203,8 +204,9 @@ def test_openapi_create_rule_failure(  # type:ignore[no-untyped-def]
     assert "You have not defined any host group yet" in resp.json["detail"]
 
 
-def test_openapi_create_rule(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app, new_rule
+def test_openapi_create_rule(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -241,8 +243,8 @@ def test_openapi_create_rule(  # type:ignore[no-untyped-def]
     assert stored_condition == expected_condition
 
 
-def test_create_rule_with_string_value(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_create_rule_with_string_value(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -267,8 +269,9 @@ def test_create_rule_with_string_value(  # type:ignore[no-untyped-def]
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
-def test_openapi_list_rules(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app, new_rule
+def test_openapi_list_rules(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -293,8 +296,9 @@ def test_openapi_list_rules(  # type:ignore[no-untyped-def]
     assert stored["conditions"]["host_tags"] == values["conditions"]["host_tags"]
 
 
-def test_openapi_delete_rule(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app, new_rule
+def test_openapi_delete_rule(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -329,9 +333,7 @@ def test_openapi_delete_rule(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
-def test_openapi_show_ruleset(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app, ruleset
-) -> None:
+def test_openapi_show_ruleset(logged_in_admin_wsgi_app: WebTestAppForCMK, ruleset: str) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.get(
@@ -341,8 +343,8 @@ def test_openapi_show_ruleset(  # type:ignore[no-untyped-def]
     assert resp.json["extensions"]["name"] == ruleset
 
 
-def test_openapi_show_non_existing_ruleset(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app,
+def test_openapi_show_non_existing_ruleset(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
     base = "/NO_SITE/check_mk/api/1.0"
@@ -354,7 +356,7 @@ def test_openapi_show_non_existing_ruleset(  # type:ignore[no-untyped-def]
     )
 
 
-def test_openapi_list_rulesets(logged_in_admin_wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_openapi_list_rulesets(logged_in_admin_wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -365,15 +367,17 @@ def test_openapi_list_rulesets(logged_in_admin_wsgi_app) -> None:  # type:ignore
     assert len(resp.json["value"]) == 2
 
 
-def test_openapi_has_rule(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
+@pytest.mark.usefixtures("new_rule")
+def test_openapi_has_rule(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str, test_folders: tuple[str, str]
 ) -> None:
     wsgi_app = aut_user_auth_wsgi_app
     assert _order_of_rules(wsgi_app, base) == ["They made me do it!"]
 
 
-def test_openapi_create_rule_order(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
+@pytest.mark.usefixtures("new_rule")
+def test_openapi_create_rule_order(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str, test_folders: tuple[str, str]
 ) -> None:
     wsgi_app = aut_user_auth_wsgi_app
     folder_name_one, folder_name_two = test_folders
@@ -391,8 +395,11 @@ def test_openapi_create_rule_order(  # type:ignore[no-untyped-def]
     _ensure_on_folder(wsgi_app, base, rule2_id, f"/{folder_name_two}")
 
 
-def test_openapi_move_rule_to_top_of_folder(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
+def test_openapi_move_rule_to_top_of_folder(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    base: str,
+    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
+    test_folders: tuple[str, str],
 ) -> None:
     wsgi_app = aut_user_auth_wsgi_app
     folder_name_one, folder_name_two = test_folders
@@ -458,11 +465,11 @@ def test_openapi_move_rule_before_specific_rule(
     assert _order_of_rules(wsgi_app, base) == ["They made me do it!", "rule2", "rule1"]
 
 
-def test_create_rule_permission_error_regression(  # type:ignore[no-untyped-def]
+def test_create_rule_permission_error_regression(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     base: str,
-    with_admin,
-):
+    with_admin: tuple[UserId, str],
+) -> None:
     user, password = with_admin
     aut_user_auth_wsgi_app.set_authorization(("Bearer", f"{user} {password}"))
 
@@ -516,7 +523,7 @@ def _move_to(wsgi_app, base, _rule_id, position, dest_rule_id=None, folder=None)
     return _resp
 
 
-def _order_of_rules(wsgi_app, base) -> list[str]:  # type:ignore[no-untyped-def]
+def _order_of_rules(wsgi_app: WebTestAppForCMK, base: str) -> list[str]:
     _resp = wsgi_app.get(
         base + "/domain-types/rule/collections/all?ruleset_name=inventory_df_rules",
         headers={"Accept": "application/json"},

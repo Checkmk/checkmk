@@ -76,4 +76,4 @@ int RunPerf(
     return result ? 0 : -1;
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

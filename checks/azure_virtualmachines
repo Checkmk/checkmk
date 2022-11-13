@@ -60,7 +60,7 @@ def check_azure_virtualmachines(_item, params, resource):
     if host_name() != group:
         yield 0, "Resource group: %s" % group
 
-    for kv_pair in azure_iter_informative_attrs(resource):
+    for kv_pair in iter_resource_attributes(resource):
         yield 0, "%s: %s" % kv_pair
 
 

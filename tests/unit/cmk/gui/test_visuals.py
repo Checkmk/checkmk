@@ -5301,7 +5301,7 @@ def test_cleanup_contexts(  # type:ignore[no-untyped-def]
 
 
 def test_get_context_specs_no_info_limit() -> None:
-    result = visuals.get_context_specs({"single_infos": ["host"], "context": {}}, info_handler=None)
+    result = visuals.get_context_specs(["host"], list(utils.visual_info_registry.keys()))
     assert [r[0] for r in result] == [
         "host",
         "service",
@@ -5347,9 +5347,7 @@ def test_get_context_specs_no_info_limit() -> None:
 
 
 def test_get_context_specs_only_host_and_service_info() -> None:
-    result = visuals.get_context_specs(
-        {"single_infos": ["host"], "context": {}}, info_handler=lambda v: ["host", "service"]
-    )
+    result = visuals.get_context_specs(["host"], ["host", "service"])
     assert [r[0] for r in result] == [
         "host",
         "service",

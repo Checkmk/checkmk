@@ -7,7 +7,6 @@
 import enum
 import traceback
 from types import TracebackType
-from typing import Tuple, Type
 
 __all__ = [
     "MKAgentError",
@@ -50,18 +49,18 @@ class MKEmptyAgentData(MKAgentError):
 
 class MKParseFunctionError(MKException):
     def __init__(
-        self, exception_type: Type[Exception], exception: Exception, backtrace: TracebackType
+        self, exception_type: type[Exception], exception: Exception, backtrace: TracebackType
     ) -> None:
         self.exception_type = exception_type
         self.exception = exception
         self.backtrace = backtrace
         super().__init__(self, exception_type, exception, backtrace)
 
-    def exc_info(self) -> Tuple[Type[Exception], Exception, TracebackType]:
+    def exc_info(self) -> tuple[type[Exception], Exception, TracebackType]:
         return self.exception_type, self.exception, self.backtrace
 
     def __str__(self) -> str:
-        return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
+        return "{!r}\n{}".format(self.exception, "".join(traceback.format_tb(self.backtrace)))
 
 
 class MKSkipCheck(MKException):

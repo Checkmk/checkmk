@@ -13,5 +13,5 @@ tag groups. A prominent one is the "agent" tag group. Previous 1.6 releases
 totally disallowed saving tag configs in case such a tag group was present.
 
 To make the migration easier, the validation is now less strict for the 1.6.
-It is possible to keep the old builtin tag group until updating to 1.7. With
-1.7 these tag groups will not be usable anymore and have to be migrated.
+It is possible to keep the old builtin tag group until updating to 2.0. With
+2.0 these tag groups will not be usable anymore and have to be migrated.

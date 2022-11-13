@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract classes and types."""
 
-from typing import List, Optional, Tuple
-
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -21,9 +19,7 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def get(
-        self, oid: OID, context_name: Optional[SNMPContextName] = None
-    ) -> Optional[SNMPRawValue]:
+    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
         walk = self.walk(oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -36,9 +32,9 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def walk(
         self,
         oid: OID,
-        section_name: Optional[SectionName] = None,
-        table_base_oid: Optional[OID] = None,
-        context_name: Optional[SNMPContextName] = None,
+        section_name: SectionName | None = None,
+        table_base_oid: OID | None = None,
+        context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]
@@ -55,10 +51,10 @@ class StoredWalkSNMPBackend(SNMPBackend):
             lines = host_cache[self.config.hostname]
         except KeyError:
             path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
-            console.vverbose("  Loading %s from %s\n" % (oid, path))
+            console.vverbose(f"  Loading {oid} from {path}\n")
             try:
                 lines = StoredWalkSNMPBackend.read_walk_data(path)
-            except IOError:
+            except OSError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
             host_cache[self.config.hostname] = lines
 
@@ -113,7 +109,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return result
 
     @staticmethod
-    def _to_bin_string(oid: OID) -> Tuple[int, ...]:
+    def _to_bin_string(oid: OID) -> tuple[int, ...]:
         try:
             return tuple(map(int, oid.strip(".").split(".")))
         except Exception:
@@ -121,7 +117,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     @staticmethod
     def _collect_until(
-        oid: OID, oid_prefix: OID, lines: List[str], index: int, direction: int
+        oid: OID, oid_prefix: OID, lines: list[str], index: int, direction: int
     ) -> SNMPRowInfo:
         rows = []
         # Handle case, where we run after the end of the lines list

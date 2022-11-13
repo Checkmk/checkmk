@@ -3,6 +3,7 @@
 
 #include "service_processor.h"
 
+#include <cfg_details.h>
 #include <fcntl.h>
 #include <io.h>
 #include <sensapi.h>
@@ -10,7 +11,6 @@
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
-#include <ranges>
 
 #include "agent_controller.h"
 #include "cap.h"
@@ -56,7 +56,7 @@ void ServiceProcessor::startService() {
 
 void ServiceProcessor::startServiceAsLegacyTest() {
     if (thread_.joinable()) {
-        xlog::l("Attempt to start service twice, no way!").print();
+        XLOG::l("Attempt to start service twice, no way!");
         return;
     }
     thread_ = std::thread(&ServiceProcessor::mainThreadAsTest, this);
@@ -172,11 +172,9 @@ std::string FindWinPerfExe() {
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
         const fs::path f{cfg::GetRootDir()};
-        std::vector<fs::path> names{
-            f / cfg::kDefaultAppFileName  // on install
-        };
+        std::vector names{f / cfg::kDefaultAppFileName};
 
-        if (tgt::Is64bit()) {
+        if constexpr (tgt::Is64bit()) {
             names.emplace_back(f / "check_mk_service64.exe");
         }
 
@@ -234,7 +232,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
         // NOT TESTED with Automatic tests
         XLOG::d("No forking to get winperf data: may lead to handle leak.");
         vf_.emplace_back(std::async(
-            std::launch::async, [prefix, this, answer_id, timeout, cmd_line]() {
+            std::launch::async, [prefix, this, answer_id, timeout, cmd_line] {
                 auto cs = tools::SplitString(cmd_line, L" ");
                 std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
                 return provider::RunPerf(prefix,
@@ -464,7 +462,7 @@ void ServiceProcessor::sendDebugData() {
     auto block = getAnswer(started);
     block.emplace_back('\0');  // we need this for printf
     _setmode(_fileno(stdout), _O_BINARY);
-    auto count = printf("%s", block.data());
+    auto count = static_cast<size_t>(printf("%s", block.data()));  // NOLINT
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);
     }
@@ -473,7 +471,7 @@ void ServiceProcessor::sendDebugData() {
 /// \brief called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string &ip_from,
                                      rt::Device &rt_device) {
-    auto value = tools::win::GetEnv(env::auto_reload);
+    const auto value = tools::win::GetEnv(env::auto_reload);
 
     if (cfg::ReloadConfigAutomatically() || tools::IsEqual(value, L"yes"))
         ReloadConfig();  // automatic config reload
@@ -518,7 +516,7 @@ bool FindProcessByPid(uint32_t pid) {
 bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
-    auto new_cfg_id = cfg::GetCfg().uniqId();
+    auto new_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (last_cfg_id == new_cfg_id) {
         return false;
     }
@@ -536,7 +534,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     // memorize vars to check for changes in loop below
     const auto ipv6 = cfg::groups::global.ipv6();
     const auto port = cfg::groups::global.port();
-    auto uniq_cfg_id = cfg::GetCfg().uniqId();
+    auto uniq_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (GetModus() == Modus::service) {
         ProcessServiceConfiguration(kServiceName);
     }
@@ -563,7 +561,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         if (controller_param.has_value() &&
-            (std::chrono::steady_clock::now() - last_check) > 30s) {
+            std::chrono::steady_clock::now() - last_check > 30s) {
             if (!FindProcessByPid(controller_param->pid)) {
                 XLOG::d("Process of the controller is dead [{}]",
                         controller_param->pid);
@@ -582,7 +580,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         if (SERVICE_DISABLED ==
-            wtools::WinService::ReadUint32(srv::kServiceName,
+            wtools::WinService::readUint32(srv::kServiceName,
                                            wtools::WinService::kRegStart)) {
             XLOG::l("Service is disabled in config, leaving...");
 
@@ -600,10 +598,10 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
 namespace {
 
 void WaitForNetwork(std::chrono::seconds period) noexcept {
-    constexpr std::chrono::seconds delay = 2s;
+    constexpr auto delay = 2s;
 
     DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
-    for (std::chrono::seconds elapsed = 0s; elapsed < period;) {
+    for (auto elapsed = 0s; elapsed < period;) {
         auto ret = ::IsNetworkAlive(&networks);
         auto error = ::GetLastError();
         if (error == 0 && ret == TRUE) {
@@ -648,9 +646,13 @@ std::wstring_view RuleName() {
     switch (GetModus()) {
         case Modus::service:
             return srv::kSrvFirewallRuleName;
-        default:
+        case Modus::app:
+        case Modus::test:
+        case Modus::integration:
             return srv::kAppFirewallRuleName;
     }
+    // unreachable
+    return srv::kAppFirewallRuleName;
 }
 
 void OpenFirewall(bool controller) {
@@ -700,24 +702,24 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    auto controller_params = OptionallyStartAgentController(1000ms);
-    ON_OUT_OF_SCOPE(ac::KillAgentController());
-    OpenFirewall(controller_params.has_value());
-    if (cap_installed) {
-        ac::CreateArtifacts(
-            fs::path{tools::win::GetSomeSystemFolder(FOLDERID_ProgramData)} /
-                ac::kCmkAgentUnistall,
-            controller_params.has_value());
-    }
-    mailslot::Slot mailbox(GetModus(), ::GetCurrentProcessId());
-    internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
-                                            mailbox.GetName());
     try {
+        mailslot::Slot mailbox(GetModus(), ::GetCurrentProcessId());
+        internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
+                                                mailbox.GetName());
         mailbox.ConstructThread(SystemMailboxCallback, 20, this,
                                 is_service ? wtools::SecurityLevel::admin
                                            : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
+        auto controller_params = OptionallyStartAgentController(1000ms);
+        ON_OUT_OF_SCOPE(ac::KillAgentController());
+        OpenFirewall(controller_params.has_value());
+        if (cap_installed) {
+            ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
+                                    FOLDERID_ProgramData)} /
+                                    ac::kCmkAgentUnistall,
+                                controller_params.has_value());
+        }
         if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
@@ -768,7 +770,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 break;
             }
             XLOG::l.i("restart main loop");
-        };
+        }
 
         // the end of the fun
         XLOG::l.i("Thread is stopped");
@@ -819,11 +821,11 @@ auto CalcTimePoint(const carrier::CarrierDataHeader *data_header) noexcept {
 
 void ServiceProcessor::processYamlInput(const std::string &yaml_text) noexcept {
     try {
-        auto y = YAML::Load(yaml_text);
-        auto mr = GetMonitoringRequest(y);
+        const auto y = YAML::Load(yaml_text);
+        const auto mr = GetMonitoringRequest(y);
         if (mr.has_value()) {
             external_port_.putOnQueue(mr->text);
-            XLOG::t.i("Request >{}<", yaml_text);
+            XLOG::t.i("Request >{}< {} {}", yaml_text, mr->text, mr->id);
         } else {
             XLOG::l("Not supported request '{}'", yaml_text);
         }
@@ -947,7 +949,7 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        if (wtools::kProcessTreeKillAllowed) {
+        if constexpr (wtools::kProcessTreeKillAllowed) {
             wtools::KillProcessTree(pid);
         }
 

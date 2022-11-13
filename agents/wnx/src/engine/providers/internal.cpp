@@ -21,15 +21,15 @@ const std::unordered_map<std::string_view, std::chrono::seconds>
     &GetDelaysOnFail() {
     const static std::unordered_map<std::string_view, std::chrono::seconds>
         delays_on_fail = {
-            {kDotNetClrMemory, cma::cfg::G_DefaultDelayOnFail},  //
-            {kWmiWebservices, cma::cfg::G_DefaultDelayOnFail},   //
-            {kWmiCpuLoad, cma::cfg::G_DefaultDelayOnFail},       //
-            {kMsExch, cma::cfg::G_DefaultDelayOnFail},           //
-            {kOhm, cma::cfg::G_DefaultDelayOnFail},
+            {kDotNetClrMemory, cfg::G_DefaultDelayOnFail},  //
+            {kWmiWebservices, cfg::G_DefaultDelayOnFail},   //
+            {kWmiCpuLoad, cfg::G_DefaultDelayOnFail},       //
+            {kMsExch, cfg::G_DefaultDelayOnFail},           //
+            {kOhm, cfg::G_DefaultDelayOnFail},
 
             // end of the real sections
-            {kBadWmi, cma::cfg::G_DefaultDelayOnFail},  // used to testing
-            {"OhmBad", 1500s},                          // used to testing
+            {kBadWmi, cfg::G_DefaultDelayOnFail},  // used to testing
+            {"OhmBad", 1500s},                     // used to testing
         };
     return delays_on_fail;
 }
@@ -77,9 +77,7 @@ std::tuple<uint64_t, std::string, std::string> ParseCommandLine(
     return {marker, std::string(section::kUseEmbeddedName), ""};
 }
 
-void Basic::registerOwner(cma::srv::ServiceProcessor *sp) noexcept {
-    host_sp_ = sp;
-}
+void Basic::registerOwner(srv::ServiceProcessor *sp) noexcept { host_sp_ = sp; }
 
 std::string Basic::generateContent(std::string_view section_name,
                                    bool force_generation) {
@@ -228,7 +226,7 @@ void Asynchronous::threadProc(
             }
             std::unique_lock l(lock_stopper_);
             const auto stop = stop_thread_.wait_until(
-                l, tm + period, [this]() { return stop_requested_; });
+                l, tm + period, [this] { return stop_requested_; });
             if (stop) {
                 break;
             }

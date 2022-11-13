@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
-from typing import Tuple as _Tuple
+from typing import Any
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
@@ -22,7 +21,7 @@ from cmk.gui.valuespec import (
 
 
 # NOTE: When changing this keep it in sync with cmk.utils.translations.translate_hostname()
-def HostnameTranslation(**kwargs):
+def HostnameTranslation(**kwargs: Any) -> Dictionary:
     help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
@@ -32,7 +31,7 @@ def HostnameTranslation(**kwargs):
     )
 
 
-def ServiceDescriptionTranslation(**kwargs):
+def ServiceDescriptionTranslation(**kwargs: Any) -> Dictionary:
     help_txt = kwargs.get("help")
     title = kwargs.get("title")
     return Dictionary(
@@ -42,7 +41,7 @@ def ServiceDescriptionTranslation(**kwargs):
     )
 
 
-def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
+def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
     if what == "host":
         singular = "hostname"
         plural = "hostnames"
@@ -141,7 +140,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
     ]
 
 
-def _get_drop_domain_element() -> _Tuple[str, ValueSpec]:
+def _get_drop_domain_element() -> tuple[str, ValueSpec]:
     return (
         "drop_domain",
         FixedValue(

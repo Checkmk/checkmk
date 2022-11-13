@@ -25,7 +25,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from cmk.utils.password_store import replace_passwords
 
@@ -71,7 +71,7 @@ OPTIONS:
 #############################################################################
 
 
-def _run_cmd(debug: bool, cmd: str) -> List[str]:
+def _run_cmd(debug: bool, cmd: str) -> list[str]:
     if debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
@@ -82,6 +82,10 @@ def _run_cmd(debug: bool, cmd: str) -> List[str]:
         check=False,
         encoding="utf-8",
     ).stdout.splitlines(keepends=True)
+
+
+def normalize_str(line: str) -> str:
+    return line.rstrip("\n").rstrip("\r")
 
 
 def main(sys_argv=None):  # pylint: disable=too-many-branches
@@ -109,7 +113,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     mortypes = ["all"]
     fetch_agent_info = False
 
-    naviseccli_options: Dict[str, Dict[str, Any]] = {
+    naviseccli_options: dict[str, dict[str, Any]] = {
         "disks": {"cmd_options": [(None, "getall -disk")], "active": False, "sep": None},
         "hba": {"cmd_options": [(None, "getall -hba")], "active": False, "sep": None},
         "hwstatus": {"cmd_options": [(None, "getall -array")], "active": False, "sep": None},
@@ -187,7 +191,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         # try using security files
         basecmd = "naviseccli -h %s " % host_address
     else:
-        basecmd = "naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (
+        basecmd = "naviseccli -h {} -User {} -Password '{}' -Scope 0 ".format(
             host_address,
             user,
             password,
@@ -219,7 +223,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     if fetch_agent_info:
         print("<<<emcvnx_agent:sep(58)>>>")
         for line in run("getagent"):
-            print(line, end=" ")
+            print(normalize_str(line))
 
     #
     # all other sections of agent output
@@ -228,7 +232,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         if module_options["active"] is True:
             separator = module_options["sep"]
             if separator:
-                print("<<<emcvnx_%s:sep(%s)>>>" % (module, separator))
+                print(f"<<<emcvnx_{module}:sep({separator})>>>")
             else:
                 print("<<<emcvnx_%s>>>" % module)
 
@@ -236,7 +240,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 if header is not None:
                     print("[[[%s]]]" % header)
                 for line in run(cmd_option):
-                    print(line, end=" ")
+                    print(normalize_str(line))
 
     if g_profile:
         g_profile_path = Path("emcvnx_profile.out")
@@ -251,4 +255,4 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         )
         show_profile.chmod(0o755)
 
-        sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+        sys.stderr.write(f"Profile '{g_profile_path}' written. Please run {show_profile}.\n")

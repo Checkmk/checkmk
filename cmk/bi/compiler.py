@@ -8,7 +8,9 @@ from __future__ import annotations
 import pickle
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
+
+from redis import Redis
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -23,9 +25,6 @@ from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation
-
-if TYPE_CHECKING:
-    from cmk.utils.redis import RedisDecoded
 
 
 class ConfigStatus(TypedDict):
@@ -46,7 +45,7 @@ class BICompiler:
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
-        self._redis_client: RedisDecoded | None = None
+        self._redis_client: Redis[str] | None = None
         self._setup()
 
     def _setup(self) -> None:
@@ -99,9 +98,7 @@ class BICompiler:
             for aggregation in self._bi_packs.get_all_aggregations():
                 start = time.time()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
-                self._logger.debug(
-                    "Compilation of %s took %f" % (aggregation.id, time.time() - start)
-                )
+                self._logger.debug(f"Compilation of {aggregation.id} took {time.time() - start:f}")
 
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
@@ -234,7 +231,7 @@ class BICompiler:
     def _load_data(self, filepath: Path) -> dict:
         return store.load_object_from_pickle_file(filepath, default={})
 
-    def _get_redis_client(self) -> "RedisDecoded":
+    def _get_redis_client(self) -> Redis[str]:
         if self._redis_client is None:
             self._redis_client = get_redis_client()
         return self._redis_client
@@ -243,7 +240,7 @@ class BICompiler:
         self._check_redis_lookup_integrity()
         return bool(
             self._get_redis_client().exists(
-                "bi:aggregation_lookup:%s:%s" % (host_name, service_description)
+                f"bi:aggregation_lookup:{host_name}:{service_description}"
             )
         )
 
@@ -276,9 +273,9 @@ class BICompiler:
                     # This information can be used to selectively load the relevant compiled
                     # aggregation for any host/service. Right now it is only an indicator if this
                     # host/service is part of an aggregation
-                    key = "bi:aggregation_lookup:%s:%s" % (host_name, service_description)
+                    key = f"bi:aggregation_lookup:{host_name}:{service_description}"
                     part_of_aggregation_map.setdefault(key, []).append(
-                        "%s\t%s" % (aggr_id, branch.properties.title)
+                        f"{aggr_id}\t{branch.properties.title}"
                     )
 
         client = self._get_redis_client()

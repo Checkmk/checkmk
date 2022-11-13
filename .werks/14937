@@ -1,0 +1,22 @@
+Title: Azure: add the option to select services to monitor
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1668029200
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk adds the possibility to specify which Azure services to
+monitor.
+
+You can select the services to monitor in the <i>Microsoft Azure</i>
+special agent configuration page.
+
+In case you want to monitor the 'Users in the Active Directory' or the
+'AD Connect Sync' services, you will need to grant the
+'Directory.Read.All' graph permission to the Azure app and to grant
+admin consent to it.
+
+

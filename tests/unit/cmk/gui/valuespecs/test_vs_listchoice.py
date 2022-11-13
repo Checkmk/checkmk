@@ -52,7 +52,7 @@ class TestListChoice:
         expect_validate_success(_get_list_choice(), [])
         expect_validate_failure(_get_list_choice(allow_empty=False), [])
         expect_validate_failure(_get_list_choice(), ["zwei"])
-        expect_validate_failure(_get_list_choice(), "not a list")  # type: ignore
+        expect_validate_failure(_get_list_choice(), "not a list")
 
     def test_json(self):
         assert _get_list_choice().value_to_json([1, 2]) == [1, 2]

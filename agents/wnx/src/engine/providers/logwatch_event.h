@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef logwatch_event_h__
-#define logwatch_event_h__
+#ifndef LOGWATCH_EVENT_H
+#define LOGWATCH_EVENT_H
 
 #include <filesystem>
 #include <string>
@@ -36,10 +36,7 @@ enum class LogWatchContext { with, hide };
 
 struct State {
     State(std::string name, uint64_t pos, bool new_found)
-        : name_(std::move(name))
-        , pos_(pos)
-        , presented_(new_found)
-        , in_config_(false) {
+        : name_(std::move(name)), pos_(pos), presented_(new_found) {
         setDefaults();
     }
     State() = default;
@@ -61,7 +58,7 @@ struct State {
 
 using StateVector = std::vector<State>;
 
-struct LogWatchEntry {
+class LogWatchEntry {
 public:
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);
@@ -108,7 +105,7 @@ public:
         XLOG::l("This can't happen index is {} size is {} ", default_entry_,
                 entries().size());
         return nullptr;
-    };
+    }
     std::vector<std::filesystem::path> makeStateFilesTable() const;
 
     bool sendAll() const { return send_all_; }
@@ -194,6 +191,6 @@ struct RawLogWatchData {
     LogWatchContext context_;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
-#endif  // logwatch_event_h__
+#endif  // LOGWATCH_EVENT_H

@@ -8,6 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0i1
 
-The system would crash if there was a pending change and the japanese locale set.
+The UI would be unsuable due to a crash if there was a pending change and the japanese locale set.
 This is no longer the case.
 

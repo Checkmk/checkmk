@@ -41,3 +41,5 @@ gapped
 mkbackup
 decrypt
 upstreamed
+TLS
+unencrypted

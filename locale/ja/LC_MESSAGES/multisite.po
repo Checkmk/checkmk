@@ -529,10 +529,6 @@ msgid "%s instances"
 msgstr "%s インスタンス"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%sから%sへ"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%sは有効なUNIXタイムスタンプではありません"
 
@@ -1817,13 +1813,6 @@ msgstr "このIDのBIパックはすでに存在します。"
 
 msgid "A Multisite view"
 msgstr "マルチサイトビュー"
-
-msgid ""
-"A bulk discovery job is already running. Please use the "
-"\"bulk_discovery_status\" call to get the curent status."
-msgstr ""
-"一括検出ジョブはすでに実行されています。現在のステータスを取得するに"
-"は、\"bulk_discovery_status\"呼び出しを使用してください。"
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -3566,6 +3555,9 @@ msgstr "追加のIPv6アドレス"
 msgid "Additional Plugin Output"
 msgstr "追加のプラグイン出力"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
 
@@ -3991,6 +3983,10 @@ msgstr "エージェントベースのプラグイン(チェック、インベ�
 msgid "Agent controller"
 msgstr "エージェントコントローラー"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "エージェント登録"
+
 msgid "Agent deployment"
 msgstr "エージェントのデプロイ"
 
@@ -4015,16 +4011,21 @@ msgstr "エージェントラベルシミュレータ"
 msgid "Agent output"
 msgstr "エージェント出力"
 
-msgid "Agent pairing"
-msgstr "エージェントペアリング"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "エージェントプラグイン: プラグイン除外のための正規表現"
 
 msgid "Agent plugins: versions"
 msgstr "エージェントプラグイン: バージョン"
 
+#, fuzzy
+msgid "Agent receiver port"
+msgstr "エージェントエラー"
+
 msgid "Agent registration"
+msgstr "エージェント登録"
+
+#, fuzzy
+msgid "Agent registration user"
 msgstr "エージェント登録"
 
 msgid "Agent rules"
@@ -4436,6 +4437,9 @@ msgstr "すべてのオンラインユーザー"
 msgid "All package types are signed with the key '%s'"
 msgstr "すべてのパッケージタイプは、キー '%s' で署名されています"
 
+msgid "All packages (enabled or disabled)"
+msgstr ""
+
 msgid "All pages"
 msgstr "すべてのページ"
 
@@ -4453,6 +4457,10 @@ msgstr "すべてのプロトコル"
 
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr "Checkmkサイトのライセンス使用情報を表示します。"
 
 msgid "All resource groups are running on a different node (none)"
 msgstr "すべてのリソースグループが別のノードで実行されています(なし)"
@@ -5457,14 +5465,6 @@ msgstr "Atto Fibrebridge FCポート"
 msgid "Attribute"
 msgstr "属性"
 
-#, python-format
-msgid ""
-"Attribute \"%s\" of user \"%s\" can not be changed, because it is locked by "
-"the user connection."
-msgstr ""
-"属性 \"%s\" ユーザー \"%s\" は、ユーザー接続によってロックされているため、変"
-"更できません。"
-
 msgid "Attribute Sync Plugins"
 msgstr "属性同期プラグイン"
 
@@ -5572,10 +5572,6 @@ msgstr "オーサー"
 msgid "Authorization"
 msgstr "承認"
 
-#, python-format
-msgid "Authorization Error. Insufficent permissions for '%s'"
-msgstr "承認エラー. '%s'の権限が不十分です"
-
 msgid "Authorization Header"
 msgstr "認証ヘッダー"
 
@@ -5664,11 +5660,6 @@ msgstr "自動ページリロード"
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード。"
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
 
@@ -5694,9 +5685,6 @@ msgid ""
 "Automatically execute a service discovery on all new hosts created by this "
 "connection. New services will be added to the monitoring in this step."
 msgstr ""
-
-msgid "Automatically execute pairing"
-msgstr "ペアリングの自動実行"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -5745,9 +5733,6 @@ msgstr "マシンアカウントの自動化の秘密"
 
 msgid "Automation user rejected"
 msgstr "自動化ユーザーが拒否されました"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
 
 msgid "Autostart Services"
 msgstr "自動開始サービス"
@@ -6160,18 +6145,12 @@ msgstr ""
 msgid "Backend Conn. %s"
 msgstr "バックエンド接続 %s"
 
-msgid "Background Job"
-msgstr "バックグラウンドジョブ"
-
 #, python-format
 msgid "Background Job %s already running"
 msgstr "バックグラウンドジョブ %s はすでに実行されています"
 
 msgid "Background in status color and label"
 msgstr "ステータスの色とラベルの背景"
-
-msgid "Background job"
-msgstr "バックグラウンドジョブ"
 
 msgid "Background job acknowledged"
 msgstr "バックグラウンドジョブが承認されました"
@@ -7064,7 +7043,11 @@ msgid ""
 "By default the server will try to contact the monitored host and pull the "
 "data by initializing a TCP connection. On the %s you can configure a push "
 "configuration, where the monitored host is expected to send the data to the "
-"monitoring server without being actively triggered."
+"monitoring server without being actively triggered.\n"
+"\n"
+"If you are configuring this, you might want to also set the \"%s\" attribute "
+"to \"%s\". The host not being reachable by the site is one of the main "
+"reason why you want to use the push connection in the first place."
 msgstr ""
 
 msgid ""
@@ -7744,6 +7727,13 @@ msgstr ""
 "このビューをマトリックスレイアウトで表示することはできません。少なくとも2つの"
 "列が必要です!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細を"
+"追加する必要があります。"
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -7945,6 +7935,14 @@ msgstr ""
 msgid "Case insensitive"
 msgstr "大文字小文字を区別しません"
 
+#, fuzzy
+msgid "Case sensitive"
+msgstr "大文字小文字を区別しません"
+
+#, fuzzy
+msgid "Case sensitivity"
+msgstr "大文字小文字を区別しません"
+
 msgid "Case translation"
 msgstr "ケースの翻訳"
 
@@ -8134,24 +8132,10 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
 "ました"
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは\"%s"
-"\""
 
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
@@ -8662,14 +8646,6 @@ msgid ""
 "that support SNMPv2c may be buggy. In such cases, you may want to try "
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
-
-#, python-format
-msgid ""
-"Checkmk exception: %s\n"
-"%s"
-msgstr ""
-"Checkmk例外:%s\n"
-"%s"
 
 msgid "Checkmk fetcher usage"
 msgstr "Checkmkフェッチャーの使用法"
@@ -9288,10 +9264,6 @@ msgstr "クローントピック"
 
 msgid "Clone view"
 msgstr "クローン ビュー"
-
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr "複製されたルール %s ルールセット内 \"%s\" フォルダ内 \"%s\""
 
 msgid "Close Timewarp"
 msgstr "タイムワープを閉じる"
@@ -10062,10 +10034,10 @@ msgid ""
 msgstr ""
 "着信HTTPリクエストから読み取るHTTPリクエストヘッダー変数の名前を構成します"
 
+#, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 
 msgid "Configure the target mode for the system."
@@ -11041,10 +11013,6 @@ msgstr "新しい%sを作成する"
 msgid "Create new %s attribute %s"
 msgstr "新しく作成 %s 属性 %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "新しい %s グループ %s を作成します"
-
 msgid "Create new auxiliary tag"
 msgstr "新しい補助タグを作成する"
 
@@ -11084,7 +11052,8 @@ msgstr "ランダムな監視データを作成する"
 msgid "Create random secret"
 msgstr "ランダムな秘密を作成する"
 
-msgid "Create real-time data executing the following agent plugins"
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr ""
 
 msgid "Create regular time-schedule for this report"
@@ -11172,14 +11141,6 @@ msgid "Created new extension package %s"
 msgstr "新しい拡張パッケージ %s を作成しました"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "新しいフォルダ %s を作成しました"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "新しいホスト %s を作成しました。"
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "新しいホストタググループ '%s'を作成しました"
 
@@ -11209,10 +11170,6 @@ msgstr "ID %s で新しいルールパックを作成しました"
 #, python-format
 msgid "Created new time period %s"
 msgstr "新しい期 %sを作成しました"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "作成された新しいユーザー: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11410,6 +11367,10 @@ msgstr "すべてのライセンスが使用される場合に重要"
 msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
 
+#, fuzzy
+msgid "CronJobs"
+msgstr "CronJobsのPod"
+
 msgid "Current"
 msgstr "電流"
 
@@ -11517,9 +11478,6 @@ msgstr "現在ダウンタイム中"
 msgid "Currently indexing, please try again shortly."
 msgstr ""
 "現在インデックスを作成しています しばらくしてからもう一度お試しください。"
-
-msgid "Currently not supported with this Checkmk Edition"
-msgstr "現在、このCheckmkエディションではサポートされていません"
 
 msgid "Currently open connections"
 msgstr "現在開いている接続"
@@ -12524,6 +12482,10 @@ msgstr "デフォルトは、通常の接続の場合は389、SSL接続の場合
 msgid "Default is Windows authentication"
 msgstr "デフォルトはWindows認証です"
 
+#, fuzzy
+msgid "Default language"
+msgstr "デフォルト値"
+
 msgid "Default layout"
 msgstr "デフォルトのレイアウト"
 
@@ -12998,10 +12960,6 @@ msgid "Deleted %s %d"
 msgstr "%s %d を削除しました"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "%sグループ%sを削除しました"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "削除されたBI集計%s"
 
@@ -13033,24 +12991,12 @@ msgid "Deleted custom GUI logo"
 msgstr "カスタムGUIロゴを削除"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "削除されたフォルダ %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "削除されたホスト %s"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr ""
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "削除された役割 '%s'"
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13061,20 +13007,12 @@ msgid "Deleted rule pack %s"
 msgstr "ルールパック %s を削除しました"
 
 #, python-format
-msgid "Deleted ruleset '%s' for '%s'"
-msgstr "%s' に対するルールセット '%s' を削除しました"
-
-#, python-format
 msgid "Deleted site %s"
 msgstr "削除されたサイト %s"
 
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "削除された期間 %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "削除されたユーザー: %s"
 
 msgid "Deletes"
 msgstr "削除します"
@@ -13744,10 +13682,6 @@ msgstr "証明書の検証を無効にする"
 msgid "Disable configuration via WATO on this site"
 msgstr "このサイトでWATOを介した構成を無効にする"
 
-#, python-format
-msgid "Disable extension package %s"
-msgstr "拡張パッケージ %sを無効にする"
-
 msgid "Disable flap detection"
 msgstr "フラップ検出を無効にする"
 
@@ -13840,8 +13774,9 @@ msgstr "クラスタ化されたサービスの無効化-クラスタホスト�
 msgid "Disabled custom checks - defined via rule"
 msgstr "無効なカスタムチェック(ルールによる定義)"
 
-msgid "Disabled extensions"
-msgstr "無効にされた拡張機能"
+#, fuzzy, python-format
+msgid "Disabled extension package %s"
+msgstr "拡張パッケージ %sを無効にする"
 
 msgid "Disabled legacy services - defined in main.mk"
 msgstr "無効にされたレガシーサービス(main.mkで定義)"
@@ -14675,6 +14610,9 @@ msgstr "レベルを課さないでください"
 msgid "Do not impose levels, always be OK"
 msgstr "レベルを課さないでください、常に大丈夫です"
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "イベントコンソールのアラートと一致しない"
 
@@ -14952,8 +14890,9 @@ msgid ""
 "Do you really want to remove the TLS registration of the selected hosts?"
 msgstr "選択したホストのTLS登録を本当に削除しますか?"
 
-#, python-format
-msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the package file <tt>%s</tt> from your system?"
 msgstr "本当にシステムからパッケージ<tt>%s</tt>を削除しますか？"
 
 #, fuzzy
@@ -15773,6 +15712,10 @@ msgstr "サービスグループの編集"
 msgid "Edit services"
 msgstr "サービスの編集"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d フィルター設定"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "サイト接続 %sを編集します"
@@ -15783,9 +15726,6 @@ msgstr "%s のサイト固有のグローバル設定を編集します"
 
 msgid "Edit stored report"
 msgstr "保存されたレポートを編集する"
-
-msgid "Edit subscription settings"
-msgstr "サブスクリプション設定の編集"
 
 msgid "Edit tag group"
 msgstr "タググループを編集する"
@@ -15891,10 +15831,6 @@ msgid "Edited host tag group %s (%s)"
 msgstr "編集されたホストタググループ%s(%s)"
 
 #, python-format
-msgid "Edited properties of folder %s"
-msgstr "フォルダ%sの編集されたプロパティ"
-
-#, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
 msgstr "ルールセット内 \"%s\" フォルダー内 \"%s\"で編集されたルール"
 
@@ -15949,11 +15885,19 @@ msgstr ""
 "サイトのローカルCAを使用してサーバー証明書を確認するか、サーバーから提供され"
 "た証明書を受け入れます。これを有効のままにしておくことを強くお勧めします。"
 
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
+
 msgid "Elastic Block Storage (EBS)"
 msgstr "Elastic Block Storage(EBS)"
 
 msgid "Elastic Compute Cloud (EC2)"
 msgstr "Elastic Compute Cloud(EC2)"
+
+#, fuzzy
+msgid "Elastic Container Service (ECS)"
+msgstr "リレーショナルデータベースサービス(RDS)"
 
 msgid "Elastic IP Addresses"
 msgstr "Elastic IPアドレス"
@@ -16136,6 +16080,12 @@ msgstr "エージェントの自動更新を有効にする"
 msgid "Enable automatic host key acceptance"
 msgstr "自動ホストキー受け入れを有効にする"
 
+msgid "Enable community translated languages"
+msgstr ""
+
+msgid "Enable community translated languages (not supported)"
+msgstr ""
+
 msgid "Enable core dumps"
 msgstr "コアダンプを有効にする"
 
@@ -16281,9 +16231,13 @@ msgstr "サービスのperfdataの処理を有効/無効にする"
 msgid "Enabled"
 msgstr "有効"
 
-#, python-format
-msgid "Enabled extension package %s"
-msgstr "有効な拡張パッケージ%s"
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "このサイトを有効にする"
+
+#, fuzzy
+msgid "Enabled (inactive on this site)"
+msgstr "このサイトを有効にする"
 
 msgid "Enabled in time range"
 msgstr "時間範囲で有効"
@@ -17621,10 +17575,6 @@ msgstr ""
 msgid "Failed to determine origin rule of %s / %s"
 msgstr ""
 
-#, python-format
-msgid "Failed to discover %s: %s"
-msgstr "%s の検出に失敗しました: %s"
-
 msgid "Failed to estimate the Apache process size"
 msgstr "Apacheプロセスサイズの見積もりに失敗しました"
 
@@ -18377,10 +18327,6 @@ msgstr "フォルダ"
 #, python-format
 msgid "Folder %r does not exist."
 msgstr "フォルダ %rは存在しません。"
-
-#, python-format
-msgid "Folder %s does not exist"
-msgstr "フォルダ %sは存在しません"
 
 #, python-format
 msgid "Folder %s not found."
@@ -20867,10 +20813,6 @@ msgid "Host"
 msgstr "ホスト"
 
 #, python-format
-msgid "Host %s already exists in the folder %s"
-msgstr "ホスト %s はすでにフォルダ %s に存在します"
-
-#, python-format
 msgid ""
 "Host %s does not exist on remote site %s. This may be caused by a failed "
 "configuration synchronization. Have a look at the <a href=\"wato.py?"
@@ -20954,9 +20896,6 @@ msgstr "ホストアドレスファミリ"
 
 msgid "Host address family (Primary)"
 msgstr "ホストアドレスファミリ(プライマリ)"
-
-msgid "Host address of the monitoring server"
-msgstr "監視サーバーのホストアドレス"
 
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "ホストアドレス(IPv4/IPv6)"
@@ -22371,6 +22310,11 @@ msgstr ""
 "ムになります。このダウンタイムは、集計がダウンタイムを離れたときにも自動的に"
 "クリーンアップされます。このチェックのために手動で設定したダウンタイムは影響"
 "を受けません。"
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -24198,9 +24142,6 @@ msgid ""
 "\">Checkmk Exchange</a>  for packages reviewed by tribe29."
 msgstr ""
 
-msgid "Install this package"
-msgstr "このパッケージをインストールします"
-
 msgid "Installation"
 msgstr "インストール"
 
@@ -24217,9 +24158,6 @@ msgstr "インストールされたエージェント"
 #, python-format
 msgid "Installed extension package %s-%s (%s)"
 msgstr "インストールされた拡張パッケージ %s-%s (%s)"
-
-msgid "Installed extension packages"
-msgstr "インストールされている拡張パッケージ"
 
 msgid "Installed, stopped and running services"
 msgstr "インストール、停止、実行中のサービス"
@@ -24599,10 +24537,6 @@ msgstr "無効なID"
 #, python-format
 msgid "Invalid ident: %s"
 msgstr "無効なID: %s"
-
-#, python-format
-msgid "Invalid key(s): %s"
-msgstr "無効なキー: %s"
 
 msgid "Invalid login"
 msgstr "無効なログイン"
@@ -25251,6 +25185,10 @@ msgstr "メッセージからサービスレベルを維持する(利用可能�
 msgid "Keep special characters"
 msgstr "特殊文字を保持する"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "確立された接続"
+
 msgid "Keepalived Parameters"
 msgstr "キープアライブパラメータ"
 
@@ -25568,9 +25506,6 @@ msgid ""
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
 "<tt>cmk/os_family:linux</tt>です。"
-
-msgid "Labels to set on the paired hosts"
-msgstr "ペアリングされたホストに設定するラベル"
 
 msgid "Lambda"
 msgstr ""
@@ -26394,6 +26329,10 @@ msgstr "ライセンスの状態"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "ライセンスステータス"
 
 msgid "Licensing Status"
 msgstr "ライセンスステータス"
@@ -27856,6 +27795,10 @@ msgstr "監視対象のホストとサービス、およびホストのフォル
 msgid "Manage the Dynamic configuration connections"
 msgstr "動的な構成接続を管理する"
 
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "Windowsエージェントコントローラーのトラブルシューティング"
+
 msgid "Manage users of the monitoring system."
 msgstr "監視システムのユーザーを管理します。"
 
@@ -29194,11 +29137,9 @@ msgstr "間違ってスケジュールされたレプリカ"
 msgid "Missing Prerequisite"
 msgstr "前提条件がありません"
 
-msgid "Missing config file for agent {}"
-msgstr ""
-
-msgid "Missing config file for agent {}/{}"
-msgstr ""
+#, fuzzy, python-format
+msgid "Missing config file for agent %s%s"
+msgstr "接続パラメータがありません: %s"
 
 #, python-format
 msgid "Missing connection parameter: %s"
@@ -29259,10 +29200,6 @@ msgstr "必須項目\"サービス名\"が選択されていません。"
 
 msgid "Missing required context information"
 msgstr "必要なコンテキスト情報の欠落"
-
-#, python-format
-msgid "Missing required key(s): %s"
-msgstr "必要なキーがありません: %s"
 
 msgid "Missing required selection."
 msgstr "必須項目が選択されていません。"
@@ -29397,10 +29334,6 @@ msgstr ""
 "変更されたフォルダー:%d、変更されたホスト:%d、変更されたルールセット:%d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "変更されたホスト %s。"
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "変更されたルールパック %s"
 
@@ -29415,10 +29348,6 @@ msgstr "変更された期間 %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "変更されたユーザーロール '%s'"
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "変更されたユーザー: %s"
 
 msgid "Modify"
 msgstr "変更"
@@ -29637,6 +29566,10 @@ msgstr "コンテナおよびコンテナオーケストレーションソフト
 msgid "Monitoring of forwarded logfiles"
 msgstr "転送されたログファイルの監視"
 
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "モニター状態"
+
 msgid "Monitoring state"
 msgstr "モニター状態"
 
@@ -29851,13 +29784,6 @@ msgid "Moved %d hosts to %s"
 msgstr "%d ホストを %s に移動しました"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"%sgroup%sを顧客%sに移動しました。追加のプロパティが変更された可能性がありま"
-"す。"
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "ID%sのBIアグリゲーションをBIパック%sに移動しました"
 
@@ -29865,23 +29791,8 @@ msgstr "ID%sのBIアグリゲーションをBIパック%sに移動しました"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "ID%sのBIルールをBIパック%sに移動しました"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "フォルダ %s を %s に移動しました"
-
 msgid "Moved from"
 msgstr "から移動しました"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "ホストを \"%s\" から \"%s\"に移動しました"
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
-"です"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -30976,9 +30887,6 @@ msgstr "検索なし、引数のリストを指定"
 msgid "No service level is set in event"
 msgstr "イベントでサービスレベルが設定されていません"
 
-msgid "No site given."
-msgstr "サイトが指定されていません。"
-
 msgid "No status host"
 msgstr "ステータスホストなし"
 
@@ -30987,13 +30895,6 @@ msgstr "これまでのところ、同期は成功していません。"
 
 msgid "No such file"
 msgstr "そのようなファイルはありません"
-
-msgid "No such host"
-msgstr "そのようなホストはありません"
-
-#, python-format
-msgid "No such host(s): %s"
-msgstr "そのようなホストはありません:%s"
 
 #, python-format
 msgid ""
@@ -32873,9 +32774,6 @@ msgstr ""
 "すべての電源ユニットを1つのサービスにグループ化するか(集約)、各ユニットに1つ"
 "の個別のサービスを割り当てるか(単一)を指定できるオプション。"
 
-msgid "Optional extension packages"
-msgstr "オプションの拡張パッケージ"
-
 msgid "Optional general information"
 msgstr "オプションの一般情報"
 
@@ -32971,7 +32869,15 @@ msgid "Order"
 msgstr "注文"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "デバイスの状態を使用する"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "アプリケーションの概要"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "アプリケーションの概要"
 
 #, fuzzy
@@ -33393,8 +33299,9 @@ msgstr "パッケージ名"
 msgid "Package name:"
 msgstr "パッケージ名:"
 
-msgid "Package not installed or corrupt"
-msgstr "パッケージがインストールされていないか破損しています"
+#, fuzzy
+msgid "Package not found"
+msgstr "ページが見つかりません"
 
 msgid "Package properties"
 msgstr "パッケージのプロパティ"
@@ -33521,12 +33428,6 @@ msgstr "ページ"
 
 msgid "Pages per second"
 msgstr "1秒あたりのページ数"
-
-msgid "Pair manually"
-msgstr "手動でペアリングする"
-
-msgid "Pair on installation"
-msgstr "ペアでインストール"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Altoアクティブセッション"
@@ -33714,10 +33615,6 @@ msgstr "パスフレーズ"
 msgid "Password"
 msgstr "パスワード"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "パスワードが変更されました(同期に失敗しました: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "パスワードが存在しないか、使用が許可されていません"
 
@@ -33778,6 +33675,10 @@ msgstr "sapgenpseへの道"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "一時ディレクトリへのパス(作成されます)"
+
+#, fuzzy
+msgid "Path to unix socket"
+msgstr ".envファイルへのパス"
 
 msgid "Path-patterns where to search for Jar files"
 msgstr "Jarファイルを検索するパスパターン"
@@ -35499,10 +35400,6 @@ msgstr "製品"
 msgid "Profile"
 msgstr "プロフィール"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "プロファイルが変更されました(同期に失敗しました %s)"
-
 msgid "Profile requests"
 msgstr "プロファイルリクエスト"
 
@@ -36430,10 +36327,6 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
 
 #, python-format
-msgid "Refreshed check configuration of host [%s] with %d services"
-msgstr "ホスト[%s]のチェック構成を%dサービスでリフレッシュしました"
-
-#, python-format
 msgid "Refusing to read file not owned by site user: \"%s\""
 msgstr ""
 
@@ -36516,6 +36409,10 @@ msgstr "ソフトウェアを検索するためのレジストリキー(Windows)
 msgid "Regular expression"
 msgstr "正規表現"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "メッセージ分類の正規表現"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr "Syslogタグを照合するための正規表現(大文字と小文字を区別しない)"
 
@@ -36554,6 +36451,11 @@ msgstr "プラグインを除外するための正規表現"
 
 msgid "Regular expression to expect in content"
 msgstr "コンテンツに期待される正規表現"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "正規表現: "
@@ -36809,23 +36711,11 @@ msgid "Removed"
 msgstr "削除されました"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "%sグループ %s を顧客 %s から削除しました"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "補助タグ %s (%s)を削除しました"
 
-#, python-format
-msgid "Removed disabled extension package %s"
-msgstr "無効状態の拡張パッケージ%sを削除しました"
-
 msgid "Removed entries"
 msgstr "削除されたエントリ"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "ホスト %s の明示的な属性を削除しました。"
 
 #, python-format
 msgid "Removed extension package %s"
@@ -36871,35 +36761,6 @@ msgstr "複数のホストの名前を変更する"
 #, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "次の場所で %d %sの名前が変更されました:<br><ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "クラスタノードの名前を %s から %sに変更しました。"
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "ホスト%sの名前が変更されました"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "ホストの名前を%sから%sに変更しました。"
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "ホストの名前を %s から %s に変更"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr ""
-"%d ルールセット内のホストの名前(フォルダ %s にあります)が変更されました"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "親の名前を%sから%sに変更しました。"
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
 
 msgid "Renaming Operations"
 msgstr "操作の名前変更"
@@ -38448,10 +38309,6 @@ msgstr "このホストを保存して、行く"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr "ホスト '%s'のチェック構成を %d サービスで保存しました"
 
-#, python-format
-msgid "Saved check configuration of host [%s] with %d services"
-msgstr "ホスト[%s]のチェック構成を%dサービスを使用して保存しました"
-
 msgid "Saved read only settings"
 msgstr "保存された読み取り専用設定"
 
@@ -39325,12 +39182,6 @@ msgstr "サービスディスカバリーの詳細"
 msgid "Service discovery rules"
 msgstr "サービス検出ルール"
 
-#, python-format
-msgid ""
-"Service discovery successful. Added %d, removed %d, kept %d, total %d "
-"services and %d new, %d total host labels"
-msgstr ""
-
 msgid "Service discovery triggers service discovery check"
 msgstr "サービス検出がサービス検出チェックをトリガーします"
 
@@ -39745,10 +39596,6 @@ msgstr "プラグインとローカルチェックの再試行回数を設定し
 msgid "Set roles"
 msgstr "役割を設定する"
 
-#, python-format
-msgid "Set ruleset '%s' for '%s' with %d rules"
-msgstr "ルールセット '%s' を '%s'に %dルールで設定します"
-
 msgid ""
 "Set service names or regular expression patterns here to allow only matching "
 "services to be activated automatically. If you set both this and 'Don't "
@@ -40003,9 +39850,6 @@ msgstr ""
 "削除されたタグはタググループのデフォルト値(ホストとフォルダーの場合)に置き換"
 "えられます。どのルールが関係するか、あなたはどのように進めるかを決定しなけれ"
 "ばなりません。"
-
-msgid "Setup is disabled on this site."
-msgstr "このサイトではセットアップが無効になっています。"
 
 msgid "Setup is disabled."
 msgstr "セットアップは無効になっています。"
@@ -40299,9 +40143,6 @@ msgstr "凡例を表示"
 msgid "Show less"
 msgstr "表示を減らす"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr "Checkmkサイトのライセンス使用情報を表示します。"
-
 msgid "Show margin round the graph"
 msgstr "グラフの周りにマージンを表示する"
 
@@ -40475,6 +40316,14 @@ msgstr "縦軸を表示"
 
 msgid "Show volume name in service output"
 msgstr "サービス出力にボリューム名を表示する"
+
+msgid ""
+"Show/Hide community translated languages in the \"Language\" dropdown (User "
+"> Edit profile). Note that these translations are contributed by the Checkmk "
+"community and thus no liability is assumed for their validity.<br>If this "
+"setting is turned from 'on' to 'off' while a user has set a community "
+"translated language, the user's language is changed to 'English'."
+msgstr ""
 
 msgid "Show/Hide password"
 msgstr "パスワードの表示/非表示"
@@ -40747,10 +40596,6 @@ msgstr "サイトカスタムフィールドID"
 msgid "Site icon"
 msgstr "サイトアイコン"
 
-#, python-format
-msgid "Site id not found: %s"
-msgstr "サイトIDが見つかりません: %s"
-
 msgid "Site is disabled"
 msgstr "サイトが無効になっています"
 
@@ -40799,6 +40644,10 @@ msgstr "サイトの状態は不明です"
 msgid "Site status"
 msgstr "サイトのステータス"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "サイト間の帯域幅"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "%sのサイト固有のグローバル構成"
@@ -40814,6 +40663,10 @@ msgstr "サイト名"
 
 msgid "Sites"
 msgstr "サイト"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "サイト間の帯域幅"
 
 msgid "Size"
 msgstr "サイズ"
@@ -41750,6 +41603,11 @@ msgid "Specify the site that should monitor this host."
 msgstr "このホストを監視するサイトを指定します。"
 
 msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
+
+msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
 "that site is being processed."
 msgstr ""
@@ -42018,10 +41876,6 @@ msgstr "起動"
 
 msgid "Starting VMs"
 msgstr "VMs起動"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "アクティベーションを開始しています(サイト: %s)"
 
 msgid "Starting from period number"
 msgstr "期間番号から"
@@ -43151,9 +43005,6 @@ msgstr "後継のプロビジョニング"
 msgid "Success"
 msgstr "成功"
 
-msgid "Successfully baked agents"
-msgstr "焼き上げに成功したエージェント"
-
 msgid "Successfully changed password."
 msgstr "パスワードが正常に変更されました。"
 
@@ -43644,9 +43495,6 @@ msgstr "TLS/SSL/Httpsが無効になっています"
 #, python-format
 msgid "TNS Alias %s"
 msgstr "TNSエイリアス %s"
-
-msgid "TODO"
-msgstr ""
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: SNMP経由で使用されたメモリ"
@@ -44618,10 +44466,6 @@ msgstr "ポートの説明"
 msgid "The SAP system ID."
 msgstr "SAPシステムID。"
 
-#, python-format
-msgid "The SLA id %s is unknown or not visible to this user"
-msgstr "SLA ID%sが不明であるか、このユーザーには表示されません"
-
 msgid ""
 "The SQL-statement or procedure name which is executed on the DBMS. It must "
 "return a result table with one row and at least two columns. The first "
@@ -44941,9 +44785,6 @@ msgstr ""
 msgid "The average utilization of memory on the active supervisor"
 msgstr "アクティブスーパーバイザーのメモリの平均使用率"
 
-msgid "The background job is missing a logger instance"
-msgstr "バックグラウンドジョブにロガーインスタンスがありません"
-
 msgid "The backup has been deleted."
 msgstr "バックアップが削除されました。"
 
@@ -45128,17 +44969,6 @@ msgstr ""
 msgid "The complete hardware- and software inventory of a host"
 msgstr "ホストの完全なハードウェアおよびソフトウェアインベントリ"
 
-msgid ""
-"The configuration has changed in the meantime. You need to load the "
-"configuration and start another update. If the existing configuration should "
-"not be checked, you can remove the configuration_hash value from the request "
-"object."
-msgstr ""
-"その間にコンフィギュレーションが変更されました。コンフィギュレーションをロー"
-"ドして、別のアップデートを開始する必要があります。既存の構成をチェックする必"
-"要がない場合は、リクエストオブジェクトからconfiguration_hash値を削除できま"
-"す。"
-
 msgid "The configuration is currently in read only mode. "
 msgstr "構成は現在読み取り専用モードです。 "
 
@@ -45212,6 +45042,12 @@ msgstr ""
 "場合、これは別のサイトによって監視されているホストである可能性があります。こ"
 "のホストを変更する場合は、サイト属性をローカルサイトに変更する必要がありま"
 "す。ただし、これにより、ホストが複数のサイトから監視される可能性があります。"
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -45718,10 +45554,6 @@ msgid ""
 "https) and the port. Be aware that a trailing slash at the end of the URL is "
 "likely to result in an error."
 msgstr ""
-
-#, python-format
-msgid "The function %s is not in the snapshotted functions."
-msgstr "関数 %s はスナップショット関数に含まれていません。"
 
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
@@ -46596,9 +46428,11 @@ msgstr ""
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr "タプル内の要素の数は正確に%dである必要があります。"
 
+#, python-format
 msgid ""
 "The number of incoming and processed agent registration requests are not the "
-"same."
+"same:\n"
+"%s"
 msgstr ""
 
 msgid ""
@@ -46731,6 +46565,10 @@ msgid ""
 "etc.) of components of a device (e.g. rack unitsas components of a rack "
 "server as device) in the last check interval.The possible range is from 0% "
 "to 100%"
+msgstr ""
+
+#, python-format
+msgid "The package is now enabled, but could not be installed on this site: %s"
 msgstr ""
 
 msgid "The pager address is optional "
@@ -48045,6 +47883,12 @@ msgid "These hosts have installed the correct version of their agent."
 msgstr ""
 "これらのホストは、正しいバージョンのエージェントをインストールしています。"
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -48603,13 +48447,6 @@ msgstr ""
 msgid "This check monitors count and age of mails in mailboxes."
 msgstr "このチェックは、メールボックス内のメールの数と経過時間を監視します。"
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"このチェックは、PostgreSQLデータベース内のデータベースオブジェクトがアクセス"
-"される頻度を監視します"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr "このチェックは、MSSQLテーブルスペースのロック関連情報を監視します。"
 
@@ -48643,6 +48480,13 @@ msgid ""
 msgstr ""
 "このチェックは、過去60分間のORACLEデータベースインスタンスのログスイッチの数"
 "を監視します。上限と下限のレベルを設定できます。"
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"このチェックは、PostgreSQLのアクティブセッションとアイドルセッションの現在の"
+"数を監視します"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "このチェックは、リモートサイトへの接続が失敗した場合にCRITを返します。"
@@ -48991,10 +48835,6 @@ msgstr ""
 "この設定は、期間を不明にしないために、時間メトリックの何パーセントを使用可能"
 "にする必要があるかを定義します。これは、1分よりはるかに大きい集計に関連してい"
 "ます。"
-
-msgid "This is rule pack can be packaged with the Extension Packages module."
-msgstr ""
-"これは、拡張パッケージモジュールと一緒にパッケージ化できるルールパックです。"
 
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
@@ -49531,8 +49371,8 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-#, python-format
-msgid "This package cannot be installed: %s"
+#, fuzzy, python-format
+msgid "This package cannot be uploaded: %s"
 msgstr "このパッケージはインストールできません: %s"
 
 msgid "This package does not exist."
@@ -50035,6 +49875,19 @@ msgstr ""
 "(エージェントのインストールディレクトリ)を指します。複数のルールを適用できま"
 "す。これは、複数のルールのパッケージがマージされることを意味します。"
 
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
+
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
 "at once. You can also assign aggregations to specific hosts through the "
@@ -50363,6 +50216,11 @@ msgstr "このルールは一致します。"
 #, python-format
 msgid "This rule matches: %s"
 msgstr "ルールの一致 :%s"
+
+#, fuzzy
+msgid "This rule pack can be packaged with the Extension Packages module."
+msgstr ""
+"これは、拡張パッケージモジュールと一緒にパッケージ化できるルールパックです。"
 
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
@@ -51137,9 +50995,6 @@ msgstr "このサイトは現在ダウンしています。"
 
 msgid "This site is currently not reachable."
 msgstr "このサイトには現在アクセスできません。"
-
-msgid "This site is not a distributed WATO site."
-msgstr "このサイトは分散型WATOサイトではありません。"
 
 msgid "This site is not responding."
 msgstr "このサイトは応答していません。"
@@ -53024,14 +52879,6 @@ msgid "Unable to analyze matching, because \"service\" parameter is missing"
 msgstr "\"サービス\"パラメータがないため、一致を分析できません"
 
 #, python-format
-msgid ""
-"Unable to apply new hosttag configuration. The following tags are still in "
-"use, but not mentioned in the updated configuration: %s"
-msgstr ""
-"新しいホストタグ構成を適用できません。次のタグはまだ使用されていますが、更新"
-"された構成では言及されていません: %s"
-
-#, python-format
 msgid "Unable to authenticate with LDAP (%s)"
 msgstr "LDAPで認証できません(%s)"
 
@@ -53050,15 +52897,9 @@ msgid ""
 msgstr ""
 "インスタンス %sに接続できません。グローバル設定で資格情報を確認してください。"
 
-msgid "Unable to create parent folder(s)."
-msgstr "親フォルダを作成できません。"
-
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "グループを削除できません。まだ使用中です: %s"
-
-msgid "Unable to delete root folder"
-msgstr "ルートフォルダを削除できません"
 
 #, python-format
 msgid "Unable to delete unknown site id: %s"
@@ -53273,9 +53114,6 @@ msgstr "ユニキャストのパケットレート"
 msgid "Unidirectional UDP Traffic"
 msgstr "単方向UDPトラフィック"
 
-msgid "Uninstall and remove this package"
-msgstr "このパッケージをアンインストールして削除します"
-
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -53309,6 +53147,10 @@ msgstr "測定の統一"
 msgid "Unix Timestamp (Epoch)"
 msgstr "Unixタイムスタンプ(Epoch)"
 
+#, fuzzy
+msgid "Unix-Socket"
+msgstr "ソケット"
+
 msgid "Unknown"
 msgstr "不明"
 
@@ -53316,15 +53158,15 @@ msgstr "不明"
 msgid "Unknown %s group: %s"
 msgstr "不明な %s グループ: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "二次 - Dunknown"
+
 msgid "Unknown agent configuration"
 msgstr "不明なエージェント構成"
 
 msgid "Unknown aggregation"
 msgstr "不明なアグリゲーション"
-
-#, python-format
-msgid "Unknown attribute: %s"
-msgstr "不明な属性: %s"
 
 msgid "Unknown configuration change"
 msgstr "不明な構成変更"
@@ -53356,16 +53198,8 @@ msgid "Unknown site (%s)"
 msgstr "不明なサイト(%s)"
 
 #, python-format
-msgid "Unknown tag %s"
-msgstr "不明なタグ %s"
-
-#, python-format
 msgid "Unknown tag group \"%s\""
 msgstr "不明なタググループ \"%s\""
-
-#, python-format
-msgid "Unknown tag group %s"
-msgstr "不明なタググループ %s"
 
 #, python-format
 msgid "Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>"
@@ -53507,9 +53341,6 @@ msgstr "更新された属性: "
 msgid "Updated discovered host labels of '%s' with %d labels"
 msgstr "%s' の検出されたホストラベルを %d ラベルで更新しました"
 
-msgid "Updated host tags through Web-API"
-msgstr "Web-APIを介してホストタグを更新"
-
 msgid ""
 "Updated metrics are written to disk in the configured interval. The write "
 "operation is only performed for metrics that are being updated. Old metrics "
@@ -53518,14 +53349,6 @@ msgstr ""
 "更新されたメトリックは、設定された間隔でディスクに書き込まれます。 書き込み操"
 "作は、更新されているメトリックに対してのみ実行されます。古いメトリックはこの"
 "オプションの影響を受けません。"
-
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "%sグループ%sのプロパティを更新しました"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "%sgroup %s のプロパティを更新しました"
 
 msgid "Updates"
 msgstr "更新"
@@ -53549,9 +53372,6 @@ msgstr "アップロード"
 #, python-format
 msgid "Upload %s"
 msgstr "%s をアップロード"
-
-msgid "Upload & install"
-msgstr "アップロードとインストール"
 
 msgid "Upload CRT/PEM File"
 msgstr "CRT/PEMファイルをアップロードする"
@@ -53588,6 +53408,10 @@ msgstr "パッケージをアップロード"
 
 msgid "Uploaded a custom GUI logo"
 msgstr "カスタムGUIロゴをアップロードしました"
+
+#, fuzzy, python-format
+msgid "Uploaded extension package %s-%s (%s)"
+msgstr "インストールされた拡張パッケージ %s-%s (%s)"
 
 msgid "Upper"
 msgstr "アッパー"
@@ -54141,6 +53965,14 @@ msgstr "WATOに対するGITバージョン管理を使用する"
 msgid "Use Hard States"
 msgstr "ハードステートを使用する"
 
+#, fuzzy
+msgid "Use IP Address of assigned host"
+msgstr "ホストのIPアドレス"
+
+#, fuzzy
+msgid "Use IP address of assigned host"
+msgstr "ホストのIPアドレス"
+
 msgid "Use IPMItool"
 msgstr "IPMItoolを使用する"
 
@@ -54327,6 +54159,10 @@ msgstr "グラフタイトルを使用する"
 
 msgid "Use host address"
 msgstr "ホストアドレスを使用する"
+
+#, fuzzy
+msgid "Use host name of assigned host"
+msgstr "割り当てられていないシャードの総数"
 
 msgid "Use hostname"
 msgstr "ホスト名を使用する"
@@ -58936,9 +58772,6 @@ msgstr "正規のパスを指定する必要があります。"
 msgid "You have to select at least one element."
 msgstr "少なくとも1つの要素を選択する必要があります。"
 
-msgid "You have to specify some hosts"
-msgstr "いくつかのホストを指定する必要があります"
-
 msgid "You have used an invalid character"
 msgstr "無効な文字を使用しました"
 
@@ -59656,6 +59489,10 @@ msgstr "信頼区間"
 msgid "configuration"
 msgstr "構成"
 
+#, fuzzy
+msgid "configure"
+msgstr "設定"
+
 msgid "connection"
 msgstr "接続"
 
@@ -59773,6 +59610,10 @@ msgstr "遅延"
 
 msgid "demand"
 msgstr "要求する"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "イベントは自動的に削除されました"
 
 msgid "detections/s"
 msgstr ""
@@ -60656,6 +60497,14 @@ msgstr "オンライン"
 msgid "online canisters"
 msgstr "オンラインキャニスター"
 
+#, fuzzy
+msgid "only messages"
+msgstr "メッセージ"
+
+#, fuzzy
+msgid "only requests"
+msgstr "リクエスト"
+
 msgid "only v4"
 msgstr "v4のみ"
 
@@ -61322,6 +61171,363 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%sから%sへ"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s"
+#~ "\"に移動しました"
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは"
+#~ "\"%s\""
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "複製されたルール %s ルールセット内 \"%s\" フォルダ内 \"%s\""
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "新しい %s グループ %s を作成します"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "新しいフォルダ %s を作成しました"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "新しいホスト %s を作成しました。"
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "作成された新しいユーザー: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "%sグループ%sを削除しました"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "削除されたフォルダ %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "削除されたホスト %s"
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "削除されたユーザー: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "フォルダ%sの編集されたプロパティ"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "変更されたホスト %s。"
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "変更されたユーザー: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "%sgroup%sを顧客%sに移動しました。追加のプロパティが変更された可能性があり"
+#~ "ます。"
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "フォルダ %s を %s に移動しました"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "ホストを \"%s\" から \"%s\"に移動しました"
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダ"
+#~ "は、%sです"
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "パスワードが変更されました(同期に失敗しました: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "プロファイルが変更されました(同期に失敗しました %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "%sグループ %s を顧客 %s から削除しました"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "ホスト %s の明示的な属性を削除しました。"
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "クラスタノードの名前を %s から %sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "ホスト%sの名前が変更されました"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "ホストの名前を%sから%sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "ホストの名前を %s から %s に変更"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr ""
+#~ "%d ルールセット内のホストの名前(フォルダ %s にあります)が変更されました"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "親の名前を%sから%sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "アクティベーションを開始しています(サイト: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "%sグループ%sのプロパティを更新しました"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "%sgroup %s のプロパティを更新しました"
+
+#~ msgid "Agent pairing"
+#~ msgstr "エージェントペアリング"
+
+#~ msgid "Automatically execute pairing"
+#~ msgstr "ペアリングの自動実行"
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "サブスクリプション設定の編集"
+
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "監視サーバーのホストアドレス"
+
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "ペアリングされたホストに設定するラベル"
+
+#~ msgid "Pair manually"
+#~ msgstr "手動でペアリングする"
+
+#~ msgid "Pair on installation"
+#~ msgstr "ペアでインストール"
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "選択したサイトでアクティブ化"
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "このチェックは、PostgreSQLデータベース内のデータベースオブジェクトがアクセ"
+#~ "スされる頻度を監視します"
+
+#~ msgid "Disabled extensions"
+#~ msgstr "無効にされた拡張機能"
+
+#, python-format
+#~ msgid "Enabled extension package %s"
+#~ msgstr "有効な拡張パッケージ%s"
+
+#~ msgid "Install this package"
+#~ msgstr "このパッケージをインストールします"
+
+#~ msgid "Installed extension packages"
+#~ msgstr "インストールされている拡張パッケージ"
+
+#~ msgid "Optional extension packages"
+#~ msgstr "オプションの拡張パッケージ"
+
+#~ msgid "Package not installed or corrupt"
+#~ msgstr "パッケージがインストールされていないか破損しています"
+
+#, python-format
+#~ msgid "Removed disabled extension package %s"
+#~ msgstr "無効状態の拡張パッケージ%sを削除しました"
+
+#~ msgid "Uninstall and remove this package"
+#~ msgstr "このパッケージをアンインストールして削除します"
+
+#~ msgid "Upload & install"
+#~ msgstr "アップロードとインストール"
+
+#~ msgid "Background Job"
+#~ msgstr "バックグラウンドジョブ"
+
+#~ msgid "Background job"
+#~ msgstr "バックグラウンドジョブ"
+
+#~ msgid "The background job is missing a logger instance"
+#~ msgstr "バックグラウンドジョブにロガーインスタンスがありません"
+
+#, python-format
+#~ msgid "The function %s is not in the snapshotted functions."
+#~ msgstr "関数 %s はスナップショット関数に含まれていません。"
+
+#~ msgid ""
+#~ "A bulk discovery job is already running. Please use the "
+#~ "\"bulk_discovery_status\" call to get the curent status."
+#~ msgstr ""
+#~ "一括検出ジョブはすでに実行されています。現在のステータスを取得するに"
+#~ "は、\"bulk_discovery_status\"呼び出しを使用してください。"
+
+#, python-format
+#~ msgid ""
+#~ "Attribute \"%s\" of user \"%s\" can not be changed, because it is locked "
+#~ "by the user connection."
+#~ msgstr ""
+#~ "属性 \"%s\" ユーザー \"%s\" は、ユーザー接続によってロックされているため、"
+#~ "変更できません。"
+
+#, python-format
+#~ msgid "Authorization Error. Insufficent permissions for '%s'"
+#~ msgstr "承認エラー. '%s'の権限が不十分です"
+
+#, python-format
+#~ msgid ""
+#~ "Checkmk exception: %s\n"
+#~ "%s"
+#~ msgstr ""
+#~ "Checkmk例外:%s\n"
+#~ "%s"
+
+#~ msgid "Currently not supported with this Checkmk Edition"
+#~ msgstr "現在、このCheckmkエディションではサポートされていません"
+
+#, python-format
+#~ msgid "Deleted ruleset '%s' for '%s'"
+#~ msgstr "%s' に対するルールセット '%s' を削除しました"
+
+#, python-format
+#~ msgid "Failed to discover %s: %s"
+#~ msgstr "%s の検出に失敗しました: %s"
+
+#, python-format
+#~ msgid "Folder %s does not exist"
+#~ msgstr "フォルダ %sは存在しません"
+
+#, python-format
+#~ msgid "Host %s already exists in the folder %s"
+#~ msgstr "ホスト %s はすでにフォルダ %s に存在します"
+
+#, python-format
+#~ msgid "Invalid key(s): %s"
+#~ msgstr "無効なキー: %s"
+
+#, python-format
+#~ msgid "Missing required key(s): %s"
+#~ msgstr "必要なキーがありません: %s"
+
+#~ msgid "No site given."
+#~ msgstr "サイトが指定されていません。"
+
+#~ msgid "No such host"
+#~ msgstr "そのようなホストはありません"
+
+#, python-format
+#~ msgid "No such host(s): %s"
+#~ msgstr "そのようなホストはありません:%s"
+
+#, python-format
+#~ msgid "Refreshed check configuration of host [%s] with %d services"
+#~ msgstr "ホスト[%s]のチェック構成を%dサービスでリフレッシュしました"
+
+#, python-format
+#~ msgid "Saved check configuration of host [%s] with %d services"
+#~ msgstr "ホスト[%s]のチェック構成を%dサービスを使用して保存しました"
+
+#, python-format
+#~ msgid "Set ruleset '%s' for '%s' with %d rules"
+#~ msgstr "ルールセット '%s' を '%s'に %dルールで設定します"
+
+#~ msgid "Setup is disabled on this site."
+#~ msgstr "このサイトではセットアップが無効になっています。"
+
+#, python-format
+#~ msgid "Site id not found: %s"
+#~ msgstr "サイトIDが見つかりません: %s"
+
+#~ msgid "Successfully baked agents"
+#~ msgstr "焼き上げに成功したエージェント"
+
+#, python-format
+#~ msgid "The SLA id %s is unknown or not visible to this user"
+#~ msgstr "SLA ID%sが不明であるか、このユーザーには表示されません"
+
+#~ msgid ""
+#~ "The configuration has changed in the meantime. You need to load the "
+#~ "configuration and start another update. If the existing configuration "
+#~ "should not be checked, you can remove the configuration_hash value from "
+#~ "the request object."
+#~ msgstr ""
+#~ "その間にコンフィギュレーションが変更されました。コンフィギュレーションを"
+#~ "ロードして、別のアップデートを開始する必要があります。既存の構成をチェック"
+#~ "する必要がない場合は、リクエストオブジェクトからconfiguration_hash値を削除"
+#~ "できます。"
+
+#~ msgid "This site is not a distributed WATO site."
+#~ msgstr "このサイトは分散型WATOサイトではありません。"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to apply new hosttag configuration. The following tags are still "
+#~ "in use, but not mentioned in the updated configuration: %s"
+#~ msgstr ""
+#~ "新しいホストタグ構成を適用できません。次のタグはまだ使用されていますが、更"
+#~ "新された構成では言及されていません: %s"
+
+#~ msgid "Unable to create parent folder(s)."
+#~ msgstr "親フォルダを作成できません。"
+
+#~ msgid "Unable to delete root folder"
+#~ msgstr "ルートフォルダを削除できません"
+
+#, python-format
+#~ msgid "Unknown attribute: %s"
+#~ msgstr "不明な属性: %s"
+
+#, python-format
+#~ msgid "Unknown tag %s"
+#~ msgstr "不明なタグ %s"
+
+#, python-format
+#~ msgid "Unknown tag group %s"
+#~ msgstr "不明なタググループ %s"
+
+#~ msgid "Updated host tags through Web-API"
+#~ msgstr "Web-APIを介してホストタグを更新"
+
+#~ msgid "You have to specify some hosts"
+#~ msgstr "いくつかのホストを指定する必要があります"
 
 #~ msgid "Search result(s) preview"
 #~ msgstr "検索結果のプレビュー"
@@ -64038,9 +64244,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgstr ""
 #~ "キャンセルイベントが到着するまでに遅延時間が経過したため、イベントが開始さ"
 #~ "れました。"
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "イベントは自動的に削除されました"
 
 #~ msgid "Exchanges"
 #~ msgstr "Exchanges"

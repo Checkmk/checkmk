@@ -11,8 +11,8 @@ import os
 import subprocess
 import sys
 from argparse import _SubParsersAction
+from collections.abc import Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Iterable, Mapping, Optional, Sequence, Tuple
 
 from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
@@ -104,7 +104,7 @@ def _add_ipmitool_args(subparsers: _SubParsersAction) -> None:
     )
 
 
-def _parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def _parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "host",
@@ -171,7 +171,7 @@ def _freeipmi_additional_args(
 
 def _prepare_freeipmi_call(
     args: Args,
-) -> Tuple[Sequence[str], Mapping[str, Tuple[Iterable[str], Iterable[str]]]]:
+) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
     return (
         [
             "ipmi-sensors",
@@ -199,7 +199,7 @@ def _ipmitool_additional_args(
 
 def _prepare_ipmitool_call(
     args: Args,
-) -> Tuple[Sequence[str], Mapping[str, Tuple[Iterable[str], Iterable[str]]]]:
+) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
     return (
         [
             "ipmitool",
@@ -267,8 +267,7 @@ def _main(args: Args) -> None:
                     ],
                     close_fds=True,
                     stdin=subprocess.DEVNULL,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     encoding="utf-8",
                     check=False,
                 )

@@ -3,18 +3,17 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef test_tools_h__
-#define test_tools_h__
+#ifndef TEST_TOOLS_H
+#define TEST_TOOLS_H
 //
 
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <vector>
 
 #include "cfg.h"
-#include "common/yaml.h"
 #include "eventlog/eventlogbase.h"
-#include "eventlog/eventlogstd.h"
 #include "eventlog/eventlogvista.h"
 #include "iosfwd"                // for ofstream
 #include "on_start.h"            // for OnStart, AppType, AppType::test
@@ -82,7 +81,7 @@ inline void CreateBinaryFile(const std::filesystem::path &path,
                              std::string_view data) {
     std::ofstream ofs(path, std::ios::binary);
 
-    ofs.write(data.data(), data.size());
+    ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
 }
 
 inline std::filesystem::path CreateIniFile(
@@ -109,8 +108,8 @@ public:
     TempDirPair &operator=(TempDirPair &&) = delete;
 
     ~TempDirPair();
-    std::filesystem::path in() const noexcept { return in_; }
-    std::filesystem::path out() const noexcept { return out_; }
+    [[nodiscard]] std::filesystem::path in() const noexcept { return in_; }
+    [[nodiscard]] std::filesystem::path out() const noexcept { return out_; }
 
 private:
     std::filesystem::path path_;
@@ -159,10 +158,6 @@ inline void SafeCleanBakeryDir() {
     }
 }
 
-const std::string_view very_temp = "tmpx";
-
-void SafeCleanTmpxDir();
-
 std::vector<std::string> ReadFileAsTable(const std::string &name);
 inline std::vector<std::string> ReadFileAsTable(
     const std::filesystem::path &name) {
@@ -183,7 +178,7 @@ inline void CheckYaml(const YAML::Node &table, const CheckYamlVector &vec) {
 constexpr std::string_view install_cab_to_test = "install_test.cab";
 constexpr std::string_view cab_to_test = "uncab_test.cab";
 
-/// \b creates temporary folder in temp and delete it on desctruction
+/// \b creates temporary folder in temp and delete it on destruction
 class TempFolder {
 public:
     explicit TempFolder(std::string_view folder_name)
@@ -191,9 +186,11 @@ public:
     explicit TempFolder(std::wstring_view folder_name);
     TempFolder(const TempFolder &) = delete;
     TempFolder &operator=(const TempFolder &) = delete;
+    TempFolder(TempFolder &&) = delete;
+    TempFolder &operator=(TempFolder &&) = delete;
     ~TempFolder();
 
-    std::filesystem::path path() const { return folder_name_; }
+    [[nodiscard]] std::filesystem::path path() const { return folder_name_; }
 
 private:
     std::filesystem::path folder_name_;
@@ -204,9 +201,6 @@ std::wstring GenerateRandomFileName() noexcept;
 
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
-private:
-    enum class Mode { standard, no_io };
-
 public:
     using ptr = std::unique_ptr<TempCfgFs>;
 
@@ -227,15 +221,15 @@ public:
     [[nodiscard]] bool loadConfig(const std::filesystem::path &yml);
     [[nodiscard]] bool reloadConfig() const;
     [[nodiscard]] bool loadFactoryConfig();
-    [[nodiscard]] bool loadContent(std::string_view config);
+    [[nodiscard]] bool loadContent(std::string_view content);
 
-    [[nodiscard]] bool createRootFile(const std::filesystem::path &relative_p,
+    [[nodiscard]] bool createRootFile(const std::filesystem::path &filepath,
                                       const std::string &content) const;
-    [[nodiscard]] bool createDataFile(const std::filesystem::path &relative_p,
+    [[nodiscard]] bool createDataFile(const std::filesystem::path &filepath,
                                       const std::string &content) const;
 
-    void removeRootFile(const std::filesystem::path &relative_p) const;
-    void removeDataFile(const std::filesystem::path &relative_p) const;
+    void removeRootFile(const std::filesystem::path &filepath) const;
+    void removeDataFile(const std::filesystem::path &filepath) const;
 
     std::filesystem::path root() const { return root_; }
     std::filesystem::path data() const { return data_; }
@@ -243,6 +237,7 @@ public:
     void allowUserAccess() const;
 
 private:
+    enum class Mode { standard, no_io };
     explicit TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
         const std::filesystem::path &filepath,
@@ -285,7 +280,7 @@ private:
 
 inline uint16_t TestPort() noexcept {
     static uint32_t r =
-        (static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU) + 22000;
+        static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU + 22000;
     return static_cast<uint16_t>(r);
 }
 
@@ -318,19 +313,23 @@ public:
         , message_(data.message)
         , event_level_{data.event_level} {}
 
-    uint64_t recordId() const override { return record_id_; }
+    [[nodiscard]] uint64_t recordId() const override { return record_id_; }
 
-    uint16_t eventId() const override { return event_id_; }
+    [[nodiscard]] uint16_t eventId() const override { return event_id_; }
 
-    uint16_t eventQualifiers() const override { return event_qualifiers_; }
+    [[nodiscard]] uint16_t eventQualifiers() const override {
+        return event_qualifiers_;
+    }
 
-    time_t timeGenerated() const override { return time_generated_; }
+    [[nodiscard]] time_t timeGenerated() const override {
+        return time_generated_;
+    }
 
-    std::wstring source() const override { return source_; }
+    [[nodiscard]] std::wstring source() const override { return source_; }
 
-    Level eventLevel() const override { return event_level_; }
+    [[nodiscard]] Level eventLevel() const override { return event_level_; }
 
-    std::wstring makeMessage() const override { return message_; }
+    [[nodiscard]] std::wstring makeMessage() const override { return message_; }
 
 private:
     uint64_t record_id_;
@@ -346,9 +345,8 @@ class EventLogDebug : public EventLogBase {
 public:
     explicit EventLogDebug(const std::vector<tst::EventRecordData> &data)
         : data_(data) {}
-    ~EventLogDebug() override = default;
 
-    std::wstring getName() const override { return L"debug"; }
+    [[nodiscard]] std::wstring getName() const override { return L"debug"; }
     void seek(uint64_t record_id) override { pos_ = record_id; }
     EventLogRecordBase *readRecord() override {
         if (pos_ < data_.size()) {
@@ -358,7 +356,7 @@ public:
         return nullptr;
     }
     uint64_t getLastRecordId() override { return 0; }
-    bool isLogValid() const override { return true; }
+    [[nodiscard]] bool isLogValid() const override { return true; }
 
 private:
     uint64_t pos_{0U};
@@ -367,4 +365,4 @@ private:
 
 }  // namespace cma::evl
 
-#endif  // test_tools_h__
+#endif  // TEST_TOOLS_H

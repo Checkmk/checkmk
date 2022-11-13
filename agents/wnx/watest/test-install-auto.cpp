@@ -59,7 +59,7 @@ TEST(InstallAuto, FileControlIntegration) {
     tst::CreateTextFile(path, "-----\n");
     // Typical windows code below: wait for file, because on heavy load file may
     // not be created quick enough. WTF Microsoft?
-    tst::WaitForSuccessSilent(1000ms, [path]() {
+    tst::WaitForSuccessSilent(1000ms, [path] {
         std::error_code ec;
         return fs::exists(path, ec);
     });
@@ -138,8 +138,8 @@ protected:
                             "This is  script");
     }
 
-    tst::TempCfgFs *fs() const { return fs_.get(); };
-    ExecuteUpdate *eu() const { return eu_.get(); };
+    [[nodiscard]] tst::TempCfgFs *fs() const { return fs_.get(); }
+    [[nodiscard]] ExecuteUpdate *eu() const { return eu_.get(); }
 
 private:
     std::unique_ptr<tst::TempCfgFs> fs_;
@@ -257,7 +257,6 @@ TEST(InstallAuto, FindAgentMsiSkippable) {
     auto agent_msi = FindProductMsi(install::kAgentProductName);
     if (!agent_msi) {
         GTEST_SKIP();
-        return;
     }
     ASSERT_TRUE(fs::exists(*agent_msi));
 }
@@ -286,13 +285,13 @@ protected:
         bak_file_ += ".bak";
     }
 
-    const auto &logFile() const noexcept { return log_file_; }
-    bool existsBak() const noexcept {
+    [[nodiscard]] const auto &logFile() const noexcept { return log_file_; }
+    [[nodiscard]] bool existsBak() const noexcept {
         std::error_code ec;
         return fs::exists(bak_file_, ec);
     }
 
-    void createLogFile(std::string_view text) {
+    void createLogFile(std::string_view text) const {
         tst::CreateTextFile(logFile(), text);
     }
 

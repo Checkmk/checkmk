@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import Dict, List, Optional
 
-# ignore mypy error: "found module but no type hints or library stubs"
-from opsgenie_sdk.api.alert import AlertApi  # type: ignore
-from opsgenie_sdk.api.alert.acknowledge_alert_payload import AcknowledgeAlertPayload  # type: ignore
-from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type: ignore
-from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore
-from opsgenie_sdk.api_client import ApiClient  # type: ignore
-from opsgenie_sdk.configuration import Configuration  # type: ignore
-from opsgenie_sdk.rest import ApiException  # type: ignore
+from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import]
+from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import]
+    AcknowledgeAlertPayload,
+)
+from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type: ignore[import]
+from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore[import]
+from opsgenie_sdk.api_client import ApiClient  # type: ignore[import]
+from opsgenie_sdk.configuration import Configuration  # type: ignore[import]
+from opsgenie_sdk.rest import ApiException  # type: ignore[import]
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
@@ -21,7 +21,7 @@ from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 # https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
 class Connector:
-    def __init__(self, api_key: str, host_url: Optional[str], proxy_url: Optional[str]) -> None:
+    def __init__(self, api_key: str, host_url: str | None, proxy_url: str | None) -> None:
         conf: "Configuration" = Configuration()
         conf.api_key["Authorization"] = api_key
         if host_url is not None:
@@ -35,16 +35,16 @@ class Connector:
     def handle_alert_creation(
         self,
         note_created: str,
-        actions_list: List[str],
+        actions_list: list[str],
         desc: str,
         msg: str,
         priority: str,
-        teams_list: List[Optional[Dict[str, str]]],
-        tags_list: List[str],
+        teams_list: list[dict[str, str] | None],
+        tags_list: list[str],
         entity_value: str,
-        alert_source: Optional[str],
-        alias: Optional[str],
-        owner: Optional[str],
+        alert_source: str | None,
+        alias: str | None,
+        owner: str | None,
     ) -> int:
 
         body = CreateAlertPayload(
@@ -73,9 +73,9 @@ class Connector:
     def handle_alert_deletion(
         self,
         note_closed: str,
-        owner: Optional[str],
-        alias: Optional[str],
-        alert_source: Optional[str],
+        owner: str | None,
+        alias: str | None,
+        alert_source: str | None,
     ) -> int:
 
         body = CloseAlertPayload(
@@ -96,7 +96,7 @@ class Connector:
             return 2
 
     def handle_alert_ack(
-        self, ack_author: str, ack_comment: str, alias: Optional[str], alert_source: Optional[str]
+        self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
     ) -> int:
 
         body = AcknowledgeAlertPayload(
@@ -131,20 +131,20 @@ def main() -> int:
     note_closed = context.get("PARAMETER_NOTE_CLOSED") or "Alert closed by Check_MK"
     priority = context.get("PARAMETER_PRIORITY", "P3")
     entity_value = context.get("PARAMETER_ENTITY", "")
-    alert_source: Optional[str] = context.get("PARAMETER_SOURCE")
-    owner: Optional[str] = context.get("PARAMETER_OWNER")
-    host_url: Optional[str] = context.get("PARAMETER_URL")
-    proxy_url: Optional[str] = context.get("PARAMETER_PROXY_URL")
+    alert_source: str | None = context.get("PARAMETER_SOURCE")
+    owner: str | None = context.get("PARAMETER_OWNER")
+    host_url: str | None = context.get("PARAMETER_URL")
+    proxy_url: str | None = context.get("PARAMETER_PROXY_URL")
 
-    tags_list: List[str] = []
+    tags_list: list[str] = []
     if context.get("PARAMETER_TAGSS"):
         tags_list = context.get("PARAMETER_TAGSS", "").split(" ")
 
-    actions_list: List[str] = []
+    actions_list: list[str] = []
     if context.get("PARAMETER_ACTIONSS"):
         actions_list = context.get("PARAMETER_ACTIONSS", "").split(" ")
 
-    teams_list: List[Optional[Dict[str, str]]] = []
+    teams_list: list[dict[str, str] | None] = []
     if context.get("PARAMETER_TEAMSS"):
         teams_list = [
             {"name": str(context[k]), "type": "team"}

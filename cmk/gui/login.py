@@ -602,7 +602,7 @@ class LoginPage(Page):
             html.br()
             html.write_text(
                 _(
-                    'You can use, modify and distribute Check_MK under the terms of the <a href="%s" target="_blank">'
+                    'You can use, modify and distribute Checkmk under the terms of the <a href="%s" target="_blank">'
                     "GNU GPL Version 2</a>."
                 )
                 % "https://checkmk.com/gpl.html"

@@ -503,7 +503,7 @@ def test_discovery_prism_container(
                     "fs_used",
                     14075.42578125,
                     levels=(12382475.141189575, 13930284.533838272),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 15478093.926487923),
                 ),
                 Metric("fs_free", 15464018.500706673, boundaries=(0.0, None)),
                 Metric(
@@ -526,7 +526,7 @@ def test_discovery_prism_container(
                     "fs_used",
                     4406899.421875,
                     levels=(15896734.338065147, 17883826.13032341),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 19870917.922581673),
                 ),
                 Metric("fs_free", 15464018.500706673, boundaries=(0.0, None)),
                 Metric(

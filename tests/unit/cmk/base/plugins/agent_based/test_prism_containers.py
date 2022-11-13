@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 import pytest
 
@@ -543,8 +543,8 @@ def test_discovery_prism_container(
     ],
 )
 def test_check_prism_container(
-    item,
-    params,
+    item: str,
+    params: Mapping[str, Any],
     section: Dict[str, Any],
     expected_check_result: Sequence[Result],
 ) -> None:

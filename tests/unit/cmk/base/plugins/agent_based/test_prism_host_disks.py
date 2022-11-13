@@ -104,8 +104,8 @@ def test_discovery_prism_host_disks(
     ],
 )
 def test_check_prism_host_disks(
-    item,
-    params,
+    item: str,
+    params: Dict[str, Any],
     section: Dict[str, Any],
     expected_check_result: Sequence[Result],
 ) -> None:

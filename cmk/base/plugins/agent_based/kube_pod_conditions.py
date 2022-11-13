@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.utils.kube import (
     condition_detailed_description,
     condition_short_description,
+    PodCondition,
     PodConditions,
     VSResultAge,
 )
@@ -74,7 +75,9 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
     `LOGICAL_ORDER`.  The last two conditions, `containersready` and `ready`,
     can be in a failed state simultaneously.  When a condition is missing (i.e.
     is `None`), it means that the previous condition is in a failed state."""
-    section_dict = section.dict()
+    condition_list: list[tuple[str, PodCondition | None]] = [
+        (name, getattr(section, name)) for name in LOGICAL_ORDER
+    ]
 
     if all(cond and cond.status for _, cond in section):
         yield Result(
@@ -82,27 +85,26 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             summary="Ready, all conditions passed",
             details="\n".join(
                 [
-                    condition_detailed_description(
-                        name, cond["status"], cond["reason"], cond["detail"]
-                    )
-                    for name in LOGICAL_ORDER
-                    if (cond := section_dict.get(name)) is not None
+                    condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+                    for name, cond in condition_list
+                    if cond is not None
                 ]
             ),
         )
         return
-    for name in LOGICAL_ORDER:
-        cond = section_dict[name]
+    for name, cond in condition_list:
         if cond is not None:
-            time_diff = now - cond["last_transition_time"]  # keep the last-seen one
-            if (status := cond["status"]) is True:
-                yield Result(state=State.OK, summary=condition_short_description(name, str(status)))
+            # keep the last-seen one
+            time_diff = now - cond.last_transition_time  # type: ignore  # SUP-12170
+            if cond.status:
+                # TODO: CMK-11697
+                yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
                 continue
             summary_prefix = condition_detailed_description(
-                name, status, cond["reason"], cond["detail"]
+                name, cond.status, cond.reason, cond.detail
             )
         else:
-            summary_prefix = condition_short_description(name, "False")
+            summary_prefix = condition_short_description(name, False)
         for result in check_levels(
             time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
         ):

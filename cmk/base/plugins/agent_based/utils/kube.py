@@ -150,13 +150,13 @@ class Controller(BaseModel):
 ControlChain = Sequence[Controller]
 
 
-def condition_short_description(name: str, status: str) -> str:
+def condition_short_description(name: str, status: bool | str) -> str:
     return f"{name.upper()}: {status}"
 
 
 def condition_detailed_description(
     name: str,
-    status: str,
+    status: bool | str,
     reason: Optional[str],
     message: Optional[str],
 ) -> str:

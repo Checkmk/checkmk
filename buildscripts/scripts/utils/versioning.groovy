@@ -134,7 +134,7 @@ def print_image_tag() {
 
 def patch_folders(edition) {
     REPO_PATCH_RULES[edition]["paths_to_be_removed"].each{FOLDER ->
-        sh("find -name ${FOLDER} -exec rm -rf {} \;");
+        sh("find -name ${FOLDER} -exec rm -rf {} \\;");
     }
 
     REPO_PATCH_RULES[edition]["folders_to_be_created"].each{FOLDER ->

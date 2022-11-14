@@ -39,7 +39,7 @@ AGENT_TMP_PATH = Path(
 ContainerName = NewType("ContainerName", str)
 
 
-class UsedMetrics(str, enum.Enum):
+class UsedMetric(str, enum.Enum):
     container_memory_working_set_bytes = "container_memory_working_set_bytes"
     container_cpu_usage_seconds_total = "container_cpu_usage_seconds_total"
 
@@ -54,17 +54,17 @@ class IdentifiableMetric(BaseModel):
 
 class PerformanceMetric(IdentifiableMetric):
     container_name: ContainerName
-    metric_name: UsedMetrics
+    metric_name: UsedMetric
     value: float = Field(..., alias="metric_value_string")
     timestamp: float
 
 
 class MemoryMetric(PerformanceMetric):
-    metric_name: Literal[UsedMetrics.container_memory_working_set_bytes]
+    metric_name: Literal[UsedMetric.container_memory_working_set_bytes]
 
 
 class CPUMetric(PerformanceMetric):
-    metric_name: Literal[UsedMetrics.container_cpu_usage_seconds_total]
+    metric_name: Literal[UsedMetric.container_cpu_usage_seconds_total]
 
 
 class UnusedMetric(BaseModel):

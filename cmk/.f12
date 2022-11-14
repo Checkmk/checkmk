@@ -35,16 +35,10 @@ PYTHON3_PATHS=(
     bi
 )
 
-echo "Copy CRE files..."
+echo "Copy files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
-    --exclude=cee \
-    --exclude=cee.py \
-    --exclude=cme \
-    --exclude=cme.py \
-    --exclude=cpe \
-    --exclude=cpe.py \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/

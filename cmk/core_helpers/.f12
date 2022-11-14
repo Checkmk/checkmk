@@ -12,14 +12,11 @@ DESTDIR="$ROOT/lib/python3/cmk/core_helpers/"
 
 echo "Update site $SITE..."
 
-echo "Copy CRE files..."
+echo "Copy files..."
 sudo rsync \
     --exclude="__pycache__" \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
-    --exclude="cee" \
-    --exclude="cpe" \
-    --exclude="cme" \
     -a ./* "$DESTDIR"
 
 echo "Compile Python file in site..."

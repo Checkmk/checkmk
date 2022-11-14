@@ -291,6 +291,120 @@ def _parameter_valuespec_livestatus_status():
                     ],
                 ),
             ),
+            (
+                "carbon_overflows_rate",
+                Tuple(
+                    title=_("Carbon Overflows Rate"),
+                    help=_("Rate of performance data loss for Carbon"),
+                    elements=[
+                        Float(
+                            title=_("Warning at or above"),
+                            unit=_("/s"),
+                            default_value=0.01,
+                        ),
+                        Float(
+                            title=_("Critical at or above"),
+                            unit=_("/s"),
+                            default_value=0.02,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "carbon_queue_usage",
+                Tuple(
+                    title=_("Carbon Queue Usage"),
+                    help=_("Carbon queue usage"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at or above"),
+                            unit=_("%"),
+                            default_value=60,
+                        ),
+                        Percentage(
+                            title=_("Critical at or above"),
+                            unit=_("%"),
+                            default_value=80,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "influxdb_overflows_rate",
+                Tuple(
+                    title=_("InfluxDB Overflows Rate"),
+                    help=_("Rate of performance data loss for InfluxDB"),
+                    elements=[
+                        Float(
+                            title=_("Warning at or above"),
+                            unit=_("/s"),
+                            default_value=0.01,
+                        ),
+                        Float(
+                            title=_("Critical at or above"),
+                            unit=_("/s"),
+                            default_value=0.02,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "influxdb_queue_usage",
+                Tuple(
+                    title=_("InfluxDB Queue Usage"),
+                    help=_("InfluxDB queue usage"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at or above"),
+                            unit=_("%"),
+                            default_value=60,
+                        ),
+                        Percentage(
+                            title=_("Critical at or above"),
+                            unit=_("%"),
+                            default_value=80,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "rrdcached_overflows_rate",
+                Tuple(
+                    title=_("RRD Overflows Rate"),
+                    help=_("Rate of performance data loss for RRD"),
+                    elements=[
+                        Float(
+                            title=_("Warning at or above"),
+                            unit=_("/s"),
+                            default_value=0.01,
+                        ),
+                        Float(
+                            title=_("Critical at or above"),
+                            unit=_("/s"),
+                            default_value=0.02,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "rrdcached_queue_usage",
+                Tuple(
+                    title=_("RRD Queue Usage"),
+                    help=_("RRD queue usage"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at or above"),
+                            unit=_("%"),
+                            default_value=60,
+                        ),
+                        Percentage(
+                            title=_("Critical at or above"),
+                            unit=_("%"),
+                            default_value=80,
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 

@@ -3175,16 +3175,12 @@ class EventStatus:
             self._logger.exception("Cannot remove event %d: not present", event["id"])
 
     # protected by self.lock
-    def _remove_event_by_nr(self, index: int) -> None:
-        event = self._events.pop(index)
-        self._count_event_remove(event)
-
-    # protected by self.lock
     def remove_oldest_event(self, ty: str, event: Event) -> None:
         if ty == "overall":
             self._logger.log(VERBOSE, "  Removing oldest event")
-            self._history.add(self._events[0], "AUTODELETE")
-            self._remove_event_by_nr(0)
+            oldest_event = self._events[0]
+            self._history.add(oldest_event, "AUTODELETE")
+            self.remove_event(oldest_event)
         elif ty == "by_rule" and event["rule_id"] is not None:
             self._logger.log(VERBOSE, '  Removing oldest event of rule "%s"', event["rule_id"])
             self._remove_oldest_event_of_rule(event["rule_id"])
@@ -3232,7 +3228,7 @@ class EventStatus:
         """
         with self.lock:
             to_delete = []
-            for nr, event in enumerate(self._events):
+            for event in self._events:
                 if event["rule_id"] == rule["id"] and self.cancelling_match(
                     match_groups, new_event, event, rule
                 ):
@@ -3278,10 +3274,10 @@ class EventStatus:
                                 is_cancelling=True,
                             )
 
-                    to_delete.append(nr)
+                    to_delete.append(event)
 
-            for nr in to_delete[::-1]:
-                self._remove_event_by_nr(nr)
+            for e in to_delete:
+                self.remove_event(e)
 
     def cancelling_match(  # pylint: disable=too-many-branches
         self, match_groups: dict, new_event: Event, event: Event, rule: Rule

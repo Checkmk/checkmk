@@ -74,6 +74,48 @@ class Status(Table):
     )
     """The current number of log messages MK Livestatus keeps in memory"""
 
+    carbon_bytes_sent = Column(
+        'carbon_bytes_sent',
+        col_type='float',
+        description='The number of number of bytes sent over the carbon connections since program start',
+    )
+    """The number of number of bytes sent over the carbon connections since program start"""
+
+    carbon_bytes_sent_rate = Column(
+        'carbon_bytes_sent_rate',
+        col_type='float',
+        description='The averaged number of number of bytes sent over the carbon connections per second',
+    )
+    """The averaged number of number of bytes sent over the carbon connections per second"""
+
+    carbon_overflows = Column(
+        'carbon_overflows',
+        col_type='float',
+        description='The number of times a Carbon connection could not send the metrics since program start',
+    )
+    """The number of times a Carbon connection could not send the metrics since program start"""
+
+    carbon_overflows_rate = Column(
+        'carbon_overflows_rate',
+        col_type='float',
+        description='The averaged number of times a Carbon connection could not send the metrics per second',
+    )
+    """The averaged number of times a Carbon connection could not send the metrics per second"""
+
+    carbon_queue_usage = Column(
+        'carbon_queue_usage',
+        col_type='float',
+        description='The number of number of elements in the queue / size of the queue since program start',
+    )
+    """The number of number of elements in the queue / size of the queue since program start"""
+
+    carbon_queue_usage_rate = Column(
+        'carbon_queue_usage_rate',
+        col_type='float',
+        description='The averaged number of number of elements in the queue / size of the queue per second',
+    )
+    """The averaged number of number of elements in the queue / size of the queue per second"""
+
     check_external_commands = Column(
         'check_external_commands',
         col_type='int',
@@ -256,6 +298,48 @@ class Status(Table):
     )
     """The averaged number of host checks per second"""
 
+    influxdb_bytes_sent = Column(
+        'influxdb_bytes_sent',
+        col_type='float',
+        description='The number of number of bytes sent over the InfluxDB connections (payload only) since program start',
+    )
+    """The number of number of bytes sent over the InfluxDB connections (payload only) since program start"""
+
+    influxdb_bytes_sent_rate = Column(
+        'influxdb_bytes_sent_rate',
+        col_type='float',
+        description='The averaged number of number of bytes sent over the InfluxDB connections (payload only) per second',
+    )
+    """The averaged number of number of bytes sent over the InfluxDB connections (payload only) per second"""
+
+    influxdb_overflows = Column(
+        'influxdb_overflows',
+        col_type='float',
+        description='The number of times an InfluxDB connection could not send the metrics since program start',
+    )
+    """The number of times an InfluxDB connection could not send the metrics since program start"""
+
+    influxdb_overflows_rate = Column(
+        'influxdb_overflows_rate',
+        col_type='float',
+        description='The averaged number of times an InfluxDB connection could not send the metrics per second',
+    )
+    """The averaged number of times an InfluxDB connection could not send the metrics per second"""
+
+    influxdb_queue_usage = Column(
+        'influxdb_queue_usage',
+        col_type='float',
+        description='The number of number of elements in the queue / size of the queue since program start',
+    )
+    """The number of number of elements in the queue / size of the queue since program start"""
+
+    influxdb_queue_usage_rate = Column(
+        'influxdb_queue_usage_rate',
+        col_type='float',
+        description='The averaged number of number of elements in the queue / size of the queue per second',
+    )
+    """The averaged number of number of elements in the queue / size of the queue per second"""
+
     interval_length = Column(
         'interval_length',
         col_type='int',
@@ -368,6 +452,20 @@ class Status(Table):
     )
     """The averaged number of new log messages per second"""
 
+    metrics_count = Column(
+        'metrics_count',
+        col_type='float',
+        description='The number of number of metrics processed by the core since program start',
+    )
+    """The number of number of metrics processed by the core since program start"""
+
+    metrics_count_rate = Column(
+        'metrics_count_rate',
+        col_type='float',
+        description='The averaged number of number of metrics processed by the core per second',
+    )
+    """The averaged number of number of metrics processed by the core per second"""
+
     mk_inventory_last = Column(
         'mk_inventory_last',
         col_type='time',
@@ -438,6 +536,20 @@ class Status(Table):
     )
     """Whether Nagios will obsess over service checks and run the ocsp_command (0/1)"""
 
+    perf_data_count = Column(
+        'perf_data_count',
+        col_type='float',
+        description='The number of number of performance data processed by the core since program start',
+    )
+    """The number of number of performance data processed by the core since program start"""
+
+    perf_data_count_rate = Column(
+        'perf_data_count_rate',
+        col_type='float',
+        description='The averaged number of number of performance data processed by the core per second',
+    )
+    """The averaged number of number of performance data processed by the core per second"""
+
     process_performance_data = Column(
         'process_performance_data',
         col_type='int',
@@ -472,6 +584,48 @@ class Status(Table):
         description='The averaged number of requests to Livestatus per second',
     )
     """The averaged number of requests to Livestatus per second"""
+
+    rrdcached_bytes_sent = Column(
+        'rrdcached_bytes_sent',
+        col_type='float',
+        description='The number of number of bytes sent over to the RRDs since program start',
+    )
+    """The number of number of bytes sent over to the RRDs since program start"""
+
+    rrdcached_bytes_sent_rate = Column(
+        'rrdcached_bytes_sent_rate',
+        col_type='float',
+        description='The averaged number of number of bytes sent over to the RRDs per second',
+    )
+    """The averaged number of number of bytes sent over to the RRDs per second"""
+
+    rrdcached_overflows = Column(
+        'rrdcached_overflows',
+        col_type='float',
+        description='The number of times an RRDCacheD connection could not send the metrics since program start',
+    )
+    """The number of times an RRDCacheD connection could not send the metrics since program start"""
+
+    rrdcached_overflows_rate = Column(
+        'rrdcached_overflows_rate',
+        col_type='float',
+        description='The averaged number of times an RRDCacheD connection could not send the metrics per second',
+    )
+    """The averaged number of times an RRDCacheD connection could not send the metrics per second"""
+
+    rrdcached_queue_usage = Column(
+        'rrdcached_queue_usage',
+        col_type='float',
+        description='The number of number of elements in the queue / size of the queue since program start',
+    )
+    """The number of number of elements in the queue / size of the queue since program start"""
+
+    rrdcached_queue_usage_rate = Column(
+        'rrdcached_queue_usage_rate',
+        col_type='float',
+        description='The averaged number of number of elements in the queue / size of the queue per second',
+    )
+    """The averaged number of number of elements in the queue / size of the queue per second"""
 
     service_checks = Column(
         'service_checks',

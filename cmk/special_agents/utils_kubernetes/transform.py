@@ -233,7 +233,9 @@ def pod_conditions(
             "status": condition.status,
             "reason": condition.reason,
             "detail": condition.message,
-            "last_transition_time": int(convert_to_timestamp(condition.last_transition_time)),
+            "last_transition_time": int(convert_to_timestamp(condition.last_transition_time))
+            if condition.last_transition_time
+            else None,
         }
         if condition.type in condition_types:
             pod_condition["type"] = condition_types[condition.type]

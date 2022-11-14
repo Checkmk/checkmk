@@ -23,7 +23,7 @@ def scss_files() -> Set[Path]:
 
 def _scss_variables(_scss_files: Iterable[Path]) -> Tuple[Set[str], Set[str]]:
     variable_definition = re.compile(r"\s*(\$[-_a-zA-Z0-9]+)\s*:")
-    variable_usage = re.compile(r":[^$]*(\$[-_a-zA-Z0-9]+)")
+    variable_usage = re.compile(r"(\$[-_a-zA-Z0-9]+)")
 
     definitions, usages = set(), set()
     for file_ in _scss_files:
@@ -31,17 +31,20 @@ def _scss_variables(_scss_files: Iterable[Path]) -> Tuple[Set[str], Set[str]]:
             for l in f:
                 if definition := variable_definition.match(l):
                     definitions.add(definition.group(1))
-                if usage := variable_usage.search(l):
-                    usages.add(usage.group(1))
+
+                # Need to search for usages like this - after splitting away potential definitions
+                # (before a colon) - because re does not support overlapping matches, and there may
+                # be more than one variable usage per line.
+                after_colon: str = l.split(":", 1)[-1]
+                if usage := variable_usage.findall(after_colon):
+                    usages.update(usage)
     return definitions, usages
 
 
 def test_unused_scss_variables() -> None:
     definitions, usages = _scss_variables(scss_files())
     unused = [var for var in definitions if var not in usages]
-    expected = [
-        "$self",  # used in interpolation with #{}
-    ]
+    expected = []
 
     if not is_enterprise_repo():
         expected.append("$ntop-protocol-painter-padding-top")

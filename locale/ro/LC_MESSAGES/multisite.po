@@ -81,6 +81,12 @@ msgstr " Se potriveste grupurilor: %s"
 msgid " - Broken"
 msgstr ""
 
+#, python-format
+msgid ""
+" <b>Note</b>: To restrict this rule to hosts created via <a href=\"%s\">auto-"
+"registration</a>, use the host label <tt>cmk/agent_auto_registered:yes</tt>."
+msgstr ""
+
 msgid " Activate this option"
 msgstr " Activează această opțiune"
 
@@ -539,14 +545,6 @@ msgstr "%s by este element existent în aceasta selecție."
 
 #, python-format
 msgid "%s is parent of %s."
-msgstr ""
-
-#, python-format
-msgid "%s is too high. The maximum allowed value is %s."
-msgstr "%s este prea mare. Valoarea maximală permisă este %s."
-
-#, python-format
-msgid "%s is too low. The minimum allowed value is %s."
 msgstr ""
 
 #, python-format
@@ -1104,6 +1102,10 @@ msgstr ""
 msgid "95% - Two standard deviations"
 msgstr ""
 
+#, fuzzy
+msgid "99th percentile request latency"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -1171,18 +1173,6 @@ msgid ""
 "Linux agent and the Windows agent. However, when setting the Encryption "
 "settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
 "matching hosts. Please keep this in mind when configuring this ruleset."
-msgstr ""
-
-msgid ""
-"<b>Note</b>: Real-time check data is encrypted by default. Hence, an "
-"encryption secret is needed to enable the baked agent to send real-time "
-"check data. A secret can be provided by activating <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_real_time_checks\">real-time checks on this "
-"site</a> (The agent bakery will use the configured secret as default for "
-"agents matching <i>this</i> rule), or by explicitly the agent rule for <a "
-"href=\"wato.py?mode=edit_ruleset&varname=agent_encryption\">encryption</a> "
-"(This secret will win over the default secret). If no secret is found, the "
-"agent bakery will fail to bake agents."
 msgstr ""
 
 msgid ""
@@ -1955,6 +1945,10 @@ msgstr ""
 msgid "ACTIVE"
 msgstr ""
 
+#, fuzzy
+msgid "AD Connect Sync"
+msgstr "Conexiuni Active"
+
 msgid "AES-128"
 msgstr ""
 
@@ -2094,6 +2088,10 @@ msgstr "Tag-uri"
 msgid "AWS/CE Costs and Usage"
 msgstr ""
 
+#, fuzzy
+msgid "AWS/CloudFront"
+msgstr "Conexiuni Active"
+
 msgid "AWS/CloudWatch Alarms Limits"
 msgstr ""
 
@@ -2118,6 +2116,10 @@ msgstr ""
 
 msgid "AWS/EC2 Limits"
 msgstr ""
+
+#, fuzzy
+msgid "AWS/ECS Limits"
+msgstr "Adaugă limite"
 
 msgid "AWS/ELB Backend Connection Errors"
 msgstr ""
@@ -2147,6 +2149,10 @@ msgid "AWS/ELBv2 Limits"
 msgstr ""
 
 #, fuzzy
+msgid "AWS/ElastiCache Limits"
+msgstr "Adaugă limite"
+
+#, fuzzy
 msgid "AWS/Glacier Limits"
 msgstr "Adaugă limite"
 
@@ -2155,6 +2161,18 @@ msgstr ""
 
 msgid "AWS/Glacier Vaults"
 msgstr ""
+
+#, fuzzy
+msgid "AWS/Lambda Concurrency"
+msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy
+msgid "AWS/Lambda Memory"
+msgstr "Starea porturilor pentru inventariere"
+
+#, fuzzy
+msgid "AWS/Lambda Performance"
+msgstr "Starea porturilor pentru inventariere"
 
 msgid "AWS/RDS CPU Credits"
 msgstr ""
@@ -2170,6 +2188,9 @@ msgid "AWS/RDS Limits"
 msgstr ""
 
 msgid "AWS/RDS Replica lag"
+msgstr ""
+
+msgid "AWS/Route53"
 msgstr ""
 
 msgid "AWS/S3 Bucket Objects"
@@ -2190,6 +2211,10 @@ msgstr ""
 
 #, fuzzy
 msgid "AWS/S3 Limits"
+msgstr "Adaugă limite"
+
+#, fuzzy
+msgid "AWS/SNS Limits"
 msgstr "Adaugă limite"
 
 #, fuzzy
@@ -2303,6 +2328,10 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Absolute levels for input traffic"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Absolute levels for logged-in users"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
@@ -3934,6 +3963,10 @@ msgid "Agent controller auto-registration"
 msgstr "Numele Elementului"
 
 #, fuzzy
+msgid "Agent controller deployment"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Agent deployment"
 msgstr "cu comentariu"
 
@@ -4249,10 +4282,6 @@ msgid "Alertmanager"
 msgstr "Adaugă o regulă de rol"
 
 #, fuzzy
-msgid "Alertmanager connection option"
-msgstr "Conexiune Noua"
-
-#, fuzzy
 msgid "Alertmanager discovery"
 msgstr "Adaugă o regulă de rol"
 
@@ -4543,6 +4572,10 @@ msgstr "Acces prin TCP"
 #, fuzzy
 msgid "Allowed agent access via IP address (Linux, Windows)"
 msgstr "Acces prin TCP"
+
+#, fuzzy
+msgid "Allowed duration since last NTPMessage"
+msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Allowed duration since last synchronisation"
@@ -5069,6 +5102,10 @@ msgstr ""
 msgid "Apply rule to temporary Tablespaces"
 msgstr ""
 
+#, fuzzy
+msgid "Apply rule to undo Tablespaces"
+msgstr "Nume tablespace"
+
 msgid "Apply single-core levels defined in 'Levels on single cores'"
 msgstr ""
 
@@ -5594,6 +5631,10 @@ msgstr ""
 msgid "Automatic fallback"
 msgstr ""
 
+#, fuzzy
+msgid "Automatic host removal"
+msgstr "doua nivele"
+
 msgid "Automatic page reload"
 msgstr ""
 
@@ -5630,6 +5671,11 @@ msgid ""
 msgstr ""
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
+msgstr ""
+
+msgid ""
+"Automatically remove hosts whose Check_MK service has been in the state "
+"CRITICAL for longer than the configured time period."
 msgstr ""
 
 msgid ""
@@ -5967,6 +6013,10 @@ msgstr ""
 
 msgid "Azure Virtual Machines Summary"
 msgstr ""
+
+#, fuzzy
+msgid "Azure services to monitor"
+msgstr "Adaugă instanță pentru monitorizare"
 
 msgid "Azure web servers (IIS)"
 msgstr ""
@@ -7018,6 +7068,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"By default, certificate validation is disabled because it is not security-"
+"relevant at this stage, see <a href=\"https://checkmk.com/werk/14715\" "
+"target=\"_blank\">werk #14715</a>."
+msgstr ""
+
+msgid ""
 "By default, data relating to a VM is sent to the group host corresponding to "
 "the resource group of the VM, the same way as for any other resource. If the "
 "VM is present in your  monitoring as a separate host, you can choose to send "
@@ -7083,6 +7139,12 @@ msgid ""
 "<tt>python3</tt> and Python 2 plugins with <tt>python2</tt> or <tt>python</"
 "tt> (depending on the command found on the host system). Here you can "
 "specify a specific command, independent of the script that will be executed."
+msgstr ""
+
+msgid ""
+"By default, the controller ignores proxy servers configured on the target "
+"system and connects directly (eg. when querying the agent receiver port from "
+"the Checkmk REST API)."
 msgstr ""
 
 msgid ""
@@ -7264,6 +7326,10 @@ msgid "CPU Memory used"
 msgstr "% utilizare"
 
 #, fuzzy
+msgid "CPU Reservation"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "CPU Utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -7307,6 +7373,10 @@ msgstr ""
 msgid "CPU rescale maximum load is Unspecified."
 msgstr ""
 
+#, fuzzy
+msgid "CPU reservation"
+msgstr "Numele Elementului"
+
 msgid "CPU resources"
 msgstr ""
 
@@ -7346,10 +7416,6 @@ msgstr "Spațiu liber exact"
 #, fuzzy
 msgid "CPU usage: Pods"
 msgstr "(nefolosit)"
-
-#, fuzzy
-msgid "CPU utilitzation"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "CPU utilization"
 msgstr ""
@@ -7788,6 +7854,9 @@ msgid "Capacity"
 msgstr "Capacitatea maxima"
 
 msgid "Capacity filled"
+msgstr ""
+
+msgid "Capacity providers per cluster"
 msgstr ""
 
 msgid "Capacity remaining"
@@ -8644,15 +8713,12 @@ msgstr "(fără parametri)"
 msgid "Checktype"
 msgstr ""
 
-msgid "Child Host Tags:"
-msgstr ""
+#, fuzzy
+msgid "Child Conditions"
+msgstr "Adaugă Condiție"
 
 msgid "Child Node Generation"
 msgstr ""
-
-#, fuzzy
-msgid "Child host name:"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Child report"
@@ -8701,9 +8767,6 @@ msgid ""
 "the 'Disk usage:' checkbox belongs to 'docker_node_disk_usage'). Note that "
 "the disk usage section is notoriously long running. If you are experiencing "
 "performance issues, consider disabeling it."
-msgstr ""
-
-msgid "Choose if realtime updates are sent/expected encrypted"
 msgstr ""
 
 msgid ""
@@ -9236,6 +9299,10 @@ msgstr ""
 msgid "Clustered services for overlapping clusters"
 msgstr ""
 
+#, fuzzy
+msgid "Clusters per account"
+msgstr " secunde "
+
 msgid "Clusters: Preferred check result of local checks"
 msgstr ""
 
@@ -9256,6 +9323,10 @@ msgstr ""
 
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
+
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "Nivelurile maxime pentru incarcare in procente"
 
 #, fuzzy
 msgid "Collect diagnostic dump"
@@ -9735,6 +9806,11 @@ msgstr "Adaugă un snapin pe sidebar"
 msgid "Configure SNMP related settings using rulesets"
 msgstr ""
 
+msgid ""
+"Configure TLS certificate validation for querying the agent receiver port "
+"from the Checkmk REST API"
+msgstr ""
+
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr ""
 
@@ -9791,6 +9867,10 @@ msgstr ""
 msgid "Configure policy violation levels"
 msgstr "doua nivele"
 
+#, fuzzy
+msgid "Configure proxy server usage"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid ""
 "Configure regular expressions that match the beginning of the service names "
 "here."
@@ -9820,6 +9900,19 @@ msgid "Configure the JIRA URL here."
 msgstr ""
 
 msgid "Configure the agent updater whether to connect via proxy server."
+msgstr ""
+
+#, python-format
+msgid ""
+"Configure the automatic creation of new hosts based on requests sent by the "
+"agent controller, see also the <a href=\"%s\">corresponding bakery ruleset</"
+"a>. <b>Note</b>: New hosts created via this channel are marked by the host "
+"label <tt>cmk/agent_auto_registered:yes</tt>. This can for example be used "
+"to configure a host lifecycle management via the <a href=\"%s\">automatic "
+"removal of hosts</a>."
+msgstr ""
+
+msgid "Configure the automatic removal of monitored hosts."
 msgstr ""
 
 msgid ""
@@ -10311,6 +10404,10 @@ msgstr ""
 #, fuzzy
 msgid "Container Name"
 msgstr "Numele Elementului"
+
+#, fuzzy
+msgid "Container instances per cluster"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Containerization"
@@ -11553,6 +11650,10 @@ msgstr "Atribute personalizate"
 msgid "Custom host attributes"
 msgstr "Atribute personalizate"
 
+#, fuzzy
+msgid "Custom host name prefix"
+msgstr "Atribute personalizate"
+
 msgid "Custom host notes"
 msgstr ""
 
@@ -12082,8 +12183,7 @@ msgstr ""
 msgid ""
 "Dashboards will be visible in the ‘Monitor’ main menu. With this option, you "
 "can select in which section of the menu this dashboard should be accessible. "
-"If you want to define a new topic name you can do this here <a "
-"href='%s'>here</a>."
+"If you want to define a new topic name you can do this <a href='%s'>here</a>."
 msgstr ""
 
 #, python-format
@@ -12245,6 +12345,14 @@ msgstr ""
 #, fuzzy
 msgid "Database diff backup"
 msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+msgid "Database for MySQL"
+msgstr "Nume tablespace"
+
+#, fuzzy
+msgid "Database for PostgreSQL"
+msgstr "Numarul maxim de conexiuni paralele"
 
 msgid "Database identifier"
 msgstr ""
@@ -12545,9 +12653,6 @@ msgid "Default reporting timerange"
 msgstr ""
 
 msgid "Default rule pack"
-msgstr ""
-
-msgid "Default secret to decrypt the packets"
 msgstr ""
 
 msgid ""
@@ -13214,11 +13319,12 @@ msgstr ""
 msgid "Deploy logged in users plugin"
 msgstr ""
 
-msgid "Deploy mk_mongodb.py wihtout authentication."
-msgstr ""
-
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr ""
+
+#, fuzzy
+msgid "Deploy mk_mongodb.py without authentication."
+msgstr "Confirma Parola"
 
 msgid "Deploy plugin for Citrix XenApp"
 msgstr ""
@@ -13489,6 +13595,9 @@ msgstr ""
 msgid "Details (Previously named: long output)"
 msgstr ""
 
+msgid "Detect and use proxies configured on the target system"
+msgstr ""
+
 msgid "Detect network parent hosts"
 msgstr ""
 
@@ -13733,6 +13842,9 @@ msgstr ""
 msgid "Disable all"
 msgstr "(dezactivat)"
 
+msgid "Disable automatic host removal"
+msgstr ""
+
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr ""
 
@@ -13745,6 +13857,10 @@ msgstr "Dezactiveaza Notificarile"
 
 msgid "Disable configuration via WATO on this site"
 msgstr ""
+
+#, fuzzy
+msgid "Disable controller"
+msgstr "trimite notificare"
 
 msgid "Disable flap detection"
 msgstr ""
@@ -14057,7 +14173,7 @@ msgid "Disk read latency"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
-msgid "Disk read opertions"
+msgid "Disk read operations"
 msgstr "Optiuni tabel"
 
 #, fuzzy
@@ -14085,6 +14201,14 @@ msgstr "Dezactiveaza Notificarile"
 #, fuzzy
 msgid "Disk write latency"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Disk write operations"
+msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Disk write throughput per second"
+msgstr "cereri/sec"
 
 msgid "Disk/Drive type"
 msgstr ""
@@ -14818,6 +14942,9 @@ msgstr ""
 msgid "Do not use absolute levels"
 msgstr "doua nivele"
 
+msgid "Do not validate server certificate during port query"
+msgstr ""
+
 msgid "Do now show reserved space"
 msgstr ""
 
@@ -15398,6 +15525,9 @@ msgstr ""
 #, fuzzy
 msgid "Duration levels"
 msgstr "doua nivele"
+
+msgid "Duration of CRITICAL state of Check_MK service"
+msgstr ""
 
 #, fuzzy
 msgid "Duration of backup"
@@ -16188,9 +16318,6 @@ msgstr ""
 msgid "Enable"
 msgstr ""
 
-msgid "Enable  (accept encrypted and unencrypted data)"
-msgstr ""
-
 msgid "Enable 'Run As <b>Local Group</b>' for scripts"
 msgstr ""
 
@@ -16229,17 +16356,16 @@ msgid "Enable adhoc downtime"
 msgstr ""
 
 #, fuzzy
-msgid "Enable agent controller"
-msgstr "trimite notificare"
-
-#, fuzzy
 msgid "Enable all"
 msgstr "Tabel"
 
 msgid "Enable automatic agent updates"
 msgstr ""
 
-msgid "Enable automatic host key acceptance"
+msgid "Enable automatic host key acceptance (OpenSSH version >= 7.6)"
+msgstr ""
+
+msgid "Enable automatic host removal"
 msgstr ""
 
 msgid "Enable community translated languages"
@@ -16247,6 +16373,10 @@ msgstr ""
 
 msgid "Enable community translated languages (not supported)"
 msgstr ""
+
+#, fuzzy
+msgid "Enable controller"
+msgstr "trimite notificare"
 
 msgid "Enable core dumps"
 msgstr ""
@@ -16520,13 +16650,7 @@ msgstr ""
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
 
-msgid "Encryption for Realtime Updates"
-msgstr ""
-
 msgid "Encryption secret"
-msgstr ""
-
-msgid "Encryption secret for Realtime Updates"
 msgstr ""
 
 msgid "End"
@@ -17645,6 +17769,9 @@ msgid "FC Ports"
 msgstr ""
 
 msgid "FCP"
+msgstr ""
+
+msgid "FIFO Topics"
 msgstr ""
 
 msgid "FIN_WAIT1"
@@ -19218,6 +19345,10 @@ msgstr ""
 msgid "Fulltext search"
 msgstr "Cautare noua"
 
+#, fuzzy
+msgid "Function"
+msgstr "Acțiune"
+
 msgid "GB"
 msgstr ""
 
@@ -19236,11 +19367,31 @@ msgid "GCP Health"
 msgstr "Numele Elementului"
 
 #, fuzzy
+msgid "GCP piggyback services"
+msgstr " (potrivire exactă)"
+
+#, fuzzy
 msgid "GCP services to monitor"
 msgstr "Adaugă instanță pentru monitorizare"
 
 msgid "GCP status product selection"
 msgstr ""
+
+#, fuzzy
+msgid "GCP/Cloud Run Cpu"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud Run Memory"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud Run Network"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud Run Requests"
+msgstr "Adresă"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr ""
@@ -19268,6 +19419,18 @@ msgstr "cereri"
 #, fuzzy
 msgid "GCP/Filestore"
 msgstr "Spațiu liber exact"
+
+#, fuzzy
+msgid "GCP/Function execution"
+msgstr "Numarul maxim de conexiuni"
+
+#, fuzzy
+msgid "GCP/Function instances"
+msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+msgid "GCP/Function network"
+msgstr "Conexiune Noua"
 
 msgid "GCP/GCE CPU"
 msgstr ""
@@ -19297,6 +19460,22 @@ msgstr ""
 #, fuzzy
 msgid "GCP/HTTP(S) load balancer requests"
 msgstr "cereri"
+
+#, fuzzy
+msgid "GCP/Memorystore redis CPU"
+msgstr "cereri"
+
+#, fuzzy
+msgid "GCP/Memorystore redis clients connected"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "GCP/Memorystore redis memory"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "GCP/Redis replication lag"
+msgstr "Adresă"
 
 msgid "GET/POST variables of this page"
 msgstr ""
@@ -21289,6 +21468,10 @@ msgid "Host registration"
 msgstr "Numele Elementului"
 
 #, fuzzy
+msgid "Host removal"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Host renaming"
 msgstr "Numele Elementului"
 
@@ -22205,6 +22388,9 @@ msgid ""
 "Rules in that rule set will override the global settings done here."
 msgstr ""
 
+msgid "If given forward output to a different host using piggyback mechanics."
+msgstr ""
+
 msgid ""
 "If in this time range the configured number of time the rule is triggered, "
 "an event is being created. If the required count is not reached then the "
@@ -23021,6 +23207,9 @@ msgstr ""
 msgid "Ignore port types during discovery"
 msgstr "Starea porturilor pentru inventariere"
 
+msgid "Ignore proxies configured on the target system"
+msgstr ""
+
 msgid "Ignore scheduled downtimes"
 msgstr ""
 
@@ -23066,6 +23255,10 @@ msgstr ""
 #, fuzzy
 msgid "Ignore these levels"
 msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Ignore undo Tablespaces (Default)"
+msgstr "spatiu utilizat"
 
 msgid "Ignore unsuccessful validation (in case of TLS/SSL)"
 msgstr ""
@@ -23702,6 +23895,9 @@ msgid "Inherit from report time range (Reporting only)"
 msgstr ""
 
 msgid "Inherited from "
+msgstr ""
+
+msgid "Init duration with absolute limits"
 msgstr ""
 
 msgid "Initial Scheduling"
@@ -25585,6 +25781,10 @@ msgid "Levels byte count"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels clients"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Levels connections"
 msgstr "Conexiune Noua"
 
@@ -25765,6 +25965,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels for laser output"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels for logged-in users"
 msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Levels for memory"
@@ -26043,12 +26247,24 @@ msgid "Levels on ingress data in bytes"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels on instances"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels on latency"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels on network"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels on network traffic"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Levels on performance"
+msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
 msgid "Levels on read capacity"
@@ -26132,6 +26348,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Levels replication"
 msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Levels requests"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels storage"
@@ -26553,6 +26773,10 @@ msgstr "Conexiuni Active"
 
 msgid "Load"
 msgstr ""
+
+#, fuzzy
+msgid "Load Balancer"
+msgstr "Perioada de timp Noua"
 
 msgid "Load Balancer Health"
 msgstr ""
@@ -27221,11 +27445,27 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Lower levels for %s"
 msgstr ""
 
+#, fuzzy
+msgid "Lower levels for 4xx error rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for 5xx error rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Lower levels for CPU balance"
 msgstr ""
 
 #, fuzzy
 msgid "Lower levels for burst balance"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Lower levels for bytes downloaded"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Lower levels for bytes uploaded"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
@@ -27236,8 +27476,20 @@ msgid "Lower levels for first output item"
 msgstr ""
 
 #, fuzzy
+msgid "Lower levels for health check percentage healty"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Lower levels for health lifetime"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for hit ratio"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for number of requests"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Lower levels for remaining API reads"
 msgstr ""
@@ -27252,6 +27504,10 @@ msgstr ""
 #, fuzzy
 msgid "Lower levels for the number of registered desktops"
 msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Lower levels for total error rate"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Lower levels for unallocated space"
@@ -28698,6 +28954,10 @@ msgstr ""
 msgid "Memory Pool Name"
 msgstr ""
 
+#, fuzzy
+msgid "Memory Reservation"
+msgstr "Optiuni tabel"
+
 msgid "Memory Usage"
 msgstr ""
 
@@ -28754,6 +29014,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Memory request"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Memory reservation"
 msgstr "cereri"
 
 msgid "Memory resources"
@@ -29586,6 +29850,10 @@ msgstr ""
 msgid "Monitor undecided services"
 msgstr "Afectat de serviciu"
 
+#, fuzzy
+msgid "Monitor undo Tablespace"
+msgstr "Nume nou"
+
 msgid "Monitor user quotas"
 msgstr ""
 
@@ -30109,10 +30377,6 @@ msgstr "Numele elementului pentru eveniment"
 #, fuzzy
 msgid "Name of Checkmk site of update server"
 msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
-msgid "Name of Piggyback Host"
-msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 msgid "Name of Queue"
@@ -31193,6 +31457,14 @@ msgid "Nodes"
 msgstr ""
 
 #, fuzzy
+msgid "Nodes per cluster"
+msgstr "Element nou"
+
+#, fuzzy
+msgid "Nodes per region"
+msgstr "cereri/sec"
+
+#, fuzzy
 msgid "Nodes to create"
 msgstr "catre port:"
 
@@ -31921,6 +32193,10 @@ msgstr ""
 msgid "Number of entries"
 msgstr "Cluster nou"
 
+#, fuzzy
+msgid "Number of evicted keys"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Number of excluded hosts"
 msgstr ""
 
@@ -32117,11 +32393,31 @@ msgstr ""
 msgid "Number of relocating shards"
 msgstr "Numarul maxim de conexiuni"
 
+#, fuzzy
+msgid "Number of requests"
+msgstr "Numarul maxim de conexiuni"
+
+msgid "Number of requests with return code class 2xx (sucess)"
+msgstr ""
+
+msgid "Number of requests with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Number of requests with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Number of requests with return code class 5xx (server error)"
+msgstr ""
+
 msgid "Number of retries"
 msgstr ""
 
 msgid "Number of retries (not counting the initial regular run)"
 msgstr ""
+
+#, fuzzy
+msgid "Number of running containers"
+msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 msgid "Number of search results"
@@ -32943,9 +33239,6 @@ msgstr "Adaungă un nou element"
 msgid "OpenHardwareMonitor (Windows)"
 msgstr ""
 
-msgid "OpenHardwareMonitor (headless)"
-msgstr ""
-
 msgid "OpenHardwareMonitor S.M.A.R.T."
 msgstr ""
 
@@ -33058,6 +33351,9 @@ msgid ""
 "compatibility whereas the python script is small an editable. Please note "
 "that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
+msgstr ""
+
+msgid "Optionally forward output to host"
 msgstr ""
 
 msgid ""
@@ -33709,6 +34005,10 @@ msgstr "sesiuni"
 msgid "Palo Alto State"
 msgstr "sesiuni"
 
+#, fuzzy
+msgid "Palo Alto Users"
+msgstr "sesiuni"
+
 msgid "Paper margins"
 msgstr ""
 
@@ -33729,6 +34029,10 @@ msgstr ""
 #, fuzzy
 msgid "Parallelize core config creation"
 msgstr "Salveaza configuratia manuala a verificarilor"
+
+#, fuzzy
+msgid "Parameter groups per region"
+msgstr "Adaugă group de model"
 
 msgid "Parameter rule set"
 msgstr ""
@@ -33783,6 +34087,10 @@ msgstr ""
 #, fuzzy
 msgid "Parameters for the bucket requests"
 msgstr "trei nivele"
+
+#, fuzzy
+msgid "Parameters for the key hit ratio"
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Parameters for the latencies"
@@ -34231,6 +34539,10 @@ msgstr "trei nivele"
 msgid "Percentual levels for free %s"
 msgstr ""
 
+#, fuzzy
+msgid "Percentual levels for logged-in users"
+msgstr "trei nivele"
+
 msgid "Percentual levels for unused licenses"
 msgstr ""
 
@@ -34545,6 +34857,10 @@ msgstr ""
 
 msgid "Piggyback name of virtual machines"
 msgstr ""
+
+#, fuzzy
+msgid "Piggyback services to monitor"
+msgstr "Adaugă instanță pentru monitorizare"
 
 msgid "Piggybacked docker containers"
 msgstr ""
@@ -35309,6 +35625,12 @@ msgstr ""
 msgid "Pre-/Postfix for TNSALIAS"
 msgstr ""
 
+msgid "Pre-shared secret"
+msgstr ""
+
+msgid "Pre-shared secret used for encryption"
+msgstr ""
+
 msgid "Precedence"
 msgstr ""
 
@@ -35374,6 +35696,9 @@ msgid "Prefix"
 msgstr ""
 
 msgid "Prefix date and your name to the comment"
+msgstr ""
+
+msgid "Prefix for GCE piggyback host names. Defaults to project ID"
 msgstr ""
 
 msgid "Prefix for piggyback hostname"
@@ -35644,7 +35969,7 @@ msgstr "Numele Elementului"
 msgid "Process name for usage in the Nagios service description"
 msgstr ""
 
-msgid "Process new logiles from the beginning"
+msgid "Process new logfiles from the beginning"
 msgstr ""
 
 msgid "Process preexisting log messages"
@@ -36484,6 +36809,10 @@ msgstr "sesiuni"
 msgid "Real Number (REAL)"
 msgstr ""
 
+#, fuzzy
+msgid "Real-time checks"
+msgstr "Verificări active"
+
 #, python-format
 msgid "Reason: %s"
 msgstr ""
@@ -36638,6 +36967,9 @@ msgstr "Adaugă nume de senzor"
 #, fuzzy
 msgid "Redis server name"
 msgstr "Adaugă nume de senzor"
+
+msgid "Redis/Hitratio"
+msgstr ""
 
 #, fuzzy
 msgid "Reenable this test"
@@ -36885,6 +37217,11 @@ msgid ""
 "Rely on WMI (Windows Management Instrumentation) when retrieving process "
 "information. Using WMI is mandatory for including the full path of a running "
 "process in the list of processes."
+msgstr ""
+
+msgid ""
+"Rely on the TLS encryption provided by the agent controller. No additional "
+"encryption is appied."
 msgstr ""
 
 msgid "Remaining Life"
@@ -37473,7 +37810,7 @@ msgid "Reschedule"
 msgstr ""
 
 #, fuzzy
-msgid "Reschedule 'Checkmk' service"
+msgid "Reschedule 'Check_MK' service"
 msgstr "<b>reprogramează o verificare imediată"
 
 msgid "Reschedule active checks"
@@ -38614,6 +38951,10 @@ msgstr ""
 msgid "SQL Compilations/sec"
 msgstr ""
 
+#, fuzzy
+msgid "SQL Databases"
+msgstr "Nume tablespace"
+
 msgid "SQL Re-Compilations/sec"
 msgstr ""
 
@@ -39303,6 +39644,13 @@ msgstr ""
 msgid "Select view"
 msgstr "(selectează directorul)"
 
+msgid ""
+"Select which Azure services to monitor.\n"
+"In case you want to monitor 'Users in the Active Directory' or 'AD Connect "
+"Sync', you will need to grant the 'Directory.Read.All' graph permission to "
+"the Azure app and to grant admin consent to it."
+msgstr ""
+
 msgid "Selected"
 msgstr ""
 
@@ -39337,10 +39685,6 @@ msgstr ""
 
 msgid "Send HTTP POST data"
 msgstr ""
-
-#, fuzzy
-msgid "Send data for real-time checks"
-msgstr "Verificare activă"
 
 #, fuzzy
 msgid "Send email"
@@ -39935,6 +40279,11 @@ msgstr ""
 #, python-format
 msgid "Services of host %s"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Services per cluster"
+msgstr "Grup nou"
 
 msgid "Services per region to monitor"
 msgstr ""
@@ -41750,12 +42099,6 @@ msgstr ""
 
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
-"Alertmanager API. If this option is not relevant for your installation, "
-"please leave it unchecked."
-msgstr ""
-
-msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
 "Kubernetes API. This is a useful option for Rancher installations (more "
 "information can be found in the manual). If this option is not relevant for "
 "your installation, please leave it unchecked."
@@ -42078,6 +42421,59 @@ msgstr ""
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the elapsed time of a function’s execution "
+"(duration)."
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+msgid ""
+"Specify the upper levels for the number of discarded events per second that "
+"could not be processed. This metric is only reported for asynchronous "
+"invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of failed invocations per second due "
+"to function errors. Default is CRIT for more than one error per hour (ca. "
+"1.0/3600)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of invocations per second that are "
+"run on non-provisioned concurrency (spillover invocations) when all "
+"provisioned concurrency is in use. Default is CRIT for more than one "
+"spillover invocation per hour (ca. 1.0/3600)."
+msgstr ""
+
+msgid ""
+"Specify the upper levels for the number of invocations per second that "
+"exceeded the concurrent limits (throttles). Default is CRIT for more than "
+"one error per hour (ca. 1.0/3600)."
+msgstr ""
+
+#, fuzzy
+msgid "Specify the upper levels for the number of invocations per second."
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+msgid ""
+"Specify the upper levels in seconds for the age of the last record for each "
+"batch of records processed (iterator age). A high iterator age could result "
+"from the following scenarios: a high execution duration for a function, not "
+"enough shards in a stream, invocation errors, insufficient batch size. This "
+"metric is only reported for stream-based invocations."
+msgstr ""
+
 msgid "Specify time since last successful backup"
 msgstr ""
 
@@ -42213,6 +42609,9 @@ msgid "Staleness value to mark hosts / services stale"
 msgstr ""
 
 msgid "Standalone"
+msgstr ""
+
+msgid "Standard Topics"
 msgstr ""
 
 msgid "Standard deviation of roundtrip times in ms"
@@ -42555,15 +42954,6 @@ msgid "State if tunnel is not found"
 msgstr ""
 
 msgid "State if violated"
-msgstr ""
-
-msgid "State in case MRP is started"
-msgstr ""
-
-msgid "State in case MRP is stopped"
-msgstr ""
-
-msgid "State in case Managed Recovery Process (MRP) is started or stopped"
 msgstr ""
 
 msgid "State in case of Active Data-Guard Option is active: "
@@ -43438,6 +43828,10 @@ msgstr ""
 msgid "Submitting license usage report..."
 msgstr ""
 
+#, fuzzy
+msgid "Subnet groups per region"
+msgstr "Grup nou"
+
 msgid "Subnet per DB subnet groups"
 msgstr ""
 
@@ -43838,6 +44232,10 @@ msgstr ""
 
 msgid "System MIBs"
 msgstr ""
+
+#, fuzzy
+msgid "System Memory utilitzation"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "System Number"
 msgstr ""
@@ -44822,13 +45220,6 @@ msgid "The Logfile"
 msgstr ""
 
 msgid "The MBean's object name, for example java.lang:type=Memory"
-msgstr ""
-
-msgid ""
-"The MRP is usally started on each physical standby node. But in some setups "
-"this may vary and the process should only be started on specific or random "
-"nodes. Here you may define which state a specific node or service should "
-"have in case the MRP is started or stopped."
 msgstr ""
 
 msgid "The MSSQL instance name and the tablespace name separated by a space."
@@ -48627,6 +49018,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"This is the secret that is used to encrypt the real-time data. You have to "
+"configure this correctly, even if you do not use the bakery to deploy the "
+"agent."
+msgstr ""
+
+msgid ""
 "This is the uid of the sensor you want to display in the 7-segment display, "
 "not the uid of the display itself. There is currently no support for "
 "controling multiple displays."
@@ -50060,13 +50457,6 @@ msgid "This script will be executed using the BASH shell. "
 msgstr ""
 
 msgid ""
-"This secret is shared between the agent and the Check_MK server and used to "
-"decrypt the Real-Time packet contents. This can be overwritten per host "
-"using this <a href=\"wato.py?mode=edit_ruleset&varname=agent_encryption"
-"\">rule</a>."
-msgstr ""
-
-msgid ""
 "This selection is only relevant if under 'User' -> 'Edit Profile' -> 'Mega "
 "menue icons' you have selected the options 'Per Entry'. If this is the case, "
 "you select here the icon that will be placed next to your Dashboard’s name "
@@ -50431,7 +50821,8 @@ msgstr ""
 
 msgid ""
 "This will automatically accept hitherto-unseen keysbut will refuse "
-"connections for changed or invalid hostkeys"
+"connections for changed or invalid hostkeys. This option only works with "
+"OpenSSH version >= 7.6."
 msgstr ""
 
 msgid ""
@@ -50764,6 +51155,9 @@ msgstr ""
 msgid "Time since last CDP run"
 msgstr ""
 
+msgid "Time since last NTPMessage"
+msgstr ""
+
 msgid "Time since last UPS selftest"
 msgstr ""
 
@@ -50787,6 +51181,10 @@ msgstr ""
 
 msgid "Time since last sync"
 msgstr ""
+
+#, fuzzy
+msgid "Time since last synchronisation"
+msgstr "foloseste descrierea"
 
 msgid "Time since the last ANALYZE"
 msgstr ""
@@ -51055,6 +51453,12 @@ msgstr ""
 msgid ""
 "To obtain the data required for this check, please configure the datasource "
 "program \"Microsoft Azure\"."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"To prevent the agent updater from being locked out, the maximum allowed "
+"update interval is set to {bound} (You entered {actual})"
 msgstr ""
 
 msgid ""
@@ -51621,6 +52025,10 @@ msgstr "Întreruperi adhoc"
 
 msgid "Traffic"
 msgstr ""
+
+#, fuzzy
+msgid "Traffic Manager"
+msgstr "Statusul Serverului"
 
 msgid "Traffic Received"
 msgstr ""
@@ -52453,9 +52861,6 @@ msgstr ""
 msgid "Unknown/Unreach"
 msgstr ""
 
-msgid "Unkown"
-msgstr ""
-
 msgid "Unlocked"
 msgstr ""
 
@@ -52885,6 +53290,14 @@ msgid "Upper levels for %s mail queue"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for 4xx error rate"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Upper levels for 5xx error rate"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "Upper levels for Backend"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -52920,6 +53333,10 @@ msgid "Upper levels for Load Balancers"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for SSL handshake time"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for Soap Service Errors"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -52941,12 +53358,40 @@ msgid "Upper levels for blocked connections"
 msgstr ""
 
 #, fuzzy
+msgid "Upper levels for bytes downloaded"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for bytes uploaded"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Upper levels for clients"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for cluster utilization"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Upper levels for code size"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for code size in percent of the region limit"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for concurrent executions"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for concurrent executions in percent of the region limit"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for connection_time"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for connections in use"
 msgstr ""
@@ -52960,6 +53405,10 @@ msgid "Upper levels for data file size"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for dead letter errors"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "Upper levels for disk usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -52971,11 +53420,23 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Upper levels for drifted access points"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
+#, fuzzy
+msgid "Upper levels for duration in percent of the timeout"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for duration in seconds"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Upper levels for encountered exceptions"
 msgstr ""
 
 msgid "Upper levels for encountered warnings"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for errors"
+msgstr "trei nivele"
 
 msgid "Upper levels for estimated time to complete"
 msgstr ""
@@ -52984,11 +53445,23 @@ msgid "Upper levels for first output item"
 msgstr ""
 
 #, fuzzy
+msgid "Upper levels for hit ratio"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Upper levels for indexes"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Upper levels for infections"
 msgstr ""
+
+#, fuzzy
+msgid "Upper levels for invocations"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for iterator age"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Upper levels for latency"
 msgstr ""
@@ -53010,6 +53483,14 @@ msgid "Upper levels for mail latency"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for memory used"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Upper levels for memory used in percent of the Lambda function limit"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Upper levels for node utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -53023,6 +53504,10 @@ msgstr ""
 msgid "Upper levels for number of alerts"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
+#, fuzzy
+msgid "Upper levels for number of requests"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Upper levels for open network sockets"
 msgstr ""
 
@@ -53032,6 +53517,19 @@ msgstr ""
 #, fuzzy
 msgid "Upper levels for physical capacity in percent"
 msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
+msgid ""
+"Upper levels for provisioned concurrency spillover invocations per second"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for provisioned concurrent executions per second"
+msgstr "Nivel-urile exacte în bits sau bytes per secundă"
+
+#, fuzzy
+msgid "Upper levels for provisioned concurrent invocations per second"
+msgstr "Nivel-urile exacte în bits sau bytes per secundă"
 
 #, fuzzy
 msgid "Upper levels for queue lengths"
@@ -53118,6 +53616,18 @@ msgid "Upper levels for the vault size"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Upper levels for throttles"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for time to first byte"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for total error rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Upper levels for total index size"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -53131,6 +53641,16 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Upper levels for unblended costs"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Upper levels for unreserved concurrent executions"
+msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid ""
+"Upper levels for unreserved concurrent executions in percent of the region "
+"limit"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
@@ -53188,6 +53708,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Upper levels on total request latency"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels provisioned concurrency utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Upper limits in percent"
@@ -53262,6 +53786,10 @@ msgstr ""
 #, fuzzy
 msgid "Usage"
 msgstr "% utilizare"
+
+#, fuzzy
+msgid "Usage Details"
+msgstr "Arata in masa"
 
 #, fuzzy
 msgid "Usage levels"
@@ -54197,6 +54725,10 @@ msgstr ""
 msgid "Users can only login from one client at a time"
 msgstr ""
 
+#, fuzzy
+msgid "Users in the Active Directory"
+msgstr "Replicare Active Directory"
+
 msgid "Users listed here are still allowed to modify things."
 msgstr ""
 
@@ -54422,6 +54954,9 @@ msgid "Valid until"
 msgstr ""
 
 msgid "Valid until Checkmk version"
+msgstr ""
+
+msgid "Validate server certificate during port query"
 msgstr ""
 
 msgid "Validity of missing data"
@@ -55186,6 +55721,10 @@ msgstr ""
 
 msgid "Web Application Firewall (WAFV2)"
 msgstr ""
+
+#, fuzzy
+msgid "Web Servers (IIS)"
+msgstr "servicii"
 
 #, fuzzy
 msgid "Web Services"
@@ -57290,7 +57829,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"You can use, modify and distribute Check_MK under the terms of the <a href="
+"You can use, modify and distribute Checkmk under the terms of the <a href="
 "\"%s\" target=\"_blank\">GNU GPL Version 2</a>."
 msgstr ""
 
@@ -58051,6 +58590,10 @@ msgstr "Verificări active"
 msgid "active hosts"
 msgstr "Verificări active"
 
+#, fuzzy
+msgid "active instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "add \"ISL\" to service description for interswitch links"
 msgstr ""
 
@@ -58187,6 +58730,10 @@ msgstr ""
 
 msgid "best state"
 msgstr ""
+
+#, fuzzy
+msgid "billable time"
+msgstr "Proprietatile Folderului"
 
 msgid "bindings"
 msgstr ""
@@ -58570,6 +59117,14 @@ msgstr ""
 msgid "execute the action \"%s\""
 msgstr ""
 
+#, fuzzy
+msgid "execution count"
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "execution time"
+msgstr "Verificări active"
+
 msgid "exists"
 msgstr ""
 
@@ -58931,6 +59486,10 @@ msgstr ""
 msgid "inodes"
 msgstr ""
 
+#, fuzzy
+msgid "instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "internal"
 msgstr ""
 
@@ -59088,6 +59647,10 @@ msgid "maximum"
 msgstr "Vechimea maxima"
 
 #, fuzzy
+msgid "memory"
+msgstr "Nume nou"
+
+#, fuzzy
 msgid "message"
 msgid_plural "messages"
 msgstr[0] "Mesajul Text"
@@ -59201,10 +59764,6 @@ msgstr ""
 
 msgid "no commands"
 msgstr ""
-
-#, fuzzy
-msgid "no discovery check"
-msgstr "Inventariere in masa"
 
 #, fuzzy
 msgid "no error"
@@ -59910,11 +60469,18 @@ msgid "used space"
 msgstr "spatiu utilizat"
 
 #, fuzzy
+msgid "user"
+msgstr "utilizatori"
+
+#, fuzzy
 msgid "users"
 msgstr "utilizatori"
 
 msgid "users: "
 msgstr "utilizatori:"
+
+msgid "vNet Gateway"
+msgstr ""
 
 msgid "vSphere User name"
 msgstr "Nume utilizator vSphere"
@@ -60045,9 +60611,41 @@ msgstr ""
 msgid "z/OS"
 msgstr "z/OS"
 
+#, fuzzy, python-brace-format
+msgid "{actual} is too high. The maximum allowed value is {bound}."
+msgstr "%s este prea mare. Valoarea maximală permisă este %s."
+
+#, fuzzy, python-brace-format
+msgid "{actual} is too low. The minimum allowed value is {bound}."
+msgstr "%s este prea mare. Valoarea maximală permisă este %s."
+
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Alertmanager connection option"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Name of Piggyback Host"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "no discovery check"
+#~ msgstr "Inventariere in masa"
+
+#, fuzzy
+#~ msgid "Child host name:"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "CPU utilitzation"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Send data for real-time checks"
+#~ msgstr "Verificare activă"
 
 #, fuzzy
 #~ msgid "Agent pairing"
@@ -60175,10 +60773,6 @@ msgstr ""
 #~ msgstr "Grup nou"
 
 #, fuzzy
-#~ msgid "Host problems (all)"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~| msgid "(no hosts)"
 #~ msgid "Linux hosts"
 #~ msgstr "(fără elemente)"
@@ -60223,30 +60817,6 @@ msgstr ""
 #~ msgstr "Întreruperi adhoc"
 
 #, fuzzy
-#~ msgid "GCP/Memorystore redis clients connected"
-#~ msgstr "Conexiune Noua"
-
-#, fuzzy
-#~ msgid "Levels clients"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Lower levels for hit ratio"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "System Memory utilitzation"
-#~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-#~ msgid "Upper levels for hit ratio"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "99th percentile request latency"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 #~ msgid "Channel"
 #~ msgstr "Nici o schimbare"
 
@@ -60267,44 +60837,12 @@ msgstr ""
 #~ msgstr "Perioada de timp Noua"
 
 #, fuzzy
-#~ msgid "GCP/Cloud Run Network"
-#~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "GCP/Function execution"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-#~ msgid "GCP/Function instances"
-#~ msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
-#~ msgid "GCP/Function network"
-#~ msgstr "Conexiune Noua"
-
-#, fuzzy
 #~ msgid "Kernel configuration (sysctl)"
 #~ msgstr "foloseste configuratia locala"
 
 #, fuzzy
 #~ msgid "Kernel configurations (sysctl)"
 #~ msgstr "foloseste configuratia locala"
-
-#, fuzzy
-#~ msgid "Levels on instances"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Levels on performance"
-#~ msgstr "Acces la Consola de Evenimente"
-
-#, fuzzy
-#~ msgid "Levels requests"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Manager"
-#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "Modules"
@@ -60321,14 +60859,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Networking Tunnels"
 #~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "Number of requests"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
-#~ msgid "Number of running containers"
-#~ msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
 #~ msgid "Oracle PGA performance"
@@ -60359,10 +60889,6 @@ msgstr ""
 #~ msgstr "Nume tablespace"
 
 #, fuzzy
-#~ msgid "Oracle tablespaces"
-#~ msgstr "Nume tablespace"
-
-#, fuzzy
 #~ msgid "Other entities"
 #~ msgstr "Setari"
 
@@ -60381,30 +60907,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Unknown entity"
 #~ msgstr "necunoscut (agent vechi)"
-
-#, fuzzy
-#~ msgid "active instances"
-#~ msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
-#~ msgid "billable time"
-#~ msgstr "Proprietatile Folderului"
-
-#, fuzzy
-#~ msgid "execution count"
-#~ msgstr "Verificări active"
-
-#, fuzzy
-#~ msgid "execution time"
-#~ msgstr "Verificări active"
-
-#, fuzzy
-#~ msgid "instances"
-#~ msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
-#~ msgid "memory"
-#~ msgstr "Nume nou"
 
 #, fuzzy
 #~ msgid "SAP value discovery"
@@ -60446,17 +60948,9 @@ msgstr ""
 #~ msgid "Used filesystem space %"
 #~ msgstr "Spațiu liber exact"
 
-#, fuzzy
-#~ msgid "AWS/SNS Limits"
-#~ msgstr "Adaugă limite"
-
 #, python-format
 #~ msgid "Absolute %s"
 #~ msgstr "Absolut %s"
-
-#, fuzzy
-#~ msgid "Configure levels for used space"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 #~ msgid "Levels for LUN"
@@ -60515,122 +61009,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "detailed config"
 #~ msgstr "Conexiune Noua"
-
-#, fuzzy
-#~ msgid "AWS/Lambda Concurrency"
-#~ msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
-#~ msgid "AWS/Lambda Memory"
-#~ msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
-#~ msgid "AWS/Lambda Performance"
-#~ msgstr "Starea porturilor pentru inventariere"
-
-#, fuzzy
-#~ msgid "Cold starts in percent"
-#~ msgstr "Nivelurile maxime pentru incarcare in procente"
-
-#, fuzzy
-#~ msgid "Lower levels for health check percentage healty"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Specify the upper levels for the number of invocations per second."
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for SSL handshake time"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for code size"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for code size in percent of the region limit"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for concurrent executions"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid ""
-#~ "Upper levels for concurrent executions in percent of the region limit"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for connection_time"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for dead letter errors"
-#~ msgstr "trei nivele"
-
-#, fuzzy
-#~ msgid "Upper levels for duration in percent of the timeout"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for duration in seconds"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Upper levels for errors"
-#~ msgstr "trei nivele"
-
-#, fuzzy
-#~ msgid "Upper levels for invocations"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for iterator age"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Upper levels for memory used"
-#~ msgstr "trei nivele"
-
-#, fuzzy
-#~ msgid "Upper levels for memory used in percent of the Lambda function limit"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid ""
-#~ "Upper levels for provisioned concurrency spillover invocations per second"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels for provisioned concurrent executions per second"
-#~ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
-
-#, fuzzy
-#~ msgid "Upper levels for provisioned concurrent invocations per second"
-#~ msgstr "Nivel-urile exacte în bits sau bytes per secundă"
-
-#, fuzzy
-#~ msgid "Upper levels for throttles"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Upper levels for time to first byte"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Upper levels for unreserved concurrent executions"
-#~ msgstr "spatiu utilizat"
-
-#, fuzzy
-#~ msgid ""
-#~ "Upper levels for unreserved concurrent executions in percent of the "
-#~ "region limit"
-#~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Upper levels provisioned concurrency utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy, python-format
 #~ msgid "%d pending changes"
@@ -63085,10 +63463,6 @@ msgstr ""
 #~ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-#~ msgid "Levels for log files used"
-#~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 #~ msgid "Linux Agent - Example configuration using with systemd"
 #~ msgstr "Activare Configurare"
 
@@ -63257,10 +63631,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New Timeperiod"
 #~ msgstr "Perioada de timp Noua"
-
-#, fuzzy
-#~ msgid "New cluster"
-#~ msgstr "Element nou"
 
 #, fuzzy
 #~ msgid "New contact group"
@@ -64162,10 +64532,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Custom Attributes"
 #~ msgstr "Atribute personalizate"
-
-#, fuzzy
-#~ msgid "Database Connections (PostgreSQL)"
-#~ msgstr "Numarul maxim de conexiuni paralele"
 
 #, fuzzy
 #~ msgid "Deadline for forcing retransmission"

@@ -624,8 +624,8 @@ class JoinCell(Cell):
         painter_spec: PainterSpec,
         sort_url_parameter: str | None,
     ) -> None:
-        super().__init__(painter_spec, sort_url_parameter)
         self._join_service_descr: ServiceName | None = None
+        super().__init__(painter_spec, sort_url_parameter)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
         super()._from_view(painter_spec)

@@ -8,17 +8,14 @@ from __future__ import annotations
 import abc
 import hashlib
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
 
 from livestatus import OnlySites
 
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.painters.v0.base import Cell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
-
-if TYPE_CHECKING:
-    from cmk.gui.painters.v0.base import Cell
 
 
 class RowTable(abc.ABC):

@@ -9,7 +9,7 @@ import json
 import textwrap
 import traceback
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, TYPE_CHECKING, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -18,8 +18,6 @@ import cmk.utils.paths
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
-import cmk.gui.user_sites as user_sites
-import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -32,16 +30,6 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import Icon
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.theme import theme
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
-from cmk.gui.werks import may_acknowledge
-
-if TYPE_CHECKING:
-    from cmk.gui.utils.html import HTML
 
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
@@ -60,6 +48,16 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     snapin_width,
     write_snapin_exception,
 )
+from cmk.gui.type_defs import Icon
+from cmk.gui.user_sites import get_configured_site_choices
+from cmk.gui.utils import load_web_plugins
+from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
+from cmk.gui.werks import may_acknowledge
 
 from .main_menu import MainMenuRenderer
 
@@ -70,7 +68,7 @@ sidebar_snapins: Dict[str, Dict] = {}
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
-    utils.load_web_plugins("sidebar", globals())
+    load_web_plugins("sidebar", globals())
     transform_old_dict_based_snapins()
 
 
@@ -945,7 +943,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = request.var("site")
-    site_choices = dict([(SiteId(""), _("All sites"))] + user_sites.get_configured_site_choices())
+    site_choices = dict([(SiteId(""), _("All sites"))] + get_configured_site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

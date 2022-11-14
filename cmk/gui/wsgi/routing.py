@@ -12,12 +12,11 @@ from werkzeug.routing import Map, Rule, Submount
 
 from cmk.gui.wsgi.applications import CheckmkApp, CheckmkRESTAPI
 from cmk.gui.wsgi.applications.helper_apps import discover_receiver, dump_environ_app, test_formdata
+from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
-
-    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
 WSGI_ENV_ARGS_NAME = "x-checkmk.args"

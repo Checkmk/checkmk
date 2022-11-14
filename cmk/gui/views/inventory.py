@@ -20,7 +20,6 @@ from typing import (
     Protocol,
     Sequence,
     Type,
-    TYPE_CHECKING,
     TypeVar,
 )
 
@@ -76,6 +75,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
 )
 from cmk.gui.plugins.visuals.utils import (
+    Filter,
     filter_registry,
     get_livestatus_filter_headers,
     get_ranged_table_filter_name,
@@ -103,10 +103,6 @@ from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
-
-if TYPE_CHECKING:
-    from cmk.gui.plugins.visuals.utils import Filter
-
 
 PaintResult = tuple[str, str | HTML]
 PaintFunction = Callable[[Any], PaintResult]

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-import typing
 
 import pytest
+import webtest  # type: ignore[import]
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -13,9 +13,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
-
-if typing.TYPE_CHECKING:
-    import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
 @pytest.mark.parametrize(
@@ -128,7 +125,7 @@ def test_normal_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: "webtest.TestResponse" = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py")
     login.form["_username"] = username
     login.form["_password"] = password
     resp = login.form.submit("_login", index=1)

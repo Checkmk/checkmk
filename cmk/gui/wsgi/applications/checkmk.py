@@ -51,12 +51,11 @@ from cmk.gui.wsgi.applications.utils import (
     handle_unhandled_exception,
     plain_error,
 )
+from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIEnvironment
-
-    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

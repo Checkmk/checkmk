@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import signal
 import time
-import typing as t
+from typing import TYPE_CHECKING
 
 import pytest
 from werkzeug.test import create_environ
@@ -15,12 +15,11 @@ from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
+from cmk.gui.wsgi.type_defs import WSGIResponse
 
-if t.TYPE_CHECKING:
+if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIEnvironment
-
-    from cmk.gui.wsgi.type_defs import WSGIResponse
 
 
 class CheckmkTestApp(CheckmkApp):

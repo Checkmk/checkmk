@@ -19,7 +19,6 @@ from typing import (
     Sequence,
     Set,
     Tuple,
-    TYPE_CHECKING,
 )
 
 import cmk.utils.piggyback
@@ -38,16 +37,12 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import SourceInfo
+from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
-
-if TYPE_CHECKING:
-    from cmk.core_helpers.type_defs import SectionNameCollection
-
 
 CacheInfo = Optional[Tuple[int, int]]
 

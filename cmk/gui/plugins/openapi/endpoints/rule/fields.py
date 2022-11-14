@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import typing
+from collections.abc import Mapping
+from typing import cast, Literal, TYPE_CHECKING, TypedDict
 
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, ValidationError
@@ -27,25 +28,25 @@ from cmk.gui.plugins.openapi.restful_objects import response_schemas
 from cmk import fields
 
 # Needed for cast()-ing. Do not move into typing.TYPE_CHECKING
-ApiExpressionValue = typing.Union[typing.List[str], str]
+ApiExpressionValue = list[str] | str
 
-if typing.TYPE_CHECKING:
-    ApiOperator = typing.Literal["is", "is_not", "one_of", "none_of"]
-    TagExpr = typing.Union[TagConditionNE, TagConditionOR, TagConditionNOR]
+if TYPE_CHECKING:
+    ApiOperator = Literal["is", "is_not", "one_of", "none_of"]
+    TagExpr = TagConditionNE | TagConditionOR | TagConditionNOR
 
-    class ApiExpressionSingle(typing.TypedDict, total=True):
+    class ApiExpressionSingle(TypedDict, total=True):
         key: str
         operator: ApiOperator
         value: ApiExpressionValue
 
-    ApiExpression = typing.Union[ApiExpressionSingle, typing.List[ApiExpressionSingle]]
+    ApiExpression = ApiExpressionSingle | list[ApiExpressionSingle]
 
-    class ApiMatchExpression(typing.TypedDict, total=True):
-        match_on: typing.List[str]
+    class ApiMatchExpression(TypedDict, total=True):
+        match_on: list[str]
         operator: ApiOperator
 
 
-RULE_ID: typing.Mapping[str, fields.String] = {
+RULE_ID: Mapping[str, fields.String] = {
     "rule_id": fields.String(
         description="The ID of the rule.",
         required=True,
@@ -155,8 +156,8 @@ class LabelConditionSchema(base.BaseSchema):
         data,
         many: bool = False,
         partial: bool = False,
-    ) -> typing.List[ApiExpression]:
-        entries: typing.List[LabelConditions]
+    ) -> list[ApiExpression]:
+        entries: list[LabelConditions]
         if isinstance(data, dict):
             entries = [data]
         elif isinstance(data, list):
@@ -164,7 +165,7 @@ class LabelConditionSchema(base.BaseSchema):
         else:
             raise ValidationError(f"Unknown type: {data!r}")
 
-        rv: typing.List[ApiExpression] = []
+        rv: list[ApiExpression] = []
         for entry in entries:
             for key, value in entry.items():
                 try:
@@ -186,7 +187,7 @@ class LabelConditionSchema(base.BaseSchema):
     @post_load(pass_many=True)
     def convert_to_checkmk(
         self,
-        data: typing.List[ApiExpressionSingle],
+        data: list[ApiExpressionSingle],
         many: bool = False,
         partial: bool = False,
     ) -> LabelConditions:
@@ -203,7 +204,7 @@ class LabelConditionSchema(base.BaseSchema):
 
 class TagConditionSchemaBase(base.BaseSchema):
 
-    allowed_operators: typing.Tuple[str, str]
+    allowed_operators: tuple[str, str]
     operator_type: str
 
     key = fields.String(
@@ -389,9 +390,9 @@ class TagConditionSchema(marshmallow_oneofschema.OneOfSchema):
 
     """
 
-    type_schemas: typing.Mapping[
+    type_schemas: Mapping[
         str,
-        typing.Type[TagConditionScalarSchemaBase] | typing.Type[TagConditionConditionSchemaBase],
+        type[TagConditionScalarSchemaBase] | type[TagConditionConditionSchemaBase],
     ] = {
         "is": TagConditionScalarSchemaBase,
         "is_not": TagConditionScalarSchemaBase,
@@ -475,15 +476,15 @@ class HostOrServiceConditionSchema(base.BaseSchema):
     def __init__(
         self,
         *,
-        only: typing.Optional[types.StrSequenceOrSet] = None,
+        only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,
-        context: typing.Optional[typing.Dict] = None,
+        context: dict | None = None,
         load_only: types.StrSequenceOrSet = (),
         dump_only: types.StrSequenceOrSet = (),
-        partial: typing.Union[bool, types.StrSequenceOrSet] = False,
-        unknown: typing.Optional[str] = None,
-        use_regex: typing.Literal["always", "never", "adaptive"] = "adaptive",
+        partial: bool | types.StrSequenceOrSet = False,
+        unknown: str | None = None,
+        use_regex: Literal["always", "never", "adaptive"] = "adaptive",
     ):
         self.use_regex = use_regex
         super().__init__(
@@ -519,7 +520,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         data: HostOrServiceConditions,
         many: bool = False,
         partial: bool = False,
-    ) -> typing.Optional[ApiMatchExpression]:
+    ) -> ApiMatchExpression | None:
         if not data:
             return None
 
@@ -539,7 +540,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
             raise ValidationError(f"Unknown format: {_entry}")
 
-        def _ensure_list(_entry) -> typing.List[str]:  # type:ignore[no-untyped-def]
+        def _ensure_list(_entry) -> list[str]:  # type:ignore[no-untyped-def]
             if isinstance(_entry, list):
                 return _entry
 
@@ -581,7 +582,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
         elif self.use_regex == "adaptive":
             match_on = [_wrap_entry(entry) for entry in data["match_on"]]
         elif isinstance(data["match_on"], list):
-            match_on = typing.cast(HostOrServiceConditionsSimple, data["match_on"])
+            match_on = cast(HostOrServiceConditionsSimple, data["match_on"])
         else:
             raise ValidationError(f"Unknown type: {data['match_on']!r}.")
 
@@ -839,8 +840,8 @@ class InputRuleObject(base.BaseSchema):
 
 
 def _unpack_value(
-    v: typing.Union[TagCondition, HostOrServiceConditionsNegated],
-) -> typing.Optional[ApiExpressionValue]:
+    v: TagCondition | HostOrServiceConditionsNegated,
+) -> ApiExpressionValue | None:
     """Unpacks the value from a condition value
 
     Examples:
@@ -860,12 +861,12 @@ def _unpack_value(
         ValueError: Unknown operator: {'foo': 'bar'}
 
     """
-    rv: typing.Optional[ApiExpressionValue]
+    rv: ApiExpressionValue | None
     if isinstance(v, dict):
         if len(v) == 1 and any(op in v for op in ["$ne", "$or", "$nor"]):
             # TODO: un-$regex the value? Not supported?
             # Type is so diverse (Unions) that mypy only has object to fall back to. :-(
-            rv = typing.cast(ApiExpressionValue, next(iter(v.values())))
+            rv = cast(ApiExpressionValue, next(iter(v.values())))
         else:
             raise ValueError(f"Unknown operator: {v}")
     elif isinstance(v, str):
@@ -881,7 +882,7 @@ def _unpack_value(
 def _scalar_value(
     value: ApiExpressionValue,
     operator: ApiOperator,
-) -> typing.Union[str, TagConditionNE]:
+) -> str | TagConditionNE:
     """Constructs a scalar value or the negation of it
 
     Examples:

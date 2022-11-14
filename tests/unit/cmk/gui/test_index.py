@@ -7,18 +7,16 @@ from __future__ import annotations
 from typing import Iterator
 
 import pytest
-import typing_extensions
 from _pytest.monkeypatch import MonkeyPatch
+
+from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.gui.main
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 
-if typing_extensions.TYPE_CHECKING:
-    from tests.unit.cmk.gui.conftest import SetConfig
-
-    RequestContextFixture = Iterator[None]
+RequestContextFixture = Iterator[None]
 
 
 def test_get_start_url_default(request_context: RequestContextFixture) -> None:

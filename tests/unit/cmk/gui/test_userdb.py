@@ -10,12 +10,14 @@ import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Generator, Iterable, TYPE_CHECKING
+from typing import Generator, Iterable
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib import is_managed_repo
+
+from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.utils.paths
 import cmk.utils.version
@@ -30,9 +32,6 @@ from cmk.gui.type_defs import SessionId, WebAuthnCredential
 from cmk.gui.userdb import htpasswd
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.valuespec import Dictionary
-
-if TYPE_CHECKING:
-    from tests.unit.cmk.gui.conftest import SetConfig
 
 
 @pytest.fixture(name="user_id")

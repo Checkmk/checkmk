@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from marshmallow import fields, post_dump, pre_load
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import HostName

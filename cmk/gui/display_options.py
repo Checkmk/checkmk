@@ -5,13 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from cmk.gui.ctx_stack import request_local_attr
-
-if TYPE_CHECKING:
-    from cmk.gui.htmllib.html import HTMLGenerator
-    from cmk.gui.http import Request
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.http import Request
 
 # .
 #   .--Display Opts.-------------------------------------------------------.

@@ -599,7 +599,7 @@ class BICompiledAggregation:
         raise NotImplementedError("Unknown node type %r" % node)
 
     @classmethod
-    def schema(cls) -> type["BICompiledAggregationSchema"]:
+    def schema(cls) -> type[BICompiledAggregationSchema]:
         return BICompiledAggregationSchema
 
     def serialize(self):

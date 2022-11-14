@@ -483,9 +483,10 @@ def test_generate_pre_17_site_snapshot(
             "customer_check_mk.tar",
             "customer_gui_design.tar",
             "customer_multisite.tar",
-            "gui_logo.tar",
-            "gui_logo_dark.tar",
-            "gui_logo_facelift.tar",
+            "login_logo_dark.tar",
+            "login_logo_facelift.tar",
+            "navbar_logo_dark.tar",
+            "navbar_logo_facelift.tar",
         ]
 
     if not is_pre_17_site:
@@ -523,9 +524,10 @@ def test_generate_pre_17_site_snapshot(
                 "customer_check_mk.tar": ["customer.mk"],
                 "customer_gui_design.tar": [],
                 "customer_multisite.tar": ["customer.mk"],
-                "gui_logo.tar": [],
-                "gui_logo_dark.tar": [],
-                "gui_logo_facelift.tar": [],
+                "login_logo_dark.tar": [],
+                "login_logo_facelift.tar": [],
+                "navbar_logo_dark.tar": [],
+                "navbar_logo_facelift.tar": [],
                 # TODO: Shouldn't we clean up these subtle differences?
                 "mkeventd.tar": ["rules.mk"],
                 "check_mk.tar": ["groups.mk", "contacts.mk", "passwords.mk"],

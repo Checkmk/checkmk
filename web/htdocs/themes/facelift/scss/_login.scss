@@ -47,7 +47,11 @@ body.login {
     top: 25px;
     left: 40px;
     width: 120px;
-    height: 36px;
+    height: auto;
+
+    &.custom {
+      width: 60px;
+    }
   }
 
   #version {

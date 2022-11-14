@@ -90,26 +90,20 @@ def _expected_replication_paths():
             ),
             ReplicationPath(
                 ty="file",
-                ident="login_logo_dark",
-                site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/login_logo.png",
+                ident="gui_logo",
+                site_path="local/share/check_mk/web/htdocs/themes/classic/images/sidebar_top.png",
                 excludes=[],
             ),
             ReplicationPath(
                 ty="file",
-                ident="login_logo_facelift",
-                site_path="local/share/check_mk/web/htdocs/themes/facelift/images/login_logo.png",
+                ident="gui_logo_dark",
+                site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/mk-logo.png",
                 excludes=[],
             ),
             ReplicationPath(
                 ty="file",
-                ident="navbar_logo_dark",
-                site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/navbar_logo.png",
-                excludes=[],
-            ),
-            ReplicationPath(
-                ty="file",
-                ident="navbar_logo_facelift",
-                site_path="local/share/check_mk/web/htdocs/themes/facelift/images/navbar_logo.png",
+                ident="gui_logo_facelift",
+                site_path="local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png",
                 excludes=[],
             ),
         ]

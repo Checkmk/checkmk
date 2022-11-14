@@ -1,0 +1,16 @@
+title: Microsoft Azure Virtual Network Gateways: BGP
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows settings and peering addresses of a Microsoft
+ Azure virtual network gateway's BGP.
+
+ In order to use this check, you need to configure the Azure special agent.
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each virtual network gateway.

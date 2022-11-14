@@ -535,6 +535,46 @@ def _parameter_valuespec_azure_virtualnetworkgateways():
                     ],
                 ),
             ),
+            (
+                "ingress_levels",
+                Tuple(
+                    title=_("Upper levels on tunnel ingress"),
+                    elements=[
+                        Integer(title=_("Warning above"), unit="B"),
+                        Integer(title=_("Critical above"), unit="B"),
+                    ],
+                ),
+            ),
+            (
+                "egress_levels",
+                Tuple(
+                    title=_("Upper levels on tunnel egress"),
+                    elements=[
+                        Integer(title=_("Warning above"), unit="B"),
+                        Integer(title=_("Critical above"), unit="B"),
+                    ],
+                ),
+            ),
+            (
+                "ingress_packet_drop_levels",
+                Tuple(
+                    title=_("Upper levels on tunnel ingress packet drop"),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+            (
+                "egress_packet_drop_levels",
+                Tuple(
+                    title=_("Upper levels on tunnel egress packet drop"),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
         ],
     )
 

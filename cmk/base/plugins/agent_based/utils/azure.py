@@ -27,8 +27,8 @@ class Resource(NamedTuple):
     kind: str | None = None
     location: str | None = None
     tags: Mapping[str, str] = {}
-    properties: Mapping[str, str | int] = {}
-    specific_info: Mapping[str, str | int] = {}
+    properties: Mapping = {}
+    specific_info: Mapping = {}
     metrics: Mapping[str, AzureMetric] = {}
     subscription: str | None = None
 
@@ -187,15 +187,17 @@ def iter_resource_attributes(
 
 
 def check_azure_metrics(
-    metrics_data: Sequence[MetricData],
+    metrics_data: Sequence[MetricData], suppress_error: bool = False
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
     def check_metric(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
         resource = section.get(item)
         if not resource:
+            if suppress_error:
+                return
             raise IgnoreResultsError("Data not present at the moment")
 
         metrics = [resource.metrics.get(m.azure_metric_name) for m in metrics_data]
-        if not any(metrics):
+        if not any(metrics) and not suppress_error:
             raise IgnoreResultsError("Data not present at the moment")
 
         for metric, metric_data in zip(metrics, metrics_data):

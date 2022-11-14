@@ -178,6 +178,18 @@ metric_info["egress"] = {
     "color": "43/a",
 }
 
+metric_info["ingress_packet_drop"] = {
+    "title": _("Ingress packet drop"),
+    "unit": "count",
+    "color": "25/a",
+}
+
+metric_info["egress_packet_drop"] = {
+    "title": _("Egress packet drop"),
+    "unit": "count",
+    "color": "16/a",
+}
+
 metric_info["data_files"] = {
     "title": _("Data files size"),
     "unit": "bytes",

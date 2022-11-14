@@ -1,0 +1,24 @@
+Title: azure_virtual_network_gateway: Added new checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1672843461
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Monitoring of Azure Virtual Network Gateways is extended
+with four new checks and four new metrics.
+
+The new monitored checks are:
+LI: Microsoft Azure Virtual Network Gateways: BGP
+LI: Microsoft Azure Virtual Network Gateways: Health Probe
+LI: Microsoft Azure Virtual Network Gateways: Remote Peering
+LI: Microsoft Azure Virtual Network Gateways: Settings
+
+The following metrics have been added to the VNet Gateway services:
+LI: Tunnel Ingress Bytes
+LI: Tunnel Egress Bytes
+LI: Tunnel Ingress Packet Drop Count
+LI: Tunnel Egress Packet Drop Count

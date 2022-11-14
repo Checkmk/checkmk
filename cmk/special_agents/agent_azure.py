@@ -16,7 +16,7 @@ import logging
 import string
 import sys
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
@@ -48,6 +48,10 @@ ALL_METRICS: dict[str, list[tuple]] = {
     # cmk/gui/plugins/wato/special_agents/azure.py
     "Microsoft.Network/virtualNetworkGateways": [
         ("AverageBandwidth,P2SBandwidth", "PT5M", "average", None),
+        ("TunnelIngressBytes", "PT5M", "count", None),
+        ("TunnelEgressBytes", "PT5M", "count", None),
+        ("TunnelIngressPacketDropCount", "PT5M", "count", None),
+        ("TunnelEgressPacketDropCount", "PT5M", "count", None),
         ("P2SConnectionCount", "PT1M", "maximum", None),
     ],
     "Microsoft.Sql/servers/databases": [
@@ -462,6 +466,26 @@ class MgmtApiClient(BaseApiClient):
         temp = "resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView"
         return self._get(temp % (group, name), params={"api-version": "2018-06-01"})
 
+    def vnet_gateway_view(self, group, name):
+        url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
+        return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
+
+    def vnet_peering_view(self, group, providers, vnet_id, vnet_peering_id):
+        url = "resourceGroups/{}/providers/{}/virtualNetworks/{}/virtualNetworkPeerings/{}"
+        return self._get(
+            url.format(group, providers, vnet_id, vnet_peering_id),
+            params={"api-version": "2022-01-01"},
+        )
+
+    def vnet_gateway_health(self, group, providers, vnet_gw):
+        url = (
+            "resourceGroups/{}/providers/{}/virtualNetworkGateways/{}/providers/"
+            "Microsoft.ResourceHealth/availabilityStatuses/current"
+        )
+        return self._get(
+            url.format(group, providers, vnet_gw), params={"api-version": "2015-01-01"}
+        )
+
     def usagedetails(self):
         yesterday = (NOW - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
         body = {
@@ -766,17 +790,81 @@ class AzureResource:
         return lines
 
 
+def filter_keys(mapping: Mapping, keys: Iterable[str]) -> Mapping:
+    items = ((k, mapping.get(k)) for k in keys)
+    return {k: v for k, v in items if v is not None}
+
+
 def process_vm(mgmt_client, vmach, args):
     use_keys = ("statuses",)
 
     inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
-    items = ((k, inst_view.get(k)) for k in use_keys)
-    vmach.info["specific_info"] = {k: v for k, v in items if v is not None}
+    vmach.info["specific_info"] = filter_keys(inst_view, use_keys)
 
     if args.piggyback_vms not in ("grouphost",):
         vmach.piggytargets.remove(vmach.info["group"])
     if args.piggyback_vms in ("self",):
         vmach.piggytargets.append(vmach.info["name"])
+
+
+def get_params_from_azure_id(
+    resource_id: str, resource_types: Sequence[str] | None = None
+) -> Sequence[str]:
+    values = resource_id.lower().split("/")
+    type_strings = list(map(str.lower, resource_types)) if resource_types else []
+    index_keywords = ["subscriptions", "resourcegroups"] + type_strings
+    return [values[values.index(keyword) + 1] for keyword in index_keywords]
+
+
+def get_remote_peerings(
+    mgmt_client: MgmtApiClient, resource: dict
+) -> Sequence[Mapping[str, object]]:
+    peering_keys = ("name", "peeringState", "peeringSyncLevel")
+
+    vnet_peerings = []
+    for vnet_peering in resource["properties"].get("remoteVirtualNetworkPeerings", []):
+        vnet_peering_id = vnet_peering["id"]
+        _, group, providers, vnet_id, vnet_peering_id = get_params_from_azure_id(
+            vnet_peering_id,
+            resource_types=["providers", "virtualNetworks", "virtualNetworkPeerings"],
+        )
+
+        peering_view = mgmt_client.vnet_peering_view(group, providers, vnet_id, vnet_peering_id)
+        vnet_peering = {
+            **filter_keys(peering_view, peering_keys),
+            **filter_keys(peering_view["properties"], peering_keys),
+        }
+        vnet_peerings.append(vnet_peering)
+
+    return vnet_peerings
+
+
+def get_vnet_gw_health(mgmt_client: MgmtApiClient, resource: Mapping) -> Mapping[str, object]:
+    health_keys = ("availabilityState", "summary", "reasonType", "occuredTime")
+
+    _, group, providers, vnet_gw = get_params_from_azure_id(
+        resource["id"], resource_types=["providers", "virtualNetworkGateways"]
+    )
+    health_view = mgmt_client.vnet_gateway_health(group, providers, vnet_gw)
+    return filter_keys(health_view["properties"], health_keys)
+
+
+def process_virtual_net_gw(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
+    gw_keys = (
+        "bgpSettings",
+        "disableIPSecReplayProtection",
+        "gatewayType",
+        "vpnType",
+        "activeActive",
+        "enableBgp",
+    )
+
+    gw_view = mgmt_client.vnet_gateway_view(resource.info["group"], resource.info["name"])
+    resource.info["specific_info"] = filter_keys(gw_view["properties"], gw_keys)
+
+    resource.info["properties"] = {}
+    resource.info["properties"]["remote_vnet_peerings"] = get_remote_peerings(mgmt_client, gw_view)
+    resource.info["properties"]["health"] = get_vnet_gw_health(mgmt_client, gw_view)
 
 
 class MetricCache(DataCache):
@@ -977,6 +1065,9 @@ def process_resource(
 
         if args.piggyback_vms == "self":
             sections.append(get_vm_labels_section(resource, group_labels))
+
+    elif resource_type == "Microsoft.Network/virtualNetworkGateways":
+        process_virtual_net_gw(mgmt_client, resource)
 
     err = gather_metrics(mgmt_client, resource, debug=args.debug)
 

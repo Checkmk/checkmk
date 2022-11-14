@@ -8,10 +8,11 @@ import json
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.elasticsearch_indices import (
     _check_elasticsearch_indices,
     _CheckParams,
+    _DiscoveryParams,
     _Section,
     discover_elasticsearch_indices,
     parse_elasticsearch_indices,
@@ -72,18 +73,18 @@ def _section() -> _Section:
                             "health": "yellow",
                             "status": "open",
                             "primaries": {
-                                "docs": {"count": 1, "deleted": 0},
+                                "docs": {"count": 28248, "deleted": 0},
                                 "store": {
-                                    "size_in_bytes": 3580,
-                                    "total_data_set_size_in_bytes": 3580,
+                                    "size_in_bytes": 35801234,
+                                    "total_data_set_size_in_bytes": 35801234,
                                     "reserved_in_bytes": 0,
                                 },
                             },
                             "total": {
-                                "docs": {"count": 1, "deleted": 0},
+                                "docs": {"count": 28248, "deleted": 0},
                                 "store": {
-                                    "size_in_bytes": 3580,
-                                    "total_data_set_size_in_bytes": 3580,
+                                    "size_in_bytes": 35801234,
+                                    "total_data_set_size_in_bytes": 35801234,
                                     "reserved_in_bytes": 0,
                                 },
                             },
@@ -93,18 +94,18 @@ def _section() -> _Section:
                             "health": "yellow",
                             "status": "open",
                             "primaries": {
-                                "docs": {"count": 2, "deleted": 0},
+                                "docs": {"count": 128248, "deleted": 0},
                                 "store": {
-                                    "size_in_bytes": 6917,
-                                    "total_data_set_size_in_bytes": 6917,
+                                    "size_in_bytes": 69174895,
+                                    "total_data_set_size_in_bytes": 69174895,
                                     "reserved_in_bytes": 0,
                                 },
                             },
                             "total": {
-                                "docs": {"count": 2, "deleted": 0},
+                                "docs": {"count": 128248, "deleted": 0},
                                 "store": {
-                                    "size_in_bytes": 6917,
-                                    "total_data_set_size_in_bytes": 6917,
+                                    "size_in_bytes": 69174895,
+                                    "total_data_set_size_in_bytes": 69174895,
                                     "reserved_in_bytes": 0,
                                 },
                             },
@@ -137,14 +138,59 @@ def _section() -> _Section:
     )
 
 
-def test_discover(section: _Section) -> None:
-    assert sorted(discover_elasticsearch_indices(section)) == [
-        Service(item="my-index-10.2022"),
-        Service(item="my-index-11.2022"),
-        Service(item="my-other-index-2016-04-12"),
-        Service(item="my-other-index-2016-04-22"),
-        Service(item="yet_another_index"),
-    ]
+@pytest.mark.parametrize(
+    ["params", "expected_result"],
+    [
+        pytest.param(
+            {"grouping": ("disabled", [])},
+            [
+                Service(item="my-index-10.2022", parameters={"grouping_regex": None}),
+                Service(item="my-index-11.2022", parameters={"grouping_regex": None}),
+                Service(item="my-other-index-2016-04-12", parameters={"grouping_regex": None}),
+                Service(item="my-other-index-2016-04-22", parameters={"grouping_regex": None}),
+                Service(item="yet_another_index", parameters={"grouping_regex": None}),
+            ],
+            id="no grouping",
+        ),
+        pytest.param(
+            {"grouping": ("enabled", ["my-index", "my-other-index"])},
+            [
+                Service(item="my-index", parameters={"grouping_regex": "my-index"}),
+                Service(item="my-other-index", parameters={"grouping_regex": "my-other-index"}),
+                Service(item="yet_another_index", parameters={"grouping_regex": None}),
+            ],
+            id="manual grouping",
+        ),
+        pytest.param(
+            {"grouping": ("enabled", ["my-([a-z]|-)+[a-z]"])},
+            [
+                Service(item="my-index", parameters={"grouping_regex": "my-([a-z]|-)+[a-z]"}),
+                Service(
+                    item="my-other-index",
+                    parameters={"grouping_regex": "my-([a-z]|-)+[a-z]"},
+                ),
+                Service(item="yet_another_index", parameters={"grouping_regex": None}),
+            ],
+            id="more advanced grouping",
+        ),
+        pytest.param(
+            {"grouping": ("enabled", ["my-index", "[0-9]*my-index"])},
+            [
+                Service(item="my-index", parameters={"grouping_regex": "my-index"}),
+                Service(item="my-other-index-2016-04-12", parameters={"grouping_regex": None}),
+                Service(item="my-other-index-2016-04-22", parameters={"grouping_regex": None}),
+                Service(item="yet_another_index", parameters={"grouping_regex": None}),
+            ],
+            id="overlapping groups",
+        ),
+    ],
+)
+def test_discover(
+    section: _Section,
+    params: _DiscoveryParams,
+    expected_result: DiscoveryResult,
+) -> None:
+    assert sorted(discover_elasticsearch_indices(params, section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -152,7 +198,7 @@ def test_discover(section: _Section) -> None:
     [
         pytest.param(
             "my-index-10.2022",
-            {},
+            {"grouping_regex": None},
             [
                 Result(state=State.OK, summary="Document count: 28398"),
                 Metric("elasticsearch_count", 28398.0),
@@ -163,45 +209,112 @@ def test_discover(section: _Section) -> None:
                 Result(state=State.OK, summary="Size rate: 293 KiB/minute"),
                 Metric("elasticsearch_size_rate", 300000.0),
             ],
-            id="without params",
+            id="ungrouped, without thresholds",
         ),
         pytest.param(
-            "my-index-10.2022",
+            "my-index",
+            {"grouping_regex": "my-index"},
+            [
+                Result(state=State.OK, summary="Document count: 14200"),
+                Metric("elasticsearch_count", 14200.0),
+                Result(state=State.OK, summary="Document count rate: -4229/minute"),
+                Metric("elasticsearch_count_rate", -4229.4),
+                Result(state=State.OK, summary="Size: 10.8 MiB"),
+                Metric("elasticsearch_size", 11280077.0),
+                Result(state=State.OK, summary="Size rate: -2.93 MiB/minute"),
+                Metric("elasticsearch_size_rate", -3073283.1),
+            ],
+            id="grouped, without thresholds",
+        ),
+        pytest.param(
+            "my-other-index-2016-04-12",
             {
+                "grouping_regex": None,
                 "elasticsearch_count_rate": (10, 20, 2),
                 "elasticsearch_size_rate": (5, 15, 2),
             },
             [
-                Result(state=State.OK, summary="Document count: 28398"),
-                Metric("elasticsearch_count", 28398.0),
-                Result(
-                    state=State.CRIT,
-                    summary="Document count rate: 30/minute (warn/crit at 25/minute/27/minute)",
-                ),
+                Result(state=State.OK, summary="Document count: 28248"),
+                Metric("elasticsearch_count", 28248.0),
+                Result(state=State.OK, summary="Document count rate: -15/minute"),
                 Metric(
                     "elasticsearch_count_rate",
-                    30.0,
-                    levels=(24.639341968612495, 26.879282147577268),
+                    -15.0,
+                    levels=(-12.319670984306248, -13.439641073788634),
                 ),
-                Result(state=State.OK, summary="Size: 21.5 MiB"),
-                Metric("elasticsearch_size", 22524354.0),
+                Result(state=State.OK, summary="Size: 34.1 MiB"),
+                Metric("elasticsearch_size", 35801234.0),
                 Result(
                     state=State.CRIT,
-                    summary="Size rate: 293 KiB/minute (warn/crit at 230 KiB/minute/252 KiB/minute)",
+                    summary="Size rate: 4.08 MiB/minute (warn/crit at 3.20 MiB/minute/3.51 MiB/minute)",
                 ),
                 Metric(
                     "elasticsearch_size_rate",
-                    300000.0,
-                    levels=(235193.71879130113, 257593.12058094883),
+                    4283064.0,
+                    levels=(3357832.499937151, 3677626.0713597364),
                 ),
             ],
-            id="with params",
+            id="ungrouped, with thresholds",
+        ),
+        pytest.param(
+            "my-other-index",
+            {
+                "grouping_regex": "my-other-index",
+                "elasticsearch_count_rate": (10, 20, 2),
+                "elasticsearch_size_rate": (5, 15, 2),
+            },
+            [
+                Result(state=State.OK, summary="Document count: 78248"),
+                Metric("elasticsearch_count", 78248.0),
+                Result(
+                    state=State.CRIT,
+                    summary="Document count rate: 14985/minute (warn/crit at 12307/minute/13426/minute)",
+                ),
+                Metric(
+                    "elasticsearch_count_rate",
+                    14985.0,
+                    levels=(12307.351313321942, 13426.201432714844),
+                ),
+                Result(state=State.OK, summary="Size: 50.1 MiB"),
+                Metric("elasticsearch_size", 52488064.5),
+                Result(
+                    state=State.CRIT,
+                    summary="Size rate: 8.86 MiB/minute (warn/crit at 6.95 MiB/minute/7.61 MiB/minute)",
+                ),
+                Metric(
+                    "elasticsearch_size_rate",
+                    9289113.149999999,
+                    levels=(7282470.220072256, 7976038.812460089),
+                ),
+            ],
+            id="grouped, with thresholds",
+        ),
+        pytest.param(
+            "my-index-10.2022",
+            {"grouping_regex": "my-index-10.2022"},
+            [
+                Result(state=State.OK, summary="Document count: 28398"),
+                Metric("elasticsearch_count", 28398.0),
+                Result(state=State.OK, summary="Document count rate: 30/minute"),
+                Metric("elasticsearch_count_rate", 30.0),
+                Result(state=State.OK, summary="Size: 21.5 MiB"),
+                Metric("elasticsearch_size", 22524354.0),
+                Result(state=State.OK, summary="Size rate: 293 KiB/minute"),
+                Metric("elasticsearch_size_rate", 300000.0),
+            ],
+            id="group with one member",
         ),
         pytest.param(
             "missing",
-            {},
+            {"grouping_regex": None},
             [],
-            id="missing item",
+            id="ungrouped, missing item",
+        ),
+        pytest.param(
+            "missing",
+            {"grouping_regex": "missing"},
+            [],
+            id="group empty",
         ),
     ],
 )

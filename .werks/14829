@@ -1,0 +1,30 @@
+Title: Monitoring of Elasticsearch indices: Rework grouping of individual indices
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1668442670
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Elasticsearch can be configured to automatically add a timestamp to index names, see
+<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/date-index-name-processor.html" target="_blank">the documentation</a>.
+This results in index names such as my-index-2018.09.12, my-index-2018.09.13, my-index-2018.09.14
+etc. In Checkmk, users will most likely not want to monitor such indices as individual services.
+Instead, users want to monitor a service called "my-index", which accumulates data accross the
+individual sub-indices.
+
+Before this werk, Checkmk identified matching indices by cutting off index names after the first
+"-". This is far too restrictive. For example, the indices "customer-a" and "customer-b" were
+accumulated into one combined index called "customer", which is most likely unwanted. Also, this
+grouping was not configurable.
+
+As of this werk, Checkmk no longer does any grouping by default. Instead, the grouping can now be
+configured via the discovery ruleset <i>Discovery of Elasticsearch indices</i>. See the help texts
+in the user interface for details regarding the configuration options.
+
+This werk is marked as incompatible because it will result in changed service configurations (new
+and vanished services) if the index names contain "-". Using the new discovery ruleset, users can
+however reproduce the old behaviour before this werk. This can be achieved by grouping indices
+according to the regular expression <tt>[^-]+</tt>.

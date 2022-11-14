@@ -4,14 +4,18 @@ catalog: app/elasticsearch
 license: GPLv2
 distribution: check_mk
 description:
- This check uses the special agent for elasticsearch. The document count and
+ This check uses the special agent for Elasticsearch. The document count and
  size growth per minute will be recorded and averaged for a set amount of time
  (30 minutes by default). The last recent document count growth and size growth
  will be compared to this average value. Thresholds can be set on how much higher
  the last recent growth can be compared to the average growth.
 
 discovery:
- One service is created for each indice.
+ By default, one service is created for each index. Using the discovery ruleset
+ "Discovery of Elasticsearch indices", multiple indices can be accumulated into
+ a single service. This can be used to for example combine the indices
+ my-index-2021.01, my-index-2021.02 and my-index-2021.03 into a single service
+ called my-index.
 
 item:
- The name of the index
+ The name of the index or the group (if grouping is configured).

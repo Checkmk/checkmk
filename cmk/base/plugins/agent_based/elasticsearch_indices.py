@@ -5,11 +5,13 @@
 
 import dataclasses
 import json
+import re
 import time
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, TypedDict
 
 import pydantic
+from typing_extensions import NotRequired
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -77,13 +79,35 @@ register.agent_section(
 )
 
 
-def discover_elasticsearch_indices(section: _Section) -> DiscoveryResult:
-    yield from (Service(item=index_name) for index_name in section)
+class _DiscoveryParams(TypedDict):
+    grouping: tuple[str, Iterable[str]]
 
 
-class _CheckParams(TypedDict, total=False):
-    elasticsearch_count_rate: tuple[float, float, int]
-    elasticsearch_size_rate: tuple[float, float, int]
+def discover_elasticsearch_indices(params: _DiscoveryParams, section: _Section) -> DiscoveryResult:
+    groups: dict[str, str] = {}
+    grouped_indices: set[str] = set()
+
+    for pattern in params["grouping"][1]:
+        compiled_pattern = re.compile(pattern)
+        for index_name in section:
+            if match := compiled_pattern.search(index_name):
+                groups.setdefault(match.group(), pattern)
+                grouped_indices.add(index_name)
+
+    yield from (
+        Service(item=group_name, parameters={"grouping_regex": group_pattern})
+        for group_name, group_pattern in groups.items()
+    )
+    yield from (
+        Service(item=index_name, parameters={"grouping_regex": None})
+        for index_name in set(section) - grouped_indices
+    )
+
+
+class _CheckParams(TypedDict):
+    grouping_regex: str | None
+    elasticsearch_count_rate: NotRequired[tuple[float, float, int]]
+    elasticsearch_size_rate: NotRequired[tuple[float, float, int]]
 
 
 def check_elasticsearch_indices(
@@ -108,13 +132,47 @@ def _check_elasticsearch_indices(
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
-    if not (index := section.get(item)):
+    if not (
+        accumulated_index := _accumulate_indices(
+            item,
+            params["grouping_regex"],
+            section,
+        )
+    ):
         return
     yield from _check_index(
-        index=index,
+        index=accumulated_index,
         params=params,
         value_store=value_store,
         now=now,
+    )
+
+
+def _accumulate_indices(
+    item: str,
+    grouping_regex: str | None,
+    section: _Section,
+) -> _ElasticIndex | None:
+    if grouping_regex is None:
+        return section.get(item)
+    compiled_pattern = re.compile(grouping_regex)
+    return _do_accumulation(
+        [
+            index
+            for index_name, index in section.items()
+            if (match := compiled_pattern.search(index_name)) and match.group() == item
+        ]
+    )
+
+
+def _do_accumulation(group_members: Sequence[_ElasticIndex]) -> _ElasticIndex | None:
+    return (
+        _ElasticIndex(
+            count=sum(index.count for index in group_members) / len(group_members),
+            size=sum(index.size for index in group_members) / len(group_members),
+        )
+        if group_members
+        else None
     )
 
 
@@ -213,7 +271,9 @@ register.check_plugin(
     name="elasticsearch_indices",
     service_name="Elasticsearch Indice %s",
     discovery_function=discover_elasticsearch_indices,
+    discovery_ruleset_name="elasticsearch_indices_disovery",
+    discovery_default_parameters={"grouping": ("disabled", [])},
     check_function=check_elasticsearch_indices,
     check_ruleset_name="elasticsearch_indices",
-    check_default_parameters={},
+    check_default_parameters={"grouping_regex": None},
 )

@@ -1553,6 +1553,7 @@ class AutomationDiagHost(Automation):
             oid_range_limits=snmp_config.oid_range_limits,
             snmpv3_contexts=snmp_config.snmpv3_contexts,
             character_encoding=snmp_config.character_encoding,
+            is_usewalk_host=snmp_config.is_usewalk_host,
             snmp_backend=snmp_config.snmp_backend,
         )
 

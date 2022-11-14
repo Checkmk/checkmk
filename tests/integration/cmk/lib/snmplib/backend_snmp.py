@@ -226,6 +226,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -241,6 +242,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -263,6 +265,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
@@ -283,6 +286,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -298,6 +302,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -320,6 +325,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
@@ -343,6 +349,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -363,6 +370,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
             oid_range_limits={},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]
@@ -386,6 +394,7 @@ def _create_configs_oidranges() -> List:
             oid_range_limits={SectionName("if64"): [(first_str, 3)]},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -401,6 +410,7 @@ def _create_configs_oidranges() -> List:
             oid_range_limits={SectionName("if64"): [(mid_str, (4, 2))]},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -416,6 +426,7 @@ def _create_configs_oidranges() -> List:
             oid_range_limits={SectionName("if64"): [(last_str, 3)]},
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         SNMPHostConfig(
@@ -433,6 +444,7 @@ def _create_configs_oidranges() -> List:
             },
             snmpv3_contexts=[],
             character_encoding=None,
+            is_usewalk_host=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
     ]

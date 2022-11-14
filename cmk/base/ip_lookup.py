@@ -16,8 +16,6 @@ from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, UpdateDNSCacheResult
 
-from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
-
 IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
 
 
@@ -49,7 +47,8 @@ class _HostConfigLike(Protocol):
     def is_snmp_host(self) -> bool:
         ...
 
-    def get_snmp_backend(self) -> SNMPBackendEnum:
+    @property
+    def is_usewalk_host(self) -> bool:
         ...
 
     @property
@@ -382,10 +381,7 @@ def update_dns_cache(
                         else configured_ipv6_addresses
                     ).get(host_name),
                     simulation_mode=simulation_mode,
-                    is_snmp_usewalk_host=(
-                        host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
-                        and host_config.is_snmp_host
-                    ),
+                    is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                     override_dns=override_dns,
                     is_dyndns_host=host_config.is_dyndns_host,
                     is_no_ip_host=host_config.is_no_ip_host,

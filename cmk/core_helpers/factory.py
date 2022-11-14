@@ -34,13 +34,13 @@ def backend(
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
-    if use_cache or snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+    if use_cache or snmp_config.is_usewalk_host:
         return StoredWalkSNMPBackend(snmp_config, logger)
 
-    if inline and snmp_config.snmp_backend is SNMPBackendEnum.INLINE:
+    if inline and snmp_config.snmp_backend == SNMPBackendEnum.INLINE:
         return inline.InlineSNMPBackend(snmp_config, logger)
 
-    if snmp_config.snmp_backend is SNMPBackendEnum.CLASSIC:
+    if snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC:
         return ClassicSNMPBackend(snmp_config, logger)
 
     raise NotImplementedError(f"Unknown SNMP backend: {snmp_config.snmp_backend}")

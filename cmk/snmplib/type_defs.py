@@ -76,7 +76,6 @@ TRawData = TypeVar("TRawData", bound=AbstractRawData)
 class SNMPBackendEnum(enum.Enum):
     INLINE = "Inline"
     CLASSIC = "Classic"
-    STORED_WALK = "StoredWalk"
 
     def serialize(self) -> str:
         return self.name
@@ -121,6 +120,7 @@ class SNMPHostConfig(NamedTuple):
     oid_range_limits: Mapping[_SectionName, Sequence[RangeLimit]]
     snmpv3_contexts: list
     character_encoding: str | None
+    is_usewalk_host: bool
     snmp_backend: SNMPBackendEnum
 
     @property

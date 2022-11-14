@@ -24,8 +24,6 @@ from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSe
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
-
 from cmk.core_helpers.tcp import EncryptionHandling
 from cmk.core_helpers.type_defs import Mode
 
@@ -547,9 +545,7 @@ def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-    assert (
-        config_cache.get_host_config(hostname).get_snmp_backend() is not SNMPBackendEnum.STORED_WALK
-    )
+    assert config_cache.get_host_config(hostname).is_usewalk_host is False
 
 
 def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -567,7 +563,7 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).get_snmp_backend() is SNMPBackendEnum.STORED_WALK
+    assert config_cache.get_host_config(hostname).is_usewalk_host is True
 
 
 @pytest.mark.parametrize(

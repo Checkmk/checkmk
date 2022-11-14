@@ -38,6 +38,7 @@ def test_snmp_port_spec(port, expected) -> None:  # type:ignore[no-untyped-def]
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
+        is_usewalk_host=False,
         snmp_backend=SNMPBackendEnum.CLASSIC,
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected
@@ -64,6 +65,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected) -> None:  # type:ignore
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
+        is_usewalk_host=False,
         snmp_backend=SNMPBackendEnum.CLASSIC,
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected
@@ -92,6 +94,7 @@ class SNMPSettings(NamedTuple):
                     oid_range_limits={},
                     snmpv3_contexts=[],
                     character_encoding=None,
+                    is_usewalk_host=False,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
                 context_name=None,
@@ -128,6 +131,7 @@ class SNMPSettings(NamedTuple):
                     oid_range_limits={},
                     snmpv3_contexts=[],
                     character_encoding=None,
+                    is_usewalk_host=False,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
                 context_name="blabla",
@@ -165,6 +169,7 @@ class SNMPSettings(NamedTuple):
                     oid_range_limits={},
                     snmpv3_contexts=[],
                     character_encoding=None,
+                    is_usewalk_host=False,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
                 context_name="blabla",
@@ -208,6 +213,7 @@ class SNMPSettings(NamedTuple):
                     oid_range_limits={},
                     snmpv3_contexts=[],
                     character_encoding=None,
+                    is_usewalk_host=False,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
                 context_name=None,
@@ -245,6 +251,7 @@ class SNMPSettings(NamedTuple):
                     oid_range_limits={},
                     snmpv3_contexts=[],
                     character_encoding=None,
+                    is_usewalk_host=False,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
                 ),
                 context_name=None,

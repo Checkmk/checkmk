@@ -35,6 +35,7 @@ def fixture_snmp_config() -> SNMPHostConfig:
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
+        is_usewalk_host=False,
         snmp_backend=SNMPBackendEnum.CLASSIC,
     )
 

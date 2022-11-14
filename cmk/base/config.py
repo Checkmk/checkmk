@@ -2439,6 +2439,9 @@ class HostConfig:
         # Basic types
         self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
         self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
+        self.is_usewalk_host: Final[bool] = self._config_cache.in_binary_hostlist(
+            hostname, usewalk_hosts
+        )
 
         def get_is_piggyback_host() -> bool:
             if self.tag_groups["piggyback"] == "piggyback":
@@ -2649,7 +2652,8 @@ class HostConfig:
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
-            snmp_backend=self.get_snmp_backend(),
+            is_usewalk_host=self.is_usewalk_host,
+            snmp_backend=self._get_snmp_backend(),
         )
 
     def _snmp_credentials(self) -> SNMPCredentials:
@@ -2721,10 +2725,7 @@ class HostConfig:
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
-    def get_snmp_backend(self) -> SNMPBackendEnum:
-        if self._config_cache.in_binary_hostlist(self.hostname, usewalk_hosts):
-            return SNMPBackendEnum.STORED_WALK
-
+    def _get_snmp_backend(self) -> SNMPBackendEnum:
         with_inline_snmp = HostConfig._is_inline_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
@@ -3205,7 +3206,8 @@ class HostConfig:
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
-            snmp_backend=self.get_snmp_backend(),
+            is_usewalk_host=self.is_usewalk_host,
+            snmp_backend=self._get_snmp_backend(),
         )
 
     @property
@@ -3362,10 +3364,8 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddres
             family=host_config.default_address_family,
             configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
-            is_snmp_usewalk_host=(
-                host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
-                and (host_config.management_protocol == "snmp")
-            ),
+            is_snmp_usewalk_host=host_config.is_usewalk_host
+            and (host_config.management_protocol == "snmp"),
             override_dns=fake_dns,
             is_dyndns_host=host_config.is_dyndns_host,
             is_no_ip_host=False,
@@ -3390,10 +3390,7 @@ def lookup_ip_address(
             host_name
         ),
         simulation_mode=simulation_mode,
-        is_snmp_usewalk_host=(
-            host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
-            and host_config.is_snmp_host
-        ),
+        is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
         override_dns=fake_dns,
         is_dyndns_host=host_config.is_dyndns_host,
         is_no_ip_host=host_config.is_no_ip_host,

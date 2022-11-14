@@ -11,8 +11,6 @@ import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import SNMPBackend
 
-from cmk.core_helpers.snmp_backend import StoredWalkSNMPBackend
-
 # "netsnmp" python module (used for inline SNMP) and snmp commands (used for
 # classic SNMP) are not available in the git environment. For the moment it
 # does not make sense to build these tests as unit tests because we want to
@@ -34,7 +32,7 @@ def monkeymodule(request):
 
 
 def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -47,7 +45,7 @@ def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -64,7 +62,7 @@ def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -88,7 +86,7 @@ def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_wrong_credentials(backend: SNMPBackend) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(credentials="dingdong")
@@ -143,7 +141,7 @@ def test_get_single_oid_not_existing(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(ipaddress="bla.local")
@@ -210,7 +208,7 @@ def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
 def test_walk_for_export(  # type:ignore[no-untyped-def]
     backend: SNMPBackend, oid, expected_table
 ) -> None:
-    if isinstance(backend, StoredWalkSNMPBackend):
+    if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
     table = snmp_modes.walk_for_export(oid, backend=backend)

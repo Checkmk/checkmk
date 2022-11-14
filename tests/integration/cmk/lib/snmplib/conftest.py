@@ -19,7 +19,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
@@ -200,7 +200,10 @@ def backend_fixture(request, snmp_data_dir):
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
-        snmp_backend=backend,
+        is_usewalk_host=backend is StoredWalkSNMPBackend,
+        snmp_backend=SNMPBackendEnum.INLINE
+        if backend is InlineSNMPBackend
+        else SNMPBackendEnum.CLASSIC,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

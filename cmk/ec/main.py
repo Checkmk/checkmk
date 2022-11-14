@@ -3183,6 +3183,7 @@ class EventStatus:
     def remove_oldest_event(self, ty: str, event: Event) -> None:
         if ty == "overall":
             self._logger.log(VERBOSE, "  Removing oldest event")
+            self._history.add(self._events[0], "AUTODELETE")
             self._remove_event_by_nr(0)
         elif ty == "by_rule" and event["rule_id"] is not None:
             self._logger.log(VERBOSE, '  Removing oldest event of rule "%s"', event["rule_id"])
@@ -3195,6 +3196,7 @@ class EventStatus:
     def _remove_oldest_event_of_rule(self, rule_id: str) -> None:
         for event in self._events:
             if event["rule_id"] == rule_id:
+                self._history.add(event, "AUTODELETE")
                 self.remove_event(event)
                 return
 
@@ -3202,6 +3204,7 @@ class EventStatus:
     def _remove_oldest_event_of_host(self, hostname: str) -> None:
         for event in self._events:
             if event["host"] == hostname:
+                self._history.add(event, "AUTODELETE")
                 self.remove_event(event)
                 return
 

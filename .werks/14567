@@ -1,0 +1,16 @@
+Title: KUBE agent_kube: Handle custom Pod condition on GKE
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668528237
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+Previously, the Kubernetes special agent would exit with the following message:
+C+:
+[special_kube] Agent exited with code 1: Can not convert to timestamp: 'None' of type <class 'NoneType'>
+C-:
+This would occur if there was a custom Pod condition present in the cluster with type
+<tt>cloud.google.com/load-balancer-neg-ready</tt>. With this werk, the error no longer occurs.

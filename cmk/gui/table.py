@@ -10,7 +10,7 @@ import re
 from collections.abc import Iterator
 from contextlib import contextmanager, nullcontext
 from enum import auto, Enum
-from typing import Any, ContextManager, Final, Literal, NamedTuple, TYPE_CHECKING
+from typing import Any, ContextManager, Final, Literal, NamedTuple
 
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
@@ -23,14 +23,12 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
+from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
-
-if TYPE_CHECKING:
-    from cmk.gui.type_defs import CSSSpec
 
 
 class TableHeader(NamedTuple):

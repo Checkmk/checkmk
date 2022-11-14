@@ -10,7 +10,7 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 from cmk.utils import store
 from cmk.utils.translations import translate_hostname
@@ -26,7 +26,7 @@ from cmk.gui.logged_in import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.hosts_and_folders import Folder, Host, update_metadata
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, update_metadata
 
 NetworkScanFoundHosts = List[Tuple[HostName, HostAddress]]
 NetworkScanResult = Dict[str, Any]
@@ -34,10 +34,6 @@ NetworkScanResult = Dict[str, Any]
 
 class NetworkScanRequest(NamedTuple):
     folder_path: str
-
-
-if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 
 def execute_network_scan_job() -> None:
@@ -104,7 +100,7 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
 
-def _find_folder_to_scan() -> Optional["CREFolder"]:
+def _find_folder_to_scan() -> Optional[CREFolder]:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in Folder.all_folders().values():
@@ -117,7 +113,7 @@ def _find_folder_to_scan() -> Optional["CREFolder"]:
     return folder_to_scan
 
 
-def _add_scanned_hosts_to_folder(folder: "CREFolder", found: NetworkScanFoundHosts) -> None:
+def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts) -> None:
     network_scan_properties = folder.attribute("network_scan")
 
     translation = network_scan_properties.get("translate_names", {})
@@ -144,7 +140,7 @@ def _add_scanned_hosts_to_folder(folder: "CREFolder", found: NetworkScanFoundHos
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
 
 
-def _save_network_scan_result(folder: "CREFolder", result: NetworkScanResult) -> None:
+def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> None:
     # Reload the folder, lock WATO before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the

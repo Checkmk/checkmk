@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Iterator, List, Tuple, TYPE_CHECKING
+from typing import Iterator, List, Tuple
 
 from livestatus import SiteId
 
@@ -52,6 +52,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.painters.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
+from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -70,11 +71,8 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+from cmk.gui.view import View
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
-
-if TYPE_CHECKING:
-    from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
-    from cmk.gui.view import View
 
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
@@ -802,8 +800,8 @@ def render_timeline_bar(  # type:ignore[no-untyped-def]
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def show_bi_availability(  # pylint: disable=too-many-branches
-    view: "View",
-    aggr_rows: "Rows",
+    view: View,
+    aggr_rows: Rows,
 ) -> None:
     user.need_permission("general.see_availability")
 

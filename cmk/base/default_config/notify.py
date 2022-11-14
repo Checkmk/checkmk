@@ -5,16 +5,8 @@
 
 from __future__ import annotations
 
-from typing import List as _List
-from typing import Tuple as _Tuple
-from typing import TYPE_CHECKING
-from typing import Union as _Union
-
 import cmk.utils.version as cmk_version
-
-if TYPE_CHECKING:
-    from cmk.utils.type_defs import EventRule, NotifyPluginParamsDict
-
+from cmk.utils.type_defs import EventRule, NotifyPluginParamsDict
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -27,8 +19,8 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
 notification_fallback_email = ""
-notification_fallback_format: _Tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
-notification_rules: _List["EventRule"] = []
+notification_fallback_format: tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
+notification_rules: list["EventRule"] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60
@@ -43,7 +35,7 @@ notification_plugin_timeout = 60
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
 if cmk_version.is_raw_edition():
-    notification_spooling: _Union[bool, str] = "off"
+    notification_spooling: bool | str = "off"
 else:
     notification_spooling = "local"
 

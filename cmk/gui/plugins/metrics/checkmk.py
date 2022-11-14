@@ -198,6 +198,123 @@ metric_info["num_disabled_alerts"] = {
     "color": "24/a",
 }
 
+metric_info["perf_data_count"] = {
+    "title": _l("Number of performance data received"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["perf_data_count_rate"] = {
+    "title": _l("Rate of performance data received"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+
+metric_info["metrics_count"] = {
+    "title": _l("Number of metrics received"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["metrics_count_rate"] = {
+    "title": _l("Rate of metrics received"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+
+metric_info["influxdb_queue_usage"] = {
+    "title": _l("InfluxDB queue usage"),
+    "unit": "%",
+    "color": "21/a",
+}
+metric_info["influxdb_queue_usage_rate"] = {
+    "title": _l("InfluxDB queue usage rate"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["influxdb_overflows"] = {
+    "title": _l("Performance data loss for InfluxDB"),
+    "unit": "count",
+    "color": "21/a",
+}
+metric_info["influxdb_overflows_rate"] = {
+    "title": _l("Rate of performance data loss for InfluxDB"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["influxdb_bytes_sent"] = {
+    "title": _l("Bytes sent to the InfluxDB connection"),
+    "unit": "bytes",
+    "color": "21/a",
+}
+metric_info["influxdb_bytes_sent_rate"] = {
+    "title": _l("Rate of bytes sent the InfluxDB connection"),
+    "unit": "bytes/s",
+    "color": "21/a",
+}
+
+metric_info["rrdcached_queue_usage"] = {
+    "title": _l("RRD queue usage"),
+    "unit": "%",
+    "color": "21/a",
+}
+metric_info["rrdcached_queue_usage_rate"] = {
+    "title": _l("RRD queue usage rate"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["rrdcached_overflows"] = {
+    "title": _l("Performance data loss for RRD"),
+    "unit": "count",
+    "color": "21/a",
+}
+metric_info["rrdcached_overflows_rate"] = {
+    "title": _l("Rate of performance data loss for RRD"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["rrdcached_bytes_sent"] = {
+    "title": _l("Bytes sent to the RRD connection"),
+    "unit": "bytes",
+    "color": "21/a",
+}
+metric_info["rrdcached_bytes_sent_rate"] = {
+    "title": _l("Rate of bytes sent the RRD connection"),
+    "unit": "bytes/s",
+    "color": "21/a",
+}
+
+metric_info["carbon_queue_usage"] = {
+    "title": _l("Carbon queue usage"),
+    "unit": "%",
+    "color": "21/a",
+}
+metric_info["carbon_queue_usage_rate"] = {
+    "title": _l("Carbon queue usage rate"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["carbon_overflows"] = {
+    "title": _l("Performance data loss for Carbon"),
+    "unit": "count",
+    "color": "21/a",
+}
+metric_info["carbon_overflows_rate"] = {
+    "title": _l("Rate of performance data loss for Carbon"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+metric_info["carbon_bytes_sent"] = {
+    "title": _l("Bytes sent to the Carbon connection"),
+    "unit": "bytes",
+    "color": "21/a",
+}
+metric_info["carbon_bytes_sent_rate"] = {
+    "title": _l("Rate of bytes sent the Carbon connection"),
+    "unit": "bytes/s",
+    "color": "21/a",
+}
+
 
 def register_omd_apache_metrics():
     for ty, unit in [("requests", "1/s"), ("bytes", "bytes/s"), ("secs", "1/s")]:

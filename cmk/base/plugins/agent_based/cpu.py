@@ -38,7 +38,7 @@ def parse_cpu(string_table: StringTable) -> Optional[Section]:
                 num_cpus = int(part.split("=", 1)[1])
                 break
         else:
-            num_cpus = int(row[5])
+            num_cpus = int(row[5]) if row[5] != "0" else 1
     else:
         num_cpus = 1
 

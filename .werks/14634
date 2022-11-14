@@ -1,0 +1,14 @@
+Title: cpu_load: Check plugin used to crash if the number of cpus was 0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668431865
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The check plugin used to crash if the number of cpus was 0.
+Now, if that is the case, it assumed that the number of cpus is 1.
+

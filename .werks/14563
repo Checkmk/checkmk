@@ -1,4 +1,4 @@
-Title: <tt>heartbeat_rscstatus<\tt>: Fix error during update
+Title: <tt>heartbeat_rscstatus</tt>: Fix error during update
 Class: fix
 Compatible: compat
 Component: checks
@@ -9,7 +9,7 @@ Level: 1
 State: unknown
 Version: 2.1.0p16
 
-During discovery the plugin <tt>heartbeat_rscstatus<\tt> stores its discovery state.  Updating
+During discovery the plugin <tt>heartbeat_rscstatus</tt> stores its discovery state.  Updating
 Checkmk from 2.0.0 to 2.1.0 or updates within those versions would cause these states to be lost.
 This is indicated by following error message:
 

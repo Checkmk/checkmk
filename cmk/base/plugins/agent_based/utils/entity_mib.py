@@ -24,4 +24,6 @@ class PhysicalClasses(Enum):
     # SUP-10602: Cisco decided to not stick to the official MiB ...
     @classmethod
     def parse_cisco(cls, raw_phys_class: str) -> "PhysicalClasses":
-        return cls.unknown if raw_phys_class == "0" else cls(raw_phys_class)
+        if raw_phys_class in ("0", ""):
+            return cls.unknown
+        return cls(raw_phys_class)

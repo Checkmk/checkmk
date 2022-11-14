@@ -14,7 +14,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.gui.plugins.views
-import cmk.gui.plugins.views.utils
 import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
@@ -29,6 +28,7 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
+from cmk.gui.views.inventory import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.sorter import sorter_registry
@@ -2477,11 +2477,11 @@ def test_registered_display_hints() -> None:
         ".software.packages:*.version",
     ]
 
-    assert sorted(cmk.gui.plugins.views.utils.inventory_displayhints.keys()) == sorted(expected)
+    assert sorted(inventory_displayhints.keys()) == sorted(expected)
 
 
 def test_get_inventory_display_hint() -> None:
-    hint = cmk.gui.plugins.views.utils.inventory_displayhints.get(".software.packages:*.summary")
+    hint = inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
 
 

@@ -11,7 +11,6 @@
 
 from cmk.gui.i18n import _l
 from cmk.gui.num_split import cmp_version
-from cmk.gui.plugins.views.utils import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
@@ -21,6 +20,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
 )
+from cmk.gui.views.inventory import inventory_displayhints
 
 # fmt: off
 

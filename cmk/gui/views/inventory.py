@@ -50,7 +50,6 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, register_painter
-from cmk.gui.plugins.views.utils import inventory_displayhints, InventoryHintSpec
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
@@ -96,6 +95,9 @@ from cmk.gui.views.store import multisite_builtin_views
 PaintResult = tuple[str, str | HTML]
 PaintFunction = Callable[[Any], PaintResult]
 
+
+InventoryHintSpec = dict[str, Any]
+inventory_displayhints: dict[str, InventoryHintSpec] = {}
 
 _PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
 _PAINT_FUNCTIONS: dict[str, PaintFunction] = {}

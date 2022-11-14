@@ -119,7 +119,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.views.sorter as sorter
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.views import command, layout, store
+    from cmk.gui.views import command, inventory, layout, store
 
     for name in (
         "ABCDataSource",
@@ -174,12 +174,14 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     ):
         api_module.__dict__[name] = store.__dict__[name]
 
+    for name in ("view_is_enabled",):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
+
     for name in (
         "inventory_displayhints",
         "InventoryHintSpec",
-        "view_is_enabled",
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
+        api_module.__dict__[name] = inventory.__dict__[name]
 
     api_module.__dict__["display_options"] = display_options.display_options
     api_module.__dict__["view_title"] = visuals.view_title

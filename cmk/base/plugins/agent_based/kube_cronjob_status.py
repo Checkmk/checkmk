@@ -99,9 +99,6 @@ def _check_cron_job_status(
     if latest_job is None:
         raise IgnoreResultsError("No Job has been scheduled")
 
-    if len(latest_job.pods) != 1:
-        raise ValueError("Job doesn't have one pod")
-
     job_pod = latest_job.pods[0]
     job_status = _determine_job_status(latest_job.status.conditions, job_pod)
 

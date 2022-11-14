@@ -1,0 +1,15 @@
+Title: kube_cronjob_status: remove exception raise when job has more than one pod
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668427284
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Prior to this werk, the check kube_cronjob_status raised an error when the job
+had multiple pods. This werk removes this restriction but does not change the
+behaviour that only the latest pod is used to determine the status.
+
+

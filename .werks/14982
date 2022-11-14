@@ -11,7 +11,7 @@ Version: 2.2.0i1
 This is the second of two Werks to simplify the configuration of the agent encryption.
 The former ruleset <i>"Encryption (Linux, Windows)"</i> is split up in three rulesets:
 
-<b>The pre-shared secret used for the OpenSSH based encryption is configured in the ruleset <i>"Symmetric encryption (Linux, Windows)"</i></b>.
+<b>The pre-shared secret used for the OpenSSL based encryption is configured in the ruleset <i>"Symmetric encryption (Linux, Windows)"</i></b>.
 This is the only parameter that is configured here. If it is set, the agent shall send encrypted data using this secret.
 By default, no such encryption is applied.
 
@@ -23,7 +23,7 @@ See <a href='https://checkmk.com/de/werk/14652'>Werk #14652</a> for details on h
 
 <b>The server side handling of (un)encrypted data is configured in the new ruleset <i>Enforce agent data encryption</i></b>.
 Users can choose how to deal with unencrypted data: use it, or discard it.
-This configration option is extended, as we now differentiate between TLS encryption and the OpenSSH based symmetric encryption.
+This configration option is extended, as we now differentiate between TLS encryption and the OpenSSL based symmetric encryption.
 TLS encrypted data is always considered to be ok, which leaves us with three options:
 
 LI: <i>"Accept TLS encrypted connections only"</i>: All other connections are cosed, and the <i>Check_MK</i> service goes to {CRIT}. Note that by the time we notice that the connection is unencrypted, the unencrypted data is already sent over the network.

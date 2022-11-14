@@ -27,12 +27,12 @@ from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterReg
 from cmk.gui.type_defs import PainterSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
-from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.views.store import multisite_builtin_views
 
 
 def test_registered_painter_options() -> None:

@@ -23,7 +23,7 @@ from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.plugins.visuals.utils import VisualType
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.valuespec import Hostname
-from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.store import get_permitted_views
 
 
 class VisualTypeViews(VisualType):

@@ -11,7 +11,7 @@ from cmk.gui.i18n import _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 
 

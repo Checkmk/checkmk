@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.gui.view import View
-from cmk.gui.view_store import multisite_builtin_views
+from cmk.gui.views.store import multisite_builtin_views
 
 
 @pytest.fixture(name="view")

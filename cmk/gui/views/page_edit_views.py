@@ -8,7 +8,8 @@
 from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _
-from cmk.gui.view_store import get_all_views
+
+from .store import get_all_views
 
 
 def page_edit_views() -> None:

@@ -23,7 +23,6 @@ import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.view import View
-from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -42,6 +41,7 @@ from cmk.gui.views.inventory import (
     TableDisplayHint,
     TableViewSpec,
 )
+from cmk.gui.views.store import multisite_builtin_views
 
 RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]

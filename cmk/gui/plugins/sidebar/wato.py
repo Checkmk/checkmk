@@ -34,7 +34,7 @@ from cmk.gui.type_defs import (
     Visual,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.search import (

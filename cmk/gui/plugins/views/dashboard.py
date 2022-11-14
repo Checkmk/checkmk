@@ -8,7 +8,7 @@
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
-from cmk.gui.view_store import multisite_builtin_views
+from cmk.gui.views.store import multisite_builtin_views
 
 multisite_builtin_views.update(
     {

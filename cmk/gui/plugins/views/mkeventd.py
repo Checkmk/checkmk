@@ -48,7 +48,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
-from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
 from cmk.gui.views.sorter import (
@@ -57,6 +56,7 @@ from cmk.gui.views.sorter import (
     cmp_simple_string,
     declare_1to1_sorter,
 )
+from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |

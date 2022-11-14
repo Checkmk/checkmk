@@ -33,8 +33,8 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, MigrateNotUpdated, ValueSpec
-from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
+from cmk.gui.views.store import multisite_builtin_views
 
 multisite_builtin_views.update(
     {

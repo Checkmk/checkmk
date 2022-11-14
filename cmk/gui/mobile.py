@@ -30,7 +30,6 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.view import View
-from cmk.gui.view_store import get_permitted_views
 from cmk.gui.views.command import command_registry, CommandSpec
 from cmk.gui.views.page_show_view import (
     ABCViewRenderer,
@@ -40,6 +39,7 @@ from cmk.gui.views.page_show_view import (
     get_want_checkboxes,
     process_view,
 )
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 
 HeaderButton = Union[tuple[str, str, str], tuple[str, str, str, str]]

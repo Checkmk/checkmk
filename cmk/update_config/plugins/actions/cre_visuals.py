@@ -6,7 +6,7 @@
 from logging import Logger
 
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards
-from cmk.gui.view_store import get_all_views
+from cmk.gui.views.store import get_all_views
 
 from cmk.update_config.plugins.actions.visuals_utils import update_visuals
 from cmk.update_config.registry import update_action_registry, UpdateAction

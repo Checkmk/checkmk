@@ -28,13 +28,13 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
-from cmk.gui.view_store import get_permitted_views
 from cmk.gui.views.page_edit_view import (
     create_view_from_valuespec,
     render_view_config,
     view_choices,
 )
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
+from cmk.gui.views.store import get_permitted_views
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 

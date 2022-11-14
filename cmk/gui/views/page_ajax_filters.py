@@ -12,7 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.store import get_permitted_views
 
 
 class ABCAjaxInitialFilters(AjaxPage):

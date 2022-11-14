@@ -46,10 +46,10 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
-from cmk.gui.view_store import get_all_views, get_permitted_views
 
 from . import availability
 from .sorter import SorterEntry
+from .store import get_all_views, get_permitted_views
 
 
 def page_show_view() -> None:

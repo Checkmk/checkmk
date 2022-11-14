@@ -69,7 +69,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
-from cmk.gui.view_store import get_all_views, get_permitted_views, internal_view_to_runtime_view
+from cmk.gui.views.store import get_all_views, get_permitted_views, internal_view_to_runtime_view
 
 DashboardName = str
 

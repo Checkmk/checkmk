@@ -37,9 +37,10 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.view_store import get_all_views, get_permitted_views
-from cmk.gui.views.layout import layout_registry
-from cmk.gui.views.sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
+
+from .layout import layout_registry
+from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
+from .store import get_all_views, get_permitted_views
 
 
 def page_edit_view() -> None:

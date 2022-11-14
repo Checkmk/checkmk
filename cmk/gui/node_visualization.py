@@ -48,8 +48,8 @@ from cmk.gui.type_defs import Visual, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
-from cmk.gui.view_store import get_permitted_views
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
+from cmk.gui.views.store import get_permitted_views
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter

@@ -9,6 +9,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
+from cmk.snmplib.type_defs import SNMPBackend
 
 # "netsnmp" python module (used for inline SNMP) and snmp commands (used for
 # classic SNMP) are not available in the git environment. For the moment it
@@ -30,11 +31,11 @@ def monkeymodule(request):
     mpatch.undo()
 
 
-def test_get_single_oid_ipv6(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config.update(
+    backend.config = backend.config._replace(
         is_ipv6_primary=True,
         ipaddress="::1",
     )
@@ -43,11 +44,11 @@ def test_get_single_oid_ipv6(backend) -> None:  # type:ignore[no-untyped-def]
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config.update(
+    backend.config = backend.config._replace(
         credentials=(
             "authNoPriv",
             "md5",
@@ -60,11 +61,11 @@ def test_get_single_oid_snmpv3(backend) -> None:  # type:ignore[no-untyped-def]
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config.update(
+    backend.config = backend.config._replace(
         credentials=(
             "authPriv",
             "SHA-512",
@@ -84,23 +85,23 @@ def test_get_single_oid_snmpv3_higher_encryption(backend) -> None:  # type:ignor
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_wrong_credentials(backend: SNMPBackend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config.update(credentials="dingdong")
+    backend.config = backend.config._replace(credentials="dingdong")
 
     result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result is None
 
 
-def test_get_single_oid(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid(backend: SNMPBackend) -> None:
     result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_cache(backend: SNMPBackend) -> None:
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
@@ -111,12 +112,12 @@ def test_get_single_oid_cache(backend) -> None:  # type:ignore[no-untyped-def]
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_non_prefixed_oid(backend: SNMPBackend) -> None:
     with pytest.raises(MKGeneralException, match="does not begin with"):
         snmp_modes.get_single_oid("1.3.6.1.2.1.1.1.0", backend=backend)
 
 
-def test_get_single_oid_next(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_next(backend: SNMPBackend) -> None:
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.*", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
@@ -128,22 +129,22 @@ def test_get_single_oid_next(backend) -> None:  # type:ignore[no-untyped-def]
 #    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
 
 
-def test_get_single_oid_value(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_value(backend: SNMPBackend) -> None:
     assert (
         snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.2.1", backend=backend)
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
-def test_get_single_oid_not_existing(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_not_existing(backend: SNMPBackend) -> None:
     assert snmp_modes.get_single_oid(".1.3.100.200.300.400", backend=backend) is None
 
 
-def test_get_single_oid_not_resolvable(backend) -> None:  # type:ignore[no-untyped-def]
+def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config.update(ipaddress="bla.local")
+    backend.config = backend.config._replace(ipaddress="bla.local")
 
     assert snmp_modes.get_single_oid(".1.3.6.1.2.1.1.7.0", backend=backend) is None
 
@@ -204,7 +205,9 @@ def test_get_single_oid_not_resolvable(backend) -> None:  # type:ignore[no-untyp
         ),
     ],
 )
-def test_walk_for_export(backend, oid, expected_table) -> None:  # type:ignore[no-untyped-def]
+def test_walk_for_export(  # type:ignore[no-untyped-def]
+    backend: SNMPBackend, oid, expected_table
+) -> None:
     if backend.config.is_usewalk_host:
         pytest.skip("Not relevant")
 

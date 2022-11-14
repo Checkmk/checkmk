@@ -139,13 +139,6 @@ class SNMPHostConfig(NamedTuple):
                 return rules
         return [None]
 
-    # TODO: Why not directly use SNMPHostConfig._replace(...)?
-    def update(self, **kwargs: Mapping[str, Any]) -> "SNMPHostConfig":
-        """Return a new SNMPHostConfig with updated attributes."""
-        cfg = self._asdict()
-        cfg.update(**kwargs)
-        return SNMPHostConfig(**cfg)
-
     def ensure_str(self, value: str | bytes) -> str:
         if isinstance(value, str):
             return value

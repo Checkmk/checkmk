@@ -1,0 +1,13 @@
+Title: Add auto-deleted events to history
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1668433030
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+If the number of events reached a limit (global/per rule/per host), the oldest event was deleted, but a history entry for that deletion was missing. This has been fixed.
+

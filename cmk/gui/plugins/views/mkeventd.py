@@ -32,7 +32,6 @@ from cmk.gui.plugins.dashboard.utils import (
     ViewDashletConfig,
 )
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.sorter import cmp_num_split, cmp_simple_number, cmp_simple_string, declare_1to1_sorter
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -52,6 +51,12 @@ from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
+from cmk.gui.views.sorter import (
+    cmp_num_split,
+    cmp_simple_number,
+    cmp_simple_string,
+    declare_1to1_sorter,
+)
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |

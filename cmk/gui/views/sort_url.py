@@ -7,8 +7,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 from cmk.gui.painters.v0.base import painter_exists, painter_registry
-from cmk.gui.sorter import ParameterizedSorter, sorter_registry
 from cmk.gui.type_defs import PainterName, PainterSpec, SorterName, SorterSpec
+from cmk.gui.views.sorter import ParameterizedSorter, sorter_registry
 
 
 def compute_sort_url_parameter(

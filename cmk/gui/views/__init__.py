@@ -21,7 +21,6 @@ from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
     multisite_icons_and_actions,
 )
-from cmk.gui.sorter import register_sorter
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
@@ -29,6 +28,7 @@ from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.command import register_legacy_command
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
 from cmk.gui.views.page_edit_view import format_view_title
+from cmk.gui.views.sorter import register_sorter
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
@@ -116,8 +116,8 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.painters.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
-    import cmk.gui.sorter as sorter
     import cmk.gui.view_store as view_store
+    import cmk.gui.views.sorter as sorter
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
     from cmk.gui.views import command, layout

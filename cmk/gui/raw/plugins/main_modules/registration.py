@@ -29,6 +29,7 @@ from cmk.gui.views.page_create_view import page_create_view
 from cmk.gui.views.page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
 from cmk.gui.views.page_edit_views import page_edit_views
 from cmk.gui.views.page_show_view import page_show_view
+from cmk.gui.views.sorter import register_sorters, sorter_registry
 from cmk.gui.views.visual_type import VisualTypeViews
 
 
@@ -92,6 +93,8 @@ def register_painters() -> None:
 
 register_pages()
 register_painters()
+
 register_post_config_load_hook(register_tag_plugins)
 visual_type_registry.register(VisualTypeViews)
 register_layouts(layout_registry)
+register_sorters(sorter_registry)

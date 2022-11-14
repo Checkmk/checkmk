@@ -30,7 +30,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
-from cmk.gui.sorter import cmp_service_name_equiv
 from cmk.gui.type_defs import (
     FilterHeader,
     HTTPVariables,
@@ -55,6 +54,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.view_utils import CSSClass
+from cmk.gui.views.sorter import cmp_service_name_equiv
 
 from cmk.bi.data_fetcher import (
     BIHostSpec,

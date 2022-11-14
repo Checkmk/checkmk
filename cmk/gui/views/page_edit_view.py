@@ -18,7 +18,6 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
-from cmk.gui.sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from cmk.gui.type_defs import ColumnName, PainterSpec, SingleInfos, SorterSpec, ViewSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
@@ -40,6 +39,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_store import get_all_views, get_permitted_views
 from cmk.gui.views.layout import layout_registry
+from cmk.gui.views.sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 
 
 def page_edit_view() -> None:

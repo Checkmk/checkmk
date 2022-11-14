@@ -16,9 +16,9 @@ from cmk.gui.painters.v0.base import Cell, CellSpec, Painter, painter_registry
 from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
-from cmk.gui.sorter import Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
+from cmk.gui.views.sorter import Sorter, sorter_registry
 
 
 class Perfometer:

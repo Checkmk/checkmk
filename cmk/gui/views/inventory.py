@@ -82,7 +82,6 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,
@@ -103,6 +102,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
+from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter

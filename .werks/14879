@@ -1,0 +1,15 @@
+Title: cisco: remove crashing services for cisco_cpu_multiitem & cisco_fru_module_status
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1668410359
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Prior to this werk, services for cisco_cpu_multiitem & cisco_fru_module_status were
+wrongly discovered despite not having any relevant monitoring information. This werk
+adjusts the discovery function for these services. The user should perform a service
+discovery in order to remove crashing services.

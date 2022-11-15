@@ -282,7 +282,7 @@ setversion:
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/mkbench bin/livedump; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-	$(MAKE) -C docker NEW_VERSION=$(NEW_VERSION) setversion
+	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
@@ -491,7 +491,7 @@ setup:
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
-	$(MAKE) -C docker setup
+	$(MAKE) -C docker_image setup
 	$(MAKE) -C locale setup
 
 linesofcode:

@@ -246,7 +246,7 @@ def _start(
     except requests.exceptions.ConnectionError as e:
         raise Exception(
             "Failed to access docker socket (Permission denied). You need to be member of the "
-            'docker group to get access to the socket (e.g. use "make -C docker setup") to '
+            'docker group to get access to the socket (e.g. use "make -C docker_image setup") to '
             "fix this, then restart your computer and try again."
         ) from e
 

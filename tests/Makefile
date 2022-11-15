@@ -224,7 +224,7 @@ test-docker-docker:
 	    ../scripts/run-in-docker.sh make --quiet test-docker
 
 test-docker:
-	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
+	$(MAKE) -C ../docker_image test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -x -T docker --log-cli-level=INFO docker
 
 test-format-python: test-format-python-isort test-format-python-black

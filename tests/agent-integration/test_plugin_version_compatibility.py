@@ -8,9 +8,9 @@
 import os
 from pathlib import Path
 
+import docker  # type: ignore[import]
 import pytest
 
-import docker  # type: ignore[import]
 from tests import testlib
 
 

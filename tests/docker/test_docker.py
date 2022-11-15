@@ -12,6 +12,7 @@ import subprocess
 from collections.abc import Mapping
 from pathlib import Path
 
+import docker  # type: ignore[import]
 import pytest
 import requests
 import requests.exceptions
@@ -20,8 +21,6 @@ from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
 from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
-
-import docker  # type: ignore[import]
 
 build_path = str(testlib.repo_path() / "docker")
 image_prefix = "docker-tests"

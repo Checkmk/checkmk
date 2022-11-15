@@ -14,6 +14,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import docker  # type: ignore[import]
 import dockerpty  # type: ignore[import]
 import requests
 from docker.models.images import Image  # type: ignore[import]
@@ -21,8 +22,6 @@ from docker.models.images import Image  # type: ignore[import]
 import tests.testlib as testlib
 from tests.testlib import get_cmk_download_credentials
 from tests.testlib.version import CMKVersion
-
-import docker  # type: ignore[import]
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY

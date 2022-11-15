@@ -66,6 +66,7 @@ from cmk.utils.type_defs import (
     ContactgroupName,
     HostName,
     HostOrServiceConditionRegex,
+    RuleValue,
     UserId,
 )
 
@@ -700,6 +701,7 @@ class UpdateConfig:
         self._extract_checkmk_agent_rule_from_exit_spec(all_rulesets)
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
+        self._transform_wato_ruleset_fileinfo_groups(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
         self._validate_regexes_in_item_specs(all_rulesets)
         self._remove_removed_check_plugins_from_ignored_checks(
@@ -899,6 +901,82 @@ class UpdateConfig:
 
         if num_errors and self._arguments.debug:
             raise MKGeneralException("Failed to transform %d rule values" % num_errors)
+
+    def _transform_wato_ruleset_fileinfo_groups(
+        self,
+        all_rulesets: RulesetCollection,
+    ) -> None:
+        fileinfo_group_patterns_rules_values = self._get_rules_values_for_ruleset(
+            all_rulesets, "fileinfo_groups"
+        )
+        fileinfo_group_rules_values = self._get_rules_values_for_ruleset(
+            all_rulesets, "static_checks:fileinfo-groups"
+        )
+
+        if not fileinfo_group_patterns_rules_values or not fileinfo_group_rules_values:
+            return
+
+        pattern_groups: List[Tuple[str, Tuple[str, str]]] = [
+            group
+            for rule in fileinfo_group_patterns_rules_values
+            for group in rule["group_patterns"]
+        ]
+        patterns_by_name: Dict[str, Set[Tuple[str, str]]] = {}
+        for group in pattern_groups:
+            patterns_by_name.setdefault(group[0], set()).add(group[1])
+
+        for rule_value in fileinfo_group_rules_values:
+            try:
+                self._do_transform_fileinfo_groups_rule(patterns_by_name, rule_value)
+            except Exception as e:
+                if self._arguments.debug:
+                    raise
+                self._logger.error(
+                    "ERROR: Failed to transform fileinfo_groups enforced service - the 'Size, age"
+                    " and count of file groups' enforced service will not work (see werk #14938):"
+                    " (Rule value: %s\nPatterns: %s\nError: %s",
+                    rule_value,
+                    patterns_by_name,
+                    e,
+                )
+
+    def _get_rules_values_for_ruleset(
+        self, all_rulesets: RulesetCollection, ruleset_id: str
+    ) -> List[RuleValue]:
+        rulesets_map = all_rulesets.get_rulesets()
+        ruleset = rulesets_map.get(ruleset_id)
+        if ruleset is None:
+            return []
+        return [rule.value for _folder, _folder_index, rule in ruleset.get_rules()]
+
+    def _do_transform_fileinfo_groups_rule(
+        self,
+        patterns_by_name: Dict[str, Set[Tuple[str, str]]],
+        rule_value: Tuple[str, str, dict],
+    ) -> None:
+        fileinfo_group_name = rule_value[1]
+        check_rule_settings = rule_value[2]
+
+        # If "group_patterns" already has some items in it, then we will skip it
+        if check_rule_settings.get("group_patterns"):
+            return
+
+        # If fileinfo_group_name is not in patterns_by_name then we have nothing to do.
+        # We shouldn't log any error because this is a legit situation
+        if (regex_set := patterns_by_name.get(fileinfo_group_name)) is None:
+            return
+
+        if len(regex_set) > 1:
+            raise ValueError(
+                f"Different regex values for same fileinfo group {fileinfo_group_name}: {regex_set}"
+            )
+
+        regex_values = list(regex_set)[0]
+
+        self._logger.debug(
+            f"Transform fileinfo_groups: adding patterns to group '{fileinfo_group_name}'"
+        )
+        check_rule_settings["group_patterns"] = [regex_values]
 
     def _transform_discovery_disabled_services(
         self,

@@ -1,0 +1,35 @@
+Title: Migrate fileinfo_groups enforced service params
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1668643838
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+In werk 12928 we updated the structure of the rules for the
+"Size, age and count of file groups" enforced service (fileinfo_groups
+and sap_hana_fileinfo_groups) but we didn't migrate the group patterns
+that were defined in the "File Grouping Patterns" rules into the new
+rule structure.
+
+This werk will automatically handle this migration but there is a corner
+case that can't be handled automatically: this happens if you have more
+than one file group with the same group name across all your
+"File Grouping Patterns" rules.
+
+Example:
+LI: A "File Grouping Patterns" rule that applies on "folder1" and defines
+the "group1" file group with an include pattern of "/path/to/group1/*"
+LI: A "File Grouping Patterns" rule that applies on "Main Folder" and
+defines the "group1" file group with an include pattern of
+"/a/different/path/*"
+
+In that case a manual intervention is needed: you need to delete one of
+the 2 "group1" definitions and just keep one of them.
+If need to keep both groups, you can rename them differently and
+manually edit the "Size, age and count of file groups" enforced services
+to point to the newly named group.
+
+After this manual fix, the migration will work as expected.

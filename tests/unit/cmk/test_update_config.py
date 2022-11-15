@@ -54,7 +54,7 @@ def request_context() -> Iterator[None]:
 
 @pytest.fixture(name="uc")
 def fixture_uc() -> update_config.UpdateConfig:
-    return update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+    return update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace(debug=False))
 
 
 def test_parse_arguments_defaults() -> None:
@@ -137,6 +137,129 @@ def test__transform_wato_rulesets_params(
 
     assert len(ruleset.get_rules()[0]) == 3
     assert ruleset.get_rules()[0][2].value == transformed_param_value
+
+
+def setup_fileinfo_groups_rulesets(ruleset_value) -> RulesetCollection:
+    RULESET_PATTERNS_SPEC = [
+        {
+            "condition": {},
+            "value": {
+                "group_patterns": [
+                    ("test-group-1", ("/tmp/test-sup-11745/*", "/tmp/test-sup-11745/exclude/*")),
+                    ("test-group-1", ("/tmp/test-sup-11745/*", "/tmp/test-sup-11745/exclude/*")),
+                    (
+                        "test-group-2",
+                        ("/tmp/test-sup-11745/test-2/*", "/tmp/test-sup-11745/test-2/exclude/*"),
+                    ),
+                    (
+                        "test-group-3",
+                        ("/tmp/test-sup-11745/3/*", "/tmp/test-sup-11745/exclude/3/*"),
+                    ),
+                ]
+            },
+        },
+        {
+            "condition": {},
+            "value": {
+                "group_patterns": [
+                    (
+                        "test-group-3",
+                        ("/tmp/test-sup-11745/3/*", "/tmp/test-sup-11745/exclude/3/*"),
+                    ),
+                    ("test-group-2", ("/tmp/test-sup-11745/2/*", "/tmp/test-sup-11745/2/*")),
+                ]
+            },
+        },
+    ]
+    # Setting up "fileinfo_groups" ruleset
+    patterns_ruleset = Ruleset("fileinfo_groups", {})
+    patterns_ruleset.from_config(Folder(""), RULESET_PATTERNS_SPEC)
+
+    rulesets = RulesetCollection()
+    rulesets.set("fileinfo_groups", patterns_ruleset)
+
+    # Setting up "static_checks:fileinfo-groups" ruleset
+    ruleset_spec = [
+        {"condition": {}, "value": ruleset_value},
+    ]
+    ruleset = Ruleset("static_checks:fileinfo-groups", {})
+    ruleset.from_config(Folder(""), ruleset_spec)
+    rulesets.set("static_checks:fileinfo-groups", ruleset)
+    return rulesets
+
+
+@pytest.mark.parametrize(
+    "ruleset_value, expected_group_patterns",
+    [
+        pytest.param(
+            ("fileinfo_groups", "test-group-1", {"maxsize_smallest": (1, 2), "group_patterns": []}),
+            [("/tmp/test-sup-11745/*", "/tmp/test-sup-11745/exclude/*")],
+            id="successful_transform",
+        ),
+        pytest.param(
+            ("fileinfo_groups", "test-group-3", {"maxsize_smallest": (1, 2), "group_patterns": []}),
+            [("/tmp/test-sup-11745/3/*", "/tmp/test-sup-11745/exclude/3/*")],
+            id="successful_transform_duplicate_identical_group",
+        ),
+        pytest.param(
+            (
+                "sap_hana_fileinfo_groups",
+                "test-group-1",
+                {"maxsize_smallest": (1, 2), "group_patterns": []},
+            ),
+            [("/tmp/test-sup-11745/*", "/tmp/test-sup-11745/exclude/*")],
+            id="successful_transform_sap_hana",
+        ),
+        pytest.param(
+            (
+                "fileinfo_groups",
+                "test-group-1",
+                {"group_patterns": [("/a/path", "/another/path/*")]},
+            ),
+            [("/a/path", "/another/path/*")],
+            id="patterns_already_filled",
+        ),
+        pytest.param(
+            ("fileinfo_groups", "not-existing-file-group", {"group_patterns": []}),
+            [],
+            id="not_existing_file_group",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test__transform_wato_ruleset_fileinfo_groups(
+    uc: update_config.UpdateConfig,
+    ruleset_value: Tuple[str, str, dict],
+    expected_group_patterns: list[Tuple[str, str]],
+) -> None:
+    rulesets = setup_fileinfo_groups_rulesets(ruleset_value)
+
+    uc._transform_wato_ruleset_fileinfo_groups(rulesets)
+
+    _folder, _idx, transformed_rule = rulesets.get("static_checks:fileinfo-groups").get_rules()[0]
+    assert transformed_rule.value[2]["group_patterns"] == expected_group_patterns
+
+
+@pytest.mark.usefixtures("request_context")
+def test__transform_wato_ruleset_fileinfo_groups_duplicate_group(
+    uc: update_config.UpdateConfig, mocker: MockerFixture
+) -> None:
+    ruleset_value = (
+        "fileinfo_groups",
+        "test-group-2",
+        {"maxsize_smallest": (1, 2), "group_patterns": []},
+    )
+    rulesets = setup_fileinfo_groups_rulesets(ruleset_value)
+
+    mock_error = mocker.patch.object(
+        uc._logger,
+        "error",
+    )
+    uc._transform_wato_ruleset_fileinfo_groups(rulesets)
+    assert (
+        "ERROR: Failed to transform fileinfo_groups enforced service"
+        in mock_error.call_args.args[0]
+    )
 
 
 @pytest.mark.parametrize(

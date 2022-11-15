@@ -34,9 +34,9 @@ def test_min(
     assert artwork._purge_min_max(_min, _max, mirrored) == result
 
 
-def test_dist_equal() -> None:
+def test_dist_seconds() -> None:
     with set_timezone("Europe/Berlin"):
-        assert list(artwork.dist_equal(1565481600, 1565481620, 10, 5)) == [
+        assert list(artwork._dist_seconds(1565481600, 1565481620, 10, 5)) == [
             (1565481600.0, 2, True),
             (1565481605.0, 0, False),
             (1565481610.0, 2, True),
@@ -47,7 +47,7 @@ def test_dist_equal() -> None:
 
 def test_dist_week() -> None:
     with set_timezone("Europe/Berlin"):
-        assert list(artwork.dist_week(1565401600, 1566691200)) == [
+        assert list(artwork._dist_week(1565401600, 1566691200)) == [
             (1565474400.0, 0, False),
             (1565560800.0, 2, True),
             (1565647200.0, 0, False),

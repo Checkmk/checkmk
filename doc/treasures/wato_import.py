@@ -14,22 +14,24 @@ import sys
 from typing import Any, Dict, List, Tuple, Union
 
 try:
-    path = os.environ.pop('OMD_ROOT')
+    path = os.environ.pop("OMD_ROOT")
     pathlokal = "~/etc/check_mk/conf.d/wato/"
     pathlokal = os.path.expanduser(pathlokal)
-    csv_file = open(sys.argv[1], 'r')
+    csv_file = open(sys.argv[1], "r")
 except Exception:
-    print("""Run this script inside a OMD site
+    print(
+        """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
-    wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None""")
+    wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None"""
+    )
     sys.exit()
 
 folders = {}  # type: Dict[str, List[Tuple[str, str, Union[str, bool]]]]
 for line in csv_file:
-    if line.startswith('#'):
+    if line.startswith("#"):
         continue
-    target_folder, name, alias, ipaddress_ = line.split(';')[:5]
+    target_folder, name, alias, ipaddress_ = line.split(";")[:5]
     if target_folder:
         try:
             os.makedirs(pathlokal + target_folder)
@@ -74,36 +76,42 @@ for folder in folders:
         extra_aux_tags = ""
         if host_aux_tags:
             extra_aux_tags = "|".join(host_aux_tags) + "|"
-        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (name.replace(" ",
-                                                                            "|"), extra_aux_tags)
+        all_hosts += "'%s|%swato|/' + FOLDER_PATH + '/',\n" % (
+            name.replace(" ", "|"),
+            extra_aux_tags,
+        )
 
         # WATO Alias extra info
         if alias:
             extra_infos.append("'alias' : u'%s'" % alias)
 
         if ipaddress:
-            host_attributes += "'%s' : {'ipaddress' : '%s', %s},\n" % (real_name, ipaddress,
-                                                                       ", ".join(extra_infos))
+            host_attributes += "'%s' : {'ipaddress' : '%s', %s},\n" % (
+                real_name,
+                ipaddress,
+                ", ".join(extra_infos),
+            )
             ips += "'%s' : '%s',\n" % (real_name, ipaddress)
         else:
             host_attributes += "'%s' : {%s},\n" % (real_name, ", ".join(extra_infos))
 
-    hosts_mk_file = open(pathlokal + folder + '/hosts.mk', 'w')
-    hosts_mk_file.write('all_hosts += [\n')
+    hosts_mk_file = open(pathlokal + folder + "/hosts.mk", "w")
+    hosts_mk_file.write("all_hosts += [\n")
     hosts_mk_file.write(all_hosts)
-    hosts_mk_file.write(']\n\n')
+    hosts_mk_file.write("]\n\n")
 
     if len(ips) > 0:
-        hosts_mk_file.write('ipaddresses.update({\n')
+        hosts_mk_file.write("ipaddresses.update({\n")
         hosts_mk_file.write(ips)
-        hosts_mk_file.write('})\n\n')
+        hosts_mk_file.write("})\n\n")
 
-    hosts_mk_file.write('host_attributes.update({\n')
+    hosts_mk_file.write("host_attributes.update({\n")
     hosts_mk_file.write(host_attributes)
-    hosts_mk_file.write('})\n\n')
+    hosts_mk_file.write("})\n\n")
     hosts_mk_file.close()
 
-    wato_file = open(pathlokal + folder + '/.wato', 'w')
-    wato_file.write("{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" %
-                    (len(folders[folder]), folder))
+    wato_file = open(pathlokal + folder + "/.wato", "w")
+    wato_file.write(
+        "{'attributes': {}, 'num_hosts': %d, 'title': '%s'}\n" % (len(folders[folder]), folder)
+    )
     wato_file.close()

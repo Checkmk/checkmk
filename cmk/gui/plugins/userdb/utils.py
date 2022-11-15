@@ -31,7 +31,8 @@ from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
-USER_SCHEME_SERIAL = 0
+# 0 -> 1 _remove_flexible_notifications() in 2.2
+USER_SCHEME_SERIAL = 1
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type

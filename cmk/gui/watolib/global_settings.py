@@ -28,6 +28,7 @@ def load_configuration_settings(
     return settings
 
 
+# TODO Can be removed with 2.3
 def rulebased_notifications_enabled() -> bool:
     return load_configuration_settings().get("enable_rulebased_notifications", False)
 

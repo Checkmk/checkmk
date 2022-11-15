@@ -5,8 +5,9 @@
 
 import functools
 import operator
+from collections.abc import Callable, Sequence
 from itertools import chain
-from typing import Callable, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.prediction import TimeSeries
@@ -123,7 +124,7 @@ def expression_constant(parameters: ExpressionParams, rrd_data: RRDData) -> Sequ
     return [TimeSeries([parameters[0]] * num_points, twindow)]
 
 
-def _derive_num_points_twindow(rrd_data: RRDData) -> Tuple[int, Tuple[int, int, int]]:
+def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:
     if rrd_data:
         sample_data = next(iter(rrd_data.values()))
         return len(sample_data), sample_data.twindow
@@ -133,8 +134,8 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> Tuple[int, Tuple[int, int, 
 
 def time_series_math(
     operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
-    operands_evaluated: List[TimeSeries],
-) -> Optional[TimeSeries]:
+    operands_evaluated: list[TimeSeries],
+) -> TimeSeries | None:
     operators = time_series_operators()
     if operator_id not in operators:
         raise MKGeneralException(
@@ -176,13 +177,13 @@ def time_series_operator_sum(tsp: TimeSeries) -> float:
     return sum(clean_time_series_point(tsp))
 
 
-def time_series_operator_product(tsp: TimeSeries) -> Optional[float]:
+def time_series_operator_product(tsp: TimeSeries) -> float | None:
     if None in tsp:
         return None
     return functools.reduce(operator.mul, tsp, 1)
 
 
-def time_series_operator_difference(tsp: TimeSeries) -> Optional[float]:
+def time_series_operator_difference(tsp: TimeSeries) -> float | None:
     if None in tsp:
         return None
     assert tsp[0] is not None
@@ -190,7 +191,7 @@ def time_series_operator_difference(tsp: TimeSeries) -> Optional[float]:
     return tsp[0] - tsp[1]
 
 
-def time_series_operator_fraction(tsp: TimeSeries) -> Optional[float]:
+def time_series_operator_fraction(tsp: TimeSeries) -> float | None:
     if None in tsp or tsp[1] == 0:
         return None
     assert tsp[0] is not None
@@ -212,7 +213,7 @@ def time_series_operator_average(tsp: TimeSeries) -> float:
 
 
 def time_series_operators() -> dict[
-    str, tuple[str, Union[Callable[[TimeSeries], float], Callable[[TimeSeries], Optional[float]]]]
+    str, tuple[str, Callable[[TimeSeries], float] | Callable[[TimeSeries], float | None]]
 ]:
     return {
         "+": (_("Sum"), time_series_operator_sum),

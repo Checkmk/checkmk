@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 from typing import Tuple as TypeTuple
-from typing import Union
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
@@ -24,9 +24,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _migrate(
-    params: Union[Mapping[str, Any], TypeTuple[str, Mapping[str, Any]]]
-) -> Mapping[str, Any]:
+def _migrate(params: Mapping[str, Any] | TypeTuple[str, Mapping[str, Any]]) -> Mapping[str, Any]:
     if isinstance(params, Mapping):
         return params
 

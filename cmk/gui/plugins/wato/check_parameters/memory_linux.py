@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, Union
+from typing import Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.memory_arbor import (  # PredictiveMemoryChoice, # not yet implemented
@@ -25,7 +25,7 @@ def UpperMemoryLevels(  # type:ignore[no-untyped-def]
     what,
     default_percents=None,
     of_what=None,
-    default_levels_type: Union[Literal["ignore", "abs_used", "perc_used"], Sentinel] = DEF_VALUE,
+    default_levels_type: Literal["ignore", "abs_used", "perc_used"] | Sentinel = DEF_VALUE,
 ):
     return CascadingDropdown(
         title=_("Upper levels for %s") % what,

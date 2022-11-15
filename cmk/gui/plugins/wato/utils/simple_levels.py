@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from functools import partial
-from typing import Optional, Protocol
+from typing import Protocol
 from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
@@ -44,11 +44,11 @@ def _FixedLevels(
 
 def SimpleLevels(
     spec: _Spec = Float,
-    help: Optional[str] = None,  # pylint: disable=redefined-builtin
+    help: str | None = None,  # pylint: disable=redefined-builtin
     default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_value: Optional[_Tuple[float, float]] = None,
-    title: Optional[str] = None,
-    unit: Optional[str] = None,
+    default_value: _Tuple[float, float] | None = None,
+    title: str | None = None,
+    unit: str | None = None,
 ) -> Alternative:
     """
     Internal API. Might change between versions
@@ -57,7 +57,7 @@ def SimpleLevels(
         :func: cmk.gui.plugins.wato.utils.Levels
     """
 
-    def match_levels_alternative(v: Optional[_Tuple[float, float]]) -> int:
+    def match_levels_alternative(v: _Tuple[float, float] | None) -> int:
         if v is None:
             return 0
         return 1

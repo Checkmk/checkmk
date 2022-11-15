@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import abc
 import traceback
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Literal, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
@@ -46,8 +47,8 @@ class PermissionSectionIconsAndActions(PermissionSection):
 
 
 class Icon(abc.ABC):
-    _custom_toplevel: Optional[bool] = None
-    _custom_sort_index: Optional[int] = None
+    _custom_toplevel: bool | None = None
+    _custom_sort_index: int | None = None
 
     @classmethod
     def type(cls) -> str:
@@ -76,9 +77,9 @@ class Icon(abc.ABC):
         self,
         what: str,
         row: Row,
-        tags: List[TagID],
-        custom_vars: Dict[str, str],
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        tags: list[TagID],
+        custom_vars: dict[str, str],
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         raise NotImplementedError()
 
     def columns(self) -> Sequence[ColumnName]:
@@ -87,13 +88,13 @@ class Icon(abc.ABC):
         (e.g. name -> host_name)"""
         return []
 
-    def host_columns(self) -> List[str]:
+    def host_columns(self) -> list[str]:
         """List of livestatus columns needed by this icon when it is
         displayed for a host row. The prefix host_ will be added to each
         column (e.g. name -> host_name)"""
         return []
 
-    def service_columns(self) -> List[str]:
+    def service_columns(self) -> list[str]:
         """List of livestatus columns needed by this icon when it is
         displayed for a service row. The prefix host_ will be added to each
         column (e.g. description -> service_description)"""
@@ -117,7 +118,7 @@ class Icon(abc.ABC):
         return self.default_sort_index()
 
 
-class IconRegistry(cmk.utils.plugin_registry.Registry[Type[Icon]]):
+class IconRegistry(cmk.utils.plugin_registry.Registry[type[Icon]]):
     def plugin_name(self, instance):
         return instance.ident()
 
@@ -195,8 +196,8 @@ class LegacyIconEntry(ABCIconEntry):
 @dataclass
 class IconEntry(ABCIconEntry):
     icon_name: str
-    title: Optional[str] = None
-    url_spec: Union[None, Tuple[str, str], str] = None
+    title: str | None = None
+    url_spec: None | tuple[str, str] | str = None
 
 
 # .
@@ -211,10 +212,10 @@ class IconEntry(ABCIconEntry):
 
 # Use this structure for new icons
 # TODO: Move this to cmk.gui.views once this is only used by legacy view/icon plugins
-multisite_icons_and_actions: Dict[str, Dict[str, Any]] = {}
+multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
-def get_multisite_icons() -> Dict[str, Icon]:
+def get_multisite_icons() -> dict[str, Icon]:
     icons = {}
 
     for icon_class in icon_and_action_registry.values():
@@ -223,7 +224,7 @@ def get_multisite_icons() -> Dict[str, Icon]:
     return icons
 
 
-def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> List[ABCIconEntry]:
+def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> list[ABCIconEntry]:
     host_custom_vars = dict(
         zip(
             row["host_custom_variable_names"],
@@ -254,12 +255,12 @@ def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> List[ABCIconEnt
 def _process_icons(
     what: IconObjectType,
     row: Row,
-    tags: List[TagID],
-    custom_vars: Dict[str, str],
+    tags: list[TagID],
+    custom_vars: dict[str, str],
     toplevel: bool,
-    user_icon_ids: List[str],
-) -> List[ABCIconEntry]:
-    icons: List[ABCIconEntry] = []
+    user_icon_ids: list[str],
+) -> list[ABCIconEntry]:
+    icons: list[ABCIconEntry] = []
     for icon_id, icon in get_multisite_icons().items():
         if icon.toplevel() != toplevel:
             continue
@@ -291,8 +292,8 @@ def _process_icons(
 def _process_icon(  # pylint: disable=too-many-branches
     what: IconObjectType,
     row: Row,
-    tags: List[TagID],
-    custom_vars: Dict[str, str],
+    tags: list[TagID],
+    custom_vars: dict[str, str],
     icon_id: str,
     icon: Icon,
 ) -> Iterator[ABCIconEntry]:
@@ -302,7 +303,7 @@ def _process_icon(  # pylint: disable=too-many-branches
     # b) single string - the icon name (without .png)
     # c) tuple         - icon, title
     # d) triple        - icon, title, url
-    result: Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]
+    result: None | str | HTML | tuple[str, str] | tuple[str, str, str]
     try:
         result = icon.render(what, row, tags, custom_vars)
     except Exception:
@@ -365,7 +366,7 @@ def _process_icon(  # pylint: disable=too-many-branches
     )
 
 
-def iconpainter_columns(what: IconObjectType, toplevel: Optional[bool]) -> List[ColumnName]:
+def iconpainter_columns(what: IconObjectType, toplevel: bool | None) -> list[ColumnName]:
     cols = {
         "site",
         "host_name",

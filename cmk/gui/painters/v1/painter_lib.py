@@ -2,8 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, Generic, Optional, Sequence, TypeVar
+from typing import Any, Generic, TypeVar
 
 import cmk.utils
 from cmk.utils.type_defs import TimeRange
@@ -19,10 +20,10 @@ T = TypeVar("T")
 @dataclass(frozen=True)
 class PainterConfiguration:
     columns: Sequence[ColumnName]
-    parameters: Optional[PainterParameters]  # configured via valuespec
-    painter_options: Optional[PainterOptions] = None
-    time_range: Optional[TimeRange] = None  # provided from external view/dashlet
-    dynamic_columns: Optional[Callable[["PainterConfiguration"], Sequence[ColumnName]]] = None
+    parameters: PainterParameters | None  # configured via valuespec
+    painter_options: PainterOptions | None = None
+    time_range: TimeRange | None = None  # provided from external view/dashlet
+    dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None
 
 
 def strip_css_from_cell_spec(
@@ -38,8 +39,8 @@ class Formatters(Generic[T]):
     def __init__(
         self,
         html: Callable[[T, PainterConfiguration], CellSpec],
-        csv: Optional[Callable[[T, PainterConfiguration], str]] = None,
-        json: Optional[Callable[[T, PainterConfiguration], object]] = None,
+        csv: Callable[[T, PainterConfiguration], str] | None = None,
+        json: Callable[[T, PainterConfiguration], object] | None = None,
     ) -> None:
         self.html = html
         self.csv = csv or strip_css_from_cell_spec(html)
@@ -54,16 +55,16 @@ class Painter(Generic[T]):
     title: str | LazyString
     short_title: str | LazyString
     columns: Sequence[ColumnName] = field(default_factory=list)
-    list_title: Optional[str | LazyString] = None
+    list_title: str | LazyString | None = None
     group_key: Callable[[T, PainterConfiguration], Any] = lambda x, y: None
-    painter_options: Optional[list[str]] = None
-    title_classes: Optional[list[str]] = None
+    painter_options: list[str] | None = None
+    title_classes: list[str] | None = None
     # dynamic_columns/derive will be reviewed later on
-    dynamic_columns: Optional[Callable[[PainterParameters], Sequence[ColumnName]]] = None
-    derive: Optional[Callable[[Rows, PainterParameters, list[ColumnName]], None]] = None
-    postprocess_query: Optional[
+    dynamic_columns: Callable[[PainterParameters], Sequence[ColumnName]] | None = None
+    derive: Callable[[Rows, PainterParameters, list[ColumnName]], None] | None = None
+    postprocess_query: None | (
         Callable[[Rows, PainterParameters, Sequence[ColumnName]], Rows]
-    ] = None
+    ) = None
 
     def export_title(self) -> str:
         return self.ident

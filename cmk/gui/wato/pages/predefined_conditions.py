@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import Collection, List, Optional, Type
+from collections.abc import Collection
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
@@ -167,7 +167,9 @@ class ModePredefinedConditions(SimpleListMode):
         html.open_ul(class_="conditions")
         html.open_li()
         html.write_text(
-            "%s: %s" % (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path())
+            "{}: {}".format(
+                _("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()
+            )
         )
         html.close_li()
         html.close_ul()
@@ -205,7 +207,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         return ["rulesets"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModePredefinedConditions
 
     def __init__(self) -> None:
@@ -216,7 +218,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if user.may("wato.edit_all_predefined_conditions"):
-            admin_element: List[ValueSpec] = [
+            admin_element: list[ValueSpec] = [
                 FixedValue(
                     value=None,
                     title=_("Administrators"),

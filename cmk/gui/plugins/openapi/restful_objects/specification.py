@@ -306,7 +306,7 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
-from typing import Dict, List, Literal, TypedDict
+from typing import Literal, TypedDict
 
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
@@ -341,34 +341,27 @@ DEFAULT_HEADERS = [
     ("Accept", "Media type(s) that is/are acceptable for the response.", "application/json"),
 ]
 
-OpenAPIInfoDict = TypedDict(
-    "OpenAPIInfoDict",
-    {
-        "description": str,
-        "license": Dict[str, str],
-        "contact": Dict[str, str],
-    },
-    total=True,
-)
 
-TagGroup = TypedDict(
-    "TagGroup",
-    {
-        "name": str,
-        "tags": List[str],
-    },
-    total=True,
-)
+class OpenAPIInfoDict(TypedDict, total=True):
+    description: str
+    license: dict[str, str]
+    contact: dict[str, str]
+
+
+class TagGroup(TypedDict, total=True):
+    name: str
+    tags: list[str]
+
 
 ReDocSpec = TypedDict(
     "ReDocSpec",
     {
         "info": OpenAPIInfoDict,
-        "externalDocs": Dict[str, str],
-        "security": List[Dict[str, List[str]]],
-        "x-logo": Dict[str, str],
-        "x-tagGroups": List[TagGroup],
-        "x-ignoredHeaderParameters": List[str],
+        "externalDocs": dict[str, str],
+        "security": list[dict[str, list[str]]],
+        "x-logo": dict[str, str],
+        "x-tagGroups": list[TagGroup],
+        "x-ignoredHeaderParameters": list[str],
     },
     total=True,
 )

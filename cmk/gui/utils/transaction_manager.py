@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import random
 import time
-from typing import Callable, List, Protocol
+from collections.abc import Callable
+from typing import Protocol
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import request
@@ -25,7 +26,7 @@ class TransactionManager:
     def __init__(
         self,
         reader: ReaderProtocol,
-        writer: Callable[[List[str]], None],
+        writer: Callable[[list[str]], None],
     ) -> None:
         self._reader = reader
         self._writer = writer

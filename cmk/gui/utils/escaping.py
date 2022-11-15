@@ -175,7 +175,7 @@ def _unescape_link(escaped_str: str) -> str:
         target = a_href.group(2)
 
         if target:
-            unescaped_tag = '<a href="%s" target="%s">' % (href, target)
+            unescaped_tag = f'<a href="{href}" target="{target}">'
         else:
             unescaped_tag = '<a href="%s">' % href
 

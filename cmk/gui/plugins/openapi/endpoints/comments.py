@@ -22,7 +22,8 @@ Related documentation
 
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
 from cmk.utils.livestatus_helpers.tables.comments import Comments

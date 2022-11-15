@@ -6,9 +6,8 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import Collection, Iterator, List, Optional
+from collections.abc import Collection, Iterator
 from typing import Tuple as _Tuple
-from typing import Type
 
 from cmk.utils.type_defs import Item
 
@@ -43,8 +42,8 @@ from cmk.gui.watolib.utils import mk_repr
 
 @mode_registry.register
 class ModeObjectParameters(WatoMode):
-    _PARAMETERS_UNKNOWN: List = []
-    _PARAMETERS_OMIT: List = []
+    _PARAMETERS_UNKNOWN: list = []
+    _PARAMETERS_OMIT: list = []
 
     @classmethod
     def name(cls) -> str:
@@ -55,7 +54,7 @@ class ModeObjectParameters(WatoMode):
         return ["hosts", "rulesets"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
     def _from_vars(self):
@@ -111,7 +110,7 @@ class ModeObjectParameters(WatoMode):
         for_host: bool = not self._service
 
         # Object type specific detail information
-        service_result: Optional[AnalyseServiceResult] = None
+        service_result: AnalyseServiceResult | None = None
         if for_host:
             self._show_host_info()
         else:
@@ -356,7 +355,7 @@ class ModeObjectParameters(WatoMode):
 
     def _get_custom_check_origin_rule(
         self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult
-    ) -> Optional[_Tuple[CREFolder, int, Rule]]:
+    ) -> _Tuple[CREFolder, int, Rule] | None:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(
@@ -422,7 +421,7 @@ class ModeObjectParameters(WatoMode):
         rulespec: Rulespec,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
-        service_result: Optional[AnalyseServiceResult],
+        service_result: AnalyseServiceResult | None,
         known_settings=None,
     ):
         if known_settings is None:
@@ -556,7 +555,9 @@ class ModeObjectParameters(WatoMode):
 
             # Binary rule, no valuespec, outcome is True or False
             else:
-                icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else "")
+                icon_name = "rule_{}{}".format(
+                    "yes" if setting else "no", "_off" if not rules else ""
+                )
                 html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()

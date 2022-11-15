@@ -3,18 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, NamedTuple, TypeVar
 
 from livestatus import SiteId
 
@@ -45,11 +35,11 @@ class AutomationResponse(NamedTuple):
 def _automation_serialized(
     command: str,
     *,
-    siteid: Optional[SiteId] = None,
-    args: Optional[Sequence[str]] = None,
+    siteid: SiteId | None = None,
+    args: Sequence[str] | None = None,
     indata: Any = "",
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
+    stdin_data: str | None = None,
+    timeout: int | None = None,
     sync: bool = True,
     non_blocking_http: bool = False,
 ) -> AutomationResponse:
@@ -113,7 +103,7 @@ _ResultType = TypeVar("_ResultType", bound=results.ABCAutomationResult)
 
 def _deserialize(
     response: AutomationResponse,
-    result_type: Type[_ResultType],
+    result_type: type[_ResultType],
 ) -> _ResultType:
     try:
         return result_type.deserialize(response.serialized_result)
@@ -130,7 +120,7 @@ def discovery(
     flags: Iterable[str],
     host_names: Iterable[HostName],
     *,
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     non_blocking_http: bool = False,
 ) -> results.DiscoveryResult:
     return _deserialize(
@@ -194,7 +184,7 @@ def update_host_labels(
 
 def rename_hosts(
     site_id: SiteId,
-    name_pairs: Sequence[Tuple[HostName, HostName]],
+    name_pairs: Sequence[tuple[HostName, HostName]],
 ) -> results.RenameHostsResult:
     return _deserialize(
         _automation_serialized(
@@ -265,14 +255,14 @@ def delete_hosts(
     )
 
 
-def restart(hosts_to_update: Optional[List[HostName]] = None) -> results.RestartResult:
+def restart(hosts_to_update: list[HostName] | None = None) -> results.RestartResult:
     return _deserialize(
         _automation_serialized("restart", args=hosts_to_update),
         results.RestartResult,
     )
 
 
-def reload(hosts_to_update: Optional[List[HostName]] = None) -> results.ReloadResult:
+def reload(hosts_to_update: list[HostName] | None = None) -> results.ReloadResult:
     return _deserialize(
         _automation_serialized("reload", args=hosts_to_update),
         results.ReloadResult,
@@ -423,7 +413,7 @@ def create_diagnostics_dump(
     )
 
 
-def bake_agents(indata: Optional[Mapping[str, Any]] = None) -> results.BakeAgentsResult:
+def bake_agents(indata: Mapping[str, Any] | None = None) -> results.BakeAgentsResult:
     return _deserialize(
         _automation_serialized(
             "bake-agents",

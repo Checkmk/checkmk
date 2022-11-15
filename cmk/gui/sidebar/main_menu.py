@@ -6,7 +6,7 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
-from typing import List, NamedTuple, Optional, Union
+from typing import NamedTuple
 
 import cmk.gui.message as message
 from cmk.gui.config import active_config
@@ -29,7 +29,7 @@ class MainMenuItem(NamedTuple):
     name: str
     title: str
     icon: Icon
-    onopen: Optional[str]
+    onopen: str | None
 
 
 class MainMenuRenderer:
@@ -78,8 +78,8 @@ class MainMenuRenderer:
 
         return content
 
-    def _get_main_menu_items(self) -> List[MainMenuItem]:
-        items: List[MainMenuItem] = []
+    def _get_main_menu_items(self) -> list[MainMenuItem]:
+        items: list[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
             if not menu.topics():
                 continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
@@ -127,7 +127,7 @@ def ajax_message_read():
 @page_registry.register_page("ajax_sidebar_get_messages")
 class ModeAjaxSidebarGetMessages(AjaxPage):
     def page(self) -> PageResult:
-        popup_msg: List = []
+        popup_msg: list = []
         hint_msg: int = 0
 
         for msg in message.get_gui_messages():
@@ -262,7 +262,7 @@ class MegaMenuRenderer:
         html.close_li()
 
     def _show_item_title(self, item: TopicMenuItem) -> None:
-        item_title: Union[HTML, str] = item.title
+        item_title: HTML | str = item.title
         if not item.button_title:
             html.write_text(item_title)
             return

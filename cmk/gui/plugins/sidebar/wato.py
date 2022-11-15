@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, Optional
+from collections.abc import Callable, Iterable
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
@@ -77,7 +77,7 @@ def render_wato(mini) -> None | bool:  # type:ignore[no-untyped-def]
 
 
 def get_wato_menu_items() -> list[TopicMenuTopic]:
-    by_topic: Dict[MainModuleTopic, TopicMenuTopic] = {}
+    by_topic: dict[MainModuleTopic, TopicMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
 
@@ -285,7 +285,7 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type:ignore[no-unty
         "%s (%d)" % (folder["title"], folder[".num_hosts"]),
         href="#",
         class_="link",
-        onclick="%s(this, '%s');" % (js_func, folder[".path"]),
+        onclick="{}(this, '{}');".format(js_func, folder[".path"]),
     )
 
     if not is_leaf:
@@ -388,7 +388,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
             if topic.title != selected_topic_name:
                 default = ""
-                style: Optional[str] = "display:none"
+                style: str | None = "display:none"
             else:
                 default = selected_target_name
                 style = None

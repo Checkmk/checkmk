@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable
+from collections.abc import Iterable
 from typing import Tuple as TupleType
 
 from cmk.gui.i18n import _

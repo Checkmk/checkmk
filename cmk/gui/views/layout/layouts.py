@@ -5,7 +5,8 @@
 
 import abc
 import re
-from typing import Any, Dict, Hashable, Iterator, List, Sequence, Tuple
+from collections.abc import Hashable, Iterator, Sequence
+from typing import Any
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
@@ -138,7 +139,7 @@ class GroupedBoxesLayout(Layout):
             this_group = group_value(row, group_cells)
             if this_group != last_group:
                 last_group = this_group
-                current_group: list[Tuple[str, Row]] = []
+                current_group: list[tuple[str, Row]] = []
                 groups.append((this_group, current_group))
             current_group.append((row_id(view["datasource"], row), row))
 
@@ -993,7 +994,7 @@ class LayoutMatrix(Layout):
 
 def create_matrices(
     rows: Rows, group_cells: Sequence[Cell], cells: Sequence[Cell], num_columns: int | None
-) -> Iterator[tuple[list[tuple[Any, Any]], List[Any], dict[Any, dict[Any, Any]]]]:
+) -> Iterator[tuple[list[tuple[Any, Any]], list[Any], dict[Any, dict[Any, Any]]]]:
     """Create list of matrices to render for the view layout and for reports"""
     if len(cells) < 2:
         raise MKGeneralException(
@@ -1008,12 +1009,12 @@ def create_matrices(
     # First find the groups - all rows that have the same values for
     # all group columns. Usually these should correspond with the hosts
     # in the matrix
-    groups: List[Tuple[Hashable, Any]] = []
+    groups: list[tuple[Hashable, Any]] = []
     last_group_id: Hashable | None = None
     # not a set, but a list. Need to keep sort order!
-    unique_row_ids: List[Hashable] = []
+    unique_row_ids: list[Hashable] = []
     # Dict from row_id -> group_id -> row
-    matrix_cells: Dict[Hashable, Dict[Any, Any]] = {}
+    matrix_cells: dict[Hashable, dict[Any, Any]] = {}
     col_num = 0
 
     for row in rows:

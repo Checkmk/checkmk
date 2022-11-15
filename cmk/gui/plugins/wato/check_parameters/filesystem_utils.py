@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
 
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from enum import Enum
-from typing import Any, Callable, List, Literal, Mapping, MutableMapping, Optional, Sequence, Union
+from typing import Any, Literal
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -64,7 +65,7 @@ def _get_free_used_dynamic_valuespec(  # type:ignore[no-untyped-def]
     level_perspective: Literal["used", "free"],
     default_value=(80.0, 90.0),
     *,
-    maxvalue: Union[None, float],
+    maxvalue: None | float,
     do_include_absolutes: bool = True,
 ) -> ValueSpec:
     if level_perspective == "used":
@@ -75,7 +76,7 @@ def _get_free_used_dynamic_valuespec(  # type:ignore[no-untyped-def]
         title = _("free space")
         course = _("below")
 
-    vs_subgroup: List[ValueSpec] = [
+    vs_subgroup: list[ValueSpec] = [
         Tuple(
             title=_("Percentage"),
             elements=[
@@ -155,9 +156,9 @@ def _transform_filesystem_free(value):
 
 
 def _filesystem_levels_elements(
-    maxvalue: Optional[float] = 101.0,
+    maxvalue: float | None = 101.0,
     do_include_absolutes: bool = True,
-) -> List[DictionaryEntry]:
+) -> list[DictionaryEntry]:
     return [
         (
             "levels",
@@ -189,19 +190,19 @@ def _filesystem_levels_elements(
     ]
 
 
-def _filesystem_levels_elements_bound() -> List[DictionaryEntry]:
+def _filesystem_levels_elements_bound() -> list[DictionaryEntry]:
     return _filesystem_levels_elements()
 
 
-def _filesystem_levels_elements_unbound() -> List[DictionaryEntry]:
+def _filesystem_levels_elements_unbound() -> list[DictionaryEntry]:
     return _filesystem_levels_elements(maxvalue=None)
 
 
-def _filesystem_levels_percent_only() -> List[DictionaryEntry]:
+def _filesystem_levels_percent_only() -> list[DictionaryEntry]:
     return _filesystem_levels_elements(do_include_absolutes=False)
 
 
-def _filesystem_show_levels_elements() -> List[DictionaryEntry]:
+def _filesystem_show_levels_elements() -> list[DictionaryEntry]:
     return [
         (
             "show_levels",
@@ -219,7 +220,7 @@ def _filesystem_show_levels_elements() -> List[DictionaryEntry]:
 
 
 # Note: This hack is only required on very old filesystem checks (prior August 2013)
-def _filesystem_levels_elements_hack() -> List[DictionaryEntry]:
+def _filesystem_levels_elements_hack() -> list[DictionaryEntry]:
     return [
         # Beware: this is a nasty hack that helps us to detect new-style parameters.
         # Something hat has todo with float/int conversion and has not been documented
@@ -235,7 +236,7 @@ def _filesystem_levels_elements_hack() -> List[DictionaryEntry]:
     ]
 
 
-def _filesystem_reserved_elements() -> List[DictionaryEntry]:
+def _filesystem_reserved_elements() -> list[DictionaryEntry]:
     return [
         (
             "show_reserved",
@@ -274,7 +275,7 @@ def _filesystem_reserved_elements() -> List[DictionaryEntry]:
     ]
 
 
-def _filesystem_volume_name() -> List[DictionaryEntry]:
+def _filesystem_volume_name() -> list[DictionaryEntry]:
     return [
         (
             "show_volume_name",
@@ -287,7 +288,7 @@ def _filesystem_volume_name() -> List[DictionaryEntry]:
     ]
 
 
-def _filesystem_inodes_elements() -> List[DictionaryEntry]:
+def _filesystem_inodes_elements() -> list[DictionaryEntry]:
     return [
         (
             "inodes_levels",
@@ -348,7 +349,7 @@ def _filesystem_inodes_elements() -> List[DictionaryEntry]:
     ]
 
 
-def _filesystem_magic_elements() -> List[DictionaryEntry]:
+def _filesystem_magic_elements() -> list[DictionaryEntry]:
     return [
         (
             "magic",
@@ -397,7 +398,7 @@ def _filesystem_magic_elements() -> List[DictionaryEntry]:
     ]
 
 
-def size_trend_elements() -> List[DictionaryEntry]:
+def size_trend_elements() -> list[DictionaryEntry]:
     return [
         (
             "trend_range",
@@ -504,7 +505,7 @@ def size_trend_elements() -> List[DictionaryEntry]:
     ]
 
 
-FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], List[DictionaryEntry]]] = {
+FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], list[DictionaryEntry]]] = {
     FilesystemElements.levels: _filesystem_levels_elements_bound,
     FilesystemElements.levels_percent: _filesystem_levels_percent_only,
     FilesystemElements.levels_unbound: _filesystem_levels_elements_unbound,
@@ -519,9 +520,9 @@ FILESYSTEM_ELEMENTS_SELECTOR: Mapping[FilesystemElements, Callable[[], List[Dict
 
 def vs_filesystem(
     *,
-    elements: Optional[Sequence[FilesystemElements]] = None,
-    extra_elements: Optional[List[DictionaryEntry]] = None,
-    ignored_keys: Optional[Sequence[str]] = None,
+    elements: Sequence[FilesystemElements] | None = None,
+    extra_elements: list[DictionaryEntry] | None = None,
+    ignored_keys: Sequence[str] | None = None,
 ) -> Dictionary:
 
     if extra_elements is None:

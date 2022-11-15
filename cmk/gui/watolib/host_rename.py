@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Dict, List, Sequence
 from typing import Tuple as _Tuple
-from typing import Union
 
 from livestatus import SiteId
 
@@ -141,7 +140,7 @@ def _rename_host_in_parents(
     oldname: HostName,
     newname: HostName,
 ) -> tuple[list[str], list[CREFolder]]:
-    folder_parent_renamed: List[CREFolder] = []
+    folder_parent_renamed: list[CREFolder] = []
     parents, folder_parent_renamed = _rename_host_as_parent(
         oldname,
         newname,
@@ -167,7 +166,7 @@ def _rename_host_in_rulesets(folder, oldname, newname):
 
                     log_audit(
                         "edit-rule",
-                        'Renamed host condition from "%s" to "%s"' % (oldname, newname),
+                        f'Renamed host condition from "{oldname}" to "{newname}"',
                         diff_text=make_diff_text(orig_rule.to_log(), rule.to_log()),
                         object_ref=rule.object_ref(),
                     )
@@ -202,12 +201,12 @@ def _rename_host_in_bi(oldname, newname):
 
 
 def _rename_hosts_in_check_mk(
-    renamings: List[_Tuple[CREFolder, HostName, HostName]]
-) -> Dict[str, int]:
-    action_counts: Dict[str, int] = {}
+    renamings: list[_Tuple[CREFolder, HostName, HostName]]
+) -> dict[str, int]:
+    action_counts: dict[str, int] = {}
     for site_id, name_pairs in _group_renamings_by_site(renamings).items():
         message = _l("Renamed host %s") % ", ".join(
-            ["%s into %s" % (oldname, newname) for (oldname, newname) in name_pairs]
+            [f"{oldname} into {newname}" for (oldname, newname) in name_pairs]
         )
 
         # Restart is done by remote automation (below), so don't do it during rename/sync
@@ -311,9 +310,9 @@ def _rename_host_in_multisite(oldname, newname):
 def _rename_host_as_parent(
     oldname: HostName,
     newname: HostName,
-    folder_parent_renamed: List[CREFolder],
+    folder_parent_renamed: list[CREFolder],
     in_folder: CREFolder,
-) -> tuple[list[Union[HostName, str]], list[CREFolder]]:
+) -> tuple[list[HostName | str], list[CREFolder]]:
 
     parents = []
     for somehost in in_folder.hosts().values():
@@ -343,7 +342,7 @@ def _merge_action_counts(action_counts, new_counts):
 
 
 def _group_renamings_by_site(renamings):
-    renamings_per_site: Dict[SiteId, List[_Tuple[HostName, HostName]]] = {}
+    renamings_per_site: dict[SiteId, list[_Tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()

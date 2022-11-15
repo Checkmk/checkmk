@@ -5,7 +5,6 @@
 
 import signal
 from types import FrameType
-from typing import Optional
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import RequestTimeout
@@ -33,7 +32,7 @@ class TimeoutManager:
     """
 
     def enable_timeout(self, duration: int) -> None:
-        def handle_request_timeout(signum: int, frame: Optional[FrameType]) -> None:
+        def handle_request_timeout(signum: int, frame: FrameType | None) -> None:
             raise RequestTimeout(
                 _(
                     "Your request timed out after %d seconds. This issue may be "

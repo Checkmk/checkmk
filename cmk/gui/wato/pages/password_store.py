@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Collection, List, Optional, Type
+from collections.abc import Collection
 
 from cmk.utils.password_store import Password
 
@@ -48,7 +48,7 @@ class PasswordStoreModeType(SimpleModeType[Password]):
     def can_be_disabled(self) -> bool:
         return False
 
-    def affected_config_domains(self) -> list[Type[ABCConfigDomain]]:
+    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
         return [ConfigDomainCore]
 
 
@@ -133,7 +133,7 @@ class ModeEditPassword(SimpleEditMode):
         return ["passwords"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModePasswords
 
     def __init__(self) -> None:
@@ -142,9 +142,9 @@ class ModeEditPassword(SimpleEditMode):
             store=PasswordStore(),
         )
 
-    def _vs_individual_elements(self) -> List[DictionaryEntry]:
+    def _vs_individual_elements(self) -> list[DictionaryEntry]:
         if user.may("wato.edit_all_passwords"):
-            admin_element: List[ValueSpec] = [
+            admin_element: list[ValueSpec] = [
                 FixedValue(
                     value=None,
                     title=_("Administrators"),
@@ -156,7 +156,7 @@ class ModeEditPassword(SimpleEditMode):
         else:
             admin_element = []
 
-        elements: List[DictionaryEntry] = [
+        elements: list[DictionaryEntry] = [
             (
                 "password",
                 PasswordValuespec(

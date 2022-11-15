@@ -31,7 +31,8 @@ Downtime object can have the following relations:
 
 import datetime as dt
 import json
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import Any, Literal
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query

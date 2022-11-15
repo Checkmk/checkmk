@@ -344,7 +344,7 @@ def _active_users(user):
         raise ValidationError(f"User {user!r} is not known.")
 
 
-def _enum_options(options: typing.List[typing.Tuple[str, str]]) -> str:
+def _enum_options(options: list[tuple[str, str]]) -> str:
     """
 
     >>> _enum_options([('foo', 'Do the foo, bar times!'), ('bar', 'Barf!')])
@@ -899,7 +899,7 @@ class HostAttributeManagementBoardField(String):
 
     def _serialize(  # type:ignore[no-untyped-def]
         self, value, attr, obj, **kwargs
-    ) -> typing.Optional[str]:
+    ) -> str | None:
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

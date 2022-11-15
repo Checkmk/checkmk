@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import List
 from typing import Tuple as _Tuple
 
 import cmk.utils.version as cmk_version
@@ -61,7 +60,7 @@ def transform_to_valuespec_html_mail_url_prefix(p):
 
     k, v = list(p.items())[0]
     if k == "automatic":
-        return "%s_%s" % (k, v)
+        return f"{k}_{v}"
 
     return ("manual", v)
 
@@ -1347,7 +1346,7 @@ $LONGSERVICEOUTPUT$
             ],
         )
 
-    def _get_state_choices(self, issue_type: str) -> List[_Tuple[str, str]]:
+    def _get_state_choices(self, issue_type: str) -> list[_Tuple[str, str]]:
         if issue_type == "incident":
             return [
                 ("none", _("Don't change state")),

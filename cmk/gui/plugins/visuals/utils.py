@@ -8,24 +8,9 @@
 
 import abc
 import re
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    get_args,
-    Iterable,
-    Iterator,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, get_args, Literal
 
 from livestatus import SiteId
 
@@ -79,12 +64,12 @@ class VisualInfo(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         """The key / valuespec pairs (choices) to identify a single row"""
         raise NotImplementedError()
 
     @property
-    def multiple_site_filters(self) -> List[str]:
+    def multiple_site_filters(self) -> list[str]:
         """Returns a list of filter identifiers.
 
         When these filters are set, the site hint will not be added to urls
@@ -104,7 +89,7 @@ class VisualInfo(abc.ABC):
         return 30
 
 
-class VisualInfoRegistry(cmk.utils.plugin_registry.Registry[Type[VisualInfo]]):
+class VisualInfoRegistry(cmk.utils.plugin_registry.Registry[type[VisualInfo]]):
     def plugin_name(self, instance):
         return instance().ident
 
@@ -163,7 +148,7 @@ class VisualType(abc.ABC):
 
     @abc.abstractmethod
     def add_visual_handler(
-        self, target_visual_name: str, add_type: str, context: VisualContext, parameters: Dict
+        self, target_visual_name: str, add_type: str, context: VisualContext, parameters: dict
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()
@@ -180,7 +165,7 @@ class VisualType(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def permitted_visuals(self) -> Dict:
+    def permitted_visuals(self) -> dict:
         """Get the permitted visuals of this type"""
         raise NotImplementedError()
 
@@ -242,7 +227,7 @@ class VisualType(abc.ABC):
         return True
 
 
-class VisualTypeRegistry(cmk.utils.plugin_registry.Registry[Type[VisualType]]):
+class VisualTypeRegistry(cmk.utils.plugin_registry.Registry[type[VisualType]]):
     def plugin_name(self, instance):
         return instance().ident
 
@@ -257,12 +242,12 @@ class Filter(abc.ABC):
         self,
         *,
         ident: str,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
-        htmlvars: List[str],
-        link_columns: List[ColumnName],
-        description: Union[None, str, LazyString] = None,
+        htmlvars: list[str],
+        link_columns: list[ColumnName],
+        description: None | str | LazyString = None,
         is_show_more: bool = False,
     ) -> None:
         """
@@ -293,7 +278,7 @@ class Filter(abc.ABC):
         return str(self._title)
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         return str(self._description)
 
     def available(self) -> bool:
@@ -340,7 +325,7 @@ class Filter(abc.ABC):
             return ""
         return self.info[:-1] + "_"
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         """Hidden filters may contribute to the pages headers of the views"""
         return None
 
@@ -351,7 +336,7 @@ class Filter(abc.ABC):
 
 
 def display_filter_radiobuttons(
-    *, varname: str, options: List[Tuple[str, str]], default: str, value: FilterHTTPVariables
+    *, varname: str, options: list[tuple[str, str]], default: str, value: FilterHTTPVariables
 ) -> None:
     pick = value.get(varname, default)
     html.begin_radio_group(horizontal=True)
@@ -364,7 +349,7 @@ class FilterOption(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         query_filter: query_filters.SingleOptionQuery,
@@ -513,7 +498,7 @@ RangedTableFilterName = Literal[
 ]
 
 
-def get_ranged_table_filter_name(s: str) -> Optional[RangedTableFilterName]:
+def get_ranged_table_filter_name(s: str) -> RangedTableFilterName | None:
     for lit in get_args(RangedTableFilterName):
         if s == lit:
             return lit
@@ -540,11 +525,11 @@ class FilterNumberRange(Filter):  # type is int
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         query_filter: query_filters.NumberRangeQuery,
-        unit: Union[str, LazyString] = "",
+        unit: str | LazyString = "",
         is_show_more: bool = True,
     ) -> None:
         self.query_filter = query_filter
@@ -591,7 +576,7 @@ class FilterTime(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: Literal["comment", "downtime", "event", "history", "host", "log", "service"],
         query_filter: query_filters.TimeQuery,
@@ -651,12 +636,12 @@ class InputTextFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         query_filter: query_filters.TextQuery,
         show_heading: bool = True,
-        description: Union[None, str, LazyString] = None,
+        description: None | str | LazyString = None,
         is_show_more: bool = False,
     ):
         self.query_filter = query_filter
@@ -682,10 +667,10 @@ class InputTextFilter(Filter):
         if self.query_filter.negateable:
             checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.query_filter.column]}
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         if self._show_heading:
             return value.get(self.query_filter.request_vars[0])
         return None
@@ -698,7 +683,7 @@ class InputTextFilter(Filter):
 
 
 def checkbox_row(
-    options: List[Tuple[str, str]], value: FilterHTTPVariables, title: Optional[str] = None
+    options: list[tuple[str, str]], value: FilterHTTPVariables, title: str | None = None
 ) -> None:
     html.begin_checkbox_group()
     if title:
@@ -713,7 +698,7 @@ class CheckboxRowFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         query_filter: query_filters.MultipleOptionsQuery,
@@ -744,12 +729,12 @@ class DualListFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         query_filter: query_filters.MultipleQuery,
         options: Callable[[str], query_filters.SitesOptions],
-        description: Union[None, str, LazyString] = None,
+        description: None | str | LazyString = None,
         is_show_more: bool = True,
     ):
         self.query_filter = query_filter
@@ -779,7 +764,7 @@ class DualListFilter(Filter):
         return self.query_filter.filter(value)
 
 
-def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
+def filter_cre_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
     return get_site_config(SiteId(current_value))["alias"] if current_value else None
 
@@ -787,7 +772,7 @@ def filter_cre_heading_info(value: FilterHTTPVariables) -> Optional[str]:
 class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
     def __init__(self) -> None:
         super().__init__()
-        self.htmlvars_to_filter: Dict[str, FilterName] = {}
+        self.htmlvars_to_filter: dict[str, FilterName] = {}
 
     def registration_hook(self, instance: Filter) -> None:
         # Know Exceptions, to this rule
@@ -832,19 +817,19 @@ class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
 filter_registry = FilterRegistry()
 
 
-def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
+def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
     for fname, filt in filter_registry.items():
         if filt.info is None or info == filt.info:
             yield fname, filt
 
 
-def filters_allowed_for_infos(info_list: SingleInfos) -> Dict[str, Filter]:
+def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
     """Same as filters_allowed_for_info() but for multiple infos"""
     return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
-def active_filter_flag(allowed_filters: Set[str], url_vars: Iterator[Tuple[str, str]]) -> str:
+def active_filter_flag(allowed_filters: set[str], url_vars: Iterator[tuple[str, str]]) -> str:
     active_filters = {
         filt
         for var, value in url_vars  #
@@ -853,7 +838,7 @@ def active_filter_flag(allowed_filters: Set[str], url_vars: Iterator[Tuple[str, 
     return ";".join(sorted(active_filters))
 
 
-def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
+def get_only_sites_from_context(context: VisualContext) -> list[SiteId] | None:
     """Gather possible existing "only sites" information from context
 
     We need to deal with all possible site filters (sites, site and siteopt).
@@ -910,7 +895,7 @@ def livestatus_query_bare_string(
     table: Literal["host", "service"],
     context: VisualContext,
     columns: Iterable[str],
-    cache: Optional[Literal["reload"]] = None,
+    cache: Literal["reload"] | None = None,
 ) -> str:
     """Return for the service table filtered by context the given columns.
     Optional cache reload. Return with site info in"""
@@ -931,9 +916,9 @@ def livestatus_query_bare_string(
 def livestatus_query_bare(
     table: Literal["host", "service"],
     context: VisualContext,
-    columns: List[str],
-    cache: Optional[Literal["reload"]] = None,
-) -> List[Dict[str, Any]]:
+    columns: list[str],
+    cache: Literal["reload"] | None = None,
+) -> list[dict[str, Any]]:
     """Return for the service table filtered by context the given columns.
     Optional cache reload. Return with site info in"""
     if query := livestatus_query_bare_string(table, context, columns, cache):

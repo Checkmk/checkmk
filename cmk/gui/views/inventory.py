@@ -8,20 +8,9 @@ from __future__ import annotations
 import abc
 import time
 from collections import OrderedDict
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Protocol,
-    Sequence,
-    Type,
-    TypeVar,
-)
+from typing import Any, Literal, NamedTuple, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -784,12 +773,12 @@ class ColumnDisplayHint:
     sort_function: SortFunction
     filter_class: (
         None
-        | Type[FilterInvtableText]
-        | Type[FilterInvtableVersion]
-        | Type[FilterInvtableOperStatus]
-        | Type[FilterInvtableAdminStatus]
-        | Type[FilterInvtableAvailable]
-        | Type[FilterInvtableInterfaceType]
+        | type[FilterInvtableText]
+        | type[FilterInvtableVersion]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableAdminStatus]
+        | type[FilterInvtableAvailable]
+        | type[FilterInvtableInterfaceType]
     )
 
     @property
@@ -1132,7 +1121,7 @@ class DisplayHints:
         self, rows: Sequence[SDRow], key_columns: SDKeyColumns, path: SDPath
     ) -> Sequence[_Column]:
         sorting_keys = list(self.table_hint.key_order) + sorted(
-            set(k for r in rows for k in r) - set(self.table_hint.key_order)
+            {k for r in rows for k in r} - set(self.table_hint.key_order)
         )
         return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
 
@@ -1622,7 +1611,7 @@ def _register_multi_table_view(
                 "_sources": info_names_and_paths,
                 "_match_by": match_by,
                 "_errors": errors,
-                "_title": "%s: %s" % (_("Inventory"), title_plural),
+                "_title": "{}: {}".format(_("Inventory"), title_plural),
                 "_infos": (
                     ["host"] + [info_name for info_name, _inventory_path in info_names_and_paths]
                 ),
@@ -2273,7 +2262,7 @@ class ABCNodeRenderer(abc.ABC):
         hints = DISPLAY_HINTS.get_hints(node.path)
 
         with foldable_container(
-            treename="inv_%s%s" % (self._hostname, self._tree_id),
+            treename=f"inv_{self._hostname}{self._tree_id}",
             id_=raw_path,
             isopen=False,
             title=self._get_header(

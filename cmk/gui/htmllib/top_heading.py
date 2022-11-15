@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.config import active_config
@@ -27,8 +25,8 @@ def top_heading(
     request: Request,
     title: str,
     breadcrumb: Breadcrumb,
-    page_menu: Optional[PageMenu] = None,
-    page_state: Optional[PageState] = None,
+    page_menu: PageMenu | None = None,
+    page_state: PageState | None = None,
     *,
     browser_reload: float,
 ) -> None:
@@ -82,7 +80,7 @@ def top_heading(
 
 def _make_default_page_state(
     writer: HTMLWriter, request: Request, *, browser_reload: float
-) -> Optional[PageState]:
+) -> PageState | None:
     """Create a general page state for all pages without specific one"""
     if not browser_reload:
         return None

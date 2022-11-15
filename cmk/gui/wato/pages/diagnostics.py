@@ -5,8 +5,8 @@
 
 import tarfile
 import uuid
+from collections.abc import Collection
 from pathlib import Path
-from typing import Collection, List, Optional, Tuple
 
 from livestatus import SiteId
 
@@ -102,7 +102,7 @@ class ModeDiagnostics(WatoMode):
         self._diagnostics_parameters = self._get_diagnostics_parameters()
         self._job = DiagnosticsDumpBackgroundJob()
 
-    def _get_diagnostics_parameters(self) -> Optional[DiagnosticsParameters]:
+    def _get_diagnostics_parameters(self) -> DiagnosticsParameters | None:
         if self._collect_dump:
             params = self._vs_diagnostics().from_html_vars("diagnostics")
             return {
@@ -175,7 +175,7 @@ class ModeDiagnostics(WatoMode):
             title=_("Collect diagnostic dump"),
             render="form",
             help="File Descriptions:<br>%s"
-            % "<br>".join([" - %s: %s" % (f, d) for (f, d) in get_checkmk_file_description()]),
+            % "<br>".join([f" - {f}: {d}" for (f, d) in get_checkmk_file_description()]),
             elements=[
                 (
                     "site",
@@ -252,8 +252,8 @@ class ModeDiagnostics(WatoMode):
             optional_keys=False,
         )
 
-    def _get_optional_information_elements(self) -> List[Tuple[str, ValueSpec]]:
-        elements: List[Tuple[str, ValueSpec]] = [
+    def _get_optional_information_elements(self) -> list[tuple[str, ValueSpec]]:
+        elements: list[tuple[str, ValueSpec]] = [
             (
                 OPT_LOCAL_FILES,
                 FixedValue(
@@ -330,8 +330,8 @@ class ModeDiagnostics(WatoMode):
 
         return elements
 
-    def _get_component_specific_elements(self) -> List[Tuple[str, ValueSpec]]:
-        elements: List[Tuple[str, ValueSpec]] = [
+    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec]]:
+        elements: list[tuple[str, ValueSpec]] = [
             (
                 OPT_COMP_GLOBAL_SETTINGS,
                 Dictionary(
@@ -405,7 +405,7 @@ class ModeDiagnostics(WatoMode):
     def _get_component_specific_checkmk_files_elements(  # type:ignore[no-untyped-def]
         self,
         component,
-    ) -> List[Tuple[str, ValueSpec]]:
+    ) -> list[tuple[str, ValueSpec]]:
         elements = []
         config_files = [
             (f, fi)
@@ -455,7 +455,7 @@ class ModeDiagnostics(WatoMode):
     def _get_component_specific_checkmk_files_choices(
         self,
         title: str,
-        checkmk_files: List[Tuple[str, CheckmkFileInfo]],
+        checkmk_files: list[tuple[str, CheckmkFileInfo]],
     ) -> ValueSpec:
         high_sensitive_files = []
         sensitive_files = []
@@ -517,7 +517,7 @@ class ModeDiagnostics(WatoMode):
             default_value="non_high_sensitive",
         )
 
-    def _list_of_files_to_text(self, list_of_files: List[Tuple[str, CheckmkFileInfo]]) -> str:
+    def _list_of_files_to_text(self, list_of_files: list[tuple[str, CheckmkFileInfo]]) -> str:
         return "<br>%s" % ",<br>".join(
             [
                 get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info)
@@ -527,8 +527,8 @@ class ModeDiagnostics(WatoMode):
 
     def _list_of_files_choices(
         self,
-        files: List[Tuple[str, CheckmkFileInfo]],
-    ) -> List[Tuple[str, str]]:
+        files: list[tuple[str, CheckmkFileInfo]],
+    ) -> list[tuple[str, str]]:
         return [
             (rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
             for rel_filepath, file_info in files
@@ -618,7 +618,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
 def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type:ignore[no-untyped-def]
     output: str = ""
     tarfile_created: bool = False
-    tarfile_paths: List[str] = []
+    tarfile_paths: list[str] = []
     for result in results:
         output += result.output
         if result.tarfile_created:
@@ -632,7 +632,7 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type:ignore[no-un
     )
 
 
-def _join_sub_tars(tarfile_paths: List[str]) -> str:
+def _join_sub_tars(tarfile_paths: list[str]) -> str:
     tarfile_path = str(
         cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz")
     )

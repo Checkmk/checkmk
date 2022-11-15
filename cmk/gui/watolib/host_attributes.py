@@ -10,7 +10,8 @@ from __future__ import annotations
 import abc
 import functools
 import re
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Type, Union
+from collections.abc import Callable, Sequence
+from typing import Any
 
 from marshmallow import fields
 
@@ -30,7 +31,7 @@ from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
 
-HostAttributeSpec = Dict[str, Any]
+HostAttributeSpec = dict[str, Any]
 
 
 class HostAttributeTopic(abc.ABC):
@@ -53,8 +54,8 @@ class HostAttributeTopic(abc.ABC):
         raise NotImplementedError()
 
 
-class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[Type[HostAttributeTopic]]):
-    def plugin_name(self, instance: Type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
+class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
+    def plugin_name(self, instance: type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
         return instance().ident
 
     def get_choices(self):
@@ -206,7 +207,7 @@ class ABCHostAttribute(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def topic(self) -> Type[HostAttributeTopic]:
+    def topic(self) -> type[HostAttributeTopic]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -222,7 +223,7 @@ class ABCHostAttribute(abc.ABC):
         """Create value from HTML variables."""
         raise NotImplementedError()
 
-    def nagios_name(self) -> Optional[str]:
+    def nagios_name(self) -> str | None:
         """Return the name of the Nagios configuration variable
         if this is a Nagios-bound attribute (e.g. "alias" or "_SERIAL")"""
         return None
@@ -237,7 +238,7 @@ class ABCHostAttribute(abc.ABC):
         """
         return False
 
-    def help(self) -> Union[str, HTML, None]:
+    def help(self) -> str | HTML | None:
         """Return an optional help text"""
         return None
 
@@ -245,7 +246,7 @@ class ABCHostAttribute(abc.ABC):
         """Return the default value for new hosts"""
         return None
 
-    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
         """Render HTML code displaying a value"""
         return "", str(value)
 
@@ -307,13 +308,13 @@ class ABCHostAttribute(abc.ABC):
         _depends_on_roles is set by declare_host_attribute()."""
         return True
 
-    def depends_on_roles(self) -> List[str]:
+    def depends_on_roles(self) -> list[str]:
         """Return information about the user roles we depend on.
         The method is usually not overridden, but the variable
         _depends_on_roles is set by declare_host_attribute()."""
         return []
 
-    def depends_on_tags(self) -> List[str]:
+    def depends_on_tags(self) -> list[str]:
         """Return information about the host tags we depend on.
         The method is usually not overridden, but the variable
         _depends_on_tags is set by declare_host_attribute()."""
@@ -360,7 +361,7 @@ class ABCHostAttribute(abc.ABC):
         """Check if the value entered by the user is valid.
         This method may raise MKUserError in case of invalid user input."""
 
-    def to_nagios(self, value: Any) -> Optional[str]:
+    def to_nagios(self, value: Any) -> str | None:
         """If this attribute should be present in Nagios as a host custom
         macro, then the value of that macro should be returned here - otherwise None"""
         return None
@@ -393,13 +394,13 @@ class ABCHostAttribute(abc.ABC):
         raise NotImplementedError()
 
 
-class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttribute]]):
+class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[type[ABCHostAttribute]]):
     _index = 0
 
-    def plugin_name(self, instance: Type[ABCHostAttribute]) -> str:
+    def plugin_name(self, instance: type[ABCHostAttribute]) -> str:
         return instance().name()
 
-    def registration_hook(self, instance: Type[ABCHostAttribute]) -> None:
+    def registration_hook(self, instance: type[ABCHostAttribute]) -> None:
         """Add missing sort indizes
 
         Internally defined attributes have a defined sort index. Attributes defined by the users
@@ -415,10 +416,10 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
         else:
             self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
-    def attributes(self) -> List[ABCHostAttribute]:
+    def attributes(self) -> list[ABCHostAttribute]:
         return [cls() for cls in self.values()]
 
-    def get_sorted_host_attributes(self) -> List[ABCHostAttribute]:
+    def get_sorted_host_attributes(self) -> list[ABCHostAttribute]:
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
         return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
 
@@ -429,10 +430,10 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
 host_attribute_registry = HostAttributeRegistry()
 
 
-def get_sorted_host_attribute_topics(for_what: str, new: bool) -> List[Tuple[str, str]]:
+def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str, str]]:
     """Return a list of needed topics for the given "what".
     Only returns the topics that are used by a visible attribute"""
-    needed_topics: Set[Type[HostAttributeTopic]] = set()
+    needed_topics: set[type[HostAttributeTopic]] = set()
     for attr_class in host_attribute_registry.values():
         attr = attr_class()
         if attr.topic() not in needed_topics and attr.is_visible(for_what, new):
@@ -448,7 +449,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> List[Tuple[str
 
 def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
     topic_id,
-) -> List[ABCHostAttribute]:
+) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
     def sort_host_attributes(a, b):
@@ -469,18 +470,18 @@ def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
 def declare_host_attribute(  # type:ignore[no-untyped-def]
-    a: Type[ABCHostAttribute],
+    a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
     show_in_host_search: bool = True,
-    topic: Optional[Union[str, Type[HostAttributeTopic]]] = None,
-    sort_index: Optional[int] = None,
+    topic: str | type[HostAttributeTopic] | None = None,
+    sort_index: int | None = None,
     show_in_form: bool = True,
-    depends_on_tags: Optional[List[str]] = None,
-    depends_on_roles: Optional[List[str]] = None,
+    depends_on_tags: list[str] | None = None,
+    depends_on_roles: list[str] | None = None,
     editable: bool = True,
     show_inherited_value: bool = True,
-    may_edit: Optional[Callable[[], bool]] = None,
+    may_edit: Callable[[], bool] | None = None,
     from_config: bool = False,
 ):
 
@@ -489,7 +490,7 @@ def declare_host_attribute(  # type:ignore[no-untyped-def]
             _("Failed to load legacy host attribute from local plugins: %r") % a
         )
 
-    attrs: Dict[str, Any] = {}
+    attrs: dict[str, Any] = {}
     if depends_on_tags is not None:
         attrs["_depends_on_tags"] = depends_on_tags
         attrs["depends_on_tags"] = lambda self: self._depends_on_tags
@@ -543,8 +544,8 @@ def declare_host_attribute(  # type:ignore[no-untyped-def]
 
 
 def _declare_host_attribute_topic(
-    ident: Optional[str], topic_title: Optional[str]
-) -> Type[HostAttributeTopic]:
+    ident: str | None, topic_title: str | None
+) -> type[HostAttributeTopic]:
     """We get the "topic title" here. Create a topic class dynamically and
     returns a reference to this class"""
     if ident is None:
@@ -611,7 +612,7 @@ def _declare_host_tag_attributes() -> None:
             )
 
 
-def _tag_attribute_sort_index(tag_group: TagGroup) -> Optional[int]:
+def _tag_attribute_sort_index(tag_group: TagGroup) -> int | None:
     """Return the host attribute sort index of tag group attributes
 
     The sort index is not configurable for tag groups, but we want some
@@ -624,9 +625,9 @@ def _tag_attribute_sort_index(tag_group: TagGroup) -> Optional[int]:
     return None
 
 
-def _create_tag_group_attribute(tag_group: TagGroup) -> Type[ABCHostAttributeTag]:
+def _create_tag_group_attribute(tag_group: TagGroup) -> type[ABCHostAttributeTag]:
     if tag_group.is_checkbox_tag_group:
-        base_class: Type = ABCHostAttributeHostTagCheckbox
+        base_class: type = ABCHostAttributeHostTagCheckbox
     else:
         base_class = ABCHostAttributeHostTagList
 
@@ -654,7 +655,7 @@ def declare_custom_host_attrs() -> None:
         else:
             raise NotImplementedError()
 
-        a: Type[ABCHostAttributeValueSpec]
+        a: type[ABCHostAttributeValueSpec]
         if attr["add_custom_macro"]:
             a = NagiosValueSpecAttribute(attr["name"], "_" + attr["name"], vs)
         else:
@@ -687,7 +688,7 @@ def _validate_is_ascii(value: str, varprefix: str) -> None:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
 
 
-def transform_pre_16_host_topics(custom_attributes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Previous to 1.6 the titles of the host attribute topics were stored.
 
     This lead to issues with localized topics. We now have internal IDs for
@@ -709,7 +710,7 @@ def transform_pre_16_host_topics(custom_attributes: List[Dict[str, Any]]) -> Lis
     return custom_attributes
 
 
-def _transform_attribute_topic_title_to_id(topic_title: str) -> Optional[str]:
+def _transform_attribute_topic_title_to_id(topic_title: str) -> str | None:
     _topic_title_to_id_map = {
         "Basic settings": "basic",
         "Address": "address",
@@ -771,23 +772,23 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     def _size(self) -> int:
         return 25
 
-    def paint(self, value: str, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
+    def paint(self, value: str, hostname: HostName) -> tuple[str, str | HTML]:
         if not value:
             return "", ""
         return "", value
 
-    def render_input(self, varprefix: str, value: Optional[str]) -> None:
+    def render_input(self, varprefix: str, value: str | None) -> None:
         if value is None:
             value = ""
         html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
 
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
+    def from_html_vars(self, varprefix: str) -> str | None:
         value = request.get_str_input(varprefix + "attr_" + self.name())
         if value is None:
             value = ""
         return value.strip()
 
-    def validate_input(self, value: Optional[str], varprefix: str) -> None:
+    def validate_input(self, value: str | None, varprefix: str) -> None:
         if self.is_mandatory() and not value:
             raise MKUserError(
                 varprefix + "attr_" + self.name(), _("Please specify a value for %s") % self.title()
@@ -798,7 +799,7 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
                 _("%s may be missing, if must not be empty if it is set.") % self.title(),
             )
 
-    def filter_matches(self, crit: str, value: Optional[str], hostname: HostName) -> bool:
+    def filter_matches(self, crit: str, value: str | None, hostname: HostName) -> bool:
         if value is None:  # Host does not have this attribute
             value = ""
 
@@ -820,13 +821,13 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         assert title is not None
         return title
 
-    def help(self) -> Union[str, HTML, None]:
+    def help(self) -> str | HTML | None:
         return self.valuespec().help()
 
     def default_value(self) -> Any:
         return self.valuespec().default_value()
 
-    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
         return "", self.valuespec().value_to_html(value)
 
     def render_input(self, varprefix: str, value: Any) -> None:
@@ -846,12 +847,12 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
     systems (e.g. during an import of a host database from
     another system)."""
 
-    def render_input(self, varprefix: str, value: Optional[str]) -> None:
+    def render_input(self, varprefix: str, value: str | None) -> None:
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
             html.write_text(value)
 
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
+    def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name())
 
 
@@ -862,7 +863,7 @@ class ABCHostAttributeNagiosText(ABCHostAttributeText):
     def nagios_name(self) -> str:
         raise NotImplementedError()
 
-    def to_nagios(self, value: str) -> Optional[str]:
+    def to_nagios(self, value: str) -> str | None:
         if value:
             return value
         return None
@@ -877,16 +878,16 @@ class ABCHostAttributeEnum(ABCHostAttribute):
 
     @property
     @abc.abstractmethod
-    def _enumlist(self) -> Sequence[Tuple[str, str]]:
+    def _enumlist(self) -> Sequence[tuple[str, str]]:
         raise NotImplementedError()
 
-    def paint(self, value: Any, hostname: HostName) -> Tuple[str, Union[str, HTML]]:
+    def paint(self, value: Any, hostname: HostName) -> tuple[str, str | HTML]:
         return "", dict(self._enumlist).get(value, self.default_value())
 
     def render_input(self, varprefix: str, value: str) -> None:
         html.dropdown(varprefix + "attr_" + self.name(), self._enumlist, value)
 
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
+    def from_html_vars(self, varprefix: str) -> str | None:
         return request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
@@ -908,7 +909,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     def is_tag_attribute(self) -> bool:
         return True
 
-    def get_tag_groups(self, value: Optional[TagID]) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
@@ -954,7 +955,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
             title=self._tag_group.title,
             label=_u(choice[1]),
             true_label=self._tag_group.title,
-            false_label="%s %s" % (_("Not"), self._tag_group.title),
+            false_label="{} {}".format(_("Not"), self._tag_group.title),
             onclick="cmk.wato.fix_visibility();",
         )
 
@@ -969,13 +970,13 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def is_checkbox_tag(self) -> bool:
         return True
 
-    def render_input(self, varprefix: str, value: Optional[TagID]) -> None:
+    def render_input(self, varprefix: str, value: TagID | None) -> None:
         self._valuespec().render_input(varprefix + self.name(), bool(value))
 
-    def _tag_value(self) -> Optional[TagID]:
+    def _tag_value(self) -> TagID | None:
         return self._tag_group.get_tag_choices()[0][0]
 
-    def get_tag_groups(self, value: Optional[TagID]) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
         if not value:
             return {}
         return super().get_tag_groups(self._tag_value())
@@ -986,7 +987,7 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
     def nagios_name(self) -> str:
         raise NotImplementedError()
 
-    def to_nagios(self, value: str) -> Optional[str]:
+    def to_nagios(self, value: str) -> str | None:
         rendered = self.valuespec().value_to_html(value)
         if rendered:
             return str(rendered)
@@ -1000,12 +1001,12 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
 def TextAttribute(
     name: str,
     title: str,
-    help_txt: Optional[str] = None,
+    help_txt: str | None = None,
     default_value: str = "",
     mandatory: bool = False,
     allow_empty: bool = True,
     size: int = 25,
-) -> Type[ABCHostAttributeText]:
+) -> type[ABCHostAttributeText]:
     return type(
         "HostAttribute%s" % name.title(),
         (ABCHostAttributeText,),
@@ -1031,7 +1032,7 @@ def NagiosTextAttribute(  # type:ignore[no-untyped-def]
     name: str,
     nag_name: str,
     title: str,
-    help_txt: Optional[str] = None,
+    help_txt: str | None = None,
     default_value: str = "",
     mandatory: bool = False,
     allow_empty: bool = True,
@@ -1061,8 +1062,8 @@ def NagiosTextAttribute(  # type:ignore[no-untyped-def]
 
 # TODO: Kept for pre 1.6 plugin compatibility
 def FixedTextAttribute(
-    name: str, title: str, help_txt: Optional[str] = None
-) -> Type[ABCHostAttributeFixedText]:
+    name: str, title: str, help_txt: str | None = None
+) -> type[ABCHostAttributeFixedText]:
     return type(
         "HostAttributeFixedText%s" % name.title(),
         (ABCHostAttributeFixedText,),
@@ -1078,7 +1079,7 @@ def FixedTextAttribute(
 
 
 # TODO: Kept for pre 1.6 plugin compatibility
-def ValueSpecAttribute(name: str, vs: ValueSpec) -> Type[ABCHostAttributeValueSpec]:
+def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSpec]:
     return type(
         "HostAttributeValueSpec%s" % name.title(),
         (ABCHostAttributeValueSpec,),
@@ -1094,7 +1095,7 @@ def ValueSpecAttribute(name: str, vs: ValueSpec) -> Type[ABCHostAttributeValueSp
 # TODO: Kept for pre 1.6 plugin compatibility
 def NagiosValueSpecAttribute(
     name: str, nag_name: str, vs: ValueSpec
-) -> Type[ABCHostAttributeNagiosValueSpec]:
+) -> type[ABCHostAttributeNagiosValueSpec]:
     return type(
         "NagiosValueSpecAttribute%s" % name.title(),
         (ABCHostAttributeNagiosValueSpec,),
@@ -1115,8 +1116,8 @@ def EnumAttribute(
     title: str,
     help_txt: str,
     default_value: str,
-    enumlist: Sequence[Tuple[str, str]],
-) -> Type[ABCHostAttributeEnum]:
+    enumlist: Sequence[tuple[str, str]],
+) -> type[ABCHostAttributeEnum]:
     return type(
         "HostAttributeEnum%s" % name.title(),
         (ABCHostAttributeEnum,),

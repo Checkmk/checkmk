@@ -7,9 +7,10 @@ import abc
 import json
 import re
 import traceback
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from typing import Optional
 
 import livestatus
 
@@ -75,13 +76,13 @@ from cmk.gui.watolib.search import (
 LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
-UsedFilters = Dict[str, List[str]]
-Matches = Optional[Tuple[str, HTTPVariables]]
+UsedFilters = dict[str, list[str]]
+Matches = Optional[tuple[str, HTTPVariables]]
 
 
 @dataclass
 class LivestatusResult:
-    text_tokens: List[Tuple[str, str]]
+    text_tokens: list[tuple[str, str]]
     url: str
     row: Row
     display_text: str
@@ -156,7 +157,7 @@ class ABCQuicksearchConductor(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_results(self) -> List[SearchResult]:
+    def create_results(self) -> list[SearchResult]:
         """Returns the results for the given query"""
         raise NotImplementedError()
 
@@ -180,7 +181,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
-        self._results: List[SearchResult] = []
+        self._results: list[SearchResult] = []
 
     def do_query(self) -> None:
         """Execute the lookup of the data using the given query"""
@@ -209,7 +210,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         """Returns the HTTP variables to link to to show the results on a content page"""
         raise NotImplementedError()  # TODO: Implement this
 
-    def create_results(self) -> List[SearchResult]:
+    def create_results(self) -> list[SearchResult]:
         return self._results[: active_config.quicksearch_dropdown_limit]
 
 
@@ -231,10 +232,10 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)
 
-        self._livestatus_table: Optional[str] = None
+        self._livestatus_table: str | None = None
         self._livestatus_command: str = ""  # Computed livestatus query
         self._rows: Rows = []  # Raw data from livestatus
-        self._queried_livestatus_columns: List[str] = []
+        self._queried_livestatus_columns: list[str] = []
 
     @property
     def livestatus_table(self) -> str:
@@ -282,7 +283,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
     def _generate_livestatus_command(self) -> None:
         self._determine_livestatus_table()
         columns_to_query = set(self._get_livestatus_default_columns())
-        livestatus_filter_domains: Dict[str, List[str]] = {}
+        livestatus_filter_domains: dict[str, list[str]] = {}
 
         self._used_search_plugins = self._get_used_search_plugins()
 
@@ -305,7 +306,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
             livestatus_filters.append("And: %d" % len(livestatus_filters))
 
         self._queried_livestatus_columns = list(columns_to_query)
-        self._livestatus_command = "GET %s\nColumns: %s\n%s\n" % (
+        self._livestatus_command = "GET {}\nColumns: {}\n{}\n".format(
             self.livestatus_table,
             " ".join(self._queried_livestatus_columns),
             "\n".join(livestatus_filters),
@@ -315,7 +316,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         limit = active_config.quicksearch_dropdown_limit
         self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
 
-    def _get_used_search_plugins(self) -> List["ABCLivestatusMatchPlugin"]:
+    def _get_used_search_plugins(self) -> list["ABCLivestatusMatchPlugin"]:
         return [
             plugin
             for plugin in match_plugin_registry.get_livestatus_match_plugins()
@@ -354,7 +355,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         self._livestatus_table = table_to_query
 
-    def _get_livestatus_default_columns(self) -> List[str]:
+    def _get_livestatus_default_columns(self) -> list[str]:
         return {
             "services": ["description", "host_name"],
             "hosts": ["name"],
@@ -389,8 +390,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         return url_params
 
-    def create_results(self) -> List[SearchResult]:
-        elements: List[LivestatusResult] = []
+    def create_results(self) -> list[SearchResult]:
+        elements: list[LivestatusResult] = []
 
         if not self._rows:
             return []
@@ -399,7 +400,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         # Feed each row to the filters and let them add additional text/url infos
         for row in self._rows:
-            text_tokens: List[Tuple[str, str]] = []
+            text_tokens: list[tuple[str, str]] = []
             url_params: HTTPVariables = []
             skip_site = False
             for name in self._used_filters:
@@ -458,7 +459,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         raise NotImplementedError()
 
-    def _generate_display_texts(self, elements: List[LivestatusResult]) -> List[SearchResult]:
+    def _generate_display_texts(self, elements: list[LivestatusResult]) -> list[SearchResult]:
         """Creates the text displayed to the user
 
         Analyzes all display texts and ensures that we have unique ones"""
@@ -476,8 +477,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         if self.livestatus_table in ["hostgroups", "servicegroups"]:
             # Discard redundant hostgroups
-            results: List[SearchResult] = []
-            used_groups: Set[str] = set()
+            results: list[SearchResult] = []
+            used_groups: set[str] = set()
             for element in elements:
                 if element.display_text in used_groups:
                     continue
@@ -500,8 +501,8 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
 
         return [SearchResult(title=e.display_text, url=e.url, context=e.context) for e in elements]
 
-    def _element_texts_unique(self, elements: List[LivestatusResult]) -> bool:
-        used_texts: Set[str] = set()
+    def _element_texts_unique(self, elements: list[LivestatusResult]) -> bool:
+        used_texts: set[str] = set()
         for entry in elements:
             if entry.display_text in used_texts:
                 return False
@@ -553,7 +554,7 @@ class QuicksearchManager:
 
         return _build_url(url_params)
 
-    def _determine_search_objects(self, query: SearchQuery) -> List[ABCQuicksearchConductor]:
+    def _determine_search_objects(self, query: SearchQuery) -> list[ABCQuicksearchConductor]:
         """Construct search objects from the query
 
         Try to find search object expressions and construct objects or
@@ -565,7 +566,7 @@ class QuicksearchManager:
 
         found_filters = self._find_search_object_expressions(query)
 
-        search_objects: List[ABCQuicksearchConductor] = []
+        search_objects: list[ABCQuicksearchConductor] = []
         if found_filters:
             # The query contains at least one search expression to search a specific search plugin.
             used_filters = self._get_used_filters_from_query(query, found_filters)
@@ -590,7 +591,7 @@ class QuicksearchManager:
         return search_objects
 
     @staticmethod
-    def _find_search_object_expressions(query: SearchQuery) -> List[Tuple[str, int]]:
+    def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:
         """Extract a list of search plugin expressions from the search query
 
         The returned list contains the name of the search plugin and the character
@@ -601,7 +602,7 @@ class QuicksearchManager:
         filter_regex = "|".join(filter_names)
 
         # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
-        regex = "((^| )(%(filter_regex)s):)" % {"filter_regex": filter_regex}
+        regex = f"((^| )({filter_regex}):)"
         found_filters = []
         matches = re.finditer(regex, query)
         for match in matches:
@@ -611,13 +612,13 @@ class QuicksearchManager:
     @staticmethod
     def _get_used_filters_from_query(
         query: SearchQuery,
-        found_filters: List[Tuple[str, int]],
+        found_filters: list[tuple[str, int]],
     ) -> UsedFilters:
         """Extract the expressions for each search plugin
 
         Create a structure like this: {'h': ['heute'], 's': ['Check_MK']}
         """
-        used_filters: Dict[str, List[str]] = {}
+        used_filters: dict[str, list[str]] = {}
         current_string = query
         for filter_type, offset in found_filters[-1::-1]:
             filter_text = _to_regex(current_string[offset + len(filter_type) :]).strip()
@@ -638,7 +639,7 @@ class QuicksearchManager:
 
         return BasicPluginQuicksearchConductor(used_filters, filter_behaviour)
 
-    def _conduct_search(self, search_objects: List[ABCQuicksearchConductor]) -> None:
+    def _conduct_search(self, search_objects: list[ABCQuicksearchConductor]) -> None:
         """Collect the raw data from livestatus
 
         1. The single search objects execute the query.
@@ -679,7 +680,7 @@ class QuicksearchManager:
 
     def _evaluate_results(
         self,
-        search_objects: List[ABCQuicksearchConductor],
+        search_objects: list[ABCQuicksearchConductor],
     ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
         yield from (
@@ -693,7 +694,7 @@ class QuicksearchManager:
         )
 
 
-def _maybe_strip(param: Optional[str]) -> Optional[str]:
+def _maybe_strip(param: str | None) -> str | None:
     if param is None:
         return None
     return param.strip()
@@ -840,7 +841,7 @@ class ABCBasicMatchPlugin(ABCMatchPlugin):
     """Base class for all non livestatus based match plugins"""
 
     @abc.abstractmethod
-    def get_results(self, query: str) -> List[SearchResult]:
+    def get_results(self, query: str) -> list[SearchResult]:
         raise NotImplementedError()
 
 
@@ -849,7 +850,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
 
     def __init__(
         self,
-        supported_livestatus_tables: List[LivestatusTable],
+        supported_livestatus_tables: list[LivestatusTable],
         preferred_livestatus_table: LivestatusTable,
         name: str,
     ):
@@ -873,7 +874,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
         return True
 
     @abc.abstractmethod
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -895,7 +896,7 @@ class ABCLivestatusMatchPlugin(ABCMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         rows: Rows,
@@ -907,7 +908,7 @@ class MatchPluginRegistry(cmk.utils.plugin_registry.Registry[ABCMatchPlugin]):
     def plugin_name(self, instance):
         return instance.name
 
-    def get_livestatus_match_plugins(self) -> List[ABCLivestatusMatchPlugin]:
+    def get_livestatus_match_plugins(self) -> list[ABCLivestatusMatchPlugin]:
         return [p for p in self.values() if isinstance(p, ABCLivestatusMatchPlugin)]
 
 
@@ -931,7 +932,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             return _("Host group")
         return _("Service group")
 
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         if livestatus_table == "%sgroups" % self._group_type:
             return ["name"]
         return ["%s_groups" % self._group_type]
@@ -947,7 +948,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
             filter_prefix = "%s_groups >= " % self._group_type
 
         for entry in used_filters.get(self.name, []):
-            filter_lines.append("Filter: %s%s" % (filter_prefix, entry))
+            filter_lines.append(f"Filter: {filter_prefix}{entry}")
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -957,7 +958,7 @@ class GroupMatchPlugin(ABCLivestatusMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         rows: Rows,
@@ -1015,7 +1016,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def get_match_topic(self) -> str:
         return _("Service Description")
 
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["service_description"]
 
     def get_livestatus_filters(
@@ -1033,7 +1034,7 @@ class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         rows: Rows,
@@ -1072,7 +1073,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
 
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return [self._get_real_fieldname(livestatus_table), "host_name"]
 
     def get_livestatus_filters(
@@ -1080,9 +1081,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
     ) -> LivestatusFilterHeaders:
         filter_lines = []
         for entry in used_filters.get(self.name, []):
-            filter_lines.append(
-                "Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry)
-            )
+            filter_lines.append(f"Filter: {self._get_real_fieldname(livestatus_table)} ~~ {entry}")
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -1092,7 +1091,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         rows: Rows,
@@ -1201,7 +1200,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         rows: Rows,
@@ -1288,7 +1287,7 @@ class HostLabelMatchPlugin(ABCLabelMatchPlugin):
         super().__init__(["hosts", "services"], "hosts", "hl")
         self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
 
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["labels"] if livestatus_table == "hosts" else ["host_labels"]
 
     def get_match_topic(self) -> str:
@@ -1297,7 +1296,7 @@ class HostLabelMatchPlugin(ABCLabelMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         _rows: Rows,
@@ -1314,7 +1313,7 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
         super().__init__(["services"], "services", "sl")
         self._supported_views = {"allservices", "searchsvc"}
 
-    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> list[LivestatusColumn]:
         return ["labels"]
 
     def get_match_topic(self) -> str:
@@ -1323,7 +1322,7 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
     def get_matches(
         self,
         for_view: ViewName,
-        row: Optional[Row],
+        row: Row | None,
         livestatus_table: LivestatusTable,
         used_filters: UsedFilters,
         _rows: Rows,
@@ -1348,7 +1347,7 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
     def get_match_topic(self) -> str:
         return _("Monitor")
 
-    def get_results(self, query: str) -> List[SearchResult]:
+    def get_results(self, query: str) -> list[SearchResult]:
         return [
             SearchResult(
                 title=topic_menu_item.title,
@@ -1413,10 +1412,10 @@ class MenuSearchResultsRenderer:
 
     def _get_icon_mapping(
         self,
-        default_icons: Tuple[Icon, Icon],
-    ) -> Dict[str, Tuple[Icon, Icon]]:
+        default_icons: tuple[Icon, Icon],
+    ) -> dict[str, tuple[Icon, Icon]]:
         # {topic: (Icon(Topic): green, Icon(Item): colorful)}
-        mapping: Dict[str, Tuple[Icon, Icon]] = {}
+        mapping: dict[str, tuple[Icon, Icon]] = {}
         for menu in [
             mega_menu_registry.menu_setup(),
             mega_menu_registry.menu_monitoring(),
@@ -1489,7 +1488,7 @@ class MenuSearchResultsRenderer:
             html_text = output_funnel.drain()
         return html_text
 
-    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]) -> None:
+    def _render_topic(self, topic: str, icons: tuple[Icon, Icon]) -> None:
         html.open_h2()
         html.div(class_="spacer", content="")
 

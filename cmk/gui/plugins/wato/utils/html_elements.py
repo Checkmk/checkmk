@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -29,7 +28,7 @@ def wato_html_head(
     *,
     title: str,
     breadcrumb: Breadcrumb,
-    page_menu: Optional[PageMenu] = None,
+    page_menu: PageMenu | None = None,
     show_body_start: bool = True,
     show_top_heading: bool = True,
 ) -> None:

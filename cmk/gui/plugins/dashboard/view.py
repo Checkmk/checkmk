@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, TypeVar
+from collections.abc import Callable
+from typing import TypeVar
 
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
@@ -157,7 +158,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
 
     @classmethod
     def add_url(cls):
-        return "create_view_dashlet.py?name=%s&mode=create&back=%s" % (
+        return "create_view_dashlet.py?name={}&mode=create&back={}".format(
             urlencode(request.var("name")),
             urlencode(makeuri(request, [("edit", "1")])),
         )
@@ -214,7 +215,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
 
     @classmethod
     def add_url(cls) -> str:
-        return "create_link_view_dashlet.py?name=%s&mode=create&back=%s" % (
+        return "create_link_view_dashlet.py?name={}&mode=create&back={}".format(
             urlencode(request.var("name")),
             urlencode(makeuri(request, [("edit", "1")])),
         )

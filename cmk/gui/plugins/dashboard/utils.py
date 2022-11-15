@@ -10,27 +10,11 @@ import abc
 import copy
 import json
 import urllib.parse
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from typing import Any, cast, Generic, Literal, Optional, TypedDict, TypeVar, Union
 
 from livestatus import LivestatusResponse, SiteId
 
@@ -175,12 +159,12 @@ DashletTypeName = str
 DashletId = int
 DashletRefreshInterval = Union[bool, int]
 DashletRefreshAction = Optional[str]
-DashletSize = Tuple[int, int]
-DashletPosition = Tuple[int, int]
+DashletSize = tuple[int, int]
+DashletPosition = tuple[int, int]
 DashletInputFunc = Callable[[DashletConfig], None]
 DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
-builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
+builtin_dashboards: dict[DashboardName, DashboardConfig] = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
@@ -315,22 +299,22 @@ class Dashlet(abc.ABC, Generic[T]):
         return None
 
     @classmethod
-    def opt_parameters(cls) -> Union[bool, List[str]]:
+    def opt_parameters(cls) -> bool | list[str]:
         """List of optional parameters in case vs_parameters() returns a list"""
         return False
 
     @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
+    def validate_parameters_func(cls) -> ValueSpecValidateFunc[Any] | None:
         """Optional validation function in case vs_parameters() returns a list"""
         return None
 
     @classmethod
-    def styles(cls) -> Optional[str]:
+    def styles(cls) -> str | None:
         """Optional registration of snapin type specific stylesheets"""
         return None
 
     @classmethod
-    def script(cls) -> Optional[str]:
+    def script(cls) -> str | None:
         """Optional registration of snapin type specific javascript"""
         return None
 
@@ -368,13 +352,13 @@ class Dashlet(abc.ABC, Generic[T]):
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id
         self._dashlet_spec = dashlet
-        self._context: Optional[VisualContext] = self._get_context()
+        self._context: VisualContext | None = self._get_context()
 
     def infos(self) -> SingleInfos:
         """Return a list of the supported infos (for the visual context) of this dashlet"""
         return []
 
-    def _get_context(self) -> Optional[VisualContext]:
+    def _get_context(self) -> VisualContext | None:
         if not self.has_context():
             return None
 
@@ -438,7 +422,7 @@ class Dashlet(abc.ABC, Generic[T]):
         except KeyError:
             return True
 
-    def title_url(self) -> Optional[str]:
+    def title_url(self) -> str | None:
         try:
             return self._dashlet_spec["title_url"]
         except KeyError:
@@ -450,11 +434,11 @@ class Dashlet(abc.ABC, Generic[T]):
         except KeyError:
             return True
 
-    def on_resize(self) -> Optional[str]:
+    def on_resize(self) -> str | None:
         """Returns either Javascript code to execute when a resize event occurs or None"""
         return None
 
-    def on_refresh(self) -> Optional[str]:
+    def on_refresh(self) -> str | None:
         """Returns either Javascript code to execute when a the dashlet should be refreshed or None"""
         return None
 
@@ -491,13 +475,13 @@ class Dashlet(abc.ABC, Generic[T]):
     def _dashlet_context_vars(self) -> list[tuple[str, str]]:
         return visuals.context_to_uri_vars(self.context)
 
-    def unconfigured_single_infos(self) -> Set[str]:
+    def unconfigured_single_infos(self) -> set[str]:
         """Returns infos that are not set by the dashlet config"""
         if not self.has_context():
             return set()
         return visuals.get_missing_single_infos(self.single_infos(), self._dashlet_spec["context"])
 
-    def missing_single_infos(self) -> Set[str]:
+    def missing_single_infos(self) -> set[str]:
         """Returns infos that are neither configured nor available through HTTP variables"""
         if not self.has_context():
             return set()
@@ -587,7 +571,7 @@ def _title_help_text_for_macros(
 
 
 def dashlet_vs_general_settings(
-    dashlet_type: Type[Dashlet], single_infos: SingleInfos
+    dashlet_type: type[Dashlet], single_infos: SingleInfos
 ) -> Dictionary:
     return Dictionary(
         title=_("General Settings"),
@@ -704,7 +688,7 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
                 % (json.dumps(self._dashlet_id), json.dumps(iframe_url))
             )
 
-    def _get_iframe_url(self) -> Optional[str]:
+    def _get_iframe_url(self) -> str | None:
         if not self.is_iframe_dashlet():
             return None
 
@@ -715,7 +699,7 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
         raise NotImplementedError()
 
 
-class DashletRegistry(cmk.utils.plugin_registry.Registry[Type[Dashlet]]):
+class DashletRegistry(cmk.utils.plugin_registry.Registry[type[Dashlet]]):
     """The management object for all available plugins."""
 
     def plugin_name(self, instance):
@@ -744,7 +728,7 @@ class FigureDashletPage(AjaxPage):
             raise MKUserError("id", _("The element does not exist."))
 
         try:
-            dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[dashlet_spec["type"]])
+            dashlet_type = cast(type[ABCFigureDashlet], dashlet_registry[dashlet_spec["type"]])
         except KeyError:
             raise MKUserError("type", _("The requested element type does not exist."))
 
@@ -788,7 +772,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     @property
     def instance_name(self) -> str:
         # Note: This introduces the restriction one graph type per dashlet
-        return "%s_%s" % (self.type_name(), self._dashlet_id)
+        return f"{self.type_name()}_{self._dashlet_id}"
 
     @classmethod
     def vs_parameters(cls) -> MigrateNotUpdated:
@@ -803,7 +787,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         )
 
     @staticmethod
-    def _vs_optional_keys() -> Union[bool, list[str]]:
+    def _vs_optional_keys() -> bool | list[str]:
         return False
 
     @staticmethod
@@ -901,7 +885,7 @@ class DashboardStore:
         self.all = self._load_all()
         self.permitted = self._load_permitted(self.all)
 
-    def _load_all(self) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
+    def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         return visuals.load(
             "dashboards",
@@ -910,8 +894,8 @@ class DashboardStore:
         )
 
     def _load_permitted(
-        self, all_dashboards: Dict[Tuple[UserId, DashboardName], DashboardConfig]
-    ) -> Dict[DashboardName, DashboardConfig]:
+        self, all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig]
+    ) -> dict[DashboardName, DashboardConfig]:
         """Returns all defitions that a user is allowed to use"""
         return visuals.available("dashboards", all_dashboards)
 
@@ -932,7 +916,7 @@ def copy_view_into_dashlet(
     dashlet: ViewDashletConfig,
     nr: DashletId,
     view_name: str,
-    add_context: Optional[VisualContext] = None,
+    add_context: VisualContext | None = None,
     load_from_all_views: bool = False,
 ) -> None:
     permitted_views = get_permitted_views()
@@ -1014,7 +998,7 @@ def service_table_query(
 
 
 def _table_query(
-    context: VisualContext, table: str, columns: Iterable[ColumnName], infos: List[str]
+    context: VisualContext, table: str, columns: Iterable[ColumnName], infos: list[str]
 ) -> tuple[list[ColumnName], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
 
@@ -1092,7 +1076,7 @@ def kubernetes_dashboard_breadcrumb(
          |
          + Kubernetes [DaemonSet|StatefulSet|Deployment]
     """
-    k8s_ids: Dict[str, str] = {
+    k8s_ids: dict[str, str] = {
         ident: "kubernetes_%s" % ident
         for ident in [
             "overview",
@@ -1205,10 +1189,10 @@ def make_mk_missing_data_error() -> MKMissingDataError:
 @dataclass
 class StateFormatter:
     css: str
-    _state_names: Callable[[Row], Tuple[str, str]]
+    _state_names: Callable[[Row], tuple[str, str]]
     message_template: str
 
-    def state_names(self, row: Row) -> Tuple[str, str]:
+    def state_names(self, row: Row) -> tuple[str, str]:
         return self._state_names(row)
 
 
@@ -1225,7 +1209,7 @@ class ServiceStateFormatter(StateFormatter):
 
 
 def state_map(  # type:ignore[no-untyped-def]
-    conf: Optional[Tuple[str, str]], row: Row, formatter: StateFormatter
+    conf: tuple[str, str] | None, row: Row, formatter: StateFormatter
 ):
     style = dict(zip(("paint", "status"), conf)) if isinstance(conf, tuple) else {}
     state, status_name = formatter.state_names(row)

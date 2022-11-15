@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 # TODO: typing of connection when livestatus.py is on pypi
 from livestatus import SiteId
@@ -16,8 +16,8 @@ from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 def send_command(  # type:ignore[no-untyped-def]
     connection,
     command: LivestatusCommand,
-    params: List[Any],
-    site_id: Optional[SiteId] = None,
+    params: list[Any],
+    site_id: SiteId | None = None,
 ):
     """Send a command to livestatus.
 

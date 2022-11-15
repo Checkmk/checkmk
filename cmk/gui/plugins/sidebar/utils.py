@@ -7,7 +7,8 @@
 import abc
 import json
 import traceback
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from collections.abc import Sequence
+from typing import Any
 
 import cmk.utils.plugin_registry
 from cmk.utils.site import url_prefix
@@ -41,9 +42,9 @@ CustomSnapins = Any
 # Constants to be used in snapins
 snapin_width = 240
 
-search_plugins: List = []
+search_plugins: list = []
 
-PageHandlers = Dict[str, "cmk.gui.pages.PageHandlerFunc"]
+PageHandlers = dict[str, "cmk.gui.pages.PageHandlerFunc"]
 
 
 @permission_section_registry.register
@@ -113,7 +114,7 @@ class SidebarSnapin(abc.ABC):
     def may_see(cls) -> bool:
         return user.may(cls.permission_name())
 
-    def styles(self) -> Optional[str]:
+    def styles(self) -> str | None:
         return None
 
     def page_handlers(self) -> PageHandlers:
@@ -141,13 +142,13 @@ class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
 
 # TODO: We should really register instances instead of classes here... :-/ Using
 # classes obfuscates the code and makes typing a nightmare.
-class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
+class SnapinRegistry(cmk.utils.plugin_registry.Registry[type[SidebarSnapin]]):
     """The management object for all available plugins."""
 
     def plugin_name(self, instance):
         return instance.type_name()
 
-    def registration_hook(self, instance: Type[SidebarSnapin]) -> None:
+    def registration_hook(self, instance: type[SidebarSnapin]) -> None:
         # Custom snapins have their own permissions "custom_snapin.*"
         if not instance.is_custom_snapin():
             declare_permission(
@@ -160,7 +161,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
         for path, page_func in instance().page_handlers().items():
             cmk.gui.pages.register_page_handler(path, page_func)
 
-    def get_customizable_snapin_types(self) -> List[Tuple[str, Type[CustomizableSidebarSnapin]]]:
+    def get_customizable_snapin_types(self) -> list[tuple[str, type[CustomizableSidebarSnapin]]]:
         return [
             (snapin_type_id, snapin_type)
             for snapin_type_id, snapin_type in self.items()
@@ -170,7 +171,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
             )
         ]
 
-    def register_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
+    def register_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
         self._clear_custom_snapins()
         self._add_custom_snapins(custom_snapins)
@@ -180,7 +181,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
             if snapin_type.is_custom_snapin():
                 self.unregister(snapin_type_id)
 
-    def _add_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
+    def _add_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
         for custom_snapin in custom_snapins:
             base_snapin_type_id = custom_snapin._["custom_snapin"][0]
 
@@ -249,7 +250,7 @@ snapin_registry = SnapinRegistry()
 
 
 def render_link(
-    text: Union[str, HTML], url: str, target: str = "main", onclick: Optional[str] = None
+    text: str | HTML, url: str, target: str = "main", onclick: str | None = None
 ) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -268,13 +269,11 @@ def render_link(
     )
 
 
-def link(
-    text: Union[str, HTML], url: str, target: str = "main", onclick: Optional[str] = None
-) -> None:
+def link(text: str | HTML, url: str, target: str = "main", onclick: str | None = None) -> None:
     html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
-def bulletlink(text: str, url: str, target: str = "main", onclick: Optional[str] = None) -> None:
+def bulletlink(text: str, url: str, target: str = "main", onclick: str | None = None) -> None:
     html.open_li(class_="sidebar")
     link(text, url, target, onclick)
     html.close_li()
@@ -309,14 +308,14 @@ def end_footnote_links() -> None:
     html.close_div()
 
 
-def footnotelinks(links: List[Tuple[str, str]]) -> None:
+def footnotelinks(links: list[tuple[str, str]]) -> None:
     begin_footnote_links()
     for text, target in links:
         link(text, target)
     end_footnote_links()
 
 
-def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
+def snapin_site_choice(ident: str, choices: list[tuple[SiteId, str]]) -> list[SiteId] | None:
     sites = user.load_file("sidebar_sites", {})
     available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")
@@ -339,10 +338,10 @@ def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optiona
     return only_sites
 
 
-def make_topic_menu(visuals: Sequence[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:
+def make_topic_menu(visuals: Sequence[tuple[str, tuple[str, Visual]]]) -> list[TopicMenuTopic]:
     topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
 
-    by_topic: Dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
+    by_topic: dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}
 
     for visual_type_name, (name, visual) in visuals:
         if visual["hidden"] or visual.get("mobile"):
@@ -409,13 +408,13 @@ def _visual_url(visual_type_name: str, name: str) -> str:
 
     # Handle page types
     if visual_type_name in ["custom_graph", "graph_collection", "forecast_graph"]:
-        return "%s.py?name=%s" % (visual_type_name, name)
+        return f"{visual_type_name}.py?name={name}"
 
     raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
 
 
 def show_topic_menu(
-    treename: str, menu: List[TopicMenuTopic], show_item_icons: bool = False
+    treename: str, menu: list[TopicMenuTopic], show_item_icons: bool = False
 ) -> None:
     for topic in menu:
         _show_topic(treename, topic, show_item_icons)

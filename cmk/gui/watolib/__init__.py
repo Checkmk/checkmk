@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Sequence, Tuple, Type
+from collections.abc import Callable, Sequence
+from typing import Tuple, Type
 
 import urllib3 as _urllib3
 
@@ -44,7 +45,7 @@ _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
 def _register_automation_commands() -> None:
-    clss: Sequence[Type[_automation_commands.AutomationCommand]] = (
+    clss: Sequence[type[_automation_commands.AutomationCommand]] = (
         _automation_commands.AutomationPing,
         _automatic_host_removal.AutomationHostsForAutoRemoval,
     )
@@ -53,7 +54,7 @@ def _register_automation_commands() -> None:
 
 
 def _register_gui_background_jobs() -> None:
-    clss: Sequence[Type[_background_job.BackgroundJob]] = (
+    clss: Sequence[type[_background_job.BackgroundJob]] = (
         _config_domains.OMDConfigChangeBackgroundJob,
         _automatic_host_removal.HostRemovalBackgroundJob,
     )
@@ -62,7 +63,7 @@ def _register_gui_background_jobs() -> None:
 
 
 def _register_config_domains() -> None:
-    clss: Sequence[Type[_config_domains.ABCConfigDomain]] = (
+    clss: Sequence[type[_config_domains.ABCConfigDomain]] = (
         _config_domains.ConfigDomainCore,
         _config_domains.ConfigDomainGUI,
         _config_domains.ConfigDomainLiveproxy,
@@ -75,7 +76,7 @@ def _register_config_domains() -> None:
 
 
 def _register_host_attribute():
-    clss: Sequence[Type[ABCHostAttribute]] = [
+    clss: Sequence[type[ABCHostAttribute]] = [
         builtin_attributes.HostAttributeAlias,
         builtin_attributes.HostAttributeIPv4Address,
         builtin_attributes.HostAttributeIPv6Address,
@@ -103,7 +104,7 @@ def _register_host_attribute():
 
 def _register_hooks():
     # TODO: Should we not execute this hook also when folders are modified?
-    args: Sequence[Tuple[str, Callable]] = (
+    args: Sequence[tuple[str, Callable]] = (
         ("userdb-job", _auth_php._on_userdb_job),
         ("users-saved", lambda users: _auth_php._create_auth_file("users-saved", users)),
         ("roles-saved", lambda x: _auth_php._create_auth_file("roles-saved")),

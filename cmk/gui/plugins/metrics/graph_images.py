@@ -9,7 +9,8 @@ import base64
 import json
 import time
 import traceback
-from typing import Any, Callable, Literal, Optional, Sequence
+from collections.abc import Callable, Sequence
+from typing import Any, Literal
 
 import livestatus
 
@@ -138,7 +139,7 @@ def graph_image_data_range(
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
-def graph_image_render_options(api_request: Optional[dict[str, Any]] = None) -> GraphRenderOptions:
+def graph_image_render_options(api_request: dict[str, Any] | None = None) -> GraphRenderOptions:
     # Set image rendering defaults
     graph_render_options = {
         "font_size": 8.0,  # pt

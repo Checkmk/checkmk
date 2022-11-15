@@ -14,7 +14,8 @@ import multiprocessing
 import queue
 import time
 import traceback
-from typing import Any, Collection, Dict, Tuple
+from collections.abc import Collection
+from typing import Any
 
 from livestatus import SiteId
 
@@ -312,7 +313,7 @@ class ModeAnalyzeConfig(WatoMode):
 
                 html.open_tr()
                 html.td(escaping.escape_attribute(site_id))
-                html.td("%s: %s" % (result.status_name(), result.text))
+                html.td(f"{result.status_name()}: {result.text}")
                 html.close_tr()
             html.close_table()
 
@@ -326,7 +327,7 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.Queue[Tuple[SiteId, str]] = multiprocessing.JoinableQueue()
+        result_queue: multiprocessing.Queue[tuple[SiteId, str]] = multiprocessing.JoinableQueue()
 
         processes = []
         site_id = SiteId("unknown_site")
@@ -378,7 +379,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._logger.debug("Got test results")
 
         # Group results by category in first instance and then then by test
-        results_by_category: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        results_by_category: dict[str, dict[str, dict[str, Any]]] = {}
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})
@@ -403,7 +404,7 @@ class ModeAnalyzeConfig(WatoMode):
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
     def _perform_tests_for_site(
-        self, site_id: SiteId, result_queue: multiprocessing.Queue[Tuple[SiteId, str]]
+        self, site_id: SiteId, result_queue: multiprocessing.Queue[tuple[SiteId, str]]
     ) -> None:
         self._logger.debug("[%s] Starting" % site_id)
         result = None

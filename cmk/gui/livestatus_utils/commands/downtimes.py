@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
 import datetime as dt
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal
 
 from livestatus import SiteId
 
@@ -182,7 +182,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
     connection,
     site_id: SiteId,
     host_name: str,
-    service_description: Union[List[str], str],
+    service_description: list[str] | str,
     start_time: dt.datetime,
     end_time: dt.datetime,
     recur: RecurMode = "fixed",
@@ -514,7 +514,7 @@ def schedule_hosts_downtimes_with_query(  # type:ignore[no-untyped-def]
 
 def schedule_host_downtime(  # type:ignore[no-untyped-def]
     connection,
-    host_entry: Union[str, List[str]],
+    host_entry: str | list[str],
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_all_services: bool = False,
@@ -667,7 +667,7 @@ def _schedule_downtime(  # type:ignore[no-untyped-def]
     command: LivestatusCommand,
     site_id,
     host_or_group: str,
-    service_description: Optional[str],
+    service_description: str | None,
     start_time: dt.datetime,
     end_time: dt.datetime,
     recur: RecurMode = "fixed",
@@ -751,7 +751,7 @@ def _recur_mode(recur: RecurMode, duration: int) -> int:
         9
 
     """
-    mapping: Dict[str, int] = {
+    mapping: dict[str, int] = {
         "fixed": 0,
         "hour": 2,
         "day": 4,

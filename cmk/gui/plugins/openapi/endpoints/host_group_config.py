@@ -17,7 +17,8 @@ A host group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this host group.
 
 """
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils import version
 

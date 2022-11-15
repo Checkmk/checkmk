@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple, Union
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -14,8 +13,8 @@ from cmk.gui.utils.transaction_manager import transactions
 
 
 def confirm_with_preview(
-    msg: Union[str, HTML], confirm_options: List[Tuple[str, str]], method: str = "POST"
-) -> Optional[bool]:
+    msg: str | HTML, confirm_options: list[tuple[str, str]], method: str = "POST"
+) -> bool | None:
     """Show a confirm dialog to the user
 
     BE AWARE: In case you just want to have some action confirmed by the user, you

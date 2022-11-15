@@ -32,7 +32,8 @@ A folder_config object can have the following relations present in `links`:
 
 
 """
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from werkzeug.datastructures import ETags
 
@@ -339,7 +340,7 @@ def list_folders(params: Mapping[str, Any]) -> Response:
 
 
 def _folders_collection(  # type:ignore[no-untyped-def]
-    folders: List[CREFolder],
+    folders: list[CREFolder],
     show_hosts: bool,
 ):
     folders_ = []

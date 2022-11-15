@@ -156,7 +156,7 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
             (rel, color),
             (50, get_themed_perfometer_bg_color()),
         ]
-    return "%.2f %s" % (offset, unit), render_perfometer(data)
+    return f"{offset:.2f} {unit}", render_perfometer(data)
 
 
 perfometers["check_mk-ntp"] = perfometer_check_mk_ntp
@@ -349,7 +349,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         MB = 1000000.0
         readable_in = number_human_readable(in_traffic * traffic_multiplier, 1, unit)
         readable_out = number_human_readable(out_traffic * traffic_multiplier, 1, unit)
-        text = "%s/s&nbsp;&nbsp;&nbsp;%s/s" % (readable_in, readable_out)
+        text = f"{readable_in}/s&nbsp;&nbsp;&nbsp;{readable_out}/s"
         return text, perfometer_logarithmic_dual(in_traffic, "#0e6", out_traffic, "#2af", MB, 5)
     # if we have bandwidth
     txt, data = [], []
@@ -602,7 +602,7 @@ def perfometer_check_mk_diskstat(
     read_bytes = float(perf_data[0][1])
     write_bytes = float(perf_data[1][1])
 
-    text = "%-.2f M/s  %-.2f M/s" % (
+    text = "{:<.2f} M/s  {:<.2f} M/s".format(
         read_bytes / (1024.0 * 1024.0),
         write_bytes / (1024.0 * 1024.0),
     )
@@ -632,7 +632,7 @@ def perfometer_check_mk_iops_r_w(
 ) -> LegacyPerfometerResult:
     iops_r = float(perf_data[0][1])
     iops_w = float(perf_data[1][1])
-    text = "%.0f IO/s %.0f IO/s" % (iops_r, iops_w)
+    text = f"{iops_r:.0f} IO/s {iops_w:.0f} IO/s"
 
     return text, perfometer_logarithmic_dual(iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
 
@@ -646,7 +646,7 @@ def perfometer_check_mk_disk_latency_r_w(
 ) -> LegacyPerfometerResult:
     latency_r = float(perf_data[0][1])
     latency_w = float(perf_data[1][1])
-    text = "%.1f ms %.1f ms" % (latency_r, latency_w)
+    text = f"{latency_r:.1f} ms {latency_w:.1f} ms"
 
     return text, perfometer_logarithmic_dual(latency_r, "#60e0a0", latency_w, "#60a0e0", 20, 10)
 
@@ -661,7 +661,7 @@ def perfometer_in_out_mb_per_sec(
     read_mbit = float(perf_data[0][1]) / 131072
     write_mbit = float(perf_data[1][1]) / 131072
 
-    text = "%-.2fMb/s  %-.2fMb/s" % (read_mbit, write_mbit)
+    text = f"{read_mbit:<.2f}Mb/s  {write_mbit:<.2f}Mb/s"
 
     return text, perfometer_logarithmic_dual(read_mbit, "#30d050", write_mbit, "#0060c0", 100, 10)
 
@@ -901,7 +901,7 @@ def perfometer_vms_system_ios(
     buffered = float(perf_data[1][1])
     # perfometer_logarithmic(100, 200, 2, "#883875")
     return (
-        "%.0f / %.0f" % (direct, buffered),
+        f"{direct:.0f} / {buffered:.0f}",
         HTMLWriter.render_div(
             perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
             + perfometer_logarithmic(direct, 10000, 3, "#38808f"),
@@ -927,7 +927,7 @@ def perfometer_cmc_lcp(row: Row, check_command: str, perf_data: Perfdata) -> Leg
     color = {0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
     val = float(perf_data[0][1])
     unit = str(perf_data[0][0])
-    return "%.1f %s" % (val, unit), perfometer_logarithmic(val, 4, 2, color)
+    return f"{val:.1f} {unit}", perfometer_logarithmic(val, 4, 2, color)
 
 
 perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
@@ -1219,7 +1219,7 @@ def perfometer_raritan_pdu_inlet(
     cap = perf_data[0][0].split("-")[-1]
     value = float(perf_data[0][1])
     unit = perf_data[0][2]
-    display_str = "%s %s" % (perf_data[0][1], unit)
+    display_str = f"{perf_data[0][1]} {unit}"
     if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
     if cap.startswith("unbalancedCurrent"):
@@ -1307,7 +1307,7 @@ def perfometer_veeam_client(
     avgspeed = cmk.utils.render.fmt_bytes(avgspeed_bytes)
     duration = cmk.utils.render.approx_age(duration_secs)
 
-    return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
+    return f"{avgspeed}/s&nbsp;&nbsp;&nbsp;{duration}", h
 
 
 perfometers["check_mk-veeam_client"] = perfometer_veeam_client

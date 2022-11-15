@@ -5,9 +5,10 @@
 
 import math
 import time
+from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from itertools import zip_longest
-from typing import Callable, Iterable, List, Literal, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Literal, Optional, TypedDict, Union
 
 import cmk.utils.render
 from cmk.utils.prediction import TimeSeries, TimeSeriesValue
@@ -31,7 +32,7 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.type_defs import CombinedGraphSpec, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-Label = Tuple[float, Optional[str], int]
+Label = tuple[float, Optional[str], int]
 
 
 class _LayoutedCurveMandatory(TypedDict):
@@ -59,7 +60,7 @@ class VerticalAxis(TypedDict):
     real_range: tuple[float, float]
     label_distance: float
     sub_distance: float
-    axis_label: Optional[str]
+    axis_label: str | None
     labels: list[Label]
     max_label_length: int
 
@@ -78,7 +79,7 @@ class CurveValue(TypedDict):
 
 class GraphArtwork(TypedDict):
     # Labelling, size, layout
-    title: Optional[str]
+    title: str | None
     width: int
     height: int
     mirrored: bool
@@ -91,12 +92,12 @@ class GraphArtwork(TypedDict):
     start_time: Timestamp
     end_time: Timestamp
     step: Seconds
-    explicit_vertical_range: tuple[Optional[float], Optional[float]]
-    requested_vrange: Optional[tuple[float, float]]
+    explicit_vertical_range: tuple[float | None, float | None]
+    requested_vrange: tuple[float, float] | None
     requested_start_time: Timestamp
     requested_end_time: Timestamp
-    requested_step: Union[str, Seconds]
-    pin_time: Optional[Timestamp]
+    requested_step: str | Seconds
+    pin_time: Timestamp | None
     # Definition itself, for reproducing the graph
     definition: GraphRecipe
 
@@ -143,9 +144,9 @@ def get_default_graph_render_options() -> GraphRenderOptions:
 
 
 class GraphColors(TypedDict):
-    background_color: Optional[str]
-    foreground_color: Optional[str]
-    canvas_color: Optional[str]
+    background_color: str | None
+    foreground_color: str | None
+    canvas_color: str | None
 
 
 def _graph_colors(theme_id: str) -> GraphColors:
@@ -282,7 +283,7 @@ def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], b
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
-    stacks: list[Optional[Sequence[TimeSeriesValue]]] = [None, None]
+    stacks: list[Sequence[TimeSeriesValue] | None] = [None, None]
 
     # Compute the logical position (i.e. measured in the original unit)
     # of the data points, where stacking and Y-mirroring is being applied.
@@ -435,7 +436,7 @@ def halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
 
 
 def _compute_scalars(
-    graph_recipe: GraphRecipe, curves: Sequence[Curve], pin_time: Optional[int]
+    graph_recipe: GraphRecipe, curves: Sequence[Curve], pin_time: int | None
 ) -> None:
     unit = unit_info[graph_recipe["unit"]]
 
@@ -569,7 +570,7 @@ def compute_graph_v_axis(
 
     if stepping == "binary":
         base = 16
-        steps: List[Tuple[float, float]] = [
+        steps: list[tuple[float, float]] = [
             (2, 0.5),
             (4, 1),
             (8, 2),
@@ -696,7 +697,7 @@ def compute_v_axis_min_max(
 
 
 def _purge_min_max(
-    min_value: Optional[float], max_value: Optional[float], mirrored: bool
+    min_value: float | None, max_value: float | None, mirrored: bool
 ) -> tuple[float, float]:
     # If all of our data points are None, then we have no
     # min/max values. In this case we assume 0 as a minimum
@@ -733,7 +734,7 @@ def _purge_min_max(
 
 def _get_min_max_from_curves(
     layouted_curves: Sequence[LayoutedCurve],
-) -> tuple[Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None]:
     min_value, max_value = None, None
 
     # Now make sure that all points are within the range.
@@ -778,7 +779,7 @@ def create_vertical_axis_labels(
     label_distance: float,
     sub_distance: float,
     mirrored: bool,
-) -> tuple[list[Label], int, Optional[str]]:
+) -> tuple[list[Label], int, str | None]:
     # round_to is the precision (number of digits after the decimal point)
     # that we round labels to.
     round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))
@@ -826,14 +827,14 @@ def create_vertical_axis_labels(
 
 
 def render_labels_with_individual_units(
-    label_specs: Sequence[tuple[float, Optional[float], int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
 ) -> tuple[list[Label], int, None]:
     rendered_labels, max_label_length = render_labels(label_specs, unit["render"])
     return rendered_labels, max_label_length, None
 
 
 def render_labels_with_graph_unit(
-    label_specs: Sequence[tuple[float, Optional[float], int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
 ) -> tuple[list[Label], int, str]:
     # Build list of real values (not 0 or None) for the graph_unit function
     # which is then calculating the graph global unit
@@ -853,8 +854,8 @@ def render_labels_with_graph_unit(
 
 
 def render_labels(
-    label_specs: Iterable[tuple[float, Union[None, str, float], int]],
-    render_func: Optional[UnitRenderFunc] = None,
+    label_specs: Iterable[tuple[float, None | str | float, int]],
+    render_func: UnitRenderFunc | None = None,
 ) -> tuple[list[Label], int]:
     max_label_length = 0
     rendered_labels: list[Label] = []
@@ -927,15 +928,15 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
     if start_date == end_date:
         title_label = str(cmk.utils.render.date(start_time))
     else:
-        title_label = "%s \u2014 %s" % (
+        title_label = "{} \u2014 {}".format(
             str(cmk.utils.render.date(start_time)),
             str(cmk.utils.render.date(end_time)),
         )
 
     # TODO: Monatsname und Wochenname lokalisierbar machen
     if start_date == end_date:
-        labelling: Union[str, Callable] = "%H:%M"
-        label_size: Union[int, float] = 5
+        labelling: str | Callable = "%H:%M"
+        label_size: int | float = 5
 
     # Less than one week
     elif time_range_days < 7:
@@ -987,7 +988,7 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
         (5760, 720),
     ]:
         if label_distance_at_least <= dist_minutes * 60:
-            dist_function: Callable[[int, int], Iterable[Tuple[float, int, bool]]] = partial(
+            dist_function: Callable[[int, int], Iterable[tuple[float, int, bool]]] = partial(
                 dist_equal, distance=dist_minutes * 60, subdivision=subdivision * 60
             )
             break
@@ -1009,12 +1010,12 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels: List[Label] = []
+    labels: list[Label] = []
     seconds_per_char = time_range / (width - 7)
     for pos, line_width, has_label in dist_function(start_time, end_time):
         if has_label:
             if isinstance(labelling, str):
-                label: Optional[str] = time.strftime(str(labelling), time.localtime(pos))
+                label: str | None = time.strftime(str(labelling), time.localtime(pos))
             else:
                 label = labelling(pos)
         else:
@@ -1043,7 +1044,7 @@ def add_step_to_title(title_label: str, step: Seconds) -> str:
     step_label = get_step_label(step)
     if title_label is None:
         return step_label
-    return "%s @ %s" % (title_label, step_label)
+    return f"{title_label} @ {step_label}"
 
 
 def get_step_label(step: Seconds) -> str:
@@ -1174,7 +1175,7 @@ def dist_equal(
 #   '----------------------------------------------------------------------'
 
 
-def load_graph_pin() -> Optional[int]:
+def load_graph_pin() -> int | None:
     return user.load_file("graph_pin", None)
 
 

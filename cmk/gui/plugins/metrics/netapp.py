@@ -50,20 +50,20 @@ def register_netapp_api_vs_traffic_metrics():
         ]:
             volume = volume_info.lower().replace(".", "_")
 
-            metric_info["%s_read_%s" % (volume, what)] = {
+            metric_info[f"{volume}_read_{what}"] = {
                 "title": _fix_title(_("%s read %s") % (volume_info, what)),
                 "unit": unit,
                 "color": "31/a",
             }
 
-            metric_info["%s_write_%s" % (volume, what)] = {
+            metric_info[f"{volume}_write_{what}"] = {
                 "title": _fix_title(_("%s write %s") % (volume_info, what)),
                 "unit": unit,
                 "color": "44/a",
             }
 
             if what in ["data", "ops", "latency"]:
-                metric_info["%s_other_%s" % (volume, what)] = {
+                metric_info[f"{volume}_other_{what}"] = {
                     "title": _("%s other %s") % (volume_info, what),
                     "unit": unit,
                     "color": "21/a",

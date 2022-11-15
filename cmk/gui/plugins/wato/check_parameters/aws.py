@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Iterable, List, Optional
+from collections.abc import Callable, Iterable
 from typing import Tuple as TupleType
-from typing import Type
 
 from cmk.utils.aws_constants import (
     AWSEC2InstFamilies,
@@ -184,7 +183,7 @@ def _item_spec_aws_limits_generic():
 def vs_aws_limits(
     resource: str,
     default_limit: int,
-    vs_limit_cls: Optional[Type[Filesize]] = None,
+    vs_limit_cls: type[Filesize] | None = None,
     unit: str = "",
     title_default: str = _("Limit from AWS API"),
 ) -> Alternative:
@@ -204,7 +203,7 @@ def vs_aws_limits(
         )
 
     if resource:
-        title: Optional[str] = _("Set limit and levels for %s") % resource
+        title: str | None = _("Set limit and levels for %s") % resource
     else:
         title = None
 
@@ -1445,13 +1444,13 @@ rulespec_registry.register(
 
 def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
 
-    elements_extr: List[ValueSpec] = [
+    elements_extr: list[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),
         Float(title=_("Critical at"), unit=unit),
     ]
 
     # mypy is unhappy without splitting into elements_avg and elements_single_minmmax
-    elements_avg: List[DictionaryEntry] = [
+    elements_avg: list[DictionaryEntry] = [
         (
             "levels_average",
             Dictionary(
@@ -1498,7 +1497,7 @@ def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
         ),
     ]
 
-    elements_single_minmmax: List[DictionaryEntry] = [
+    elements_single_minmmax: list[DictionaryEntry] = [
         (
             "levels_%s" % extr,
             Dictionary(
@@ -1547,7 +1546,7 @@ def _parameter_valuespec_aws_dynamodb_latency() -> Dictionary:
         title=_("Levels on latency"),
         elements=[
             (
-                "levels_seconds_%s_%s" % (operation.lower(), statistic),
+                f"levels_seconds_{operation.lower()}_{statistic}",
                 Tuple(
                     title=_("Upper levels on %s latency of successful %s requests")
                     % (statistic, operation),

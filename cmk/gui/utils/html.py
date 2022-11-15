@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import html
-from typing import Any, Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Any, Union
 
 HTMLInput = Union["HTML", str]
 
@@ -82,23 +83,19 @@ class HTML:
     def __contains__(self, item: HTMLInput) -> bool:
         return self._ensure_str(item) in self.value
 
-    def count(
-        self, x: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
-    ) -> int:
+    def count(self, x: HTMLInput, __start: int | None = None, __end: int | None = None) -> int:
         return self.value.count(self._ensure_str(x), __start, __end)
 
-    def index(
-        self, sub: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
-    ) -> int:
+    def index(self, sub: HTMLInput, __start: int | None = None, __end: int | None = None) -> int:
         return self.value.index(self._ensure_str(sub), __start, __end)
 
-    def lstrip(self, chars: Optional[HTMLInput] = None) -> HTML:
+    def lstrip(self, chars: HTMLInput | None = None) -> HTML:
         return HTML(self.value.lstrip(self._ensure_str(chars) if chars is not None else None))
 
-    def rstrip(self, chars: Optional[HTMLInput] = None) -> HTML:
+    def rstrip(self, chars: HTMLInput | None = None) -> HTML:
         return HTML(self.value.rstrip(self._ensure_str(chars) if chars is not None else None))
 
-    def strip(self, chars: Optional[HTMLInput] = None) -> HTML:
+    def strip(self, chars: HTMLInput | None = None) -> HTML:
         return HTML(self.value.strip(self._ensure_str(chars) if chars is not None else None))
 
     def lower(self) -> HTML:
@@ -108,6 +105,6 @@ class HTML:
         return HTML(self.value.upper())
 
     def startswith(
-        self, prefix: HTMLInput, start: Optional[int] = None, end: Optional[int] = None
+        self, prefix: HTMLInput, start: int | None = None, end: int | None = None
     ) -> bool:
         return self.value.startswith(self._ensure_str(prefix), start, end)

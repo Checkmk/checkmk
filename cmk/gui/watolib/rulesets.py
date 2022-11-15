@@ -9,20 +9,9 @@ import dataclasses
 import os
 import pprint
 import re
+from collections.abc import Callable, Container, Mapping
 from enum import auto, Enum
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Container,
-    Dict,
-    Final,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, cast, Final, Optional
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -72,7 +61,7 @@ from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 register_post_config_load_hook(cmk.base.export.reset_config)
 
 FolderPath = str
-SearchOptions = Dict[str, Any]
+SearchOptions = dict[str, Any]
 
 
 # This macro is needed to make the to_config() methods be able to use native pprint/repr for the
@@ -90,11 +79,11 @@ class RuleConditions:
     def __init__(
         self,
         host_folder: str,
-        host_tags: Optional[TaggroupIDToTagCondition] = None,
-        host_labels: Optional[Labels] = None,
-        host_name: Optional[HostOrServiceConditions] = None,
-        service_description: Optional[HostOrServiceConditions] = None,
-        service_labels: Optional[Labels] = None,
+        host_tags: TaggroupIDToTagCondition | None = None,
+        host_labels: Labels | None = None,
+        host_name: HostOrServiceConditions | None = None,
+        service_description: HostOrServiceConditions | None = None,
+        service_labels: Labels | None = None,
     ) -> None:
         self.host_folder: Final = host_folder
         self.host_tags: Final[TaggroupIDToTagCondition] = host_tags or {}
@@ -175,7 +164,7 @@ class RuleConditions:
 
     # Compatibility code for pre 1.6 WATO code
     @property
-    def tag_list(self) -> Container[Optional[TagID]]:
+    def tag_list(self) -> Container[TagID | None]:
         tag_list = []
         for tag_spec in self.host_tags.values():
             is_not = isinstance(tag_spec, dict) and "$ne" in tag_spec
@@ -198,8 +187,8 @@ class RuleConditions:
         return self._condition_list(self.service_description, is_service=True)
 
     def _condition_list(
-        self, object_list: Optional[HostOrServiceConditions], is_service: bool
-    ) -> Optional[Tuple[List[str], bool]]:
+        self, object_list: HostOrServiceConditions | None, is_service: bool
+    ) -> tuple[list[str], bool] | None:
         if object_list is None:
             return None
 
@@ -250,7 +239,7 @@ class RulesetCollection:
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
 
-    def __init__(self, rulesets: Dict[RulesetName, Ruleset]) -> None:
+    def __init__(self, rulesets: dict[RulesetName, Ruleset]) -> None:
         super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
@@ -258,14 +247,14 @@ class RulesetCollection:
 
     @staticmethod
     def _initialize_rulesets(
-        only_varname: Optional[RulesetName] = None,
-    ) -> Dict[RulesetName, Ruleset]:
+        only_varname: RulesetName | None = None,
+    ) -> dict[RulesetName, Ruleset]:
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
 
     def _load_folder_rulesets(
-        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+        self, folder: CREFolder, only_varname: RulesetName | None = None
     ) -> None:
         path = folder.rules_file_path()
 
@@ -292,11 +281,11 @@ class RulesetCollection:
         self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
 
     def from_config(  # type:ignore[no-untyped-def]
-        self, folder: CREFolder, rulesets_config, only_varname: Optional[RulesetName] = None
+        self, folder: CREFolder, rulesets_config, only_varname: RulesetName | None = None
     ) -> None:
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         config_varname: str
-        subkey: Optional[str]
+        subkey: str | None
         for varname in varnames:
             if ":" in varname:
                 config_varname, subkey = varname.split(":", 1)
@@ -371,7 +360,7 @@ class RulesetCollection:
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(
-        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+        self, folder: CREFolder, only_varname: RulesetName | None = None
     ) -> None:
 
         if may_use_redis():
@@ -384,7 +373,7 @@ class AllRulesets(RulesetCollection):
         self._load_folder_rulesets(folder, only_varname)
 
     def _load_rulesets_via_redis(
-        self, folder: CREFolder, only_varname: Optional[RulesetName] = None
+        self, folder: CREFolder, only_varname: RulesetName | None = None
     ) -> None:
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
@@ -442,7 +431,7 @@ class SingleRulesetRecursively(AllRulesets):
 class FolderRulesets(RulesetCollection):
     def __init__(
         self,
-        rulesets: Dict[RulesetName, Ruleset],
+        rulesets: dict[RulesetName, Ruleset],
         *,
         folder: CREFolder,
     ) -> None:
@@ -488,7 +477,7 @@ class Ruleset:
         self,
         name: RulesetName,
         tag_to_group_map: TagIDToTaggroupID,
-        rulespec: Optional[Rulespec] = None,
+        rulespec: Rulespec | None = None,
     ) -> None:
         super().__init__()
         self.name: Final = name
@@ -496,11 +485,11 @@ class Ruleset:
         self.rulespec: Final = rulespec_registry[name] if rulespec is None else rulespec
 
         # Holds list of the rules. Using the folder paths as keys.
-        self._rules: Dict[FolderPath, List[Rule]] = {}
-        self._rules_by_id: Dict[str, Rule] = {}
+        self._rules: dict[FolderPath, list[Rule]] = {}
+        self._rules_by_id: dict[str, Rule] = {}
 
         # Temporary needed during search result processing
-        self.search_matching_rules: List[Rule] = []
+        self.search_matching_rules: list[Rule] = []
 
         # Converts pre 1.6 tuple rulesets in place to 1.6+ format
         self.tuple_transformer = ruleset_matcher.RulesetToDictTransformer(
@@ -528,7 +517,7 @@ class Ruleset:
     def num_rules_in_folder(self, folder: CREFolder) -> int:
         return len(self.get_folder_rules(folder))
 
-    def get_rules(self) -> List[Tuple[CREFolder, int, Rule]]:
+    def get_rules(self) -> list[tuple[CREFolder, int, Rule]]:
         rules = []
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
@@ -537,7 +526,7 @@ class Ruleset:
             rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
         )
 
-    def get_folder_rules(self, folder: CREFolder) -> List[Rule]:
+    def get_folder_rules(self, folder: CREFolder) -> list[Rule]:
         try:
             return self._rules[folder.path()]
         except KeyError:
@@ -625,16 +614,16 @@ class Ruleset:
 
         if ":" in self.name:
             dictname, subkey = self.name.split(":")
-            varname = "%s[%r]" % (dictname, subkey)
+            varname = f"{dictname}[{subkey!r}]"
 
-            content += "\n%s.setdefault(%r, [])\n" % (dictname, subkey)
+            content += f"\n{dictname}.setdefault({subkey!r}, [])\n"
         else:
             varname = self.name
 
             content += "\nglobals().setdefault(%r, [])\n" % (varname)
 
             if self.is_optional():
-                content += "\nif %s is None:\n    %s = []\n" % (varname, varname)
+                content += f"\nif {varname} is None:\n    {varname} = []\n"
 
         content += "\n%s = [\n" % varname
         for rule in self._rules[folder.path()]:
@@ -789,22 +778,22 @@ class Ruleset:
     def valuespec(self) -> ValueSpec:
         return self.rulespec.valuespec
 
-    def help(self) -> Union[None, str, HTML]:
+    def help(self) -> None | str | HTML:
         return self.rulespec.help
 
-    def title(self) -> Optional[str]:
+    def title(self) -> str | None:
         return self.rulespec.title
 
-    def item_type(self) -> Optional[str]:
+    def item_type(self) -> str | None:
         return self.rulespec.item_type
 
-    def item_name(self) -> Optional[str]:
+    def item_name(self) -> str | None:
         return self.rulespec.item_name
 
-    def item_help(self) -> Union[None, str, HTML]:
+    def item_help(self) -> None | str | HTML:
         return self.rulespec.item_help
 
-    def item_enum(self) -> Optional[DropdownChoiceEntries]:
+    def item_enum(self) -> DropdownChoiceEntries | None:
         return self.rulespec.item_enum
 
     def match_type(self) -> str:
@@ -829,7 +818,7 @@ class Ruleset:
         service_labels: Labels,
     ):
         resultlist = []
-        resultdict: Dict[str, Any] = {}
+        resultdict: dict[str, Any] = {}
         effectiverules = []
         for folder, rule_index, rule in self.get_rules():
             if rule.is_disabled():
@@ -965,7 +954,7 @@ class Rule:
         cls,
         folder: CREFolder,
         ruleset: Ruleset,
-        rule_config: Dict[Any, Any],
+        rule_config: dict[Any, Any],
     ) -> Rule:
         # cmk-update-config uses this to load rules from the config file for rewriting them To make
         # this possible, we need to accept missing "id" fields here. During runtime this is not
@@ -1145,10 +1134,9 @@ class Rule:
         if only_host_conditions:
             match_service_conditions = False
 
-        for reason in self._get_mismatch_reasons_of_match_object(
+        yield from self._get_mismatch_reasons_of_match_object(
             match_object, match_service_conditions
-        ):
-            yield reason
+        )
 
     def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
         matcher = cmk.base.export.get_ruleset_matcher()
@@ -1265,7 +1253,7 @@ class Rule:
 
         return True
 
-    def _get_search_folders(self, search_options: SearchOptions) -> List[str]:
+    def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]
         current_folder = Folder.folder(current_folder)
         search_in_folders = [current_folder.name()]
@@ -1288,7 +1276,7 @@ class Rule:
     def comment(self) -> str:
         return self.rule_options.comment
 
-    def predefined_condition_id(self) -> Optional[str]:
+    def predefined_condition_id(self) -> str | None:
         """When a rule refers to a predefined condition return the ID
 
         The predefined conditions are a pure WATO feature. These are resolved when writing
@@ -1356,7 +1344,7 @@ def _match_search_expression(search_options: SearchOptions, attr_name: str, sear
 
 
 def _match_one_of_search_expression(
-    search_options: SearchOptions, attr_name: str, search_in_list: List[str]
+    search_options: SearchOptions, attr_name: str, search_in_list: list[str]
 ) -> bool:
     for search_in in search_in_list:
         if _match_search_expression(search_options, attr_name, search_in):

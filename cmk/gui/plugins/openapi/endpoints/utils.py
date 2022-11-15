@@ -5,7 +5,8 @@
 import contextlib
 import http.client
 import json
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
+from collections.abc import Sequence
+from typing import Any, Dict, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
@@ -52,7 +53,7 @@ def serve_group(group, serializer):
 
 def serialize_group_list(
     domain_type: GroupName,
-    collection: Sequence[Dict[str, Any]],
+    collection: Sequence[dict[str, Any]],
 ) -> constructors.CollectionObject:
     return constructors.collection_object(
         domain_type=domain_type,
@@ -90,7 +91,7 @@ def serialize_group(name: GroupName) -> Any:
 
 
 def update_groups(  # type:ignore[no-untyped-def]
-    group_type: GroupType, entries: List[Dict[str, Any]]
+    group_type: GroupType, entries: list[dict[str, Any]]
 ):
     groups = []
     for details in entries:
@@ -103,7 +104,7 @@ def update_groups(  # type:ignore[no-untyped-def]
     return fetch_specific_groups(groups, group_type)
 
 
-def prepare_groups(group_type: GroupType, entries: List[Dict[str, Any]]) -> GroupSpecs:
+def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> GroupSpecs:
     specific_existing_groups = load_group_information()[group_type]
     groups: GroupSpecs = {}
     already_existing = []
@@ -131,7 +132,7 @@ def fetch_group(
     ident: str,
     group_type: GroupType,
     status: int = 404,
-    message: Optional[str] = None,
+    message: str | None = None,
 ) -> GroupSpec:
     groups = load_group_information()[group_type]
     group = _retrieve_group(ident, groups, status, message)
@@ -140,11 +141,11 @@ def fetch_group(
 
 
 def fetch_specific_groups(
-    idents: List[str],
+    idents: list[str],
     group_type: GroupType,
     status: int = 404,
-    message: Optional[str] = None,
-) -> List[GroupSpec]:
+    message: str | None = None,
+) -> list[GroupSpec]:
     groups = load_group_information()[group_type]
     result = []
     for ident in idents:
@@ -158,7 +159,7 @@ def _retrieve_group(
     ident: str,
     groups: GroupSpecs,
     status: int,
-    message: Optional[str],
+    message: str | None,
 ) -> GroupSpec:
     try:
         group = groups[ident].copy()
@@ -171,8 +172,8 @@ def _retrieve_group(
 
 @contextlib.contextmanager
 def may_fail(  # type:ignore[no-untyped-def]
-    exc_type: Union[Type[Exception], Tuple[Type[Exception], ...]],
-    status: Optional[int] = None,
+    exc_type: type[Exception] | tuple[type[Exception], ...],
+    status: int | None = None,
 ):
     """Context manager to make Exceptions REST-API safe
 

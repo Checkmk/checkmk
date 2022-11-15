@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
-from typing import Optional, Sequence, TypeGuard
+from collections.abc import Sequence
+from typing import TypeGuard
 
 from cmk.utils.type_defs import Timestamp
 
@@ -27,10 +28,10 @@ def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
-    pos_left: Optional[SizeMM] = None,
-    pos_top: Optional[SizeMM] = None,
-    total_width: Optional[SizeMM] = None,
-    total_height: Optional[SizeMM] = None,
+    pos_left: SizeMM | None = None,
+    pos_top: SizeMM | None = None,
+    total_width: SizeMM | None = None,
+    total_height: SizeMM | None = None,
 ) -> None:
     pdf_document = instance["document"]
 
@@ -351,7 +352,7 @@ def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         legend_top = bottom - legend_top_margin + bottom_margin
         legend_column_width = (width - left_margin - left_border - right_margin) / 7.0
 
-        def paint_legend_line(color: Optional[RGBColor], texts: Sequence[Optional[str]]) -> None:
+        def paint_legend_line(color: RGBColor | None, texts: Sequence[str | None]) -> None:
             l = t_orig
             if color:
                 pdf_document.render_rect(
@@ -384,7 +385,7 @@ def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             ("average", _("Average")),
             ("last", _("Last")),
         ]
-        scalars_legend_line: list[Optional[str]] = [None]
+        scalars_legend_line: list[str | None] = [None]
 
         paint_legend_line(None, scalars_legend_line + [x[1] for x in scalars])
         pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)

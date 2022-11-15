@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import Any, Callable, TypedDict
+from collections.abc import Callable
+from typing import Any, TypedDict
 
 import cmk.utils.store as store
 

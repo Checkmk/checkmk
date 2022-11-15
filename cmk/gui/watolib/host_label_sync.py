@@ -10,7 +10,7 @@ import ast
 from dataclasses import asdict, dataclass
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -51,7 +51,7 @@ class SiteResult:
     site_id: SiteId
     success: bool
     error: str
-    updated_host_labels: List[UpdatedHostLabelsEntry]
+    updated_host_labels: list[UpdatedHostLabelsEntry]
 
 
 @dataclass
@@ -63,10 +63,10 @@ class EnforcedHostRequest:
 @dataclass
 class SiteRequest:
     newest_host_labels: float
-    enforce_host: Optional[EnforcedHostRequest]
+    enforce_host: EnforcedHostRequest | None
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "SiteRequest":
+    def deserialize(cls, serialized: dict[str, Any]) -> SiteRequest:
         enforce_host = (
             EnforcedHostRequest(**serialized["enforce_host"])
             if serialized["enforce_host"]
@@ -91,7 +91,7 @@ class SiteRequest:
         assert isinstance(newest_host_labels, float)
         return cls(newest_host_labels, enforce_host)
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         return {
             "newest_host_labels": self.newest_host_labels,
             "enforce_host": asdict(self.enforce_host) if self.enforce_host else None,
@@ -100,7 +100,7 @@ class SiteRequest:
 
 @dataclass
 class DiscoveredHostLabelSyncResponse:
-    updated_host_labels: List[UpdatedHostLabelsEntry]
+    updated_host_labels: list[UpdatedHostLabelsEntry]
 
 
 def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
@@ -117,7 +117,7 @@ def execute_host_label_sync(host_name: HostName, site_id: SiteId) -> None:
     save_updated_host_label_files(result.updated_host_labels)
 
 
-def execute_host_label_sync_job() -> Optional[DiscoveredHostLabelSyncJob]:
+def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
     """This function is called by the GUI cron job once a minute.
     Errors are logged to var/log/web.log."""
     if not has_wato_slave_sites():
@@ -185,7 +185,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
 
     def _execute_site_sync_bg(
         self,
-        args: Tuple[
+        args: tuple[
             RequestContext,
             SiteId,
             SiteConfiguration,
@@ -197,7 +197,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
             return _execute_site_sync(*args[1:])
 
     def _process_site_sync_results(
-        self, newest_host_labels: Dict[SiteId, float], results: List[SiteResult]
+        self, newest_host_labels: dict[SiteId, float], results: list[SiteResult]
     ) -> None:
         """Persist the sync results received from the remote site on the central site"""
         for site_result in results:
@@ -216,12 +216,12 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def newest_host_labels_per_site_path() -> Path:
         return Path(cmk.utils.paths.var_dir) / "wato" / "newest_host_labels_per_site.mk"
 
-    def _load_newest_host_labels_per_site(self) -> Dict[SiteId, float]:
+    def _load_newest_host_labels_per_site(self) -> dict[SiteId, float]:
         return store.load_object_from_file(
             DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(), default={}
         )
 
-    def _save_newest_host_labels_per_site(self, newest_host_labels: Dict[SiteId, float]) -> None:
+    def _save_newest_host_labels_per_site(self, newest_host_labels: dict[SiteId, float]) -> None:
         store.save_object_to_file(
             DiscoveredHostLabelSyncJob.newest_host_labels_per_site_path(), newest_host_labels
         )
@@ -285,7 +285,7 @@ class AutomationDiscoveredHostLabelSync(AutomationCommand):
             raise MKUserError("request", _('The parameter "%s" is missing.') % "request")
         return SiteRequest.deserialize(ast.literal_eval(ascii_input))
 
-    def execute(self, api_request: SiteRequest) -> Dict[str, Any]:
+    def execute(self, api_request: SiteRequest) -> dict[str, Any]:
         if api_request.enforce_host:
             try:
                 response = DiscoveredHostLabelSyncResponse(

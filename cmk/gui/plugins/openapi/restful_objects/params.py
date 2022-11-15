@@ -5,7 +5,7 @@
 
 import re
 from collections import abc
-from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
+from collections.abc import ItemsView, Sequence
 
 from marshmallow import Schema
 
@@ -24,7 +24,7 @@ from cmk import fields
 PARAM_RE = re.compile(r"{([a-z][a-z0-9_]*)}")
 
 
-def path_parameters(path: str) -> List[str]:
+def path_parameters(path: str) -> list[str]:
     """Give all variables from a path-template.
 
     Examples:
@@ -44,7 +44,7 @@ def path_parameters(path: str) -> List[str]:
 
 
 def to_openapi(
-    params: Optional[Union[RawParameter, Sequence[RawParameter]]],
+    params: RawParameter | Sequence[RawParameter] | None,
     location: LocationType,
 ) -> Sequence[OpenAPIParameter]:
     """Put the 'in' key into a all parameters in a list.
@@ -110,7 +110,7 @@ def to_openapi(
         except TypeError:
             return False
 
-    result: List[OpenAPIParameter] = []
+    result: list[OpenAPIParameter] = []
     _fields: ItemsView[str, fields.Field]
     for raw_param in params:
         if _is_schema_class(raw_param):
@@ -149,9 +149,7 @@ def to_openapi(
     return result
 
 
-def to_schema(
-    params: Optional[Union[Sequence[RawParameter], RawParameter]]
-) -> Optional[Type[Schema]]:
+def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Schema] | None:
     """
     Examples:
 
@@ -227,7 +225,7 @@ def to_schema(
         return None
 
     if isinstance(params, abc.Sequence):
-        p: Dict[str, fields.Field] = {}
+        p: dict[str, fields.Field] = {}
         for entry in params:
             if isinstance(entry, abc.Mapping):
                 p.update(entry)
@@ -245,7 +243,7 @@ def to_schema(
 
 def fill_out_path_template(
     orig_path: str,
-    parameters: Dict[str, OpenAPIParameter],
+    parameters: dict[str, OpenAPIParameter],
 ) -> str:
     """Fill out a simple template.
 

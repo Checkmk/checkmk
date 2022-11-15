@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for managing the new rule based notifications"""
 
-from typing import Mapping
+from collections.abc import Mapping
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule, UserId

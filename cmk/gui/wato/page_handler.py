@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -159,7 +158,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _ensure_mode_permissions(mode_class: Type[WatoMode]) -> None:
+def _ensure_mode_permissions(mode_class: type[WatoMode]) -> None:
     permissions = mode_class.permissions()
     if permissions is None:
         permissions = []

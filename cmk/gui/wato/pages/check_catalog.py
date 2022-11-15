@@ -10,7 +10,8 @@ the global settings.
 """
 
 import re
-from typing import Any, Collection, Dict, List, Mapping, Optional, overload, Set, Tuple, Type
+from collections.abc import Collection, Mapping
+from typing import Any, overload
 
 from six import ensure_str
 
@@ -104,7 +105,7 @@ class ModeCheckPluginSearch(WatoMode):
         return ["check_plugins"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPlugins
 
     def _from_vars(self):
@@ -113,7 +114,7 @@ class ModeCheckPluginSearch(WatoMode):
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
-        return "%s: %s" % (_("Check plugins matching"), self._search)
+        return "{}: {}".format(_("Check plugins matching"), self._search)
 
     def page(self) -> None:
         search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
@@ -122,8 +123,8 @@ class ModeCheckPluginSearch(WatoMode):
             _render_manpage_list(self._titles, manpages, path, self._titles.get(path, path))
 
     def _get_manpages_after_search(self):
-        collection: Dict[ManPageCatalogPath, List[Dict]] = {}
-        handled_check_names: Set[CheckPluginNameStr] = set()
+        collection: dict[ManPageCatalogPath, list[dict]] = {}
+        handled_check_names: set[CheckPluginNameStr] = set()
 
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
@@ -181,7 +182,7 @@ class ModeCheckPluginTopic(WatoMode):
         return ["check_plugins"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPlugins
 
     # pylint does not understand this overloading
@@ -218,7 +219,7 @@ class ModeCheckPluginTopic(WatoMode):
         if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
             raise MKUserError("topic", _("Invalid topic"))
 
-        self._path: Tuple[str, ...] = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
+        self._path: tuple[str, ...] = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
 
         for comp in self._path:
             ID().validate_value(comp, None)  # Beware against code injection!
@@ -250,7 +251,7 @@ class ModeCheckPluginTopic(WatoMode):
             # For some topics we render a second level in the same optic as the first level
             menu = MainMenu()
             for path_comp, subnode in self._manpages.items():
-                url = makeuri(request, [("topic", "%s/%s" % (self._path[0], path_comp))])
+                url = makeuri(request, [("topic", f"{self._path[0]}/{path_comp}")])
                 title = self._titles.get(path_comp, path_comp)
                 helptext = self._get_check_plugin_stats(subnode)
 
@@ -429,7 +430,7 @@ class ModeCheckManPage(WatoMode):
         return ["check_plugins"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCheckPluginTopic
 
     def breadcrumb(self) -> Breadcrumb:
@@ -459,7 +460,7 @@ class ModeCheckManPage(WatoMode):
             self._check_type = "check_mk"
             self._service_description = check_info["service_description"]
             ruleset_name = check_info.get("check_ruleset_name")
-            self._ruleset: Optional[str] = (
+            self._ruleset: str | None = (
                 f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
             )
 

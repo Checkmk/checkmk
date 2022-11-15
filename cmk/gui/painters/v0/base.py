@@ -9,10 +9,10 @@ import abc
 import os
 import re
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from html import unescape
 from pathlib import Path
-from typing import Any, Callable, Literal, Union
+from typing import Any, Literal, Union
 
 from livestatus import lqencode
 
@@ -89,7 +89,7 @@ class Painter(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def title(self, cell: "Cell") -> str:
+    def title(self, cell: Cell) -> str:
         """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
 
@@ -103,7 +103,7 @@ class Painter(abc.ABC):
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
-    def dynamic_columns(self, cell: "Cell") -> list[ColumnName]:
+    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
         """Return list of dynamically generated column as specified by Cell
 
         Some columns for the Livestatus query need to be generated at
@@ -111,7 +111,7 @@ class Painter(abc.ABC):
         generated the required column names."""
         return []
 
-    def derive(self, rows: Rows, cell: "Cell", dynamic_columns: list[ColumnName] | None) -> None:
+    def derive(self, rows: Rows, cell: Cell, dynamic_columns: list[ColumnName] | None) -> None:
         """Post process query according to cell
 
         This function processes data immediately after it is handled back
@@ -130,16 +130,16 @@ class Painter(abc.ABC):
             query. As they might be required to find them again within the
             data."""
 
-    def short_title(self, cell: "Cell") -> str:
+    def short_title(self, cell: Cell) -> str:
         """Used as display string for the painter e.g. as table header
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
-    def export_title(self, cell: "Cell") -> str:
+    def export_title(self, cell: Cell) -> str:
         """Used for exporting views in JSON/CSV/python format"""
         return self.ident
 
-    def list_title(self, cell: "Cell") -> str:
+    def list_title(self, cell: Cell) -> str:
         """Override this to define a custom title for the painter in the view editor
         Falls back to the full title if no short title is given"""
         return self.title(cell)
@@ -147,7 +147,7 @@ class Painter(abc.ABC):
     def group_by(
         self,
         row: Row,
-        cell: "Cell",
+        cell: Cell,
     ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
@@ -198,11 +198,11 @@ class Painter(abc.ABC):
 
     # TODO For PDF or Python output format we implement additional methods.
 
-    def _compute_data(self, row: Row, cell: "Cell") -> object:
+    def _compute_data(self, row: Row, cell: Cell) -> object:
         return self.render(row, cell)[1]
 
     @abc.abstractmethod
-    def render(self, row: Row, cell: "Cell") -> CellSpec:
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         """Renders the painter for the given row
         The paint function gets one argument: A data row, which is a python
         dictionary representing one data object (host, service, ...). Its
@@ -218,7 +218,7 @@ class Painter(abc.ABC):
         change in future."""
         raise NotImplementedError()
 
-    def export_for_csv(self, row: Row, cell: "Cell") -> str | HTML:
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         """Render the content of the painter for CSV export based on the given row.
 
         If the data of a painter can not be exported as CSV (like trees), then this method
@@ -228,7 +228,7 @@ class Painter(abc.ABC):
             return data
         raise ValueError("Data must be of type 'str' or 'HTML' but is %r" % type(data))
 
-    def export_for_json(self, row: Row, cell: "Cell") -> object:
+    def export_for_json(self, row: Row, cell: Cell) -> object:
         """Render the content of the painter for JSON export based on the given row.
 
         If the data of a painter can not be exported as JSON, then this method
@@ -549,7 +549,7 @@ class Cell:
             return css_classes, content
         except Exception:
             raise MKGeneralException(
-                'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc())
+                f'Failed to paint "{self.painter_name()}": {traceback.format_exc()}'
             )
 
     # TODO render_for_python_export/as PDF
@@ -643,17 +643,17 @@ class JoinCell(Cell):
         return self._join_service_descr
 
     def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:
-        return "Filter: %s = %s" % (lqencode(join_column_name), lqencode(self.join_service()))
+        return f"Filter: {lqencode(join_column_name)} = {lqencode(self.join_service())}"
 
     def title(self, use_short: bool = True) -> str:
         return self._custom_title or self.join_service()
 
     def export_title(self) -> str:
         serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
-        return "%s.%s" % (self._painter_name, serv_painter)
+        return f"{self._painter_name}.{serv_painter}"
 
 
-def join_row(row: Row, cell: "Cell") -> Row:
+def join_row(row: Row, cell: Cell) -> Row:
     if isinstance(cell, JoinCell):
         return row.get("JOIN", {}).get(cell.join_service())
     return row
@@ -694,7 +694,7 @@ class PainterAdapter(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return self._painter.columns
 
-    def dynamic_columns(self, cell: "Cell") -> list[ColumnName]:
+    def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
         # TODO: the dynamic columns/derive functionality is added, once we migrate painters using it
         if self._painter.dynamic_columns is None:
             return []

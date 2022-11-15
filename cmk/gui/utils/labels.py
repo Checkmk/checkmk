@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import json
 from ast import literal_eval
-from typing import Dict, Iterable, List, Mapping, NamedTuple, Set, Tuple, Union
+from collections.abc import Iterable, Mapping
+from typing import NamedTuple
 
 from redis import Redis
 from redis.client import Pipeline
@@ -39,8 +40,8 @@ class _LivestatusLabelResponse(NamedTuple):
 
 
 class _MergedLabels(NamedTuple):
-    hosts: Dict[SiteId, Dict[str, str]]
-    services: Dict[SiteId, Dict[str, str]]
+    hosts: dict[SiteId, dict[str, str]]
+    services: dict[SiteId, dict[str, str]]
 
 
 def parse_labels_value(value: str) -> Labels:
@@ -50,9 +51,9 @@ def parse_labels_value(value: str) -> Labels:
     except ValueError as e:
         raise MKUserError(None, _("Failed to parse labels: %s") % e)
 
-    seen: Set[str] = set()
+    seen: set[str] = set()
     for entry in decoded_labels:
-        label_id, label_value = [p.strip() for p in entry["value"].split(":", 1)]
+        label_id, label_value = (p.strip() for p in entry["value"].split(":", 1))
         if label_id in seen:
             raise MKUserError(
                 None,
@@ -71,7 +72,7 @@ def encode_label_for_livestatus(column: str, label: Label) -> str:
     >>> encode_label_for_livestatus("labels", Label("key", "value", False))
     "Filter: labels = 'key' 'value'"
     """
-    return "Filter: %s %s %s %s" % (
+    return "Filter: {} {} {} {}".format(
         lqencode(column),
         "!=" if label.negate else "=",
         lqencode(quote_dict(label.id)),
@@ -95,7 +96,7 @@ def encode_labels_for_livestatus(
 
 
 def encode_labels_for_tagify(
-    labels: Union[Labels, Iterable[Tuple[str, str]]]
+    labels: Labels | Iterable[tuple[str, str]]
 ) -> Iterable[Mapping[str, str]]:
     """
     >>> encode_labels_for_tagify({"key": "value", "x": "y"}.items()) ==  encode_labels_for_tagify([Label("key", "value", False), Label("x", "y", False)])
@@ -104,7 +105,7 @@ def encode_labels_for_tagify(
     return [{"value": "%s:%s" % e[:2]} for e in labels]
 
 
-def encode_labels_for_http(labels: Union[Labels, Iterable[Tuple[str, str]]]) -> str:
+def encode_labels_for_http(labels: Labels | Iterable[tuple[str, str]]) -> str:
     """The result can be used in building URLs
     >>> encode_labels_for_http([])
     '[]'
@@ -127,11 +128,11 @@ class LabelsCache:
         self._svc_label: str = "service_labels"
         self._program_starts: str = self._namespace + ":last_program_starts"
         self._redis_client: Redis[str] = get_redis_client()
-        self._sites_to_update: Set[SiteId] = set()
+        self._sites_to_update: set[SiteId] = set()
 
-    def _get_site_ids(self) -> List[SiteId]:
+    def _get_site_ids(self) -> list[SiteId]:
         """Create list of all site IDs the user is authorized for"""
-        site_ids: List[SiteId] = []
+        site_ids: list[SiteId] = []
         for site_id, _site in user.authorized_sites().items():
             site_ids.append(site_id)
         return site_ids
@@ -150,10 +151,10 @@ class LabelsCache:
 
     def _redis_query_labels(self) -> list[tuple[str, str]]:
         """Query all labels from redis"""
-        cache_names: List = []
+        cache_names: list = []
         for site_id in self._get_site_ids():
             for label_type in [self._hst_label, self._svc_label]:
-                cache_names.append("%s:%s:%s" % (self._namespace, site_id, label_type))
+                cache_names.append(f"{self._namespace}:{site_id}:{label_type}")
 
         with self._redis_client.pipeline() as pipeline:
             for cache in cache_names:
@@ -170,7 +171,7 @@ class LabelsCache:
 
         return all_labels
 
-    def _livestatus_get_labels(self, only_sites: List[SiteId]) -> _MergedLabels:
+    def _livestatus_get_labels(self, only_sites: list[SiteId]) -> _MergedLabels:
         """Get labels for all sites that need an update and the user is authorized for"""
         try:
             sites.live().set_auth_domain("labels")
@@ -180,7 +181,7 @@ class LabelsCache:
 
     def _query_livestatus(
         self,
-        only_sites: List[SiteId],
+        only_sites: list[SiteId],
     ) -> _LivestatusLabelResponse:
 
         with sites.prepend_site(), sites.only_sites(only_sites):
@@ -192,8 +193,8 @@ class LabelsCache:
     def _collect_labels_from_livestatus_labels(
         self, livestatus_labels: _LivestatusLabelResponse
     ) -> _MergedLabels:
-        all_sites_host_labels: Dict[SiteId, Dict[str, Set]] = {}
-        all_sites_service_labels: Dict[SiteId, Dict[str, Set]] = {}
+        all_sites_host_labels: dict[SiteId, dict[str, set]] = {}
+        all_sites_service_labels: dict[SiteId, dict[str, set]] = {}
 
         # Collect data from rows
         for source_rows, target_dict in (
@@ -206,8 +207,8 @@ class LabelsCache:
                     site_labels.setdefault(key, set()).add(value)
 
         # Convert label_values to a single str
-        merged_host_labels: Dict[SiteId, Dict[str, str]] = {}
-        merged_service_labels: Dict[SiteId, Dict[str, str]] = {}
+        merged_host_labels: dict[SiteId, dict[str, str]] = {}
+        merged_service_labels: dict[SiteId, dict[str, str]] = {}
         for source_dict, target_merged_labels in (
             (all_sites_host_labels, merged_host_labels),
             (all_sites_service_labels, merged_service_labels),
@@ -236,7 +237,7 @@ class LabelsCache:
         pipeline: Pipeline,
     ) -> None:
 
-        sites_list: List[SiteId] = []
+        sites_list: list[SiteId] = []
         for site_id, label in labels.items():
             if site_id not in self._sites_to_update:
                 continue
@@ -244,7 +245,7 @@ class LabelsCache:
             if not label:
                 continue
 
-            label_key = "%s:%s:%s" % (self._namespace, site_id, label_type)
+            label_key = f"{self._namespace}:{site_id}:{label_type}"
             pipeline.delete(label_key)
             # NOTE: Mapping is invariant in its key because of __getitem__, so for mypy's sake we
             # make a copy below. This doesn't matter from a performance view, hset is iterating over
@@ -259,7 +260,7 @@ class LabelsCache:
         for site_id in sites_list:
             self._redis_set_last_program_start(site_id, pipeline)
 
-    def _redis_get_last_program_starts(self) -> Dict[str, str]:
+    def _redis_get_last_program_starts(self) -> dict[str, str]:
         program_starts = self._redis_client.hgetall(self._program_starts)
         return program_starts
 

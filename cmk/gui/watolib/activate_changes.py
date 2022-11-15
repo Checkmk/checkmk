@@ -26,10 +26,11 @@ import shutil
 import subprocess
 import time
 import traceback
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -138,12 +139,12 @@ var_dir = cmk.utils.paths.var_dir + "/wato/"
 
 
 # Directories and files to synchronize during replication
-_replication_paths: List[ReplicationPath] = []
+_replication_paths: list[ReplicationPath] = []
 
-ConfigWarnings = Dict[ConfigDomainName, List[str]]
+ConfigWarnings = dict[ConfigDomainName, list[str]]
 ActivationId = str
-SiteActivationState = Dict[str, Any]
-ActivationState = Dict[str, SiteActivationState]
+SiteActivationState = dict[str, Any]
+ActivationState = dict[str, SiteActivationState]
 
 
 def get_trial_expired_message() -> str:
@@ -156,7 +157,7 @@ def get_trial_expired_message() -> str:
 
 
 # TODO: find a way to make this more obvious/transparent in code
-def add_replication_paths(paths: List[ReplicationPath]) -> None:
+def add_replication_paths(paths: list[ReplicationPath]) -> None:
     """Addition of any edition-specific replication paths (i.e. config files) that need
     to be synchronised in a distributed set-up.
 
@@ -166,13 +167,13 @@ def add_replication_paths(paths: List[ReplicationPath]) -> None:
     _replication_paths.extend(paths)
 
 
-def get_replication_paths() -> List[ReplicationPath]:
+def get_replication_paths() -> list[ReplicationPath]:
     """A list of replication paths common to all editions.
 
     NOTE: This list is enriched further by edition plugins. See
     'add_replication_paths'.
     """
-    paths: List[ReplicationPath] = [
+    paths: list[ReplicationPath] = [
         ReplicationPath(
             "dir",
             "check_mk",
@@ -336,7 +337,7 @@ def clear_site_replication_status(site_id):
 
 
 def _site_replication_status_path(site_id):
-    return "%sreplication_status_%s.mk" % (var_dir, site_id)
+    return f"{var_dir}replication_status_{site_id}.mk"
 
 
 def _load_replication_status(lock=False):
@@ -349,13 +350,13 @@ def _load_replication_status(lock=False):
 @dataclass
 class PendingChangesInfo:
     number: int
-    message: Optional[str]
+    message: str | None
 
     def has_changes(self) -> bool:
         return self.number > 0
 
     @property
-    def message_without_number(self) -> Optional[str]:
+    def message_without_number(self) -> str | None:
         """Returns only the non-numeric (and non-"+") part of the pending changes message
         E.g.: self.message = "2 pending changes" -> "pending changes"
               self.message = "10+ Änderungen"    -> "Änderungen"
@@ -434,7 +435,7 @@ class ActivateChanges:
         return changes_counter
 
     @staticmethod
-    def _make_changes_message(number_of_changes: int) -> Optional[str]:
+    def _make_changes_message(number_of_changes: int) -> str | None:
         if number_of_changes > 10:
             return _("10+ changes")
         if number_of_changes == 1:
@@ -443,7 +444,7 @@ class ActivateChanges:
             return _("%d changes") % number_of_changes
         return None
 
-    def get_changes_estimate(self) -> Optional[str]:
+    def get_changes_estimate(self) -> str | None:
         number_of_changes = self._get_number_of_pending_changes()
         return self._make_changes_message(number_of_changes)
 
@@ -458,13 +459,13 @@ class ActivateChanges:
     def _changes_of_site(self, site_id):
         return self._changes_by_site[site_id]
 
-    def dirty_and_active_activation_sites(self) -> List[SiteId]:
+    def dirty_and_active_activation_sites(self) -> list[SiteId]:
         """Returns the list of sites that should be used when activating all affected sites"""
         return self.filter_not_activatable_sites(self.dirty_sites())
 
     def filter_not_activatable_sites(
-        self, sites: List[Tuple[SiteId, SiteConfiguration]]
-    ) -> List[SiteId]:
+        self, sites: list[tuple[SiteId, SiteConfiguration]]
+    ) -> list[SiteId]:
         dirty = []
         for site_id, site in sites:
             status = self._get_site_status(site_id, site)[1]
@@ -475,7 +476,7 @@ class ActivateChanges:
                 dirty.append(site_id)
         return dirty
 
-    def dirty_sites(self) -> List[Tuple[SiteId, SiteConfiguration]]:
+    def dirty_sites(self) -> list[tuple[SiteId, SiteConfiguration]]:
         """Returns the list of sites that have changes (including offline sites)"""
         return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
@@ -485,7 +486,7 @@ class ActivateChanges:
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
 
-    def _get_site_status(self, site_id: SiteId, site: SiteConfiguration) -> Tuple[SiteStatus, str]:
+    def _get_site_status(self, site_id: SiteId, site: SiteConfiguration) -> tuple[SiteStatus, str]:
         if site.get("disabled"):
             site_status = SiteStatus({})
             status = "disabled"
@@ -585,12 +586,12 @@ class ActivateChangesManager(ActivateChanges):
     )
 
     def __init__(self) -> None:
-        self._sites: List[SiteId] = []
-        self._site_snapshot_settings: Dict[SiteId, SnapshotSettings] = {}
-        self._activate_until: Optional[str] = None
-        self._comment: Optional[str] = None
+        self._sites: list[SiteId] = []
+        self._site_snapshot_settings: dict[SiteId, SnapshotSettings] = {}
+        self._activate_until: str | None = None
+        self._comment: str | None = None
         self._activate_foreign = False
-        self._activation_id: Optional[str] = None
+        self._activation_id: str | None = None
         self._prevent_activate = False
         store.makedirs(self.activation_persisted_dir)
         super().__init__()
@@ -615,9 +616,9 @@ class ActivateChangesManager(ActivateChanges):
     # thread.
     def start(
         self,
-        sites: List[SiteId],
-        activate_until: Optional[str] = None,
-        comment: Optional[str] = None,
+        sites: list[SiteId],
+        activate_until: str | None = None,
+        comment: str | None = None,
         activate_foreign: bool = False,
         prevent_activate: bool = False,
     ) -> ActivationId:
@@ -703,7 +704,7 @@ class ActivateChangesManager(ActivateChanges):
     def activate_until(self):
         return self._activate_until
 
-    def wait_for_completion(self, timeout: Optional[float] = None) -> bool:
+    def wait_for_completion(self, timeout: float | None = None) -> bool:
         """Wait for activation to be complete.
 
         Optionally a soft timeout can be given and waiting will stop. The return value will then
@@ -764,7 +765,7 @@ class ActivateChangesManager(ActivateChanges):
 
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)
-    def running_sites(self) -> List[SiteId]:
+    def running_sites(self) -> list[SiteId]:
         running = []
         for site_id in self._sites:
             if self._activation_running(site_id):
@@ -775,7 +776,7 @@ class ActivateChangesManager(ActivateChanges):
     def _new_activation_id(self) -> ActivationId:
         return cmk.gui.utils.gen_id()
 
-    def _get_sites(self, sites: List[SiteId]) -> List[SiteId]:
+    def _get_sites(self, sites: list[SiteId]) -> list[SiteId]:
         for site_id in sites:
             # suppression needed because of pylint bug, see https://github.com/PyCQA/pylint/issues/2296
             if site_id not in activation_sites():  # pylint: disable=unsupported-membership-test
@@ -784,14 +785,14 @@ class ActivateChangesManager(ActivateChanges):
         return sites
 
     def _info_path(self, activation_id):
-        return "%s/%s/info.mk" % (self.activation_tmp_base_dir, activation_id)
+        return f"{self.activation_tmp_base_dir}/{activation_id}/info.mk"
 
     def activations(self):
         for activation_id in os.listdir(self.activation_tmp_base_dir):
             yield activation_id, self._load_activation_info(activation_id)
 
     def _site_snapshot_file(self, site_id):
-        return "%s/%s/site_%s_sync.tar.gz" % (
+        return "{}/{}/site_{}_sync.tar.gz".format(
             self.activation_tmp_base_dir,
             self._activation_id,
             site_id,
@@ -876,8 +877,8 @@ class ActivateChangesManager(ActivateChanges):
         logger.debug("Finished all snapshots")
 
     def _get_site_snapshot_settings(
-        self, activation_id: ActivationId, sites: List[SiteId]
-    ) -> Dict[SiteId, SnapshotSettings]:
+        self, activation_id: ActivationId, sites: list[SiteId]
+    ) -> dict[SiteId, SnapshotSettings]:
         snapshot_settings = {}
 
         for site_id in sites:
@@ -975,7 +976,7 @@ class SnapshotManager:
     @staticmethod
     def factory(
         work_dir: str,
-        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        site_snapshot_settings: dict[SiteId, SnapshotSettings],
         edition: cmk_version.Edition,
     ) -> "SnapshotManager":
         if edition is cmk_version.Edition.CME:
@@ -1000,7 +1001,7 @@ class SnapshotManager:
     def __init__(
         self,
         activation_work_dir: str,
-        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        site_snapshot_settings: dict[SiteId, SnapshotSettings],
         data_collector: "ABCSnapshotDataCollector",
         reuse_identical_snapshots: bool,
         generate_in_subprocess: bool,
@@ -1132,7 +1133,7 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         self._logger.debug("Finished site")
 
     def _clone_site_config_directories(
-        self, origin_site_id: SiteId, site_ids: List[SiteId]
+        self, origin_site_id: SiteId, site_ids: list[SiteId]
     ) -> None:
         origin_site_work_dir = self._site_snapshot_settings[origin_site_id].work_dir
 
@@ -1153,12 +1154,12 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
             assert completed_process.returncode == 0
             self._logger.debug("Finished site")
 
-    def get_generic_components(self) -> List[ReplicationPath]:
+    def get_generic_components(self) -> list[ReplicationPath]:
         return get_replication_paths()
 
     def get_site_components(
         self, snapshot_settings: SnapshotSettings
-    ) -> Tuple[List[ReplicationPath], List[ReplicationPath]]:
+    ) -> tuple[list[ReplicationPath], list[ReplicationPath]]:
         generic_site_components = []
         custom_site_components = []
 
@@ -1291,7 +1292,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
         return ids
 
 
-def execute_activation_cleanup_background_job(maximum_age: Optional[int] = None) -> None:
+def execute_activation_cleanup_background_job(maximum_age: int | None = None) -> None:
     """This function is called by the GUI cron job once a minute.
 
     Errors are logged to var/log/web.log."""
@@ -1320,7 +1321,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     def __init__(
         self,
         activation_id: str,
-        site_snapshot_settings: Dict[SiteId, SnapshotSettings],
+        site_snapshot_settings: dict[SiteId, SnapshotSettings],
         prevent_activate: bool,
     ) -> None:
         super().__init__(
@@ -1346,7 +1347,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             _("Going to update %d sites") % len(queued_jobs), with_timestamp=True
         )
 
-        running_jobs: List[ActivateChangesSite] = []
+        running_jobs: list[ActivateChangesSite] = []
         max_jobs = self._get_maximum_concurrent_jobs()
         while queued_jobs or len(running_jobs) > 0:
             # Housekeeping, remove finished jobs
@@ -1399,7 +1400,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             return 1
 
     def _get_queued_jobs(self) -> "List[ActivateChangesSite]":
-        queued_jobs: List[ActivateChangesSite] = []
+        queued_jobs: list[ActivateChangesSite] = []
 
         file_filter_func = None
         if cmk_version.is_managed_edition():
@@ -1432,25 +1433,25 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         snapshot_settings: SnapshotSettings,
         activation_id: str,
         prevent_activate: bool = False,
-        file_filter_func: Optional[Callable[[str], bool]] = None,
+        file_filter_func: Callable[[str], bool] | None = None,
     ) -> None:
         super().__init__()
         self._site_id = site_id
-        self._site_changes: List = []
+        self._site_changes: list = []
         self._activation_id = activation_id
         self._snapshot_settings = snapshot_settings
         self._file_filter_func = file_filter_func
         self.daemon = True
         self._prevent_activate = prevent_activate
 
-        self._time_started: Optional[float] = None
-        self._time_updated: Optional[float] = None
-        self._time_ended: Optional[float] = None
-        self._phase: Optional[Phase] = None
-        self._state: Optional[State] = None
-        self._status_text: Optional[str] = None
-        self._status_details: Optional[str] = None
-        self._pid: Optional[int] = None
+        self._time_started: float | None = None
+        self._time_updated: float | None = None
+        self._time_ended: float | None = None
+        self._phase: Phase | None = None
+        self._state: State | None = None
+        self._status_text: str | None = None
+        self._status_details: str | None = None
+        self._pid: int | None = None
         self._expected_duration = 10.0
         self._logger = logger.getChild("site[%s]" % self._site_id)
 
@@ -1584,7 +1585,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         html_code += "<ul>"
         for domain, warnings in sorted(configuration_warnings.items()):
             for warning in warnings:
-                html_code += "<li>%s: %s</li>" % (
+                html_code += "<li>{}: {}</li>".format(
                     escaping.escape_attribute(domain),
                     escaping.escape_attribute(warning),
                 )
@@ -1725,11 +1726,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         )
         self._logger.debug("Finished config sync")
 
-    def _set_sync_state(self, status_details: Optional[str] = None) -> None:
+    def _set_sync_state(self, status_details: str | None = None) -> None:
         self._set_result(PHASE_SYNC, _("Synchronizing"), status_details=status_details)
 
     def _get_config_sync_state(
-        self, replication_paths: List[ReplicationPath]
+        self, replication_paths: list[ReplicationPath]
     ) -> "Tuple[Dict[str, ConfigSyncFileInfo], int]":
         """Get the config file states from the remote sites
 
@@ -1746,8 +1747,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _synchronize_files(
         self,
-        files_to_sync: List[str],
-        files_to_delete: List[str],
+        files_to_sync: list[str],
+        files_to_delete: list[str],
         remote_config_generation: int,
         site_config_dir: Path,
     ) -> None:
@@ -1818,7 +1819,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         return response
 
-    def _get_omd_domain_background_job_result(self) -> List[str]:
+    def _get_omd_domain_background_job_result(self) -> list[str]:
         """
         OMD domain needs restart of the whole site so the apache connection gets lost.
         A background job is started and we have to wait for the result
@@ -1845,7 +1846,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     return [e.message]
 
     def _get_domains_needing_activation(self, omd_ident: ConfigDomainName) -> DomainRequests:
-        domain_settings: Dict[ConfigDomainName, List[SerializedSettings]] = {}
+        domain_settings: dict[ConfigDomainName, list[SerializedSettings]] = {}
         omd_domain_used: bool = False
         for change in self._site_changes:
             if change["need_restart"]:
@@ -1897,7 +1898,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self,
         phase: Phase,
         status_text: str,
-        status_details: Optional[str] = None,
+        status_details: str | None = None,
         state: State = STATE_SUCCESS,
     ):
         """Stores the current state for displaying in the GUI
@@ -1938,7 +1939,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             },
         )
 
-    def _calc_status_details(self, phase: Phase, status_details: Optional[str]) -> str:
+    def _calc_status_details(self, phase: Phase, status_details: str | None) -> str:
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
             value = _("Queued for update")
@@ -2152,7 +2153,7 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         raise MKGeneralException(message)
 
 
-def _get_replication_components(site_config: SiteConfiguration) -> List[ReplicationPath]:
+def _get_replication_components(site_config: SiteConfiguration) -> list[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset
@@ -2192,8 +2193,8 @@ def get_file_names_to_sync(
     site_logger: logging.Logger,
     central_file_infos: "Dict[str, ConfigSyncFileInfo]",
     remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
-    file_filter_func: Optional[Callable[[str], bool]],
-) -> Tuple[List[str], List[str], List[str]]:
+    file_filter_func: Callable[[str], bool] | None,
+) -> tuple[list[str], list[str], list[str]]:
     """Compare the response with the site_config directory of the site
 
     Comparing both file lists and returning all files for synchronization that
@@ -2268,7 +2269,7 @@ def _filter_remote_files(remote_files: set[str]) -> set[str]:
     return remote_files_to_keep
 
 
-def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
+def _get_sync_archive(to_sync: list[str], base_dir: Path) -> bytes:
     # Use native tar instead of python tarfile for performance reasons
     completed_process = subprocess.run(
         [
@@ -2284,8 +2285,7 @@ def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
             "--preserve-permissions",
         ],
         input=b"\0".join(f.encode() for f in to_sync),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         close_fds=True,
         shell=False,
         check=False,
@@ -2317,8 +2317,7 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
             "--preserve-permissions",
         ],
         input=sync_archive,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         close_fds=True,
         shell=False,
         check=False,
@@ -2334,8 +2333,8 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
 class ConfigSyncFileInfo(NamedTuple):
     st_mode: int
     st_size: int
-    link_target: Optional[str]
-    file_hash: Optional[str]
+    link_target: str | None
+    file_hash: str | None
 
 
 # Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
@@ -2344,7 +2343,7 @@ class ConfigSyncFileInfo(NamedTuple):
 #    ("file_infos", Dict[str, ConfigSyncFileInfo]),
 #    ("config_generation", int),
 # ])
-GetConfigSyncStateResponse = Tuple[Dict[str, Tuple[int, int, Optional[str], Optional[str]]], int]
+GetConfigSyncStateResponse = tuple[dict[str, tuple[int, int, Optional[str], Optional[str]]], int]
 
 
 @automation_command_registry.register
@@ -2360,13 +2359,13 @@ class AutomationGetConfigSyncState(AutomationCommand):
     def command_name(self):
         return "get-config-sync-state"
 
-    def get_request(self) -> List[ReplicationPath]:
+    def get_request(self) -> list[ReplicationPath]:
         return [
             ReplicationPath(*e)
             for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
         ]
 
-    def execute(self, api_request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
+    def execute(self, api_request: list[ReplicationPath]) -> GetConfigSyncStateResponse:
         with store.lock_checkmk_configuration():
             file_infos = _get_config_sync_file_infos(api_request, base_dir=cmk.utils.paths.omd_root)
             transport_file_infos = {
@@ -2376,8 +2375,8 @@ class AutomationGetConfigSyncState(AutomationCommand):
 
 
 def _get_config_sync_file_infos(
-    replication_paths: List[ReplicationPath], base_dir: Path
-) -> Dict[str, ConfigSyncFileInfo]:
+    replication_paths: list[ReplicationPath], base_dir: Path
+) -> dict[str, ConfigSyncFileInfo]:
     """Scans the given replication paths for the information needed for the config sync
 
     It produces a dictionary of sync file infos. One entry is created for each file.  Directories
@@ -2460,7 +2459,7 @@ def _config_generation_path() -> Path:
 class ReceiveConfigSyncRequest(NamedTuple):
     site_id: SiteId
     sync_archive: bytes
-    to_delete: List[str]
+    to_delete: list[str]
     config_generation: int
 
 
@@ -2507,7 +2506,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
             logger.debug("Done")
             return True
 
-    def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:
+    def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: list[str]) -> None:
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
 
@@ -2525,8 +2524,8 @@ class AutomationReceiveConfigSync(AutomationCommand):
 
 
 def activate_changes_start(
-    sites: List[SiteId],
-    comment: Optional[str] = None,
+    sites: list[SiteId],
+    comment: str | None = None,
     force_foreign_changes: bool = False,
 ) -> ActivationId:
     """Start activation of configuration changes on specific or "dirty" sites.
@@ -2599,8 +2598,8 @@ def activate_changes_start(
 
 
 def activate_changes_wait(
-    activation_id: ActivationId, timeout: Optional[Union[float, int]] = None
-) -> Optional[ActivationState]:
+    activation_id: ActivationId, timeout: float | int | None = None
+) -> ActivationState | None:
     """Wait for configuration changes to complete activating.
 
     Args:

@@ -5,7 +5,7 @@
 
 import re
 import shlex
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _

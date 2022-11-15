@@ -9,8 +9,9 @@ import ast
 import json
 import os
 import tarfile
+from collections.abc import Collection, Iterator
 from dataclasses import asdict
-from typing import Collection, Dict, Iterator, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple
 
 from six import ensure_str
 
@@ -253,7 +254,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         )
 
     def _extract_from_file(
-        self, filename: str, elements: Dict[str, backup_snapshots.DomainSpec]
+        self, filename: str, elements: dict[str, backup_snapshots.DomainSpec]
     ) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
@@ -299,7 +300,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def _get_amount_changes(self) -> int:
         return sum(len(self._changes_of_site(site_id)) for site_id in activation_sites())
 
-    def _get_initial_message(self) -> Optional[str]:
+    def _get_initial_message(self) -> str | None:
         if self._get_amount_changes() != 0:
             return None
         if not request.has_var("_finished"):
@@ -556,7 +557,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return self._site_is_online(status) and self._site_is_logged_in(site_id, site)
 
 
-def render_object_ref_as_icon(object_ref: Optional[ObjectRef]) -> Optional[HTML]:
+def render_object_ref_as_icon(object_ref: ObjectRef | None) -> HTML | None:
     if object_ref is None:
         return None
 
@@ -575,13 +576,13 @@ def render_object_ref_as_icon(object_ref: Optional[ObjectRef]) -> Optional[HTML]
     return HTMLWriter.render_a(
         content=html.render_icon(
             icons.get(object_ref.object_type, "link"),
-            title="%s: %s" % (object_ref.object_type.name, title) if title else None,
+            title=f"{object_ref.object_type.name}: {title}" if title else None,
         ),
         href=url,
     )
 
 
-def render_object_ref(object_ref: Optional[ObjectRef]) -> Union[str, HTML, None]:
+def render_object_ref(object_ref: ObjectRef | None) -> str | HTML | None:
     url, title = _get_object_reference(object_ref)
     if title and not url:
         return title
@@ -591,7 +592,7 @@ def render_object_ref(object_ref: Optional[ObjectRef]) -> Union[str, HTML, None]
 
 
 # TODO: Move this to some generic place
-def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str], Optional[str]]:
+def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str | None]:
     if object_ref is None:
         return None, None
 
@@ -644,7 +645,7 @@ def _get_object_reference(object_ref: Optional[ObjectRef]) -> Tuple[Optional[str
     return None, object_ref.ident
 
 
-def _vs_activation(title: str, has_foreign_changes: bool) -> Optional[Dictionary]:
+def _vs_activation(title: str, has_foreign_changes: bool) -> Dictionary | None:
     elements: list[DictionaryEntry] = []
 
     if active_config.wato_activate_changes_comment_mode != "disabled":
@@ -712,7 +713,7 @@ class ModeAjaxStartActivation(AjaxPage):
         else:
             affected_sites = [SiteId(s) for s in affected_sites_request.split(",")]
 
-        comment: Optional[str] = api_request.get("comment", "").strip()
+        comment: str | None = api_request.get("comment", "").strip()
 
         activate_foreign = api_request.get("activate_foreign", "0") == "1"
 

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, MutableSequence, NamedTuple, NewType, Sequence, TypedDict
+from collections.abc import MutableSequence, Sequence
+from typing import NamedTuple, NewType, TypedDict
 
 from livestatus import SiteId
 
@@ -46,7 +47,7 @@ class DiscoveryTask(NamedTuple):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    selection_elements: List[ValueSpec] = []
+    selection_elements: list[ValueSpec] = []
 
     if include_subfolders:
         selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
@@ -300,7 +301,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         return _("discovery successful")
 
 
-def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> List[DiscoveryHost]:
+def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> list[DiscoveryHost]:
     hosts_to_discover = []
     for host_name in hostnames:
         host = Host.host(host_name)
@@ -336,7 +337,7 @@ def bulk_discovery_job_status(job: BulkDiscoveryBackgroundJob) -> BulkDiscoveryS
 
 def start_bulk_discovery(
     job: BulkDiscoveryBackgroundJob,
-    hosts: List[DiscoveryHost],
+    hosts: list[DiscoveryHost],
     discovery_mode: DiscoveryMode,
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
@@ -377,15 +378,15 @@ def start_bulk_discovery(
 
 
 def _create_tasks_from_hosts(
-    hosts_to_discover: List[DiscoveryHost], bulk_size: BulkSize
-) -> List[DiscoveryTask]:
+    hosts_to_discover: list[DiscoveryHost], bulk_size: BulkSize
+) -> list[DiscoveryTask]:
     """Create a list of tasks for the job
 
     Each task groups the hosts together that are in the same folder and site. This is
     mainly done to reduce the overhead of site communication and loading/saving of files
     """
     current_site_and_folder = None
-    tasks: List[DiscoveryTask] = []
+    tasks: list[DiscoveryTask] = []
 
     for site_id, folder_path, host_name in sorted(hosts_to_discover):
         if (

@@ -6,7 +6,8 @@
 
 import abc
 import operator
-from typing import Any, Collection, Dict, Iterator, List, Optional, Tuple, Type
+from collections.abc import Collection, Iterator
+from typing import Any
 
 from cmk.utils.type_defs import HostName
 
@@ -885,7 +886,7 @@ class ModeFolder(WatoMode):
             contact_group_names = load_contact_group_information()
 
             host_errors = self._folder.host_validation_errors()
-            rendered_hosts: List[HostName] = []
+            rendered_hosts: list[HostName] = []
 
             # Now loop again over all hosts and display them
             max_hosts = len(hostnames)
@@ -1096,7 +1097,7 @@ class ModeFolder(WatoMode):
 
     def _move_to_imported_folders(self, host_names_to_move) -> None:  # type:ignore[no-untyped-def]
         # Create groups of hosts with the same target folder
-        target_folder_names: Dict[str, List[HostName]] = {}
+        target_folder_names: dict[str, list[HostName]] = {}
         for host_name in host_names_to_move:
             host = self._folder.load_host(host_name)
             imported_folder_name = host.attribute("imported_folder")
@@ -1206,7 +1207,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
 
 class ABCFolderMode(WatoMode, abc.ABC):
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def __init__(self) -> None:
@@ -1273,7 +1274,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         html.begin_form("edit_host", method="POST")
 
         # title
-        basic_attributes: List[Tuple[str, ValueSpec, str]] = [
+        basic_attributes: list[tuple[str, ValueSpec, str]] = [
             ("title", TextInput(title=_("Title")), "" if new else self._folder.title()),
         ]
         html.set_focus("title")

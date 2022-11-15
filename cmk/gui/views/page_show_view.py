@@ -6,11 +6,10 @@
 """Display a table view"""
 
 import functools
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, List
 from typing import Tuple as _Tuple
-from typing import Union
 
 import livestatus
 from livestatus import SiteId
@@ -111,7 +110,7 @@ def _may_create_slow_view_log_entry(page_view_tracker: CPUTracker, view: View) -
         view.row_limit,
         # as in get_limit()
         request.var("limit", "soft"),
-        ["%s=%s" % (k, v) for k, v in request.itervars() if k != "selection" and v != ""],
+        [f"{k}={v}" for k, v in request.itervars() if k != "selection" and v != ""],
         view.context,
         view.process_tracking.amount_unfiltered_rows,
         view.process_tracking.amount_filtered_rows,
@@ -182,12 +181,12 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: List[str]):  # type:ignore[no-untyped-def]
+def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type:ignore[no-untyped-def]
     from cmk.utils.livestatus_helpers.queries import Query
 
     from cmk.gui.plugins.openapi.utils import create_url
 
-    entries: List[PageMenuEntry] = []
+    entries: list[PageMenuEntry] = []
     for text_query in set(queries):
         if "\nStats:" in text_query:
             continue
@@ -269,7 +268,7 @@ def get_row_count(view: View) -> int:
 
 
 def _get_view_rows(
-    view: View, all_active_filters: List[Filter], only_count: bool = False
+    view: View, all_active_filters: list[Filter], only_count: bool = False
 ) -> _Tuple[int, Rows]:
     with CPUTracker() as fetch_rows_tracker:
         rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
@@ -294,7 +293,7 @@ def _get_view_rows(
 
 
 def _fetch_view_rows(
-    view: View, all_active_filters: List[Filter], only_count: bool
+    view: View, all_active_filters: list[Filter], only_count: bool
 ) -> _Tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
@@ -321,7 +320,7 @@ def _fetch_view_rows(
         # We test for limit here and not inside view.row_limit, because view.row_limit is used
         # for rendering limits.
         query_row_limit = None if view.datasource.ignore_limit else view.row_limit
-        row_data: Union[Rows, _Tuple[Rows, int]] = view.datasource.table.query(
+        row_data: Rows | _Tuple[Rows, int] = view.datasource.table.query(
             view.datasource,
             view.row_cells,
             columns,
@@ -433,7 +432,7 @@ def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:
 def _get_needed_regular_columns(
     all_active_filters: Iterable[Filter],
     view: View,
-) -> List[ColumnName]:
+) -> list[ColumnName]:
     """Compute the list of all columns we need to query via Livestatus
 
     Those are: (1) columns used by the sorters in use, (2) columns use by column- and group-painters
@@ -483,8 +482,8 @@ def _get_needed_regular_columns(
 
 
 def _get_needed_join_columns(
-    join_cells: List[JoinCell], sorters: List[SorterEntry]
-) -> List[ColumnName]:
+    join_cells: list[JoinCell], sorters: list[SorterEntry]
+) -> list[ColumnName]:
     join_columns = columns_of_cells(join_cells)
 
     # Columns needed for sorters
@@ -503,9 +502,9 @@ def _get_needed_join_columns(
 
 def _is_inventory_data_needed(view: View, all_active_filters: "List[Filter]") -> bool:
 
-    group_cells: List[Cell] = view.group_cells
-    cells: List[Cell] = view.row_cells
-    sorters: List[SorterEntry] = view.sorters
+    group_cells: list[Cell] = view.group_cells
+    cells: list[Cell] = view.row_cells
+    sorters: list[SorterEntry] = view.sorters
 
     for cell in cells:
         if cell.has_tooltip():
@@ -568,8 +567,8 @@ def _add_sla_data(view: View, rows: Rows) -> None:
         sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
 
-def columns_of_cells(cells: Sequence[Cell]) -> Set[ColumnName]:
-    columns: Set[ColumnName] = set()
+def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:
+    columns: set[ColumnName] = set()
     permitted_views = get_permitted_views()
     for cell in cells:
         columns.update(cell.needed_columns(permitted_views))
@@ -581,7 +580,7 @@ JoinSlaveKey = str
 
 
 def _do_table_join(
-    view: View, master_rows: Rows, master_filters: str, sorters: List[SorterEntry]
+    view: View, master_rows: Rows, master_filters: str, sorters: list[SorterEntry]
 ) -> None:
     assert view.datasource.join is not None
     join_table, join_master_column = view.datasource.join
@@ -597,7 +596,7 @@ def _do_table_join(
         join_filters.append(cell.livestatus_filter(join_slave_column))
 
     join_filters.append("Or: %d" % len(join_filters))
-    headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
+    headers = "{}{}\n".format(master_filters, "\n".join(join_filters))
     row_data = slave_ds.table.query(
         view.datasource,
         view.row_cells,
@@ -614,9 +613,9 @@ def _do_table_join(
     else:
         rows = row_data
 
-    per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, Row]] = {}
-    current_key: Optional[JoinMasterKey] = None
-    current_entry: Optional[Dict[JoinSlaveKey, Row]] = None
+    per_master_entry: dict[JoinMasterKey, dict[JoinSlaveKey, Row]] = {}
+    current_key: JoinMasterKey | None = None
+    current_entry: dict[JoinSlaveKey, Row] | None = None
     for row in rows:
         master_key = (row["site"], row[join_master_column])
         if master_key != current_key:
@@ -657,7 +656,7 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
 
 
 def _parse_url_sorters(
-    config_sorters: Sequence[SorterSpec], cells: Sequence[Cell], sort: Optional[str]
+    config_sorters: Sequence[SorterSpec], cells: Sequence[Cell], sort: str | None
 ) -> list[SorterSpec]:
     sorters: list[SorterSpec] = []
     sorter: SorterName | tuple[SorterName, Mapping[str, Any]]
@@ -712,7 +711,7 @@ def _sorter_parameters_by_ident(
     return None
 
 
-def get_user_sorters(sorters: Sequence[SorterSpec], cells: Sequence[Cell]) -> List[SorterSpec]:
+def get_user_sorters(sorters: Sequence[SorterSpec], cells: Sequence[Cell]) -> list[SorterSpec]:
     """Returns a list of optionally set sort parameters from HTTP request"""
     return _parse_url_sorters(sorters, cells, request.var("sort"))
 
@@ -722,7 +721,7 @@ def get_want_checkboxes() -> bool:
     return request.get_integer_input_mandatory("show_checkboxes", 0) == 1
 
 
-def get_limit() -> Optional[int]:
+def get_limit() -> int | None:
     """How many data rows may the user query?"""
     limitvar = request.var("limit", "soft")
     if limitvar == "hard" and user.may("general.ignore_soft_limit"):
@@ -741,7 +740,7 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: "Rows", sorters: List[SorterEntry]) -> None:
+def _sort_data(data: "Rows", sorters: list[SorterEntry]) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return

@@ -152,8 +152,8 @@ def _parameter_valuespec_oracle_performance():
                 target_array = iostat_bytes_choices if io_unit == "bytes/s" else iostat_ios_choices
                 target_array.append(
                     (
-                        "oracle_ios_f_%s_%s_%s" % (iofile_id, size_code, io_code),
-                        " %s %s %s" % (iofile_name, size_text, io_text),
+                        f"oracle_ios_f_{iofile_id}_{size_code}_{io_code}",
+                        f" {iofile_name} {size_text} {io_text}",
                         levels_tuple(Integer, io_unit),
                     )
                 )

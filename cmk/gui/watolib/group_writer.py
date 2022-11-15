@@ -48,11 +48,8 @@ def _save_cmk_base_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
     output = wato_fileheader()
     for group_type in get_args(GroupType):
         if check_mk_groups.get(group_type):
-            output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (
-                group_type,
-                group_type,
-            )
-            output += "define_%sgroups.update(%s)\n\n" % (
+            output += f"if type(define_{group_type}groups) != dict:\n    define_{group_type}groups = {{}}\n"
+            output += "define_{}groups.update({})\n\n".format(
                 group_type,
                 format_config_value(check_mk_groups[group_type]),
             )
@@ -74,7 +71,7 @@ def _save_gui_groups(all_groups: AllGroupSpecs, config_dir: str) -> None:
     output = wato_fileheader()
     for what in get_args(GroupType):
         if multisite_groups.get(what):
-            output += "multisite_%sgroups = \\\n%s\n\n" % (
+            output += "multisite_{}groups = \\\n{}\n\n".format(
                 what,
                 format_config_value(multisite_groups[what]),
             )

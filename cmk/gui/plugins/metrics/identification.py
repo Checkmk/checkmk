@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Generic, MutableMapping, Optional, Type, TypeVar
+from collections.abc import MutableMapping
+from typing import Generic, TypeVar
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -37,9 +38,9 @@ class GraphIdentificationTypes:
 
     def __init__(self) -> None:
         super().__init__()
-        self._types: MutableMapping[str, Type["GraphIdentification"]] = {}
+        self._types: MutableMapping[str, type["GraphIdentification"]] = {}
 
-    def register(self, type_cls: Type["GraphIdentification"]) -> None:
+    def register(self, type_cls: type["GraphIdentification"]) -> None:
         assert issubclass(type_cls, GraphIdentification)
         self._types[type_cls.ident()] = type_cls
 
@@ -50,7 +51,7 @@ class GraphIdentificationTypes:
     def create_graph_recipes(
         self,
         graph_identification: GraphIdentifier,
-        destination: Optional[str] = None,
+        destination: str | None = None,
     ) -> list[GraphRecipe]:
         type_ident, spec_info = graph_identification
         type_cls = self._types[type_ident]
@@ -72,7 +73,7 @@ class GraphIdentification(Generic[T], abc.ABC):
 
     @abc.abstractmethod
     def create_graph_recipes(
-        self, ident_info: T, destination: Optional[str] = None
+        self, ident_info: T, destination: str | None = None
     ) -> list[GraphRecipe]:
         ...
 
@@ -83,7 +84,7 @@ class GraphIdentificationExplicit(GraphIdentification[ExplicitGraphSpec]):
         return "explicit"
 
     def create_graph_recipes(
-        self, ident_info: ExplicitGraphSpec, destination: Optional[str] = None
+        self, ident_info: ExplicitGraphSpec, destination: str | None = None
     ) -> list[GraphRecipe]:
         graph_recipe = dict(ident_info)
         graph_recipe["specification"] = ("explicit", ident_info)

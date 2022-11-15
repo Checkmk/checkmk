@@ -6,7 +6,7 @@
 
 import enum
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any
 
 from cmk.utils.type_defs import Labels
 
@@ -30,7 +30,7 @@ class ObjectRef:
     labels: Labels = field(default_factory=dict)
 
     def serialize(self):
-        serialized: Dict[str, Any] = {
+        serialized: dict[str, Any] = {
             "object_type": self.object_type.name,
             "ident": self.ident,
         }
@@ -39,7 +39,7 @@ class ObjectRef:
         return serialized
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, Any]) -> "ObjectRef":
+    def deserialize(cls, serialized: dict[str, Any]) -> "ObjectRef":
         return cls(
             object_type=ObjectRefType(serialized["object_type"]),
             ident=serialized["ident"],

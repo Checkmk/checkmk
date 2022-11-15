@@ -6,11 +6,11 @@
 
 import copy
 import json
-from typing import Any, Collection, Dict, List
+from collections.abc import Collection
+from typing import Any
 from typing import Optional as _Optional
 from typing import overload
 from typing import Tuple as _Tuple
-from typing import Type
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
@@ -233,7 +233,7 @@ class ABCBIMode(WatoMode):
             request,
             [("mode", "bi_edit_rule"), ("id", bi_rule.id), ("pack", bi_pack.id)],
         )
-        title = "%s (%s)" % (bi_rule.properties.title, bi_rule.id)
+        title = f"{bi_rule.properties.title} ({bi_rule.id})"
 
         sub_rule_ids = self.aggregation_sub_rule_ids(bi_rule)
         if not sub_rule_ids:
@@ -245,7 +245,7 @@ class ABCBIMode(WatoMode):
         else:
             with foldable_container(
                 treename="bi_rule_trees",
-                id_="%s%s" % (tree_prefix, tree_path),
+                id_=f"{tree_prefix}{tree_path}",
                 isopen=False,
                 title=title,
                 title_url=edit_url,
@@ -284,7 +284,7 @@ class ABCBIMode(WatoMode):
 @mode_registry.register
 class ModeBIEditPack(ABCBIMode):
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIPacks
 
     @classmethod
@@ -614,7 +614,7 @@ class ModeBIRules(ABCBIMode):
         self._view_type = request.var("view", "list")
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIPacks
 
     def _breadcrumb_url(self) -> str:
@@ -986,7 +986,7 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
                     table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
-                    have_this = set([])
+                    have_this = set()
                     for (pack_id, aggr_id, bi_aggregation) in aggregations_that_use_rule.get(
                         rule_id, []
                     ):
@@ -1009,10 +1009,10 @@ class ModeBIRules(ABCBIMode):
     def _aggregation_title(self, bi_aggregation):
         rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
         assert rule is not None
-        return "%s (%s)" % (rule.properties.title, rule.id)
+        return f"{rule.properties.title} ({rule.id})"
 
     def _find_aggregation_rule_usages(self):
-        aggregations_that_use_rule: Dict[str, List] = {}
+        aggregations_that_use_rule: dict[str, list] = {}
         for pack_id, bi_pack in self._bi_packs.get_packs().items():
             for aggr_id, bi_aggregation in bi_pack.get_aggregations().items():
                 action = bi_aggregation.node.action
@@ -1077,7 +1077,7 @@ class ModeBIEditRule(ABCBIMode):
         return self._rule_id
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIRules
 
     def title(self) -> str:
@@ -1193,7 +1193,7 @@ class ModeBIEditRule(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     def _may_use_rules_from_packs(self, bi_rule: BIRule) -> None:
-        rules_without_permissions: Dict[_Tuple[str, str], Any] = {}
+        rules_without_permissions: dict[_Tuple[str, str], Any] = {}
         for bi_node in bi_rule.get_nodes():
             if bi_node.action.kind() != "call_a_rule":
                 continue
@@ -1619,7 +1619,7 @@ class BIModeEditAggregation(ABCBIMode):
                 raise MKUserError("id", _("This aggregation does not exist."))
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIPacks
 
     def title(self) -> str:
@@ -1907,7 +1907,7 @@ class BIModeAggregations(ABCBIMode):
         return ["bi_rules"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIPacks
 
     # pylint does not understand this overloading
@@ -2239,7 +2239,7 @@ class ModeBIRuleTree(ABCBIMode):
         return ["bi_rules"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> _Optional[type[WatoMode]]:
         return ModeBIPacks
 
     def __init__(self) -> None:

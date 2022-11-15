@@ -8,8 +8,9 @@ from __future__ import annotations
 import json
 import pprint
 import re
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -98,7 +99,7 @@ class HTMLGenerator(HTMLWriter):
             self._default_javascripts.append(name)
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
-        self.javascript("cmk.utils.set_reload(%s, '%s');" % (secs, url))
+        self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
 
     def add_body_css_class(self, cls: str) -> None:
         self._body_classes.append(cls)
@@ -172,9 +173,7 @@ class HTMLGenerator(HTMLWriter):
             if not urls[n]:
                 text = text.replace(match[0], match[2])
             else:
-                text = text.replace(
-                    match[0], '<a href="%s" target="_blank">%s</a>' % (urls[n], match[2])
-                )
+                text = text.replace(match[0], f'<a href="{urls[n]}" target="_blank">{match[2]}</a>')
         return text
 
     def enable_help_toggle(self) -> None:
@@ -994,7 +993,7 @@ class HTMLGenerator(HTMLWriter):
         if self.request.has_var(varname):
             checked = self.request.var(varname) == value
 
-        id_ = "rb_%s_%s" % (varname, value) if label else None
+        id_ = f"rb_{varname}_{value}" if label else None
         self.open_span(class_="radiobutton_group")
         self.input(
             name=varname, type_="radio", value=value, checked="" if checked else None, id_=id_
@@ -1282,7 +1281,7 @@ class HTMLGenerator(HTMLWriter):
         hover_switch_delay: int | None = None,
     ) -> HTML:
 
-        onclick = "cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s,  %s);" % (
+        onclick = "cmk.popup_menu.toggle_popup(event, this, {}, {}, {}, {}, {},  {});".format(
             json.dumps(ident),
             json.dumps(method.asdict()),
             json.dumps(data if data else None),
@@ -1292,9 +1291,11 @@ class HTMLGenerator(HTMLWriter):
         )
 
         if popup_group:
-            onmouseenter: str | None = "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" % (
-                json.dumps(popup_group),
-                json.dumps(hover_switch_delay),
+            onmouseenter: str | None = (
+                "cmk.popup_menu.switch_popup_menu_group(this, {}, {})".format(
+                    json.dumps(popup_group),
+                    json.dumps(hover_switch_delay),
+                )
             )
             onmouseleave: str | None = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:

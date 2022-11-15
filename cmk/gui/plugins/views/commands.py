@@ -504,7 +504,7 @@ class CommandFakeCheckResult(Command):
                 perfdata = request.var("_fake_perfdata")
                 if perfdata:
                     pluginoutput += "|" + perfdata
-                command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (
+                command = "PROCESS_{}_CHECK_RESULT;{};{};{}".format(
                     "SERVICE" if cmdtag == "SVC" else cmdtag,
                     spec,
                     s,
@@ -601,7 +601,7 @@ class CommandCustomNotification(Command):
             comment = request.get_str_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
             forced = 2 if html.get_checkbox("_cusnot_forced") else 0
-            command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
+            command = "SEND_CUSTOM_{}_NOTIFICATION;{};{};{};{}".format(
                 cmdtag,
                 spec,
                 broadcast + forced,
@@ -732,7 +732,7 @@ class CommandAcknowledge(Command):
             specs = []
             for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
                 if service:
-                    spec = "%s;%s" % (host, service)
+                    spec = f"{host};{service}"
                     cmdtag = "SVC"
                 else:
                     spec = host
@@ -871,7 +871,7 @@ class CommandAddComment(Command):
             command = (
                 "ADD_"
                 + cmdtag
-                + "_COMMENT;%s;1;%s" % (spec, user.id)
+                + f"_COMMENT;{spec};1;{user.id}"
                 + (";%s" % livestatus.lqencode(comment))
             )
             title = _("<b>add a comment to</b>")
@@ -1137,7 +1137,7 @@ class CommandScheduleDowntimes(Command):
                 downtime_ids.append(int(id_))
         commands = []
         for dtid in downtime_ids:
-            commands.append("DEL_%s_DOWNTIME;%s\n" % (cmdtag, dtid))
+            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
         title = _("<b>remove all scheduled downtimes</b> of ")
         return commands, title
 
@@ -1331,7 +1331,7 @@ def bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
     commands_aggr = []
     for site, host, service in bi.find_all_leaves(node):
         if service:
-            spec = "%s;%s" % (host, service)
+            spec = f"{host};{service}"
             cmdtag: Literal["HOST", "SVC"] = "SVC"
         else:
             spec = host
@@ -1435,7 +1435,7 @@ class CommandRemoveDowntime(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
-            return ("DEL_%s_DOWNTIME;%s" % (cmdtag, spec), _("remove"))
+            return (f"DEL_{cmdtag}_DOWNTIME;{spec}", _("remove"))
         return None
 
 
@@ -1485,10 +1485,10 @@ class CommandRemoveComments(Command):
             spec = (
                 row["host_name"]
                 if cmdtag == "HOST"
-                else ("%s;%s" % (row["host_name"], row["service_description"]))
+                else ("{};{}".format(row["host_name"], row["service_description"]))
             )
-            return ("REMOVE_%s_ACKNOWLEDGEMENT;%s" % (cmdtag, spec)), ""
-        return ("DEL_%s_COMMENT;%s" % (cmdtag, spec)), ""
+            return (f"REMOVE_{cmdtag}_ACKNOWLEDGEMENT;{spec}"), ""
+        return (f"DEL_{cmdtag}_COMMENT;{spec}"), ""
 
 
 # .
@@ -1551,7 +1551,7 @@ class CommandFavorites(Command):
                 title = _("<b>add to you favorites</b>")
             else:
                 title = _("<b>remove from your favorites</b>")
-            return "STAR;%s;%s" % (star, spec), title
+            return f"STAR;{star};{spec}", title
         return None
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:

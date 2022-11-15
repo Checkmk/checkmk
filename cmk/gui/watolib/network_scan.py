@@ -10,7 +10,7 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 from cmk.utils import store
 from cmk.utils.translations import translate_hostname
@@ -28,8 +28,8 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, update_metadata
 
-NetworkScanFoundHosts = List[Tuple[HostName, HostAddress]]
-NetworkScanResult = Dict[str, Any]
+NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
+NetworkScanResult = dict[str, Any]
 
 
 class NetworkScanRequest(NamedTuple):
@@ -100,7 +100,7 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
 
-def _find_folder_to_scan() -> Optional[CREFolder]:
+def _find_folder_to_scan() -> CREFolder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in Folder.all_folders().values():
@@ -216,7 +216,7 @@ _FULL_IPV4 = (2**32) - 1
 def _ip_addresses_of_range(spec):
     first_int, last_int = map(_ip_int_from_string, spec)
 
-    addresses: List[HostAddress] = []
+    addresses: list[HostAddress] = []
 
     if first_int > last_int:
         return addresses  # skip wrong config
@@ -239,7 +239,7 @@ def _ip_int_from_string(ip_str: str) -> int:
 
 
 def _string_from_ip_int(ip_int: int) -> HostAddress:
-    octets: List[str] = []
+    octets: list[str] = []
     for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
@@ -309,7 +309,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # Initalize all workers
     threads = []
-    found_hosts: List[Tuple[HostName, HostAddress]] = []
+    found_hosts: list[tuple[HostName, HostAddress]] = []
     for _t_num in range(parallel_pings):
         t = threading.Thread(target=_ping_worker, args=[ip_addresses, found_hosts])
         t.daemon = True
@@ -323,7 +323,7 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses: List[HostAddress], hosts: List[Tuple[HostName, HostAddress]]) -> None:
+def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostAddress]]) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -333,7 +333,7 @@ def _ping_worker(addresses: List[HostAddress], hosts: List[Tuple[HostName, HostA
         if _ping(ipaddress):
             try:
                 host_name = socket.gethostbyaddr(ipaddress)[0]
-            except socket.error:
+            except OSError:
                 host_name = ipaddress
 
             hosts.append((host_name, ipaddress))

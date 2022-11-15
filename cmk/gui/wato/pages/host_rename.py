@@ -5,7 +5,7 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from typing import Collection, Optional, Sequence, Type
+from collections.abc import Collection, Sequence
 
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
@@ -101,7 +101,7 @@ class ModeBulkRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def __init__(self) -> None:
@@ -403,7 +403,7 @@ def rename_hosts_background_job(
     if auth_problems:
         message += _(
             "The following hosts could not be renamed because of missing permissions: %s"
-        ) % ", ".join(["%s (%s)" % (host_name, reason) for (host_name, reason) in auth_problems])
+        ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
     job_interface.send_result_message(message)
 
 
@@ -418,7 +418,7 @@ class ModeRenameHost(WatoMode):
         return ["hosts", "manage_hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
     def _from_vars(self):

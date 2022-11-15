@@ -11,5 +11,5 @@ from cmk.gui.http import request
 class PrependURLFilter(logging.Filter):
     def filter(self, record):
         if record.levelno >= logging.ERROR:
-            record.msg = "%s %s" % (request.requested_url, record.msg)
+            record.msg = f"{request.requested_url} {record.msg}"
         return True

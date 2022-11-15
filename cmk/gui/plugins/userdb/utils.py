@@ -5,8 +5,9 @@
 
 import abc
 import os
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 from livestatus import SiteId
 
@@ -29,14 +30,14 @@ from cmk.gui.valuespec import ValueSpec
 # incompatible
 USER_SCHEME_SERIAL = 0
 
-RoleSpec = Dict[str, Any]  # TODO: Improve this type
-Roles = Dict[str, RoleSpec]  # TODO: Improve this type
-UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
+RoleSpec = dict[str, Any]  # TODO: Improve this type
+Roles = dict[str, RoleSpec]  # TODO: Improve this type
+UserConnectionSpec = dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
 CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
-def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
+def load_cached_profile(user_id: UserId) -> UserSpec | None:
     usr = LoggedInUser(user_id) if user_id != user.id else user
     return usr.load_file("cached_profile", None)
 
@@ -125,7 +126,7 @@ def add_internal_attributes(usr: UserSpec) -> int:
     return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
 
 
-def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+def show_mode_choices() -> list[tuple[str | None, str]]:
     return [
         ("default_show_less", _("Default to show less")),
         ("default_show_more", _("Default to show more")),
@@ -157,7 +158,7 @@ def validate_start_url(value: str, varprefix: str) -> None:
 
 
 @request_memoize(maxsize=None)
-def get_connection(connection_id: Optional[str]) -> "Optional[UserConnector]":
+def get_connection(connection_id: str | None) -> "Optional[UserConnector]":
     """Returns the connection object of the requested connection id
 
     This function maintains a cache that for a single connection_id only one object per request is
@@ -179,10 +180,10 @@ def active_connections() -> "List[Tuple[str, UserConnector]]":
     ]
 
 
-def connection_choices() -> List[Tuple[str, str]]:
+def connection_choices() -> list[tuple[str, str]]:
     return sorted(
         [
-            (connection_id, "%s (%s)" % (connection_id, connection.type()))
+            (connection_id, f"{connection_id} ({connection.type()})")
             for connection_id, connection in _all_connections()
             if connection.type() == "ldap"
         ],
@@ -194,11 +195,11 @@ def _all_connections() -> "List[Tuple[str, UserConnector]]":
     return _get_connections_for(_get_connection_configs())
 
 
-def _get_connections_for(configs: List[Dict[str, Any]]) -> "List[Tuple[str, UserConnector]]":
+def _get_connections_for(configs: list[dict[str, Any]]) -> "List[Tuple[str, UserConnector]]":
     return [(cfg["id"], user_connector_registry[cfg["type"]](cfg)) for cfg in configs]
 
 
-def _get_connection_configs() -> List[Dict[str, Any]]:
+def _get_connection_configs() -> list[dict[str, Any]]:
     # The htpasswd connector is enabled by default and always executed first.
     return [_HTPASSWD_CONNECTION] + active_config.user_connections
 
@@ -224,13 +225,13 @@ _HTPASSWD_CONNECTION = {
 #   '----------------------------------------------------------------------'
 
 
-def load_connection_config(lock: bool = False) -> List[UserConnectionSpec]:
+def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
     filename = os.path.join(_multisite_dir(), "user_connections.mk")
     return store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
 
 
 def save_connection_config(
-    connections: List[UserConnectionSpec], base_dir: Optional[str] = None
+    connections: list[UserConnectionSpec], base_dir: str | None = None
 ) -> None:
     if not base_dir:
         base_dir = _multisite_dir()
@@ -366,7 +367,7 @@ class UserConnector(abc.ABC):
         self,
         *,
         add_to_changelog: bool,
-        only_username: Optional[UserId],
+        only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ):
@@ -384,13 +385,13 @@ class UserConnector(abc.ABC):
 
     # List of user attributes locked for all users attached to this
     # connection. Those locked attributes are read-only in WATO.
-    def locked_attributes(self) -> List[str]:
+    def locked_attributes(self) -> list[str]:
         return []
 
-    def multisite_attributes(self) -> List[str]:
+    def multisite_attributes(self) -> list[str]:
         return []
 
-    def non_contact_attributes(self) -> List[str]:
+    def non_contact_attributes(self) -> list[str]:
         return []
 
 
@@ -455,7 +456,7 @@ class UserAttribute(abc.ABC):
 #   '----------------------------------------------------------------------'
 
 
-class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[Type[UserConnector]]):
+class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[type[UserConnector]]):
     """The management object for all available user connector classes.
 
     Have a look at the base class for details."""
@@ -467,7 +468,7 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[Type[UserConnecto
 user_connector_registry = UserConnectorRegistry()
 
 
-class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[UserAttribute]]):
+class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[type[UserAttribute]]):
     """The management object for all available user attributes.
     Have a look at the base class for details."""
 
@@ -478,12 +479,12 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[UserAttribut
 user_attribute_registry = UserAttributeRegistry()
 
 
-def get_user_attributes() -> List[Tuple[str, UserAttribute]]:
+def get_user_attributes() -> list[tuple[str, UserAttribute]]:
     return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
 
 
-def get_user_attributes_by_topic() -> Dict[str, List[Tuple[str, UserAttribute]]]:
-    topics: Dict[str, List[Tuple[str, UserAttribute]]] = {}
+def get_user_attributes_by_topic() -> dict[str, list[tuple[str, UserAttribute]]]:
+    topics: dict[str, list[tuple[str, UserAttribute]]] = {}
     for name, attr_class in user_attribute_registry.items():
         topic = attr_class().topic()
         topics.setdefault(topic, []).append((name, attr_class()))

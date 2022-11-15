@@ -8,7 +8,7 @@
 # fields: mode, title, icon, permission, help
 
 import time
-from typing import Iterable
+from collections.abc import Iterable
 
 import cmk.utils.version as cmk_version
 

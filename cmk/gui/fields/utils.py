@@ -6,18 +6,8 @@
 import collections
 import functools
 import typing
-from typing import (
-    Any,
-    Callable,
-    cast,
-    List,
-    Literal,
-    NamedTuple,
-    Optional,
-    Type,
-    TypedDict,
-    TypeVar,
-)
+from collections.abc import Callable
+from typing import Any, cast, Literal, NamedTuple, TypedDict, TypeVar
 
 from marshmallow import ValidationError
 
@@ -54,8 +44,8 @@ class Attr(NamedTuple):
     mandatory: bool
     section: str
     description: str
-    enum: Optional[List[Optional[str]]] = None
-    field: Optional[fields.Field] = None
+    enum: list[str | None] | None = None
+    field: fields.Field | None = None
 
 
 ObjectType = Literal["host", "folder", "cluster"]
@@ -65,7 +55,7 @@ ObjectContext = Literal["create", "update", "view"]
 def collect_attributes(
     object_type: ObjectType,
     context: ObjectContext,
-) -> List[Attr]:
+) -> list[Attr]:
     """Collect all host attributes for a specific object type
 
     Use cases can be host or folder creation or updating.
@@ -108,14 +98,14 @@ def collect_attributes(
     """
     something = TypeVar("something")
 
-    def _ensure(optional: Optional[something]) -> something:
+    def _ensure(optional: something | None) -> something:
         if optional is None:
             raise ValueError
         return optional
 
     T = typing.TypeVar("T")
 
-    def maybe_call(func: Optional[Callable[[], T]]) -> Optional[T]:
+    def maybe_call(func: Callable[[], T] | None) -> T | None:
         if func is None:
             return None
         return func()
@@ -161,14 +151,14 @@ def collect_attributes(
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
 
-    def _format(tag_id: Optional[str]) -> str:
+    def _format(tag_id: str | None) -> str:
         if tag_id is None:
             return "`null`"
         return f'`"{tag_id}"`'
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
-        description: List[str] = []
+        description: list[str] = []
         if tag_group.help:
             description.append(tag_group.help)
 
@@ -250,7 +240,7 @@ def _field_from_attr(attr):
     class FieldParams(TypedDict, total=False):
         description: str
         required: bool
-        enum: List[Optional[str]]
+        enum: list[str | None]
         validate: Callable[[Any], Any]
         allow_none: bool
 
@@ -270,7 +260,7 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:  # type:ignore[no-untyped-def]
+def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type:ignore[no-untyped-def]
     dict_ = schema_dict.copy()
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
@@ -280,7 +270,7 @@ def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:  # type:ignore[no-
 def attr_openapi_schema(
     object_type: ObjectType,
     context: ObjectContext,
-) -> Type[BaseSchema]:
+) -> type[BaseSchema]:
     """
 
     Examples:
@@ -434,7 +424,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ign
     raise ValueError(f"Unknown operator: {op}")
 
 
-def _lookup_column(table_name: str | typing.Type[Table], column_name: str) -> UnaryExpression:
+def _lookup_column(table_name: str | type[Table], column_name: str) -> UnaryExpression:
     if isinstance(table_name, str):
         table_class = getattr(tables, table_name.title())
     else:
@@ -448,7 +438,7 @@ def _lookup_column(table_name: str | typing.Type[Table], column_name: str) -> Un
     return column.expr
 
 
-def _table_name(table: typing.Type[Table]) -> str:
+def _table_name(table: type[Table]) -> str:
     if isinstance(table, str):
         return table
 

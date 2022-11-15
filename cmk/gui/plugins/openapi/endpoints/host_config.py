@@ -39,7 +39,8 @@ A host_config object can have the following relations present in `links`:
 """
 import itertools
 import operator
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlencode
 
 import cmk.utils.version as cmk_version
@@ -219,8 +220,8 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
 
-    failed_hosts: Dict[HostName, str] = {}
-    succeeded_hosts: List[HostName] = []
+    failed_hosts: dict[HostName, str] = {}
+    succeeded_hosts: list[HostName] = []
     folder: CREFolder
     for folder, grouped_hosts in itertools.groupby(entries, operator.itemgetter("folder")):
         validated_entries = []
@@ -250,7 +251,7 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
 
 
 def _bulk_host_action_response(
-    failed_hosts: Dict[HostName, str], succeeded_hosts: Sequence[CREHost]
+    failed_hosts: dict[HostName, str], succeeded_hosts: Sequence[CREHost]
 ) -> Response:
     if failed_hosts:
         return problem(
@@ -417,8 +418,8 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
 
-    succeeded_hosts: List[CREHost] = []
-    failed_hosts: Dict[HostName, str] = {}
+    succeeded_hosts: list[CREHost] = []
+    failed_hosts: dict[HostName, str] = {}
     for update_detail in entries:
         host_name = update_detail["host_name"]
         new_attributes = update_detail["attributes"]
@@ -642,7 +643,7 @@ def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
     )
 
 
-def _except_keys(dict_: Dict[str, Any], exclude_keys: List[str]) -> Dict[str, Any]:
+def _except_keys(dict_: dict[str, Any], exclude_keys: list[str]) -> dict[str, Any]:
     """Removes some keys from a dict.
 
     Examples:

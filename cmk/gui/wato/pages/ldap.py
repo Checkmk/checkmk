@@ -5,7 +5,7 @@
 """LDAP configuration and diagnose page"""
 
 import re
-from typing import Collection, Iterable, List, Optional, Type
+from collections.abc import Collection, Iterable
 
 from livestatus import SiteId
 
@@ -145,8 +145,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         super().__init__(valuespec=valuespec, migrate=LDAPUserConnector.migrate_config)
 
-    def _general_elements(self) -> List[DictionaryEntry]:
-        general_elements: List[DictionaryEntry] = []
+    def _general_elements(self) -> list[DictionaryEntry]:
+        general_elements: list[DictionaryEntry] = []
 
         if self._new:
             id_element: DictionaryEntry = (
@@ -335,7 +335,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         return connection_elements
 
     def _vs_directory_options(self, ty: str) -> Dictionary:
-        connect_to_choices: List[CascadingDropdownChoice] = [
+        connect_to_choices: list[CascadingDropdownChoice] = [
             (
                 "fixed_list",
                 _("Manually specify list of LDAP servers"),
@@ -694,10 +694,10 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
 
 class LDAPMode(WatoMode):
-    def _add_change(self, action_name: str, text: LogMessage, sites: List[SiteId]) -> None:
+    def _add_change(self, action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
         _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
 
-    def _get_affected_sites(self, connection: UserConnectionSpec) -> List[SiteId]:
+    def _get_affected_sites(self, connection: UserConnectionSpec) -> list[SiteId]:
         if cmk_version.is_managed_edition():
             return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
         return get_login_sites()
@@ -859,7 +859,7 @@ class ModeEditLDAPConnection(LDAPMode):
         return ["global"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeLDAPConfig
 
     def _from_vars(self):
@@ -994,7 +994,7 @@ class ModeEditLDAPConnection(LDAPMode):
             assert isinstance(connection, LDAPUserConnector)
 
             for address in connection.servers():
-                html.h3("%s: %s" % (_("Server"), address))
+                html.h3("{}: {}".format(_("Server"), address))
                 with table_element("test", searchable=False) as table:
                     for title, test_func in self._tests():
                         table.row()

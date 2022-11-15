@@ -6,7 +6,8 @@
 this mode is used."""
 
 import copy
-from typing import cast, Collection, List, Optional, Tuple, Type
+from collections.abc import Collection
+from typing import cast
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
@@ -47,7 +48,7 @@ class ModeBulkDiscovery(WatoMode):
         return ["hosts", "services"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def _from_vars(self):
@@ -68,14 +69,14 @@ class ModeBulkDiscovery(WatoMode):
 
         # The cast is needed for the moment, because mypy does not understand our data structure here
         (self._recurse, self._only_failed, self._only_failed_invcheck, self._only_ok_agent) = cast(
-            Tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+            tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
         )
 
         self._do_full_scan, self._bulk_size = self._get_performance_params()
         self._mode = DiscoveryMode(self._bulk_discovery_params["mode"])
         self._ignore_errors = IgnoreErrors(self._bulk_discovery_params["error_handling"])
 
-    def _get_performance_params(self) -> Tuple[DoFullScan, BulkSize]:
+    def _get_performance_params(self) -> tuple[DoFullScan, BulkSize]:
         performance_params = self._bulk_discovery_params["performance"]
         assert isinstance(performance_params, tuple)
 
@@ -157,7 +158,7 @@ class ModeBulkDiscovery(WatoMode):
             )
             # The cast is needed for the moment, because mypy does not understand our data structure here
             selection = cast(
-                Tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+                tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
             )
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
@@ -175,7 +176,7 @@ class ModeBulkDiscovery(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _get_hosts_to_discover(self) -> List[DiscoveryHost]:
+    def _get_hosts_to_discover(self) -> list[DiscoveryHost]:
         if self._only_failed_invcheck:
             restrict_to_hosts = self._find_hosts_with_failed_discovery_check()
         else:

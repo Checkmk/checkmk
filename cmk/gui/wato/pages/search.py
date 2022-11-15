@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for searching hosts"""
 
-from typing import Collection, Optional, Type
+from collections.abc import Collection
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -32,7 +32,7 @@ class ModeSearch(WatoMode):
         return ["hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def __init__(self) -> None:

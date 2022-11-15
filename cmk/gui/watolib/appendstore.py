@@ -8,7 +8,7 @@ import ast
 import errno
 import os
 from pathlib import Path
-from typing import Generic, List, TypeVar
+from typing import Generic, TypeVar
 
 import cmk.utils.store as store
 
@@ -65,7 +65,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
         return self._path.exists()
 
     # TODO: Implement this locking as context manager
-    def read(self, lock: bool = False) -> List[_VT]:
+    def read(self, lock: bool = False) -> list[_VT]:
         """Parse the file and return the entries"""
         path = self._path
 
@@ -78,7 +78,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
                 for entry in f.read().split(b"\0"):
                     if entry:
                         entries.append(self._deserialize(ast.literal_eval(entry.decode("utf-8"))))
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.ENOENT:
                 pass
             else:
@@ -90,7 +90,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
 
         return entries
 
-    def write(self, entries: List[_VT]) -> None:
+    def write(self, entries: list[_VT]) -> None:
         # First truncate the file
         with self._path.open("wb"):
             pass

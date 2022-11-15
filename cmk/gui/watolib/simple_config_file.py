@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Generic, Mapping, TypeVar
+from typing import Generic, TypeVar
 
 import cmk.utils.store as store
 

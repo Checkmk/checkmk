@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
-from typing import Dict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
@@ -39,7 +38,7 @@ class FilterRange(Filter):
     def range_config(self):
         return self._filter_range_config
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self._filter_range_config.column: row[self._filter_range_config.column]}
 
     def display(self, value: FilterHTTPVariables) -> None:

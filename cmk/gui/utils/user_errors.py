@@ -9,7 +9,8 @@ actual HTML page may be stored as user errors and displayed later during page re
 page.
 """
 
-from typing import Dict, Iterator, Mapping, Optional
+from collections.abc import Iterator, Mapping
+from typing import Optional
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
@@ -17,7 +18,7 @@ from cmk.gui.exceptions import MKUserError
 
 class UserErrors(Mapping[Optional[str], str]):
     def __init__(self) -> None:
-        self._errors: Dict[Optional[str], str] = {}
+        self._errors: dict[str | None, str] = {}
 
     def add(self, error: MKUserError) -> None:
         self._errors[error.varname] = str(error)
@@ -25,10 +26,10 @@ class UserErrors(Mapping[Optional[str], str]):
     def __bool__(self) -> bool:
         return bool(self._errors)
 
-    def __getitem__(self, key: Optional[str]) -> str:
+    def __getitem__(self, key: str | None) -> str:
         return self._errors.__getitem__(key)
 
-    def __iter__(self) -> Iterator[Optional[str]]:
+    def __iter__(self) -> Iterator[str | None]:
         return self._errors.__iter__()
 
     def __len__(self) -> int:

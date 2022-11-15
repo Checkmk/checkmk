@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Optional
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
 
-def validate_regex(value: str, varname: Optional[str]) -> None:
+def validate_regex(value: str, varname: str | None) -> None:
     try:
         re.compile(value)
     except re.error:

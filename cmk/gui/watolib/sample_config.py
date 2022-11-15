@@ -6,7 +6,7 @@
 
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
@@ -288,7 +288,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         ]
         save_notification_rules(notification_rules)
 
-    def _initial_global_settings(self) -> Dict[str, Any]:
+    def _initial_global_settings(self) -> dict[str, Any]:
         settings = {
             "use_new_descriptions_for": [
                 "aix_memory",

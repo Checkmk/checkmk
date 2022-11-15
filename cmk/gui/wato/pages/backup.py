@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
 
-from typing import Collection, Optional, Type
+from collections.abc import Collection
 
 import cmk.utils.paths
 from cmk.utils.site import omd_site
@@ -60,7 +60,7 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     def title(self) -> str:
@@ -90,7 +90,7 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupTargets
 
     def targets(self):
@@ -108,7 +108,7 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     def __init__(self) -> None:
@@ -166,7 +166,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return "backup_job_state"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     @classmethod
@@ -209,7 +209,7 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     def __init__(self) -> None:
@@ -230,7 +230,7 @@ class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
     def __init__(self) -> None:
@@ -248,7 +248,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
     def __init__(self) -> None:
@@ -270,14 +270,14 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
 
     def _file_name(self, key_id: int, key: Key) -> str:
-        return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), omd_site(), key_id)
+        return f"Check_MK-{backup.hostname()}-{omd_site()}-backup_key-{key_id}.pem"
 
 
 @mode_registry.register
@@ -291,7 +291,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         return ["backups"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
     def title(self) -> str:

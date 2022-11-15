@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, List, Literal, Optional, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import Any, Literal, TypedDict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -241,9 +242,9 @@ class ValuesWithUnits(CascadingDropdown):
         self,
         vs_name: str,
         metric_vs_name: str,
-        elements: List[ValueWithUnitElement],
-        validate_value_elemets: Optional[ValueSpecValidateFunc[tuple[Any, ...]]] = None,
-        help: Optional[ValueSpecHelp] = None,
+        elements: list[ValueWithUnitElement],
+        validate_value_elemets: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
+        help: ValueSpecHelp | None = None,
     ):
         super().__init__(choices=self._unit_choices, help=help)
         self._vs_name = vs_name

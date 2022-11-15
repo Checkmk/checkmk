@@ -10,21 +10,10 @@ import queue
 import socket
 import time
 import traceback
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import (
-    Any,
-    cast,
-    Collection,
-    Dict,
-    Iterable,
-    Iterator,
-    Mapping,
-    NamedTuple,
-    Optional,
-    overload,
-)
+from typing import Any, cast, NamedTuple, overload
 from typing import Tuple as _Tuple
-from typing import Type, Union
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 
@@ -125,7 +114,7 @@ class ModeEditSite(WatoMode):
         return ["sites"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeDistributedMonitoring
 
     # pylint does not understand this overloading
@@ -987,7 +976,7 @@ class PingResult(NamedTuple):
 class ReplicationStatus(NamedTuple):
     site_id: SiteId
     success: bool
-    response: Union[PingResult, Exception]
+    response: PingResult | Exception
 
 
 class ReplicationStatusFetcher:
@@ -1001,7 +990,7 @@ class ReplicationStatusFetcher:
         self, sites: Collection[_Tuple[SiteId, SiteConfiguration]]
     ) -> Mapping[SiteId, ReplicationStatus]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
-        results_by_site: Dict[SiteId, ReplicationStatus] = {}
+        results_by_site: dict[SiteId, ReplicationStatus] = {}
 
         # Results are fetched simultaneously from the remote sites
         result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
@@ -1026,7 +1015,7 @@ class ReplicationStatusFetcher:
                 logger.exception(
                     "error collecting replication results from site %s", result.site_id
                 )
-                html.show_error("%s: %s" % (result.site_id, e))
+                html.show_error(f"{result.site_id}: {e}")
 
         self._logger.debug("Got results")
         return results_by_site
@@ -1090,7 +1079,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         return ["sites"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
     # pylint does not understand this overloading
@@ -1233,7 +1222,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ["global"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSiteGlobals
 
     def _from_vars(self) -> None:
@@ -1279,7 +1268,7 @@ class ModeSiteLivestatusEncryption(WatoMode):
         return ["sites"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditSite
 
     def __init__(self) -> None:

@@ -6,7 +6,8 @@
 
 import collections
 import time
-from typing import Any, Callable, Iterator, List, Optional, Sequence, Set
+from collections.abc import Callable, Iterator, Sequence
+from typing import Any, Optional
 
 import livestatus
 from livestatus import LivestatusRow, SiteId
@@ -76,7 +77,7 @@ def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction) -
     step = None
 
     for spec, rrddata in rrd_data.items():
-        spec_title = "%s/%s/%s" % (spec[1], spec[2], spec[3])  # host/service/perfvar
+        spec_title = f"{spec[1]}/{spec[2]}/{spec[3]}"  # host/service/perfvar
         if not rrddata:
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
@@ -145,7 +146,7 @@ def get_needed_sources(
     ],
     *,
     condition: Callable[[Any], bool] = lambda x: True,
-) -> Set:
+) -> set:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -228,7 +229,7 @@ def _convert_query_results(
 
 def rrd_columns(
     metrics: set[MetricProperties],
-    rrd_consolidation: Optional[GraphConsoldiationFunction],
+    rrd_consolidation: GraphConsoldiationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
@@ -237,10 +238,10 @@ def rrd_columns(
 
     for perfvar, cf, scale in metrics:
         cf = rrd_consolidation or cf or "max"
-        rpn = "%s.%s" % (perfvar, cf)
+        rpn = f"{perfvar}.{cf}"
         if scale != 1.0:
             rpn += ",%f,*" % scale
-        yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
+        yield f"rrddata:{perfvar}:{rpn}:{data_range}"
 
 
 def metric_in_all_rrd_columns(
@@ -248,10 +249,10 @@ def metric_in_all_rrd_columns(
     rrd_consolidation: GraphConsoldiationFunction,
     from_time: int,
     until_time: int,
-) -> List[ColumnName]:
+) -> list[ColumnName]:
     """Translate metric name to all perf_data names and construct RRD data columns for each"""
 
-    data_range = "%s:%s:%s" % (from_time, until_time, 60)
+    data_range = f"{from_time}:{until_time}:{60}"
     metrics: set[MetricProperties] = {
         (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
     }
@@ -259,7 +260,7 @@ def metric_in_all_rrd_columns(
 
 
 def merge_multicol(
-    row: dict[str, Any], rrdcols: List[ColumnName], params: dict[str, Any]
+    row: dict[str, Any], rrdcols: list[ColumnName], params: dict[str, Any]
 ) -> TimeSeries:
     """Establish single timeseries for desired metric
 

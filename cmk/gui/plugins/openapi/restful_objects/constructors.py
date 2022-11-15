@@ -6,7 +6,7 @@ import contextlib
 import hashlib
 import re
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
@@ -34,8 +34,8 @@ from cmk.gui.plugins.openapi.utils import ProblemException
 @contextlib.contextmanager
 def _request_context(secure=True):
     import os
+    from unittest import mock
 
-    import mock
     from werkzeug.test import create_environ
 
     from cmk.gui.utils.script_helpers import request_context
@@ -85,10 +85,10 @@ def link_rel(
     href: str,
     method: HTTPMethod = "get",
     content_type: str = "application/json",
-    profile: Optional[str] = None,
-    title: Optional[str] = None,
-    parameters: Optional[Dict[str, str]] = None,
-    body_params: Optional[Dict[str, Optional[str]]] = None,
+    profile: str | None = None,
+    title: str | None = None,
+    parameters: dict[str, str] | None = None,
+    body_params: dict[str, str | None] | None = None,
 ) -> LinkType:
     """Link to a separate entity
 
@@ -157,7 +157,7 @@ def link_rel(
 
 def expand_rel(
     rel: str,
-    parameters: Optional[Dict[str, str]] = None,
+    parameters: dict[str, str] | None = None,
 ) -> str:
     """Expand abbreviations in the rel field
 
@@ -188,14 +188,14 @@ def expand_rel(
 
     if parameters:
         for param_name, value in sorted(parameters.items()):
-            rel += ';%s="%s"' % (param_name, value)
+            rel += f';{param_name}="{value}"'
 
     return rel
 
 
 def require_etag(
     etag: ETags,
-    error_details: Optional[Dict[str, str]] = None,
+    error_details: dict[str, str] | None = None,
 ) -> None:
     """Ensure the current request matches the given ETag.
 
@@ -229,7 +229,7 @@ def require_etag(
         )
 
 
-def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
+def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
     """A action description to be used as an object member.
 
     Examples:
@@ -266,9 +266,9 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
 def object_collection(
     name: str,
     domain_type: DomainType,
-    entries: List[Union[LinkType, DomainObject]],
+    entries: list[LinkType | DomainObject],
     base: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """A collection description to be used as an object member.
 
     Args:
@@ -321,11 +321,11 @@ def object_collection(
 
 
 def action_result(
-    action_links: List[LinkType],
+    action_links: list[LinkType],
     result_type: ResultType,
-    result_value: Optional[Any] = None,
-    result_links: Optional[List[LinkType]] = None,
-) -> Dict:
+    result_value: Any | None = None,
+    result_links: list[LinkType] | None = None,
+) -> dict:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4"""
@@ -351,9 +351,9 @@ class DomainObjectMembers:
         name: str,
         value: Any,
         prop_format: PropertyFormat,
-        title: Optional[str] = None,
+        title: str | None = None,
         linkable=True,
-        links: Optional[List[LinkType]] = None,
+        links: list[LinkType] | None = None,
     ):
         self.members[name] = object_property(
             name, value, prop_format, self.base, title, linkable, links
@@ -377,8 +377,8 @@ def object_sub_property(
     ident: str,
     name: str,
     value: Any,
-    disabled_reason: Optional[str] = None,
-    extensions: Optional[Dict[str, Any]] = None,
+    disabled_reason: str | None = None,
+    extensions: dict[str, Any] | None = None,
 ) -> ObjectProperty:
     if extensions is None:
         extensions = {}
@@ -403,7 +403,7 @@ def object_sub_property(
 
 def collection_property(  # type:ignore[no-untyped-def]
     name: str,
-    value: List[Any],
+    value: list[Any],
     base: str,
 ):
     """Represent a collection property.
@@ -445,12 +445,12 @@ def object_property(
     value: Any,
     prop_format: PropertyFormat,
     base: str,
-    title: Optional[str] = None,
+    title: str | None = None,
     linkable: bool = True,
-    links: Optional[List[LinkType]] = None,
-    extensions: Optional[Dict[str, Any]] = None,
-    choices: Optional[List[Any]] = None,
-) -> Dict[str, Any]:
+    links: list[LinkType] | None = None,
+    extensions: dict[str, Any] | None = None,
+    choices: list[Any] | None = None,
+) -> dict[str, Any]:
     """Render an object-property
 
     Args:
@@ -584,9 +584,9 @@ def collection_href(domain_type: DomainType, name: str = "all") -> str:
 
 def object_action_href(
     domain_type: DomainType,
-    obj_id: Union[int, str],
+    obj_id: int | str,
     action_name: str,
-    query_params: Optional[List[Tuple[str, str]]] = None,
+    query_params: list[tuple[str, str]] | None = None,
 ) -> str:
     """Construct a href of a domain-object action.
 
@@ -629,7 +629,7 @@ def object_action_href(
 
 def object_href(
     domain_type: DomainType,
-    obj_id: Union[int, str],
+    obj_id: int | str,
 ) -> str:
     """Constructs a href to a domain-object.
 
@@ -655,7 +655,7 @@ def object_href(
     return f"/objects/{domain_type}/{url_safe(obj_id)}"
 
 
-def url_safe(part: Union[int, str]) -> str:
+def url_safe(part: int | str) -> str:
     """Quote a part of the URL.
 
     This is necessary because as it is a string, it may contain characters like '/' which
@@ -693,12 +693,12 @@ def domain_object(
     domain_type: DomainType,
     identifier: str,
     title: str,
-    members: Optional[Dict[str, Any]] = None,
-    extensions: Optional[Dict[str, Any]] = None,
+    members: dict[str, Any] | None = None,
+    extensions: dict[str, Any] | None = None,
     editable: bool = True,
     deletable: bool = True,
-    links: Optional[List[LinkType]] = None,
-    self_link: Optional[LinkType] = None,
+    links: list[LinkType] | None = None,
+    self_link: LinkType | None = None,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -762,9 +762,9 @@ def domain_object(
 
 def collection_object(
     domain_type: DomainType,
-    value: List[Union[CollectionItem, LinkType]],
-    links: Optional[List[LinkType]] = None,
-    extensions: Optional[Dict[str, Any]] = None,
+    value: list[CollectionItem | LinkType],
+    links: list[LinkType] | None = None,
+    extensions: dict[str, Any] | None = None,
 ) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
@@ -804,7 +804,7 @@ def collection_object(
 def link_endpoint(
     module_name: str,
     rel: LinkRelation,
-    parameters: Dict[str, str],
+    parameters: dict[str, str],
 ) -> LinkType:
     """Link to a specific endpoint by name.
 
@@ -882,7 +882,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     return (
         action,
         {
-            "id": "%s-%s" % (action, parameter),
+            "id": f"{action}-{parameter}",
             "name": parameter,
             "friendlyName": friendly_name,
             "optional": optional,
@@ -891,7 +891,7 @@ def action_parameter(action, parameter, friendly_name, optional, pattern):
     )
 
 
-def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
+def etag_of_dict(dict_: dict[str, Any]) -> ETags:
     """Build a sha256 hash over a dictionary's content.
 
     Keys are sorted first to ensure a stable hash.

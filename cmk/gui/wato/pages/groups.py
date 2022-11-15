@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Collection, Dict, Iterator, List, Optional, Sequence, Tuple, Type
+from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
 
@@ -65,7 +65,7 @@ class ModeGroups(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -141,12 +141,12 @@ class ModeGroups(WatoMode, abc.ABC):
             usages = groups.find_usages_of_group(delname, self.type_name)
 
             if usages:
-                message = "<b>%s</b><br>%s:<ul>" % (
+                message = "<b>{}</b><br>{}:<ul>".format(
                     _("You cannot delete this %s group.") % self.type_name,
                     _("It is still in use by"),
                 )
                 for title, link in usages:
-                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+                    message += f'<li><a href="{link}">{title}</a></li>\n'
                 message += "</ul>"
                 raise MKUserError(None, message)
 
@@ -200,14 +200,14 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         raise NotImplementedError()
 
     def __init__(self) -> None:
-        self._name: Optional[GroupName] = None
+        self._name: GroupName | None = None
         self._new = False
         self.group: GroupSpec = {}
-        self._groups: Dict[GroupName, GroupSpec] = self._load_groups()
+        self._groups: dict[GroupName, GroupSpec] = self._load_groups()
 
         super().__init__()
 
@@ -306,7 +306,7 @@ class ModeHostgroups(ModeGroups):
     def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
     def title(self) -> str:
@@ -337,7 +337,7 @@ class ModeServicegroups(ModeGroups):
     def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
     def title(self) -> str:
@@ -368,12 +368,12 @@ class ModeContactgroups(ModeGroups):
     def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
     def title(self) -> str:
         # TODO: Move to constructor (incl. _collect_additional_data)
-        self._members: Dict[GroupName, List[Tuple[UserId, str]]] = {}
+        self._members: dict[GroupName, list[tuple[UserId, str]]] = {}
         return _("Contact groups")
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
@@ -423,14 +423,14 @@ class ModeEditServicegroup(ABCModeEditGroup):
         return "edit_service_group"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeServicegroups
 
     @classmethod
     def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_service_group_information()
 
     def title(self) -> str:
@@ -450,14 +450,14 @@ class ModeEditHostgroup(ABCModeEditGroup):
         return "edit_host_group"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeHostgroups
 
     @classmethod
     def permissions(cls) -> Collection[PermissionName]:
         return ["groups"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_host_group_information()
 
     def title(self) -> str:
@@ -477,14 +477,14 @@ class ModeEditContactgroup(ABCModeEditGroup):
         return "edit_contact_group"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeContactgroups
 
     @classmethod
     def permissions(cls) -> Collection[PermissionName]:
         return ["users"]
 
-    def _load_groups(self) -> Dict[GroupName, GroupSpec]:
+    def _load_groups(self) -> dict[GroupName, GroupSpec]:
         return load_contact_group_information()
 
     def title(self) -> str:

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
@@ -42,7 +43,7 @@ class Perfometer:
 
         self._translated_metrics = metrics.translate_metrics(self._perf_data, self._check_command)
 
-    def render(self) -> Tuple[Optional[str], Optional[HTML]]:
+    def render(self) -> tuple[str | None, HTML | None]:
         """Renders the HTML code of a perfometer
 
         It returns a 2-tuple of either the title to show and the HTML of
@@ -69,7 +70,7 @@ class Perfometer:
         )
         return self._render_legacy_perfometer()
 
-    def _render_metrics_perfometer(self) -> Tuple[Optional[str], Optional[HTML]]:
+    def _render_metrics_perfometer(self) -> tuple[str | None, HTML | None]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None, None
@@ -79,7 +80,7 @@ class Perfometer:
         )
         return renderer.get_label(), render_metricometer(renderer.get_stack())
 
-    def _render_legacy_perfometer(self) -> Tuple[Optional[str], Optional[HTML]]:
+    def _render_legacy_perfometer(self) -> tuple[str | None, HTML | None]:
         perf_painter = perfometers[self._check_command]
         result = perf_painter(self._row, self._check_command, self._perf_data)
         if result is None:
@@ -91,7 +92,7 @@ class Perfometer:
 
         return title, h
 
-    def sort_value(self) -> Tuple[Optional[int], Optional[float]]:
+    def sort_value(self) -> tuple[int | None, float | None]:
         """Calculates a value that is used for sorting perfometers
 
         - First sort by the perfometer group / id
@@ -100,7 +101,7 @@ class Perfometer:
         """
         return self._get_sort_group(), self._get_sort_value()
 
-    def _get_sort_group(self) -> Optional[int]:
+    def _get_sort_group(self) -> int | None:
         """First sort by the optional performeter group or the perfometer id. The perfometer
         group is used to group different perfometers in a single sort domain
         """
@@ -118,7 +119,7 @@ class Perfometer:
         perf_painter_func = perfometers[self._check_command]
         return id(perf_painter_func)
 
-    def _get_metrics_sort_group(self) -> Optional[int]:
+    def _get_metrics_sort_group(self) -> int | None:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -128,7 +129,7 @@ class Perfometer:
         # can use the id() of the perfometer_definition here.
         return perfometer_definition.get("sort_group", id(perfometer_definition))
 
-    def _get_sort_value(self) -> Optional[float]:
+    def _get_sort_value(self) -> float | None:
         """Calculate the sort value for this perfometer
         - The second sort criteria is a number that is calculated for each perfometer. The
           calculation of this number depends on the perfometer type:
@@ -150,7 +151,7 @@ class Perfometer:
         # TODO: Fallback to legacy perfometer number calculation
         return None
 
-    def _get_metrics_sort_value(self) -> Optional[float]:
+    def _get_metrics_sort_value(self) -> float | None:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -162,7 +163,7 @@ class Perfometer:
 
     def _get_perfometer_definition(
         self, translated_metrics: TranslatedMetrics
-    ) -> Optional[PerfometerSpec]:
+    ) -> PerfometerSpec | None:
         """Returns the matching perfometer definition
 
         Uses the metrics of the current row to gather perfometers that can be

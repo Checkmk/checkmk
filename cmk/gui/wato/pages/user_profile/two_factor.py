@@ -7,7 +7,8 @@
 import abc
 import http.client as http_client
 import time
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from fido2 import cbor  # type: ignore[import]
 from fido2.client import ClientData  # type: ignore[import]

@@ -11,8 +11,10 @@ somebody is attending to it.
 You can find an introduction to the acknowledgement of problems in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/basics_ackn.html).
 """
+from collections.abc import Mapping
+
 # TODO: List acknowledgments
-from typing import Any, Mapping
+from typing import Any
 from urllib.parse import unquote
 
 from cmk.utils.livestatus_helpers.expressions import And

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
 import re
-from typing import List
 
 import jinja2
 
@@ -80,7 +79,7 @@ def is_adjacent_column(column) -> bool:  # type:ignore[no-untyped-def]
     )
 
 
-def table_definitions() -> List[str]:
+def table_definitions() -> list[str]:
     result = []
     table_tmpl = _jinja_env().get_template("table")
     for table_name in tables.__all__:

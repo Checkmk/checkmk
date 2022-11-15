@@ -38,7 +38,7 @@
 
 import json
 import re
-from typing import Dict, List, Sequence, Set, Tuple, Union
+from collections.abc import Sequence
 
 import cmk.utils
 import cmk.utils.render
@@ -95,7 +95,7 @@ class ActionMenuIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         url_vars = [
             ("host", row["host_name"]),
         ]
@@ -220,7 +220,7 @@ class RescheduleIcon(Icon):
                     icon = "reload_cmk"
                     txt = _("Reschedule 'Check_MK' service")
 
-            url = "onclick:cmk.views.reschedule_check(this, %s, %s, %s, %s);" % (
+            url = "onclick:cmk.views.reschedule_check(this, {}, {}, {}, {});".format(
                 json.dumps(row["site"]),
                 json.dumps(row["host_name"]),
                 json.dumps(servicedesc),
@@ -265,7 +265,7 @@ class RuleEditorIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_check_type"] == 2:
             return None  # shadow services have no parameters
 
@@ -317,7 +317,7 @@ class ManpageIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what == "service" and active_config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
             if command.startswith("check_mk-mgmt_"):
@@ -376,7 +376,7 @@ class AcknowledgeIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_acknowledged"]:
             return "ack", _("This problem has been acknowledged")
         return None
@@ -416,7 +416,7 @@ class PerfgraphIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_pnpgraph_present"] == 1:
             return self._pnp_icon(row, what)
         return None
@@ -481,7 +481,7 @@ class PredictionIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
         # only creates a link to the first one. Add multiple icons or add a navigation
         # element to the prediction page.
@@ -533,7 +533,7 @@ class CustomActionIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if display_options.enabled(display_options.X):
             # action_url (only, if not a PNP-URL and pnp_graph is working!)
             action_url = row[what + "_action_url_expanded"]
@@ -571,7 +571,7 @@ class LogwatchIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what != "service" or row[what + "_check_command"] not in [
             "check_mk-logwatch",
             "check_mk-logwatch_groups",
@@ -678,17 +678,17 @@ class DowntimesIcon(Icon):
                 ) = downtime_entry[:11]
 
                 if fixed:
-                    time_info = "Start: %s, End: %s" % (
+                    time_info = "Start: {}, End: {}".format(
                         cmk.utils.render.date_and_time(start_time),
                         cmk.utils.render.date_and_time(end_time),
                     )
                 else:
-                    time_info = "May start from %s till %s with duration of %s" % (
+                    time_info = "May start from {} till {} with duration of {}".format(
                         cmk.utils.render.date_and_time(start_time),
                         cmk.utils.render.date_and_time(end_time),
                         cmk.utils.render.Age(duration),
                     )
-                    lines.append("%s (%s) - %s" % (author, time_info, comment))
+                    lines.append(f"{author} ({time_info}) - {comment}")
 
             return "\n%s" % "\n".join(lines)
 
@@ -753,7 +753,7 @@ class CommentsIcon(Icon):
             for c in sorted(comments, key=lambda x: x[4]):
                 _id, author, comment, _ty, timestamp = c
                 comment = comment.replace("\n", "<br>")
-                text += '%s %s: "%s" \n' % (
+                text += '{} {}: "{}" \n'.format(
                     paint_age(timestamp, True, 0, "abs")[1],
                     author,
                     comment,
@@ -797,7 +797,7 @@ class NotificationsIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Notifications disabled
         enabled = row[what + "_notifications_enabled"]
         modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
@@ -878,7 +878,7 @@ class StalenessIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if is_stale(row):
             if what == "host":
                 title = _("This host is stale")
@@ -923,7 +923,7 @@ class ActiveChecksIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Setting of active checks modified by user
         if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
             if row[what + "_active_checks_enabled"] == 0:
@@ -966,7 +966,7 @@ class PassiveChecksIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Passive checks disabled manually?
         if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
             if row[what + "_accept_passive_checks"] == 0:
@@ -1006,7 +1006,7 @@ class NotificationPeriodIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_notification_period"]:
             return "outofnot", _("Out of notification period")
         return None
@@ -1041,7 +1041,7 @@ class ServicePeriodIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_service_period"]:
             return "outof_serviceperiod", _("Out of service period")
         return None
@@ -1072,7 +1072,7 @@ class AggregationsIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
         # otherwise only for the hosts/services which are part of aggregations.
@@ -1122,7 +1122,7 @@ class StarsIcon(Icon):
 
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         stars = self._get_stars()
 
         if what == "host":
@@ -1137,7 +1137,7 @@ class StarsIcon(Icon):
         return None
 
     @request_memoize()
-    def _get_stars(self) -> Set[str]:
+    def _get_stars(self) -> set[str]:
         return user.stars.copy()
 
 
@@ -1186,7 +1186,7 @@ class AggregationIcon(Icon):
             end = args.find("' ", start)
             aggr_name = args[start:end]
 
-            url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % (
+            url = "{}/check_mk/view.py?view_name=aggr_single&aggr_name={}".format(
                 base_url,
                 urlencode(aggr_name),
             )
@@ -1335,16 +1335,16 @@ class RobotmkIcon(Icon):
     def title(cls) -> str:
         return _("Robot Framework: Last log")
 
-    def service_columns(self) -> List[str]:
+    def service_columns(self) -> list[str]:
         return ["labels"]
 
     def render(
         self,
         what: str,
         row: Row,
-        tags: List[TagID],
-        custom_vars: Dict[str, str],
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        tags: list[TagID],
+        custom_vars: dict[str, str],
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row.get("service_labels", {}).get("robotmk/html_last_log"):
             return None
 
@@ -1374,16 +1374,16 @@ class RobotmkErrorIcon(Icon):
     def title(cls) -> str:
         return _("Robot Framework: Last error log")
 
-    def service_columns(self) -> List[str]:
+    def service_columns(self) -> list[str]:
         return ["labels"]
 
     def render(
         self,
         what: str,
         row: Row,
-        tags: List[TagID],
-        custom_vars: Dict[str, str],
-    ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
+        tags: list[TagID],
+        custom_vars: dict[str, str],
+    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row.get("service_labels", {}).get("robotmk/html_last_error_log"):
             return None
 

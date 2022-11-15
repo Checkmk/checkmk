@@ -15,7 +15,8 @@ You can find an introduction to the configuration of Checkmk including activatio
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response

@@ -5,7 +5,7 @@
 
 import io
 import os
-from typing import Collection
+from collections.abc import Collection
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
@@ -83,9 +83,9 @@ class ModeIcons(WatoMode):
         file_name = value[0]
         browser_url = theme.url("images/icon_%s" % file_name)
         if os.path.exists(
-            "%s/share/check_mk/web/htdocs/%s" % (cmk.utils.paths.omd_root, browser_url)
+            f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/{browser_url}"
         ) or os.path.exists(
-            "%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)
+            f"{cmk.utils.paths.omd_root}/share/check_mk/web/htdocs/images/icons/{file_name}"
         ):
             raise MKUserError(
                 varprefix,
@@ -130,7 +130,7 @@ class ModeIcons(WatoMode):
         try:
             file_name = os.path.basename(icon_info["icon"][0])
             im.save(dest_dir + "/" + file_name, "PNG", pnginfo=meta)
-        except IOError as e:
+        except OSError as e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7
             raise MKUserError(None, _("Unable to upload icon: %s") % e)
 

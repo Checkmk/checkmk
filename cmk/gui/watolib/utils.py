@@ -7,8 +7,9 @@ import ast
 import base64
 import pprint
 import re
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, TypedDict, Union
+from typing import Any, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
@@ -53,19 +54,19 @@ def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
 
 
 class HostContactGroupSpec(TypedDict):
-    groups: List[ContactgroupName]
+    groups: list[ContactgroupName]
     recurse_perms: bool
     use: bool
     use_for_services: bool
     recurse_use: bool
 
 
-LegacyContactGroupSpec = Tuple[bool, List[ContactgroupName]]
+LegacyContactGroupSpec = tuple[bool, list[ContactgroupName]]
 
 
 # TODO: Find a better place later
 def convert_cgroups_from_tuple(
-    value: Union[HostContactGroupSpec, LegacyContactGroupSpec]
+    value: HostContactGroupSpec | LegacyContactGroupSpec,
 ) -> HostContactGroupSpec:
     """Convert old tuple representation to new dict representation of folder's group settings"""
     if isinstance(value, dict):
@@ -112,14 +113,14 @@ def mk_repr(x: Any) -> bytes:
     return base64.b64encode(repr(x).encode())
 
 
-def mk_eval(s: Union[bytes, str]) -> Any:
+def mk_eval(s: bytes | str) -> Any:
     try:
         return ast.literal_eval(base64.b64decode(s).decode())
     except Exception:
         raise MKGeneralException(_("Unable to parse provided data: %s") % escape_to_html(repr(s)))
 
 
-def site_neutral_path(path: Union[str, Path]) -> str:
+def site_neutral_path(path: str | Path) -> str:
     path = str(path)
     if path.startswith("/omd"):
         parts = path.split("/")

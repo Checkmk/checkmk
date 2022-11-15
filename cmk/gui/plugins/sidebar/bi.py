@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import cmk.gui.bi as bi
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -52,7 +52,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
         return _("A direct link to all groups of BI aggregations organized as tree")
 
     def show(self) -> None:
-        tree: Dict[Tuple[str, ...], Dict[str, Any]] = {}
+        tree: dict[tuple[str, ...], dict[str, Any]] = {}
         for group in bi.get_aggregation_group_trees():
             self._build_tree(group.split("/"), tree, tuple())
         self._render_tree(tree)

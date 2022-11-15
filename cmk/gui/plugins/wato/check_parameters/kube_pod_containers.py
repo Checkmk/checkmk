@@ -19,10 +19,8 @@ def _parameter_valuespec():
                 "failed_state",
                 MonitoringState(
                     title=_(
-                        (
-                            "Monitoring state if a container terminates "
-                            "unsuccessfully (non-zero exit code)"
-                        )
+                        "Monitoring state if a container terminates "
+                        "unsuccessfully (non-zero exit code)"
                     ),
                     default_value=2,
                 ),

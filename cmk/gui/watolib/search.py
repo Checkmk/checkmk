@@ -6,24 +6,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Collection, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from time import sleep
-from typing import (
-    Any,
-    Callable,
-    Collection,
-    DefaultDict,
-    Dict,
-    Final,
-    Generic,
-    Iterable,
-    List,
-    Mapping,
-    Type,
-    TypeVar,
-)
+from typing import Any, DefaultDict, Final, Generic, TypeVar
 
 import redis
 
@@ -67,7 +55,7 @@ class MatchItem:
 
 
 MatchItems = Iterable[MatchItem]
-MatchItemsByTopic = Dict[str, MatchItems]
+MatchItemsByTopic = dict[str, MatchItems]
 
 
 class ABCMatchItemGenerator(ABC):
@@ -259,7 +247,7 @@ T = TypeVar("T")
 
 class URLChecker(Generic[T]):
     # TODO(ml): This is not a real class.  It does not have a single useful method.
-    def __init__(self, mode: Type[T]) -> None:
+    def __init__(self, mode: type[T]) -> None:
         self._mode_edit_host = mode
 
     @staticmethod
@@ -358,7 +346,7 @@ class IndexSearcher:
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
-        results: DefaultDict[str, List[SearchResult]] = DefaultDict(list)
+        results: DefaultDict[str, list[SearchResult]] = DefaultDict(list)
 
         self._search_redis(
             query_preprocessed,
@@ -383,7 +371,7 @@ class IndexSearcher:
         query: str,
         key_categories: str,
         key_prefix_match_items: str,
-        results: DefaultDict[str, List[SearchResult]],
+        results: DefaultDict[str, list[SearchResult]],
     ) -> None:
         for category in self._redis_client.smembers(key_categories):
             if not self._may_see_category(category):

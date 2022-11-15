@@ -20,7 +20,8 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 definition on GitHub.
 """
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
@@ -170,7 +171,7 @@ def _list_services(params: Mapping[str, Any]) -> Response:
 
     q = Query(params["columns"])
 
-    host_name: Optional[str] = params.get("host_name")
+    host_name: str | None = params.get("host_name")
     if host_name is not None:
         q = q.filter(Services.host_name == host_name)
 

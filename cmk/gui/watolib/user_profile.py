@@ -105,7 +105,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     for result in results:
         if result.error_text:
-            logger.info("  FAILED [%s]: %s" % (result.site_id, result.error_text))
+            logger.info(f"  FAILED [{result.site_id}]: {result.error_text}")
             if active_config.wato_enabled:
                 add_change(
                     "edit-users",
@@ -218,7 +218,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
         response = mk_eval(response)
     except Exception:
         # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException("%s: <pre>%s</pre>" % (_("Got invalid data"), response))
+        raise MKAutomationException("{}: <pre>{}</pre>".format(_("Got invalid data"), response))
     return response
 
 

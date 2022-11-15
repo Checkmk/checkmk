@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
 
 from cmk.utils.version import parse_check_mk_version
 
@@ -34,7 +33,7 @@ def _validate_version(value: str, varprefix: str) -> None:
 
 
 def _migrate_version_spec(
-    param: Union[str, tuple[str, str], tuple[str, dict[str, str]]]
+    param: str | tuple[str, str] | tuple[str, dict[str, str]]
 ) -> tuple[str, dict[str, str]]:
     """
     >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))

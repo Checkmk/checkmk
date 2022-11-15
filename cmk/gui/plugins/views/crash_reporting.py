@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Sequence
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 import livestatus
 from livestatus import OnlySites, SiteId
@@ -263,7 +263,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, "%s: %s" % (row["crash_exc_type"], row["crash_exc_value"]))
+        return (None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"]))
 
 
 @sorter_registry.register

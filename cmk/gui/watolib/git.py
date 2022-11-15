@@ -8,7 +8,6 @@ import glob
 import os
 import subprocess
 from pathlib import Path
-from typing import List
 
 import cmk.utils
 import cmk.utils.paths
@@ -25,13 +24,13 @@ def add_message(message: str) -> None:
 
 
 @request_memoize()
-def _git_messages() -> List[str]:
+def _git_messages() -> list[str]:
     """Initializes the request global data structure and returns it"""
     return []
 
 
 def do_git_commit() -> None:
-    author = "%s <%s>" % (user.id, user.email)
+    author = f"{user.id} <{user.email}>"
     git_dir = cmk.utils.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         logger.debug("GIT: Initializing")
@@ -80,7 +79,7 @@ def _git_add_files() -> None:
     _git_command(["add", "--all", ".gitignore"] + rel_paths)
 
 
-def _git_command(args: List[str]) -> None:
+def _git_command(args: list[str]) -> None:
     command = ["git"] + args
     logger.debug(
         "GIT: Execute in %s: %s",

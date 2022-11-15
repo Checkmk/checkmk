@@ -5,7 +5,7 @@
 
 import abc
 import copy
-from typing import Any, Dict, List, Type, Union
+from typing import Any
 
 import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.defines import short_service_state_name
@@ -501,8 +501,8 @@ class ABCBIConfigAction(ABCBIAction):
         raise NotImplementedError()
 
 
-class BIConfigActionRegistry(plugin_registry.Registry[Type[ABCBIConfigAction]]):
-    def plugin_name(self, instance: Type[ABCBIConfigAction]) -> str:
+class BIConfigActionRegistry(plugin_registry.Registry[type[ABCBIConfigAction]]):
+    def plugin_name(self, instance: type[ABCBIConfigAction]) -> str:
         return instance.kind()
 
 
@@ -585,13 +585,13 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
         for pack_id, bi_pack in sorted(get_cached_bi_packs().get_packs().items()):
             if may_use_rules_in_pack(bi_pack):
                 pack_choices = [
-                    (rule_id, "%s (%s)" % (bi_rule.title, rule_id))
+                    (rule_id, f"{bi_rule.title} ({rule_id})")
                     for rule_id, bi_rule in bi_pack.get_rules().items()
                 ]
                 choices.append(
                     (
                         pack_id,
-                        "%s (%s)" % (bi_pack.title, bi_pack.id),
+                        f"{bi_pack.title} ({bi_pack.id})",
                         DropdownChoice[str](
                             choices=sorted(pack_choices),
                             empty_text=_("There are no configured rules in this aggregation pack"),
@@ -719,7 +719,7 @@ class BIConfigStateOfRemainingServicesAction(
 
 
 def get_aggregation_function_choices():
-    choices: List[Any] = []
+    choices: list[Any] = []
     for aggr_func_id, bi_aggr_func in bi_config_aggregation_function_registry.items():
         choices.append((aggr_func_id, bi_aggr_func.title(), bi_aggr_func.valuespec()))
 
@@ -749,9 +749,9 @@ class ABCBIConfigAggregationFunction(ABCBIAggregationFunction):
 
 
 class BIConfigAggregationFunctionRegistry(
-    plugin_registry.Registry[Type[ABCBIConfigAggregationFunction]]
+    plugin_registry.Registry[type[ABCBIConfigAggregationFunction]]
 ):
-    def plugin_name(self, instance: Type[ABCBIConfigAggregationFunction]) -> str:
+    def plugin_name(self, instance: type[ABCBIConfigAggregationFunction]) -> str:
         return instance.kind()
 
 
@@ -876,7 +876,7 @@ class BIConfigAggregationFunctionCountOK(
         for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
             if settings["type"] == "count":
                 info.append(
-                    "%(state)s (%(value)s OK nodes)" % {"state": state, "value": settings["value"]}
+                    "{state} ({value} OK nodes)".format(state=state, value=settings["value"])
                 )
             else:
                 info.append(
@@ -904,7 +904,7 @@ class BIConfigAggregationFunctionCountOK(
             return tuple(result)
 
         def convert_from_vs(value):
-            result: Dict[str, Union[str, Dict[str, Union[int, str]]]] = {"type": cls.kind()}
+            result: dict[str, str | dict[str, int | str]] = {"type": cls.kind()}
 
             for name, number in [("levels_ok", value[0]), ("levels_warn", value[1])]:
                 result[name] = {

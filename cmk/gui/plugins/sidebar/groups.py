@@ -21,7 +21,7 @@ class GroupSnapin(SidebarSnapin, abc.ABC):
         group_type = self._group_type_ident()
         html.open_ul()
         for name, alias in sites.all_groups(group_type.replace("group", "")):
-            url = "view.py?view_name=%s&%s=%s" % (group_type, group_type, urlencode(name))
+            url = f"view.py?view_name={group_type}&{group_type}={urlencode(name)}"
             bulletlink(alias or name, url)
         html.close_ul()
 

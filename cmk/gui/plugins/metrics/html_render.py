@@ -7,19 +7,8 @@ import copy
 import json
 import time
 import traceback
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, Literal, NamedTuple, Union
 
 import livestatus
 
@@ -143,7 +132,7 @@ def render_graph_or_error_html(
         return render_graph_error_html(e)
 
 
-def render_graph_error_html(msg_or_exc: Union[Exception, str], title: Optional[str] = None) -> HTML:
+def render_graph_error_html(msg_or_exc: Exception | str, title: str | None = None) -> HTML:
     if isinstance(msg_or_exc, MKGeneralException) and not active_config.debug:
         msg = "%s" % msg_or_exc
 
@@ -217,7 +206,7 @@ def render_plain_graph_title(
 
 def _render_graph_title_elements(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
-) -> list[tuple[str, Optional[str]]]:
+) -> list[tuple[str, str | None]]:
     if not graph_render_options["show_title"]:
         return []
 
@@ -225,7 +214,7 @@ def _render_graph_title_elements(
     if "title" in graph_render_options:
         return [(graph_render_options["title"], None)]
 
-    title_elements: List[Tuple[str, Optional[str]]] = []
+    title_elements: list[tuple[str, str | None]] = []
 
     title_format = migrate_graph_render_options_title_format(graph_render_options["title_format"])
 
@@ -621,7 +610,7 @@ def render_ajax_graph(
     range_from_var = request.var("range_from")
     range_to_var = request.var("range_to")
     if range_from_var is not None and range_to_var is not None:
-        vertical_range: Optional[Tuple[float, float]] = (float(range_from_var), float(range_to_var))
+        vertical_range: tuple[float, float] | None = (float(range_from_var), float(range_to_var))
     else:
         vertical_range = None
 
@@ -684,7 +673,7 @@ def forget_manual_vertical_zoom() -> None:
 
 
 def resolve_graph_recipe(
-    graph_identification: GraphIdentifier, destination: Optional[str] = None
+    graph_identification: GraphIdentifier, destination: str | None = None
 ) -> Sequence[GraphRecipe]:
     return graph_identification_types.create_graph_recipes(
         graph_identification,
@@ -694,8 +683,8 @@ def resolve_graph_recipe(
 
 def resolve_graph_recipe_with_error_handling(
     graph_identification: GraphIdentifier,
-    destination: Optional[str] = None,
-) -> Union[Sequence[GraphRecipe], HTML]:
+    destination: str | None = None,
+) -> Sequence[GraphRecipe] | HTML:
     try:
         return resolve_graph_recipe(
             graph_identification,
@@ -1088,16 +1077,16 @@ def host_service_graph_dashlet_cmk(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
-) -> Optional[HTML]:
+) -> HTML | None:
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 
     width_var = request.get_float_input_mandatory("width", 0.0)
-    width = int((width_var / html_size_per_ex))
+    width = int(width_var / html_size_per_ex)
 
     height_var = request.get_float_input_mandatory("height", 0.0)
-    height = int((height_var / html_size_per_ex))
+    height = int(height_var / html_size_per_ex)
 
     bounds = _graph_margin_ex(graph_render_options)
     height -= _graph_title_height_ex(graph_render_options)

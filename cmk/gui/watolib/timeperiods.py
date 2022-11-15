@@ -74,7 +74,9 @@ class TimeperiodSelection(DropdownChoice[str]):
 
     def _get_choices(self) -> list[tuple[str, str]]:
         timeperiods = load_timeperiods()
-        elements = [(name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items()]
+        elements = [
+            (name, "{} - {}".format(name, tp["alias"])) for (name, tp) in timeperiods.items()
+        ]
 
         always = ("24X7", _("Always"))
         if always[0] not in dict(elements):

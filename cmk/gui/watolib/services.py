@@ -9,19 +9,9 @@ import json
 import os
 import sys
 import time
+from collections.abc import Callable, Iterable, Sequence
 from hashlib import sha256
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-)
+from typing import Any, NamedTuple, TypedDict
 
 from mypy_extensions import NamedArg
 
@@ -167,8 +157,8 @@ class StartDiscoveryRequest(NamedTuple):
 
 
 class DiscoveryInfo(TypedDict):
-    update_source: Optional[str]
-    update_target: Optional[str]
+    update_source: str | None
+    update_target: str | None
     update_services: Sequence[str]
 
 
@@ -177,9 +167,9 @@ class Discovery:
         self,
         host,
         discovery_options,
-        update_target: Optional[str],
-        update_services: List[str],
-        update_source: Optional[str] = None,
+        update_target: str | None,
+        update_services: list[str],
+        update_source: str | None = None,
     ) -> None:
         self._host = host
         self._options = discovery_options
@@ -199,9 +189,9 @@ class Discovery:
     def do_discovery(self, discovery_result: DiscoveryResult):  # type:ignore[no-untyped-def]
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
-        remove_disabled_rule: Set[str] = set()
-        add_disabled_rule: Set[str] = set()
-        saved_services: Set[str] = set()
+        remove_disabled_rule: set[str] = set()
+        add_disabled_rule: set[str] = set()
+        saved_services: set[str] = set()
         apply_changes: bool = False
 
         for entry in discovery_result.check_table:
@@ -366,7 +356,7 @@ class Discovery:
 
     def _update_rule_of_host(
         self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
-    ) -> List[CREFolder]:
+    ) -> list[CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
@@ -455,9 +445,9 @@ def service_discovery_call(  # type:ignore[no-untyped-def]
         [
             DiscoveryOptions,
             DiscoveryResult,
-            List[str],
-            Optional[str],
-            Optional[str],
+            list[str],
+            str | None,
+            str | None,
             NamedArg(CREHost, "host"),
         ],
         DiscoveryResult,
@@ -517,9 +507,9 @@ def perform_host_label_discovery(
 def perform_service_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
-    update_services: List[str],
-    update_source: Optional[str],
-    update_target: Optional[str],
+    update_services: list[str],
+    update_source: str | None,
+    update_target: str | None,
     *,
     host: CREHost,
 ) -> DiscoveryResult:
@@ -555,7 +545,7 @@ def has_discovery_action_specific_permissions(intended_discovery_action: str) ->
 def initial_discovery_result(
     discovery_options: DiscoveryOptions,
     host: CREHost,
-    previous_discovery_result: Optional[DiscoveryResult],
+    previous_discovery_result: DiscoveryResult | None,
 ) -> DiscoveryResult:
     if _use_previous_discovery_result(previous_discovery_result):
         assert previous_discovery_result is not None
@@ -564,7 +554,7 @@ def initial_discovery_result(
     return get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
 
 
-def _use_previous_discovery_result(previous_discovery_result: Optional[DiscoveryResult]) -> bool:
+def _use_previous_discovery_result(previous_discovery_result: DiscoveryResult | None) -> bool:
     if not previous_discovery_result:
         return False
 
@@ -595,13 +585,13 @@ def _perform_update_host_labels(host, host_labels):
 def _apply_state_change(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
-    key: Tuple[Any, Any],
-    value: Tuple[Any, Any, Any, Any],
+    key: tuple[Any, Any],
+    value: tuple[Any, Any, Any, Any],
     descr: str,
     autochecks_to_save: SetAutochecksTable,
-    saved_services: Set[str],
-    add_disabled_rule: Set[str],
-    remove_disabled_rule: Set[str],
+    saved_services: set[str],
+    add_disabled_rule: set[str],
+    remove_disabled_rule: set[str],
 ):
     if table_source == DiscoveryState.UNDECIDED:
         if table_target == DiscoveryState.MONITORED:
@@ -663,7 +653,7 @@ def _apply_state_change(  # type:ignore[no-untyped-def] # pylint: disable=too-ma
         saved_services.add(descr)
 
 
-def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:
+def _make_host_audit_log_object(checks: SetAutochecksTable) -> set[str]:
     """The resulting object is used for building object diffs"""
     return {v[0] for v in checks.values()}
 
@@ -687,7 +677,7 @@ def checkbox_id(check_type: str, item: Item) -> str:
 
     """
 
-    key = "%s_%s" % (check_type, item)
+    key = f"{check_type}_{item}"
     return sha256(key.encode("utf-8")).hexdigest()
 
 
@@ -871,7 +861,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     @staticmethod
     def _get_try_discovery(
         api_request: StartDiscoveryRequest,
-    ) -> Tuple[int, TryDiscoveryResult]:
+    ) -> tuple[int, TryDiscoveryResult]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.

@@ -7,19 +7,8 @@
 import json
 import pprint
 import traceback
-from typing import (
-    Any,
-    Collection,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Type,
-)
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
+from typing import Any, NamedTuple
 
 from livestatus import SiteId
 
@@ -89,7 +78,7 @@ from cmk.gui.watolib.services import (
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
-AjaxDiscoveryRequest = Dict[str, Any]
+AjaxDiscoveryRequest = dict[str, Any]
 
 
 class TableGroupEntry(NamedTuple):
@@ -117,7 +106,7 @@ class ModeDiscovery(WatoMode):
         return ["hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
     def _from_vars(self):
@@ -323,10 +312,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         self,
         host: CREHost,
         discovery_options: DiscoveryOptions,
-        previous_discovery_result: Optional[DiscoveryResult],
-        update_source: Optional[str],
-        update_target: Optional[str],
-        update_services: List[str],
+        previous_discovery_result: DiscoveryResult | None,
+        update_source: str | None,
+        update_target: str | None,
+        update_services: list[str],
     ) -> DiscoveryResult:
         if discovery_options.action == DiscoveryAction.NONE:
             return initial_discovery_result(discovery_options, host, previous_discovery_result)
@@ -409,7 +398,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _get_status_message(
         self, discovery_result: DiscoveryResult, performed_action: str
-    ) -> Optional[str]:
+    ) -> str | None:
         if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
@@ -533,8 +522,8 @@ class DiscoveryPageRenderer:
         table,
         discovery_result: DiscoveryResult,
     ) -> None:
-        active_host_labels: Dict[str, Dict[str, str]] = {}
-        changed_host_labels: Dict[str, Dict[str, str]] = {}
+        active_host_labels: dict[str, dict[str, str]] = {}
+        changed_host_labels: dict[str, dict[str, str]] = {}
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value
@@ -683,7 +672,7 @@ class DiscoveryPageRenderer:
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]
     ) -> Mapping[str, Sequence[CheckPreviewEntry]]:
-        by_group: Dict[str, List[CheckPreviewEntry]] = {}
+        by_group: dict[str, list[CheckPreviewEntry]] = {}
         for entry in check_table:
             by_group.setdefault(entry.check_source, []).append(entry)
         return by_group
@@ -847,7 +836,7 @@ class DiscoveryPageRenderer:
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
-        enable_page_menu_entry(html, "bulk_%s_%s" % (source, target))
+        enable_page_menu_entry(html, f"bulk_{source}_{target}")
 
     def _show_check_row(  # type:ignore[no-untyped-def]
         self, table, discovery_result, api_request, entry: CheckPreviewEntry, show_bulk_actions
@@ -958,8 +947,8 @@ class DiscoveryPageRenderer:
                 err = traceback.format_exc()
             else:
                 err = "%s" % e
-            paramtext = "<b>%s</b>: %s<br>" % (_("Invalid check parameter"), err)
-            paramtext += "%s: <tt>%s</tt><br>" % (_("Variable"), varname)
+            paramtext = "<b>{}</b>: {}<br>".format(_("Invalid check parameter"), err)
+            paramtext += "{}: <tt>{}</tt><br>".format(_("Variable"), varname)
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text(paramtext)
@@ -1227,7 +1216,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _get_ruleset_name(self, entry: CheckPreviewEntry) -> Optional[str]:
+    def _get_ruleset_name(self, entry: CheckPreviewEntry) -> str | None:
         if entry.ruleset_name == "logwatch":
             return "logwatch_rules"
         if entry.ruleset_name:
@@ -1236,7 +1225,7 @@ class DiscoveryPageRenderer:
             return f"active_checks:{entry.check_plugin_name}"
         return None
 
-    def _ordered_table_groups(self) -> List[TableGroupEntry]:
+    def _ordered_table_groups(self) -> list[TableGroupEntry]:
         return [
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,
@@ -1727,7 +1716,7 @@ class BulkEntry(NamedTuple):
     source: str
     target: str
     title: str
-    explanation: Optional[str]
+    explanation: str | None
 
 
 def _page_menu_selected_services_entries(
@@ -1824,7 +1813,7 @@ def _page_menu_selected_services_entries(
                     },
                 )
             ),
-            name="bulk_%s_%s" % (entry.source, entry.target),
+            name=f"bulk_{entry.source}_{entry.target}",
             is_enabled=False,
             is_shortcut=entry.is_shortcut,
             is_show_more=entry.is_show_more,
@@ -1850,9 +1839,9 @@ def _page_menu_host_labels_entries(
 
 
 def _start_js_call(
-    host: CREHost, options: DiscoveryOptions, request_vars: Optional[dict] = None
+    host: CREHost, options: DiscoveryOptions, request_vars: dict | None = None
 ) -> str:
-    return "cmk.service_discovery.start(%s, %s, %s, %s, %s)" % (
+    return "cmk.service_discovery.start({}, {}, {}, {}, {})".format(
         json.dumps(host.name()),
         json.dumps(host.folder().path()),
         json.dumps(options._asdict()),

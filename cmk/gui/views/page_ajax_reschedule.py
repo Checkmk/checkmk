@@ -71,10 +71,10 @@ class PageRescheduleCheck(AjaxPage):
         if service:
             cmd = "SVC"
             what = "service"
-            spec = "%s;%s" % (host, service)
+            spec = f"{host};{service}"
 
             if wait_svc:
-                wait_spec = "%s;%s" % (host, wait_svc)
+                wait_spec = f"{host};{wait_svc}"
                 add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
             else:
                 wait_spec = spec

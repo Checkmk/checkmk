@@ -24,7 +24,8 @@ from __future__ import annotations
 
 import abc
 import itertools
-from typing import Iterable, List, Protocol, Sequence
+from collections.abc import Iterable, Sequence
+from typing import Protocol
 
 
 class UserLike(Protocol):
@@ -96,7 +97,7 @@ class Ignore(Optional):
 
 
 class MultiPerm(BasePerm, abc.ABC):
-    def __init__(self, perms: List[BasePerm]) -> None:
+    def __init__(self, perms: list[BasePerm]) -> None:
         self.perms = perms
 
     def __repr__(self) -> str:

@@ -5,7 +5,6 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
-from typing import List, Optional
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
@@ -43,7 +42,7 @@ def _sidebar_position_id(stored_value: str) -> str:
     return "left" if stored_value == "left" else "right"
 
 
-def _user_menu_topics() -> List[TopicMenuTopic]:
+def _user_menu_topics() -> list[TopicMenuTopic]:
     quick_items = [
         TopicMenuItem(
             name="ui_theme",
@@ -187,7 +186,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         return {}
 
 
-def _set_user_attribute(key: str, value: Optional[str]):  # type:ignore[no-untyped-def]
+def _set_user_attribute(key: str, value: str | None):  # type:ignore[no-untyped-def]
     assert user.id is not None
     user_id = user.id
 

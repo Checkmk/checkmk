@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Iterator, List, Tuple
+from collections.abc import Iterator
 
 from livestatus import SiteId
 
@@ -1061,7 +1061,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             ]
             edit_url = makeuri(request, anno_vars)
             html.icon_button(edit_url, _("Edit this annotation"), "edit")
-            del_anno: "HTTPVariables" = [("_delete_annotation", "1")]
+            del_anno: HTTPVariables = [("_delete_annotation", "1")]
             delete_url = make_confirm_link(
                 url=makeactionuri(request, transactions, del_anno + anno_vars),
                 message=_("Are you sure that you want to delete this annotation?"),
@@ -1240,7 +1240,7 @@ def _validate_reclassify_of_states(value, varprefix):
 
 
 def _vs_annotation():
-    elements: List[DictionaryEntry] = [
+    elements: list[DictionaryEntry] = [
         ("site", TextInput(title=_("Site"))),
         ("host", TextInput(title=_("Hostname"))),
         (
@@ -1287,7 +1287,7 @@ def _vs_annotation():
         ),
         ("text", TextAreaUnicode(title=_("Annotation"), allow_empty=False)),
     ]
-    extra_elements: List[DictionaryEntry] = (
+    extra_elements: list[DictionaryEntry] = (
         []
         if cmk_version.is_raw_edition()
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
@@ -1425,10 +1425,10 @@ def _output_availability_timeline_csv(
 def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVOptions) -> None:
     def cells_from_row(
         table: Table,
-        group_titles: List[str],
-        group_cells: List[str],
-        object_titles: List[str],
-        cell_titles: List[Tuple[str, str]],
+        group_titles: list[str],
+        group_cells: list[str],
+        object_titles: list[str],
+        cell_titles: list[tuple[str, str]],
         row_object: AVObjectCells,
         row_cells: AVRowCells,
     ) -> None:
@@ -1485,7 +1485,7 @@ def _output_availability_csv(what: AVObjectType, av_data: AVData, avoptions: AVO
 
 
 def _av_output_set_content_disposition(title: str) -> None:
-    filename = "%s-%s.csv" % (
+    filename = "{}-{}.csv".format(
         title,
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )

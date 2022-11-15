@@ -580,11 +580,9 @@ def _validate_prometheus_service_metrics(value, _varprefix):
 
 
 rulespec_registry.register(
-    (
-        HostRulespec(
-            group=RulespecGroupVMCloudContainer,
-            name="special_agents:prometheus",
-            valuespec=_valuespec_generic_metrics_prometheus,
-        )
+    HostRulespec(
+        group=RulespecGroupVMCloudContainer,
+        name="special_agents:prometheus",
+        valuespec=_valuespec_generic_metrics_prometheus,
     )
 )

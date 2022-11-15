@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Dict, Iterator, List, Optional, Set, Tuple
+from collections.abc import Iterator
 
 from cmk.utils.prediction import lq_logic
 
@@ -31,7 +31,7 @@ def _wato_folders_to_lq_regex(path: str) -> str:
         op = "~~"
     else:
         op = "~"
-    return "%s %s" % (op, path_regex)
+    return f"{op} {path_regex}"
 
 
 class FilterWatoFolder(Filter):
@@ -47,7 +47,7 @@ class FilterWatoFolder(Filter):
 
     def load_wato_data(self):
         self.tree = Folder.root_folder()
-        self.path_to_tree: Dict[str, str] = {}  # will be filled by self.folder_selection
+        self.path_to_tree: dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
 
@@ -60,7 +60,7 @@ class FilterWatoFolder(Filter):
         allowed_folders = self._fetch_folders()
         return [entry for entry in self.selection if entry[0] in allowed_folders]
 
-    def _fetch_folders(self) -> Set[str]:
+    def _fetch_folders(self) -> set[str]:
         # Note: WATO Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
@@ -96,7 +96,7 @@ class FilterWatoFolder(Filter):
     # folders
     def folder_selection(  # type:ignore[no-untyped-def]
         self, folder, depth=0
-    ) -> Iterator[Tuple[str, str]]:
+    ) -> Iterator[tuple[str, str]]:
         my_path: str = folder.path()
         self.path_to_tree[my_path] = folder.title()
 
@@ -107,7 +107,7 @@ class FilterWatoFolder(Filter):
         for subfolder in sorted(folder.subfolders(), key=lambda x: x.title().lower()):
             yield from self.folder_selection(subfolder, depth + 1)
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         # FIXME: There is a problem with caching data and changing titles of WATO files
         # Everything is changed correctly but the filter object is stored in the
         # global multisite_filters var and self.path_to_tree is not refreshed when
@@ -144,7 +144,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         choices = [(name, folder) for name, folder in self.choices() if name]
         return DualListChoice(choices=choices, rows=4, enlarge_active=True)
 
-    def _to_list(self, value: FilterHTTPVariables) -> List[str]:
+    def _to_list(self, value: FilterHTTPVariables) -> list[str]:
         if folders := value.get(self.htmlvars[0], ""):
             return folders.split("|")
         return []
@@ -162,7 +162,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
         var context. This can be used to persist the filter settings."""
         return {self.htmlvars[0]: "|".join(self.valuespec().from_html_vars(self.ident))}
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         self.check_wato_data_update()
         return ", ".join(
             filter(

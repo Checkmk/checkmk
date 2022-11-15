@@ -5,7 +5,7 @@
 
 import json
 import traceback
-from typing import Collection, Iterator, Optional, Type
+from collections.abc import Collection, Iterator
 
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
@@ -112,7 +112,7 @@ class ModeBackgroundJobDetails(WatoMode):
         return []
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackgroundJobsOverview
 
     def title(self) -> str:
@@ -178,7 +178,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
             "is_finished": job_snapshot and not job_snapshot.is_active,
         }
 
-    def _show_details_page(self, job_id: str) -> Optional[BackgroundStatusSnapshot]:
+    def _show_details_page(self, job_id: str) -> BackgroundStatusSnapshot | None:
         job = BackgroundJob(job_id)
         if not job.exists():
             html.show_message(_("Background job info is not available"))

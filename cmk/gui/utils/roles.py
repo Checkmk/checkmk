@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Final, List, Literal, Optional
+from typing import Final, Literal
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
@@ -14,13 +14,13 @@ from cmk.gui.hooks import request_memoize
 
 
 @request_memoize()
-def user_may(user_id: Optional[UserId], pname: str) -> bool:
+def user_may(user_id: UserId | None, pname: str) -> bool:
     return may_with_roles(roles_of_user(user_id), pname)
 
 
-def get_role_permissions() -> Dict[str, List[str]]:
+def get_role_permissions() -> dict[str, list[str]]:
     """Returns the set of permissions for all roles"""
-    role_permissions: Dict[str, List[str]] = {}
+    role_permissions: dict[str, list[str]] = {}
     roleids = set(active_config.roles.keys())
     for perm in permissions.permission_registry.values():
         for role_id in roleids:
@@ -42,7 +42,7 @@ _default_admin_permissions: Final[frozenset[str]] = frozenset(
 )
 
 
-def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
+def may_with_roles(some_role_ids: list[str], pname: str) -> bool:
     if "admin" in some_role_ids and pname in _default_admin_permissions:
         return True
 
@@ -72,7 +72,7 @@ def may_with_roles(some_role_ids: List[str], pname: str) -> bool:
 
 def is_user_with_publish_permissions(
     for_type: Literal["visual", "pagetype"],
-    user_id: Optional[UserId],
+    user_id: UserId | None,
     type_name: str,
 ) -> bool:
     """
@@ -98,7 +98,7 @@ def is_user_with_publish_permissions(
     )
 
 
-def roles_of_user(user_id: Optional[UserId]) -> List[str]:
+def roles_of_user(user_id: UserId | None) -> list[str]:
     def existing_role_ids(role_ids):
         return [role_id for role_id in role_ids if role_id in active_config.roles]
 

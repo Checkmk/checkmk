@@ -19,7 +19,8 @@ The site management endpoints allow for:
 
 """
 
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import Any, Literal
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import cmk.utils.render
 
@@ -90,7 +90,7 @@ unit_info["1/s"] = {
     "title": _("per second"),
     "description": _("Frequency (displayed in events/s)"),
     "symbol": _("/s"),
-    "render": lambda v: "%s%s" % (cmk.utils.render.scientific(v, 2), _("/s")),
+    "render": lambda v: "{}{}".format(cmk.utils.render.scientific(v, 2), _("/s")),
     "js_render": "v => cmk.number_format.scientific(v, 2) + '/s'",
 }
 
@@ -142,7 +142,7 @@ def physical_precision_list(  # type:ignore[no-untyped-def]
 
     scaled_values = ["%.*f" % (places_after_comma, float(value) / scale_factor) for value in values]
 
-    return "%s%s" % (scale_symbol, unit_symbol), scaled_values
+    return f"{scale_symbol}{unit_symbol}", scaled_values
 
 
 unit_info["bits/s"] = {
@@ -187,7 +187,7 @@ unit_info["bytes/d"] = {
 unit_info["c"] = {
     "title": _("Degree Celsius"),
     "symbol": "°C",
-    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), "°C"),
+    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), "°C"),
     "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
     "conversions": {
         "f": lambda v: v * 1.8 + 32.0,
@@ -247,14 +247,14 @@ unit_info["wh"] = {
 unit_info["dbm"] = {
     "title": _("Decibel-milliwatts"),
     "symbol": _("dBm"),
-    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBm")),
+    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), _("dBm")),
     "js_render": "v => cmk.number_format.drop_dotzero(v) + ' dBm'",
 }
 
 unit_info["dbmv"] = {
     "title": _("Decibel-millivolt"),
     "symbol": _("dBmV"),
-    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), _("dBmV")),
+    "render": lambda v: "{} {}".format(cmk.utils.render.drop_dotzero(v), _("dBmV")),
     "js_render": "v => cmk.number_format.drop_dotzero(v) + ' dBmV'",
 }
 

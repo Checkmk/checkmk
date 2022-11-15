@@ -1,5 +1,3 @@
-from typing import Optional
-
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.watolib.host_attributes import (
     _clear_config_based_host_attributes,
@@ -9,7 +7,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
 
-_update_config_based_host_attributes_config_hash: Optional[str] = None
+_update_config_based_host_attributes_config_hash: str | None = None
 
 
 def _update_config_based_host_attributes() -> None:

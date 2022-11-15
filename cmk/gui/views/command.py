@@ -6,8 +6,8 @@
 import abc
 import re
 import time
-from collections.abc import Sequence
-from typing import Any, Callable, Literal, Optional
+from collections.abc import Callable, Sequence
+from typing import Any, Literal, Optional
 
 from livestatus import SiteId
 

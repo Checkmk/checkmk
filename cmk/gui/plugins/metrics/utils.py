@@ -8,27 +8,11 @@ import colorsys
 import random
 import re
 import shlex
+from collections import OrderedDict
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import lru_cache
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    OrderedDict,
-    overload,
-    Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from typing import Any, Optional, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -73,12 +57,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 
-LegacyPerfometer = Tuple[str, Any]
+LegacyPerfometer = tuple[str, Any]
 Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 
-ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
+ScalarDefinition = Union[str, tuple[str, Union[str, LazyString]]]
 HorizontalRule = tuple[float, str, str, Union[str, LazyString]]
 
 
@@ -103,15 +87,15 @@ class _GraphDataRangeMandatory(TypedDict):
     time_range: TimeRange
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
     # colon separated [step length]:[rrd point count]
-    step: Union[Seconds, str]
+    step: Seconds | str
 
 
 class GraphDataRange(_GraphDataRangeMandatory, total=False):
     vertical_range: tuple[float, float]
 
 
-GraphRangeSpec = Tuple[Union[int, str], Union[int, str]]
-GraphRange = Tuple[Optional[float], Optional[float]]
+GraphRangeSpec = tuple[Union[int, str], Union[int, str]]
+GraphRange = tuple[Optional[float], Optional[float]]
 
 SizeEx = int
 
@@ -127,7 +111,7 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     # - During runtime the field is always there and set
     id: str
     # All attributes here are optional
-    title: Union[str, LazyString]
+    title: str | LazyString
     scalars: Sequence[ScalarDefinition]
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
@@ -138,7 +122,7 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     convert_unit_to: str
 
 
-GraphRecipe = Dict[str, Any]
+GraphRecipe = dict[str, Any]
 
 
 class _GraphMetricMandatory(TypedDict):
@@ -152,8 +136,8 @@ class GraphMetric(_GraphMetricMandatory, total=False):
     color: str
 
 
-RRDDataKey = Tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
-RRDData = Dict[RRDDataKey, TimeSeries]
+RRDDataKey = tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
+RRDData = dict[RRDDataKey, TimeSeries]
 
 
 class CombinedGraphMetricSpec(TypedDict):
@@ -180,28 +164,28 @@ class CheckMetricEntry(TypedDict, total=False):
 class MetricInfo(TypedDict, total=False):
     # title, unit and color should be required, but metric_info.get(xxx, {}) is
     # used and is not compatible with requied keys
-    title: Union[str, LazyString]
+    title: str | LazyString
     unit: str
     color: str
-    help: Union[str, LazyString]
-    render: Callable[[Union[float, int]], str]
+    help: str | LazyString
+    render: Callable[[float | int], str]
 
 
 class MetricInfoExtended(TypedDict, total=False):
     # this is identical to MetricInfo except unit, but one can not override the
     # type of a field so we have to copy everything from MetricInfo
-    title: Union[str, LazyString]
+    title: str | LazyString
     unit: UnitInfo
     color: str
-    help: Union[str, LazyString]
-    render: Callable[[Union[float, int]], str]
+    help: str | LazyString
+    render: Callable[[float | int], str]
 
 
 class NormalizedPerfData(TypedDict):
-    orig_name: List[str]
+    orig_name: list[str]
     value: float
-    scalar: Dict[str, float]
-    scale: List[float]
+    scalar: dict[str, float]
+    scale: list[float]
     auto_graph: bool
 
 
@@ -215,9 +199,7 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
     """Dictionary class with the ability of appending items like provided
     by a list."""
 
-    def __init__(
-        self, list_identifier: Optional[str] = None, start_index: Optional[int] = None
-    ) -> None:
+    def __init__(self, list_identifier: str | None = None, start_index: int | None = None) -> None:
         super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
@@ -228,10 +210,10 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info: Dict[str, UnitInfo] = {}
+unit_info: dict[str, UnitInfo] = {}
 metric_info: dict[_MetricName, MetricInfo] = {}
-check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
-perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
+check_metrics: dict[str, dict[str, CheckMetricEntry]] = {}
+perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
@@ -341,7 +323,7 @@ def indexed_color(idx: int, total: int) -> str:
 
 def parse_perf_values(
     data_str: str,
-) -> Tuple[str, str, Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]]:
+) -> tuple[str, str, tuple[str | None, str | None, str | None, str | None]]:
     "convert perf str into a tuple with values"
     varname, values = data_str.split("=", 1)
     varname = cmk.utils.pnp_cleanup(varname.replace('"', "").replace("'", ""))
@@ -361,7 +343,7 @@ def parse_perf_values(
     return varname, value, other_parts
 
 
-def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
+def split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
 
     if not value_text.strip():
@@ -383,8 +365,8 @@ def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
 
 
 def parse_perf_data(
-    perf_data_string: str, check_command: Optional[str] = None
-) -> Tuple[Perfdata, str]:
+    perf_data_string: str, check_command: str | None = None
+) -> tuple[Perfdata, str]:
     """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
@@ -433,7 +415,7 @@ def parse_perf_data(
     return perf_data, check_command
 
 
-def _float_or_int(val: Optional[str]) -> Union[int, float, None]:
+def _float_or_int(val: str | None) -> int | float | None:
     """ "45.0" -> 45.0, "45" -> 45"""
     if val is None:
         return None
@@ -447,7 +429,7 @@ def _float_or_int(val: Optional[str]) -> Union[int, float, None]:
             return None
 
 
-def _split_perf_data(perf_data_string: str) -> List[str]:
+def _split_perf_data(perf_data_string: str) -> list[str]:
     """Split the perf data string into parts. Preserve quoted strings!"""
     return shlex.split(perf_data_string)
 
@@ -472,7 +454,7 @@ def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInf
     }
 
 
-def scalar_bounds(perfvar_bounds, scale) -> Dict[str, float]:  # type:ignore[no-untyped-def]
+def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type:ignore[no-untyped-def]
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -487,7 +469,7 @@ def scalar_bounds(perfvar_bounds, scale) -> Dict[str, float]:  # type:ignore[no-
 
 def normalize_perf_data(  # type:ignore[no-untyped-def]
     perf_data, check_command
-) -> Tuple[str, NormalizedPerfData]:
+) -> tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
     new_entry: NormalizedPerfData = {
@@ -502,7 +484,7 @@ def normalize_perf_data(  # type:ignore[no-untyped-def]
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name: str, color_index: int) -> Tuple[MetricInfoExtended, int]:
+def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
 
     if metric_name not in metric_info:
         color_index += 1
@@ -558,7 +540,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     return translated_metrics
 
 
-def perf_data_string_from_metric_names(metric_names: List[_MetricName]) -> str:
+def perf_data_string_from_metric_names(metric_names: list[_MetricName]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -577,7 +559,7 @@ def perf_data_string_from_metric_names(metric_names: List[_MetricName]) -> str:
 
 def available_metrics_translated(
     perf_data_string: str,
-    rrd_metrics: List[_MetricName],
+    rrd_metrics: list[_MetricName],
     check_command: str,
 ) -> TranslatedMetrics:
     # If we have no RRD files then we cannot paint any graph :-(
@@ -680,7 +662,7 @@ class UnitConverter:
 # TODO: Refactor evaluate and all helpers into single class
 
 
-def split_expression(expression: MetricExpression) -> Tuple[str, Optional[str], Optional[str]]:
+def split_expression(expression: MetricExpression) -> tuple[str, str | None, str | None]:
     explicit_color = None
     if "#" in expression:
         expression, explicit_color = expression.rsplit("#", 1)  # drop appended color information
@@ -696,15 +678,15 @@ def split_expression(expression: MetricExpression) -> Tuple[str, Optional[str], 
 def evaluate(
     expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, UnitInfo, str]:
+) -> tuple[float, UnitInfo, str]:
     ...
 
 
 @overload
 def evaluate(
-    expression: Union[int, float],
+    expression: int | float,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[Optional[float], UnitInfo, str]:
+) -> tuple[float | None, UnitInfo, str]:
     ...
 
 
@@ -719,9 +701,9 @@ def evaluate(
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
 def evaluate(
-    expression: Union[MetricExpression, int, float],
+    expression: MetricExpression | int | float,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[Optional[float], UnitInfo, str]:
+) -> tuple[float | None, UnitInfo, str]:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
@@ -741,7 +723,7 @@ def evaluate(
 def _evaluate_rpn(
     expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, UnitInfo, str]:
+) -> tuple[float, UnitInfo, str]:
     # stack of (value, unit, color)
     return stack_resolver(
         expression.split(","),
@@ -752,12 +734,12 @@ def _evaluate_rpn(
 
 
 def stack_resolver(
-    elements: List[Atom],
+    elements: list[Atom],
     is_operator: Callable[[Atom], bool],
     apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
     apply_element: Callable[[Atom], StackElement],
 ) -> StackElement:
-    stack: List[StackElement] = []
+    stack: list[StackElement] = []
     for element in elements:
         if is_operator(element):
             if len(stack) < 2:
@@ -801,13 +783,13 @@ rpn_operators = {
 
 
 # TODO: real unit computation!
-def _unit_mult(u1: Dict[str, Any], u2: Dict[str, Any]) -> Dict[str, Any]:
+def _unit_mult(u1: dict[str, Any], u2: dict[str, Any]) -> dict[str, Any]:
     return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
 
 
-_unit_div: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
-_unit_add: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
-_unit_sub: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
+_unit_div: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
+_unit_add: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
+_unit_sub: Callable[[dict[str, Any], dict[str, Any]], dict[str, Any]] = _unit_mult
 
 
 def _choose_operator_color(a: str, b: str) -> str:
@@ -839,9 +821,9 @@ def _operator_minmax(a, b, func):
 
 
 def _evaluate_literal(
-    expression: Union[int, float, str],
+    expression: int | float | str,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[Optional[float], UnitInfo, str]:
+) -> tuple[float | None, UnitInfo, str]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], "#000000"
 
@@ -948,7 +930,7 @@ def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str
     return r.sub(eval_to_string, text)
 
 
-def get_graph_template_choices() -> List[Tuple[str, str]]:
+def get_graph_template_choices() -> list[tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
@@ -996,7 +978,7 @@ def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iter
             yield template
 
 
-def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> Set[str]:
+def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> set[str]:
     return set(chain.from_iterable(map(_metrics_used_by_graph, graph_templates)))
 
 
@@ -1030,7 +1012,7 @@ def drop_metric_consolidation_advice(expression: MetricExpression) -> str:
 def graph_template_for_metrics(
     graph_template: GraphTemplate,
     translated_metrics: TranslatedMetrics,
-) -> Optional[GraphTemplate]:
+) -> GraphTemplate | None:
     # Skip early on conflicting_metrics
     for var in graph_template.get("conflicting_metrics", []):
         if var in translated_metrics:
@@ -1075,7 +1057,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
     what = "host" if service_description == "_HOST_" else "service"
-    labels = ["site"] + ["%s_%s" % (what, col) for col in columns]
+    labels = ["site"] + [f"{what}_{col}" for col in columns]
 
     with sites.only_sites(only_sites), sites.prepend_site():
         info = dict(zip(labels, sites.live().query_row(query)))
@@ -1098,7 +1080,7 @@ def metric_recipe_and_unit(
     consolidation_function: str,
     line_type: str = "stack",
     visible: bool = True,
-) -> Tuple[RenderableRecipe, str]:
+) -> tuple[RenderableRecipe, str]:
     mi = metric_info.get(metric_name, {})
     return (
         RenderableRecipe(
@@ -1217,10 +1199,10 @@ _cmk_color_palette = {
 
 
 def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
-    return "#%02x%02x%02x" % (red, green, blue)
+    return f"#{red:02x}{green:02x}{blue:02x}"
 
 
-def hex_color_to_rgb_color(color: str) -> Tuple[int, int, int]:
+def hex_color_to_rgb_color(color: str) -> tuple[int, int, int]:
     """Convert '#112233' to (17, 34, 51)"""
     try:
         return int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
@@ -1246,7 +1228,7 @@ scalar_colors = {
 
 def get_palette_color_by_index(i: int, shading="a") -> str:  # type:ignore[no-untyped-def]
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
-    return "%s/%s" % (color_key, shading)
+    return f"{color_key}/{shading}"
 
 
 def get_next_random_palette_color() -> str:
@@ -1260,12 +1242,12 @@ def get_next_random_palette_color() -> str:
     return parse_color_into_hexrgb("%s/a" % keys[index])
 
 
-def get_n_different_colors(n: int) -> List[str]:
+def get_n_different_colors(n: int) -> list[str]:
     """Return a list of colors that are as different as possible (visually)
     by distributing them on the HSV color wheel."""
     total_weight = sum(x[1] for x in _hsv_color_distribution)
 
-    colors: List[str] = []
+    colors: list[str] = []
     while len(colors) < n:
         weight_index = int(len(colors) * total_weight / n)
         hue = _get_hue_by_weight_index(weight_index)
@@ -1309,13 +1291,13 @@ def parse_color_into_hexrgb(color_string: str) -> str:
 
 
 def _pointwise_multiplication(
-    c1: Tuple[float, float, float], c2: Tuple[float, float, float]
-) -> Tuple[float, float, float]:
+    c1: tuple[float, float, float], c2: tuple[float, float, float]
+) -> tuple[float, float, float]:
     components = list(x * y for x, y in zip(c1, c2))
     return components[0], components[1], components[2]
 
 
-def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
+def hsv_to_hexrgb(hsv: tuple[float, float, float]) -> str:
     return render_color(colorsys.hsv_to_rgb(*hsv))
 
 
@@ -1378,7 +1360,7 @@ def render_color_icon(color: str) -> HTML:
 
 
 @MemoizeCache
-def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]]:
+def reverse_translate_metric_name(canonical_name: str) -> list[tuple[str, float]]:
     "Return all known perf data names that are translated into canonical_name with corresponding scaling"
     current_version = parse_check_mk_version(cmk_version.__version__)
     possible_translations = []
@@ -1401,7 +1383,7 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def metric_choices(check_command: str, perfvars: Tuple[_MetricName, ...]) -> Iterator[Choice]:
+def metric_choices(check_command: str, perfvars: tuple[_MetricName, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         translated = perfvar_translation(perfvar, check_command)
         name = translated["name"]

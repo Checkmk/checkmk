@@ -18,9 +18,7 @@ def _parameter_valuespec():
             (
                 "machine_metrics",
                 MonitoringState(
-                    title=_(
-                        ("Monitoring state if the Cluster Collector reports no Machine Metrics")
-                    ),
+                    title=_("Monitoring state if the Cluster Collector reports no Machine Metrics"),
                     default_value=2,
                 ),
             ),

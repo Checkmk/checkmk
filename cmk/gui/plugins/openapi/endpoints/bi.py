@@ -15,7 +15,8 @@ You can find an introduction to BI in the
 
 import http
 import http.client
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 

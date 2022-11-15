@@ -6,7 +6,6 @@
 import json
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import cmk.utils.paths
 from cmk.utils.version import is_managed_edition
@@ -21,7 +20,7 @@ class Theme:
     def __init__(self) -> None:
         self._default_theme = "facelift"
         self._theme = "facelift"
-        self.theme_choices: List[Tuple[str, str]] = theme_choices()
+        self.theme_choices: list[tuple[str, str]] = theme_choices()
 
         if not self.theme_choices:
             raise MKInternalError(_("No valid theme directories found."))
@@ -50,7 +49,7 @@ class Theme:
     def get(self) -> str:
         return self._theme
 
-    def icon_themes(self) -> List[str]:
+    def icon_themes(self) -> list[str]:
         """Returns the themes where icons of a theme can be found in decreasing order of importance.
         By default the facelift theme provides all icons. If a theme wants to use different icons it
         only needs to add those icons under the same name. See detect_icon_path for a detailed list
@@ -83,7 +82,7 @@ class Theme:
 
         return self.detect_icon_path("missing", "icon_")
 
-    def _find_icon_in_dir(self, icon_dir: str, icon_name: str, prefix: str) -> Optional[str]:
+    def _find_icon_in_dir(self, icon_dir: str, icon_name: str, prefix: str) -> str | None:
         for base_dir in [str(cmk.utils.paths.local_web_dir), cmk.utils.paths.web_dir]:
             for file_type in ["svg", "png"]:
                 rel_path = icon_dir + "/" + prefix + icon_name + "." + file_type
@@ -93,7 +92,7 @@ class Theme:
         return None
 
     def url(self, rel_url: str) -> str:
-        return "themes/%s/%s" % (self._theme, rel_url)
+        return f"themes/{self._theme}/{rel_url}"
 
     def base_dir(self) -> Path:
         return cmk.utils.paths.local_web_dir / "htdocs" / "themes" / self._theme
@@ -107,7 +106,7 @@ class Theme:
         return is_managed_edition() and self.base_dir().joinpath("images", "mk-logo.png").exists()
 
 
-def theme_choices() -> List[Tuple[str, str]]:
+def theme_choices() -> list[tuple[str, str]]:
     themes = {}
 
     for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:

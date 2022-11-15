@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 
@@ -20,10 +20,10 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 #   This removes variation from the code.
 
 
-Ident = Tuple[str, str]
+Ident = tuple[str, str]
 
 
-def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
+def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, Any]:
     endpoint: Endpoint
 
     methods = ["get", "put", "post", "delete"]
@@ -73,7 +73,7 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, An
     return generated_spec
 
 
-def add_once(coll: List[Dict[str, Any]], to_add: Dict[str, Any]) -> None:
+def add_once(coll: list[dict[str, Any]], to_add: dict[str, Any]) -> None:
     """Add an entry to a collection, only once.
 
     Examples:

@@ -5,7 +5,8 @@
 """Users"""
 import datetime as dt
 import time
-from typing import Any, Dict, Literal, Mapping, Optional, Tuple, TypedDict, Union
+from collections.abc import Mapping
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.type_defs import UserId
 
@@ -28,7 +29,7 @@ from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users
 
-TIMESTAMP_RANGE = Tuple[float, float]
+TIMESTAMP_RANGE = tuple[float, float]
 
 
 class ApiInterfaceAttributes(TypedDict, total=False):
@@ -40,11 +41,11 @@ class ApiInterfaceAttributes(TypedDict, total=False):
 
 
 class InternalInterfaceAttributes(TypedDict, total=False):
-    ui_theme: Optional[Literal["modern-dark", "facelift"]]
-    ui_sidebar_position: Optional[Literal["left"]]
-    nav_hide_icons_title: Optional[Literal["hide"]]
-    icons_per_item: Optional[Literal["entry"]]
-    show_mode: Optional[Literal["default_show_less", "default_show_more", "enforce_show_more"]]
+    ui_theme: Literal["modern-dark", "facelift"] | None
+    ui_sidebar_position: Literal["left"] | None
+    nav_hide_icons_title: Literal["hide"] | None
+    icons_per_item: Literal["entry"] | None
+    show_mode: Literal["default_show_less", "default_show_more", "enforce_show_more"] | None
 
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -120,7 +121,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
     username = api_attrs["username"]
 
     # The interface options must be set for a new user but we restrict the setting through the API
-    internal_attrs: Dict[str, Any] = {
+    internal_attrs: dict[str, Any] = {
         "start_url": None,
         "force_authuser": False,
     }
@@ -354,20 +355,15 @@ def _notification_options_to_api_format(internal_attributes):
     return {"disable_notifications": options}
 
 
-ContactOptions = TypedDict(
-    "ContactOptions",
-    {
-        "email": str,
-        "fallback_contact": bool,
-    },
-    total=False,
-)
+class ContactOptions(TypedDict, total=False):
+    email: str
+    fallback_contact: bool
 
 
 def _contact_options_to_internal_format(  # type:ignore[no-untyped-def]
-    contact_options: ContactOptions, current_email: Optional[str] = None
+    contact_options: ContactOptions, current_email: str | None = None
 ):
-    updated_details: Dict[str, Union[str, bool]] = {}
+    updated_details: dict[str, str | bool] = {}
     if not contact_options:
         return updated_details
 
@@ -392,16 +388,11 @@ def _contact_options_to_internal_format(  # type:ignore[no-untyped-def]
     return updated_details
 
 
-AuthOptions = TypedDict(
-    "AuthOptions",
-    {
-        "auth_type": Literal["remove", "automation", "password"],
-        "password": str,
-        "secret": str,
-        "enforce_password_change": bool,
-    },
-    total=False,
-)
+class AuthOptions(TypedDict, total=False):
+    auth_type: Literal["remove", "automation", "password"]
+    password: str
+    secret: str
+    enforce_password_change: bool
 
 
 def _update_auth_options(  # type:ignore[no-untyped-def]
@@ -434,7 +425,7 @@ def _update_auth_options(  # type:ignore[no-untyped-def]
 
 def _auth_options_to_internal_format(
     auth_details: AuthOptions, new_user: bool = False
-) -> Dict[str, Union[int, str, bool]]:
+) -> dict[str, int | str | bool]:
     """Format the authentication information to be Checkmk compatible
 
     Args:
@@ -451,7 +442,7 @@ def _auth_options_to_internal_format(
     >>> _auth_options_to_internal_format({"auth_type": "password", "password": "password"})  # doctest:+ELLIPSIS
     {'password': ..., 'last_pw_change': ...}
     """
-    internal_options: Dict[str, Union[str, bool, int]] = {}
+    internal_options: dict[str, str | bool | int] = {}
     if not auth_details:
         return internal_options
 
@@ -472,14 +463,9 @@ def _auth_options_to_internal_format(
     return internal_options
 
 
-IdleDetails = TypedDict(
-    "IdleDetails",
-    {
-        "option": Literal["disable", "individual", "global"],
-        "duration": int,
-    },
-    total=False,
-)
+class IdleDetails(TypedDict, total=False):
+    option: Literal["disable", "individual", "global"]
+    duration: int
 
 
 def _update_idle_options(internal_attrs, idle_details: IdleDetails):  # type:ignore[no-untyped-def]
@@ -572,22 +558,14 @@ def _load_user(username: UserId) -> UserSpec:
     return userdb.load_users(lock=False)[username]
 
 
-TimeRange = TypedDict(
-    "TimeRange",
-    {
-        "start_time": dt.datetime,
-        "end_time": dt.datetime,
-    },
-)
+class TimeRange(TypedDict):
+    start_time: dt.datetime
+    end_time: dt.datetime
 
-NotificationDetails = TypedDict(
-    "NotificationDetails",
-    {
-        "timerange": TimeRange,
-        "disable": bool,
-    },
-    total=False,
-)
+
+class NotificationDetails(TypedDict, total=False):
+    timerange: TimeRange
+    disable: bool
 
 
 def _update_notification_options(  # type:ignore[no-untyped-def]
@@ -600,9 +578,9 @@ def _update_notification_options(  # type:ignore[no-untyped-def]
 
 
 def _notification_options_to_internal_format(
-    notification_internal: Dict[str, Union[bool, TIMESTAMP_RANGE]],
+    notification_internal: dict[str, bool | TIMESTAMP_RANGE],
     notification_api_details: NotificationDetails,
-) -> Dict[str, Union[bool, TIMESTAMP_RANGE]]:
+) -> dict[str, bool | TIMESTAMP_RANGE]:
     """Format disable notifications information to be Checkmk compatible
 
     Args:

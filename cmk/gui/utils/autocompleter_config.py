@@ -12,7 +12,8 @@ will be read by javascript and included in the ajax call to the autocompleters
 endpoint.
 """
 
-from typing import Collection, Literal, Mapping, Optional, Union
+from collections.abc import Collection, Mapping
+from typing import Literal, Union
 
 AutocompleterParams = Mapping[str, Union[str, int, float, bool, Collection[str]]]
 AutocompleterConfigJson = Mapping[
@@ -34,7 +35,7 @@ class AutocompleterConfig:
         ident: str,
         # TODO: rename ident to endpoint!
         strict: bool = False,
-        dynamic_params_callback_name: Optional[DynamicParamsCallbackName] = None,
+        dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
     ):
         self._ident = ident
         self._strict = strict
@@ -78,7 +79,7 @@ class ContextAutocompleterConfig(AutocompleterConfig):
         ident: str,
         strict: bool = True,
         show_independent_of_context: bool = False,
-        dynamic_params_callback_name: Optional[DynamicParamsCallbackName] = None,
+        dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
     ) -> None:
         super().__init__(
             ident=ident,
@@ -110,7 +111,7 @@ class GroupAutocompleterConfig(AutocompleterConfig):
             "statefulset",
         ],
         strict: bool = True,
-        dynamic_params_callback_name: Optional[DynamicParamsCallbackName] = None,
+        dynamic_params_callback_name: DynamicParamsCallbackName | None = None,
     ) -> None:
         super().__init__(
             ident=ident, strict=strict, dynamic_params_callback_name=dynamic_params_callback_name

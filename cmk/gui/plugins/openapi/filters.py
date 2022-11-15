@@ -12,7 +12,7 @@
 # Host.name=heute
 import collections
 import pprint
-from typing import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 
 import dateutil.parser
 import pyparsing as pp  # type: ignore

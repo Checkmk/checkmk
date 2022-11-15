@@ -11,8 +11,9 @@ import logging
 import re
 import subprocess
 import uuid
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Iterable, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, NamedTuple
 
 import requests
 import urllib3
@@ -64,11 +65,11 @@ def cmk_version_of_remote_automation_source() -> cmk_version.Version:
 def check_mk_local_automation_serialized(
     *,
     command: str,
-    args: Optional[Sequence[str]] = None,
+    args: Sequence[str] | None = None,
     indata: Any = "",
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
-) -> Tuple[Sequence[str], SerializedResult]:
+    stdin_data: str | None = None,
+    timeout: int | None = None,
+) -> tuple[Sequence[str], SerializedResult]:
     if args is None:
         args = []
     new_args = list(args)
@@ -101,8 +102,7 @@ def check_mk_local_automation_serialized(
     try:
         completed_process = subprocess.run(
             cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             close_fds=True,
             encoding="utf-8",
             input=stdin_data,
@@ -174,10 +174,10 @@ def check_mk_remote_automation_serialized(
     *,
     site_id: SiteId,
     command: str,
-    args: Optional[Sequence[str]],
+    args: Sequence[str] | None,
     indata: Any,
-    stdin_data: Optional[str] = None,
-    timeout: Optional[int] = None,
+    stdin_data: str | None = None,
+    timeout: int | None = None,
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
@@ -455,10 +455,10 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
 
 class CheckmkAutomationRequest(NamedTuple):
     command: str
-    args: Optional[Sequence[str]]
+    args: Sequence[str] | None
     indata: Any
-    stdin_data: Optional[str]
-    timeout: Optional[int]
+    stdin_data: str | None
+    timeout: int | None
 
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
@@ -577,7 +577,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         return _("Checkmk automation")
 
     def __init__(
-        self, job_id: Optional[str] = None, api_request: Optional[CheckmkAutomationRequest] = None
+        self, job_id: str | None = None, api_request: CheckmkAutomationRequest | None = None
     ) -> None:
         if job_id is not None:
             # Loading an existing job

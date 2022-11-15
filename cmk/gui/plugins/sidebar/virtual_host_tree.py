@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import nullcontext
-from typing import Any, ContextManager, Dict, List
+from typing import Any, ContextManager
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -304,7 +304,7 @@ function virtual_host_tree_enter(path)
 
     def _compute_tag_tree(self, tree_spec):
         tag_groups, topics = self._get_tag_config()
-        tree: Dict[Any, Any] = {}
+        tree: dict[Any, Any] = {}
         for host_row in self._get_all_hosts():
             self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
         return tree
@@ -445,7 +445,7 @@ function virtual_host_tree_enter(path)
     # Prepare list of host tag groups and topics
     def _get_tag_config(self):
         tag_groups = {}
-        topics: Dict[str, List[Any]] = {}
+        topics: dict[str, list[Any]] = {}
         for tag_group in active_config.tags.tag_groups:
             if tag_group.topic:
                 topics.setdefault(tag_group.topic, []).append(tag_group)

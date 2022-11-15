@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pprint import pformat
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from cmk.utils.site import get_omd_config
 
@@ -33,7 +33,7 @@ def _get_receiver_port() -> int:
 
 
 def dump_environ_app(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-    dumped_env = "\n".join(["{0}: {1}".format(k, environ[k]) for k in environ.keys()])
+    dumped_env = "\n".join([f"{k}: {environ[k]}" for k in environ.keys()])
     return serve_string(dumped_env)(environ, start_response)
 
 
@@ -55,7 +55,7 @@ def serve_string(_str: str) -> WSGIApplication:
 
 def test_formdata(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
     # show the environment:
-    output: List[bytes] = [
+    output: list[bytes] = [
         b"<pre>",
         pformat(environ).encode("utf-8"),
         b"</pre>",

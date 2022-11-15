@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import HTMLGenerator
@@ -16,9 +16,9 @@ def make_header(
     writer: HTMLGenerator,
     title: str,
     breadcrumb: Breadcrumb,
-    page_menu: Optional[PageMenu] = None,
-    page_state: Optional[PageState] = None,
-    javascripts: Optional[Sequence[str]] = None,
+    page_menu: PageMenu | None = None,
+    page_state: PageState | None = None,
+    javascripts: Sequence[str] | None = None,
     force: bool = False,
     show_body_start: bool = True,
     show_top_heading: bool = True,

@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
-from typing import Any, Mapping, NamedTuple
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from cmk.gui.type_defs import ColumnName, PainterSpec, Row
 from cmk.gui.valuespec import Dictionary

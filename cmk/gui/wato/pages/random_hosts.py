@@ -6,7 +6,7 @@
 for test and development."""
 
 import random
-from typing import Collection, Dict, List, Optional, Tuple, Type
+from collections.abc import Collection
 
 from cmk.utils.type_defs import HostName
 
@@ -37,7 +37,7 @@ class ModeRandomHosts(WatoMode):
         return _("Add random hosts")
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -76,7 +76,7 @@ class ModeRandomHosts(WatoMode):
 
     def _create_random_hosts(self, folder, count, folders, levels):
         if levels == 0:
-            hosts_to_create: List[Tuple[HostName, Dict, None]] = []
+            hosts_to_create: list[tuple[HostName, dict, None]] = []
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((HostName(host_name), {"ipaddress": "127.0.0.1"}, None))

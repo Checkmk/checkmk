@@ -7,14 +7,13 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-from typing import Dict, Optional
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 
 
-def get_ntop_connection() -> Optional[Dict]:
+def get_ntop_connection() -> dict | None:
     # Use this function if you *really* want to try accessing the ntop connection settings
     try:
         # ntop is currently part of CEE and will *only* be defined if we are a CEE
@@ -23,7 +22,7 @@ def get_ntop_connection() -> Optional[Dict]:
         return None
 
 
-def get_ntop_connection_mandatory() -> Dict:
+def get_ntop_connection_mandatory() -> dict:
     connection = get_ntop_connection()
     return connection if connection else {}
 

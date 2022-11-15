@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Sequence, Tuple, Type, Union
+from collections.abc import Sequence
 
 from livestatus import OnlySites
 
@@ -46,7 +46,7 @@ class DataSourceBIAggregations(ABCDataSource):
         return _("BI Aggregations")
 
     @property
-    def table(self) -> "RowTable":
+    def table(self) -> RowTable:
         return RowTableBIAggregations()
 
     @property
@@ -54,15 +54,15 @@ class DataSourceBIAggregations(ABCDataSource):
         return ["aggr", "aggr_group"]
 
     @property
-    def unsupported_columns(self) -> List[ColumnName]:
+    def unsupported_columns(self) -> list[ColumnName]:
         return ["site"]
 
     @property
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
@@ -71,13 +71,13 @@ class RowTableBIAggregations(RowTable):
         self,
         datasource: ABCDataSource,
         cells: Sequence[Cell],
-        columns: List[ColumnName],
+        columns: list[ColumnName],
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         return bi.table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
@@ -92,7 +92,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return _("BI Aggregations affected by one host")
 
     @property
-    def table(self) -> "RowTable":
+    def table(self) -> RowTable:
         return RowTableBIHostAggregations()
 
     @property
@@ -100,11 +100,11 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
@@ -117,9 +117,9 @@ class RowTableBIHostAggregations(RowTable):
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         return bi.host_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
@@ -137,7 +137,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return _("BI Hostname Aggregations")
 
     @property
-    def table(self) -> "RowTable":
+    def table(self) -> RowTable:
         return RowTableBIHostnameAggregations()
 
     @property
@@ -145,11 +145,11 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return ["aggr", "host", "aggr_group"]
 
     @property
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
@@ -162,9 +162,9 @@ class RowTableBIHostnameAggregations(RowTable):
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         return bi.hostname_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
@@ -181,7 +181,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return _("BI aggregations for hosts by host groups")
 
     @property
-    def table(self) -> "RowTable":
+    def table(self) -> RowTable:
         return RowTableBIHostnameByGroupAggregations()
 
     @property
@@ -189,11 +189,11 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return ["aggr", "host", "hostgroup", "aggr_group"]
 
     @property
-    def keys(self) -> List[ColumnName]:
+    def keys(self) -> list[ColumnName]:
         return []
 
     @property
-    def id_keys(self) -> List[ColumnName]:
+    def id_keys(self) -> list[ColumnName]:
         return ["aggr_name"]
 
 
@@ -206,9 +206,9 @@ class RowTableBIHostnameByGroupAggregations(RowTable):
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         return bi.hostname_by_group_table(
             context, columns, headers, only_sites, limit, all_active_filters
         )
@@ -590,7 +590,7 @@ class PainterOptionAggrWrap(PainterOption):
 
 
 def paint_aggregated_tree_state(
-    row: Row, force_renderer_cls: Optional[Type[bi.ABCFoldableTreeRenderer]] = None
+    row: Row, force_renderer_cls: type[bi.ABCFoldableTreeRenderer] | None = None
 ) -> CellSpec:
     painter_options = PainterOptions.get_instance()
     treetype = painter_options.get("aggr_treetype")

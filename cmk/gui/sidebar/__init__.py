@@ -8,8 +8,9 @@ import copy
 import json
 import textwrap
 import traceback
+from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -62,7 +63,7 @@ from cmk.gui.werks import may_acknowledge
 from .main_menu import MainMenuRenderer
 
 # TODO: Kept for pre 1.6 plugin compatibility
-sidebar_snapins: Dict[str, Dict] = {}
+sidebar_snapins: dict[str, dict] = {}
 
 
 def load_plugins() -> None:
@@ -166,7 +167,7 @@ def transform_old_dict_based_snapins() -> None:
 class UserSidebarConfig:
     """Manages the configuration of the users sidebar"""
 
-    def __init__(self, usr: LoggedInUser, default_config: List[Tuple[str, str]]) -> None:
+    def __init__(self, usr: LoggedInUser, default_config: list[tuple[str, str]]) -> None:
         super().__init__()
         self._user = usr
         self._default_config = copy.deepcopy(default_config)
@@ -211,16 +212,16 @@ class UserSidebarConfig:
     def snapins(self) -> "List[UserSidebarSnapin]":
         return self._config["snapins"]
 
-    def _initial_config(self) -> Dict[str, Union[bool, List[Dict[str, Any]]]]:
+    def _initial_config(self) -> dict[str, bool | list[dict[str, Any]]]:
         return {
             "snapins": self._transform_legacy_tuples(self._default_config),
             "fold": False,
         }
 
-    def _user_config(self) -> Dict[str, Any]:
+    def _user_config(self) -> dict[str, Any]:
         return self._user.get_sidebar_configuration(self._initial_config())
 
-    def _load(self) -> Dict[str, Any]:
+    def _load(self) -> dict[str, Any]:
         """Load current state of user's sidebar
 
         Convert from old format (just a snapin list) to the new format
@@ -243,7 +244,7 @@ class UserSidebarConfig:
 
         return user_config
 
-    def _transform_legacy_list_config(self, user_config: Any) -> Dict[str, Any]:
+    def _transform_legacy_list_config(self, user_config: Any) -> dict[str, Any]:
         if not isinstance(user_config, list):
             return user_config
 
@@ -252,10 +253,10 @@ class UserSidebarConfig:
             "fold": False,
         }
 
-    def _transform_legacy_off_state(self, snapins: List[Dict[str, str]]) -> List[Dict[str, str]]:
+    def _transform_legacy_off_state(self, snapins: list[dict[str, str]]) -> list[dict[str, str]]:
         return [e for e in snapins if e["visibility"] != "off"]
 
-    def _transform_legacy_tuples(self, snapins: Any) -> List[Dict[str, Any]]:
+    def _transform_legacy_tuples(self, snapins: Any) -> list[dict[str, Any]]:
         return [
             {"snapin_type_id": e[0], "visibility": e[1]} if isinstance(e, tuple) else e
             for e in snapins
@@ -265,13 +266,13 @@ class UserSidebarConfig:
         if self._user.may("general.configure_sidebar"):
             self._user.set_sidebar_configuration(self._to_config())
 
-    def _from_config(self, cfg: Dict[str, Any]) -> Dict[str, Any]:
+    def _from_config(self, cfg: dict[str, Any]) -> dict[str, Any]:
         return {
             "fold": cfg["fold"],
             "snapins": [UserSidebarSnapin.from_config(e) for e in cfg["snapins"]],
         }
 
-    def _to_config(self) -> Dict[str, Any]:
+    def _to_config(self) -> dict[str, Any]:
         return {
             "fold": self._config["fold"],
             "snapins": [e.to_config() for e in self._config["snapins"]],
@@ -287,7 +288,7 @@ class UserSidebarSnapin:
     """An instance of a snapin that is configured in the users sidebar"""
 
     @staticmethod
-    def from_config(cfg: Dict[str, Any]) -> "UserSidebarSnapin":
+    def from_config(cfg: dict[str, Any]) -> "UserSidebarSnapin":
         """Construct a UserSidebarSnapin object from the persisted data structure"""
         snapin_class = snapin_registry[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
@@ -298,14 +299,14 @@ class UserSidebarSnapin:
 
     def __init__(
         self,
-        snapin_type: Type[SidebarSnapin],
+        snapin_type: type[SidebarSnapin],
         visibility: SnapinVisibility = SnapinVisibility.OPEN,
     ) -> None:
         super().__init__()
         self.snapin_type = snapin_type
         self.visible = visibility
 
-    def to_config(self) -> Dict[str, Any]:
+    def to_config(self) -> dict[str, Any]:
         return {
             "snapin_type_id": self.snapin_type.type_name(),
             "visibility": self.visible.value,
@@ -322,7 +323,7 @@ class UserSidebarSnapin:
 
 
 class SidebarRenderer:
-    def show(self, title: Optional[str] = None, content: Optional["HTML"] = None) -> None:
+    def show(self, title: str | None = None, content: Optional["HTML"] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideally we should
         # split this up. Possible solutions might be:
@@ -415,7 +416,7 @@ class SidebarRenderer:
             )
         )
 
-    def _show_snapins(self, user_config: UserSidebarConfig) -> Tuple[List, List, List]:
+    def _show_snapins(self, user_config: UserSidebarConfig) -> tuple[list, list, list]:
         refresh_snapins = []
         restart_snapins = []
         static_snapins = []
@@ -468,7 +469,7 @@ class SidebarRenderer:
         toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
         # If the user may modify the sidebar then add code for dragging the snapin
-        head_actions: Dict[str, str] = {}
+        head_actions: dict[str, str] = {}
         if user.may("general.configure_sidebar"):
             head_actions = {
                 "onmouseover": "document.body.style.cursor='move';",
@@ -506,7 +507,7 @@ class SidebarRenderer:
             html.close_div()
 
         # The heading. A click on the heading mini/maximizes the snapin
-        toggle_actions: Dict[str, str] = {}
+        toggle_actions: dict[str, str] = {}
         if user.may("general.configure_sidebar"):
             toggle_actions = {
                 "onclick": "cmk.sidebar.toggle_sidebar_snapin(this,'%s')" % toggle_url,
@@ -617,7 +618,7 @@ def ajax_snapin():
         [snapin_id] if snapin_id else request.get_str_input_mandatory("names", "").split(",")
     )
 
-    snapin_code: List[str] = []
+    snapin_code: list[str] = []
     for snapin_id in snapin_ids:
         try:
             snapin_instance = user_config.get_snapin(snapin_id).snapin_type()
@@ -719,7 +720,7 @@ def move_snapin() -> None:
         return None
 
     before_id = request.var("before")
-    before_snapin: Optional[UserSidebarSnapin] = None
+    before_snapin: UserSidebarSnapin | None = None
     if before_id:
         try:
             before_snapin = user_config.get_snapin(before_id)
@@ -894,7 +895,7 @@ def _add_snapins_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-def _used_snapins() -> List[Any]:
+def _used_snapins() -> list[Any]:
     user_config = UserSidebarConfig(user, active_config.sidebar)
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 

@@ -241,7 +241,7 @@ import cmk.gui.watolib.network_scan
 import cmk.gui.watolib.read_only
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
-modes: Dict[Any, Any] = {}
+modes: dict[Any, Any] = {}
 
 # Import the module to register page handler
 import cmk.gui.wato.page_handler

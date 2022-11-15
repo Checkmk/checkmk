@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-from typing import Any, Collection, List, NamedTuple, Optional, Sequence, Type
+from collections.abc import Collection, Sequence
+from typing import Any, NamedTuple
 
 from livestatus import SiteId
 
@@ -136,7 +137,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             else:
                 self._logger.exception(msg)
 
-    def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> List:
+    def _execute_parent_scan(self, task: ParentScanTask, settings: ParentScanSettings) -> list:
         return scan_parents(
             task.site_id,
             task.host_name,
@@ -152,7 +153,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         ).gateways
 
     def _process_parent_scan_results(
-        self, task: ParentScanTask, settings: ParentScanSettings, gateways: List
+        self, task: ParentScanTask, settings: ParentScanSettings, gateways: list
     ) -> None:
         gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
         state, skipped_gateways, error = gateways[0][1:]
@@ -183,7 +184,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
-        gateway: Optional[ParentScanResult],
+        gateway: ParentScanResult | None,
     ) -> None:
         Folder.invalidate_caches()
         folder = Folder.folder(task.folder_path)
@@ -219,9 +220,9 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
-        gateway: Optional[ParentScanResult],
+        gateway: ParentScanResult | None,
         folder: CREFolder,
-    ) -> List[HostName]:
+    ) -> list[HostName]:
         """Ensure there is a gateway host in the Check_MK configuration (or raise an exception)
 
         If we have found a gateway, we need to know a matching host name from our configuration.
@@ -273,7 +274,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             return gateway.dns_name
 
         if task.site_id:
-            return HostName("gw-%s-%s" % (task.site_id, gateway.ip.replace(".", "-")))
+            return HostName("gw-{}-{}".format(task.site_id, gateway.ip.replace(".", "-")))
 
         return HostName("gw-%s" % (gateway.ip.replace(".", "-")))
 
@@ -311,7 +312,7 @@ class ModeParentScan(WatoMode):
         return _("Parent scan")
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def _from_vars(self):

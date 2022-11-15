@@ -13,7 +13,8 @@ You can find an introduction to time periods in the
 
 import datetime as dt
 import http.client
-from typing import Any, Dict, List, Mapping, Tuple, Union
+from collections.abc import Mapping
+from typing import Any
 
 from marshmallow.utils import from_iso_time
 
@@ -38,7 +39,7 @@ from cmk.gui.watolib.timeperiods import (
     save_timeperiods,
 )
 
-TIME_RANGE = Tuple[str, str]
+TIME_RANGE = tuple[str, str]
 
 PERMISSIONS = permissions.Perm("wato.timeperiods")
 
@@ -214,7 +215,7 @@ def _to_api_format(  # type:ignore[no-untyped-def]
 'end': '17:00'}]}], 'exceptions': [{'date': '2021-04-01', 'time_ranges': [{'start': '14:00', 'end': '15:00'}]}]}
 
     """
-    time_period_readable: Dict[str, Any] = {"alias": time_period["alias"]}
+    time_period_readable: dict[str, Any] = {"alias": time_period["alias"]}
     if not builtin_period:
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
@@ -238,7 +239,7 @@ def _to_api_format(  # type:ignore[no-untyped-def]
     return time_period_readable
 
 
-def _daily_time_ranges(active_time_ranges: List[Dict[str, Any]]) -> Dict[str, List[TIME_RANGE]]:
+def _daily_time_ranges(active_time_ranges: list[dict[str, Any]]) -> dict[str, list[TIME_RANGE]]:
     """Convert the user provided time ranges to the Checkmk format
 
     Args:
@@ -256,7 +257,7 @@ def _daily_time_ranges(active_time_ranges: List[Dict[str, Any]]) -> Dict[str, Li
 
     """
 
-    result: Dict[str, List[TIME_RANGE]] = {day: [] for day in defines.weekday_ids()}
+    result: dict[str, list[TIME_RANGE]] = {day: [] for day in defines.weekday_ids()}
     for active_time_range in active_time_ranges:
         period = active_time_range["day"]  # weekday or week
         time_ranges = [
@@ -270,7 +271,7 @@ def _daily_time_ranges(active_time_ranges: List[Dict[str, Any]]) -> Dict[str, Li
     return result
 
 
-def _active_time_ranges_readable(days: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _active_time_ranges_readable(days: dict[str, Any]) -> list[dict[str, Any]]:
     """Convert the Checkmk time ranges to the API format
 
     Args:
@@ -287,9 +288,9 @@ def _active_time_ranges_readable(days: Dict[str, Any]) -> List[Dict[str, Any]]:
         [{'day': 'monday', 'time_ranges': [{'start': ('12', '0'), 'end': ('14', '0')}]}]
     """
 
-    result: List[Dict[str, Any]] = []
+    result: list[dict[str, Any]] = []
     for day, time_ranges in days.items():
-        temp: List[Dict[str, str]] = []
+        temp: list[dict[str, str]] = []
         for time_range in time_ranges:
             temp.append({"start": time_range[0], "end": time_range[1]})
         if temp:
@@ -297,10 +298,10 @@ def _active_time_ranges_readable(days: Dict[str, Any]) -> List[Dict[str, Any]]:
     return result
 
 
-def _convert_to_dt(exceptions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _convert_to_dt(exceptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     result = []
 
-    def convert_to_dt(time_range: Dict[str, str]) -> Dict[str, dt.time]:
+    def convert_to_dt(time_range: dict[str, str]) -> dict[str, dt.time]:
         return {k: from_iso_time(v) for k, v in time_range.items()}
 
     for exception in exceptions:
@@ -310,7 +311,7 @@ def _convert_to_dt(exceptions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return result
 
 
-def _format_exceptions(exceptions: List[Dict[str, Any]]) -> Dict[str, List[TIME_RANGE]]:
+def _format_exceptions(exceptions: list[dict[str, Any]]) -> dict[str, list[TIME_RANGE]]:
     result = {}
     for exception in exceptions:
         date_exception = []
@@ -320,7 +321,7 @@ def _format_exceptions(exceptions: List[Dict[str, Any]]) -> Dict[str, List[TIME_
     return result
 
 
-def _exceptions_readable(mk_exceptions: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _exceptions_readable(mk_exceptions: dict[str, Any]) -> list[dict[str, Any]]:
     """Convert the Checkmk exceptions to the API exception format
 
     Args:
@@ -335,9 +336,9 @@ def _exceptions_readable(mk_exceptions: Dict[str, Any]) -> List[Dict[str, Any]]:
         [{'date': '2020-01-01', 'time_ranges': [{'start': ('14', '0'), 'end': ('18', '0')}]}]
 
     """
-    result: List[Dict[str, Any]] = []
+    result: list[dict[str, Any]] = []
     for test_date, time_ranges in mk_exceptions.items():
-        time_ranges_formatted: List[Dict[str, str]] = []
+        time_ranges_formatted: list[dict[str, str]] = []
         for time_range in time_ranges:
             time_ranges_formatted.append({"start": time_range[0], "end": time_range[1]})
         result.append({"date": test_date, "time_ranges": time_ranges_formatted})
@@ -349,12 +350,12 @@ def _time_readable(mk_time: str) -> str:
     return f"{mk_time[0]}:{minutes}"
 
 
-def _format_time_range(time_range: Dict[str, dt.time]) -> TIME_RANGE:
+def _format_time_range(time_range: dict[str, dt.time]) -> TIME_RANGE:
     """Convert time iso format to Checkmk format"""
     return _mk_time_format(time_range["start"]), _mk_time_format(time_range["end"])
 
 
-def _mk_time_format(time_or_str: Union[str, dt.time]) -> str:
+def _mk_time_format(time_or_str: str | dt.time) -> str:
     """
 
     Examples:
@@ -393,11 +394,11 @@ def _mk_date_format(exception_date: dt.date) -> str:
 
 def _to_checkmk_format(
     alias: str,
-    periods: Dict[str, Any],
-    exceptions: Dict[str, Any],
-    exclude: List[str],
+    periods: dict[str, Any],
+    exceptions: dict[str, Any],
+    exclude: list[str],
 ) -> TimeperiodSpec:
-    time_period: Dict[str, Any] = {"alias": alias}
+    time_period: dict[str, Any] = {"alias": alias}
     time_period.update(exceptions)
     time_period.update(periods)
     if exclude is None:

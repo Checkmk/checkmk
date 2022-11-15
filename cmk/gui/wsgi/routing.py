@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import Any, Dict, Mapping, Tuple, TYPE_CHECKING
+from collections.abc import Mapping
+from typing import Any, TYPE_CHECKING
 
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -69,7 +70,7 @@ def make_router(debug: bool = False) -> WSGIApplication:
     cmk_app = ProxyFix(app=CheckmkApp(debug=debug).__call__)
     api_app = ProxyFix(app=CheckmkRESTAPI(debug=debug).wsgi_app)
 
-    endpoints: Dict[str, WSGIApplication] = {
+    endpoints: dict[str, WSGIApplication] = {
         "cmk": cmk_app,
         "rest-api": api_app,
         "debug-dump": dump_environ_app,
@@ -80,7 +81,7 @@ def make_router(debug: bool = False) -> WSGIApplication:
     def router(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         urls = url_map.bind_to_environ(environ)
         try:
-            result: Tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
+            result: tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
             endpoint_name, args = result  # pylint: disable=unpacking-non-sequence
             endpoint = endpoints[endpoint_name]
         except HTTPException as e:

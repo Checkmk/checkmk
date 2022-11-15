@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.visuals.utils import visual_info_registry, VisualInfo
@@ -32,7 +31,7 @@ class VisualInfoHost(VisualInfo):
         return _("Hosts")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("host", MonitoredHostname(title=_("Hostname"), strict="True"))]
 
     @property
@@ -59,7 +58,7 @@ class VisualInfoService(VisualInfo):
         return _("Services")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "service",
@@ -99,7 +98,7 @@ class VisualInfoHostgroup(VisualInfo):
         return _("Host groups")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "hostgroup",
@@ -133,7 +132,7 @@ class VisualInfoServicegroup(VisualInfo):
         return _("Service groups")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "servicegroup",
@@ -167,7 +166,7 @@ class VisualInfoLog(VisualInfo):
         return _("Log Entries")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return []
 
 
@@ -186,7 +185,7 @@ class VisualInfoComment(VisualInfo):
         return _("Comments")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "comment_id",
@@ -212,7 +211,7 @@ class VisualInfoDowntime(VisualInfo):
         return _("Downtimes")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "downtime_id",
@@ -238,7 +237,7 @@ class VisualInfoContact(VisualInfo):
         return _("Contacts")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "log_contact_name",
@@ -264,7 +263,7 @@ class VisualInfoCommand(VisualInfo):
         return _("Commands")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "command_name",
@@ -290,7 +289,7 @@ class VisualInfoBIAggregation(VisualInfo):
         return _("BI Aggregations")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "aggr_name",
@@ -320,7 +319,7 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return _("BI Aggregation Groups")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "aggr_group",
@@ -350,7 +349,7 @@ class VisualInfoDiscovery(VisualInfo):
         return _("Discovery Outputs")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return []
 
 
@@ -369,7 +368,7 @@ class VisualInfoEvent(VisualInfo):
         return _("Event Console Events")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "event_id",
@@ -395,7 +394,7 @@ class VisualInfoEventHistory(VisualInfo):
         return _("Historic Event Console Events")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "event_id",
@@ -427,7 +426,7 @@ class VisualInfoCrash(VisualInfo):
         return _("Crash reports")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [
             (
                 "crash_id",
@@ -453,7 +452,7 @@ class VisualInfoKubernetesCluser(VisualInfo):
         return _("Kubernetes Clusters")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_cluster", TextInput(title=self.title))]
 
 
@@ -472,7 +471,7 @@ class VisualInfoKubernetesNamespace(VisualInfo):
         return _("Kubernetes Namespaces")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_namespace", TextInput(title=self.title))]
 
 
@@ -491,7 +490,7 @@ class VisualInfoKubernetesDaemonset(VisualInfo):
         return _("Kubernetes Daemonsets")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_daemonset", TextInput(title=self.title))]
 
 
@@ -510,7 +509,7 @@ class VisualInfoKubernetesDeployment(VisualInfo):
         return _("Kubernetes Deployments")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_deployment", TextInput(title=self.title))]
 
 
@@ -529,5 +528,5 @@ class VisualInfoKubernetesStatefulset(VisualInfo):
         return _("Kubernetes Statefulsets")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return [("kubernetes_statefulset", TextInput(title=self.title))]

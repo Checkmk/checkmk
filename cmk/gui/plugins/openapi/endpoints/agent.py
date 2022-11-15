@@ -14,7 +14,8 @@ You can find more about the agent bakery and automatic agent updates of checkmk 
 in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint

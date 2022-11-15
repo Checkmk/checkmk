@@ -5,7 +5,7 @@
 """WATO can be set into read only mode manually using this mode"""
 
 import time
-from typing import Collection
+from collections.abc import Collection
 
 import cmk.utils.store as store
 

@@ -5,8 +5,8 @@
 """Foldable containers for pages"""
 
 import json
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator, Optional, Union
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
@@ -30,11 +30,11 @@ def foldable_container(
     id_: str,
     isopen: bool,
     title: HTMLContent,
-    indent: Union[str, None, bool] = True,
-    icon: Optional[str] = None,
-    fetch_url: Optional[str] = None,
-    title_url: Optional[str] = None,
-    title_target: Optional[str] = None,
+    indent: str | None | bool = True,
+    icon: str | None = None,
+    fetch_url: str | None = None,
+    title_url: str | None = None,
+    title_target: str | None = None,
     padding: int = 15,
     save_state: bool = True,
 ) -> Iterator[bool]:
@@ -99,10 +99,10 @@ def foldable_container(
 def foldable_container_onclick(
     treename: str,
     id_: str,
-    fetch_url: Optional[str],
+    fetch_url: str | None,
     save_state: bool = True,
 ) -> str:
-    return "cmk.foldable_container.toggle(%s, %s, %s, %s)" % (
+    return "cmk.foldable_container.toggle({}, {}, {}, {})".format(
         json.dumps(treename),
         json.dumps(id_),
         json.dumps(fetch_url if fetch_url else ""),
@@ -111,8 +111,8 @@ def foldable_container_onclick(
 
 
 def foldable_container_img_id(treename: str, id_: str) -> str:
-    return "treeimg.%s.%s" % (treename, id_)
+    return f"treeimg.{treename}.{id_}"
 
 
 def foldable_container_id(treename: str, id_: str) -> str:
-    return "tree.%s.%s" % (treename, id_)
+    return f"tree.{treename}.{id_}"

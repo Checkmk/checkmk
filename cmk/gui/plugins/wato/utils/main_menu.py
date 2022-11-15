@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import List
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
@@ -69,7 +68,7 @@ def register_modules(*args):
         main_module_registry.register(cls)
 
 
-def get_modules() -> List[ABCMainModule]:
+def get_modules() -> list[ABCMainModule]:
     return sorted(
         [m() for m in main_module_registry.values()], key=lambda m: (m.sort_index, m.title)
     )

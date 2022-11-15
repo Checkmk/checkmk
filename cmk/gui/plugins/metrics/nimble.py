@@ -37,7 +37,7 @@ for nimble_op_ty in ["read", "write"]:
         ("500", "200-500 ms", "13/a"),
         ("1000", "500+ ms", "12/a"),
     ]:
-        metric_info["nimble_%s_latency_%s" % (nimble_op_ty, nimble_key.replace(".", ""))] = {
+        metric_info["nimble_{}_latency_{}".format(nimble_op_ty, nimble_key.replace(".", ""))] = {
             "title": _("%s latency %s") % (nimble_op_ty.title(), nimble_title),
             "unit": "%",
             "color": nimble_color,

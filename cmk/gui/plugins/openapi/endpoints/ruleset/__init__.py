@@ -50,16 +50,16 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        rulesets: Union[
-            RulesetCollection_, FilteredRulesetCollection
-        ] = FilteredRulesetCollection.filter(
+        rulesets: (
+            RulesetCollection_ | FilteredRulesetCollection
+        ) = FilteredRulesetCollection.filter(
             all_sets.get_rulesets(),
             key=lambda ruleset: ruleset.matches_search_with_rules(search_options),
         )
     else:
         rulesets = all_sets
 
-    ruleset_collection: List[DomainObject] = []
+    ruleset_collection: list[DomainObject] = []
     for ruleset in rulesets.get_rulesets().values():
         ruleset_collection.append(_serialize_ruleset(ruleset))
 

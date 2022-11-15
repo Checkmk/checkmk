@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 
@@ -386,7 +385,7 @@ rulespec_registry.register(
     )
 )
 
-vs_elements_if_groups_matches: List[DictionaryEntry] = [
+vs_elements_if_groups_matches: list[DictionaryEntry] = [
     (
         "iftype",
         Transform(
@@ -411,7 +410,7 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
     ),
 ]
 
-vs_elements_if_groups_group: List[DictionaryEntry] = [
+vs_elements_if_groups_group: list[DictionaryEntry] = [
     (
         "group_name",
         TextInput(
@@ -440,7 +439,7 @@ vs_elements_if_groups_group: List[DictionaryEntry] = [
 
 
 def _valuespec_if_groups() -> Alternative:
-    node_name_elements: List[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
+    node_name_elements: list[DictionaryEntry] = [("node_name", TextInput(title=_("Node name")))]
     return Alternative(
         title=_("Network interface groups"),
         help=_(

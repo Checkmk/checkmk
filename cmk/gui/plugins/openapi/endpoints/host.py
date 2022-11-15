@@ -38,7 +38,8 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hosts

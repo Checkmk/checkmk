@@ -6,7 +6,8 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import Any, Dict, Iterator, List, Optional, Type
+from collections.abc import Iterator
+from typing import Any
 
 from livestatus import LocalConnection
 
@@ -24,7 +25,7 @@ from cmk.gui.watolib.sites import get_effective_global_setting
 
 
 class ACResult:
-    status: Optional[int] = None
+    status: int | None = None
 
     def __init__(self, text: str) -> None:
         super().__init__()
@@ -62,7 +63,7 @@ class ACResult:
         return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
-    def from_repr(cls, repr_data: Dict[str, Any]) -> "ACResult":
+    def from_repr(cls, repr_data: dict[str, Any]) -> "ACResult":
         result_class_name = repr_data.pop("class_name")
         result = globals()[result_class_name](repr_data["text"])
 
@@ -127,7 +128,7 @@ class ACTestCategories:
 class ACTest:
     def __init__(self) -> None:
         self._executed = False
-        self._results: List[ACResult] = []
+        self._results: list[ACResult] = []
 
     def id(self) -> str:
         return self.__class__.__name__
@@ -161,7 +162,7 @@ class ACTest:
         try:
             # Do not merge results that have been gathered on one site for different sites
             results = list(self.execute())
-            num_sites = len(set(r.site_id for r in results))
+            num_sites = len({r.site_id for r in results})
             if num_sites > 1:
                 for result in results:
                     result.from_test(self)
@@ -189,7 +190,7 @@ class ACTest:
         return cmk.utils.defines.short_service_state_name(self.status())
 
     @property
-    def results(self) -> List[ACResult]:
+    def results(self) -> list[ACResult]:
         if not self._executed:
             raise MKGeneralException(_("The test has not been executed yet"))
         return self._results
@@ -208,8 +209,8 @@ class ACTest:
         )
 
 
-class ACTestRegistry(cmk.utils.plugin_registry.Registry[Type[ACTest]]):
-    def plugin_name(self, instance: Type[ACTest]) -> str:
+class ACTestRegistry(cmk.utils.plugin_registry.Registry[type[ACTest]]):
+    def plugin_name(self, instance: type[ACTest]) -> str:
         return instance.__name__
 
 
@@ -224,8 +225,8 @@ class AutomationCheckAnalyzeConfig(AutomationCommand):
     def get_request(self):
         return None
 
-    def execute(self, _unused_request: None) -> List[ACResult]:
-        results: List[ACResult] = []
+    def execute(self, _unused_request: None) -> list[ACResult]:
+        results: list[ACResult] = []
         for test_cls in ac_test_registry.values():
             test = test_cls()
 

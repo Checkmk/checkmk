@@ -6,9 +6,9 @@
 automation functions on slaves,"""
 
 import traceback
+from collections.abc import Iterable
 from contextlib import nullcontext
 from datetime import datetime
-from typing import Iterable
 
 import cmk.utils.paths
 import cmk.utils.store as store

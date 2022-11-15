@@ -17,26 +17,9 @@ import http.client
 import json
 import logging
 import warnings
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from types import FunctionType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Final,
-    Generator,
-    Iterator,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TYPE_CHECKING,
-    TypeVar,
-    Union,
-)
+from typing import Any, Final, Literal, TYPE_CHECKING, TypeVar
 from urllib import parse
 
 import apispec
@@ -97,7 +80,7 @@ if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import WSGIApplication
 
-_SEEN_ENDPOINTS: Set[FunctionType] = set()
+_SEEN_ENDPOINTS: set[FunctionType] = set()
 
 T = TypeVar("T")
 K = TypeVar("K")
@@ -126,8 +109,8 @@ class WrappedEndpoint:
 Version = str
 
 
-def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
-    attrs: Dict[str, Any] = fields_.copy()
+def to_named_schema(fields_: dict[str, fields.Field]) -> type[Schema]:
+    attrs: dict[str, Any] = fields_.copy()
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),
@@ -146,19 +129,19 @@ def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
     _update(fields_)
 
     name = f"GeneratedSchema{_hash.hexdigest()}"
-    schema_cls: Type[Schema] = type(name, (Schema,), attrs)
+    schema_cls: type[Schema] = type(name, (Schema,), attrs)
     return schema_cls
 
 
 def coalesce_schemas(
-    parameters: Sequence[Tuple[LocationType, Sequence[RawParameter]]],
+    parameters: Sequence[tuple[LocationType, Sequence[RawParameter]]],
 ) -> Sequence[SchemaParameter]:
-    rv: List[SchemaParameter] = []
+    rv: list[SchemaParameter] = []
     for location, params in parameters:
         if not params:
             continue
 
-        to_convert: Dict[str, fields.Field] = {}
+        to_convert: dict[str, fields.Field] = {}
         for param in params:
             if isinstance(param, SchemaMeta):
                 rv.append({"in": location, "schema": param})
@@ -174,9 +157,9 @@ def coalesce_schemas(
 def _render_path_item(
     status_code: int,
     description: str,
-    error_schema: Type[Schema],
-    content: Optional[Dict[str, Any]] = None,
-    headers: Optional[Dict[str, OpenAPIParameter]] = None,
+    error_schema: type[Schema],
+    content: dict[str, Any] | None = None,
+    headers: dict[str, OpenAPIParameter] | None = None,
 ) -> PathItem:
     """Build a OpenAPI PathItem segment
 
@@ -387,24 +370,24 @@ class Endpoint:
         method: HTTPMethod = "get",
         content_type: str = "application/json",
         output_empty: bool = False,
-        error_schemas: Optional[Mapping[ErrorStatusCodeInt, Type[ApiError]]] = None,
-        response_schema: Optional[RawParameter] = None,
-        request_schema: Optional[RawParameter] = None,
+        error_schemas: Mapping[ErrorStatusCodeInt, type[ApiError]] | None = None,
+        response_schema: RawParameter | None = None,
+        request_schema: RawParameter | None = None,
         convert_response: bool = True,
         skip_locking: bool = False,
-        path_params: Optional[Sequence[RawParameter]] = None,
-        query_params: Optional[Sequence[RawParameter]] = None,
-        header_params: Optional[Sequence[RawParameter]] = None,
-        etag: Optional[ETagBehaviour] = None,
-        status_descriptions: Optional[Dict[StatusCodeInt, str]] = None,
+        path_params: Sequence[RawParameter] | None = None,
+        query_params: Sequence[RawParameter] | None = None,
+        header_params: Sequence[RawParameter] | None = None,
+        etag: ETagBehaviour | None = None,
+        status_descriptions: dict[StatusCodeInt, str] | None = None,
         tag_group: Literal["Monitoring", "Setup", "Checkmk Internal"] = "Setup",
-        blacklist_in: Optional[Sequence[EndpointTarget]] = None,
-        additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
-        permissions_required: Optional[permissions.BasePerm] = None,  # will be permissions.NoPerm()
-        permissions_description: Optional[Mapping[str, str]] = None,
-        valid_from: Optional[Version] = None,
-        valid_until: Optional[Version] = None,
-        deprecated_urls: Optional[Mapping[str, int]] = None,
+        blacklist_in: Sequence[EndpointTarget] | None = None,
+        additional_status_codes: Sequence[StatusCodeInt] | None = None,
+        permissions_required: permissions.BasePerm | None = None,  # will be permissions.NoPerm()
+        permissions_description: Mapping[str, str] | None = None,
+        valid_from: Version | None = None,
+        valid_until: Version | None = None,
+        deprecated_urls: Mapping[str, int] | None = None,
         update_config_generation: bool = True,
     ):
         self.path = path
@@ -423,7 +406,7 @@ class Endpoint:
         self.etag = etag
         self.status_descriptions = self._dict(status_descriptions)
         self.tag_group = tag_group
-        self.blacklist_in: List[EndpointTarget] = self._list(blacklist_in)
+        self.blacklist_in: list[EndpointTarget] = self._list(blacklist_in)
         self.additional_status_codes = self._list(additional_status_codes)
         self.permissions_description = self._dict(permissions_description)
         self.valid_from = valid_from
@@ -440,7 +423,7 @@ class Endpoint:
         self.wrapped: Callable[[Mapping[str, Any]], WSGIApplication]
 
         self.permissions_required = permissions_required
-        self._used_permissions: Set[str] = set()
+        self._used_permissions: set[str] = set()
 
         self._expected_status_codes = self.additional_status_codes.copy()
 
@@ -502,7 +485,7 @@ class Endpoint:
                 )
 
     def error_schema(self, status_code: ErrorStatusCodeInt) -> ApiError:
-        schema: Type[ApiError] = self.error_schemas.get(status_code, ApiError)
+        schema: type[ApiError] = self.error_schemas.get(status_code, ApiError)
         return schema()
 
     @contextlib.contextmanager
@@ -553,10 +536,10 @@ class Endpoint:
     def __repr__(self) -> str:
         return f"<Endpoint {self.func.__module__}:{self.func.__name__}>"
 
-    def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
+    def _list(self, sequence: Sequence[T] | None) -> list[T]:
         return list(sequence) if sequence is not None else []
 
-    def _dict(self, mapping: Optional[Mapping[K, V]]) -> Dict[K, V]:
+    def _dict(self, mapping: Mapping[K, V] | None) -> dict[K, V]:
         return dict(mapping) if mapping is not None else {}
 
     def __call__(self, func: WrappedFunc) -> WrappedEndpoint:
@@ -598,7 +581,7 @@ class Endpoint:
         _verify_parameters(self.path, path_schema)
 
         def _mandatory_parameter_names(*_params):
-            schema: Type[Schema]
+            schema: type[Schema]
             req = []
             for schema in _params:
                 if not schema:
@@ -632,7 +615,7 @@ class Endpoint:
 
         return WrappedEndpoint(self, wrapped)
 
-    def _is_expected_content_type(self, content_type_header: Optional[str]) -> None:
+    def _is_expected_content_type(self, content_type_header: str | None) -> None:
         if content_type_header is None:
             raise ValueError(f"No content-type specified. Possible value is: {self.content_type}")
 
@@ -656,11 +639,11 @@ class Endpoint:
 
     def wrap_with_validation(
         self,
-        request_schema: Optional[Type[Schema]],
-        response_schema: Optional[Type[Schema]],
-        header_schema: Optional[Type[Schema]],
-        path_schema: Optional[Type[Schema]],
-        query_schema: Optional[Type[Schema]],
+        request_schema: type[Schema] | None,
+        response_schema: type[Schema] | None,
+        header_schema: type[Schema] | None,
+        path_schema: type[Schema] | None,
+        query_schema: type[Schema] | None,
     ) -> WrappedFunc:
         """Wrap a function with schema validation logic.
 
@@ -697,7 +680,7 @@ class Endpoint:
             _params = dict(param)
             del param
 
-            def _format_fields(_messages: Union[List, Dict]) -> str:
+            def _format_fields(_messages: list | dict) -> str:
                 if isinstance(_messages, list):
                     return ", ".join(_messages)
                 if isinstance(_messages, dict):
@@ -971,15 +954,15 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: Dict[str, Any]):  # type:ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]):  # type:ignore[no-untyped-def]
         return self.path.format(**parameter_values)
 
     def _path_item(
         self,
         status_code: StatusCodeInt,
         description: str,
-        content: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, OpenAPIParameter]] = None,
+        content: dict[str, Any] | None = None,
+        headers: dict[str, OpenAPIParameter] | None = None,
     ) -> PathItem:
         message = self.status_descriptions.get(status_code)
         if message is None:
@@ -992,7 +975,7 @@ class Endpoint:
             headers=headers,
         )
 
-    def operation_dicts(self) -> Generator[Tuple[str, OperationObject], None, None]:
+    def operation_dicts(self) -> Generator[tuple[str, OperationObject], None, None]:
         """Generate the openapi spec part of this endpoint.
 
         The result needs to be added to the `apispec` instance manually.
@@ -1008,14 +991,14 @@ class Endpoint:
 
     def to_operation_dict(  # pylint: disable=too-many-branches
         self,
-        werk_id: Optional[int] = None,
+        werk_id: int | None = None,
     ) -> OperationObject:
         assert self.func is not None, "This object must be used in a decorator environment."
         assert self.operation_id is not None, "This object must be used in a decorator environment."
 
         module_obj = import_string(self.func.__module__)
 
-        response_headers: Dict[str, OpenAPIParameter] = {}
+        response_headers: dict[str, OpenAPIParameter] = {}
         content_type_header = to_openapi([CONTENT_TYPE], "header")[0]
         del content_type_header["in"]
         response_headers[content_type_header.pop("name")] = content_type_header
@@ -1138,7 +1121,7 @@ class Endpoint:
         else:
             operation_spec["operationId"] = self.operation_id
 
-        header_params: List[RawParameter] = []
+        header_params: list[RawParameter] = []
         query_params: Sequence[RawParameter] = (
             self.query_params if self.query_params is not None else []
         )
@@ -1224,7 +1207,7 @@ class Endpoint:
         return {self.method: operation_spec}
 
 
-def _build_description(description_text: Optional[str], werk_id: Optional[int] = None) -> str:
+def _build_description(description_text: str | None, werk_id: int | None = None) -> str:
     r"""Build a OperationSpecType description.
 
     Examples:
@@ -1269,7 +1252,7 @@ def _build_description(description_text: Optional[str], werk_id: Optional[int] =
 
 def _verify_parameters(  # type:ignore[no-untyped-def]
     path: str,
-    path_schema: Optional[Type[Schema]],
+    path_schema: type[Schema] | None,
 ):
     """Verifies matching of parameters to the placeholders used in an URL-Template
 
@@ -1345,7 +1328,7 @@ def _assign_to_tag_group(tag_group: str, name: str) -> None:
         raise ValueError(f"x-tagGroup {tag_group} not found. Please add it to specification.py")
 
 
-def _add_tag(tag: OpenAPITag, tag_group: Optional[str] = None) -> None:
+def _add_tag(tag: OpenAPITag, tag_group: str | None = None) -> None:
     name = tag["name"]
     if name in [t["name"] for t in SPEC._tags]:
         return
@@ -1382,7 +1365,7 @@ def _schema_definition(schema_name: str):  # type:ignore[no-untyped-def]
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 
 
-def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
+def _tag_from_schema(schema: type[Schema]) -> OpenAPITag:
     """Construct a Tag-Dict from a Schema instance or class
 
     Examples:
@@ -1428,7 +1411,7 @@ def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
     return tag
 
 
-def _docstring_name(docstring: Optional[str]) -> str:
+def _docstring_name(docstring: str | None) -> str:
     """Split the docstring by title and rest.
 
     This is part of the rest.
@@ -1454,7 +1437,7 @@ def _docstring_name(docstring: Optional[str]) -> str:
     return [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)][0]
 
 
-def _docstring_description(docstring: Optional[str]) -> Optional[str]:
+def _docstring_description(docstring: str | None) -> str | None:
     """Split the docstring by title and rest.
 
     This is part of the rest.
@@ -1479,7 +1462,7 @@ def _docstring_description(docstring: Optional[str]) -> Optional[str]:
 
 def _permission_descriptions(
     perms: permissions.BasePerm,
-    descriptions: Optional[dict[str, str]] = None,
+    descriptions: dict[str, str] | None = None,
 ) -> str:
     r"""Describe permissions human-readable
 
@@ -1538,13 +1521,13 @@ def _permission_descriptions(
         The description as a string.
 
     """
-    description_map: Dict[str, str] = descriptions if descriptions is not None else {}
-    _description: List[str] = ["This endpoint requires the following permissions: "]
+    description_map: dict[str, str] = descriptions if descriptions is not None else {}
+    _description: list[str] = ["This endpoint requires the following permissions: "]
 
     def _count_perms(_perms):
         return len([p for p in _perms if not isinstance(p, permissions.Ignore)])
 
-    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: List[str]) -> None:
+    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
         if isinstance(permission, permissions.Perm):

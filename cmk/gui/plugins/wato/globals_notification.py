@@ -7,7 +7,6 @@
 # TODO: Remove all configuration for legacy-Email to deprecated, or completely
 # remove from WATO.
 
-from typing import Type
 
 import cmk.utils.paths
 
@@ -40,10 +39,10 @@ from cmk.gui.watolib.utils import site_neutral_path
 
 @config_variable_registry.register
 class ConfigVariableEnableRBN(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -67,10 +66,10 @@ class ConfigVariableEnableRBN(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackEmail(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -95,10 +94,10 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationFallbackFormat(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -124,10 +123,10 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBacklog(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -150,10 +149,10 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationBulkInterval(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -177,10 +176,10 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationPluginTimeout(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -196,10 +195,10 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableNotificationLogging(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainCore
 
     def ident(self) -> str:
@@ -224,10 +223,10 @@ class ConfigVariableNotificationLogging(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableServiceLevels(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -270,10 +269,10 @@ class ConfigVariableServiceLevels(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableFailedNotificationHorizon(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

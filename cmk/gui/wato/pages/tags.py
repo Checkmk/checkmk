@@ -6,7 +6,7 @@
 to hosts and that is the basis of the rules."""
 
 import abc
-from typing import Collection, List, Optional, Set, Type, Union
+from collections.abc import Collection
 
 import cmk.utils.tags
 
@@ -100,7 +100,7 @@ class ABCTagMode(WatoMode, abc.ABC):
 
     def _get_tags_using_aux_tag(
         self, aux_tag: cmk.utils.tags.AuxTag
-    ) -> Set[cmk.utils.tags.GroupedTag]:
+    ) -> set[cmk.utils.tags.GroupedTag]:
         return {
             tag  #
             for tag_group in self._effective_config.tag_groups
@@ -196,9 +196,7 @@ class ModeTags(ABCTagMode):
         if not request.has_var("_repair") and self._is_cleaning_up_user_tag_group_to_builtin(
             del_id
         ):
-            message: Union[bool, str] = (
-                _('Transformed the user tag group "%s" to builtin.') % del_id
-            )
+            message: bool | str = _('Transformed the user tag group "%s" to builtin.') % del_id
         else:
             message = _rename_tags_after_confirmation(
                 self.breadcrumb(), OperationRemoveTagGroup(del_id)
@@ -530,7 +528,7 @@ class ModeTagUsage(ABCTagMode):
         return ["hosttags"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
     def title(self) -> str:
@@ -644,7 +642,7 @@ class ModeEditAuxtag(ABCEditTagMode):
         return "edit_auxtag"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
     def __init__(self) -> None:
@@ -726,7 +724,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         return "edit_tag"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
     def __init__(self) -> None:
@@ -905,9 +903,7 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
 
-def _rename_tags_after_confirmation(
-    breadcrumb: Breadcrumb, operation: ABCOperation
-) -> Union[bool, str]:
+def _rename_tags_after_confirmation(breadcrumb: Breadcrumb, operation: ABCOperation) -> bool | str:
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according
@@ -1031,7 +1027,7 @@ def _rename_tags_after_confirmation(
     return True
 
 
-def _show_aux_tag_used_by_tags(tags: Set[cmk.utils.tags.GroupedTag]) -> None:
+def _show_aux_tag_used_by_tags(tags: set[cmk.utils.tags.GroupedTag]) -> None:
     if not tags:
         return
 
@@ -1052,7 +1048,7 @@ def _show_aux_tag_used_by_tags(tags: Set[cmk.utils.tags.GroupedTag]) -> None:
     html.close_ul()
 
 
-def _show_affected_folders(affected_folders: List[CREFolder]) -> None:
+def _show_affected_folders(affected_folders: list[CREFolder]) -> None:
     html.open_ul()
     for folder in affected_folders:
         html.open_li()
@@ -1061,7 +1057,7 @@ def _show_affected_folders(affected_folders: List[CREFolder]) -> None:
     html.close_ul()
 
 
-def _show_affected_hosts(affected_hosts: List[CREHost]) -> None:
+def _show_affected_hosts(affected_hosts: list[CREHost]) -> None:
     html.open_ul()
     html.open_li()
     for nr, host in enumerate(affected_hosts):
@@ -1077,7 +1073,7 @@ def _show_affected_hosts(affected_hosts: List[CREHost]) -> None:
     html.close_ul()
 
 
-def _show_affected_rulesets(affected_rulesets: List[Ruleset]) -> None:
+def _show_affected_rulesets(affected_rulesets: list[Ruleset]) -> None:
     html.open_ul()
     for ruleset in affected_rulesets:
         html.open_li()

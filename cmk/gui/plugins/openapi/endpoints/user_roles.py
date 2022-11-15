@@ -31,7 +31,8 @@ For example, useful for public status monitors hanging on a wall.
 
 """
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from marshmallow import ValidationError
 

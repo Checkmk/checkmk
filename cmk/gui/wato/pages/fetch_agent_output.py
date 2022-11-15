@@ -7,7 +7,6 @@ import abc
 import ast
 import os
 from pathlib import Path
-from typing import Dict
 
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
@@ -60,7 +59,7 @@ class FetchAgentOutputRequest:
         self.agent_type = agent_type
 
     @classmethod
-    def deserialize(cls, serialized: Dict[str, str]) -> "FetchAgentOutputRequest":
+    def deserialize(cls, serialized: dict[str, str]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
         host = Host.host(host_name)
         if host is None:
@@ -77,7 +76,7 @@ class FetchAgentOutputRequest:
 
         return cls(host, serialized["agent_type"])
 
-    def serialize(self) -> Dict[str, str]:
+    def serialize(self) -> dict[str, str]:
         return {
             "host_name": self.host.name(),
             "agent_type": self.agent_type,
@@ -116,7 +115,7 @@ class AgentOutputPage(Page, abc.ABC):
 
     @staticmethod
     def file_name(api_request: FetchAgentOutputRequest) -> str:
-        return "%s-%s-%s.txt" % (
+        return "{}-{}-{}.txt".format(
             api_request.host.site_id(),
             api_request.host.name(),
             api_request.agent_type,
@@ -241,7 +240,7 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     def command_name(self):
         return "fetch-agent-output-get-status"
 
-    def execute(self, api_request: FetchAgentOutputRequest) -> Dict:
+    def execute(self, api_request: FetchAgentOutputRequest) -> dict:
         return dict(get_fetch_agent_job_status(api_request))
 
 
@@ -264,7 +263,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         self._request = api_request
 
         host = self._request.host
-        job_id = "%s%s-%s-%s" % (
+        job_id = "{}{}-{}-{}".format(
             self.job_prefix,
             host.site_id(),
             host.name(),

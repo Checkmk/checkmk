@@ -7,7 +7,7 @@
 import abc
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Final, List, Optional, Set, Tuple, Union
+from typing import Any, Final
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -87,7 +87,7 @@ def update_tag_config(tag_config: TagConfig):  # type:ignore[no-untyped-def]
     _update_tag_dependencies()
 
 
-def load_tag_group(ident: str) -> Optional[TagGroup]:
+def load_tag_group(ident: str) -> TagGroup | None:
     """Load a tag group
 
     Args:
@@ -130,7 +130,7 @@ def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type:ignore
     return tag_config.tag_group_exists(ident)
 
 
-def load_aux_tags() -> List[str]:
+def load_aux_tags() -> list[str]:
     """Return the list available auxiliary tag ids (ID != GUI title)"""
     tag_config = load_tag_config()
     tag_config += cmk.utils.tags.BuiltinTagConfig()
@@ -273,8 +273,8 @@ class OperationReplaceGroupedTags(ABCOperation):
     def __init__(
         self,
         tag_group_id: str,
-        remove_tag_ids: List[Optional[str]],
-        replace_tag_ids: Dict[str, str],
+        remove_tag_ids: list[str | None],
+        replace_tag_ids: dict[str, str],
     ) -> None:
         super().__init__()
         self.tag_group_id = tag_group_id
@@ -287,7 +287,7 @@ class OperationReplaceGroupedTags(ABCOperation):
 
 def change_host_tags(
     operation: ABCOperation, mode: TagCleanupMode
-) -> Tuple[List[CREFolder], List[CREHost], List[Ruleset]]:
+) -> tuple[list[CREFolder], list[CREHost], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
         mode,
@@ -303,7 +303,7 @@ def _get_all_rulesets() -> AllRulesets:
     return cmk.gui.watolib.rulesets.AllRulesets.load_all_rulesets()
 
 
-def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) -> List[Ruleset]:
+def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) -> list[Ruleset]:
     affected_rulesets = set()
     all_rulesets = _get_all_rulesets()
     for ruleset in all_rulesets.get_rulesets().values():
@@ -318,7 +318,7 @@ def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) 
 
 def _change_host_tags_in_folders(
     operation: ABCOperation, mode: TagCleanupMode, folder: Any
-) -> Tuple[List[CREFolder], List[CREHost]]:
+) -> tuple[list[CREFolder], list[CREHost]]:
     """Update host tag assignments in hosts/folders
 
     See _rename_tags_after_confirmation() doc string for additional information.
@@ -363,7 +363,7 @@ def _change_host_tags_in_hosts(operation, mode, folder):
 
 
 def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected: List[Union[CREHost, CREFolder]] = []
+    affected: list[CREHost | CREFolder] = []
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()
@@ -398,7 +398,7 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
 
 
 def _change_host_tags_in_rule(operation, mode, ruleset, rule):
-    affected_rulesets: Set[FolderRulesets] = set()
+    affected_rulesets: set[FolderRulesets] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 
@@ -419,7 +419,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
-    tag_map: List[Tuple[Optional[str], Any]] = list(operation.replace_tag_ids.items())
+    tag_map: list[tuple[str | None, Any]] = list(operation.replace_tag_ids.items())
     tag_map += [(tag_id, False) for tag_id in operation.remove_tag_ids]
 
     # Removal or renaming of single tag choices
@@ -494,50 +494,50 @@ def _export_hosttags_to_php(cfg):
     content = """<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
-$mk_hosttags = %s;
-$mk_auxtags = %s;
+$mk_hosttags = {};
+$mk_auxtags = {};
 
-function taggroup_title($group_id) {
+function taggroup_title($group_id) {{
     global $mk_hosttags;
     if (isset($mk_hosttags[$group_id]))
         return $mk_hosttags[$group_id][0];
     else
         return $taggroup;
-}
+}}
 
-function taggroup_choice($group_id, $object_tags) {
+function taggroup_choice($group_id, $object_tags) {{
     global $mk_hosttags;
     if (!isset($mk_hosttags[$group_id]))
         return false;
-    foreach ($object_tags AS $tag) {
-        if (isset($mk_hosttags[$group_id][2][$tag])) {
+    foreach ($object_tags AS $tag) {{
+        if (isset($mk_hosttags[$group_id][2][$tag])) {{
             // Found a match of the objects tags with the taggroup
             // now return an array of the matched tag and its alias
             return array($tag, $mk_hosttags[$group_id][2][$tag][0]);
-        }
-    }
+        }}
+    }}
     // no match found. Test whether or not a "None" choice is allowed
     if (isset($mk_hosttags[$group_id][2][null]))
         return array(null, $mk_hosttags[$group_id][2][null][0]);
     else
         return null; // no match found
-}
+}}
 
-function all_taggroup_choices($object_tags) {
+function all_taggroup_choices($object_tags) {{
     global $mk_hosttags;
     $choices = array();
-    foreach ($mk_hosttags AS $group_id => $group) {
+    foreach ($mk_hosttags AS $group_id => $group) {{
         $choices[$group_id] = array(
             'topic' => $group[0],
             'title' => $group[1],
             'value' => taggroup_choice($group_id, $object_tags),
         );
-    }
+    }}
     return $choices;
-}
+}}
 
 ?>
-""" % (
+""".format(
         format_php(hosttags_dict),
         format_php(auxtags_dict),
     )

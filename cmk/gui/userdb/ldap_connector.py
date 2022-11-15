@@ -36,11 +36,12 @@ import os
 import shutil
 import sys
 import time
+from collections.abc import Callable, Iterator, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, IO, Iterator, List, Literal, Sequence
+from typing import IO, Literal
 from typing import Tuple as _Tuple
-from typing import Type, Union
+from typing import Union
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -146,7 +147,7 @@ class MKLDAPException(MKGeneralException):
 
 
 DistinguishedName = str
-GroupMemberships = Dict[DistinguishedName, Dict[str, Union[str, List[str]]]]
+GroupMemberships = dict[DistinguishedName, dict[str, Union[str, list[str]]]]
 
 # .
 #   .--UserConnector-------------------------------------------------------.
@@ -299,7 +300,7 @@ class LDAPUserConnector(UserConnector):
             else:
                 msg = "%s" % e
 
-            return None, "%s: %s" % (uri, msg)
+            return None, f"{uri}: {msg}"
 
         except MKLDAPException as e:
             self.clear_nearest_dc_cache()
@@ -383,7 +384,7 @@ class LDAPUserConnector(UserConnector):
         try:
             server = locator.locate(domain)
             self._cache_nearest_dc(server)
-            self._logger.info("  DISCOVERY: Discovered server %r from %r" % (server, domain))
+            self._logger.info(f"  DISCOVERY: Discovered server {server!r} from {domain!r}")
             return server
         except Exception:
             self._logger.info("  DISCOVERY: Failed to discover a server from domain %r" % domain)
@@ -394,7 +395,7 @@ class LDAPUserConnector(UserConnector):
     def _get_nearest_dc_from_cache(self) -> str | None:
         try:
             return self._nearest_dc_cache_filepath().open(encoding="utf-8").read()
-        except IOError:
+        except OSError:
             pass
         return None
 
@@ -468,7 +469,7 @@ class LDAPUserConnector(UserConnector):
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
             raise
         except ldap.LDAPError as e:
-            self._logger.info("  FAILED (%s: %s)" % (e.__class__.__name__, e))
+            self._logger.info(f"  FAILED ({e.__class__.__name__}: {e})")
             if catch:
                 raise MKLDAPException(_("Unable to authenticate with LDAP (%s)") % e)
             raise
@@ -619,7 +620,7 @@ class LDAPUserConnector(UserConnector):
         if columns is None:
             columns = []
 
-        self._logger.info('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
+        self._logger.info(f'LDAP_SEARCH "{base}" "{scope}" "{filt}" "{columns!r}"')
         self._num_queries += 1
         start_time = time.time()
 
@@ -857,7 +858,7 @@ class LDAPUserConnector(UserConnector):
             add_filter += "(|%s)" % "".join(member_filter_items)
 
         if add_filter:
-            filt = "(&%s%s)" % (filt, add_filter)
+            filt = f"(&{filt}{add_filter})"
 
         result = {}
         for dn, ldap_user in self._ldap_search(
@@ -883,7 +884,7 @@ class LDAPUserConnector(UserConnector):
             # When using AD, the groups can be filtered by the DN attribute. With
             # e.g. OpenLDAP this is not possible. In that case, change the DN.
             if self.is_active_directory():
-                filt = "(&%s(distinguishedName=%s))" % (
+                filt = "(&{}(distinguishedName={}))".format(
                     filt,
                     ldap.filter.escape_filter_chars(_escape_dn(specific_dn)),
                 )
@@ -958,7 +959,7 @@ class LDAPUserConnector(UserConnector):
                         for f in filters
                     ]
                 )
-                filt = "(&%s%s)" % (filt, add_filt)
+                filt = f"(&{filt}{add_filt})"
 
             for dn, obj in self._ldap_search(
                 self.get_group_dn(), filt, ["cn", member_attr], self._config["group_scope"]
@@ -1212,7 +1213,7 @@ class LDAPUserConnector(UserConnector):
 
     def _add_suffix(self, username):
         suffix = self._get_suffix()
-        return "{}@{}".format(username, suffix)
+        return f"{username}@{suffix}"
 
     def do_sync(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
@@ -1571,7 +1572,7 @@ class LDAPAttributePlugin(abc.ABC):
         return []
 
 
-class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[Type[LDAPAttributePlugin]]):
+class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[type[LDAPAttributePlugin]]):
     def plugin_name(self, instance):
         return instance().ident
 

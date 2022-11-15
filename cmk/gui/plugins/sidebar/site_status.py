@@ -84,7 +84,7 @@ class SiteStatus(SidebarSnapin):
                     request,
                     transactions,
                     [
-                        ("_site_switch", "%s:%s" % (sitename, switch)),
+                        ("_site_switch", f"{sitename}:{switch}"),
                     ],
                     filename="switch_site.py",
                 )

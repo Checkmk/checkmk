@@ -7,7 +7,7 @@
 import abc
 import fnmatch
 import os
-from typing import Collection, Iterator, List
+from collections.abc import Collection, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -84,7 +84,7 @@ class ABCModeDownloadAgents(WatoMode):
             )
 
     @abc.abstractmethod
-    def _packed_agents(self) -> List[str]:
+    def _packed_agents(self) -> list[str]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -95,14 +95,12 @@ class ABCModeDownloadAgents(WatoMode):
         return []
 
     def _exclude_paths(self):
-        return set(
-            [
-                "/bakery",
-                "/special",
-                "/windows/baked_container.msi",
-                "/windows/plugins/.gitattributes",
-            ]
-        )
+        return {
+            "/bakery",
+            "/special",
+            "/windows/baked_container.msi",
+            "/windows/plugins/.gitattributes",
+        }
 
     def page(self) -> None:
         html.open_div(class_="rulesets")
@@ -160,7 +158,7 @@ class ABCModeDownloadAgents(WatoMode):
                 return True
         return False
 
-    def _download_table(self, title: str, paths: List[str]) -> None:
+    def _download_table(self, title: str, paths: list[str]) -> None:
         forms.header(title)
         forms.container()
         for path in paths:
@@ -191,7 +189,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Other operating systems")
 
-    def _packed_agents(self) -> List[str]:
+    def _packed_agents(self) -> list[str]:
         return []
 
     def _walk_base_dir(self):
@@ -230,7 +228,7 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Windows files")
 
-    def _packed_agents(self) -> List[str]:
+    def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_windows_msi())]
 
     def _walk_base_dir(self):
@@ -246,7 +244,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     def title(self) -> str:
         return _("Linux, Solaris, AIX files")
 
-    def _packed_agents(self) -> List[str]:
+    def _packed_agents(self) -> list[str]:
         return [str(agent.packed_agent_path_linux_deb()), str(agent.packed_agent_path_linux_rpm())]
 
     def _walk_base_dir(self):

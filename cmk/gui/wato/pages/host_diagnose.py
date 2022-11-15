@@ -5,7 +5,7 @@
 """Verify or find out a hosts agent related configuration"""
 
 import json
-from typing import Collection, List, Optional, Type
+from collections.abc import Collection
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -54,7 +54,7 @@ class ModeDiagHost(WatoMode):
         return ["hosts", "diag_host"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
     @classmethod
@@ -429,7 +429,7 @@ class ModeAjaxDiagHost(AjaxPage):
             raise MKGeneralException(_("Invalid test."))
 
         # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
-        args: List[str] = [""] * 13
+        args: list[str] = [""] * 13
         for idx, what in enumerate(
             [
                 "ipaddress",

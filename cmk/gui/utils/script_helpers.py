@@ -7,9 +7,10 @@
 The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Any, Iterator, Mapping, Optional
+from typing import Any
 
 from werkzeug.test import create_environ
 
@@ -41,7 +42,7 @@ def application_context() -> Iterator[None]:
         yield
 
 
-def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> RequestContext:
+def make_request_context(environ: Mapping[str, Any] | None = None) -> RequestContext:
     req = Request(dict(create_environ(), REQUEST_URI="") if environ is None else environ)
     resp = Response(mimetype="text/html")
     funnel = OutputFunnel(resp)
@@ -62,19 +63,19 @@ def make_request_context(environ: Optional[Mapping[str, Any]] = None) -> Request
 
 
 @contextmanager
-def request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+def request_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
     with make_request_context(environ=environ):
         yield
 
 
 @contextmanager
-def application_and_request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+def application_and_request_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
     with application_context(), request_context(environ):
         yield
 
 
 @contextmanager
-def gui_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
+def gui_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
     with application_context(), request_context(environ):
         load_config()
         yield

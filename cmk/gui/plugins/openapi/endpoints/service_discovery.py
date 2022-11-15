@@ -11,7 +11,8 @@ You can find an introduction to services including service discovery in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import enum
-from typing import Any, List, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from typing_extensions import assert_never
 
@@ -280,7 +281,7 @@ def _update_single_service_phase(
     target_phase: str,
     host: CREHost,
     check_type: str,
-    service_item: Optional[str],
+    service_item: str | None,
 ) -> None:
     discovery = Discovery(
         host=host,
@@ -493,7 +494,7 @@ def _discovery_wait_for_completion_link(host_name: str) -> LinkType:
     )
 
 
-def _in_phase(phase_to_check: str, discovery_phases: List[str]) -> bool:
+def _in_phase(phase_to_check: str, discovery_phases: list[str]) -> bool:
     for phase in list(discovery_phases):
         if SERVICE_DISCOVERY_PHASES[phase] == phase_to_check:
             return True
@@ -707,7 +708,7 @@ def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
 def _serve_services(
     host: CREHost,
     discovered_services: Sequence[CheckPreviewEntry],
-    discovery_phases: List[str],
+    discovery_phases: list[str],
 ) -> Response:
     members = {}
     host_name = host.name()

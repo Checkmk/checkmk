@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.profile
@@ -125,7 +126,7 @@ def _handle_not_authenticated() -> Response:
                 request, [("start_url", post_login_url)], filename="index.py"
             )
         raise HTTPRedirect(
-            "%scheck_mk/login.py?_origtarget=%s" % (url_prefix(), urlencode(post_login_url))
+            f"{url_prefix()}check_mk/login.py?_origtarget={urlencode(post_login_url)}"
         )
 
     # This either displays the login page or validates the information submitted
@@ -154,7 +155,7 @@ def handle_unhandled_exception() -> Response:
     return response
 
 
-def load_gui_log_levels() -> Dict[str, int]:
+def load_gui_log_levels() -> dict[str, int]:
     """Load the GUI log-level global setting from the WATO GUI config"""
     return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
 

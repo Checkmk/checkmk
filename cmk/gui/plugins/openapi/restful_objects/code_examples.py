@@ -11,7 +11,7 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
-from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
+from typing import Any, NamedTuple
 
 import black
 import jinja2
@@ -286,7 +286,7 @@ class CodeExample(NamedTuple):
 
 
 # NOTE: To add a new code-example, you need to add them to this list.
-CODE_EXAMPLES: List[CodeExample] = [
+CODE_EXAMPLES: list[CodeExample] = [
     CodeExample(lang="python", label="requests", template=CODE_TEMPLATE_REQUESTS),
     CodeExample(lang="python", label="urllib", template=CODE_TEMPLATE_URLLIB),
     CodeExample(lang="bash", label="httpie", template=CODE_TEMPLATE_HTTPIE),
@@ -335,7 +335,7 @@ def field_value(field: fields.Field) -> str:
     return field.metadata["example"]
 
 
-def to_dict(schema: Schema) -> Dict[str, str]:
+def to_dict(schema: Schema) -> dict[str, str]:
     """Convert a Schema-class to a dict-representation.
 
     Examples:
@@ -405,7 +405,7 @@ def code_samples(  # type:ignore[no-untyped-def]
     header_params,
     path_params,
     query_params,
-) -> List[CodeSample]:
+) -> list[CodeSample]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc.
@@ -472,7 +472,7 @@ def format_nicely(obj: object) -> str:
     return black.format_str(str(obj), mode=black.Mode(line_length=50))
 
 
-def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
+def _get_schema(schema: str | type[Schema] | None) -> Schema | None:
     """Get the schema instance of a schema name or class.
 
     In case of OneOfSchema classes, the first dispatched schema is being returned.
@@ -502,14 +502,14 @@ def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
     return _schema
 
 
-def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
+def _schema_is_multiple(schema: str | type[Schema] | None) -> bool:
     if schema is None:
         return False
     _schema = resolve_schema_instance(schema)
     return bool(getattr(_schema, "type_schemas", None))
 
 
-@functools.lru_cache()
+@functools.lru_cache
 def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
@@ -570,7 +570,7 @@ def _jinja_environment() -> jinja2.Environment:
     return tmpl_env
 
 
-def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]:
+def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]:
     """
 
     >>> to_param_dict([{'name': 'Foo'}, {'name': 'Bar'}])
@@ -591,7 +591,7 @@ def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: Dict[str, Any], val) -> str:  # type:ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type:ignore[no-untyped-def]
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

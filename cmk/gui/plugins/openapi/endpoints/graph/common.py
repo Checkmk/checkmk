@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 import marshmallow
 
@@ -83,7 +83,7 @@ def reorganize_response(resp: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def reorganize_time_range(time_range: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+def reorganize_time_range(time_range: dict[str, Any] | None) -> dict[str, Any] | None:
     """Reorganize a TimeRange into the legacy format the WebApi uses.
 
     >>> reorganize_time_range({'start': "1970-01-01T00:00:00Z", 'end': "1970-01-01T00:00:30Z"})

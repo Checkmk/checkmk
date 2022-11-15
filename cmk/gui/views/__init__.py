@@ -32,9 +32,9 @@ from cmk.gui.views.sorter import register_sorter
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_commands: List[Dict[str, Any]] = []
-multisite_painters: Dict[str, Dict[str, Any]] = {}
-multisite_sorters: Dict[str, Any] = {}
+multisite_commands: list[dict[str, Any]] = []
+multisite_painters: dict[str, dict[str, Any]] = {}
+multisite_sorters: dict[str, Any] = {}
 
 
 @permission_section_registry.register
@@ -87,7 +87,7 @@ def load_plugins() -> None:
         declare_permission(
             "view.%s" % name,
             format_view_title(name, view_spec),
-            "%s - %s" % (name, _u(str(view_spec["description"]))),
+            "{} - {}".format(name, _u(str(view_spec["description"]))),
             default_authorized_builtin_role_ids,
         )
 

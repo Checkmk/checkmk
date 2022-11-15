@@ -6,8 +6,9 @@
 
 import abc
 import re
+from collections.abc import Collection, Iterable
 from datetime import datetime
-from typing import Any, Collection, Dict, Iterable, Optional, Type
+from typing import Any
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -71,7 +72,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             matching_attrs = [a for a in self._attrs if a["name"] == self._name]
             if not matching_attrs:
                 raise MKUserError(None, _("The attribute does not exist."))
-            self._attr: Dict[str, Any] = matching_attrs[0]
+            self._attr: dict[str, Any] = matching_attrs[0]
         else:
             self._attr = {}
 
@@ -267,7 +268,7 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
         return ["users", "custom_attributes"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCustomUserAttrs
 
     @property
@@ -340,7 +341,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeCustomHostAttrs
 
     @property

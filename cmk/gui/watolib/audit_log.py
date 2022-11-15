@@ -5,8 +5,9 @@
 
 import json
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import NamedTuple, Optional, Sequence, Union
+from typing import NamedTuple, Union
 
 from cmk.utils.type_defs import UserId
 
@@ -26,11 +27,11 @@ LogMessage = Union[str, HTML, LazyString]
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
     class Entry(NamedTuple):
         time: int
-        object_ref: Optional[ObjectRef]
+        object_ref: ObjectRef | None
         user_id: str
         action: str
         text: LogMessage
-        diff_text: Optional[str]
+        diff_text: str | None
 
     @staticmethod
     def make_path(*args: str) -> Path:
@@ -86,9 +87,9 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 def log_audit(
     action: str,
     message: LogMessage,
-    object_ref: Optional[ObjectRef] = None,
-    user_id: Optional[UserId] = None,
-    diff_text: Optional[str] = None,
+    object_ref: ObjectRef | None = None,
+    user_id: UserId | None = None,
+    diff_text: str | None = None,
 ) -> None:
     if isinstance(message, LazyString):
         message = message.unlocalized_str()
@@ -103,10 +104,10 @@ def log_audit(
 
 def _log_entry(
     action: str,
-    message: Union[HTML, str],
-    object_ref: Optional[ObjectRef],
-    user_id: Optional[UserId],
-    diff_text: Optional[str],
+    message: HTML | str,
+    object_ref: ObjectRef | None,
+    user_id: UserId | None,
+    diff_text: str | None,
 ) -> None:
     entry = AuditLogStore.Entry(
         time=int(time.time()),

@@ -5,8 +5,8 @@
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
 import time
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
-from typing import Iterable, Iterator, Optional, Sequence, Type
 
 from livestatus import SiteId
 
@@ -30,14 +30,14 @@ from cmk.gui.watolib.site_changes import SiteChanges
 def add_change(
     action_name: str,
     text: LogMessage,
-    object_ref: Optional[ObjectRef] = None,
-    diff_text: Optional[str] = None,
+    object_ref: ObjectRef | None = None,
+    diff_text: str | None = None,
     add_user: bool = True,
-    need_sync: Optional[bool] = None,
-    need_restart: Optional[bool] = None,
-    domains: Optional[Sequence[Type[ABCConfigDomain]]] = None,
-    sites: Optional[Sequence[SiteId]] = None,
-    domain_settings: Optional[DomainSettings] = None,
+    need_sync: bool | None = None,
+    need_restart: bool | None = None,
+    domains: Sequence[type[ABCConfigDomain]] | None = None,
+    sites: Sequence[SiteId] | None = None,
+    domain_settings: DomainSettings | None = None,
 ) -> None:
     log_audit(
         action=action_name,
@@ -79,13 +79,13 @@ class ActivateChangesWriter:
         self,
         action_name: str,
         text: LogMessage,
-        object_ref: Optional[ObjectRef],
+        object_ref: ObjectRef | None,
         add_user: bool,
-        need_sync: Optional[bool],
-        need_restart: Optional[bool],
-        domains: Optional[Sequence[Type[ABCConfigDomain]]],
-        sites: Optional[Iterable[SiteId]],
-        domain_settings: Optional[DomainSettings],
+        need_sync: bool | None,
+        need_restart: bool | None,
+        domains: Sequence[type[ABCConfigDomain]] | None,
+        sites: Iterable[SiteId] | None,
+        domain_settings: DomainSettings | None,
     ) -> None:
         if not ActivateChangesWriter._enabled:
             return
@@ -123,12 +123,12 @@ class ActivateChangesWriter:
         change_id: str,
         action_name: str,
         text: LogMessage,
-        object_ref: Optional[ObjectRef],
+        object_ref: ObjectRef | None,
         add_user: bool,
-        need_sync: Optional[bool],
-        need_restart: Optional[bool],
-        domains: Sequence[Type[ABCConfigDomain]],
-        domain_settings: Optional[DomainSettings],
+        need_sync: bool | None,
+        need_restart: bool | None,
+        domains: Sequence[type[ABCConfigDomain]],
+        domain_settings: DomainSettings | None,
     ) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
@@ -170,7 +170,7 @@ def add_service_change(
     text: str,
     object_ref: ObjectRef,
     site_id: SiteId,
-    diff_text: Optional[str] = None,
+    diff_text: str | None = None,
     need_sync: bool = False,
 ) -> None:
     add_change(

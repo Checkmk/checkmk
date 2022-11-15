@@ -5,7 +5,8 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from typing import Collection, Iterator, Optional, overload, Type
+from collections.abc import Collection, Iterator
+from typing import overload
 
 import cmk.utils.tags
 
@@ -55,7 +56,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 
 class ABCHostMode(WatoMode, abc.ABC):
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     @abc.abstractmethod
@@ -180,14 +181,14 @@ class ABCHostMode(WatoMode, abc.ABC):
         return _("The cluster %s while the node <b>%s</b> %s") % (
             ", ".join(
                 [
-                    "%s '%s'" % (_get_is_or_is_not(diff_ds.myself_is), diff_ds.name)
+                    f"{_get_is_or_is_not(diff_ds.myself_is)} '{diff_ds.name}'"
                     for diff_ds in differences
                 ]
             ),
             node_name,
             ", ".join(
                 [
-                    "%s '%s'" % (_get_is_or_is_not(diff_ds.other_is), diff_ds.name)
+                    f"{_get_is_or_is_not(diff_ds.other_is)} '{diff_ds.name}'"
                     for diff_ds in differences
                 ]
             ),

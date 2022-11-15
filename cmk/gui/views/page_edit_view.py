@@ -98,7 +98,7 @@ def format_view_title(name, view):
     elif "servicegroup" in infos:
         title_parts.append(_("Service groups"))
 
-    title_parts.append("%s (%s)" % (_u(view["title"]), name))
+    title_parts.append("{} ({})".format(_u(view["title"]), name))
 
     return " - ".join(map(str, title_parts))
 
@@ -546,7 +546,7 @@ def _painter_choices_with_params(painters: Mapping[str, Painter]) -> list[Cascad
 
 def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
     dummy_cell = Cell(PainterSpec(plugin.ident), None)
-    return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
+    return f"{_get_info_title(plugin)}: {plugin.list_title(dummy_cell)}"
 
 
 def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
@@ -556,7 +556,7 @@ def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
         title = plugin.title(dummy_cell)
     else:
         title = plugin.title
-    return "%s: %s" % (_get_info_title(plugin), title)
+    return f"{_get_info_title(plugin)}: {title}"
 
 
 def _dummy_view_spec() -> ViewSpec:

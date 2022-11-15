@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any, cast, Iterator, Literal, Mapping
+from typing import Any, cast, Literal
 
 from livestatus import (
     LocalSocketInfo,
@@ -152,8 +153,7 @@ class Heartbeat:
     timeout: float
 
     def __iter__(self) -> Iterator[tuple[str, int]]:
-        for k, v in self.__dict__.items():
-            yield k, v
+        yield from self.__dict__.items()
 
 
 @dataclass
@@ -217,8 +217,7 @@ class ProxyTcp:
 
     def to_external(self) -> Iterator[tuple[str, int | list[str] | bool]]:
         if self.port:
-            for k, v in self.__dict__.items():
-                yield k, v
+            yield from self.__dict__.items()
 
     def to_internal(self) -> ProxyConfigTcp:
         proxyconfigtcp: ProxyConfigTcp = {}

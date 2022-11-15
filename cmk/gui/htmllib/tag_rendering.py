@@ -5,7 +5,8 @@
 """Internal helper for rendering HTML tags"""
 
 import re
-from typing import cast, Iterator, Optional, Union
+from collections.abc import Iterator
+from typing import cast, Optional, Union
 
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
@@ -58,7 +59,7 @@ def render_element(
     elif not isinstance(tag_content, HTML):
         tag_content = escaping.escape_text(tag_content)
 
-    return HTML("%s%s</%s>" % (open_tag, tag_content, tag_name))
+    return HTML(f"{open_tag}{tag_content}</{tag_name}>")
 
 
 def _render_attributes(  # pylint: disable=too-many-branches
@@ -112,7 +113,7 @@ def _render_attributes(  # pylint: disable=too-many-branches
 
             v = joined_value
 
-        yield ' %s="%s"' % (key, v)
+        yield f' {key}="{v}"'
 
     for k in options:
         yield " %s=''" % k

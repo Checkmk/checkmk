@@ -21,9 +21,7 @@ import cmk.utils.regex
 from cmk.gui.log import logger
 
 
-def is_allowed_url(
-    url: str, cross_domain: bool = False, schemes: Optional[list[str]] = None
-) -> bool:
+def is_allowed_url(url: str, cross_domain: bool = False, schemes: list[str] | None = None) -> bool:
     """Check if url is allowed
 
     >>> is_allowed_url("http://checkmk.com/")
@@ -106,13 +104,13 @@ def gen_id() -> str:
 
 # This may not be moved to g, because this needs to be request independent
 # TODO: Move to cmk.gui.modules once load_web_plugins is dropped
-_failed_plugins: Dict[str, List[Tuple[str, BaseException]]] = {}
+_failed_plugins: dict[str, list[tuple[str, BaseException]]] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
-def load_web_plugins(forwhat: str, globalvars: Dict) -> None:
+def load_web_plugins(forwhat: str, globalvars: dict) -> None:
     _failed_plugins.setdefault(forwhat, [])
 
     for plugins_path in [
@@ -143,5 +141,5 @@ def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException)
     _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
 
 
-def get_failed_plugins() -> List[Tuple[str, BaseException]]:
+def get_failed_plugins() -> list[tuple[str, BaseException]]:
     return list(itertools.chain(*list(_failed_plugins.values())))

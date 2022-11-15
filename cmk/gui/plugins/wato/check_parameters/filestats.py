@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
@@ -25,7 +24,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-file_size_age_elements: List[_Tuple[str, ValueSpec]] = [
+file_size_age_elements: list[_Tuple[str, ValueSpec]] = [
     (
         "minage_oldest",
         Tuple(

@@ -8,7 +8,8 @@ import functools
 import http.client as http_client
 import json
 import traceback
-from typing import Callable, TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import livestatus
 
@@ -141,7 +142,7 @@ def _render_exception(e: Exception, title: str) -> Response:
     if plain_error():
         return Response(
             response=[
-                "%s%s\n" % (("%s: " % title) if title else "", e),
+                "{}{}\n".format(("%s: " % title) if title else "", e),
             ],
             mimetype="text/plain",
         )

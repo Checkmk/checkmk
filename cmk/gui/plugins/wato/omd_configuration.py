@@ -248,7 +248,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
         output = ""
         for k, v in sorted(config.items()):
-            output += "%s = %r\n" % (k, v)
+            output += f"{k} = {v!r}\n"
 
         store.save_text_to_file(self.diskspace_config, output)
 

@@ -1247,7 +1247,7 @@ class CommandECChangeState(ECCommand):
         if request.var("_mkeventd_changestate"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return "CHANGESTATE;%s;%s;%s" % (events, user.id, state), _("change the state")
+            return f"CHANGESTATE;{events};{user.id};{state}", _("change the state")
         return None
 
 
@@ -1298,7 +1298,7 @@ class CommandECCustomAction(ECCommand):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
                 title = _('execute the action "%s"') % title
-                return "ACTION;%s;%s;%s" % (row["event_id"], user.id, action_id), title
+                return "ACTION;{};{};{}".format(row["event_id"], user.id, action_id), title
         return None
 
 
@@ -1343,7 +1343,7 @@ class CommandECArchiveEvent(ECCommand):
     ) -> CommandActionResult:
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
-            command = "DELETE;%s;%s" % (events, user.id)
+            command = f"DELETE;{events};{user.id}"
             title = _("<b>archive</b>")
             return command, title
         return None

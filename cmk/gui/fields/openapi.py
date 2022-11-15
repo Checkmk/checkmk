@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
-from typing import Optional, Tuple
 
 from apispec.ext import marshmallow
 from apispec.ext.marshmallow import common, field_converter
@@ -18,7 +17,7 @@ def is_value_typed_dict(schema) -> bool:  # type:ignore[no-untyped-def]
     return is_class or is_instance
 
 
-def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
+def type_and_format_of_field(field: fields.Field) -> tuple[str, str | None]:
     """Get the type and the format of a field.
 
     Examples:
@@ -48,17 +47,12 @@ def type_and_format_of_field(field: fields.Field) -> Tuple[str, Optional[str]]:
     raise ValueError(f"No fitting spec found for field {field!r}.")
 
 
-FieldProperties = typing.TypedDict(
-    "FieldProperties",
-    {
-        "required": bool,
-        "description": str,
-        "format": str,
-        "pattern": str,
-        "type": str,
-    },
-    total=False,
-)
+class FieldProperties(typing.TypedDict, total=False):
+    required: bool
+    description: str
+    format: str
+    pattern: str
+    type: str
 
 
 def field_properties(field: fields.Field) -> FieldProperties:

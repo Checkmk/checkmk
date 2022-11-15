@@ -9,7 +9,8 @@ password store. You can use in a rule a password stored in the password store wi
 entering the password.
 """
 
-from typing import Any, cast, Mapping
+from collections.abc import Mapping
+from typing import Any, cast
 
 from cmk.utils import version
 

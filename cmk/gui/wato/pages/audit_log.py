@@ -6,7 +6,7 @@
 
 import re
 import time
-from typing import Collection, Iterator
+from collections.abc import Collection, Iterator
 
 import cmk.utils.render as render
 
@@ -398,7 +398,7 @@ class ModeAuditLog(WatoMode):
 
             html.icon_button(
                 makeactionuri(request, transactions, time_url_args(next_log_time)),
-                "%s: %s" % (_("Newer events"), render.date(next_log_time)),
+                "{}: {}".format(_("Newer events"), render.date(next_log_time)),
                 "back",
             )
         else:
@@ -408,7 +408,7 @@ class ModeAuditLog(WatoMode):
         if previous_log_time is not None:
             html.icon_button(
                 makeactionuri(request, transactions, time_url_args(previous_log_time)),
-                "%s: %s" % (_("Older events"), render.date(previous_log_time)),
+                "{}: {}".format(_("Older events"), render.date(previous_log_time)),
                 "forth",
             )
         else:
@@ -538,12 +538,12 @@ class ModeAuditLog(WatoMode):
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-%s_%s.csv" % (
+            filename = "wato-auditlog-{}_{}.csv".format(
                 render.date(time.time()),
                 render.time_of_day(time.time()),
             )
         else:
-            filename = "wato-auditlog-%s_%s_days.csv" % (
+            filename = "wato-auditlog-{}_{}_days.csv".format(
                 render.date(time.time()),
                 self._options["display"][1],
             )

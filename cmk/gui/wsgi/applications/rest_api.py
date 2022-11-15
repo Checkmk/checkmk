@@ -15,9 +15,10 @@ import os
 import re
 import traceback
 import urllib.parse
+from collections.abc import Callable, Mapping
 from contextlib import nullcontext
 from datetime import datetime
-from typing import Any, Callable, Mapping, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from werkzeug.exceptions import HTTPException, NotFound
@@ -374,7 +375,7 @@ class ServeSwaggerUI:
                 elif b"favicon" in line:
                     continue
                 elif b"petstore.swagger.io" in line:
-                    page.append(f'        url: "{yaml_file}",'.encode("utf-8"))
+                    page.append(f'        url: "{yaml_file}",'.encode())
                     page.append(b"        validatorUrl: null,")
                     page.append(b"        displayOperationId: false,")
                 else:

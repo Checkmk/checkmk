@@ -11,23 +11,12 @@ import itertools
 import json
 import pprint
 import re
+from collections.abc import Collection, Generator, Iterable, Iterator
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import (
-    Any,
-    cast,
-    Collection,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    overload,
-    Set,
-)
+from typing import Any, cast, Optional, overload
 from typing import Tuple as _Tuple
-from typing import Type, Union
+from typing import Union
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.regex import escape_regex_chars
@@ -146,9 +135,9 @@ else:
 
 def _group_rulesets(
     rulesets: Iterable[Ruleset],
-) -> List[_Tuple[str, List[_Tuple[str, List[Ruleset]]]]]:
+) -> list[_Tuple[str, list[_Tuple[str, list[Ruleset]]]]]:
     """Groups the rulesets in 3 layers (main group, sub group, rulesets)."""
-    grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
+    grouped_dict: dict[str, dict[str, list[Ruleset]]] = {}
     for ruleset in rulesets:
         main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
         group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
@@ -191,7 +180,7 @@ class ABCRulesetMode(WatoMode):
         self._page_type = self._get_page_type(self._search_options)
 
         self._title: str = ""
-        self._help: Optional[str] = None
+        self._help: str | None = None
         self._set_title_and_help()
 
     @abc.abstractmethod
@@ -222,7 +211,7 @@ class ABCRulesetMode(WatoMode):
 
         self._search_options: SearchOptions = ModeRuleSearchForm().search_options
 
-    def _group_name_from_vars(self) -> Optional[str]:
+    def _group_name_from_vars(self) -> str | None:
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         # This is either given via "group" parameter or via search (see blow)
@@ -242,7 +231,7 @@ class ABCRulesetMode(WatoMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
+    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -254,9 +243,9 @@ class ABCRulesetMode(WatoMode):
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets: Union[
-                FilteredRulesetCollection, RulesetCollection
-            ] = FilteredRulesetCollection.filter(
+            rulesets: (
+                FilteredRulesetCollection | RulesetCollection
+            ) = FilteredRulesetCollection.filter(
                 self._rulesets().get_rulesets(),
                 key=lambda ruleset: ruleset.matches_search_with_rules(self._search_options),
             )
@@ -348,7 +337,7 @@ class ModeRuleSearch(ABCRulesetMode):
     def name(cls) -> str:
         return "rule_search"
 
-    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+    def _get_page_type(self, search_options: dict[str, str]) -> PageType:
         if _is_deprecated_rulesets_page(search_options):
             return PageType.DeprecatedRulesets
 
@@ -360,7 +349,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
         return PageType.RuleSearch
 
-    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
+    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
             return FilteredRulesetCollection.filter(
@@ -472,7 +461,7 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
         return False
 
     if "_hosttags_tag_" in varname and value != "ignore":
-        tagvalue_varname = "%s_hosttags_tagvalue_%s" % (
+        tagvalue_varname = "{}_hosttags_tagvalue_{}".format(
             form_prefix,
             varname.split("_hosttags_tag_")[1],
         )
@@ -480,7 +469,9 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
             return False
 
     if "_hosttags_tagvalue_" in varname:
-        tag_varname = "%s_hosttags_tag_%s" % (form_prefix, varname.split("_hosttags_tagvalue_")[1])
+        tag_varname = "{}_hosttags_tag_{}".format(
+            form_prefix, varname.split("_hosttags_tagvalue_")[1]
+        )
         tag_value = request.var(tag_varname)
         if tag_value and tag_value != "ignore":
             return False
@@ -501,14 +492,14 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
     return True
 
 
-def _page_menu_entries_predefined_searches(group: Optional[str]) -> Iterable[PageMenuEntry]:
+def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMenuEntry]:
     for search_title, search_emblem, search_term in [
         ("Used rulesets", "enable", "ruleset_used"),
         ("Ineffective rules", "disable", "rule_ineffective"),
         ("Deprecated rules", "warning", "ruleset_deprecated"),
     ]:
 
-        uri_params: List[_Tuple[str, Union[None, int, str]]] = [
+        uri_params: list[_Tuple[str, None | int | str]] = [
             ("mode", "rule_search"),
             ("search_p_%s" % search_term, DropdownChoice.option_id(True)),
             ("search_p_%s_USE" % search_term, "on"),
@@ -583,10 +574,10 @@ class ModeRulesetGroup(ABCRulesetMode):
         assert self._group_name is not None
         return self.mode_url(group=self._group_name)
 
-    def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
+    def _get_page_type(self, search_options: dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
-    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
+    def _rulesets(self) -> RulesetCollection | FilteredRulesetCollection:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
             return FilteredRulesetCollection.filter(
@@ -747,7 +738,7 @@ class ModeEditRuleset(WatoMode):
         return []
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRulesetGroup
 
     # pylint does not understand this overloading
@@ -788,8 +779,8 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-        self._item: Optional[ServiceName] = None
-        self._service: Optional[ServiceName] = None
+        self._item: ServiceName | None = None
+        self._service: ServiceName | None = None
 
         # TODO: Clean this up. In which case is it used?
         # - The calculation for the service_description is not even correct, because it does not
@@ -829,8 +820,8 @@ class ModeEditRuleset(WatoMode):
                     pass
 
         hostname = request.get_ascii_input("host")
-        self._host: Optional[CREHost] = None
-        self._hostname: Optional[HostName] = None
+        self._host: CREHost | None = None
+        self._hostname: HostName | None = None
         if hostname:
             self._hostname = HostName(hostname)
             host = Folder.current().host(self._hostname)
@@ -1076,12 +1067,12 @@ class ModeEditRuleset(WatoMode):
         html.close_div()
 
     def _rule_listing(self, ruleset: Ruleset) -> None:
-        rules: List[_Tuple[CREFolder, int, Rule]] = ruleset.get_rules()
+        rules: list[_Tuple[CREFolder, int, Rule]] = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
             return
 
-        match_state: Dict[str, Union[bool, Set]] = {"matched": False, "keys": set()}
+        match_state: dict[str, bool | set] = {"matched": False, "keys": set()}
         search_options: SearchOptions = ModeRuleSearchForm().search_options
 
         html.div("", id_="row_info")
@@ -1096,7 +1087,7 @@ class ModeEditRuleset(WatoMode):
 
         for folder, folder_rules in _get_groups(rules, self._folder):
             with table_element(
-                "rules_%s_%s" % (self._name, folder.ident()),
+                f"rules_{self._name}_{folder.ident()}",
                 title="%s %s (%d)"
                 % (
                     _("Rules in folder"),
@@ -1276,7 +1267,7 @@ class ModeEditRuleset(WatoMode):
             return
 
         # Labels should only get synced once per request
-        cache_id = "%s:%s" % (site_id, self._hostname)
+        cache_id = f"{site_id}:{self._hostname}"
         if cache_id in g.get("host_label_sync", {}):
             return
         execute_host_label_sync(self._hostname, site_id)
@@ -1390,12 +1381,12 @@ class ModeEditRuleset(WatoMode):
 
 
 def _get_groups(
-    rules: List[_Tuple[CREFolder, int, Rule]],
+    rules: list[_Tuple[CREFolder, int, Rule]],
     current_folder: CREFolder,
 ) -> Generator[_Tuple[CREFolder, Iterator[_Tuple[CREFolder, int, Rule]]], None, None]:
     """Get ruleset groups in correct sort order. Sort by title_path() to honor
     renamed folders"""
-    sorted_rules: List[_Tuple[CREFolder, int, Rule]] = sorted(
+    sorted_rules: list[_Tuple[CREFolder, int, Rule]] = sorted(
         rules,
         key=lambda x: (x[0].title_path(), len(rules) - x[1]),
         reverse=True,
@@ -1419,7 +1410,7 @@ class ModeRuleSearchForm(WatoMode):
         return ["rulesets"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRuleSearch
 
     def __init__(self) -> None:
@@ -1682,7 +1673,7 @@ def _vs_ruleset_group() -> DropdownChoice:
 
 class ABCEditRuleMode(WatoMode):
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditRuleset
 
     def _from_vars(self) -> None:
@@ -1779,7 +1770,7 @@ class ABCEditRuleMode(WatoMode):
         yield _page_menu_entry_predefined_conditions()
         yield _page_menu_entry_rule_search()
 
-    def _page_menu_topic_this_rule(self) -> Optional[PageMenuTopic]:
+    def _page_menu_topic_this_rule(self) -> PageMenuTopic | None:
         if user.may("wato.auditlog"):
             return PageMenuTopic(
                 title=_("This rule"),
@@ -2146,8 +2137,8 @@ class VSExplicitConditions(Transform):
         return elements
 
     # TODO: refine type
-    def _to_valuespec(self, conditions: RuleConditions) -> Dict[str, Any]:
-        explicit: Dict[str, Any] = {
+    def _to_valuespec(self, conditions: RuleConditions) -> dict[str, Any]:
+        explicit: dict[str, Any] = {
             "folder_path": conditions.host_folder,
             "host_tags": conditions.host_tags,
         }
@@ -2173,7 +2164,7 @@ class VSExplicitConditions(Transform):
         if not self._rulespec.item_type:
             return []
 
-        elements: List[_Tuple[str, ValueSpec]] = [
+        elements: list[_Tuple[str, ValueSpec]] = [
             ("explicit_services", self._vs_explicit_services())
         ]
 
@@ -2182,7 +2173,7 @@ class VSExplicitConditions(Transform):
 
         return elements
 
-    def _service_title(self) -> Optional[str]:
+    def _service_title(self) -> str | None:
         item_type = self._rulespec.item_type
         if not item_type:
             return None
@@ -2199,7 +2190,7 @@ class VSExplicitConditions(Transform):
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
     # TODO: refine type
-    def _from_valuespec(self, explicit: Dict[str, Any]) -> RuleConditions:
+    def _from_valuespec(self, explicit: dict[str, Any]) -> RuleConditions:
         service_description = None
         service_labels = None
         if self._rulespec.item_type:
@@ -2226,8 +2217,8 @@ class VSExplicitConditions(Transform):
         )
 
     def _condition_list_from_valuespec(
-        self, conditions: Optional[_Tuple[List[str], bool]], is_service: bool
-    ) -> Optional[HostOrServiceConditions]:
+        self, conditions: _Tuple[list[str], bool] | None, is_service: bool
+    ) -> HostOrServiceConditions | None:
         if conditions is None:
             return None
 
@@ -2319,7 +2310,7 @@ class VSExplicitConditions(Transform):
             ],
         )
 
-    def _explicit_service_help_text(self) -> Union[None, str, HTML]:
+    def _explicit_service_help_text(self) -> None | str | HTML:
         itemtype = self._rulespec.item_type
         if itemtype == "service":
             return _(
@@ -2346,7 +2337,7 @@ class VSExplicitConditions(Transform):
 
         return None
 
-    def _vs_service_conditions(self) -> Union[Transform, ListOfStrings]:
+    def _vs_service_conditions(self) -> Transform | ListOfStrings:
         itemenum = self._rulespec.item_enum
         if itemenum:
             return Transform(
@@ -2456,7 +2447,7 @@ class RuleConditionRenderer:
     def _single_tag_condition(
         self,
         taggroup_id: TaggroupID,
-        tag_spec: Union[Optional[TagID], TagConditionNE],
+        tag_spec: TagID | None | TagConditionNE,
     ) -> HTML:
         negate = False
         if isinstance(tag_spec, dict):
@@ -2534,7 +2525,9 @@ class RuleConditionRenderer:
         if not negate:
             return labels_html
 
-        return HTML("%s%s" % (HTMLWriter.render_i(_("not"), class_="label_operator"), labels_html))
+        return HTML(
+            "{}{}".format(HTMLWriter.render_i(_("not"), class_="label_operator"), labels_html)
+        )
 
     def _host_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         if conditions.host_name is None:
@@ -2557,14 +2550,14 @@ class RuleConditionRenderer:
 
         is_negate, host_name_conditions = ruleset_matcher.parse_negated_condition_list(conditions)
 
-        condition: List[HTML] = [escape_to_html_permissive(_("Host name"))]
+        condition: list[HTML] = [escape_to_html_permissive(_("Host name"))]
 
         regex_count = len(
             [x for x in host_name_conditions if isinstance(x, dict) and "$regex" in x]
         )
 
         folder_lookup_cache = Folder.get_folder_lookup_cache()
-        text_list: List[HTML] = []
+        text_list: list[HTML] = []
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             if is_negate:
@@ -2625,9 +2618,9 @@ class RuleConditionRenderer:
 
     def _service_conditions(  # pylint: disable=too-many-branches
         self,
-        item_type: Optional[str],
-        item_name: Optional[str],
-        conditions: Optional[HostOrServiceConditions],
+        item_type: str | None,
+        item_name: str | None,
+        conditions: HostOrServiceConditions | None,
     ) -> Iterable[HTML]:
         if not item_type or conditions is None:
             return
@@ -2651,7 +2644,7 @@ class RuleConditionRenderer:
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"]
         )
 
-        text_list: List[HTML] = []
+        text_list: list[HTML] = []
         if exact_match_count == len(service_conditions) or exact_match_count == 0:
             if is_negate:
                 phrase = _("is not ") if exact_match_count else _("does not begin with ")
@@ -2772,8 +2765,8 @@ class ModeNewRule(ABCEditRuleMode):
         return self._get_rule_conditions_from_vars().host_folder
 
     def _set_rule(self) -> None:
-        host_name_conditions: Optional[HostOrServiceConditions] = None
-        service_description_conditions: Optional[HostOrServiceConditions] = None
+        host_name_conditions: HostOrServiceConditions | None = None
+        service_description_conditions: HostOrServiceConditions | None = None
 
         if request.has_var("_new_host_rule"):
             hostname = request.get_ascii_input("host")

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Collection, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from collections.abc import Collection, Mapping, Sequence
+from typing import NamedTuple
 
 import livestatus
 
@@ -22,17 +23,17 @@ from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, T
 
 
 class ViewURLParams(NamedTuple):
-    total: Sequence[Tuple[str, str]]
-    handled: Sequence[Tuple[str, str]]
-    unhandled: Sequence[Tuple[str, Union[str, int]]]
-    stale: Optional[Sequence[Tuple[str, str]]]
+    total: Sequence[tuple[str, str]]
+    handled: Sequence[tuple[str, str]]
+    unhandled: Sequence[tuple[str, str | int]]
+    stale: Sequence[tuple[str, str]] | None
 
 
 class OverviewRow(NamedTuple):
     what: str
     title: str
     context: Mapping
-    stats: Optional[Sequence[int]]
+    stats: Sequence[int] | None
     views: ViewURLParams
 
 
@@ -49,9 +50,9 @@ def get_context_url_variables(context):
 
 
 def group_by_state(
-    acc: Dict[str, List[str]],
-    id_and_state: Tuple[str, str],
-) -> Dict[str, List[str]]:
+    acc: dict[str, list[str]],
+    id_and_state: tuple[str, str],
+) -> dict[str, list[str]]:
     id_, state = id_and_state
     acc[state].append(id_)
     return acc

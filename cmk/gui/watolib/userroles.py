@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Iterator, Mapping
 from datetime import datetime
-from typing import Dict, Iterator, Mapping, NewType, Tuple
+from typing import NewType
 
 from marshmallow import ValidationError
 
@@ -28,7 +29,7 @@ RoleID = NewType("RoleID", str)
 def clone_role(
     role_id: RoleID, new_role_id: str | None = None, new_alias: str | None = None
 ) -> UserRole:
-    all_roles: Dict[RoleID, UserRole] = get_all_roles()
+    all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_clone: UserRole = get_role(role_id)
 
     if new_role_id is None:
@@ -50,7 +51,7 @@ def clone_role(
     return cloned_user_role
 
 
-def get_all_roles() -> Dict[RoleID, UserRole]:
+def get_all_roles() -> dict[RoleID, UserRole]:
     stored_roles: dict[str, dict] = userdb_utils.load_roles()
     return {
         RoleID(roleid): UserRole(name=roleid, **params) for roleid, params in stored_roles.items()
@@ -71,7 +72,7 @@ def role_exists(role_id: RoleID) -> bool:
 
 
 def delete_role(role_id: RoleID) -> None:
-    all_roles: Dict[RoleID, UserRole] = get_all_roles()
+    all_roles: dict[RoleID, UserRole] = get_all_roles()
     role_to_delete: UserRole = get_role(role_id)
 
     if transactions.transaction_valid() and role_to_delete.builtin:
@@ -93,8 +94,8 @@ def delete_role(role_id: RoleID) -> None:
     save_all_roles(all_roles)
 
 
-def save_all_roles(all_roles: Dict[RoleID, UserRole]) -> None:
-    roles_as_dicts: Dict[str, dict] = {role.name: role.to_dict() for role in all_roles.values()}
+def save_all_roles(all_roles: dict[RoleID, UserRole]) -> None:
+    roles_as_dicts: dict[str, dict] = {role.name: role.to_dict() for role in all_roles.values()}
     active_config.roles.update(roles_as_dicts)
     store.mkdir(multisite_dir())
     store.save_to_mk_file(
@@ -142,7 +143,7 @@ def validate_new_roleid(old_roleid: str, new_roleid: str) -> None:
             )
 
 
-def update_permissions(role: UserRole, new_permissions: Iterator[Tuple[str, str]] | None) -> None:
+def update_permissions(role: UserRole, new_permissions: Iterator[tuple[str, str]] | None) -> None:
     if new_permissions is None:
         return
 
@@ -165,7 +166,7 @@ def update_permissions(role: UserRole, new_permissions: Iterator[Tuple[str, str]
 
 
 def update_role(role: UserRole, old_roleid: RoleID, new_roleid: RoleID) -> None:
-    all_roles: Dict[RoleID, UserRole] = get_all_roles()
+    all_roles: dict[RoleID, UserRole] = get_all_roles()
     del all_roles[old_roleid]
     all_roles[new_roleid] = role
     save_all_roles(all_roles)

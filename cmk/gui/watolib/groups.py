@@ -6,7 +6,7 @@
 import copy
 import re
 from collections.abc import Sequence
-from typing import Any, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -166,7 +166,7 @@ def check_modify_group_permissions(group_type: GroupType) -> None:
     # Check permissions
     perms = required_permissions.get(group_type)
     if perms is None:
-        raise Exception("invalid group type %r" % (group_type,))
+        raise Exception(f"invalid group type {group_type!r}")
     for permission in perms:
         user.need_permission(permission)
 
@@ -196,7 +196,7 @@ def _set_group(
         hooks.call("contactgroups-saved", all_groups)
 
 
-def find_usages_of_group(name: GroupName, group_type: GroupType) -> List[Tuple[str, str]]:
+def find_usages_of_group(name: GroupName, group_type: GroupType) -> list[tuple[str, str]]:
     usages = []
     if group_type == "contact":
         usages = find_usages_of_contact_group(name)
@@ -207,7 +207,7 @@ def find_usages_of_group(name: GroupName, group_type: GroupType) -> List[Tuple[s
     return usages
 
 
-def find_usages_of_contact_group(name: GroupName) -> List[Tuple[str, str]]:
+def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     """Check if a group is currently in use and cannot be deleted
     Returns a list of occurrances.
     """
@@ -225,7 +225,7 @@ def find_usages_of_contact_group(name: GroupName) -> List[Tuple[str, str]]:
     return used_in
 
 
-def _find_usages_of_contact_group_in_users(name: GroupName) -> List[Tuple[str, str]]:
+def _find_usages_of_contact_group_in_users(name: GroupName) -> list[tuple[str, str]]:
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
@@ -234,7 +234,7 @@ def _find_usages_of_contact_group_in_users(name: GroupName) -> List[Tuple[str, s
         if name in cgs:
             used_in.append(
                 (
-                    "%s: %s" % (_("User"), user_spec.get("alias", userid)),
+                    "{}: {}".format(_("User"), user_spec.get("alias", userid)),
                     folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
                 )
             )
@@ -243,7 +243,7 @@ def _find_usages_of_contact_group_in_users(name: GroupName) -> List[Tuple[str, s
 
 def _find_usages_of_contact_group_in_default_user_profile(
     name: GroupName, global_config: GlobalSettings
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     """Used in default_user_profile?"""
     used_in = []
     config_variable = config_variable_registry["default_user_profile"]()
@@ -266,7 +266,7 @@ def _find_usages_of_contact_group_in_default_user_profile(
 
 def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
     name: GroupName, global_config: GlobalSettings
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     """Is the contactgroup used in mkeventd notify (if available)?"""
     used_in = []
     if "mkeventd_notify_contactgroup" in config_variable_registry:
@@ -288,7 +288,7 @@ def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
 
 def _find_usages_of_contact_group_in_hosts_and_folders(
     name: GroupName, folder: CREFolder
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     used_in = []
     for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
@@ -305,17 +305,17 @@ def _find_usages_of_contact_group_in_hosts_and_folders(
     return used_in
 
 
-def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple[str, str]]:
-    used_in: List[Tuple[str, str]] = []
+def _find_usages_of_contact_group_in_notification_rules(name: str) -> list[tuple[str, str]]:
+    used_in: list[tuple[str, str]] = []
     for rule in load_notification_rules():
         if _used_in_notification_rule(name, rule):
-            title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
+            title = "{}: {}".format(_("Notification rule"), rule.get("description", ""))
             used_in.append((title, "wato.py?mode=notifications"))
 
     for user_id, user_rules in load_user_notification_rules().items():
         for rule in user_rules:
             if _used_in_notification_rule(name, rule):
-                title = "%s: %s" % (
+                title = "{}: {}".format(
                     _("Notification rules of user %s") % user_id,
                     rule.get("description", ""),
                 )
@@ -324,15 +324,15 @@ def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple
     return used_in
 
 
-def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, str]]:
-    used_in: List[Tuple[str, str]] = []
+def _find_usages_of_contact_group_in_dashboards(name: str) -> list[tuple[str, str]]:
+    used_in: list[tuple[str, str]] = []
     # FIXME: This leads to a circular import otherwise.
     from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 
     for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
-        public_value: Union[bool, Tuple[str, Sequence[str]]] = board["public"]
+        public_value: bool | tuple[str, Sequence[str]] = board["public"]
         if isinstance(public_value, tuple) and name in public_value[1]:
-            title = "%s: %s" % (_("Dashboard of user %s") % dashboard_owner, dashboard_name)
+            title = "{}: {}".format(_("Dashboard of user %s") % dashboard_owner, dashboard_name)
             used_in.append(
                 (
                     title,
@@ -354,16 +354,16 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
 
 
-def _find_usages_of_contact_group_in_ec_rules(name: str) -> List[Tuple[str, str]]:
+def _find_usages_of_contact_group_in_ec_rules(name: str) -> list[tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
-    used_in: List[Tuple[str, str]] = []
+    used_in: list[tuple[str, str]] = []
     rule_packs = mkeventd.load_mkeventd_rules()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):
                 used_in.append(
                     (
-                        "%s: %s" % (_("Event console rule"), rule["id"]),
+                        "{}: {}".format(_("Event console rule"), rule["id"]),
                         folder_preserving_link(
                             [
                                 ("mode", "mkeventd_edit_rule"),
@@ -376,15 +376,15 @@ def _find_usages_of_contact_group_in_ec_rules(name: str) -> List[Tuple[str, str]
     return used_in
 
 
-def find_usages_of_host_group(name: GroupName) -> List[Tuple[str, str]]:
+def find_usages_of_host_group(name: GroupName) -> list[tuple[str, str]]:
     return _find_usages_of_group_in_rules(name, ["host_groups"])
 
 
-def find_usages_of_service_group(name: GroupName) -> List[Tuple[str, str]]:
+def find_usages_of_service_group(name: GroupName) -> list[tuple[str, str]]:
     return _find_usages_of_group_in_rules(name, ["service_groups"])
 
 
-def _find_usages_of_group_in_rules(name: GroupName, varnames: List[str]) -> List[Tuple[str, str]]:
+def _find_usages_of_group_in_rules(name: GroupName, varnames: list[str]) -> list[tuple[str, str]]:
     used_in = []
     rulesets = AllRulesets.load_all_rulesets()
     for varname in varnames:
@@ -393,7 +393,7 @@ def _find_usages_of_group_in_rules(name: GroupName, varnames: List[str]) -> List
             if rule.value == name:
                 used_in.append(
                     (
-                        "%s: %s" % (_("Ruleset"), ruleset.title()),
+                        "{}: {}".format(_("Ruleset"), ruleset.title()),
                         folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]),
                     )
                 )
@@ -401,8 +401,8 @@ def _find_usages_of_group_in_rules(name: GroupName, varnames: List[str]) -> List
 
 
 def is_alias_used(
-    my_what: Union[GroupType, Literal["roles", "timeperiods"]], my_name: GroupName, my_alias: str
-) -> Tuple[bool, Optional[str]]:
+    my_what: GroupType | Literal["roles", "timeperiods"], my_name: GroupName, my_alias: str
+) -> tuple[bool, str | None]:
     # Host / Service / Contact groups
     all_groups = load_group_information()
     for what, groups in all_groups.items():
@@ -432,8 +432,8 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def __init__(self) -> None:
         ABCHostAttribute.__init__(self)
-        self._contactgroups: Optional[GroupSpecs] = None
-        self._loaded_at: Optional[int] = None
+        self._contactgroups: GroupSpecs | None = None
+        self._loaded_at: int | None = None
 
     def name(self) -> str:
         return "contactgroups"
@@ -441,7 +441,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def title(self) -> str:
         return _("Permissions")
 
-    def topic(self) -> Type[HostAttributeTopic]:
+    def topic(self) -> type[HostAttributeTopic]:
         return HostAttributeTopicBasicSettings
 
     @classmethod
@@ -479,7 +479,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts: List[HTML] = []
+        texts: list[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")

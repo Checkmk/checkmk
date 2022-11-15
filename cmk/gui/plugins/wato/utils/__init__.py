@@ -11,10 +11,10 @@ import json
 import re
 import subprocess
 import urllib.parse
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import nullcontext
-from typing import Any, Callable, cast, ContextManager, Dict, List, Literal, Mapping
+from typing import Any, cast, ContextManager, Dict, List, Literal
 from typing import Optional as _Optional
-from typing import Sequence
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -599,7 +599,7 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -614,7 +614,7 @@ class RulespecGroupCheckParametersNetworking(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersStorage(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -629,7 +629,7 @@ class RulespecGroupCheckParametersStorage(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -644,7 +644,7 @@ class RulespecGroupCheckParametersOperatingSystem(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -659,7 +659,7 @@ class RulespecGroupCheckParametersPrinters(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -674,7 +674,7 @@ class RulespecGroupCheckParametersEnvironment(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersApplications(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -689,7 +689,7 @@ class RulespecGroupCheckParametersApplications(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -704,7 +704,7 @@ class RulespecGroupCheckParametersVirtualization(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersHardware(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -719,7 +719,7 @@ class RulespecGroupCheckParametersHardware(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDiscoveryCheckParameters
 
     @property
@@ -941,7 +941,7 @@ def Levels(
     title: _Optional[str] = None,
     unit: str = "",
 ) -> Alternative:
-    def match_levels_alternative(v: Union[Dict[Any, Any], _Tuple[Any, Any]]) -> int:
+    def match_levels_alternative(v: dict[Any, Any] | _Tuple[Any, Any]) -> int:
         if isinstance(v, dict):
             return 2
         if isinstance(v, tuple) and v != (None, None):
@@ -1339,7 +1339,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                 )
 
 
-def _get_host_event_choices(add_choices: list[tuple[str, str]]) -> List[tuple[str, str]]:
+def _get_host_event_choices(add_choices: list[tuple[str, str]]) -> list[tuple[str, str]]:
     return [
         ("rd", _("UP") + " ➤ " + _("DOWN")),
         ("ru", _("UP") + " ➤ " + _("UNREACHABLE")),
@@ -1398,7 +1398,7 @@ def _get_service_event_choices(
     return choices + add_choices
 
 
-def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:
+def sort_sites(sites: SiteConfigurations) -> list[_Tuple[SiteId, SiteConfiguration]]:
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(
         sites.items(),
@@ -1798,7 +1798,7 @@ class NotificationParameter(abc.ABC):
 
 
 class NotificationParameterRegistry(
-    cmk.utils.plugin_registry.Registry[Type[NotificationParameter]]
+    cmk.utils.plugin_registry.Registry[type[NotificationParameter]]
 ):
     def plugin_name(self, instance):
         return instance().ident
@@ -2171,7 +2171,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
         """Show dropdown with "is/isnot/ignore" and beginning of div that is switched visible by is/isnot"""
         html.open_td()
         dropdown_id = varprefix + tagtype + "_" + id_
-        onchange = "cmk.valuespecs.toggle_tag_dropdown(this, '%stag_sel_%s');" % (varprefix, id_)
+        onchange = f"cmk.valuespecs.toggle_tag_dropdown(this, '{varprefix}tag_sel_{id_}');"
         choices: Choices = [
             ("ignore", _("ignore")),
             ("is", _("is")),
@@ -2186,7 +2186,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
         else:
             div_is_open = deflt != "ignore"
         html.open_div(
-            id_="%stag_sel_%s" % (varprefix, id_),
+            id_=f"{varprefix}tag_sel_{id_}",
             style="display: none;" if not div_is_open else None,
         )
 
@@ -2379,7 +2379,7 @@ def get_search_expression() -> None | str:
 
 def get_hostnames_from_checkboxes(
     filterfunc: _Optional[Callable] = None, deflt: bool = False
-) -> List[str]:
+) -> list[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     selected = user.get_rowselection(
@@ -2387,7 +2387,7 @@ def get_hostnames_from_checkboxes(
     )
     search_text = request.var("search")
 
-    selected_host_names: List[str] = []
+    selected_host_names: list[str] = []
     for host_name, host in sorted(_hosts_and_folders.Folder.current().hosts().items()):
         if (not search_text or _search_text_matches(host, search_text)) and (
             "_c_" + host_name

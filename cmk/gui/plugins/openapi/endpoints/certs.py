@@ -8,8 +8,9 @@ WARNING: Use at your own risk, not supported.
 
 Checkmk uses SSL certificates to verify push hosts.
 """
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from cryptography.hazmat.primitives.serialization import Encoding
 from cryptography.x509 import CertificateSigningRequest

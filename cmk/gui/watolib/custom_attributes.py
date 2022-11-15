@@ -51,8 +51,8 @@ def save_custom_attrs_to_mk_file(attrs):
     output = wato_fileheader()
     for what in ["user", "host"]:
         if what in attrs and len(attrs[what]) > 0:
-            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
-            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
+            output += f"if type(wato_{what}_attrs) != list:\n    wato_{what}_attrs = []\n"
+            output += f"wato_{what}_attrs += {pprint.pformat(attrs[what])}\n\n"
 
     store.mkdir(multisite_dir())
     store.save_text_to_file(multisite_dir() + "custom_attrs.mk", output)

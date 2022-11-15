@@ -12,9 +12,10 @@ import subprocess
 import tarfile
 import time
 import traceback
+from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable, IO, Literal, TypeVar
+from typing import Any, IO, Literal, TypeVar
 
 from typing_extensions import NotRequired, TypedDict
 
@@ -105,8 +106,8 @@ def _do_create_snapshot(data: SnapshotData) -> None:
             os.makedirs(work_dir)
 
         # Open / initialize files
-        filename_target = "%s/%s" % (snapshot_dir, snapshot_name)
-        filename_work = "%s/%s.work" % (work_dir, snapshot_name)
+        filename_target = f"{snapshot_dir}/{snapshot_name}"
+        filename_work = f"{work_dir}/{snapshot_name}.work"
 
         with open(filename_target, "wb"):
             pass
@@ -137,7 +138,7 @@ def _do_create_snapshot(data: SnapshotData) -> None:
         for name, info in sorted(_get_default_backup_domains().items()):
             prefix = info.get("prefix", "")
             filename_subtar = "%s.tar.gz" % name
-            path_subtar = "%s/%s" % (work_dir, filename_subtar)
+            path_subtar = f"{work_dir}/{filename_subtar}"
 
             paths = ["." if x[1] == "" else x[1] for x in info.get("paths", [])]
             command = [
@@ -154,8 +155,7 @@ def _do_create_snapshot(data: SnapshotData) -> None:
                 command,
                 stdin=None,
                 close_fds=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 cwd=prefix,
                 encoding="utf-8",
                 check=False,
@@ -186,7 +186,7 @@ def _do_create_snapshot(data: SnapshotData) -> None:
 
         # Now add the info file which contains hashes and signed hashes for
         # each of the subtars
-        info_str = "".join(["%s %s %s\n" % (k, v[0], v[1]) for k, v in subtar_info.items()]) + "\n"
+        info_str = "".join([f"{k} {v[0]} {v[1]}\n" for k, v in subtar_info.items()]) + "\n"
 
         with tarfile.open(filename_work, "a") as tar_in_progress:
             tarinfo = get_basic_tarinfo("checksums")
@@ -362,14 +362,14 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
 
     try:
         if len(name) > 35:
-            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-", ":"))
+            status["name"] = "{} {}".format(name[14:24], name[25:33].replace("-", ":"))
         else:
             status["name"] = name
 
         if not file_stream:
             # Check if the snapshot build is still in progress...
-            path_status = "%s/workdir/%s/%s.status" % (snapshot_dir, name, name)
-            path_pid = "%s/workdir/%s/%s.pid" % (snapshot_dir, name, name)
+            path_status = f"{snapshot_dir}/workdir/{name}/{name}.status"
+            path_pid = f"{snapshot_dir}/workdir/{name}/{name}.pid"
 
             # Check if this process is still running
             if os.path.exists(path_pid):
@@ -463,7 +463,7 @@ def _snapshot_secret() -> bytes:
     path = Path(cmk.utils.paths.default_config_dir, "snapshot.secret")
     try:
         return path.read_bytes()
-    except IOError:
+    except OSError:
         # create a secret during first use
         s = os.urandom(256)
         path.write_bytes(s)
@@ -511,9 +511,8 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         # Older versions of python tarfile handle empty subtar archives :(
         # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
         completed_process = subprocess.run(
-            ["tar", "tzf", "%s/%s" % (restore_dir, tar_member.name)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            ["tar", "tzf", f"{restore_dir}/{tar_member.name}"],
+            capture_output=True,
             encoding="utf-8",
             check=False,
         )
@@ -527,7 +526,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
             check_exists_or_writable(path_tokens)
 
         # Cleanup
-        os.unlink("%s/%s" % (restore_dir, tar_member.name))
+        os.unlink(f"{restore_dir}/{tar_member.name}")
 
         return errors
 
@@ -545,15 +544,17 @@ def extract_snapshot(  # pylint: disable=too-many-branches
         for what, path in domain.get("paths", {}):
             if not path_valid(domain["prefix"], path):
                 continue
-            full_path = "%s/%s" % (domain["prefix"], path)
+            full_path = "{}/{}".format(domain["prefix"], path)
             if os.path.exists(full_path):
                 if what == "dir":
                     exclude_files = []
                     for pattern in domain.get("exclude", []):
                         if "*" in pattern:
-                            exclude_files.extend(glob.glob("%s/%s" % (domain["prefix"], pattern)))
+                            exclude_files.extend(
+                                glob.glob("{}/{}".format(domain["prefix"], pattern))
+                            )
                         else:
-                            exclude_files.append("%s/%s" % (domain["prefix"], pattern))
+                            exclude_files.append("{}/{}".format(domain["prefix"], pattern))
                     _cleanup_dir(full_path, exclude_files)
                 else:
                     os.remove(full_path)
@@ -567,19 +568,18 @@ def extract_snapshot(  # pylint: disable=too-many-branches
             # The complete tar.gz file never fits in stringIO buffer..
             tar.extract(tar_member, restore_dir)
 
-            command = ["tar", "xzf", "%s/%s" % (restore_dir, tar_member.name), "-C", target_dir]
+            command = ["tar", "xzf", f"{restore_dir}/{tar_member.name}", "-C", target_dir]
             completed_process = subprocess.run(
                 command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 encoding="utf-8",
                 check=False,
             )
 
             if completed_process.returncode:
-                return ["%s - %s" % (domain["title"], completed_process.stderr)]
+                return ["{} - {}".format(domain["title"], completed_process.stderr)]
         except Exception as e:
-            return ["%s - %s" % (domain["title"], str(e))]
+            return ["{} - {}".format(domain["title"], str(e))]
 
         return []
 
@@ -618,7 +618,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
                     errors.extend(dom_errors or [])
                 except Exception:
                     # This should NEVER happen
-                    err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (
+                    err_info = "Restore-Phase: {}, Domain: {}\nError: {}".format(
                         what,
                         name,
                         traceback.format_exc(),
@@ -666,14 +666,14 @@ def _cleanup_dir(root_path: str, exclude_files: list[str] | None = None) -> None
     files_to_remove = []
     for path, dirnames, filenames in os.walk(root_path):
         for dirname in dirnames:
-            pathname = "%s/%s" % (path, dirname)
+            pathname = f"{path}/{dirname}"
             for entry in exclude_files:
                 if entry.startswith(pathname):
                     break
             else:
                 paths_to_remove.append(pathname)
         for filename in filenames:
-            filepath = "%s/%s" % (path, filename)
+            filepath = f"{path}/{filename}"
             if filepath not in exclude_files:
                 files_to_remove.append(filepath)
 

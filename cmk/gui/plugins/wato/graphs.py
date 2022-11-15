@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -20,10 +19,10 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 @config_variable_registry.register
 class ConfigVariableGraphTimeranges(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

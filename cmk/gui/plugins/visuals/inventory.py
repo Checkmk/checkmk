@@ -5,7 +5,6 @@
 
 import re
 from functools import partial
-from typing import List, Optional, Tuple, Union
 
 import cmk.utils.defines as defines
 
@@ -110,8 +109,8 @@ class FilterInvFloat(FilterNumberRange):
         ident: str,
         title: str,
         inventory_path: inventory.InventoryPath,
-        unit: Optional[str],
-        scale: Optional[float],
+        unit: str | None,
+        scale: float | None,
         is_show_more: bool = True,
     ) -> None:
         super().__init__(
@@ -356,7 +355,7 @@ class _FilterInvHasSoftwarePackage(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
         assert not isinstance(value, str)
-        name: Union[str, re.Pattern] = value.get(self._varprefix + "name", "")
+        name: str | re.Pattern = value.get(self._varprefix + "name", "")
         if not name:
             return rows
 
@@ -407,10 +406,10 @@ class _FilterInvHasSoftwarePackage(Filter):
                 continue
         return False
 
-    def version_is_lower(self, a: Optional[str], b: Optional[str]) -> bool:
+    def version_is_lower(self, a: str | None, b: str | None) -> bool:
         return a != b and not self.version_is_higher(a, b)
 
-    def version_is_higher(self, a: Optional[str], b: Optional[str]) -> bool:
+    def version_is_higher(self, a: str | None, b: str | None) -> bool:
         return cmp_version(a, b) == 1
 
 
@@ -432,5 +431,5 @@ class VisualInfoHost(VisualInfo):
         return _("Inventory Historys")
 
     @property
-    def single_spec(self) -> List[Tuple[str, ValueSpec]]:
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
         return []

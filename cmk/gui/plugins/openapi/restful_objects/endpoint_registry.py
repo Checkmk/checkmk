@@ -10,7 +10,8 @@ This registry has multiple jobs:
  2. interlinking between endpoints without having to know the specific URL.
 
 """
-from typing import Any, Dict, Iterator, List, Sequence
+from collections.abc import Iterator, Sequence
+from typing import Any
 
 from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, path_parameters
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -65,8 +66,8 @@ class EndpointRegistry:
     """
 
     def __init__(self) -> None:
-        self._endpoints: Dict[EndpointKey, Dict[ParameterKey, EndpointEntry]] = {}
-        self._endpoint_list: List[EndpointEntry] = []
+        self._endpoints: dict[EndpointKey, dict[ParameterKey, EndpointEntry]] = {}
+        self._endpoint_list: list[EndpointEntry] = []
 
     def __iter__(self) -> Iterator[Any]:
         return iter(self._endpoint_list)
@@ -75,7 +76,7 @@ class EndpointRegistry:
         self,
         module_name: str,
         rel: LinkRelation,
-        parameter_values: Dict[str, str],
+        parameter_values: dict[str, str],
     ) -> EndpointEntry:
         """Look up an endpoint definition
 
@@ -108,7 +109,7 @@ class EndpointRegistry:
                 f"{list(endpoint_entry.keys())}"
             )
 
-        examples: Dict[str, OpenAPIParameter] = {
+        examples: dict[str, OpenAPIParameter] = {
             key: {"example": value} for key, value in parameter_values.items()
         }
 
@@ -190,7 +191,7 @@ class EndpointRegistry:
 def _make_url(
     path: str,
     param_spec: Sequence[OpenAPIParameter],
-    param_val: Dict[str, str],
+    param_val: dict[str, str],
 ) -> str:
     """Make a concrete URL according to parameter specs and value-mappings.
 
@@ -244,7 +245,7 @@ def _make_url(
         The formatted path, query-string appended if applicable.
 
     """
-    path_params: Dict[str, OpenAPIParameter] = {}
+    path_params: dict[str, OpenAPIParameter] = {}
     qs = []
     for p in param_spec:
         param_name = p["name"]

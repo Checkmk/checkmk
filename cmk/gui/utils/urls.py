@@ -5,9 +5,10 @@
 
 import json
 import urllib.parse
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from functools import lru_cache
-from typing import Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import Literal
 
 from typing_extensions import assert_never
 
@@ -24,7 +25,7 @@ _ALWAYS_SAFE = frozenset(
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZ" b"abcdefghijklmnopqrstuvwxyz" b"0123456789" b"_.-~" b" "
 )
 _ALWAYS_SAFE_BYTES = bytes(_ALWAYS_SAFE)
-_QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else "%{:02X}".format(b) for b in range(256)}
+_QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else f"%{b:02X}" for b in range(256)}
 
 
 def quote(string: str) -> str:
@@ -45,17 +46,17 @@ def quote_plus(string: str) -> str:
     return quote(string).replace(" ", "+")
 
 
-def _quote_pair(varname: str, value: Union[None, int, str]) -> str:
+def _quote_pair(varname: str, value: None | int | str) -> str:
     assert isinstance(varname, str)
     if isinstance(value, int):
-        return "%s=%s" % (quote_plus(varname), quote_plus(str(value)))
+        return f"{quote_plus(varname)}={quote_plus(str(value))}"
     if value is None:
         # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
         # variables with None values simply be skipped? We currently can not find the
         # call sites easily. This may be cleaned up once we establish typing. Until then
         # we need to be compatible with the previous behavior.
         return "%s=" % quote_plus(varname)
-    return "%s=%s" % (quote_plus(varname), quote_plus(value))
+    return f"{quote_plus(varname)}={quote_plus(value)}"
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
@@ -65,7 +66,7 @@ def urlencode_vars(vars_: HTTPVariables) -> str:
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
-def urlencode(value: Optional[str]) -> str:
+def urlencode(value: str | None) -> str:
     """Replace special characters in string using the %xx escape."""
     return "" if value is None else quote_plus(value)
 
@@ -201,9 +202,9 @@ def requested_file_with_query(request: Request) -> str:
 def makeuri(
     request: Request,
     addvars: HTTPVariables,
-    filename: Optional[str] = None,
-    remove_prefix: Optional[str] = None,
-    delvars: Optional[Sequence[str]] = None,
+    filename: str | None = None,
+    remove_prefix: str | None = None,
+    delvars: Sequence[str] | None = None,
 ) -> str:
     new_vars = [nv[0] for nv in addvars]
     vars_: HTTPVariables = [
@@ -224,7 +225,7 @@ def makeuri(
 def makeuri_contextless(
     request: Request,
     vars_: HTTPVariables,
-    filename: Optional[str] = None,
+    filename: str | None = None,
 ) -> str:
     if not filename:
         filename = requested_file_name(request) + ".py"
@@ -237,8 +238,8 @@ def makeactionuri(
     request: Request,
     transaction_manager: TransactionManager,
     addvars: HTTPVariables,
-    filename: Optional[str] = None,
-    delvars: Optional[Sequence[str]] = None,
+    filename: str | None = None,
+    delvars: Sequence[str] | None = None,
 ) -> str:
     return makeuri(
         request,
@@ -252,7 +253,7 @@ def makeactionuri_contextless(
     request: Request,
     transaction_manager: TransactionManager,
     addvars: HTTPVariables,
-    filename: Optional[str] = None,
+    filename: str | None = None,
 ) -> str:
     return makeuri_contextless(
         request,
@@ -273,13 +274,13 @@ def makeuri_contextless_rulespec_group(
 
 
 def make_confirm_link(*, url: str, message: str) -> str:
-    return "javascript:cmk.forms.confirm_link(%s, %s),cmk.popup_menu.close_popup()" % (
+    return "javascript:cmk.forms.confirm_link({}, {}),cmk.popup_menu.close_popup()".format(
         json.dumps(quote_plus(url)),
         json.dumps(escape_text(message)),
     )
 
 
-def file_name_and_query_vars_from_url(url: str) -> Tuple[str, QueryVars]:
+def file_name_and_query_vars_from_url(url: str) -> tuple[str, QueryVars]:
     """Deconstruct a (potentially relative) URL.
 
     Args:
@@ -348,7 +349,7 @@ class DocReference(Enum):
     WATO_USER_2FA = "wato_user#2fa"
 
 
-def doc_reference_url(doc_ref: Optional[DocReference] = None) -> str:
+def doc_reference_url(doc_ref: DocReference | None = None) -> str:
     base = user.get_docs_base_url()
     if doc_ref is None:
         return base

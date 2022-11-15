@@ -48,7 +48,7 @@ class WatoIcon(Icon):
             return None
 
         if display_options.enabled(display_options.X):
-            url = "wato.py?folder=%s&host=%s" % (urlencode(folder), urlencode(hostname))
+            url = f"wato.py?folder={urlencode(folder)}&host={urlencode(hostname)}"
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")

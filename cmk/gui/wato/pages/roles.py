@@ -18,7 +18,7 @@ roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
 """
 
-from typing import Collection, Optional, Type
+from collections.abc import Collection
 
 from marshmallow import ValidationError
 
@@ -192,7 +192,7 @@ class ModeEditRole(WatoMode):
         return ["users"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
     def __init__(self) -> None:
@@ -259,7 +259,7 @@ class ModeEditRole(WatoMode):
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
 
         if self._role.builtin:
-            html.write_text("%s (%s)" % (self._role_id, _("builtin role")))
+            html.write_text("{} ({})".format(self._role_id, _("builtin role")))
             html.hidden_field("id", self._role_id)
         else:
             html.text_input("id", self._role_id)
@@ -352,7 +352,7 @@ class ModeRoleMatrix(WatoMode):
         return ["users"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
     def title(self) -> str:
@@ -386,7 +386,7 @@ class ModeRoleMatrix(WatoMode):
                         pvalue = role.permissions.get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:
-                                icon_name: Optional[str] = "perm_yes_default"
+                                icon_name: str | None = "perm_yes_default"
                             else:
                                 icon_name = None
                         else:

@@ -6,10 +6,10 @@
 
 import abc
 import time
+from collections.abc import Collection, Iterator, Mapping
 from datetime import datetime
-from typing import Any, Collection, Iterator, List, Mapping, NamedTuple, Optional, overload
+from typing import Any, NamedTuple, overload
 from typing import Tuple as _Tuple
-from typing import Type, Union
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule
@@ -990,7 +990,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
         return ["users"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditUser
 
     # pylint does not understand this overloading
@@ -1132,11 +1132,11 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         self._start_async_repl = False
 
     @abc.abstractmethod
-    def _load_rules(self) -> List[EventRule]:
+    def _load_rules(self) -> list[EventRule]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _save_rules(self, rules: List[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule]) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1188,9 +1188,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = []
+            contact_headers: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = []
             section_contacts = []
-            section_override: List[DictionaryEntry] = []
+            section_override: list[DictionaryEntry] = []
         else:
             contact_headers = [
                 (
@@ -1324,7 +1324,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ),
             ]
 
-        bulk_options: List[DictionaryEntry] = [
+        bulk_options: list[DictionaryEntry] = [
             (
                 "count",
                 Integer(
@@ -1384,7 +1384,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             ),
         ]
 
-        def make_interval_entry() -> List[DictionaryEntry]:
+        def make_interval_entry() -> list[DictionaryEntry]:
             return [
                 (
                     "interval",
@@ -1397,7 +1397,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ),
             ]
 
-        timeperiod_entry: List[DictionaryEntry] = [
+        timeperiod_entry: list[DictionaryEntry] = [
             (
                 "timeperiod",
                 watolib.timeperiods.TimeperiodSelection(
@@ -1406,7 +1406,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             ),
         ]
 
-        bulk_outside_entry: List[DictionaryEntry] = [
+        bulk_outside_entry: list[DictionaryEntry] = [
             (
                 "bulk_outside",
                 Dictionary(
@@ -1422,7 +1422,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             ),
         ]
 
-        headers_part1: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
+        headers_part1: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = [
             (
                 _("Rule Properties"),
                 ["description", "comment", "disabled", "docu_url", "allow_disable"],
@@ -1430,7 +1430,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
         ]
 
-        headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
+        headers_part2: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = [
             (
                 _("Conditions"),
                 [
@@ -1571,9 +1571,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         choices = []
         for script_name, title in notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs: Union[Dictionary, ListOfStrings] = notification_parameter_registry[
-                    script_name
-                ]().spec
+                vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name]().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -1685,13 +1683,13 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return ["notifications"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeNotifications
 
-    def _load_rules(self) -> List[EventRule]:
+    def _load_rules(self) -> list[EventRule]:
         return load_notification_rules(lock=transactions.is_transaction())
 
-    def _save_rules(self, rules: List[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule]) -> None:
         save_notification_rules(rules)
 
     def _user_id(self):
@@ -1712,7 +1710,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
 
 
 class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
-    def _load_rules(self) -> List[EventRule]:
+    def _load_rules(self) -> list[EventRule]:
         self._users = userdb.load_users(lock=transactions.is_transaction())
         if self._user_id() not in self._users:
             raise MKUserError(
@@ -1721,7 +1719,7 @@ class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
         user_spec = self._users[self._user_id()]
         return user_spec.setdefault("notification_rules", [])
 
-    def _save_rules(self, rules: List[EventRule]) -> None:
+    def _save_rules(self, rules: list[EventRule]) -> None:
         userdb.save_users(self._users, datetime.now())
 
     def _rule_from_valuespec(self, rule: EventRule) -> EventRule:
@@ -1751,7 +1749,7 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
         return ["notifications"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUserNotifications
 
     def _user_id(self):
@@ -1773,7 +1771,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
         return "notification_rule_p"
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModePersonalUserNotifications
 
     @classmethod

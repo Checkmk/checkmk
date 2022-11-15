@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional, Union
+from collections.abc import Mapping
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -15,8 +15,8 @@ from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Migrate, Text
 
 
 def _migrate_opt_string(
-    parameters: Union[Mapping[str, Optional[str]], str, None]
-) -> Mapping[str, Optional[str]]:
+    parameters: Mapping[str, str | None] | str | None
+) -> Mapping[str, str | None]:
     """
     >>> _migrate_opt_string(None)
     {'expected_node': None}

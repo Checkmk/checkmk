@@ -5,7 +5,7 @@
 
 import time
 from contextlib import nullcontext
-from typing import ContextManager, Dict, List, Tuple
+from typing import ContextManager
 
 from livestatus import SiteId
 
@@ -46,7 +46,7 @@ class MasterControlSnapin(SidebarSnapin):
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
 
-        site_status_info: Dict[sites.SiteId, List] = {}
+        site_status_info: dict[sites.SiteId, list] = {}
         try:
             sites.live().set_prepend_site(True)
             for row in sites.live().query(
@@ -80,7 +80,7 @@ class MasterControlSnapin(SidebarSnapin):
     def refresh_regularly(cls) -> bool:
         return True
 
-    def _core_toggles(self) -> List[Tuple[str, str]]:
+    def _core_toggles(self) -> list[tuple[str, str]]:
         return [
             ("enable_notifications", _("Notifications")),
             ("execute_service_checks", _("Service checks")),
@@ -94,8 +94,8 @@ class MasterControlSnapin(SidebarSnapin):
     def _show_master_control_site(
         self,
         site_id: sites.SiteId,
-        site_status_info: Dict[sites.SiteId, List],
-        items: List[Tuple[str, str]],
+        site_status_info: dict[sites.SiteId, list],
+        items: list[tuple[str, str]],
     ) -> None:
         site_state = sites.states().get(site_id)
 
@@ -164,7 +164,7 @@ class MasterControlSnapin(SidebarSnapin):
         html.close_table()
 
     @classmethod
-    def allowed_roles(cls) -> List[str]:
+    def allowed_roles(cls) -> list[str]:
         return ["admin"]
 
     def page_handlers(self) -> PageHandlers:

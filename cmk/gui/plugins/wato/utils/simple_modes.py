@@ -13,7 +13,8 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Any, Generic, List, Mapping, Optional, Type, TypeVar, Union
+from collections.abc import Mapping
+from typing import Any, Generic, TypeVar
 
 from livestatus import SiteId
 
@@ -77,7 +78,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         """
         raise NotImplementedError()
 
-    def site_valuespec(self) -> Union[DualListChoice, SetupSiteChoice]:
+    def site_valuespec(self) -> DualListChoice | SetupSiteChoice:
         return SetupSiteChoice()
 
     @abc.abstractmethod
@@ -89,7 +90,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self) -> List[Type[ABCConfigDomain]]:
+    def affected_config_domains(self) -> list[type[ABCConfigDomain]]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
@@ -105,7 +106,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
         """The mode name of the WATO edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
-    def affected_sites(self, entry: _T) -> Optional[List[SiteId]]:
+    def affected_sites(self, entry: _T) -> list[SiteId] | None:
         """Sites that are affected by changes to objects of this type
 
         Returns either a list of sites affected by a change or None.
@@ -142,11 +143,11 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         *,
         action: str,
         text: str,
-        affected_sites: Optional[List[SiteId]],
+        affected_sites: list[SiteId] | None,
     ) -> None:
         """Add a WATO change entry for this object type modifications"""
         _changes.add_change(
-            "%s-%s" % (action, self._mode_type.type_name()),
+            f"{action}-{self._mode_type.type_name()}",
             text,
             domains=self._mode_type.affected_config_domains(),
             sites=affected_sites,
@@ -326,7 +327,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                 )
 
             self._new = False
-            self._ident: Optional[str] = ident
+            self._ident: str | None = ident
             self._entry = entry
             return
 
@@ -378,7 +379,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         )
 
     def _vs_mandatory_elements(self) -> list[DictionaryEntry]:
-        ident_attr: List = []
+        ident_attr: list = []
         if self._new:
             ident_attr = [
                 (

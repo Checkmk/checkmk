@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -88,7 +88,7 @@ def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str
     html.close_div()
 
 
-def _add_profile_replication_change(site_id: SiteId, result: Union[bool, str]) -> None:
+def _add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
     """Add pending change entry to make sync possible later for admins"""
     add_change(
         "edit-users",
@@ -134,7 +134,7 @@ class ModeAjaxProfileReplication(AjaxPage):
 
     def _synchronize_profile(
         self, site_id: SiteId, site: SiteConfiguration, user_id: UserId
-    ) -> Union[bool, str]:
+    ) -> bool | str:
         users = userdb.load_users(lock=False)
         if user_id not in users:
             raise MKUserError(None, _("The requested user does not exist"))

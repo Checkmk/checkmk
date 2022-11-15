@@ -6,7 +6,8 @@
 settings"""
 
 import abc
-from typing import Any, Collection, Final, Iterable, Iterator, Optional, Type
+from collections.abc import Collection, Iterable, Iterator
+from typing import Any, Final
 
 import cmk.utils.version as cmk_version
 
@@ -213,7 +214,7 @@ class ABCGlobalSettingsMode(WatoMode):
 
                 if varname in self._current_settings:
                     modified_cls = ["modified"]
-                    value_title: Optional[str] = _("This option has been modified.")
+                    value_title: str | None = _("This option has been modified.")
                 elif varname in self._global_settings:
                     modified_cls = ["modified globally"]
                     value_title = _("This option has been modified in global settings.")
@@ -542,7 +543,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ["global"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditGlobals
 
     def title(self) -> str:
@@ -573,11 +574,11 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         # RuntimeError("Working outside of request context.")
         # when registering below due to
         # ABCGlobalSettingsMode.__init__ --> _from_vars --> get_search_expression)
-        mode_class: Type[ABCGlobalSettingsMode],
+        mode_class: type[ABCGlobalSettingsMode],
     ) -> None:
         super().__init__(name)
         self._topic: Final[str] = topic
-        self._mode_class: Final[Type[ABCGlobalSettingsMode]] = mode_class
+        self._mode_class: Final[type[ABCGlobalSettingsMode]] = mode_class
 
     def _config_variable_to_match_item(
         self,

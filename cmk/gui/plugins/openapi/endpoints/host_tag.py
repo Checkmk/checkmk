@@ -13,7 +13,8 @@ You can find an introduction to hosts including host tags and host tag groups in
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 
@@ -248,7 +249,7 @@ def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
     return response
 
 
-def serialize_host_tag_group(details: Dict[str, Any]):  # type:ignore[no-untyped-def]
+def serialize_host_tag_group(details: dict[str, Any]):  # type:ignore[no-untyped-def]
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],

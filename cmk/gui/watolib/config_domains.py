@@ -377,7 +377,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                         continue
 
                     trusted_cas.update(raw_certificates_from_file(cert_file_path))
-                except (IOError, PermissionError):
+                except (OSError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
                     # trigger for further checking web.log when a really needed certificate can
@@ -412,7 +412,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
+    omd_config_dir = f"{cmk.utils.paths.omd_root}/etc/omd"
 
     def __init__(self) -> None:
         super().__init__()
@@ -445,7 +445,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             if current_settings[key] == val:
                 continue  # Skip unchanged settings
 
-            config_change_commands.append("%s=%s" % (key, val))
+            config_change_commands.append(f"{key}={val}")
 
         if not config_change_commands:
             self._logger.debug("Got no config change commands...")

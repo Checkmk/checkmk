@@ -7,7 +7,8 @@
 import base64
 import time
 import traceback
-from typing import cast, Collection, Iterator, List, Optional, overload, Tuple, Type, Union
+from collections.abc import Collection, Iterator
+from typing import cast, overload
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
@@ -403,15 +404,13 @@ class ModeUsers(WatoMode):
                         title = _("Never logged in")
                         img_txt = "inactive"
 
-                    title += " (%s %s)" % (render.date(last_seen), render.time_of_day(last_seen))
+                    title += f" ({render.date(last_seen)} {render.time_of_day(last_seen)})"
                     table.cell(_("Act."))
                     html.icon(img_txt, title)
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:
-                        html.write_text(
-                            "%s %s" % (render.date(last_seen), render.time_of_day(last_seen))
-                        )
+                        html.write_text(f"{render.date(last_seen)} {render.time_of_day(last_seen)}")
                     else:
                         html.write_text(_("Never logged in"))
 
@@ -421,20 +420,20 @@ class ModeUsers(WatoMode):
                 # Connection
                 if connection:
                     table.cell(
-                        _("Connection"), "%s (%s)" % (connection.short_title(), user_connection_id)
+                        _("Connection"), f"{connection.short_title()} ({user_connection_id})"
                     )
                     locked_attributes = userdb.locked_attributes(user_connection_id)
                 else:
                     table.cell(
                         _("Connection"),
-                        "%s (%s) (%s)" % (_("UNKNOWN"), user_connection_id, _("disabled")),
+                        "{} ({}) ({})".format(_("UNKNOWN"), user_connection_id, _("disabled")),
                         css=["error"],
                     )
                     locked_attributes = []
 
                 # Authentication
                 if "automation_secret" in user_spec:
-                    auth_method: Union[str, HTML] = _("Automation")
+                    auth_method: str | HTML = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
                     if _is_two_factor_enabled(user_spec):
@@ -582,7 +581,7 @@ class ModeEditUser(WatoMode):
         return ["users"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeUsers
 
     # pylint does not understand this overloading
@@ -900,7 +899,7 @@ class ModeEditUser(WatoMode):
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
 
-        def lockable_input(name: str, dflt: Optional[str]) -> None:
+        def lockable_input(name: str, dflt: str | None) -> None:
             # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/
             value = cast(str, self._user.get(name, dflt))
             if self._is_locked(name):
@@ -1185,7 +1184,7 @@ class ModeEditUser(WatoMode):
             forms.section(_("Notification time period"))
             user_np = self._user.get("notification_period", "24X7")
             if not isinstance(user_np, str):
-                raise Exception("invalid notification period %r" % (user_np,))
+                raise Exception(f"invalid notification period {user_np!r}")
             choices: Choices = [
                 (id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()
             ]
@@ -1325,7 +1324,7 @@ class ModeEditUser(WatoMode):
             ],
         )
 
-    def _show_custom_user_attributes(self, custom_attr: List[Tuple[str, UserAttribute]]) -> None:
+    def _show_custom_user_attributes(self, custom_attr: list[tuple[str, UserAttribute]]) -> None:
         for name, attr in custom_attr:
             vs = attr.valuespec()
             vs_title = vs.title()

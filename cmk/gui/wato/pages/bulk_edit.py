@@ -6,8 +6,8 @@
 cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
+from collections.abc import Collection
 from hashlib import sha256
-from typing import Collection, Optional, Type
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -42,7 +42,7 @@ class ModeBulkEdit(WatoMode):
         return ["hosts", "edit_hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def title(self) -> str:
@@ -125,7 +125,7 @@ class ModeBulkCleanup(WatoMode):
         return ["hosts", "edit_hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def _from_vars(self):

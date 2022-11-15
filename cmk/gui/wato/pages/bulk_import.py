@@ -9,9 +9,10 @@ by pasting the contents of a CSV file into a textbox."""
 import csv
 import time
 import uuid
+from collections.abc import Collection
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Collection, Dict, Optional, Type
+from typing import Any
 
 import cmk.utils.store as store
 
@@ -66,12 +67,12 @@ class ModeBulkImport(WatoMode):
         return ["hosts", "manage_hosts"]
 
     @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
     def __init__(self) -> None:
         super().__init__()
-        self._params: Optional[Dict[str, Any]] = None
+        self._params: dict[str, Any] | None = None
         self._has_title_line = True
 
     @property
@@ -134,7 +135,7 @@ class ModeBulkImport(WatoMode):
                 return self._import(csv_reader)
         return None
 
-    def _file_path(self, file_id: Optional[str] = None) -> Path:
+    def _file_path(self, file_id: str | None = None) -> Path:
         if file_id is None:
             file_id = request.get_str_input_mandatory("file_id")
         if not file_id.isalnum():
@@ -168,7 +169,7 @@ class ModeBulkImport(WatoMode):
             if mtime < time.time() - 3600:
                 path.unlink()
 
-    def _get_custom_csv_dialect(self, delim: str) -> Type[csv.Dialect]:
+    def _get_custom_csv_dialect(self, delim: str) -> type[csv.Dialect]:
         class CustomCSVDialect(csv.excel):
             delimiter = delim
 
@@ -177,7 +178,7 @@ class ModeBulkImport(WatoMode):
     def _open_csv_file(self) -> CSVReader:
         try:
             csv_file = self._file_path().open(encoding="utf-8")
-        except IOError:
+        except OSError:
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
             )
@@ -278,7 +279,7 @@ class ModeBulkImport(WatoMode):
 
     def _get_host_info_from_row(self, row, row_num):
         host_name = None
-        attributes: Dict[str, str] = {}
+        attributes: dict[str, str] = {}
         for col_num, value in enumerate(row):
             if not value:
                 continue

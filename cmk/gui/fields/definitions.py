@@ -10,8 +10,9 @@ import re
 import typing
 import uuid
 import warnings
+from collections.abc import Mapping
 from datetime import datetime
-from typing import Any, Literal, Mapping, Optional
+from typing import Any, Literal
 
 import pytz
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -98,7 +99,7 @@ class PythonString(base.String):
 
     def _serialize(  # type:ignore[no-untyped-def]
         self, value, attr, obj, **kwargs
-    ) -> typing.Optional[str]:
+    ) -> str | None:
         return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
@@ -215,7 +216,7 @@ class FolderField(base.String):
 
     def _serialize(  # type:ignore[no-untyped-def]
         self, value, attr, obj, **kwargs
-    ) -> typing.Optional[str]:
+    ) -> str | None:
         if isinstance(value, str):
             if not value.startswith("/"):
                 value = f"/{value}"
@@ -366,7 +367,7 @@ class _ExprNested(base.Nested):
 
 
 def query_field(  # type:ignore[no-untyped-def]
-    table: typing.Type[Table], required: bool = False, example=None
+    table: type[Table], required: bool = False, example=None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
@@ -412,12 +413,12 @@ ColumnTypes = typing.Union[Column, str]
 
 
 def column_field(
-    table: typing.Type[Table],
-    example: typing.List[str],
+    table: type[Table],
+    example: list[str],
     required: bool = False,
-    mandatory: Optional[typing.List[ColumnTypes]] = None,
+    mandatory: list[ColumnTypes] | None = None,
 ) -> "_ListOfColumns":
-    column_names: typing.List[str] = []
+    column_names: list[str] = []
     if mandatory is not None:
         for col in mandatory:
             if isinstance(col, Column):
@@ -475,9 +476,9 @@ class _ListOfColumns(base.List):
 
     def __init__(  # type:ignore[no-untyped-def]
         self,
-        cls_or_instance: typing.Union[_fields.Field, type],
-        table: typing.Type[Table],
-        mandatory: Optional[typing.List[str]] = None,
+        cls_or_instance: _fields.Field | type,
+        table: type[Table],
+        mandatory: list[str] | None = None,
         **kwargs,
     ) -> None:
         super().__init__(cls_or_instance, **kwargs)
@@ -557,9 +558,9 @@ class HostField(base.String):
         pattern=HOST_NAME_REGEXP,
         required=True,
         validate=None,
-        should_exist: Optional[bool] = True,
-        should_be_monitored: Optional[bool] = None,
-        should_be_cluster: Optional[bool] = None,
+        should_exist: bool | None = True,
+        should_be_monitored: bool | None = None,
+        should_be_cluster: bool | None = None,
         **kwargs,
     ):
         if not should_exist and should_be_cluster is not None:
@@ -871,7 +872,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         )
     )
 
-    def _validate_tag_group(self, name: str) -> set[typing.Optional[str]]:
+    def _validate_tag_group(self, name: str) -> set[str | None]:
         if not name.startswith("tag_"):
             raise ValidationError({name: "Tag group name must start with 'tag_'"})
 
@@ -927,8 +928,8 @@ def host_attributes_field(
     object_type: ObjectType,
     object_context: ObjectContext,
     direction: typing.Literal["inbound", "outbound"],
-    description: Optional[str] = None,
-    example: Optional[Any] = None,
+    description: str | None = None,
+    example: Any | None = None,
     required: bool = False,
     load_default: Any = utils.missing,
     many: bool = False,
@@ -1105,7 +1106,7 @@ class GroupField(base.String):
         required=True,
         validate=None,
         should_exist: bool = True,
-        should_be_monitored: Optional[bool] = None,
+        should_be_monitored: bool | None = None,
         **kwargs,
     ):
         self._group_type = group_type

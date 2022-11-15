@@ -5,7 +5,7 @@
 
 import abc
 import http.client
-from typing import Collection, Iterable, Type
+from collections.abc import Collection, Iterable
 
 from cmk.utils.plugin_registry import Registry
 
@@ -49,7 +49,7 @@ class WatoMode(abc.ABC):
         return makeuri_contextless(request, get_vars, filename="wato.py")
 
     @classmethod
-    def parent_mode(cls) -> None | Type["WatoMode"]:
+    def parent_mode(cls) -> None | type["WatoMode"]:
         """Reference from a mode to it's parent mode to make the breadcrumb be able to render the
         hierarchy of modes"""
         return None
@@ -152,7 +152,7 @@ class WatoMode(abc.ABC):
         return self.page()
 
 
-class ModeRegistry(Registry[Type[WatoMode]]):
+class ModeRegistry(Registry[type[WatoMode]]):
     def plugin_name(self, instance):
         return instance.name()
 

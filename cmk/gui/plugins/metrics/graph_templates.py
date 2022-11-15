@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Iterable, Iterator, List, Optional, Sequence, Tuple
+from collections.abc import Iterable, Iterator, Sequence
 
 from cmk.utils import pnp_cleanup
 from cmk.utils.type_defs import HostName, ServiceName
@@ -37,7 +37,7 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
 
-RPNAtom = Tuple  # TODO: Improve this type
+RPNAtom = tuple  # TODO: Improve this type
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use
@@ -48,7 +48,7 @@ RPNAtom = Tuple  # TODO: Improve this type
 def matching_graph_templates(
     graph_identification_info: TemplateGraphSpec,
     translated_metrics: TranslatedMetrics,
-) -> Iterable[Tuple[int, GraphTemplate]]:
+) -> Iterable[tuple[int, GraphTemplate]]:
     graph_index = graph_identification_info.get(
         "graph_index"
     )  # can be None -> no restriction by index
@@ -79,15 +79,15 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
     @staticmethod
     def template_tuning(
         graph_template: GraphTemplate,
-        site: Optional[str],
-        host_name: Optional[HostName],
-        service_description: Optional[ServiceName],
-        destination: Optional[str],
-    ) -> Optional[GraphTemplate]:
+        site: str | None,
+        host_name: HostName | None,
+        service_description: ServiceName | None,
+        destination: str | None,
+    ) -> GraphTemplate | None:
         return graph_template
 
     def create_graph_recipes(
-        self, ident_info: TemplateGraphSpec, destination: Optional[str] = None
+        self, ident_info: TemplateGraphSpec, destination: str | None = None
     ) -> list[GraphRecipe]:
         graph_identification_info = ident_info
 
@@ -218,8 +218,8 @@ def create_graph_recipe_from_template(
 
 def iter_rpn_expression(
     expression: MetricExpression,
-    enforced_consolidation_function: Optional[GraphConsoldiationFunction],
-) -> Iterator[Tuple[str, Optional[GraphConsoldiationFunction]]]:
+    enforced_consolidation_function: GraphConsoldiationFunction | None,
+) -> Iterator[tuple[str, GraphConsoldiationFunction | None]]:
     for part in expression.split(","):  # var names, operators
         if any(part.endswith(cf) for cf in [".max", ".min", ".average"]):
             part, raw_consolidation_function = part.rsplit(".", 1)
@@ -255,7 +255,7 @@ def metric_expression_to_graph_recipe_expression(
     expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
-    enforced_consolidation_function: Optional[GraphConsoldiationFunction],
+    enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> StackElement:
     """Convert 'user,util,+,2,*' into this:
 
@@ -276,7 +276,7 @@ def metric_expression_to_graph_recipe_expression(
     )
 
     expression = split_expression(expression)[0]
-    atoms: List[RPNAtom] = []
+    atoms: list[RPNAtom] = []
     # Break the RPN into parts and translate each part separately
     for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
         # Some parts are operators. We leave them. We are just interested in
@@ -323,8 +323,8 @@ def metric_line_title(
 def metric_unit_color(
     metric_expression: MetricExpression,
     translated_metrics: TranslatedMetrics,
-    optional_metrics: Optional[Sequence[str]] = None,
-) -> Optional[MetricUnitColor]:
+    optional_metrics: Sequence[str] | None = None,
+) -> MetricUnitColor | None:
     try:
         _value, unit, color = evaluate(metric_expression, translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics

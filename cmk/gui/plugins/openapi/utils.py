@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, Dict, Iterable, Literal, Optional
+from collections.abc import Iterable
+from typing import Any, Literal
 from urllib.parse import quote_plus
 
 import docstring_parser
@@ -21,10 +22,10 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import Serializable
 def problem(
     status: int = 400,
     title: str = "A problem occurred.",
-    detail: Optional[str] = None,
-    type_: Optional[str] = None,
-    fields: Optional[dict[str, Any]] = None,
-    ext: Optional[dict[str, Any]] = None,
+    detail: str | None = None,
+    type_: str | None = None,
+    fields: dict[str, Any] | None = None,
+    ext: dict[str, Any] | None = None,
 ) -> Response:
     problem_dict = {
         "title": title,
@@ -53,10 +54,10 @@ class ProblemException(HTTPException):
         self,
         status: int = 400,
         title: str = "A problem occured.",
-        detail: Optional[str] = None,
-        type_: Optional[str] = None,
-        fields: Optional[dict[str, list[Any]]] = None,
-        ext: Optional[dict[str, Any]] = None,
+        detail: str | None = None,
+        type_: str | None = None,
+        fields: dict[str, list[Any]] | None = None,
+        ext: dict[str, Any] | None = None,
     ):
         """
         This exception is holds arguments that are going to be passed to the
@@ -87,10 +88,10 @@ class ProblemException(HTTPException):
 
 
 def param_description(
-    string: Optional[str],
+    string: str | None,
     param_name: str,
     errors: Literal["raise", "ignore"] = "raise",
-) -> Optional[str]:
+) -> str | None:
     """Get a param description of a docstring.
 
     Args:
@@ -192,10 +193,10 @@ def serve_json(
     data: Serializable,
     content_type: str = "application/json",
     status: int = 200,
-    profile: Optional[Dict[str, str]] = None,
+    profile: dict[str, str] | None = None,
 ) -> Response:
     if profile is not None:
-        content_type += ';profile="%s"' % (profile,)
+        content_type += f';profile="{profile}"'
     response = Response()
     response.status_code = status
     response.set_content_type(content_type)

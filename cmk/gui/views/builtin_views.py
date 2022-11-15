@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import cmk.utils.version as cmk_version
 
@@ -4943,7 +4944,7 @@ builtin_views["cmk_servers"] = {
 
 
 def cmk_sites_painters() -> Sequence[PainterSpec]:
-    service_painters: List[Any] = []
+    service_painters: list[Any] = []
     if not cmk_version.is_raw_edition():
         service_painters += [
             PainterSpec(name="invcmksites_cmc"),

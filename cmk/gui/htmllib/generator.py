@@ -27,7 +27,7 @@
 from __future__ import annotations
 
 import json
-from typing import final, Final, Literal, Optional, Union
+from typing import Final, final, Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -85,7 +85,7 @@ class HTMLWriter:
         self.output_format: Final = output_format
         self.mobile: Final = mobile
         self.render_headfoot = True
-        self.link_target: Optional[str] = None
+        self.link_target: str | None = None
         self.browser_reload = 0.0
         self._final_javascript: list[str] = []
 
@@ -110,7 +110,7 @@ class HTMLWriter:
 
         self.output_funnel.write(text.encode("utf-8"))
 
-    def meta(self, httpequiv: Optional[str] = None, **attrs: HTMLTagAttributeValue) -> None:
+    def meta(self, httpequiv: str | None = None, **attrs: HTMLTagAttributeValue) -> None:
         if httpequiv:
             attrs["http-equiv"] = httpequiv
         self.write_html(render_start_tag("meta", close_tag=True, **attrs))
@@ -118,14 +118,14 @@ class HTMLWriter:
     def base(self, target: str) -> None:
         self.write_html(render_start_tag("base", close_tag=True, target=target))
 
-    def open_a(self, href: Optional[str], **attrs: HTMLTagAttributeValue) -> None:
+    def open_a(self, href: str | None, **attrs: HTMLTagAttributeValue) -> None:
         if href is not None:
             attrs["href"] = href
         self.write_html(render_start_tag("a", close_tag=False, **attrs))
 
     @staticmethod
     def render_a(
-        content: HTMLContent, href: Union[None, str, str], **attrs: HTMLTagAttributeValue
+        content: HTMLContent, href: None | str | str, **attrs: HTMLTagAttributeValue
     ) -> HTML:
         if href is not None:
             attrs["href"] = href
@@ -162,27 +162,27 @@ class HTMLWriter:
         """<script type="text/javascript" src="%(name)"/>\n"""
         self.write_html(render_element("script", "", type_="text/javascript", src=src))
 
-    def show_message(self, msg: Union[HTML, str]) -> None:
+    def show_message(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "message"))
 
-    def show_error(self, msg: Union[HTML, str]) -> None:
+    def show_error(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "error"))
 
-    def show_warning(self, msg: Union[HTML, str]) -> None:
+    def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
-    def render_message(self, msg: Union[HTML, str]) -> HTML:
+    def render_message(self, msg: HTML | str) -> HTML:
         return self._render_message(msg, "message")
 
-    def render_error(self, msg: Union[HTML, str]) -> HTML:
+    def render_error(self, msg: HTML | str) -> HTML:
         return self._render_message(msg, "error")
 
-    def render_warning(self, msg: Union[HTML, str]) -> HTML:
+    def render_warning(self, msg: HTML | str) -> HTML:
         return self._render_message(msg, "warning")
 
     def _render_message(
         self,
-        msg: Union[HTML, str],
+        msg: HTML | str,
         msg_type: Literal["message", "warning", "error"] = "message",
     ) -> HTML:
         if msg_type == "message":
@@ -203,7 +203,7 @@ class HTMLWriter:
                 return HTMLWriter.render_center(code)
             return code
         return escaping.escape_to_html_permissive(
-            "%s: %s\n" % (prefix, escaping.strip_tags(msg)), escape_links=False
+            f"{prefix}: {escaping.strip_tags(msg)}\n", escape_links=False
         )
 
     @staticmethod
@@ -301,7 +301,7 @@ class HTMLWriter:
         self.write_html(render_element("th", content, **kwargs))
 
     def td(
-        self, content: HTMLContent, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue
+        self, content: HTMLContent, colspan: int | None = None, **kwargs: HTMLTagAttributeValue
     ) -> None:
         self.write_html(
             render_element(
@@ -561,7 +561,7 @@ class HTMLWriter:
     def close_input(self) -> None:
         self.write_html(render_end_tag("input"))
 
-    def open_td(self, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue) -> None:
+    def open_td(self, colspan: int | None = None, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(
             render_start_tag(
                 "td",
@@ -576,7 +576,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_td(
-        content: HTMLContent, colspan: Optional[int] = None, **kwargs: HTMLTagAttributeValue
+        content: HTMLContent, colspan: int | None = None, **kwargs: HTMLTagAttributeValue
     ) -> HTML:
         return render_element(
             "td", content, colspan=str(colspan) if colspan is not None else None, **kwargs

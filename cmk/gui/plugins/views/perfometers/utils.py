@@ -11,9 +11,9 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Callable
+from collections.abc import Callable
 from typing import Dict as _Dict
-from typing import List, Literal, Optional, Tuple
+from typing import Literal, Optional
 
 import cmk.gui.metrics as metrics
 from cmk.gui.exceptions import MKGeneralException
@@ -23,7 +23,7 @@ from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-PerfometerData = List[Tuple[float, str]]
+PerfometerData = list[tuple[float, str]]
 
 # .
 #   .--Plugin API----------------------------------------------------------.
@@ -35,7 +35,7 @@ PerfometerData = List[Tuple[float, str]]
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-LegacyPerfometerResult = Optional[Tuple[str, HTML]]
+LegacyPerfometerResult = Optional[tuple[str, HTML]]
 
 # "Registry" for old perfometers. There are still some left. See:
 # cmk/gui/plugins/views/perfometers/check_mk.py

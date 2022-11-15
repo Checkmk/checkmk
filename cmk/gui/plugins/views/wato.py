@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
@@ -41,13 +42,13 @@ class PainterHostFilename(Painter):
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
-def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, HTML]:
+def get_wato_folder(row: dict, how: str, with_links: bool = True) -> str | HTML:
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
     wato_path = filename[6:-9]
     try:
-        title_path: Union[list[str], list[HTML]] = (
+        title_path: list[str] | list[HTML] = (
             get_folder_title_path_with_links(wato_path)
             if with_links
             else get_folder_title_path(wato_path)

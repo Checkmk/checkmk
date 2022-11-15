@@ -7,7 +7,8 @@
 WARNING: Use at your own risk, not supported.
 """
 
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from typing import Any, Literal
 from uuid import UUID
 
 from cmk.utils.agent_registration import get_uuid_link_manager

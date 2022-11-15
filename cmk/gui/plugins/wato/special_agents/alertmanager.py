@@ -153,11 +153,9 @@ def _valuespec_generic_metrics_alertmanager():
 
 
 rulespec_registry.register(
-    (
-        HostRulespec(
-            group=RulespecGroupVMCloudContainer,
-            name="special_agents:alertmanager",
-            valuespec=_valuespec_generic_metrics_alertmanager,
-        )
+    HostRulespec(
+        group=RulespecGroupVMCloudContainer,
+        name="special_agents:alertmanager",
+        valuespec=_valuespec_generic_metrics_alertmanager,
     )
 )

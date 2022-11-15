@@ -5,9 +5,10 @@
 
 import abc
 import time
+from collections.abc import Callable, Iterable, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
@@ -175,9 +176,7 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def _paint_custom_var(
-    what: str, key: CSSClass, row: Row, choices: Optional[List] = None
-) -> CellSpec:
+def _paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
     if choices is None:
         choices = []
 
@@ -269,7 +268,7 @@ class PainterServiceIcons(Painter):
     def printable(self) -> bool:
         return False
 
-    def group_by(self, row: Row, cell: Cell) -> Tuple[str]:
+    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -296,7 +295,7 @@ class PainterHostIcons(Painter):
     def printable(self) -> bool:
         return False
 
-    def group_by(self, row: Row, cell: Cell) -> Tuple[str]:
+    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -398,7 +397,7 @@ class PainterSitealias(Painter):
 #   '----------------------------------------------------------------------'
 
 
-def service_state_short(row: Row) -> Tuple[str, str]:
+def service_state_short(row: Row) -> tuple[str, str]:
     if row["service_has_been_checked"] == 1:
         return str(row["service_state"]), short_service_state_name(row["service_state"], "")
     return "p", short_service_state_name(-1, "")
@@ -413,7 +412,7 @@ def _paint_service_state_short(row: Row) -> CellSpec:
     )
 
 
-def host_state_short(row: Row) -> Tuple[str, str]:
+def host_state_short(row: Row) -> tuple[str, str]:
     if row["host_has_been_checked"] == 1:
         state = str(row["host_state"])
         # A state of 3 is sent by livestatus in cases where no normal state
@@ -450,7 +449,7 @@ class PainterServiceState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
@@ -847,7 +846,7 @@ class PainterSvcStateAge(Painter):
         return "stateage"
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -887,7 +886,7 @@ class PainterSvcCheckAge(Painter):
         return ["service_has_been_checked", "service_last_check", "service_cached_at"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -911,7 +910,7 @@ class PainterSvcCheckCacheInfo(Painter):
         return ["service_last_check", "service_cached_at", "service_cache_interval"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1050,7 +1049,7 @@ class PainterSvcLastNotification(Painter):
         return ["service_last_notification"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1413,7 +1412,7 @@ class PainterSvcPnpgraph(Painter2):
         return "time_graph"
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["pnp_timerange"]
 
     @property
@@ -1671,7 +1670,7 @@ class PainterSvcServicelevel(Painter):
         return _paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
-def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) -> CellSpec:
+def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
     if blacklist is None:
         blacklist = []
 
@@ -1698,7 +1697,7 @@ class PainterServiceCustomVariables(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["service_custom_variables"]
 
-    def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
+    def group_by(self, row: Row, cell: Cell) -> tuple[tuple[str, str], ...]:
         return tuple(row["service_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1713,15 +1712,15 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         return self._dynamic_title(cell.painter_parameters())
 
     def export_title(self, cell: Cell) -> str:
-        return "%s_%s" % (self.ident, cell.painter_parameters()["ident"])
+        return "{}_{}".format(self.ident, cell.painter_parameters()["ident"])
 
-    def _dynamic_title(self, params: Optional[Dict[str, Any]] = None) -> str:
+    def _dynamic_title(self, params: dict[str, Any] | None = None) -> str:
         if params is None:
             # Happens in view editor when adding a painter
             return self._default_title
 
         try:
-            attributes: Dict = dict(self._custom_attribute_choices())
+            attributes: dict = dict(self._custom_attribute_choices())
             return attributes[params["ident"]]
         except KeyError:
             return self._default_title
@@ -1799,8 +1798,8 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def group_by(self, row: Row, cell: Cell) -> Union[str, Tuple[str, ...]]:
-        parameters: Optional[Dict[str, str]] = cell.painter_parameters()
+    def group_by(self, row: Row, cell: Cell) -> str | tuple[str, ...]:
+        parameters: dict[str, str] | None = cell.painter_parameters()
         if parameters is None:
             return ""
         custom_variable_name = parameters["ident"]
@@ -1852,7 +1851,7 @@ class PainterHostState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
@@ -1988,7 +1987,7 @@ class PainterHostStateAge(Painter):
         return ["host_has_been_checked", "host_last_state_change"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2012,7 +2011,7 @@ class PainterHostCheckAge(Painter):
         return ["host_has_been_checked", "host_last_check"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2096,7 +2095,7 @@ class PainterHostLastNotification(Painter):
         return ["host_last_notification"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -2390,7 +2389,7 @@ class PainterHostPnpgraph(Painter2):
         return "time_graph"
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["pnp_timerange"]
 
     @property
@@ -2739,13 +2738,13 @@ class PainterHostAddressFamilies(Painter):
         return "", ", ".join(families)
 
 
-def paint_svc_count(id_: Union[int, str], count: int) -> CellSpec:
+def paint_svc_count(id_: int | str, count: int) -> CellSpec:
     if count > 0:
         return "count svcstate state%s" % id_, str(count)
     return "count svcstate", "0"
 
 
-def paint_host_count(id_: Optional[int], count: int) -> CellSpec:
+def paint_host_count(id_: int | None, count: int) -> CellSpec:
     if count > 0:
         if id_ is not None:
             return "count hstate hstate%s" % id_, str(count)
@@ -2766,7 +2765,7 @@ class PainterNumServices(Painter):
     def short_title(self, cell: Cell) -> str:
         return ""
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2789,7 +2788,7 @@ class PainterNumServicesOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2812,7 +2811,7 @@ class PainterNumProblems(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Prob.")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2840,7 +2839,7 @@ class PainterNumServicesWarn(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Wa")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2863,7 +2862,7 @@ class PainterNumServicesCrit(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Cr")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2886,7 +2885,7 @@ class PainterNumServicesUnknown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2909,7 +2908,7 @@ class PainterNumServicesPending(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -2935,7 +2934,7 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
             svc, state, checked = entry
             host = row["host_name"]
             text = svc
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+        link = "view.py?view_name=service&site={}&host={}&service={}".format(
             urlencode(row["site"]),
             urlencode(host),
             urlencode(svc),
@@ -3076,7 +3075,7 @@ class PainterHostGroupMemberlist(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_groups"]
 
-    def group_by(self, row: Row, cell: Cell) -> Tuple[str, ...]:
+    def group_by(self, row: Row, cell: Cell) -> tuple[str, ...]:
         return tuple(row["host_groups"])
 
     @property
@@ -3296,7 +3295,7 @@ class PainterHostCustomVariables(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_custom_variables"]
 
-    def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
+    def group_by(self, row: Row, cell: Cell) -> tuple[tuple[str, str], ...]:
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -3340,7 +3339,7 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
             }.get(value, value),
         )
     if field == "discovery_service" and row["discovery_state"] == "vanished":
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+        link = "view.py?view_name=service&site={}&host={}&service={}".format(
             urlencode(row["site"]),
             urlencode(row["host_name"]),
             urlencode(value),
@@ -3435,7 +3434,7 @@ class PainterHostgroupHosts(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         h = HTML()
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = "view.py?view_name=host&site=%s&host=%s" % (
+            link = "view.py?view_name=host&site={}&host={}".format(
                 urlencode(row["site"]),
                 urlencode(host),
             )
@@ -3479,7 +3478,7 @@ class PainterHgNumServicesOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("O")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3502,7 +3501,7 @@ class PainterHgNumServicesWarn(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("W")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3525,7 +3524,7 @@ class PainterHgNumServicesCrit(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("C")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3548,7 +3547,7 @@ class PainterHgNumServicesUnknown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("U")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3571,7 +3570,7 @@ class PainterHgNumServicesPending(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("P")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3594,7 +3593,7 @@ class PainterHgNumHostsUp(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Up")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3617,7 +3616,7 @@ class PainterHgNumHostsDown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3640,7 +3639,7 @@ class PainterHgNumHostsUnreach(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -3663,7 +3662,7 @@ class PainterHgNumHostsPending(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -4004,7 +4003,7 @@ class PainterCommentTime(Painter):
         return ["comment_entry_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4028,7 +4027,7 @@ class PainterCommentExpires(Painter):
         return ["comment_expire_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4191,7 +4190,7 @@ class PainterDowntimeOrigin(Painter):
 
 class PainterDowntimeRecurring(Painter):
     # Poor man's composition.  CRE and non-CRE have different renderers.
-    renderer: Optional[Callable[[Row, Cell], CellSpec]] = None
+    renderer: Callable[[Row, Cell], CellSpec] | None = None
 
     @property
     def ident(self) -> str:
@@ -4270,7 +4269,7 @@ class PainterDowntimeEntryTime(Painter):
         return ["downtime_entry_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4294,7 +4293,7 @@ class PainterDowntimeStartTime(Painter):
         return ["downtime_start_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4318,7 +4317,7 @@ class PainterDowntimeEndTime(Painter):
         return ["downtime_end_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4365,7 +4364,7 @@ class PainterLogDetailsHistory(Painter):
         return _("Log: Details")
 
     @property
-    def columns(self) -> List[ColumnName]:
+    def columns(self) -> list[ColumnName]:
         return ["log_long_plugin_output"]
 
     @property
@@ -4794,7 +4793,7 @@ class PainterLogTime(Painter):
         return ["log_time"]
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4856,7 +4855,7 @@ class PainterLogState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["center"]
 
     @property
@@ -4894,7 +4893,7 @@ class PainterAlertStatsOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -4917,7 +4916,7 @@ class PainterAlertStatsWarn(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("WARN")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -4940,7 +4939,7 @@ class PainterAlertStatsCrit(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("CRIT")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -4963,7 +4962,7 @@ class PainterAlertStatsUnknown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("UNKN")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -4986,7 +4985,7 @@ class PainterAlertStatsProblem(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Problems")
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         return ["right"]
 
     @property
@@ -5254,7 +5253,7 @@ class PainterHostDockerNode(Painter):
 
 
 @request_memoize()
-def _get_docker_container_status_outputs() -> Dict[str, str]:
+def _get_docker_container_status_outputs() -> dict[str, str]:
     """Returns a map of all known hosts with their docker nodes
 
     It is important to cache this query per request and also try to use the
@@ -5314,7 +5313,7 @@ class AbstractPainterSpecificMetric(Painter):
 
     @classmethod
     @request_memoize()
-    def _metric_choices(cls) -> List[Tuple[str, str]]:
+    def _metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
             [(k, str(v.get("title", k))) for k, v in metric_info.items()],
             key=lambda x: x[1],
@@ -5391,7 +5390,7 @@ class _PainterHostKubernetes(Painter):
     """
     The content of the corresponding label will be displayed by this painter.
     """
-    _constraints: List[str]
+    _constraints: list[str]
     """
     Defines which filters should be added for building up the link.
     """

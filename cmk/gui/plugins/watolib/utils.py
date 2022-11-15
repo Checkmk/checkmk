@@ -8,9 +8,10 @@ from __future__ import annotations
 import abc
 import os
 import pprint
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Type
+from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
@@ -53,15 +54,15 @@ class ABCConfigDomain(abc.ABC):
         ...
 
     @classmethod
-    def enabled_domains(cls) -> Sequence[Type[ABCConfigDomain]]:
+    def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:
         return [d for d in config_domain_registry.values() if d.enabled()]
 
     @abc.abstractmethod
-    def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
 
     @classmethod
-    def get_class(cls, ident: str) -> Type[ABCConfigDomain]:
+    def get_class(cls, ident: str) -> type[ABCConfigDomain]:
         return config_domain_registry[ident]
 
     @classmethod
@@ -86,7 +87,7 @@ class ABCConfigDomain(abc.ABC):
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
 
-        settings: Dict[str, Any] = {}
+        settings: dict[str, Any] = {}
 
         if not filename.exists():
             return {}
@@ -115,7 +116,7 @@ class ABCConfigDomain(abc.ABC):
 
         output = wato_fileheader()
         for varname, value in settings.items():
-            output += "%s = %s\n" % (varname, pprint.pformat(value))
+            output += f"{varname} = {pprint.pformat(value)}\n"
 
         store.makedirs(os.path.dirname(filename))
         store.save_text_to_file(filename, output)
@@ -143,28 +144,28 @@ class ABCConfigDomain(abc.ABC):
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod
-    def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
+    def get_domain_request(cls, settings: list[SerializedSettings]) -> DomainRequest:
         return DomainRequest(cls.ident())
 
 
 @request_memoize()
-def _get_all_default_globals() -> Dict[str, Any]:
-    settings: Dict[str, Any] = {}
+def _get_all_default_globals() -> dict[str, Any]:
+    settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         settings.update(domain().default_globals())
     return settings
 
 
-def get_config_domain(domain_ident: ConfigDomainName) -> Type[ABCConfigDomain]:
+def get_config_domain(domain_ident: ConfigDomainName) -> type[ABCConfigDomain]:
     return config_domain_registry[domain_ident]
 
 
-def get_always_activate_domains() -> Sequence[Type[ABCConfigDomain]]:
+def get_always_activate_domains() -> Sequence[type[ABCConfigDomain]]:
     return [d for d in config_domain_registry.values() if d.always_activate]
 
 
-class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
-    def plugin_name(self, instance: Type[ABCConfigDomain]) -> str:
+class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[type[ABCConfigDomain]]):
+    def plugin_name(self, instance: type[ABCConfigDomain]) -> str:
         return instance.ident()
 
 
@@ -194,12 +195,12 @@ class SampleConfigGenerator(abc.ABC):
 
 
 class SampleConfigGeneratorRegistry(
-    cmk.utils.plugin_registry.Registry[Type[SampleConfigGenerator]]
+    cmk.utils.plugin_registry.Registry[type[SampleConfigGenerator]]
 ):
     def plugin_name(self, instance):
         return instance.ident()
 
-    def get_generators(self) -> List[SampleConfigGenerator]:
+    def get_generators(self) -> list[SampleConfigGenerator]:
         """Return the generators in the order they are expected to be executed"""
         return sorted([g_class() for g_class in self.values()], key=lambda e: e.sort_index())
 
@@ -240,12 +241,12 @@ class ConfigVariableGroup:
         """Returns an integer to control the sorting of the groups in lists"""
         raise NotImplementedError()
 
-    def config_variables(self) -> "List[Type[ConfigVariable]]":
+    def config_variables(self) -> list[type[ConfigVariable]]:
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
 
-class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariableGroup]]):
+class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):
     def plugin_name(self, instance):
         return instance().ident()
 
@@ -254,7 +255,7 @@ config_variable_group_registry = ConfigVariableGroupRegistry()
 
 
 class ConfigVariable:
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         """Returns the class of the configuration variable group this configuration variable belongs to"""
         raise NotImplementedError()
 
@@ -266,7 +267,7 @@ class ConfigVariable:
         """Returns the valuespec object of this configuration variable"""
         raise NotImplementedError()
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         """Returns the class of the config domain this configuration variable belongs to"""
         return config_domain_registry["check_mk"]
 
@@ -275,7 +276,7 @@ class ConfigVariable:
     # Investigate:
     # - Is this needed per config variable or do we need this only per config domain?
     # - Can't we simplify this to simply be a boolean?
-    def need_restart(self) -> Optional[bool]:
+    def need_restart(self) -> bool | None:
         """Whether or not a change to this setting enforces a "restart" during activate changes instead of just a synchronization"""
         return None
 
@@ -292,7 +293,7 @@ class ConfigVariable:
         return HTML()
 
 
-class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariable]]):
+class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariable]]):
     def plugin_name(self, instance):
         return instance().ident()
 
@@ -301,7 +302,7 @@ config_variable_registry = ConfigVariableRegistry()
 
 
 def filter_unknown_settings(settings):
-    removals: List[str] = []
+    removals: list[str] = []
     for varname in list(settings.keys()):
         if varname not in config_variable_registry:
             removals.append(varname)

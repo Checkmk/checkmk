@@ -6,7 +6,7 @@
 
 from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import FinalizeRequest
@@ -104,7 +104,7 @@ class UserProfile(ABCUserProfilePage):
 
         users = userdb.load_users()
 
-        user_spec: Optional[UserSpec] = users.get(user.id)
+        user_spec: UserSpec | None = users.get(user.id)
         if user_spec is None:
             html.show_warning(_("Sorry, your user account does not exist."))
             html.footer()
@@ -170,6 +170,6 @@ def _show_custom_user_attr(
                 h = vs.help()
                 if isinstance(h, str):
                     h = _u(h)
-                html.help((h))
+                html.help(h)
             else:
                 html.write_text(vs.value_to_html(value))

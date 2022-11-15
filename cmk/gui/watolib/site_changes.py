@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
 
-ChangeSpec = Dict[str, Any]
+ChangeSpec = dict[str, Any]
 
 
 class SiteChanges(ABCAppendStore[ChangeSpec]):

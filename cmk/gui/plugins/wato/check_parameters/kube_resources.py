@@ -2,7 +2,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Literal, Optional, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.kube import wrap_with_no_levels_dropdown
@@ -29,7 +30,7 @@ def valuespec_percentual(title: str) -> CascadingDropdown:
 
 def _parameter_valuespec_memory(  # type:ignore[no-untyped-def]
     valuespec_help: str,
-    options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
+    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] | None = None,
 ):
     elements = []
     if options is None:
@@ -101,7 +102,7 @@ rulespec_registry.register(
 
 def _parameter_valuespec_cpu(  # type:ignore[no-untyped-def]
     valuespec_help: str,
-    options: Optional[Sequence[Literal["usage", "request", "limit", "cluster", "node"]]] = None,
+    options: Sequence[Literal["usage", "request", "limit", "cluster", "node"]] | None = None,
 ):
     elements = []
     if options is None:

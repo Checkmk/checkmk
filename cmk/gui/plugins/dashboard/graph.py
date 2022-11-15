@@ -5,7 +5,8 @@
 
 import abc
 import json
-from typing import Any, Generic, Iterable, Mapping, TypeVar
+from collections.abc import Iterable, Mapping
+from typing import Any, Generic, TypeVar
 
 import livestatus
 

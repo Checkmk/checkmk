@@ -5,9 +5,9 @@
 
 import functools
 import json
+from collections.abc import Iterator
 from contextlib import contextmanager
 from types import ModuleType
-from typing import Iterator
 
 
 # TODO: Cleanup this dirty hack. Creating a custom subclass of the JSONEncoder and implement the

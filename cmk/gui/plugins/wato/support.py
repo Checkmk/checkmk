@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import (
@@ -28,10 +27,10 @@ class ConfigVariableGroupSupport(ConfigVariableGroup):
 
 @config_variable_registry.register
 class ConfigVariableCrashReportURL(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -47,10 +46,10 @@ class ConfigVariableCrashReportURL(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableCrashReportTarget(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSupport
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:

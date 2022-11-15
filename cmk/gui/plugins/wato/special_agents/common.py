@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Optional, Type
+from typing import Any
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -62,7 +62,7 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -77,7 +77,7 @@ class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -92,7 +92,7 @@ class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -106,7 +106,7 @@ class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
 
 class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -121,7 +121,7 @@ class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -136,7 +136,7 @@ class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -151,7 +151,7 @@ class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupDatasourcePrograms
 
     @property
@@ -248,9 +248,7 @@ def filter_kubernetes_namespace_element():
     )
 
 
-def connection_set(
-    options: Optional[List[str]] = None, auth_option: Optional[str] = None
-) -> List[Any]:
+def connection_set(options: list[str] | None = None, auth_option: str | None = None) -> list[Any]:
     """Standard connection elements set
 
     A set of frequently used connection configuration options.
@@ -269,7 +267,7 @@ def connection_set(
         list of WATO connection elements
 
     """
-    connection_options: List[Any] = []
+    connection_options: list[Any] = []
     if options is None:
         all_options = True
         options = []
@@ -401,8 +399,8 @@ def connection_set(
     return connection_options
 
 
-def _auth_option(option: str) -> List[Any]:
-    auth: List[Any] = []
+def _auth_option(option: str) -> list[Any]:
+    auth: list[Any] = []
     if option == "basic":
         auth.append(
             (
@@ -451,7 +449,7 @@ def validate_aws_tags(value, varprefix):
     # VALUES:
     # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
     for idx_tag, (tag_key, tag_values) in enumerate(value):
-        tag_field = "%s_%s_0" % (varprefix, idx_tag + 1)
+        tag_field = f"{varprefix}_{idx_tag + 1}_0"
         if tag_key not in used_keys:
             used_keys.append(tag_key)
         else:
@@ -466,7 +464,7 @@ def validate_aws_tags(value, varprefix):
             raise MKUserError(tag_field, _("The maximum number of tags per resource is 50."))
 
         for idx_values, v in enumerate(tag_values):
-            values_field = "%s_%s_1_%s" % (varprefix, idx_tag + 1, idx_values + 1)
+            values_field = f"{varprefix}_{idx_tag + 1}_1_{idx_values + 1}"
             if len(v) > 256:
                 raise MKUserError(values_field, _("The maximum value length is 256 characters."))
             if v.startswith("aws:"):

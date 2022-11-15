@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Iterator
+from collections.abc import Callable, Iterator
 
 
 class LazyString:
@@ -27,7 +27,7 @@ class LazyString:
         raise AttributeError(attr)
 
     def __repr__(self) -> str:
-        return "l'{0}'".format(str(self))
+        return f"l'{str(self)}'"
 
     def __str__(self) -> str:
         string = str(self._func(self._text))

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -13,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.valuespec import Dictionary, Integer, Tuple, ValueSpec
 
-mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
+mailqueue_elements: list[tuple[str, ValueSpec]] = [
     (
         "deferred",
         Tuple(

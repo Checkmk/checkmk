@@ -101,7 +101,7 @@ class ValueTypedDictSchema(BaseSchema):
 
     """
 
-    value_type: typing.Union[typing.Type[Schema], FieldWrapper]
+    value_type: type[Schema] | FieldWrapper
 
     @classmethod
     def field(cls, field: fields.Field) -> FieldWrapper:
@@ -415,14 +415,14 @@ Keys 'optional1', 'required1' occur more than once.
 
     def __init__(  # type:ignore[no-untyped-def]
         self,
-        nested: typing.Sequence[typing.Union[typing.Type[Schema], Schema]],
+        nested: typing.Sequence[type[Schema] | Schema],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
         default: typing.Any = fields.missing_,
-        only: typing.Optional[types.StrSequenceOrSet] = None,
+        only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,
-        unknown: typing.Optional[str] = None,
+        unknown: str | None = None,
         # In this loop we do the following:
         #  1) we try to dump all the keys of a model
         #  2) when the dump succeeds, we remove all the dumped keys from the source
@@ -486,7 +486,7 @@ Keys 'optional1', 'required1' occur more than once.
         self.unknown = EXCLUDE if self.merged else RAISE
         super().__init__(default=default, metadata=metadata, **kwargs)
 
-    def _nested_schemas(self) -> typing.List[Schema]:
+    def _nested_schemas(self) -> list[Schema]:
         return self._nested + [MultiNested.ValidateOnDump(unknown=RAISE)]
 
     @staticmethod
@@ -496,7 +496,7 @@ Keys 'optional1', 'required1' occur more than once.
     def _add_error(
         self,
         error_store: ErrorStore,
-        errors: typing.Union[str, typing.List, typing.Dict],
+        errors: str | list | dict,
     ) -> None:
         if isinstance(errors, dict):
             error_store.store_error(errors)
@@ -507,7 +507,7 @@ Keys 'optional1', 'required1' occur more than once.
         else:
             raise TypeError(f"Unexpected error message type: {type(errors)}")
 
-    def _dump_schemas(self, scalar: Result) -> typing.Union[Result, list[Result]]:
+    def _dump_schemas(self, scalar: Result) -> Result | list[Result]:
         rv = []
         error_store = ErrorStore()
         value = dict(scalar)
@@ -558,7 +558,7 @@ Keys 'optional1', 'required1' occur more than once.
         attr: str,
         obj: typing.Any,
         **kwargs,
-    ) -> typing.Union[Result, list[Result]]:
+    ) -> Result | list[Result]:
         result: typing.Any
         error_store = ErrorStore()
 
@@ -662,11 +662,11 @@ Keys 'optional1', 'required1' occur more than once.
 
     def _deserialize(  # type:ignore[no-untyped-def]
         self,
-        value: typing.Union[Result, list[Result]],
-        attr: typing.Optional[str],
-        data: typing.Optional[typing.Mapping[str, typing.Any]],
+        value: Result | list[Result],
+        attr: str | None,
+        data: typing.Mapping[str, typing.Any] | None,
         **kwargs,
-    ) -> typing.Union[Result, list[Result]]:
+    ) -> Result | list[Result]:
         if isinstance(value, list):  # pylint: disable=no-else-return
             if self.many:
                 result = []

@@ -6,7 +6,7 @@
 import os
 import re
 import time
-from typing import Any, cast, NamedTuple, Type
+from typing import Any, cast, NamedTuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
 
@@ -400,7 +400,7 @@ class SiteManagementFactory:
     @staticmethod
     def factory() -> SiteManagement:
         if cmk_version.is_raw_edition():
-            cls: Type[SiteManagement] = CRESiteManagement
+            cls: type[SiteManagement] = CRESiteManagement
         else:
             cls = CEESiteManagement
 

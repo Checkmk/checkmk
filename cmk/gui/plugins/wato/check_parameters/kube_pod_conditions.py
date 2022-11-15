@@ -16,11 +16,9 @@ from cmk.gui.valuespec import Dictionary
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            (
-                "A Pod's status depends on an array of conditions through which the"
-                " Pod has or has not yet passed. You can set a time for how long a condition"
-                " is allowed to be in a failed state before the check alerts."
-            )
+            "A Pod's status depends on an array of conditions through which the"
+            " Pod has or has not yet passed. You can set a time for how long a condition"
+            " is allowed to be in a failed state before the check alerts."
         ),
         elements=[
             (

@@ -5,7 +5,7 @@
 
 import contextlib
 import os
-from typing import Iterator
+from collections.abc import Iterator
 from unittest import mock
 
 from livestatus import MultiSiteConnection

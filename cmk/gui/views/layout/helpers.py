@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Sequence
-from typing import Hashable
+from collections.abc import Hashable, Sequence
 
 from cmk.gui.http import response
 from cmk.gui.painters.v0.base import Cell
@@ -13,7 +12,7 @@ from cmk.gui.type_defs import Row, ViewSpec
 
 
 def output_csv_headers(view: ViewSpec) -> None:
-    filename = "%s-%s.csv" % (
+    filename = "{}-{}.csv".format(
         view["name"],
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )

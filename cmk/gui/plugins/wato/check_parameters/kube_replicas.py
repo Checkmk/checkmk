@@ -16,16 +16,14 @@ from cmk.gui.valuespec import Dictionary
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            (
-                "This ruleset is relevant for Kubernetes replicas. You can set "
-                "a maximum allowed duration during which replicas may be in a not "
-                "ready or not up-to-date state. For DaemonSets, you may "
-                "additionally specify the duration for which there may be a "
-                "positive number of misscheduled replicas. Keep in mind that replicas "
-                "may temporarily be in these states during the process of an "
-                "update. Therefore, it is recommended to always have a grace "
-                "period configured."
-            )
+            "This ruleset is relevant for Kubernetes replicas. You can set "
+            "a maximum allowed duration during which replicas may be in a not "
+            "ready or not up-to-date state. For DaemonSets, you may "
+            "additionally specify the duration for which there may be a "
+            "positive number of misscheduled replicas. Keep in mind that replicas "
+            "may temporarily be in these states during the process of an "
+            "update. Therefore, it is recommended to always have a grace "
+            "period configured."
         ),
         elements=[
             ("update_duration", age_levels_dropdown(_("Update duration"))),

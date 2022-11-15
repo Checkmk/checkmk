@@ -5,7 +5,6 @@
 
 """Defining builting rule spec groups"""
 
-from typing import Type
 
 from cmk.gui.i18n import _
 
@@ -35,7 +34,7 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -65,7 +64,7 @@ class RulespecGroupHostsMonitoringRules(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -80,7 +79,7 @@ class RulespecGroupMonitoringConfigurationServiceChecks(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupHostsMonitoringRules
 
     @property
@@ -95,7 +94,7 @@ class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringConfiguration
 
     @property
@@ -110,7 +109,7 @@ class RulespecGroupMonitoringConfigurationNotifications(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupHostsMonitoringRules
 
     @property
@@ -125,7 +124,7 @@ class RulespecGroupHostsMonitoringRulesNotifications(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupHostsMonitoringRulesHostChecks(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupHostsMonitoringRules
 
     @property
@@ -170,7 +169,7 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupMonitoringAgentsGenericOptions(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupMonitoringAgents
 
     @property
@@ -205,7 +204,7 @@ class RulespecGroupEnforcedServices(RulespecGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -220,7 +219,7 @@ class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -235,7 +234,7 @@ class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -250,7 +249,7 @@ class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -265,7 +264,7 @@ class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -280,7 +279,7 @@ class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property
@@ -295,7 +294,7 @@ class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
 @rulespec_group_registry.register
 class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
     @property
-    def main_group(self) -> Type[RulespecGroup]:
+    def main_group(self) -> type[RulespecGroup]:
         return RulespecGroupEnforcedServices
 
     @property

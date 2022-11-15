@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Union
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -16,8 +15,8 @@ from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
 def _migrate(
-    params: Union[tuple[int, int], dict[str, Optional[tuple[int, int]]]]
-) -> dict[str, Optional[tuple[int, int]]]:
+    params: tuple[int, int] | dict[str, tuple[int, int] | None]
+) -> dict[str, tuple[int, int] | None]:
     if isinstance(params, dict):
         return params
     w, c = params

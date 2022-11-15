@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -12,7 +11,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 
 
-def check_csrf_token(token: Optional[str] = None) -> None:
+def check_csrf_token(token: str | None = None) -> None:
     session = request_local_attr("session")
     # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
     if not hasattr(session, "session_info"):

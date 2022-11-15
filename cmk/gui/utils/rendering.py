@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Optional, Tuple
+from collections.abc import Iterable
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _u
@@ -12,7 +12,7 @@ from cmk.gui.utils.html import HTML
 
 
 def text_with_links_to_user_translated_html(
-    elements: Iterable[Tuple[str, Optional[str]]],
+    elements: Iterable[tuple[str, str | None]],
     separator: str = "",
 ) -> HTML:
     return HTML(separator).join(

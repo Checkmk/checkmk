@@ -6,7 +6,7 @@
 import abc
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Generic, List, NamedTuple, Tuple, TypeVar
+from typing import Generic, NamedTuple, TypeVar
 
 from livestatus import MKLivestatusNotFoundError
 
@@ -31,7 +31,7 @@ class HostStats(NamedTuple):
     unreachable: int
     down: int
 
-    def get_parts_data(self, general_url_vars: HTTPVariables) -> List[Tuple[str, str, int, str]]:
+    def get_parts_data(self, general_url_vars: HTTPVariables) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("Up"),
@@ -78,7 +78,7 @@ class ServiceStats(NamedTuple):
 
     def get_parts_data(  # type:ignore[no-untyped-def]
         self, general_url_vars
-    ) -> List[Tuple[str, str, int, str]]:
+    ) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("OK"),
@@ -138,7 +138,7 @@ class EventStats(NamedTuple):
 
     def get_parts_data(  # type:ignore[no-untyped-def]
         self, general_url_vars
-    ) -> List[Tuple[str, str, int, str]]:
+    ) -> list[tuple[str, str, int, str]]:
         return [
             (
                 _("Ok"),
@@ -178,7 +178,7 @@ class StatsPart:
 @dataclass
 class StatsElement:
     total: StatsPart
-    parts: List[StatsPart]
+    parts: list[StatsPart]
 
     def serialize(self):
         serialized = asdict(self)
@@ -344,7 +344,7 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
         try:
             if only_sites:
                 with sites.only_sites(only_sites):
-                    result: List[int] = sites.live().query_row(query)
+                    result: list[int] = sites.live().query_row(query)
             else:
                 result = sites.live().query_summed_stats(query)
         except MKLivestatusNotFoundError:
@@ -354,7 +354,7 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
 
     @classmethod
     def _get_stats_element(
-        cls, parts_data: List[Tuple[str, str, int, str]], general_url_vars: HTTPVariables
+        cls, parts_data: list[tuple[str, str, int, str]], general_url_vars: HTTPVariables
     ) -> StatsElement:
         parts = []
         total_count = 0

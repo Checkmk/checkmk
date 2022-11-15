@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 
 from cmk.utils import password_store, store
 from cmk.utils.password_store import Password

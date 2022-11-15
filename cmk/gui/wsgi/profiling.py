@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 import typing
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from repoze.profile import ProfileMiddleware  # type: ignore[import]
 from repoze.profile.compat import profile  # type: ignore[import]
@@ -33,7 +33,7 @@ class ProfileSwitcher:
 
     """
 
-    def __init__(self, app: WSGIApplication, profile_file: Optional[pathlib.Path] = None) -> None:
+    def __init__(self, app: WSGIApplication, profile_file: pathlib.Path | None = None) -> None:
         self.app = app
         if profile_file is None:
             profile_file = pathlib.Path(cmk.utils.paths.var_dir) / "multisite.profile"
@@ -94,7 +94,7 @@ def _profiling_enabled(environ: WSGIEnvironment) -> bool:
     return True
 
 
-def _load_profiling_setting() -> Union[bool, Literal["enable_by_var"]]:
+def _load_profiling_setting() -> bool | Literal["enable_by_var"]:
     """Load the profiling global setting from the WATO GUI config"""
     return load_single_global_wato_setting("profile", deflt=False)
 

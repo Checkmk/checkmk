@@ -5,7 +5,7 @@
 
 import datetime as dt
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from marshmallow import fields as _fields
 from marshmallow import post_load, Schema
@@ -749,7 +749,7 @@ class CustomUserAttributes(ValueTypedDictSchema):
 
 
 def user_attributes_field(
-    description: Optional[str] = None, example: Optional[Any] = None
+    description: str | None = None, example: Any | None = None
 ) -> _fields.Field:
     """Build an Attribute Field
 

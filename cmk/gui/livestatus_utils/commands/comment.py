@@ -5,9 +5,9 @@
 """This module contains helpers to set comments for host and service.
 """
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Mapping
 
 from livestatus import MultiSiteConnection, SiteId
 

@@ -62,7 +62,7 @@ def register_oracle_metrics():
         for size_code, size_text in oracle_io_sizes:
             color_index += 1
             for io_code, io_text, unit in oracle_io_types:
-                metric_info["oracle_ios_f_%s_%s_%s" % (iofile_id, size_code, io_code)] = {
+                metric_info[f"oracle_ios_f_{iofile_id}_{size_code}_{io_code}"] = {
                     "title": _("ORACLE %s %s %s") % (iofile_name, size_text, io_text),
                     "unit": unit,
                     "color": indexed_color(color_index, len(oracle_iofiles) * len(oracle_io_sizes)),
@@ -245,12 +245,12 @@ def register_oracle_graphs():
     iostat_ios_metrics = []
     for iofile in oracle_iofiles:
         for size in ["s", "l"]:
-            iostat_bytes_metrics.append(("oracle_ios_f_%s_%s_rb" % (iofile.id, size), "line"))
-            iostat_ios_metrics.append(("oracle_ios_f_%s_%s_r" % (iofile.id, size), "line"))
+            iostat_bytes_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_rb", "line"))
+            iostat_ios_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_r", "line"))
     for iofile in oracle_iofiles:
         for size in ["s", "l"]:
-            iostat_bytes_metrics.append(("oracle_ios_f_%s_%s_wb" % (iofile.id, size), "-line"))
-            iostat_ios_metrics.append(("oracle_ios_f_%s_%s_w" % (iofile.id, size), "-line"))
+            iostat_bytes_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_wb", "-line"))
+            iostat_ios_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_w", "-line"))
     graph_info["oracle_iostat_bytes"] = {
         "title": _("ORACLE IOSTAT Bytes"),
         "metrics": iostat_bytes_metrics,

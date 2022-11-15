@@ -6,9 +6,9 @@
 import abc
 import multiprocessing
 import subprocess
+from collections.abc import Iterator
 from contextlib import suppress
 from pathlib import Path
-from typing import Iterator, Type
 
 import requests
 import urllib3
@@ -198,7 +198,7 @@ class ACTestLivestatusUsage(ACTest):
 
         usage_warn, usage_crit = 80, 95
         if usage_perc >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -673,7 +673,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             pid_file = cmk.utils.paths.omd_root / "tmp/apache/run/apache.pid"
             with pid_file.open(encoding="utf-8") as f:
                 ppid = int(f.read())
-        except (IOError, ValueError):
+        except (OSError, ValueError):
             raise MKGeneralException(_("Failed to read the Apache process ID"))
 
         sizes = []
@@ -739,7 +739,7 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
 
         usage_warn, usage_crit = 60, 90
         if usage >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif usage >= usage_warn:
             cls = ACResultWARN
         else:
@@ -798,7 +798,7 @@ class ACTestCheckMKHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -857,7 +857,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if fetcher_usage_perc >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif fetcher_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -931,7 +931,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if checker_usage_perc >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif checker_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -1024,7 +1024,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
 
         usage_warn, usage_crit = 85, 95
         if helper_usage_perc >= usage_crit:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         elif helper_usage_perc >= usage_warn:
             cls = ACResultWARN
         else:
@@ -1075,7 +1075,7 @@ class ACTestSizeOfExtensions(ACTest):
     def execute(self) -> Iterator[ACResult]:
         size = self._size_of_extensions()
         if size > 100 * 1024 * 1024:
-            cls: Type[ACResult] = ACResultCRIT
+            cls: type[ACResult] = ACResultCRIT
         else:
             cls = ACResultOK
 
@@ -1286,7 +1286,7 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             return
 
         for folder_title, rule_state in rules:
-            yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
+            yield ACResultCRIT(f"Rule in <b>{folder_title}</b> has value <b>{rule_state}</b>")
 
     def _get_rules(self):
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(

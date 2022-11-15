@@ -5,20 +5,9 @@
 
 import json
 import re
+from collections.abc import Callable, Container, Iterable, Mapping
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Literal
 
 import livestatus
 
@@ -82,13 +71,13 @@ class AjaxDropdownFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         info: str,
         autocompleter: AutocompleterConfig,
-        query_filter: Union[query_filters.TextQuery, query_filters.KubernetesQuery],
-        link_columns: Optional[List[ColumnName]] = None,
-        description: Union[None, str, LazyString] = None,
+        query_filter: query_filters.TextQuery | query_filters.KubernetesQuery,
+        link_columns: list[ColumnName] | None = None,
+        description: None | str | LazyString = None,
         is_show_more: bool = False,
     ) -> None:
         self.query_filter = query_filter
@@ -111,7 +100,7 @@ class AjaxDropdownFilter(Filter):
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         return self.query_filter.filter_table(context, rows)
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.column]}
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -259,10 +248,10 @@ class IPAddressFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         query_filter: query_filters.IPAddressQuery,
-        link_columns: List[str],
+        link_columns: list[str],
         is_show_more: bool = False,
     ):
         self.query_filter = query_filter
@@ -291,10 +280,10 @@ class IPAddressFilter(Filter):
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row["host_address"]}
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.query_filter.request_vars[0])
 
 
@@ -402,12 +391,12 @@ class FilterGroupCombo(AjaxDropdownFilter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         group_type: GroupType,
         autocompleter: AutocompleterConfig,
         query_filter: query_filters.TextQuery,
-        description: Union[None, str, LazyString] = None,
+        description: None | str | LazyString = None,
     ) -> None:
         self.query_filter = query_filter
         self.group_type = group_type
@@ -422,7 +411,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             description=description,
         )
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         varname = self.htmlvars[0]
         value = row.get(self.group_type + "group_name")
         if value:
@@ -434,7 +423,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             return s
         return {}
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         # TODO: This should be part of the general options query
         if current_value := value.get(self.query_filter.request_vars[0]):
             group_type = "contact" if self.group_type.endswith("_contact") else self.group_type
@@ -774,7 +763,7 @@ filter_registry.register(
 
 
 def filter_state_type_with_register(
-    *, ident: str, title: Union[str, LazyString], sort_index: int, info: str
+    *, ident: str, title: str | LazyString, sort_index: int, info: str
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -860,7 +849,7 @@ filter_registry.register(
 def filter_nagios_flag_with_register(
     *,
     ident: str,
-    title: Union[str, LazyString],
+    title: str | LazyString,
     sort_index: int,
     info: str,
     is_show_more: bool = False,
@@ -985,10 +974,10 @@ class SiteFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         query_filter: query_filters.Query,
-        description: Union[None, str, LazyString] = None,
+        description: None | str | LazyString = None,
         is_show_more: bool = False,
     ) -> None:
         self.query_filter = query_filter
@@ -1022,12 +1011,12 @@ class SiteFilter(Filter):
             ),
         )
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         if cmk_version.is_managed_edition():
             return filter_cme_heading_info(value)
         return filter_cre_heading_info(value)
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {"site": row["site"]}
 
 
@@ -1055,7 +1044,7 @@ filter_registry.register(
 
 
 class MultipleSitesFilter(SiteFilter):
-    def get_request_sites(self, value: FilterHTTPVariables) -> List[str]:
+    def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
     def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
@@ -1413,7 +1402,7 @@ class TagFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
     ):
@@ -1549,7 +1538,7 @@ class LabelFilter(Filter):
     def __init__(
         self,
         *,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         object_type: Literal["host", "service"],
     ) -> None:
         self.query_filter = query_filters.AllLabelsQuery(object_type=object_type)
@@ -1562,10 +1551,10 @@ class LabelFilter(Filter):
             link_columns=[],
         )
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return " ".join(f"{e.id}:{e.value}" for e in sorted(self.query_filter.parse_value(value)))
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.query_filter.request_vars[0]: row[self.query_filter.ident]}
 
     def _valuespec(self):
@@ -1630,7 +1619,7 @@ class FilterCustomAttribute(Filter):
         self,
         *,
         ident: str,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         info: str,
         choice_func: Callable[[], Choices],
     ):
@@ -1681,7 +1670,7 @@ class FilterCustomAttribute(Filter):
                 _("The requested item %s does not exist") % attribute_id,
             )
         val = value[self.value_varname(self.ident)]
-        return "Filter: %s_custom_variables ~~ %s ^%s\n" % (
+        return "Filter: {}_custom_variables ~~ {} ^{}\n".format(
             self.info,
             livestatus.lqencode(attribute_id.upper()),
             livestatus.lqencode(val),
@@ -1724,7 +1713,7 @@ filter_registry.register(
 
 # choices = [ (value, "readable"), .. ]
 class FilterECServiceLevelRange(Filter):
-    def __init__(self, *, ident: str, title: Union[str, LazyString], info: str) -> None:
+    def __init__(self, *, ident: str, title: str | LazyString, info: str) -> None:
         self.lower_bound_varname = "%s_lower" % ident
         self.upper_bound_varname = "%s_upper" % ident
         super().__init__(
@@ -1741,9 +1730,9 @@ class FilterECServiceLevelRange(Filter):
         )
 
     @staticmethod
-    def _options() -> List[Tuple[str, str]]:
+    def _options() -> list[tuple[str, str]]:
         choices = sorted(active_config.mkeventd_service_levels[:])
-        return [("", "")] + [(str(x[0]), "%s - %s" % (x[0], x[1])) for x in choices]
+        return [("", "")] + [(str(x[0]), f"{x[0]} - {x[1]}") for x in choices]
 
     def display(self, value: FilterHTTPVariables) -> None:
         selection = self._options()
@@ -1767,8 +1756,8 @@ class FilterECServiceLevelRange(Filter):
         if not any(v for _k, v in bounds.items()):
             return rows
 
-        lower_bound: Optional[str] = bounds.get(self.lower_bound_varname)
-        upper_bound: Optional[str] = bounds.get(self.upper_bound_varname)
+        lower_bound: str | None = bounds.get(self.lower_bound_varname)
+        upper_bound: str | None = bounds.get(self.upper_bound_varname)
 
         # If user only chooses "From" or "To", use same value from the choosen
         # field for the empty field and update filter form with that value
@@ -1820,7 +1809,7 @@ filter_registry.register(
 
 
 def filter_starred_with_register(
-    *, what: Literal["host", "service"], title: Union[str, LazyString], sort_index: int
+    *, what: Literal["host", "service"], title: str | LazyString, sort_index: int
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -1874,7 +1863,7 @@ class _FilterAggrGroup(Filter):
             link_columns=[self.column],
         )
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
     def display(self, value: FilterHTTPVariables) -> None:
@@ -1892,7 +1881,7 @@ class _FilterAggrGroup(Filter):
             return [row for row in rows if row[self.column] == group]
         return rows
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
 
@@ -1911,14 +1900,14 @@ class _FilterAggrGroupTree(Filter):
             link_columns=[self.column],
         )
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
     def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         html.dropdown(htmlvar, self._options(), deflt=value.get(htmlvar, ""))
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
     @staticmethod
@@ -1946,7 +1935,7 @@ class _FilterAggrGroupTree(Filter):
                 title_prefix = ""
             return ("/".join(path), title_prefix + path[index])
 
-        tree: Dict[str, Any] = {}
+        tree: dict[str, Any] = {}
         for group in bi.get_aggregation_group_trees():
             _build_tree(group.split("/"), tree, tuple())
 
@@ -1970,7 +1959,7 @@ class BITextFilter(Filter):
         self,
         *,
         ident: str,
-        title: Union[str, LazyString],
+        title: str | LazyString,
         sort_index: int,
         what: str,
         how: str = "regex",
@@ -1987,13 +1976,13 @@ class BITextFilter(Filter):
             link_columns=[self.column],
         )
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {self.htmlvars[0]: row[self.column]}
 
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""))
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
@@ -2063,13 +2052,13 @@ class _FilterAggrHosts(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""))
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1])
 
     def find_host(self, host, hostlist):
         return any((h == host for _s, h in hostlist))
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {
             "aggr_host_host": row["host_name"],
             "aggr_host_site": row["site"],
@@ -2108,10 +2097,10 @@ class _FilterAggrService(Filter):
         html.write_text(_("Service") + ": ")
         html.text_input(self.htmlvars[2], default_value=value.get(self.htmlvars[2], ""))
 
-    def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
+    def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[1], "") + " / " + value.get(self.htmlvars[2], "")
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {
             "site": row["site"],
             "host": row["host_name"],
@@ -2124,16 +2113,14 @@ filter_registry.register(_FilterAggrService())
 
 class BIStatusFilter(Filter):
     # TODO: Rename "what"
-    def __init__(
-        self, ident: str, title: Union[str, LazyString], sort_index: int, what: str
-    ) -> None:
+    def __init__(self, ident: str, title: str | LazyString, sort_index: int, what: str) -> None:
         self.column = "aggr_" + what + "state"
         if what == "":
             self.code = "r"
         else:
             self.code = what[0]
         self.prefix = "bi%ss" % self.code
-        vars_ = ["%s%s" % (self.prefix, x) for x in [-1, 0, 1, 2, 3, "_filled"]]
+        vars_ = [f"{self.prefix}{x}" for x in [-1, 0, 1, 2, 3, "_filled"]]
         if self.code == "a":
             vars_.append(self.prefix + "n")
         super().__init__(
@@ -2164,7 +2151,7 @@ class BIStatusFilter(Filter):
             html.checkbox(var, deflt=bool(value.get(var, checkbox_default)), label=text)
 
     @staticmethod
-    def _options() -> List[Tuple[str, str]]:
+    def _options() -> list[tuple[str, str]]:
         return [
             ("0", _("OK")),
             ("1", _("WARN")),
@@ -2477,7 +2464,7 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
             query_filter=query_filters.OptEventEffectiveContactgroupQuery(),
         )
 
-    def request_vars_from_row(self, row: Row) -> Dict[str, str]:
+    def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {}
 
 
@@ -2538,12 +2525,12 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
             site = row["service_description"].split(" ")[1]
             re_matches_pid = re.findall("Core PID: ([0-9][0-9]*)", row["long_plugin_output"])
             if re_matches_pid:
-                pid: Optional[int] = int(re_matches_pid[0])
+                pid: int | None = int(re_matches_pid[0])
             else:
                 pid = None
             sites_and_pids_from_services.append((site, pid))
 
-        unique_sites_from_services = set(site for (site, _pid) in sites_and_pids_from_services)
+        unique_sites_from_services = {site for (site, _pid) in sites_and_pids_from_services}
 
         # sites from service outputs are unique and all expected sites are present --> no need to
         # filter by PIDs

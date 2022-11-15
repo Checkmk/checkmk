@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple
 
 from livestatus import SiteId
 
@@ -54,10 +53,10 @@ class SidebarSnapinCustomers(SidebarSnapin):
         html.close_table()
 
     def _mkeventd_performance_entries(
-        self, only_sites: Optional[List[SiteId]]
-    ) -> List[Tuple[float, HTMLContent, HTMLContent]]:
+        self, only_sites: list[SiteId] | None
+    ) -> list[tuple[float, HTMLContent, HTMLContent]]:
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
-        entries: List[Tuple[float, HTMLContent, HTMLContent]] = []
+        entries: list[tuple[float, HTMLContent, HTMLContent]] = []
 
         # TODO: Reorder these values and create a useful order.
         # e.g. Client connects and Time per client request after

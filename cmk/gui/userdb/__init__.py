@@ -12,12 +12,13 @@ import os
 import shutil
 import time
 import traceback
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Mapping, TypeVar
+from typing import Any, Literal, TypeVar
 
 from six import ensure_str
 
@@ -366,7 +367,7 @@ class UserSelection(DropdownChoice[UserId]):
             users = load_users()
             elements: list[tuple[UserId | None, str]] = sorted(
                 [
-                    (name, "%s - %s" % (name, us.get("alias", name)))
+                    (name, "{} - {}".format(name, us.get("alias", name)))
                     for (name, us) in users.items()
                     if (not only_contacts or us.get("contactgroups"))
                     and (not only_automation or us.get("automation_secret"))
@@ -806,7 +807,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 user_secret_path = Path(directory) / uid / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
                     secret: str | None = f.read().strip()
-            except IOError:
+            except OSError:
                 secret = None
 
             if secret:
@@ -900,9 +901,9 @@ def _add_custom_macro_attributes(profiles: Users) -> Users:
     updated_profiles = copy.deepcopy(profiles)
 
     # Add custom macros
-    core_custom_macros = set(
+    core_custom_macros = {
         name for name, attr in get_user_attributes() if attr.add_custom_macro()  #
-    )
+    }
     for user in updated_profiles.keys():
         for macro in core_custom_macros:
             if macro in updated_profiles[user]:
@@ -1048,7 +1049,7 @@ def write_contacts_and_users_file(
 
     # Checkmk's monitoring contacts
     store.save_to_mk_file(
-        "%s/%s" % (check_mk_config_dir, "contacts.mk"),
+        "{}/{}".format(check_mk_config_dir, "contacts.mk"),
         "contacts",
         contacts,
         pprint_value=active_config.wato_pprint_config,
@@ -1524,9 +1525,9 @@ def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta
     # Some files like ldap_*_sync_time.mk can be placed in
     # ~/var/check_mk/web, causing error entries in web.log while trying to
     # delete a dir
-    profiles = set(
+    profiles = {
         profile_dir.name for profile_dir in profile_base_dir.iterdir() if profile_dir.is_dir()
-    )
+    }
 
     abandoned_profiles = sorted(profiles - users)
     if not abandoned_profiles:

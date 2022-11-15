@@ -2493,7 +2493,7 @@ class HostConfig:
             is_ipv6_host=self.is_ipv6_host,
             is_no_ip_host=self.is_no_ip_host,
             is_snmp_host=self.is_snmp_host,
-            snmp_backend=self.get_snmp_backend(),
+            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
             default_address_family=self.default_address_family,
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
@@ -2646,7 +2646,7 @@ class HostConfig:
             is_ipv6_primary=self.is_ipv6_primary,
             hostname=self.hostname,
             ipaddress=ip_address,
-            credentials=self._snmp_credentials(),
+            credentials=self._config_cache._snmp_credentials(self.hostname),
             port=self._snmp_port(),
             is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
             is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
@@ -2662,27 +2662,8 @@ class HostConfig:
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
-            snmp_backend=self.get_snmp_backend(),
+            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
         )
-
-    def _snmp_credentials(self) -> SNMPCredentials:
-        """Determine SNMP credentials for a specific host
-
-        It the host is found int the map snmp_communities, that community is
-        returned. Otherwise the snmp_default_community is returned (wich is
-        preset with "public", but can be overridden in main.mk.
-        """
-        try:
-            return explicit_snmp_communities[self.hostname]
-        except KeyError:
-            pass
-
-        communities = self._config_cache.host_extra_conf(self.hostname, snmp_communities)
-        if communities:
-            return communities[0]
-
-        # nothing configured for this host -> use default
-        return snmp_default_community
 
     def snmp_credentials_of_version(self, snmp_version: int) -> Optional[SNMPCredentials]:
         for entry in self._config_cache.host_extra_conf(self.hostname, snmp_communities):
@@ -2720,46 +2701,9 @@ class HostConfig:
             return None
         return entries[0]
 
-    def _is_host_snmp_v1(self) -> bool:
-        """Determines is host snmp-v1 using a bit Heuristic algorithm"""
-        if isinstance(self._snmp_credentials(), tuple):
-            return False  # v3
-
-        if self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts):
-            return False
-
-        return not self._config_cache.in_binary_hostlist(self.hostname, snmpv2c_hosts)
-
     @staticmethod
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
-
-    def get_snmp_backend(self) -> SNMPBackendEnum:
-        if self._config_cache.in_binary_hostlist(self.hostname, usewalk_hosts):
-            return SNMPBackendEnum.STORED_WALK
-
-        with_inline_snmp = HostConfig._is_inline_backend_supported()
-
-        host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
-
-        if host_backend_config:
-            # If more backends are configured for this host take the first one
-            host_backend = host_backend_config[0]
-            if with_inline_snmp and host_backend == "inline":
-                return SNMPBackendEnum.INLINE
-            if host_backend == "classic":
-                return SNMPBackendEnum.CLASSIC
-            raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
-
-        # TODO(sk): remove this when netsnmp is fixed
-        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
-        if self._is_host_snmp_v1():
-            return SNMPBackendEnum.CLASSIC
-
-        if with_inline_snmp and snmp_backend_default == "inline":
-            return SNMPBackendEnum.INLINE
-
-        return SNMPBackendEnum.CLASSIC
 
     def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
         """Return the fetch interval of SNMP sections in seconds
@@ -3218,7 +3162,7 @@ class HostConfig:
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
             character_encoding=self._snmp_character_encoding(),
-            snmp_backend=self.get_snmp_backend(),
+            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
         )
 
     @property
@@ -3368,6 +3312,7 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddres
     except (ValueError, TypeError):
         mgmt_ipa = None
 
+    config_cache = get_config_cache()
     try:
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
@@ -3376,7 +3321,7 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddres
             configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
             is_snmp_usewalk_host=(
-                host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
+                config_cache.get_snmp_backend(host_config.hostname) is SNMPBackendEnum.STORED_WALK
                 and (host_config.management_protocol == "snmp")
             ),
             override_dns=fake_dns,
@@ -3396,6 +3341,7 @@ def lookup_ip_address(
     if family is None:
         family = host_config.default_address_family
     host_name = host_config.hostname
+    config_cache = get_config_cache()
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
@@ -3404,7 +3350,7 @@ def lookup_ip_address(
         ),
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=(
-            host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
+            config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
             and host_config.is_snmp_host
         ),
         override_dns=fake_dns,
@@ -3662,6 +3608,62 @@ class ConfigCache:
             "site": omd_site(),
             "address_family": "ip-v4-only",
         }
+
+    def _snmp_credentials(self, host_name: HostName) -> SNMPCredentials:
+        """Determine SNMP credentials for a specific host
+
+        It the host is found int the map snmp_communities, that community is
+        returned. Otherwise the snmp_default_community is returned (wich is
+        preset with "public", but can be overridden in main.mk.
+        """
+        try:
+            return explicit_snmp_communities[host_name]
+        except KeyError:
+            pass
+
+        communities = self.host_extra_conf(host_name, snmp_communities)
+        if communities:
+            return communities[0]
+
+        # nothing configured for this host -> use default
+        return snmp_default_community
+
+    def _is_host_snmp_v1(self, host_name: HostName) -> bool:
+        """Determines is host snmp-v1 using a bit Heuristic algorithm"""
+        if isinstance(self._snmp_credentials(host_name), tuple):
+            return False  # v3
+
+        if self.in_binary_hostlist(host_name, bulkwalk_hosts):
+            return False
+
+        return not self.in_binary_hostlist(host_name, snmpv2c_hosts)
+
+    def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum:
+        if self.in_binary_hostlist(host_name, usewalk_hosts):
+            return SNMPBackendEnum.STORED_WALK
+
+        with_inline_snmp = HostConfig._is_inline_backend_supported()
+
+        host_backend_config = self.host_extra_conf(host_name, snmp_backend_hosts)
+
+        if host_backend_config:
+            # If more backends are configured for this host take the first one
+            host_backend = host_backend_config[0]
+            if with_inline_snmp and host_backend == "inline":
+                return SNMPBackendEnum.INLINE
+            if host_backend == "classic":
+                return SNMPBackendEnum.CLASSIC
+            raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
+
+        # TODO(sk): remove this when netsnmp is fixed
+        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
+        if self._is_host_snmp_v1(host_name):
+            return SNMPBackendEnum.CLASSIC
+
+        if with_inline_snmp and snmp_backend_default == "inline":
+            return SNMPBackendEnum.INLINE
+
+        return SNMPBackendEnum.CLASSIC
 
     def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tags of a service

@@ -63,7 +63,7 @@ def active_check_checking(
         service_name="Check_MK",
         plugin_name="mk",
         is_cluster=config_cache.is_cluster(hostname),
-        snmp_backend=host_config.snmp_config(hostname).snmp_backend,
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

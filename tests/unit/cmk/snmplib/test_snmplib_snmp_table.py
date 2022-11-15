@@ -20,7 +20,7 @@ from cmk.snmplib.type_defs import (
     SpecialColumn,
 )
 
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache, HostConfig
 
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
@@ -169,14 +169,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch) -> None:  # type:ignore[no-unty
     )
 
     # credentials is v3 -> INLINE
-    monkeypatch.setattr(
-        HostConfig,
-        "_snmp_credentials",
-        lambda _: (
-            "a",
-            "p",
-        ),
-    )
+    monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
     assert (
         config_cache.get_host_config("not_included").snmp_config("").snmp_backend
         == SNMPBackendEnum.INLINE

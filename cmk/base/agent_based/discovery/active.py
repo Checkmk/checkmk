@@ -39,7 +39,7 @@ def active_check_discovery(
         service_name="Check_MK Discovery",
         plugin_name="discover",
         is_cluster=config_cache.is_cluster(host_name),
-        snmp_backend=host_config.snmp_config(host_name).snmp_backend,
+        snmp_backend=config_cache.get_snmp_backend(host_name),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

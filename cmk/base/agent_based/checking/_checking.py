@@ -433,7 +433,7 @@ def get_aggregated_result(
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_cluster=config_cache.is_cluster(host_name),
                 is_enforced=service.id() in table,
-                snmp_backend=host_config.snmp_config(host_name).snmp_backend,
+                snmp_backend=config_cache.get_snmp_backend(host_name),
                 rtc_package=rtc_package,
             ),
         )

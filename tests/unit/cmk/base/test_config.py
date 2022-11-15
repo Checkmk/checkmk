@@ -547,9 +547,7 @@ def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-    assert (
-        config_cache.get_host_config(hostname).get_snmp_backend() is not SNMPBackendEnum.STORED_WALK
-    )
+    assert config_cache.get_snmp_backend(hostname) is not SNMPBackendEnum.STORED_WALK
 
 
 def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -567,7 +565,7 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).get_snmp_backend() is SNMPBackendEnum.STORED_WALK
+    assert config_cache.get_snmp_backend(hostname) is SNMPBackendEnum.STORED_WALK
 
 
 @pytest.mark.parametrize(

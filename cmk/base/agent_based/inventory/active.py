@@ -45,7 +45,7 @@ def active_check_inventory(
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",
         is_cluster=config_cache.is_cluster(hostname),
-        snmp_backend=host_config.snmp_config(hostname).snmp_backend,
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

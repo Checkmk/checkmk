@@ -12,6 +12,7 @@ from marshmallow import ValidationError
 
 from livestatus import SiteId
 
+from cmk.utils import version
 from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 # There is an implicit dependency introduced by the collect_attributes call which is evaluated
@@ -85,6 +86,10 @@ def collect_attributes(
 
     """
     something = TypeVar("something")
+
+    # Yes, this is ugly. But the attribute will not be found SOMETIMES if we don't do this.
+    if not version.is_raw_edition():
+        import cmk.gui.cee.plugins.wato.bake_agent_package_attribute as _unused  # pylint: disable=unused-import, no-name-in-module
 
     def _ensure(optional: Optional[something]) -> something:
         if optional is None:

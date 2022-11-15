@@ -2427,7 +2427,7 @@ class HostConfig:
             if self.tag_groups["piggyback"] == "no-piggyback":
                 return False
             # Legacy automatic detection
-            return self.has_piggyback_data
+            return self._config_cache.has_piggyback_data(self.hostname)
 
         self.is_piggyback_host: Final = get_is_piggyback_host()
 
@@ -2487,80 +2487,6 @@ class HostConfig:
     @staticmethod
     def make_host_config(hostname: HostName) -> HostConfig:
         return get_config_cache().get_host_config(hostname)
-
-    @property
-    def has_piggyback_data(self) -> bool:
-        time_settings: list[tuple[str | None, str, int]] = self.piggybacked_host_files
-        time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
-
-        if piggyback.has_piggyback_raw_data(self.hostname, time_settings):
-            return True
-
-        return Path(
-            cmk.utils.paths.var_dir, "persisted_sections", "piggyback", self.hostname
-        ).exists()
-
-    @property
-    def piggybacked_host_files(self) -> list[tuple[str | None, str, int]]:
-        rules = self._config_cache.host_extra_conf(self.hostname, piggybacked_host_files)
-        if rules:
-            return self._flatten_piggybacked_host_files_rule(rules[0])
-        return []
-
-    def _flatten_piggybacked_host_files_rule(
-        self, rule: dict[str, Any]
-    ) -> list[tuple[str | None, str, int]]:
-        """This rule is a first match rule.
-
-        Max cache age, validity period and state are configurable wihtin this
-        rule for all piggybacked host or per piggybacked host of this source.
-        In order to differentiate later for which piggybacked hosts a parameter
-        is used we flat this rule to a homogeneous data structure:
-            (HOST, KEY): VALUE
-        Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
-        parameters generically."""
-        flat_rule: list[tuple[str | None, str, int]] = []
-
-        max_cache_age = rule.get("global_max_cache_age")
-        if max_cache_age is not None and max_cache_age != "global":
-            flat_rule.append((self.hostname, "max_cache_age", max_cache_age))
-
-        global_validity_setting = rule.get("global_validity", {})
-
-        period = global_validity_setting.get("period")
-        if period is not None:
-            flat_rule.append((self.hostname, "validity_period", period))
-
-        check_mk_state = global_validity_setting.get("check_mk_state")
-        if check_mk_state is not None:
-            flat_rule.append((self.hostname, "validity_state", check_mk_state))
-
-        for setting in rule.get("per_piggybacked_host", []):
-            if "piggybacked_hostname" in setting:
-                piggybacked_hostname_expressions = [setting["piggybacked_hostname"]]
-            elif "piggybacked_hostname_expressions" in setting:
-                piggybacked_hostname_expressions = setting["piggybacked_hostname_expressions"]
-            else:
-                piggybacked_hostname_expressions = []
-
-            for piggybacked_hostname_expr in piggybacked_hostname_expressions:
-                max_cache_age = setting.get("max_cache_age")
-                if max_cache_age is not None and max_cache_age != "global":
-                    flat_rule.append((piggybacked_hostname_expr, "max_cache_age", max_cache_age))
-
-                validity_setting = setting.get("validity", {})
-                if not validity_setting:
-                    continue
-
-                period = validity_setting.get("period")
-                if period is not None:
-                    flat_rule.append((piggybacked_hostname_expr, "validity_period", period))
-
-                check_mk_state = validity_setting.get("check_mk_state")
-                if check_mk_state is not None:
-                    flat_rule.append((piggybacked_hostname_expr, "validity_state", check_mk_state))
-
-        return flat_rule
 
     @property
     def check_mk_check_interval(self) -> int:
@@ -3636,6 +3562,76 @@ class ConfigCache:
 
         return SNMPBackendEnum.CLASSIC
 
+    def has_piggyback_data(self, host_name: HostName) -> bool:
+        time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
+        time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
+
+        if piggyback.has_piggyback_raw_data(host_name, time_settings):
+            return True
+
+        return Path(cmk.utils.paths.var_dir, "persisted_sections", "piggyback", host_name).exists()
+
+    def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:
+        rules = self.host_extra_conf(host_name, piggybacked_host_files)
+        if rules:
+            return self._flatten_piggybacked_host_files_rule(host_name, rules[0])
+        return []
+
+    def _flatten_piggybacked_host_files_rule(
+        self, host_name: HostName, rule: dict[str, Any]
+    ) -> list[tuple[str | None, str, int]]:
+        """This rule is a first match rule.
+
+        Max cache age, validity period and state are configurable wihtin this
+        rule for all piggybacked host or per piggybacked host of this source.
+        In order to differentiate later for which piggybacked hosts a parameter
+        is used we flat this rule to a homogeneous data structure:
+            (HOST, KEY): VALUE
+        Then piggyback.py:_get_piggyback_processed_file_info can evaluate the
+        parameters generically."""
+        flat_rule: list[tuple[str | None, str, int]] = []
+
+        max_cache_age = rule.get("global_max_cache_age")
+        if max_cache_age is not None and max_cache_age != "global":
+            flat_rule.append((host_name, "max_cache_age", max_cache_age))
+
+        global_validity_setting = rule.get("global_validity", {})
+
+        period = global_validity_setting.get("period")
+        if period is not None:
+            flat_rule.append((host_name, "validity_period", period))
+
+        check_mk_state = global_validity_setting.get("check_mk_state")
+        if check_mk_state is not None:
+            flat_rule.append((host_name, "validity_state", check_mk_state))
+
+        for setting in rule.get("per_piggybacked_host", []):
+            if "piggybacked_hostname" in setting:
+                piggybacked_hostname_expressions = [setting["piggybacked_hostname"]]
+            elif "piggybacked_hostname_expressions" in setting:
+                piggybacked_hostname_expressions = setting["piggybacked_hostname_expressions"]
+            else:
+                piggybacked_hostname_expressions = []
+
+            for piggybacked_hostname_expr in piggybacked_hostname_expressions:
+                max_cache_age = setting.get("max_cache_age")
+                if max_cache_age is not None and max_cache_age != "global":
+                    flat_rule.append((piggybacked_hostname_expr, "max_cache_age", max_cache_age))
+
+                validity_setting = setting.get("validity", {})
+                if not validity_setting:
+                    continue
+
+                period = validity_setting.get("period")
+                if period is not None:
+                    flat_rule.append((piggybacked_hostname_expr, "validity_period", period))
+
+                check_mk_state = validity_setting.get("check_mk_state")
+                if check_mk_state is not None:
+                    flat_rule.append((piggybacked_hostname_expr, "validity_state", check_mk_state))
+
+        return flat_rule
+
     def tags_of_service(self, hostname: HostName, svc_desc: ServiceName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tags of a service
         It takes all explicitly configured tag groups into account.
@@ -4043,7 +4039,7 @@ class ConfigCache:
     ) -> Sequence[tuple[str | None, str, int]]:
         time_settings: list[tuple[str | None, str, int]] = []
         for source_hostname in sorted(piggyback.get_source_hostnames(piggybacked_hostname)):
-            time_settings.extend(self.get_host_config(source_hostname).piggybacked_host_files)
+            time_settings.extend(self._piggybacked_host_files(source_hostname))
 
         # From global settings
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))

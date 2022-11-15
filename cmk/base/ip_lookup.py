@@ -6,7 +6,7 @@
 import socket
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, MutableMapping, Optional, Protocol, Tuple
+from typing import Any, Iterable, Iterator, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -25,44 +25,18 @@ _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
 
 
-class _HostConfigLike(Protocol):
+class IPLookupConfig(NamedTuple):
     """This is what we expect from a HostConfig in *this* module"""
 
-    # Importing of the HostConfig class repeatedly lead to import cycles at various places.
-    @property
-    def hostname(self) -> HostName:
-        ...
-
-    @property
-    def is_ipv4_host(self) -> bool:
-        ...
-
-    @property
-    def is_ipv6_host(self) -> bool:
-        ...
-
-    @property
-    def is_no_ip_host(self) -> bool:
-        ...
-
-    @property
-    def is_snmp_host(self) -> bool:
-        ...
-
-    def get_snmp_backend(self) -> SNMPBackendEnum:
-        ...
-
-    @property
-    def default_address_family(self) -> socket.AddressFamily:
-        ...
-
-    @property
-    def management_address(self) -> Optional[HostAddress]:
-        ...
-
-    @property
-    def is_dyndns_host(self) -> bool:
-        ...
+    hostname: HostName
+    is_ipv4_host: bool
+    is_ipv6_host: bool
+    is_no_ip_host: bool
+    is_snmp_host: bool
+    snmp_backend: SNMPBackendEnum
+    default_address_family: socket.AddressFamily
+    management_address: HostAddress | None
+    is_dyndns_host: bool
 
 
 def fallback_ip_for(family: socket.AddressFamily) -> HostAddress:
@@ -351,7 +325,7 @@ def _get_ip_lookup_cache() -> IPLookupCache:
 
 def update_dns_cache(
     *,
-    host_configs: Iterable[_HostConfigLike],
+    ip_lookup_configs: Iterable[IPLookupConfig],
     configured_ipv4_addresses: Mapping[HostName, HostAddress],
     configured_ipv6_addresses: Mapping[HostName, HostAddress],
     # Do these two even make sense? If either is set, this function
@@ -370,7 +344,7 @@ def update_dns_cache(
         ip_lookup_cache.clear()
 
         console.verbose("Updating DNS cache...\n")
-        for host_name, host_config, family in _annotate_family(host_configs):
+        for host_name, host_config, family in _annotate_family(ip_lookup_configs):
             console.verbose(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
@@ -383,7 +357,7 @@ def update_dns_cache(
                     ).get(host_name),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=(
-                        host_config.get_snmp_backend() is SNMPBackendEnum.STORED_WALK
+                        host_config.snmp_backend is SNMPBackendEnum.STORED_WALK
                         and host_config.is_snmp_host
                     ),
                     override_dns=override_dns,
@@ -414,9 +388,9 @@ def update_dns_cache(
 
 
 def _annotate_family(
-    host_configs: Iterable[_HostConfigLike],
-) -> Iterable[Tuple[HostName, _HostConfigLike, socket.AddressFamily]]:
-    for host_config in host_configs:
+    ip_lookup_configs: Iterable[IPLookupConfig],
+) -> Iterable[Tuple[HostName, IPLookupConfig, socket.AddressFamily]]:
+    for host_config in ip_lookup_configs:
 
         if host_config.is_ipv4_host:
             yield host_config.hostname, host_config, socket.AF_INET

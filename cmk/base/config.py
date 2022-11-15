@@ -2486,6 +2486,19 @@ class HostConfig:
     def default_address_family(self) -> socket.AddressFamily:
         return socket.AF_INET6 if self.is_ipv6_primary else socket.AF_INET
 
+    def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
+        return ip_lookup.IPLookupConfig(
+            hostname=self.hostname,
+            is_ipv4_host=self.is_ipv4_host,
+            is_ipv6_host=self.is_ipv6_host,
+            is_no_ip_host=self.is_no_ip_host,
+            is_snmp_host=self.is_snmp_host,
+            snmp_backend=self.get_snmp_backend(),
+            default_address_family=self.default_address_family,
+            management_address=self.management_address,
+            is_dyndns_host=self.is_dyndns_host,
+        )
+
     @staticmethod
     def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
         return get_config_cache().get_host_config(hostname).snmp_config(address)

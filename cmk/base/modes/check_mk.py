@@ -794,7 +794,10 @@ modes.register(
 def mode_update_dns_cache() -> None:
     config_cache = config.get_config_cache()
     ip_lookup.update_dns_cache(
-        host_configs=(config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+        ip_lookup_configs=(
+            config_cache.get_host_config(hn).ip_lookup_config()
+            for hn in config_cache.all_active_hosts()
+        ),
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,

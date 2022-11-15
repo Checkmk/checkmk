@@ -5,6 +5,7 @@
 
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 from cmk.utils.livestatus_helpers.tables.hostgroups import Hostgroups
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.servicegroups import Servicegroups
@@ -19,4 +20,5 @@ __all__ = [
     "Services",
     "Status",
     "Comments",
+    "Eventconsoleevents",
 ]

@@ -22,7 +22,7 @@ from docker.models.images import Image  # type: ignore[import]
 import tests.testlib as testlib
 from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
 
-build_path = str(testlib.repo_path() / "docker")
+build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
 distro_codename = "jammy"

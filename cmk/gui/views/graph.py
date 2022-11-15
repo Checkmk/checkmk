@@ -41,7 +41,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
-from cmk.gui.views.store import multisite_builtin_views
+
+from .store import multisite_builtin_views
 
 multisite_builtin_views.update(
     {

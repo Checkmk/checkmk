@@ -56,13 +56,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
 from cmk.gui.painters.v0.helpers import render_cache_info
 from cmk.gui.painters.v1.helpers import is_stale
-from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.views.graph import cmk_graph_url
 from cmk.gui.visual_link import url_to_visual
 
 #   .--Action Menu---------------------------------------------------------.

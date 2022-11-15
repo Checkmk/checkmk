@@ -9,7 +9,6 @@ from functools import partial
 import cmk.gui.pages
 import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
-import cmk.gui.plugins.views.graphs as graphs
 import cmk.gui.plugins.views.painters as painters
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.i18n import _
@@ -19,7 +18,7 @@ from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.type_defs import CombinedGraphSpec, Row
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views import datasource_selection
+from cmk.gui.views import datasource_selection, graph
 from cmk.gui.views.command import (
     command_group_registry,
     command_registry,
@@ -76,23 +75,23 @@ def register_pages() -> None:
 
 
 def register_painters() -> None:
-    graphs.PainterServiceGraphs.resolve_combined_single_metric_spec = (
+    graph.PainterServiceGraphs.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
-    graphs.PainterHostGraphs.resolve_combined_single_metric_spec = (
+    graph.PainterHostGraphs.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
-    graphs.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
+    graph.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
-    graphs.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
+    graph.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
 
-    painter_registry.register(graphs.PainterServiceGraphs)
-    painter_registry.register(graphs.PainterHostGraphs)
-    painter_registry.register(graphs.PainterSvcPnpgraph)
-    painter_registry.register(graphs.PainterHostPnpgraph)
+    painter_registry.register(graph.PainterServiceGraphs)
+    painter_registry.register(graph.PainterHostGraphs)
+    painter_registry.register(graph.PainterSvcPnpgraph)
+    painter_registry.register(graph.PainterHostPnpgraph)
 
     painters.PainterDowntimeRecurring.renderer = painter_downtime_recurring_renderer
     painter_registry.register(painters.PainterDowntimeRecurring)

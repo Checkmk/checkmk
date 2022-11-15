@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from datetime import datetime
 
 import pytest
 
@@ -34,18 +35,31 @@ def test_min(
     assert artwork._purge_min_max(_min, _max, mirrored) == result
 
 
-def test_dist_seconds() -> None:
+def test_t_axis_labels_seconds() -> None:
     with set_timezone("Europe/Berlin"):
-        assert list(artwork._dist_seconds(1565481600, 1565481620, 10)) == [
+        assert [
+            label_pos.timestamp()
+            for label_pos in artwork._t_axis_labels_seconds(
+                datetime.fromtimestamp(1565481600),
+                datetime.fromtimestamp(1565481620),
+                10,
+            )
+        ] == [
             1565481600.0,
             1565481610.0,
             1565481620.0,
         ]
 
 
-def test_dist_week() -> None:
+def test_t_axis_labels_week() -> None:
     with set_timezone("Europe/Berlin"):
-        assert list(artwork._dist_week(1565401600, 1566691200)) == [
+        assert [
+            label_pos.timestamp()
+            for label_pos in artwork._t_axis_labels_week(
+                datetime.fromtimestamp(1565401600),
+                datetime.fromtimestamp(1566691200),
+            )
+        ] == [
             1565560800.0,
             1566165600.0,
         ]
@@ -174,11 +188,11 @@ def test_fringe(
                     (1666476000.0, "10-23", 2),
                     (1666735200.0, "10-26", 2),
                     (1666994400.0, "10-29", 2),
-                    (1667253600.0, "10-31", 2),
-                    (1667512800.0, "11-03", 2),
-                    (1667772000.0, "11-06", 2),
-                    (1668031200.0, "11-09", 2),
-                    (1668290400.0, "11-12", 2),
+                    (1667257200.0, "11-01", 2),
+                    (1667516400.0, "11-04", 2),
+                    (1667775600.0, "11-07", 2),
+                    (1668034800.0, "11-10", 2),
+                    (1668294000.0, "11-13", 2),
                 ],
                 "range": (1665486000, 1668519000),
                 "title": "2022-10-11 — 2022-11-15 @ 2h",
@@ -194,10 +208,10 @@ def test_fringe(
                 "labels": [
                     (1638313200.0, "2021-12-01", 2),
                     (1643670000.0, "2022-02-01", 2),
-                    (1648767600.0, "2022-04-01", 2),
-                    (1654038000.0, "2022-06-01", 2),
-                    (1659308400.0, "2022-08-01", 2),
-                    (1664578800.0, "2022-10-01", 2),
+                    (1648764000.0, "2022-04-01", 2),
+                    (1654034400.0, "2022-06-01", 2),
+                    (1659304800.0, "2022-08-01", 2),
+                    (1664575200.0, "2022-10-01", 2),
                 ],
                 "range": (1633910400, 1668470400),
                 "title": "2021-10-12 — 2022-11-14 @ 1d",

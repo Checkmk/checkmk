@@ -6,9 +6,12 @@
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator, Sequence
+from datetime import datetime
 from functools import partial
 from itertools import zip_longest
 from typing import Literal, TypedDict
+
+from dateutil.relativedelta import relativedelta
 
 import cmk.utils.render
 from cmk.utils.prediction import TimeSeries, TimeSeriesValue
@@ -1000,6 +1003,27 @@ def _select_t_axis_label_producer(
     label_size: float,
     label_distance_at_least: float,
 ) -> Callable[[int, int], Iterator[float]]:
+    return lambda start, end: (
+        label_position.timestamp()
+        for label_position in _select_t_axis_label_producer_datetime(
+            time_range=time_range,
+            width=width,
+            label_size=label_size,
+            label_distance_at_least=label_distance_at_least,
+        )(
+            datetime.fromtimestamp(start),
+            datetime.fromtimestamp(end),
+        )
+    )
+
+
+def _select_t_axis_label_producer_datetime(
+    *,
+    time_range: int,
+    width: int,
+    label_size: float,
+    label_distance_at_least: float,
+) -> Callable[[datetime, datetime], Iterator[datetime]]:
     # Guess a nice number of labels. This is similar to the
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
@@ -1026,101 +1050,108 @@ def _select_t_axis_label_producer(
         360,
         480,
         720,
-        1440,
-        2880,
-        4320,
-        5760,
     ):
         if label_distance_at_least <= dist_minutes * 60:
-            return partial(_dist_seconds, distance=dist_minutes * 60)
+            return partial(_t_axis_labels_seconds, stepsize_seconds=dist_minutes * 60)
+
+    # Label distance between 1 and 4 days?
+    for dist_days in (
+        1,
+        2,
+        3,
+        4,
+    ):
+        if label_distance_at_least <= dist_days * 24 * 60 * 60:
+            return partial(_t_axis_labels_days, stepsize_days=dist_days)
 
     # Label distance less than one week? Align lables at days of week
     if label_distance_at_least <= 86400 * 7:
-        return _dist_week
+        return _t_axis_labels_week
 
     # Label distance less that two years?
     for months in 1, 2, 3, 4, 6, 12, 18, 24, 36, 48:
         if label_distance_at_least <= 86400 * 31 * months:
-            return partial(_dist_months, months=months)
+            return partial(_t_axis_labels_months, stepsize_months=months)
 
     # Label distance is more than 8 years. Bogus, but we must not crash
-    return partial(_dist_months, months=96)
+    return partial(_t_axis_labels_months, stepsize_months=96)
 
 
-def _dist_seconds(
-    start_time: int,
-    end_time: int,
-    distance: int,
-) -> Iterator[float]:
-    align_broken = time.localtime(start_time)
-    align = time.mktime(
-        (
-            align_broken[0],
-            align_broken[1],
-            align_broken[2],
-            0,
-            0,
-            0,
-            align_broken[6],
-            align_broken[7],
-            align_broken[8],
-        )
+def _t_axis_labels_seconds(
+    start_time: datetime,
+    end_time: datetime,
+    stepsize_seconds: int,
+) -> Iterator[datetime]:
+    zhsd = _zero_hour_same_day(start_time)
+    yield from _t_axis_labels(
+        start_time=start_time,
+        end_time=end_time,
+        step_size=relativedelta(seconds=stepsize_seconds),
+        initial_position=zhsd
+        + relativedelta(
+            seconds=math.floor((start_time - zhsd).seconds / stepsize_seconds) * stepsize_seconds
+        ),
     )
 
-    pos = align + math.ceil((start_time - align) / distance) * distance
 
+def _t_axis_labels_days(
+    start_time: datetime,
+    end_time: datetime,
+    stepsize_days: int,
+) -> Iterator[datetime]:
+    yield from _t_axis_labels(
+        start_time=start_time,
+        end_time=end_time,
+        step_size=relativedelta(days=stepsize_days),
+        initial_position=_zero_hour_same_day(start_time),
+    )
+
+
+def _t_axis_labels_week(
+    start_time: datetime,
+    end_time: datetime,
+) -> Iterator[datetime]:
+    yield from _t_axis_labels(
+        start_time=start_time,
+        end_time=end_time,
+        step_size=relativedelta(weeks=1),
+        initial_position=_zero_hour_same_day(start_time) - relativedelta(days=start_time.weekday()),
+    )
+
+
+def _t_axis_labels_months(
+    start_time: datetime,
+    end_time: datetime,
+    stepsize_months: int,
+) -> Iterator[datetime]:
+    yield from _t_axis_labels(
+        start_time=start_time,
+        end_time=end_time,
+        step_size=relativedelta(months=stepsize_months),
+        initial_position=_zero_hour_same_day(start_time).replace(day=1),
+    )
+
+
+def _zero_hour_same_day(dt: datetime) -> datetime:
+    return dt.replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+
+
+def _t_axis_labels(
+    *,
+    start_time: datetime,
+    end_time: datetime,
+    step_size: relativedelta,
+    initial_position: datetime,
+) -> Iterator[datetime]:
+    pos = initial_position + step_size * (initial_position < start_time)
     while pos <= end_time:
         yield pos
-        pos += distance
-
-
-def _dist_week(start_time: int, end_time: int) -> Iterator[float]:
-    # Shift time back to monday
-    wday_of_start_time = time.localtime(start_time).tm_wday
-    monday_week = start_time - 86400 * wday_of_start_time
-
-    # Now we have an equal distance of 7 days
-    yield from (pos for pos in _dist_seconds(monday_week, end_time, 7 * 86400) if pos >= start_time)
-
-
-def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[float]:
-    # Jump to beginning of month
-    broken = time.localtime(start_time)
-    broken_tm_year = broken[0]
-    broken_tm_mon = broken[1]
-    broken_tm_mday = 1
-    broken_tm_hour = 0
-    broken_tm_min = 0
-    broken_tm_sec = 0
-    broken_tm_wday = broken[6]
-    broken_tm_yday = broken[7]
-    broken_tm_isdst = 0
-
-    while True:
-        pos = time.mktime(
-            (
-                broken_tm_year,
-                broken_tm_mon,
-                broken_tm_mday,
-                broken_tm_hour,
-                broken_tm_min,
-                broken_tm_sec,
-                broken_tm_wday,
-                broken_tm_yday,
-                broken_tm_isdst,
-            )
-        )
-        if pos > end_time:
-            break
-
-        if pos >= start_time:
-            yield pos
-
-        for _m in range(months):
-            broken_tm_mon += 1
-            if broken_tm_mon > 12:
-                broken_tm_year += 1
-                broken_tm_mon -= 12
+        pos += step_size
 
 
 def _add_step_to_title(title_label: str, step: Seconds) -> str:

@@ -103,7 +103,7 @@ class RealHostTreeUpdater:
                 retention_key = (tuple(item.path), node_type)
 
                 if (from_config := self._from_config.get(retention_key)) is None:
-                    return
+                    continue
 
                 self._retention_infos.setdefault(
                     retention_key,

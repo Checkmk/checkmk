@@ -123,7 +123,7 @@ def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("host_tag_group"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostTagGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
@@ -135,11 +135,7 @@ def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
         "id": "host_tag",
         "domainType": "host_tag_group",
         "value": [
-            constructors.collection_item(
-                domain_type="host_tag_group",
-                title=tag_group_obj.title,
-                identifier=tag_group_obj.id,
-            )
+            serialize_host_tag_group(tag_group_obj.get_dict_format())
             for tag_group_obj in tag_config.get_tag_groups()
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_tag_group"))],
@@ -244,12 +240,12 @@ def _retrieve_group(ident: str) -> TagGroup:
 
 
 def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
-    response = serve_json(serialize_host_tag_group(dict(tag_details)))
+    response = serve_json(serialize_host_tag_group(tag_details))
     response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
     return response
 
 
-def serialize_host_tag_group(details: dict[str, Any]):  # type:ignore[no-untyped-def]
+def serialize_host_tag_group(details: TaggroupSpec) -> dict[str, Any]:
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],
@@ -262,5 +258,5 @@ def serialize_host_tag_group(details: dict[str, Any]):  # type:ignore[no-untyped
                 base=constructors.object_href("host_tag_group", details["id"]),
             )
         },
-        extensions={key: details[key] for key in details if key in ("topic", "tags")},
+        extensions={"topic": details["topic"], "tags": details["tags"]},
     )

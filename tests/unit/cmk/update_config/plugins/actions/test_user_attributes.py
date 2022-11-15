@@ -6,7 +6,7 @@ import logging
 from datetime import datetime
 
 import pytest
-from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import with_user  # pylint: disable=unused-import
 from tests.unit.cmk.gui.test_userdb import _load_users_uncached
@@ -16,6 +16,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.userdb as userdb
 from cmk.gui.type_defs import UserSpec
 
+import cmk.update_config.plugins.actions.user_attributes
 from cmk.update_config.plugins.actions.user_attributes import UpdateUserAttributes
 
 
@@ -168,17 +169,23 @@ def fixture_plugin() -> UpdateUserAttributes:
     ],
 )
 def test_update_user_attributes(
-    with_user: tuple[UserId, str],  # pylint: disable=redefined-outer-name
     user: UserSpec,
     expected: UserSpec,
     plugin: UpdateUserAttributes,
-    monkeypatch: MonkeyPatch,
+    mocker: MockerFixture,
+    with_user: tuple[UserId, str],  # pylint: disable=redefined-outer-name
 ) -> None:
     now = datetime.now()
     user_id = with_user[0]
     users: userdb.Users = _load_users_uncached(lock=False)
     users[user_id] = user
     userdb.save_users(users, now)
+
+    mocker.patch.object(
+        cmk.update_config.plugins.actions.user_attributes,
+        "_flexible_notifications_active",
+        return_value=True,
+    )
     plugin(logging.getLogger(), {})
 
     assert _load_users_uncached(lock=False)[user_id] == expected

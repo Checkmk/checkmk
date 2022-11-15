@@ -17,7 +17,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, Rule, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
+from cmk.update_config.update_state import format_warning, UpdateActionState
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
@@ -172,7 +172,7 @@ def _validate_rule_values(
             except MKUserError as excpt:
                 n_invalid += 1
                 logger.warning(
-                    _format_warning(
+                    format_warning(
                         "WARNING: Invalid rule configuration detected (Ruleset: %s, Title: %s, "
                         "Folder: %s,\nRule nr: %s, Exception: %s)"
                     ),
@@ -185,17 +185,13 @@ def _validate_rule_values(
 
     if n_invalid:
         logger.warning(
-            _format_warning(
+            format_warning(
                 "Detected %s issue(s) in configured rules.\n"
                 "To correct these issues, we recommend to open the affected rules in the GUI.\n"
                 "Upon attempting to save them, any problematic fields will be highlighted."
             ),
             n_invalid,
         )
-
-
-def _format_warning(msg: str) -> str:
-    return f"\033[93m {msg}\033[00m"
 
 
 def _remove_removed_check_plugins_from_ignored_checks(

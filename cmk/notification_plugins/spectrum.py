@@ -44,12 +44,6 @@ def main() -> NoReturn:
     # gather all options from env
     context = utils.collect_context()
 
-    # check if configured via flexible notifications
-    if "PARAMETER_1" in context:
-        context["PARAMETER_COMMUNITY"] = context["PARAMETER_1"]
-        context["PARAMETER_DESTINATION"] = context["PARAMETER_2"]
-        context["PARAMETER_BASEOID"] = context["PARAMETER_3"]
-
     base_oid = context.get("PARAMETER_BASEOID", "1.3.6.1.4.1.1234")
 
     # adjust these oids to your needs

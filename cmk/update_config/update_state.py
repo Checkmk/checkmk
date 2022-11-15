@@ -62,3 +62,7 @@ class UpdateState:
 
     def setdefault(self, name: str) -> UpdateActionState:
         return self.payload.setdefault(name, {})
+
+
+def format_warning(msg: str) -> str:
+    return f"\033[93m {msg}\033[00m"

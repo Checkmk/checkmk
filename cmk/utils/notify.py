@@ -49,11 +49,6 @@ class NotificationForward(TypedDict):
     context: EventContext
 
 
-class NotificationViaPlainMail(TypedDict):
-    plugin: None
-    context: NotificationContext
-
-
 class NotificationViaPlugin(TypedDict):
     plugin: str
     context: NotificationContext
@@ -195,9 +190,7 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
 def create_spoolfile(
     logger_: Logger,
     spool_dir: Path,
-    data: (
-        NotificationForward | NotificationResult | NotificationViaPlainMail | NotificationViaPlugin
-    ),
+    data: (NotificationForward | NotificationResult | NotificationViaPlugin),
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())

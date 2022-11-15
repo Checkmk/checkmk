@@ -120,7 +120,7 @@ def test_sanitize_snmp_encoding(  # type:ignore[no-untyped-def]
     config_cache = ts.apply(monkeypatch)
 
     snmp_config = config_cache.get_host_config("localhost").snmp_config("")
-    assert snmp_table._sanitize_snmp_encoding(columns, snmp_config) == expected
+    assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]

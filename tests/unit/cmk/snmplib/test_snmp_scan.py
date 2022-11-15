@@ -199,7 +199,7 @@ def scenario(backend, monkeypatch):
 @pytest.fixture
 def cache_oids(backend):
     # Cache OIDs to avoid actual SNMP I/O.
-    snmp_cache.initialize_single_oid_cache(backend.config)
+    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR] = "sys description"
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] = "sys object"
     yield

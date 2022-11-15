@@ -57,7 +57,7 @@ def _snmp_scan(
     missing_sys_description: bool,
     backend: SNMPBackend,
 ) -> frozenset[SectionName]:
-    snmp_cache.initialize_single_oid_cache(backend.config)
+    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     console.vverbose("  SNMP scan:\n")
 
     if missing_sys_description:
@@ -71,7 +71,7 @@ def _snmp_scan(
         backend=backend,
     )
     _output_snmp_check_plugins("SNMP scan found", found_sections)
-    snmp_cache.write_single_oid_cache(backend.config)
+    snmp_cache.write_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
     return found_sections
 
 

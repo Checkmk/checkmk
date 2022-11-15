@@ -253,7 +253,7 @@ def oids_to_walk(options: SNMPWalkOptions | None = None) -> list[OID]:
 
 def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
     # TODO what about SNMP management boards?
-    snmp_cache.initialize_single_oid_cache(backend.config)
+    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
 
     value = get_single_oid(oid, backend=backend)
     sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")

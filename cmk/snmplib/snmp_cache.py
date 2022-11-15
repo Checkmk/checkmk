@@ -11,7 +11,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostAddress, HostName
 
-from .type_defs import OID, SNMPDecodedString, SNMPHostConfig
+from .type_defs import OID, SNMPDecodedString
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname: HostName | None = None
@@ -21,40 +21,41 @@ _g_single_oid_cache: dict[OID, SNMPDecodedString | None] | None = None
 _g_walk_cache: dict[HostName, list[str]] = {}
 
 
-def initialize_single_oid_cache(snmp_config: SNMPHostConfig, from_disk: bool = False) -> None:
+def initialize_single_oid_cache(
+    host_name: HostName, ipaddress: HostAddress | None, from_disk: bool = False
+) -> None:
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
     if (
-        not (
-            _g_single_oid_hostname == snmp_config.hostname
-            and _g_single_oid_ipaddress == snmp_config.ipaddress
-        )
+        not (_g_single_oid_hostname == host_name and _g_single_oid_ipaddress == ipaddress)
         or _g_single_oid_cache is None
     ):
-        _g_single_oid_hostname = snmp_config.hostname
-        _g_single_oid_ipaddress = snmp_config.ipaddress
+        _g_single_oid_hostname = host_name
+        _g_single_oid_ipaddress = ipaddress
         if from_disk:
-            _g_single_oid_cache = _load_single_oid_cache(snmp_config)
+            _g_single_oid_cache = _load_single_oid_cache(host_name, ipaddress)
         else:
             _g_single_oid_cache = {}
 
 
-def write_single_oid_cache(snmp_config: SNMPHostConfig) -> None:
+def write_single_oid_cache(host_name: HostName, ipaddress: HostAddress | None) -> None:
     if not _g_single_oid_cache:
         return
 
     cache_dir = cmk.utils.paths.snmp_scan_cache_dir
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
-    cache_path = f"{cache_dir}/{snmp_config.hostname}.{snmp_config.ipaddress}"
+    cache_path = f"{cache_dir}/{host_name}.{ipaddress}"
     store.save_object_to_file(cache_path, _g_single_oid_cache, pretty=False)
 
 
-def _load_single_oid_cache(snmp_config: SNMPHostConfig) -> dict[OID, SNMPDecodedString | None]:
+def _load_single_oid_cache(
+    host_name: HostName, ipaddress: HostAddress | None
+) -> dict[OID, SNMPDecodedString | None]:
     cache_path = "{}/{}.{}".format(
         cmk.utils.paths.snmp_scan_cache_dir,
-        snmp_config.hostname,
-        snmp_config.ipaddress,
+        host_name,
+        ipaddress,
     )
     return store.load_object_from_file(cache_path, default={})
 

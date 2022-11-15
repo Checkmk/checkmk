@@ -111,6 +111,7 @@ class SNMPDetectSpec(_SNMPDetectBaseType):
 class SNMPHostConfig(NamedTuple):
     is_ipv6_primary: bool
     hostname: _HostName
+    # TODO(ml): ipaddress is not optional with SNMP
     ipaddress: _HostAddress | None
     credentials: SNMPCredentials
     port: int

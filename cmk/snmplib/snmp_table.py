@@ -18,7 +18,6 @@ from .type_defs import (
     OID,
     SNMPBackend,
     SNMPDecodedValues,
-    SNMPHostConfig,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPTable,
@@ -192,7 +191,7 @@ def get_snmp_table(
         index_encoding = columns[index_column][-1]
         columns[index_column] = fetchoid, index_rows, index_encoding
 
-    return _make_table(columns, backend.config)
+    return _make_table(columns, backend.config.ensure_str)
 
 
 def _make_index_rows(
@@ -219,7 +218,7 @@ def _make_index_rows(
 
 
 def _make_table(
-    columns: ResultColumnsUnsanitized, snmp_config: SNMPHostConfig
+    columns: ResultColumnsUnsanitized, ensure_str: Callable[[str | bytes], str]
 ) -> Sequence[SNMPTable]:
     # Here we have to deal with a nasty problem: Some brain-dead devices
     # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
@@ -230,7 +229,7 @@ def _make_table(
     # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
     # get python byte strings. But for Checkmk we need unicode strings now.
     # Convert them by using the standard Checkmk approach for incoming data
-    decoded_columns = _sanitize_snmp_encoding(sanitized_columns, snmp_config)
+    decoded_columns = _sanitize_snmp_encoding(sanitized_columns, ensure_str)
 
     return _construct_snmp_table_of_rows(decoded_columns)
 
@@ -322,19 +321,21 @@ def _perform_snmpwalk(
 
 
 def _sanitize_snmp_encoding(
-    columns: ResultColumnsSanitized, snmp_config: SNMPHostConfig
+    columns: ResultColumnsSanitized, ensure_str: Callable[[str | bytes], str]
 ) -> ResultColumnsDecoded:
     return [
-        _decode_column(column, value_encoding, snmp_config) for column, value_encoding in columns  #
+        _decode_column(column, value_encoding, ensure_str) for column, value_encoding in columns  #
     ]
 
 
 def _decode_column(
-    column: list[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
+    column: list[SNMPRawValue],
+    value_encoding: SNMPValueEncoding,
+    ensure_str: Callable[[SNMPRawValue], SNMPDecodedValues],
 ) -> list[SNMPDecodedValues]:
     if value_encoding == "string":
         # ? ensure_str is used with potentially different encodings
-        decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
+        decode = ensure_str
     else:
 
         def decode(v: SNMPRawValue) -> SNMPDecodedValues:

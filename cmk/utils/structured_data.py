@@ -368,12 +368,6 @@ class StructuredDataNode:
 
         return node
 
-    def remove_retentions(self) -> None:
-        self.attributes.remove_retentions()
-        self.table.remove_retentions()
-        for node in self._nodes.values():
-            node.remove_retentions()
-
     #   ---node methods---------------------------------------------------------
 
     def setdefault_node(self, path: SDPath) -> StructuredDataNode:
@@ -889,9 +883,6 @@ class Table:
     def get_retention_intervals(self, key: SDKey, row: SDRow) -> RetentionIntervals | None:
         return self.retentions.get(self._make_row_ident(row), {}).get(key)
 
-    def remove_retentions(self) -> None:
-        self.retentions = {}
-
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -1119,9 +1110,6 @@ class Attributes:
 
     def get_retention_intervals(self, key: SDKey) -> RetentionIntervals | None:
         return self.retentions.get(key)
-
-    def remove_retentions(self) -> None:
-        self.retentions = {}
 
     #   ---representation-------------------------------------------------------
 

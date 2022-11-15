@@ -315,9 +315,9 @@ def _inventorize_real_host(
     section.section_step("May update inventory tree")
 
     tree_updater = RealHostTreeUpdater(raw_intervals_from_config)
-    tree_updater.may_add_cache_info(now=now, items_of_inventory_plugins=items_of_inventory_plugins)
     update_result = tree_updater.may_update(
         now=now,
+        items_of_inventory_plugins=items_of_inventory_plugins,
         inventory_tree=trees.inventory,
         previous_tree=old_tree,
     )

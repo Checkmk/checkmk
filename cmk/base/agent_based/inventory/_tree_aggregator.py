@@ -15,7 +15,6 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RawIntervalsFromConfig,
     RetentionIntervals,
-    SDFilterFunc,
     SDPath,
     StructuredDataNode,
     TABLE_KEY,
@@ -24,22 +23,10 @@ from cmk.utils.structured_data import (
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
-RawCacheInfo = tuple[int, int]
-
 
 class IntervalFromConfig(NamedTuple):
     choices: tuple[str, list[str]] | str
     interval: int
-
-
-class RetentionInfo(NamedTuple):
-    filter_func: SDFilterFunc
-    intervals: RetentionIntervals
-
-
-RetentionKey = tuple[SDPath, str]
-RetentionInfos = dict[RetentionKey, RetentionInfo]
-IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
 @dataclass(frozen=True)
@@ -51,7 +38,6 @@ class ItemsOfInventoryPlugin:
 class RealHostTreeUpdater:
     def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
-        self._retention_infos: RetentionInfos = {}
 
     # ---from retention intervals-------------------------------------------
 
@@ -81,12 +67,20 @@ class RealHostTreeUpdater:
     #       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
     #             retention_interval: configured in the above ruleset
 
-    def may_add_cache_info(
+    def may_update(
         self,
         *,
         now: int,
         items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
-    ) -> None:
+        inventory_tree: StructuredDataNode,
+        previous_tree: StructuredDataNode,
+    ) -> UpdateResult:
+        if not self._from_config:
+            return UpdateResult(
+                save_tree=False,
+                reason="No retention intervals found.",
+            )
+
         def _get_node_type(item: Attributes | TableRow) -> str:
             if isinstance(item, Attributes):
                 return ATTRIBUTES_KEY
@@ -100,53 +94,33 @@ class RealHostTreeUpdater:
             for item in items_of_inventory_plugin.items
         }
 
+        results = []
         for retention_key, from_config in self._from_config.items():
             if (raw_cache_info := raw_cache_info_by_retention_key.get(retention_key)) is None:
                 raw_cache_info = (now, 0)
 
-            self._retention_infos.setdefault(
-                retention_key,
-                RetentionInfo(
-                    make_filter_from_choice(from_config.choices),
-                    RetentionIntervals(
-                        cached_at=raw_cache_info[0],
-                        cache_interval=raw_cache_info[1],
-                        retention_interval=from_config.interval,
-                    ),
-                ),
-            )
+            item_path, node_type = retention_key
 
-    def may_update(
-        self,
-        *,
-        now: int,
-        inventory_tree: StructuredDataNode,
-        previous_tree: StructuredDataNode,
-    ) -> UpdateResult:
-        if not self._from_config:
-            inventory_tree.remove_retentions()
-            return UpdateResult(
-                save_tree=False,
-                reason="No retention intervals found.",
-            )
-
-        results = []
-        for retention_key, retention_info in self._retention_infos.items():
-            node_path, node_type = retention_key
-
-            if (previous_node := previous_tree.get_node(node_path)) is None:
+            if (previous_node := previous_tree.get_node(item_path)) is None:
                 previous_node = StructuredDataNode()
 
-            if (inv_node := inventory_tree.get_node(node_path)) is None:
-                inv_node = inventory_tree.setdefault_node(node_path)
+            if (inv_node := inventory_tree.get_node(item_path)) is None:
+                inv_node = inventory_tree.setdefault_node(item_path)
+
+            filter_func = make_filter_from_choice(from_config.choices)
+            intervals = RetentionIntervals(
+                cached_at=raw_cache_info[0],
+                cache_interval=raw_cache_info[1],
+                retention_interval=from_config.interval,
+            )
 
             if node_type == ATTRIBUTES_KEY:
                 results.append(
                     inv_node.attributes.update_from_previous(
                         now,
                         previous_node.attributes,
-                        retention_info.filter_func,
-                        retention_info.intervals,
+                        filter_func,
+                        intervals,
                     )
                 )
 
@@ -155,8 +129,8 @@ class RealHostTreeUpdater:
                     inv_node.table.update_from_previous(
                         now,
                         previous_node.table,
-                        retention_info.filter_func,
-                        retention_info.intervals,
+                        filter_func,
+                        intervals,
                     )
                 )
 
@@ -178,8 +152,8 @@ class RealHostTreeUpdater:
 
 def _get_intervals_from_config(
     raw_intervals_from_config: RawIntervalsFromConfig,
-) -> IntervalsFromConfig:
-    intervals: IntervalsFromConfig = {}
+) -> dict[tuple[SDPath, str], IntervalFromConfig]:
+    intervals: dict[tuple[SDPath, str], IntervalFromConfig] = {}
 
     for entry in raw_intervals_from_config:
         interval = entry["interval"]

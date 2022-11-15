@@ -1,7 +1,5 @@
 Thank you for your interest in contributing to Checkmk!
-Unfortunately, due to our current work load, we only consider pure bug fixes as stated in our [Readme](https://github.com/tribe29/checkmk#want-to-contribute).
-This means any new pull request that is not a pure bug fix will be closed.
-Instead of creating a PR, please consider sharing new check plugins, agent plugins, special agents or notification plugins via the [Checkmk Exchange](https://exchange.checkmk.com/).
+Consider looking into [Readme](https://github.com/tribe29/checkmk#want-to-contribute) regarding process details.
 
 ## General information
 

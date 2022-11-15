@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, NotifyPluginParamsDict
+from cmk.utils.type_defs import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -19,7 +19,10 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = True
 notification_fallback_email = ""
-notification_fallback_format: tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
+notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParamsDict] = (
+    "asciimail",
+    {},
+)
 notification_rules: list[EventRule] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10

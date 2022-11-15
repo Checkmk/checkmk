@@ -55,7 +55,9 @@ from cmk.utils.type_defs import (
     ContactName,
     EventContext,
     EventRule,
+    HostEventType,
     NotificationContext,
+    NotificationPluginNameStr,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
     NotifyBulks,
@@ -65,6 +67,7 @@ from cmk.utils.type_defs import (
     NotifyPluginParamsList,
     NotifyRuleInfo,
     PluginNotificationContext,
+    ServiceEventType,
     UUIDs,
 )
 
@@ -85,8 +88,6 @@ logger = logging.getLogger("cmk.base.notify")
 
 _log_to_stdout = False
 notify_mode = "notify"
-
-NotificationPluginNameStr = str
 
 NotificationTableEntry = dict[str, Union[NotificationPluginNameStr, list]]
 NotificationTable = list[NotificationTableEntry]
@@ -900,7 +901,7 @@ def rbn_match_event(
     state: str,
     last_state: str,
     event_map: dict[str, str],
-    allowed_events: list[str],
+    allowed_events: Sequence[ServiceEventType] | Sequence[HostEventType],
 ) -> str | None:
     notification_type = context["NOTIFICATIONTYPE"]
 
@@ -1743,7 +1744,7 @@ def send_ripe_bulks() -> None:
 def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
-    plugin_name = parts[-2]
+    plugin_name = cast(NotificationPluginNameStr, parts[-2])
     logger.info("   -> %s/%s %s", contact, plugin_name, dirname)
     # If new entries are created in this directory while we are working
     # on it, nothing bad happens. It's just that we cannot remove

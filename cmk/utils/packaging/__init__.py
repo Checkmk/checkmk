@@ -182,13 +182,15 @@ def release(pacname: PackageName) -> None:
         raise PackageException("Package %s not installed or corrupt." % pacname)
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + get_config_parts():
-        filenames = package.files.get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in filenames:
-                logger.log(VERBOSE, "    %s", f)
-            if part.ident == "ec_rule_packs":
-                ec.release_packaged_rule_packs(filenames)
+        if not (filenames := package.files.get(part.ident, [])):
+            continue
+
+        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+        for f in filenames:
+            logger.log(VERBOSE, "    %s", f)
+        if part.ident == "ec_rule_packs":
+            ec.release_packaged_rule_packs(filenames)
+
     _remove_package_info(pacname)
 
 
@@ -226,37 +228,38 @@ def create_mkp_object(
 
         # Now pack the actual files into sub tars
         for part in package_parts() + config_parts():
-            filenames = package.files.get(part.ident, [])
-            if len(filenames) > 0:
-                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-                for f in filenames:
-                    logger.log(VERBOSE, "    %s", f)
-                subdata = subprocess.check_output(
-                    ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path]
-                    + filenames
-                )
-                add_file(part.ident + ".tar", subdata)
+            if not (filenames := package.files.get(part.ident, [])):
+                continue
+
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            for f in filenames:
+                logger.log(VERBOSE, "    %s", f)
+            subdata = subprocess.check_output(
+                ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames
+            )
+            add_file(part.ident + ".tar", subdata)
 
     return buffer.getvalue()
 
 
 def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
     for part in get_package_parts() + get_config_parts():
-        filenames = package.files.get(part.ident, [])
-        if len(filenames) > 0:
-            logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
-            if part.ident == "ec_rule_packs":
-                _remove_packaged_rule_packs(filenames)
-                continue
-            for fn in filenames:
-                logger.log(VERBOSE, "    %s", fn)
-                try:
-                    file_path = Path(part.path) / fn
-                    file_path.unlink(missing_ok=True)
-                except Exception as e:
-                    if cmk.utils.debug.enabled():
-                        raise
-                    raise Exception(f"Cannot uninstall {file_path}: {e}\n")
+        if not (filenames := package.files.get(part.ident, [])):
+            continue
+
+        logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
+        if part.ident == "ec_rule_packs":
+            _remove_packaged_rule_packs(filenames)
+            continue
+        for fn in filenames:
+            logger.log(VERBOSE, "    %s", fn)
+            try:
+                file_path = Path(part.path) / fn
+                file_path.unlink(missing_ok=True)
+            except Exception as e:
+                if cmk.utils.debug.enabled():
+                    raise
+                raise Exception(f"Cannot uninstall {file_path}: {e}\n")
 
     (package_dir() / package.name).unlink()
 
@@ -470,55 +473,56 @@ def _install(  # pylint: disable=too-many-branches
     with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
         for part in get_package_parts() + get_config_parts():
-            filenames = package.files.get(part.ident, [])
-            if len(filenames) > 0:
-                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-                for fn in filenames:
-                    logger.log(VERBOSE, "    %s", fn)
+            if not (filenames := package.files.get(part.ident, [])):
+                continue
 
-                # make sure target directory exists
-                if not os.path.exists(part.path):
-                    logger.log(VERBOSE, "    Creating directory %s", part.path)
-                    os.makedirs(part.path)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            for fn in filenames:
+                logger.log(VERBOSE, "    %s", fn)
 
-                tarsource = tar.extractfile(part.ident + ".tar")
-                if tarsource is None:
-                    raise PackageException("Failed to open %s.tar" % part.ident)
+            # make sure target directory exists
+            if not os.path.exists(part.path):
+                logger.log(VERBOSE, "    Creating directory %s", part.path)
+                os.makedirs(part.path)
 
-                # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
-                # been installed for cache invalidation.
-                with subprocess.Popen(
-                    ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
-                    stdin=subprocess.PIPE,
-                    shell=False,
-                    close_fds=True,
-                ) as tardest:
-                    if tardest.stdin is None:
-                        raise PackageException("Failed to open stdin")
+            tarsource = tar.extractfile(part.ident + ".tar")
+            if tarsource is None:
+                raise PackageException("Failed to open %s.tar" % part.ident)
 
-                    while True:
-                        data = tarsource.read(4096)
-                        if not data:
-                            break
-                        tardest.stdin.write(data)
+            # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
+            # been installed for cache invalidation.
+            with subprocess.Popen(
+                ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                stdin=subprocess.PIPE,
+                shell=False,
+                close_fds=True,
+            ) as tardest:
+                if tardest.stdin is None:
+                    raise PackageException("Failed to open stdin")
 
-                # Fix permissions of extracted files
-                for filename in filenames:
-                    path = os.path.join(part.path, filename)
-                    desired_perm = _get_permissions(path)
-                    has_perm = os.stat(path).st_mode & 0o7777
-                    if has_perm != desired_perm:
-                        logger.log(
-                            VERBOSE,
-                            "    Fixing permissions of %s: %04o -> %04o",
-                            path,
-                            has_perm,
-                            desired_perm,
-                        )
-                        os.chmod(path, desired_perm)
+                while True:
+                    data = tarsource.read(4096)
+                    if not data:
+                        break
+                    tardest.stdin.write(data)
 
-                if part.ident == "ec_rule_packs":
-                    ec.add_rule_pack_proxies(filenames)
+            # Fix permissions of extracted files
+            for filename in filenames:
+                path = os.path.join(part.path, filename)
+                desired_perm = _get_permissions(path)
+                has_perm = os.stat(path).st_mode & 0o7777
+                if has_perm != desired_perm:
+                    logger.log(
+                        VERBOSE,
+                        "    Fixing permissions of %s: %04o -> %04o",
+                        path,
+                        has_perm,
+                        desired_perm,
+                    )
+                    os.chmod(path, desired_perm)
+
+            if part.ident == "ec_rule_packs":
+                ec.add_rule_pack_proxies(filenames)
 
     # In case of an update remove files from old_package not present in new one
     if old_package is not None:

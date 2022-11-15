@@ -40,6 +40,7 @@ def test_all_services_present_in_gui():
         "ad_connect",
         "usage_details",
         "Microsoft.Compute/virtualMachines",
+        "Microsoft.RecoveryServices/vaults",
         *all_agent_metrics,
     ]
     assert sorted(all_gui_services) == sorted(all_agent_services)

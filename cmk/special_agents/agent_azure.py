@@ -470,6 +470,12 @@ class MgmtApiClient(BaseApiClient):
         url = "resourceGroups/{}/providers/Microsoft.Network/virtualNetworkGateways/{}"
         return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
 
+    def backup_containers_view(self, group, name):
+        url = (
+            "resourceGroups/{}/providers/Microsoft.RecoveryServices/vaults/{}/backupProtectedItems"
+        )
+        return self._get(url.format(group, name), params={"api-version": "2022-05-01"})
+
     def vnet_peering_view(self, group, providers, vnet_id, vnet_peering_id):
         url = "resourceGroups/{}/providers/{}/virtualNetworks/{}/virtualNetworkPeerings/{}"
         return self._get(
@@ -867,6 +873,25 @@ def process_virtual_net_gw(mgmt_client: MgmtApiClient, resource: AzureResource) 
     resource.info["properties"]["health"] = get_vnet_gw_health(mgmt_client, gw_view)
 
 
+def process_recovery_services_vaults(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
+    backup_keys = (
+        "friendlyName",
+        "backupManagementType",
+        "protectedItemType",
+        "lastBackupTime",
+        "lastBackupStatus",
+        "protectionState",
+        "protectionStatus",
+        "policyName",
+        "isArchiveEnabled",
+    )
+    backup_view = mgmt_client.backup_containers_view(resource.info["group"], resource.info["name"])
+
+    backup_containers = [filter_keys(b["properties"], backup_keys) for b in backup_view["value"]]
+    resource.info["properties"] = {}
+    resource.info["properties"]["backup_containers"] = backup_containers
+
+
 class MetricCache(DataCache):
     def __init__(  # type:ignore[no-untyped-def]
         self, resource, metric_definition, ref_time, debug=False
@@ -1066,6 +1091,8 @@ def process_resource(
         if args.piggyback_vms == "self":
             sections.append(get_vm_labels_section(resource, group_labels))
 
+    elif resource_type == "Microsoft.RecoveryServices/vaults":
+        process_recovery_services_vaults(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/virtualNetworkGateways":
         process_virtual_net_gw(mgmt_client, resource)
 

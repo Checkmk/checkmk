@@ -39,6 +39,7 @@ ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("Microsoft.DBforPostgreSQL/servers", _("Database for PostgreSQL")),
     ("Microsoft.Network/trafficmanagerprofiles", _("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", _("Load Balancer")),
+    ("Microsoft.RecoveryServices/vaults", _("Recovery Services Vault")),
 ]
 
 

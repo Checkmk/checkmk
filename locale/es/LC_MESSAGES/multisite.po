@@ -1147,30 +1147,6 @@ msgstr ""
 "<b>Nota:</b> los resultados mostrados están incompletos y no reflejan el "
 "orden de clasificación."
 
-#, python-format
-msgid ""
-"<b>Note</b>: On the agent side, TLS is currently only supported on systemd "
-"based Linux machines. However, when setting the Encryption settings to '%s', "
-"Checkmk will expect encrypted data from all matching hosts. Please keep this "
-"in mind when configuring this ruleset."
-msgstr ""
-"<b> Nota</b>: En el lado del agente, TLS actualmente sólo es compatible con "
-"las máquinas Linux basadas en systemd. Sin embargo, al establecer la "
-"configuración de cifrado en '%s', Checkmk esperará datos cifrados de todos "
-"los hosts que coincidan. Tenga esto en cuenta cuando configure este conjunto "
-"de reglas."
-
-msgid ""
-"<b>Note</b>: On the agent side, this encryption is only supported by the "
-"Linux agent and the Windows agent. However, when setting the Encryption "
-"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
-"matching hosts. Please keep this in mind when configuring this ruleset."
-msgstr ""
-"<b>Nota</b>: En el agente, Esta encripción es solo soportada por el agente "
-"de Linux y Windows. De todas formas, cuando se elige la opción de Encripción "
-"a <i>forzar</i>, Checkmk esperará datos cifrados de todos los hosts "
-"coincidentes. Tenga esto en cuenta al configurar este conjunto de reglas."
-
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
 "3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
@@ -2730,8 +2706,19 @@ msgstr "Niveles absolutos de arrendamientos usados"
 msgid "Absolute value"
 msgstr "Valor absoluto"
 
+#, fuzzy
+msgid "Accept TLS encrypted connections only"
+msgstr "Conexiones aceptadas"
+
 msgid "Accept all"
 msgstr "Aceptar todo"
+
+msgid "Accept all incoming data, including unencrypted"
+msgstr ""
+
+#, fuzzy
+msgid "Accept all types of encryption"
+msgstr "Codificación del estado"
 
 msgid "Accept any SSH Host Key"
 msgstr "Aceptar cualquier clave de host SSH"
@@ -4799,9 +4786,6 @@ msgstr ""
 
 msgid "Allow challenge-response authentication"
 msgstr "Permitir la autenticación de reto-respuesta"
-
-msgid "Allow non-TLS connections"
-msgstr "Permitir conexiones no TLS"
 
 msgid "Allow password authentication"
 msgstr "Permitir la autenticación con contraseña"
@@ -9381,20 +9365,6 @@ msgstr ""
 "sección de uso del disco es notoriamente larga. Si tiene problemas de "
 "rendimiento, considere la posibilidad de deshabilitarla."
 
-msgid ""
-"Choose if the agent sends encrypted packages. This controls whether baked "
-"agents encrypt their output and whether Checkmk expects encrypted output. "
-"Please note: If you opt to enforce encryption, agents that don't support "
-"encryption will not work any more. Further note: This only affects regular "
-"agents, not special agents aka datasource programs."
-msgstr ""
-"Elija si el agente envía paquetes cifrados. Esto controla si los agentes "
-"horneados encriptan su salida y si Checkmk espera una salida encriptada. "
-"Nota: Si opta por forzar la encriptación, los agentes que no soportan la "
-"encriptación ya no funcionarán. Nota adicional: Esto sólo afecta a los "
-"agentes normales, no a los agentes especiales, también conocidos como "
-"programas de fuentes de datos."
-
 msgid "Choose if this rule applies to plugins or local checks"
 msgstr "Elija si esta regla se aplica a los plugins o a los controles locales"
 
@@ -9776,6 +9746,14 @@ msgstr "Clon SLA"
 
 msgid "Clone bookmark list"
 msgstr "Clonar la lista de favoritos"
+
+#, fuzzy
+msgid "Clone builtin dashboard"
+msgstr "Personalizar el panel de control integrado"
+
+#, fuzzy
+msgid "Clone builtin view"
+msgstr "Vista de clonación"
 
 msgid "Clone custom graph"
 msgstr "Clonar gráfico personalizado"
@@ -11195,10 +11173,6 @@ msgstr "Continúa el conteo cuando el evento es <b>reconocido</b>."
 msgid "Continue search"
 msgstr "Seguir buscando"
 
-msgid "Control encryption of data sent from agents to Checkmk."
-msgstr ""
-"Controla la encriptación de los datos enviados por los agentes a Checkmk."
-
 msgid "Control group:"
 msgstr "Grupo de control:"
 
@@ -12493,13 +12467,6 @@ msgstr "Personalizar %s y utilizarlos"
 msgid "Customize GUI design"
 msgstr "Personalizar el diseño de la interfaz gráfica de usuario"
 
-msgid "Customize builtin dashboard"
-msgstr "Personalizar el panel de control integrado"
-
-#, fuzzy
-msgid "Customize dashboards"
-msgstr "Personalizar los cuadros de mando"
-
 msgid "Customize login screen"
 msgstr "Personalizar la pantalla de inicio de sesión"
 
@@ -12526,9 +12493,6 @@ msgstr "Personalizar el rango de tiempo"
 
 msgid "Customize title"
 msgstr "Personalizar el título"
-
-msgid "Customize view"
-msgstr "Personalizar la vista"
 
 msgid "Customized"
 msgstr "Personalizado"
@@ -14458,9 +14422,6 @@ msgstr "Bloques de disco sucios"
 
 msgid "Disable"
 msgstr "Desactivar"
-
-msgid "Disable (drop encrypted data)"
-msgstr "Desactivar (dejar caer los datos encriptados)"
 
 msgid "Disable SSL certificate validation"
 msgstr "Desactivar la validación de certificados SSL"
@@ -16554,6 +16515,10 @@ msgstr "Editar la métrica"
 msgid "Edit model"
 msgstr "Editar modelo"
 
+#, fuzzy
+msgid "Edit my view"
+msgstr "Editar vistas"
+
 #, python-format
 msgid "Edit notification rule %d"
 msgstr "Editar regla de notificación %d"
@@ -16718,6 +16683,10 @@ msgstr "Editar usuario %s"
 
 msgid "Edit user attribute"
 msgstr "Editar atributo de usuario"
+
+#, fuzzy, python-format
+msgid "Edit view of user %s"
+msgstr "Editar usuario %s"
 
 msgid "Editable by"
 msgstr "Editable por"
@@ -16938,9 +16907,6 @@ msgstr "Habilitar 'Ejecutar como <b>grupo local</b>' para los scripts"
 
 msgid "Enable 'Run As <b>User</b>' for scripts"
 msgstr "Habilitar 'Ejecutar como <b>Usuario</b>' para los scripts"
-
-msgid "Enable (accept encrypted and unencrypted data)"
-msgstr "Habilitar (aceptar datos encriptados y no encriptados)"
 
 msgid "Enable Caching"
 msgstr "Activar el caché"
@@ -17283,15 +17249,9 @@ msgstr ""
 msgid "Encryption"
 msgstr "Codificación"
 
-msgid "Encryption (Linux, Windows)"
-msgstr "Cifrado (Linux, Windows)"
-
 #, python-format
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr "El cifrado de %s sólo se utiliza si está activado en el sitio remoto"
-
-msgid "Encryption secret"
-msgstr "Secreto de encriptación"
 
 msgid "End"
 msgstr "Finalizar"
@@ -17329,9 +17289,6 @@ msgstr "Puntos finales"
 msgid "Endpoints"
 msgstr "Puntos finales"
 
-msgid "Enforce (drop unencrypted data)"
-msgstr "Hacer cumplir (dejar caer los datos no codificados)"
-
 msgid "Enforce IPv4"
 msgstr "Hacer valer el IPv4"
 
@@ -17346,6 +17303,10 @@ msgstr "Aplicar la versión de Python 2"
 
 msgid "Enforce Python 3 version"
 msgstr "Aplicar la versión de Python 3"
+
+#, fuzzy
+msgid "Enforce agent data encryption"
+msgstr "autenticación y encriptación"
 
 msgid "Enforce change"
 msgstr "Aplicar el cambio"
@@ -23963,6 +23924,14 @@ msgstr ""
 "direcciones IP configuradas de un host se verificarán con las direcciones IP "
 "permitidas informadas por el agente. Esto se hace durante la monitorización "
 "por el servicio Check_MK."
+
+msgid ""
+"If you cannot use the agent controllers encrypted TLS connections, you can "
+"resort to the old OpenSSH based symmetric encryption (if your host system "
+"supports it).Note that using this encryption in addition to the TLS "
+"encryption is not only useless, but also prevents the controller from "
+"compressing the data for transport."
+msgstr ""
 
 msgid ""
 "If you change this paths away from its default then the package will <b>not</"
@@ -38675,11 +38644,6 @@ msgstr ""
 "información de los procesos. El uso de WMI es obligatorio para incluir la "
 "ruta completa de un proceso en ejecución en la lista de procesos."
 
-msgid ""
-"Rely on the TLS encryption provided by the agent controller. No additional "
-"encryption is appied."
-msgstr ""
-
 msgid "Remaining Life"
 msgstr "Vida restante"
 
@@ -41273,6 +41237,10 @@ msgstr "Porcentaje utilizado"
 msgid "Server performance"
 msgstr "Rendimiento de los servidores"
 
+#, fuzzy
+msgid "Server side handling of unencrypted data"
+msgstr "Hacer cumplir (dejar caer los datos no codificados)"
+
 msgid "Server timezone"
 msgstr "Zona horaria del servidor"
 
@@ -43543,11 +43511,19 @@ msgstr "Ordenar"
 msgid "Sort by %s"
 msgstr "Ordenar por %s"
 
+#, fuzzy
+msgid "Sort by column"
+msgstr "Mostrar en la columna"
+
 msgid "Sort index"
 msgstr "Índice de ordenación"
 
 msgid "Sorting"
 msgstr "Clasificación"
+
+#, fuzzy
+msgid "Sorty by column"
+msgstr "Mostrar en la columna"
 
 msgid "Source"
 msgstr "Fuente"
@@ -45765,6 +45741,10 @@ msgstr "Symantec Anti Virus (Linux)"
 msgid "Symantec Brightmail Queues"
 msgstr "Colas de correo de Symantec Brightmail"
 
+#, fuzzy
+msgid "Symmetric encryption (Linux, Windows)"
+msgstr "Cifrado (Linux, Windows)"
+
 msgid "Sync group memberships from other connections"
 msgstr "Sincronizar la pertenencia a grupos de otras conexiones"
 
@@ -47295,6 +47275,14 @@ msgid ""
 msgstr ""
 "La edad, en segundos, en que se recuperó el último mensaje de la cola. Se "
 "calcula restando LGETDATE/LGETTIME de la marca de tiempo actual."
+
+msgid ""
+"The agent can send data either using TLS encryption, a symmetric encryption, "
+"or unencrypted. This rule determines how the monitoring site handles each "
+"type of data, in case it is sent by the agent. Data encrypted using TLS is "
+"always accepted. Note: This does not prevent the unencrypted data being sent "
+"over the network in all cases."
+msgstr ""
 
 msgid ""
 "The agent controller provides a safe channel for the communication between "
@@ -57840,9 +57828,6 @@ msgstr "Utilice STARTTLS para la conexión."
 msgid "Use STS AssumeRole to assume a different IAM role"
 msgstr "Utilice STS AssumeRole para asumir un rol IAM diferente"
 
-msgid "Use TLS encryption (Linux)"
-msgstr "Utilizar el cifrado TLS (Linux)"
-
 msgid "Use TLS over SMTP"
 msgstr "Utilizar TLS sobre SMTP"
 
@@ -58156,9 +58141,6 @@ msgstr "Utilice las siguientes credenciales"
 
 msgid "Use the following levels"
 msgstr "Utilice los siguientes niveles"
-
-msgid "Use the following setting for non-TLS connections"
-msgstr "Utilice la siguiente configuración para las conexiones no TLS"
 
 msgid "Use the following status host"
 msgstr "Utiliza el siguiente host de estado"
@@ -63275,6 +63257,14 @@ msgstr ""
 "agente especial para el dispositivo PLC separado por un espacio con el ident "
 "del valor que también está configurado en el agente especial."
 
+#, fuzzy, python-format
+msgid ""
+"You need to configure a \"%s\" column and save the view first, to be able to "
+"sort by this column."
+msgstr ""
+"Es necesario configurar el DN base del grupo para poder utilizar el plugin "
+"de sincronización de roles."
+
 msgid ""
 "You need to configure the group base DN to be able to use the roles "
 "synchronization plugin."
@@ -65620,6 +65610,75 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#, python-format
+#~ msgid ""
+#~ "<b>Note</b>: On the agent side, TLS is currently only supported on "
+#~ "systemd based Linux machines. However, when setting the Encryption "
+#~ "settings to '%s', Checkmk will expect encrypted data from all matching "
+#~ "hosts. Please keep this in mind when configuring this ruleset."
+#~ msgstr ""
+#~ "<b> Nota</b>: En el lado del agente, TLS actualmente sólo es compatible "
+#~ "con las máquinas Linux basadas en systemd. Sin embargo, al establecer la "
+#~ "configuración de cifrado en '%s', Checkmk esperará datos cifrados de "
+#~ "todos los hosts que coincidan. Tenga esto en cuenta cuando configure este "
+#~ "conjunto de reglas."
+
+#~ msgid ""
+#~ "<b>Note</b>: On the agent side, this encryption is only supported by the "
+#~ "Linux agent and the Windows agent. However, when setting the Encryption "
+#~ "settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
+#~ "matching hosts. Please keep this in mind when configuring this ruleset."
+#~ msgstr ""
+#~ "<b>Nota</b>: En el agente, Esta encripción es solo soportada por el "
+#~ "agente de Linux y Windows. De todas formas, cuando se elige la opción de "
+#~ "Encripción a <i>forzar</i>, Checkmk esperará datos cifrados de todos los "
+#~ "hosts coincidentes. Tenga esto en cuenta al configurar este conjunto de "
+#~ "reglas."
+
+#~ msgid "Allow non-TLS connections"
+#~ msgstr "Permitir conexiones no TLS"
+
+#~ msgid ""
+#~ "Choose if the agent sends encrypted packages. This controls whether baked "
+#~ "agents encrypt their output and whether Checkmk expects encrypted output. "
+#~ "Please note: If you opt to enforce encryption, agents that don't support "
+#~ "encryption will not work any more. Further note: This only affects "
+#~ "regular agents, not special agents aka datasource programs."
+#~ msgstr ""
+#~ "Elija si el agente envía paquetes cifrados. Esto controla si los agentes "
+#~ "horneados encriptan su salida y si Checkmk espera una salida encriptada. "
+#~ "Nota: Si opta por forzar la encriptación, los agentes que no soportan la "
+#~ "encriptación ya no funcionarán. Nota adicional: Esto sólo afecta a los "
+#~ "agentes normales, no a los agentes especiales, también conocidos como "
+#~ "programas de fuentes de datos."
+
+#~ msgid "Control encryption of data sent from agents to Checkmk."
+#~ msgstr ""
+#~ "Controla la encriptación de los datos enviados por los agentes a Checkmk."
+
+#, fuzzy
+#~| msgid "Customize Dashboards"
+#~ msgid "Customize dashboards"
+#~ msgstr "Personalizar los cuadros de mando"
+
+#~ msgid "Customize view"
+#~ msgstr "Personalizar la vista"
+
+#~ msgid "Disable (drop encrypted data)"
+#~ msgstr "Desactivar (dejar caer los datos encriptados)"
+
+#~ msgid "Enable (accept encrypted and unencrypted data)"
+#~ msgstr "Habilitar (aceptar datos encriptados y no encriptados)"
+
+#~ msgid "Encryption secret"
+#~ msgstr "Secreto de encriptación"
+
+#~ msgid "Use TLS encryption (Linux)"
+#~ msgstr "Utilizar el cifrado TLS (Linux)"
+
+#~ msgid "Use the following setting for non-TLS connections"
+#~ msgstr "Utilice la siguiente configuración para las conexiones no TLS"
 
 #~ msgid "OpenHardwareMonitor (headless)"
 #~ msgstr "OpenHardwareMonitor (sin cabeza)"

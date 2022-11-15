@@ -23,6 +23,8 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 CrashReportStore = crash_reporting.CrashReportStore
 
 
@@ -87,7 +89,7 @@ def create_check_crash_dump(
     plugin_kwargs: Mapping[str, Any],
     is_cluster: bool,
     is_enforced: bool,
-    is_inline_snmp: bool,
+    snmp_backend: SNMPBackendEnum,
     rtc_package: Optional[AgentRawData],
 ) -> str:
     """Create a crash dump from an exception occured during check execution
@@ -105,7 +107,7 @@ def create_check_crash_dump(
                 "is_cluster": is_cluster,
                 "description": service_name,
                 "check_type": str(plugin_name),
-                "inline_snmp": is_inline_snmp,
+                "inline_snmp": snmp_backend is SNMPBackendEnum.INLINE,
                 "enforced_service": is_enforced,
                 **plugin_kwargs,
             },

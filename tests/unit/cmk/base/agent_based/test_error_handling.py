@@ -10,6 +10,8 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import ExitSpec, HostName
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 import cmk.base.agent_based.error_handling as error_handling
 
 
@@ -40,7 +42,7 @@ def test_MKTimeout_exception_returns_2(capsys) -> None:  # type:ignore[no-untype
         service_name="service_name",
         plugin_name="pluging_name",
         is_cluster=False,
-        is_inline_snmp=False,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
         rtc_package=None,
         keepalive=False,
     )
@@ -61,7 +63,7 @@ def test_MKAgentError_exception_returns_2(capsys) -> None:  # type:ignore[no-unt
         service_name="service_name",
         plugin_name="pluging_name",
         is_cluster=False,
-        is_inline_snmp=False,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
         rtc_package=None,
         keepalive=False,
     )
@@ -82,7 +84,7 @@ def test_MKGeneralException_returns_3(capsys) -> None:  # type:ignore[no-untyped
         service_name="service_name",
         plugin_name="pluging_name",
         is_cluster=False,
-        is_inline_snmp=False,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
         rtc_package=None,
         keepalive=False,
     )
@@ -104,7 +106,7 @@ def test_unhandled_exception_returns_3(capsys) -> None:  # type:ignore[no-untype
         service_name="service_name",
         plugin_name="pluging_name",
         is_cluster=False,
-        is_inline_snmp=False,
+        snmp_backend=SNMPBackendEnum.CLASSIC,
         rtc_package=None,
         keepalive=False,
     )

@@ -9,7 +9,7 @@ from typing import Callable, Sequence, Tuple
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import AgentRawData, HostName, result, ServiceState
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.type_defs import SourceInfo
 
@@ -39,7 +39,7 @@ def active_check_discovery(
         service_name="Check_MK Discovery",
         plugin_name="discover",
         is_cluster=config_cache.is_cluster(host_name),
-        is_inline_snmp=(host_config.snmp_config(host_name).snmp_backend is SNMPBackendEnum.INLINE),
+        snmp_backend=host_config.snmp_config(host_name).snmp_backend,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

@@ -27,6 +27,8 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 import cmk.base.crash_reporting
 
 
@@ -38,7 +40,7 @@ def check_result(
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
     is_cluster: bool,
-    is_inline_snmp: bool,
+    snmp_backend: SNMPBackendEnum,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -52,7 +54,7 @@ def check_result(
             service_name=service_name,
             plugin_name=plugin_name,
             is_cluster=is_cluster,
-            is_inline_snmp=is_inline_snmp,
+            snmp_backend=snmp_backend,
             keepalive=keepalive,
             rtc_package=None,
         )
@@ -82,7 +84,7 @@ def _handle_failure(
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
     is_cluster: bool,
-    is_inline_snmp: bool,
+    snmp_backend: SNMPBackendEnum,
     rtc_package: Optional[AgentRawData],
     keepalive: bool,
 ) -> Tuple[ServiceState, str]:
@@ -108,7 +110,7 @@ def _handle_failure(
             plugin_kwargs={},
             is_cluster=is_cluster,
             is_enforced=False,
-            is_inline_snmp=is_inline_snmp,
+            snmp_backend=snmp_backend,
             rtc_package=rtc_package,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

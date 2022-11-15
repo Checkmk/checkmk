@@ -243,12 +243,6 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
     ]
 
-    if with_local:
-        expected_paths += [
-            'local',
-            'var/check_mk/packages',
-        ]
-
     # The new sync directories create all needed files on the central site now
     if not is_pre_17_site:
         expected_paths += [
@@ -283,6 +277,17 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
             'etc/check_mk/mkeventd.d/mkp',
             'etc/check_mk/mkeventd.d/mkp/rule_packs',
         ]
+        if not is_pre_17_site:
+            expected_paths += [
+                "local",
+                "var/check_mk/packages",
+            ]
+        else:
+            if with_local:
+                expected_paths += [
+                    "local",
+                    "var/check_mk/packages",
+                ]
 
     # The paths are registered once the enterprise plugins are available, independent of the
     # cmk_version.edition_short() value.
@@ -308,6 +313,12 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
         ]
+
+        if with_local:
+            expected_paths += [
+                "local",
+                "var/check_mk/packages",
+            ]
 
         expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
 

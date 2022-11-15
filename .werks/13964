@@ -1,0 +1,14 @@
+Title: REST API will now return complete Host Tag Group objects
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1668696269
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Instead of returning only the title of a Host Tag Group, the REST API will now als return a topic field
+and a list of tags belonging to the the group.
+

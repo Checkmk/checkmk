@@ -242,8 +242,8 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
 
 def test_openapi_host_tag_with_only_one_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host,
-):
+    with_host: None,
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     wsgi_app = aut_user_auth_wsgi_app
     wsgi_app.call_method(
@@ -332,3 +332,19 @@ def test_openapi_host_tag_with_only_one_option(
     )
 
     assert host.json["extensions"]["attributes"]["tag_group_id999"] is None
+
+
+def test_openapi_host_tag_groups_all_props_in_schema(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> None:
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+    first_tag = resp.json["value"][0]
+    assert "title" in first_tag
+    assert "id" in first_tag
+    assert "topic" in first_tag["extensions"]
+    assert "tags" in first_tag["extensions"]

@@ -5,7 +5,7 @@
 
 import math
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import partial
 from itertools import zip_longest
 from typing import Literal, TypedDict
@@ -956,57 +956,12 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
         labelling = cmk.utils.render.date
         label_size = 8
 
-    # Now guess a nice number of labels. This is similar to the
-    # vertical axis, but here the division is not done by 1, 2 and
-    # 5 but we need to stick to user friendly time sections - that
-    # might even not be equal in size (like months!)
-    num_t_labels = max(int((width - 7) / label_size), 2)
-    label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
-
-    # Get a distribution function. The function is called with start_time end
-    # end_time and outputs an iteration of label positions - tuples of the
-    # form (timepos, line_width, has_label).
-
-    # If the distance of the lables is less than one day, we have a distance aligned
-    # at minutes.
-    for dist_minutes, subdivision in [
-        (1, 0.25),
-        (2, 0.5),
-        (5, 1),
-        (10, 2),
-        (20, 5),
-        (30, 5),
-        (60, 10),
-        (120, 20),
-        (240, 30),
-        (360, 60),
-        (480, 60),
-        (720, 120),
-        (1440, 360),
-        (2880, 480),
-        (4320, 720),
-        (5760, 720),
-    ]:
-        if label_distance_at_least <= dist_minutes * 60:
-            dist_function: Callable[[int, int], Iterable[tuple[float, int, bool]]] = partial(
-                _dist_seconds, distance=dist_minutes * 60, subdivision=subdivision * 60
-            )
-            break
-
-    else:
-        # Label distance less than one week? Align lables at days of week
-        if label_distance_at_least <= 86400 * 7:
-            dist_function = _dist_week
-
-        else:
-            # Label distance less that two years?
-            for months in 1, 2, 3, 4, 6, 12, 18, 24, 36, 48:
-                if label_distance_at_least <= 86400 * 31 * months:
-                    dist_function = partial(_dist_months, months=months)
-                    break
-            else:
-                # Label distance is more than 8 years. Bogus, but we must not crash
-                dist_function = partial(_dist_months, months=96)
+    dist_function = _select_t_axis_label_producer(
+        time_range=time_range,
+        width=width,
+        label_size=label_size,
+        label_distance_at_least=label_distance_at_least,
+    )
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
@@ -1040,6 +995,60 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
     }
 
 
+def _select_t_axis_label_producer(
+    *,
+    time_range: int,
+    width: int,
+    label_size: float,
+    label_distance_at_least: float,
+) -> Callable[[int, int], Iterator[tuple[float, int, bool]]]:
+    # Guess a nice number of labels. This is similar to the
+    # vertical axis, but here the division is not done by 1, 2 and
+    # 5 but we need to stick to user friendly time sections - that
+    # might even not be equal in size (like months!)
+    num_t_labels = max(int((width - 7) / label_size), 2)
+    label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
+
+    # Get a distribution function. The function is called with start_time end
+    # end_time and outputs an iteration of label positions - tuples of the
+    # form (timepos, line_width, has_label).
+
+    # If the distance of the lables is less than one day, we have a distance aligned
+    # at minutes.
+    for dist_minutes, subdivision in [
+        (1, 0.25),
+        (2, 0.5),
+        (5, 1),
+        (10, 2),
+        (20, 5),
+        (30, 5),
+        (60, 10),
+        (120, 20),
+        (240, 30),
+        (360, 60),
+        (480, 60),
+        (720, 120),
+        (1440, 360),
+        (2880, 480),
+        (4320, 720),
+        (5760, 720),
+    ]:
+        if label_distance_at_least <= dist_minutes * 60:
+            return partial(_dist_seconds, distance=dist_minutes * 60, subdivision=subdivision * 60)
+
+    # Label distance less than one week? Align lables at days of week
+    if label_distance_at_least <= 86400 * 7:
+        return _dist_week
+
+    # Label distance less that two years?
+    for months in 1, 2, 3, 4, 6, 12, 18, 24, 36, 48:
+        if label_distance_at_least <= 86400 * 31 * months:
+            return partial(_dist_months, months=months)
+
+    # Label distance is more than 8 years. Bogus, but we must not crash
+    return partial(_dist_months, months=96)
+
+
 # These distance functions yield a sequence of useful
 # points for labels plus intermediate points for lines without
 # labels. These points have the label (None). The function
@@ -1047,7 +1056,7 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
 # line is one of 0, 1, 2 (none, thin, thick)
 def _dist_seconds(
     start_time: int, end_time: int, distance: int, subdivision: float
-) -> Iterable[tuple[float, int, bool]]:
+) -> Iterator[tuple[float, int, bool]]:
     # First align start_time to the next time that can be divided
     # distance, but align this at 00:00 localtime!
     align_broken = time.localtime(start_time)
@@ -1079,7 +1088,7 @@ def _dist_seconds(
         pos += subdivision
 
 
-def _dist_week(start_time: int, end_time: int) -> Iterable[tuple[float, int, bool]]:
+def _dist_week(start_time: int, end_time: int) -> Iterator[tuple[float, int, bool]]:
     # Shift time back to monday
     wday_of_start_time = time.localtime(start_time).tm_wday
     monday_week = start_time - 86400 * wday_of_start_time
@@ -1090,7 +1099,7 @@ def _dist_week(start_time: int, end_time: int) -> Iterable[tuple[float, int, boo
             yield (pos, line_width, has_label)
 
 
-def _dist_months(start_time: int, end_time: int, months: int) -> Iterable[tuple[float, int, bool]]:
+def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[float, int, bool]]:
     # Jump to beginning of month
     broken = time.localtime(start_time)
     broken_tm_year = broken[0]

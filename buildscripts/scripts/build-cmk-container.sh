@@ -116,7 +116,7 @@ BASE_PATH=$(pwd)/tmp
 mkdir -p "$BASE_PATH"
 TMP_PATH=$(mktemp --directory -p "$BASE_PATH" --suffix=.cmk-docker)
 PACKAGE_PATH=$(pwd)/download
-DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker"
+DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}/docker_image"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}"
 PKG_FILE="${PKG_NAME}_0.jammy_$(dpkg --print-architecture).deb"

@@ -458,9 +458,11 @@ class UserLoginTwoFactor(Page):
 
         html.open_a(href="https://checkmk.com")
         html.img(
-            src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
+            src=theme.detect_icon_path(
+                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "mk-logo",
+                prefix="",
+            ),
             id_="logo",
-            class_="custom" if theme.has_custom_logo() else None,
         )
         html.close_a()
 

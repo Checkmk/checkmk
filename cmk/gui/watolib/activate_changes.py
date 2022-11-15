@@ -289,9 +289,10 @@ def get_replication_paths() -> List[ReplicationPath]:
                 "customer_multisite",
                 "customer_check_mk",
                 "customer_gui_design",
-                "gui_logo",
-                "gui_logo_facelift",
-                "gui_logo_dark",
+                "login_logo_facelift",
+                "login_logo_dark",
+                "navbar_logo_facelift",
+                "navbar_logo_dark",
             }
         ]
 

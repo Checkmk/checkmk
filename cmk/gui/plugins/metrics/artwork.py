@@ -967,7 +967,8 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
     # TODO: could we run into any problems with daylight saving time here?
     labels: list[Label] = []
     seconds_per_char = time_range / (width - 7)
-    for pos, line_width in dist_function(start_time, end_time):
+    for pos in dist_function(start_time, end_time):
+        line_width = 2  # thick
         if isinstance(labelling, str):
             label: str | None = time.strftime(str(labelling), time.localtime(pos))
         else:
@@ -998,7 +999,7 @@ def _select_t_axis_label_producer(
     width: int,
     label_size: float,
     label_distance_at_least: float,
-) -> Callable[[int, int], Iterator[tuple[float, int]]]:
+) -> Callable[[int, int], Iterator[float]]:
     # Guess a nice number of labels. This is similar to the
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
@@ -1050,7 +1051,7 @@ def _dist_seconds(
     start_time: int,
     end_time: int,
     distance: int,
-) -> Iterator[tuple[float, int]]:
+) -> Iterator[float]:
     align_broken = time.localtime(start_time)
     align = time.mktime(
         (
@@ -1069,22 +1070,20 @@ def _dist_seconds(
     pos = align + math.ceil((start_time - align) / distance) * distance
 
     while pos <= end_time:
-        yield (pos, 2)
+        yield pos
         pos += distance
 
 
-def _dist_week(start_time: int, end_time: int) -> Iterator[tuple[float, int]]:
+def _dist_week(start_time: int, end_time: int) -> Iterator[float]:
     # Shift time back to monday
     wday_of_start_time = time.localtime(start_time).tm_wday
     monday_week = start_time - 86400 * wday_of_start_time
 
     # Now we have an equal distance of 7 days
-    for pos, line_width in _dist_seconds(monday_week, end_time, 7 * 86400):
-        if pos >= start_time:
-            yield (pos, line_width)
+    yield from (pos for pos in _dist_seconds(monday_week, end_time, 7 * 86400) if pos >= start_time)
 
 
-def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[float, int]]:
+def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[float]:
     # Jump to beginning of month
     broken = time.localtime(start_time)
     broken_tm_year = broken[0]
@@ -1115,7 +1114,7 @@ def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[
             break
 
         if pos >= start_time:
-            yield pos, 2
+            yield pos
 
         for _m in range(months):
             broken_tm_mon += 1

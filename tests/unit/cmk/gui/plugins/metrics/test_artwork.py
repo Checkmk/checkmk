@@ -37,17 +37,17 @@ def test_min(
 def test_dist_seconds() -> None:
     with set_timezone("Europe/Berlin"):
         assert list(artwork._dist_seconds(1565481600, 1565481620, 10)) == [
-            (1565481600.0, 2),
-            (1565481610.0, 2),
-            (1565481620.0, 2),
+            1565481600.0,
+            1565481610.0,
+            1565481620.0,
         ]
 
 
 def test_dist_week() -> None:
     with set_timezone("Europe/Berlin"):
         assert list(artwork._dist_week(1565401600, 1566691200)) == [
-            (1565560800.0, 2),
-            (1566165600.0, 2),
+            1565560800.0,
+            1566165600.0,
         ]
 
 

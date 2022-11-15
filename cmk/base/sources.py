@@ -135,9 +135,9 @@ def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
-    host_config = HostConfig.make_host_config(hostname)
+    config_cache = config.get_config_cache()
     return AgentParserConfig(
-        check_interval=host_config.check_mk_check_interval,
+        check_interval=config_cache.check_mk_check_interval(hostname),
         encoding_fallback=config.fallback_agent_output_encoding,
         keep_outdated=FileCacheGlobals.keep_outdated,
         translation=config.get_piggyback_translations(hostname),
@@ -538,7 +538,7 @@ class _Builder:
                 SourceType.HOST,
             )
             # convert to seconds and add grace period
-            interval = int(1.5 * 60 * self.host_config.check_mk_check_interval)
+            interval = int(1.5 * 60 * self.config_cache.check_mk_check_interval(self.host_name))
             return (
                 source,
                 NoFetcher(),

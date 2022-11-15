@@ -1512,8 +1512,9 @@ class AutomationDiagHost(Automation):
 
         # Determine SNMPv2/v3 community
         if hostname not in config.explicit_snmp_communities:
-            cred = host_config.snmp_credentials_of_version(
-                snmp_version=3 if test == "snmpv3" else 2
+            config_cache = config.get_config_cache()
+            cred = config_cache.snmp_credentials_of_version(
+                hostname, snmp_version=3 if test == "snmpv3" else 2
             )
             if cred is not None:
                 credentials = cred

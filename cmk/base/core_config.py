@@ -831,7 +831,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
         attrs["address"] = attrs["_ADDRESS_4"]
         attrs["_ADDRESS_FAMILY"] = "4"
 
-    add_ipv4addrs, add_ipv6addrs = host_config.additional_ipaddresses
+    add_ipv4addrs, add_ipv6addrs = config_cache.additional_ipaddresses(hostname)
     _set_addresses(attrs, add_ipv4addrs, "4")
     _set_addresses(attrs, add_ipv6addrs, "6")
 

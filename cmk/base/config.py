@@ -2460,7 +2460,8 @@ class HostConfig:
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
         self.is_ipv6_primary: Final = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
-            self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6"
+            self.is_ipv4v6_host
+            and self._config_cache._primary_ip_address_family_of(self.hostname) == "ipv6"
         )
 
     @property
@@ -2489,20 +2490,7 @@ class HostConfig:
         return get_config_cache().get_host_config(hostname)
 
     @property
-    def check_mk_check_interval(self) -> int:
-        return self._config_cache.extra_attributes_of_service(self.hostname, "Check_MK")[
-            "check_interval"
-        ]
-
-    def _primary_ip_address_family_of(self) -> str:
-        rules = self._config_cache.host_extra_conf(self.hostname, primary_address_family)
-        if rules:
-            return rules[0]
-        return "ipv4"
-
-    @property
     def alias(self) -> str:
-
         # Alias by explicit matching
         alias = self._explicit_host_attributes.get("alias")
         if alias:
@@ -2521,7 +2509,6 @@ class HostConfig:
         # First rule match
         return aliases[0]
 
-    # TODO: Move cluster/node parent handling to this function
     @property
     def parents(self) -> list[str]:
         """Returns the parents of a host configured via ruleset "parents"
@@ -2554,13 +2541,13 @@ class HostConfig:
             hostname=self.hostname,
             ipaddress=ip_address,
             credentials=self._config_cache._snmp_credentials(self.hostname),
-            port=self._snmp_port(),
+            port=self._config_cache._snmp_port(self.hostname),
             is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
             is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
                 self.hostname, snmpv2c_hosts
             ),
-            bulk_walk_size_of=self._bulk_walk_size(),
-            timing=self._snmp_timing(),
+            bulk_walk_size_of=self._config_cache._bulk_walk_size(self.hostname),
+            timing=self._config_cache._snmp_timing(self.hostname),
             oid_range_limits={
                 SectionName(name): rule
                 for name, rule in reversed(
@@ -2568,45 +2555,9 @@ class HostConfig:
                 )
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
-            character_encoding=self._snmp_character_encoding(),
+            character_encoding=self._config_cache._snmp_character_encoding(self.hostname),
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
         )
-
-    def snmp_credentials_of_version(self, snmp_version: int) -> SNMPCredentials | None:
-        for entry in self._config_cache.host_extra_conf(self.hostname, snmp_communities):
-            if snmp_version == 3 and not isinstance(entry, tuple):
-                continue
-
-            if snmp_version != 3 and isinstance(entry, tuple):
-                continue
-
-            return entry
-
-        return None
-
-    def _snmp_port(self) -> int:
-        ports = self._config_cache.host_extra_conf(self.hostname, snmp_ports)
-        if not ports:
-            return 161
-        return ports[0]
-
-    def _snmp_timing(self) -> SNMPTiming:
-        timing = self._config_cache.host_extra_conf(self.hostname, snmp_timing)
-        if not timing:
-            return {}
-        return timing[0]
-
-    def _bulk_walk_size(self) -> int:
-        bulk_sizes = self._config_cache.host_extra_conf(self.hostname, snmp_bulk_size)
-        if not bulk_sizes:
-            return 10
-        return bulk_sizes[0]
-
-    def _snmp_character_encoding(self) -> str | None:
-        entries = self._config_cache.host_extra_conf(self.hostname, snmp_character_encodings)
-        if not entries:
-            return None
-        return entries[0]
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
@@ -3052,15 +3003,15 @@ class HostConfig:
             hostname=self.hostname,
             ipaddress=address,
             credentials=cast(SNMPCredentials, self.management_credentials),
-            port=self._snmp_port(),
+            port=self._config_cache._snmp_port(self.hostname),
             is_bulkwalk_host=self._config_cache.in_binary_hostlist(
                 self.hostname, management_bulkwalk_hosts
             ),
             is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
                 self.hostname, snmpv2c_hosts
             ),
-            bulk_walk_size_of=self._bulk_walk_size(),
-            timing=self._snmp_timing(),
+            bulk_walk_size_of=self._config_cache._bulk_walk_size(self.hostname),
+            timing=self._config_cache._snmp_timing(self.hostname),
             oid_range_limits={
                 SectionName(name): rule
                 for name, rule in reversed(
@@ -3068,19 +3019,8 @@ class HostConfig:
                 )
             },
             snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
-            character_encoding=self._snmp_character_encoding(),
+            character_encoding=self._config_cache._snmp_character_encoding(self.hostname),
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
-        )
-
-    @property
-    def additional_ipaddresses(self) -> tuple[list[HostAddress], list[HostAddress]]:
-        # TODO Regarding the following configuration variables from WATO
-        # there's no inheritance, thus we use 'host_attributes'.
-        # Better would be to use cmk.base configuration variables,
-        # eg. like 'management_protocol'.
-        return (
-            host_attributes.get(self.hostname, {}).get("additional_ipv4addresses", []),
-            host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []),
         )
 
     @property
@@ -3561,6 +3501,64 @@ class ConfigCache:
             return SNMPBackendEnum.INLINE
 
         return SNMPBackendEnum.CLASSIC
+
+    def snmp_credentials_of_version(
+        self, hostname: HostName, snmp_version: int
+    ) -> SNMPCredentials | None:
+        for entry in self.host_extra_conf(hostname, snmp_communities):
+            if snmp_version == 3 and not isinstance(entry, tuple):
+                continue
+
+            if snmp_version != 3 and isinstance(entry, tuple):
+                continue
+
+            return entry
+
+        return None
+
+    def _snmp_port(self, hostname: HostName) -> int:
+        ports = self.host_extra_conf(hostname, snmp_ports)
+        if not ports:
+            return 161
+        return ports[0]
+
+    def _snmp_timing(self, hostname: HostName) -> SNMPTiming:
+        timing = self.host_extra_conf(hostname, snmp_timing)
+        if not timing:
+            return {}
+        return timing[0]
+
+    def _bulk_walk_size(self, hostname: HostName) -> int:
+        bulk_sizes = self.host_extra_conf(hostname, snmp_bulk_size)
+        if not bulk_sizes:
+            return 10
+        return bulk_sizes[0]
+
+    def _snmp_character_encoding(self, hostname: HostName) -> Optional[str]:
+        entries = self.host_extra_conf(hostname, snmp_character_encodings)
+        if not entries:
+            return None
+        return entries[0]
+
+    @staticmethod
+    def additional_ipaddresses(hostname: HostName) -> tuple[list[HostAddress], list[HostAddress]]:
+        # TODO Regarding the following configuration variables from WATO
+        # there's no inheritance, thus we use 'host_attributes'.
+        # Better would be to use cmk.base configuration variables,
+        # eg. like 'management_protocol'.
+        return (
+            host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
+            host_attributes.get(hostname, {}).get("additional_ipv6addresses", []),
+        )
+
+    def check_mk_check_interval(self, hostname: HostName) -> int:
+        return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"]
+
+    def _primary_ip_address_family_of(self, hostname: HostName) -> str:
+        rules = self.host_extra_conf(hostname, primary_address_family)
+        if rules:
+            return rules[0]
+        return "ipv4"
 
     def has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)

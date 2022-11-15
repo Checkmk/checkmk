@@ -473,7 +473,7 @@ def test_host_config_additional_ipaddresses(
     ts.set_option("host_attributes", {hostname: attrs})
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.get_host_config(hostname).additional_ipaddresses == result
+    assert config_cache.additional_ipaddresses(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1502,7 +1502,7 @@ def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str
         ("testhost4", 3, ("noAuthNoPriv", "v3")),
     ],
 )
-def test_host_config_snmp_credentials_of_version(
+def test_config_cache_snmp_credentials_of_version(
     monkeypatch: MonkeyPatch,
     hostname_str: str,
     version: int,
@@ -1525,7 +1525,7 @@ def test_host_config_snmp_credentials_of_version(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
+    assert config_cache.snmp_credentials_of_version(hostname, version) == result
 
 
 @pytest.mark.usefixtures("fix_register")

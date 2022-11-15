@@ -967,14 +967,11 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
     # TODO: could we run into any problems with daylight saving time here?
     labels: list[Label] = []
     seconds_per_char = time_range / (width - 7)
-    for pos, line_width, has_label in dist_function(start_time, end_time):
-        if has_label:
-            if isinstance(labelling, str):
-                label: str | None = time.strftime(str(labelling), time.localtime(pos))
-            else:
-                label = labelling(pos)
+    for pos, line_width in dist_function(start_time, end_time):
+        if isinstance(labelling, str):
+            label: str | None = time.strftime(str(labelling), time.localtime(pos))
         else:
-            label = None
+            label = labelling(pos)
 
         # Should the label be centered within a range? Then add just
         # the line and shift the label with "no line" into the future
@@ -984,7 +981,7 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
             pos += label_shift
 
         # Do not display label if it would not fit onto the page
-        if has_label and label is not None and len(label) / 3.5 * seconds_per_char > end_time - pos:
+        if label is not None and len(label) / 3.5 * seconds_per_char > end_time - pos:
             label = None
         labels.append((pos, label, line_width))
 
@@ -1001,7 +998,7 @@ def _select_t_axis_label_producer(
     width: int,
     label_size: float,
     label_distance_at_least: float,
-) -> Callable[[int, int], Iterator[tuple[float, int, bool]]]:
+) -> Callable[[int, int], Iterator[tuple[float, int]]]:
     # Guess a nice number of labels. This is similar to the
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
@@ -1015,26 +1012,26 @@ def _select_t_axis_label_producer(
 
     # If the distance of the lables is less than one day, we have a distance aligned
     # at minutes.
-    for dist_minutes, subdivision in [
-        (1, 0.25),
-        (2, 0.5),
-        (5, 1),
-        (10, 2),
-        (20, 5),
-        (30, 5),
-        (60, 10),
-        (120, 20),
-        (240, 30),
-        (360, 60),
-        (480, 60),
-        (720, 120),
-        (1440, 360),
-        (2880, 480),
-        (4320, 720),
-        (5760, 720),
-    ]:
+    for dist_minutes in (
+        1,
+        2,
+        5,
+        10,
+        20,
+        30,
+        60,
+        120,
+        240,
+        360,
+        480,
+        720,
+        1440,
+        2880,
+        4320,
+        5760,
+    ):
         if label_distance_at_least <= dist_minutes * 60:
-            return partial(_dist_seconds, distance=dist_minutes * 60, subdivision=subdivision * 60)
+            return partial(_dist_seconds, distance=dist_minutes * 60)
 
     # Label distance less than one week? Align lables at days of week
     if label_distance_at_least <= 86400 * 7:
@@ -1049,16 +1046,11 @@ def _select_t_axis_label_producer(
     return partial(_dist_months, months=96)
 
 
-# These distance functions yield a sequence of useful
-# points for labels plus intermediate points for lines without
-# labels. These points have the label (None). The function
-# returns tuples of the form (time, line), where
-# line is one of 0, 1, 2 (none, thin, thick)
 def _dist_seconds(
-    start_time: int, end_time: int, distance: int, subdivision: float
-) -> Iterator[tuple[float, int, bool]]:
-    # First align start_time to the next time that can be divided
-    # distance, but align this at 00:00 localtime!
+    start_time: int,
+    end_time: int,
+    distance: int,
+) -> Iterator[tuple[float, int]]:
     align_broken = time.localtime(start_time)
     align = time.mktime(
         (
@@ -1073,33 +1065,26 @@ def _dist_seconds(
             align_broken[8],
         )
     )
-    fract, wholes = math.modf((start_time - align) / subdivision)
 
-    pos = align + wholes * subdivision
-    if fract > 0:
-        pos += subdivision
+    pos = align + math.ceil((start_time - align) / distance) * distance
 
     while pos <= end_time:
-        f = math.modf((pos - align) / distance)[0]
-        if f <= 0.0000001 or f >= 0.9999999:
-            yield (pos, 2, True)
-        else:
-            yield (pos, 0, False)
-        pos += subdivision
+        yield (pos, 2)
+        pos += distance
 
 
-def _dist_week(start_time: int, end_time: int) -> Iterator[tuple[float, int, bool]]:
+def _dist_week(start_time: int, end_time: int) -> Iterator[tuple[float, int]]:
     # Shift time back to monday
     wday_of_start_time = time.localtime(start_time).tm_wday
     monday_week = start_time - 86400 * wday_of_start_time
 
     # Now we have an equal distance of 7 days
-    for pos, line_width, has_label in _dist_seconds(monday_week, end_time, 7 * 86400, 86400):
+    for pos, line_width in _dist_seconds(monday_week, end_time, 7 * 86400):
         if pos >= start_time:
-            yield (pos, line_width, has_label)
+            yield (pos, line_width)
 
 
-def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[float, int, bool]]:
+def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[float, int]]:
     # Jump to beginning of month
     broken = time.localtime(start_time)
     broken_tm_year = broken[0]
@@ -1130,29 +1115,13 @@ def _dist_months(start_time: int, end_time: int, months: int) -> Iterator[tuple[
             break
 
         if pos >= start_time:
-            yield pos, 2, True
+            yield pos, 2
 
         for _m in range(months):
             broken_tm_mon += 1
             if broken_tm_mon > 12:
                 broken_tm_year += 1
                 broken_tm_mon -= 12
-
-            if months > 2:
-                pos = time.mktime(
-                    (
-                        broken_tm_year,
-                        broken_tm_mon,
-                        broken_tm_mday,
-                        broken_tm_hour,
-                        broken_tm_min,
-                        broken_tm_sec,
-                        broken_tm_wday,
-                        broken_tm_yday,
-                        broken_tm_isdst,
-                    )
-                )
-                yield pos, 0, False
 
 
 def _add_step_to_title(title_label: str, step: Seconds) -> str:

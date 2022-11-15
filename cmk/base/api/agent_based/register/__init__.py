@@ -3,13 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import chain
-from typing import List
-
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.version import is_plus_edition
 
 from cmk.base.api.agent_based.register._config import (
     add_check_plugin,
@@ -41,14 +37,9 @@ from cmk.base.api.agent_based.register._config import (
 )
 
 
-def load_all_plugins() -> List[str]:
+def load_all_plugins() -> list[str]:
     errors = []
-    for plugin, exception in chain(
-        load_plugins_with_exceptions("cmk.base.plugins.agent_based"),
-        load_plugins_with_exceptions("cmk.base.cpe.plugins.agent_based")
-        if is_plus_edition()
-        else [],
-    ):
+    for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
         errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
         if cmk.utils.debug.enabled():
             raise exception

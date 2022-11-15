@@ -9,6 +9,7 @@ import sys
 from typing import (
     Callable,
     Dict,
+    Final,
     get_args,
     List,
     Literal,
@@ -21,6 +22,7 @@ from typing import (
 
 from cmk.utils.paths import agent_based_plugins_dir
 from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, RuleSetName
+from cmk.utils.version import Edition
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
@@ -31,6 +33,8 @@ ITEM_VARIABLE = "%s"
 
 _NONE_TYPE = type(None)
 
+_ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
+
 
 def get_validated_plugin_module_name() -> str:
     """Find out which module registered the plugin and make sure its in the right place"""
@@ -39,13 +43,17 @@ def get_validated_plugin_module_name() -> str:
     calling_from = sys._getframe(2).f_code.co_filename
 
     path = pathlib.Path(calling_from)
-    if path.parent.parts[-3:] not in (
-        ("cpe", "plugins", "agent_based"),
-        agent_based_plugins_dir.parts[-3:],
-    ):
-        raise ImportError("do not register from %r" % path)
 
-    return path.stem
+    # watch out: this has to work in the git repo!
+    allowed_path_segment = agent_based_plugins_dir.parts[-3:]
+    if path.parent.parts[-len(allowed_path_segment) :] == allowed_path_segment:
+        return path.stem
+
+    if path.parent.parts[-len(allowed_path_segment) - 1 : -1] == allowed_path_segment:
+        if (edition := path.parent.parts[-1]) in _ALLOWED_EDITION_FOLDERS:
+            return f"{edition}.{path.stem}"
+
+    raise ImportError("do not register from %r" % path)
 
 
 def create_subscribed_sections(

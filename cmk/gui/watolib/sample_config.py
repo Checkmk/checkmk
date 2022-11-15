@@ -375,8 +375,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "wmic_process",
                 "zfsget",
             ],
-            "enable_rulebased_notifications": True,
-            "log_logon_failures": True,
             "lock_on_logon_failures": 10,
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,

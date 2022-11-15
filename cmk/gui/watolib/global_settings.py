@@ -28,11 +28,6 @@ def load_configuration_settings(
     return settings
 
 
-# TODO Can be removed with 2.3
-def rulebased_notifications_enabled() -> bool:
-    return load_configuration_settings().get("enable_rulebased_notifications", False)
-
-
 def save_global_settings(
     vars_: GlobalSettings, site_specific: bool = False, custom_site_path: str | None = None
 ) -> None:

@@ -47,7 +47,6 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 from cmk.gui.watolib.sites import SiteManagementFactory
 
@@ -1156,31 +1155,6 @@ class ACTestESXDatasources(ACTest):
 
         if all_rules_ok:
             yield ACResultOK(_("No configured rules are affected"))
-
-
-@ac_test_registry.register
-class ACTestRulebasedNotifications(ACTest):
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    def title(self) -> str:
-        return _("Flexible and plain email notifications")
-
-    def help(self) -> str:
-        return _(
-            "Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
-            " will be removed in Checkmk version 1.6.0. Please consider to switch to rulebased "
-            "notifications."
-        )
-
-    def is_relevant(self) -> bool:
-        return True
-
-    def execute(self) -> Iterator[ACResult]:
-        if not rulebased_notifications_enabled():
-            yield ACResultCRIT("Rulebased notifications are deactivated in the global settings")
-        else:
-            yield ACResultOK(_("Rulebased notifications are activated"))
 
 
 @ac_test_registry.register

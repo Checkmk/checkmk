@@ -174,10 +174,6 @@ def test_update_user_attributes(
     plugin: UpdateUserAttributes,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-
     now = datetime.now()
     user_id = with_user[0]
     users: userdb.Users = _load_users_uncached(lock=False)

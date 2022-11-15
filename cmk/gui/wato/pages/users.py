@@ -13,7 +13,7 @@ from typing import cast, overload
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
-from cmk.utils.type_defs import timeperiod_spec_alias, UserId
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -57,7 +57,6 @@ from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
-from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
@@ -65,13 +64,11 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
     edit_users,
-    get_vs_flexible_notifications,
     get_vs_user_idle_timeout,
     make_user_object_ref,
 )
@@ -334,7 +331,6 @@ class ModeUsers(WatoMode):
         html.begin_form("bulk_delete_form", method="POST")
 
         roles = userdb_utils.load_roles()
-        timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
         html.div("", id_="row_info")
@@ -379,15 +375,14 @@ class ModeUsers(WatoMode):
                 )
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                if rulebased_notifications_enabled():
-                    notifications_url = folder_preserving_link(
-                        [("mode", "user_notifications"), ("user", uid)]
-                    )
-                    html.icon_button(
-                        notifications_url,
-                        _("Custom notification table of this user"),
-                        "notifications",
-                    )
+                notifications_url = folder_preserving_link(
+                    [("mode", "user_notifications"), ("user", uid)]
+                )
+                html.icon_button(
+                    notifications_url,
+                    _("Custom notification table of this user"),
+                    "notifications",
+                )
 
                 # ID
                 table.cell(_("ID"), uid)
@@ -498,38 +493,6 @@ class ModeUsers(WatoMode):
                     )
                 else:
                     html.i(_("none"))
-
-                # table.cell(_("Sites"))
-                # html.write_text(vs_authorized_sites().value_to_html(user_spec.get("authorized_sites",
-                #                                                vs_authorized_sites().default_value())))
-
-                # notifications
-                if not rulebased_notifications_enabled():
-                    table.cell(_("Notifications"))
-                    if not cgs:
-                        html.i(_("not a contact"))
-                    elif not user_spec.get("notifications_enabled", True):
-                        html.write_text(_("disabled"))
-                    elif (
-                        user_spec.get("host_notification_options", "") == ""
-                        and user_spec.get("service_notification_options", "") == ""
-                    ):
-                        html.write_text(_("all events disabled"))
-                    else:
-                        tp = user_spec.get("notification_period", "24X7")
-                        tp_code = HTML()
-                        if tp not in timeperiods:
-                            tp_code = escape_to_html(tp + _(" (invalid)"))
-                        elif tp not in watolib.timeperiods.builtin_timeperiods():
-                            url = folder_preserving_link(
-                                [("mode", "edit_timeperiod"), ("edit", tp)]
-                            )
-                            tp_code = HTMLWriter.render_a(
-                                timeperiod_spec_alias(timeperiods[tp], tp), href=url
-                            )
-                        else:
-                            tp_code = escape_to_html(timeperiod_spec_alias(timeperiods[tp], tp))
-                        html.write_html(tp_code)
 
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
@@ -674,7 +637,7 @@ class ModeEditUser(WatoMode):
         return menu
 
     def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
-        if self._rbn_enabled() and not self._is_new_user:
+        if not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Notification rules"),
                 icon_name="topic_events",
@@ -855,28 +818,7 @@ class ModeEditUser(WatoMode):
                 cgs.append(c)
         user_attrs["contactgroups"] = cgs
 
-        # Notification settings are only active if we do *not* have
-        # rule based notifications!
-        if not self._rbn_enabled():
-            # Notifications
-            user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
-
-            ntp = request.var("notification_period")
-            user_attrs["notification_period"] = (
-                ntp if ntp is not None and ntp in self._timeperiods else "24X7"
-            )
-
-            user_attrs["host_notification_options"] = "".join(
-                [opt for opt in "durfs" if html.get_checkbox("host_" + opt)]
-            )
-            user_attrs["service_notification_options"] = "".join(
-                [opt for opt in "wucrfs" if html.get_checkbox("service_" + opt)]
-            )
-
-            value = get_vs_flexible_notifications().from_html_vars("notification_method")
-            user_attrs["notification_method"] = value
-        else:
-            user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
+        user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
 
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
@@ -1185,105 +1127,25 @@ class ModeEditUser(WatoMode):
         )
 
         forms.header(_("Notifications"), isopen=False)
-        if not self._rbn_enabled():
-            forms.section(_("Enabling"), simple=True)
-            html.checkbox(
-                "notifications_enabled",
-                bool(self._user.get("notifications_enabled")),
-                label=_("enable notifications"),
+        forms.section(_("Fallback notifications"), simple=True)
+
+        html.checkbox(
+            "fallback_contact",
+            bool(self._user.get("fallback_contact")),
+            label=_("Receive fallback notifications"),
+        )
+
+        html.help(
+            _(
+                "In case none of your notification rules handles a certain event a notification "
+                "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
+                "gets notified. Furthermore this contact will be used for notifications to any host or service "
+                "that is not known to the monitoring. This can happen when you forward notifications "
+                "from the Event Console.<br><br>Notification fallback can also configured in the global "
+                'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
+                "Fallback email address for notifications</a>."
             )
-            html.help(_("Notifications are sent out when the status of a host or service changes."))
-
-            # Notification period
-            forms.section(_("Notification time period"))
-            user_np = self._user.get("notification_period", "24X7")
-            if not isinstance(user_np, str):
-                raise Exception(f"invalid notification period {user_np!r}")
-            choices: Choices = [
-                (id_, "%s" % (tp["alias"])) for (id_, tp) in self._timeperiods.items()
-            ]
-            html.dropdown("notification_period", choices, deflt=user_np, ordered=True)
-            html.help(
-                _(
-                    "Only during this time period the "
-                    "user will get notifications about host or service alerts."
-                )
-            )
-
-            # Notification options
-            notification_option_names = {  # defined here: _() must be executed always!
-                "host": {
-                    "d": _("Host goes down"),
-                    "u": _("Host gets unreachble"),
-                    "r": _("Host goes up again"),
-                },
-                "service": {
-                    "w": _("Service goes into warning state"),
-                    "u": _("Service goes into unknown state"),
-                    "c": _("Service goes into critical state"),
-                    "r": _("Service recovers to OK"),
-                },
-                "both": {
-                    "f": _("Start or end of flapping state"),
-                    "s": _("Start or end of a scheduled downtime"),
-                },
-            }
-
-            forms.section(_("Notification Options"))
-            # TODO: Remove this "what" nonsense
-            for title, what, opts in [
-                (_("Host events"), "host", "durfs"),
-                (_("Service events"), "service", "wucrfs"),
-            ]:
-                html.write_text("%s:" % title)
-                html.open_ul()
-
-                user_opts = (
-                    self._user.get("host_notification_options", opts)
-                    if what == "host"
-                    else self._user.get("service_notification_options", opts)
-                )
-                for opt in opts:
-                    opt_name = notification_option_names[what].get(
-                        opt, notification_option_names["both"].get(opt)
-                    )
-                    html.checkbox(what + "_" + opt, opt in user_opts, label=opt_name)
-                    html.br()
-                html.close_ul()
-
-            html.help(
-                _(
-                    "Here you specify which types of alerts "
-                    "will be notified to this contact. Note: these settings will only be saved "
-                    "and used if the user is member of a contact group."
-                )
-            )
-
-            forms.section(_("Notification Method"))
-            get_vs_flexible_notifications().render_input(
-                "notification_method", self._user.get("notification_method")
-            )
-
-        else:
-            forms.section(_("Fallback notifications"), simple=True)
-
-            html.checkbox(
-                "fallback_contact",
-                bool(self._user.get("fallback_contact")),
-                label=_("Receive fallback notifications"),
-            )
-
-            html.help(
-                _(
-                    "In case none of your notification rules handles a certain event a notification "
-                    "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
-                    "gets notified. Furthermore this contact will be used for notifications to any host or service "
-                    "that is not known to the monitoring. This can happen when you forward notifications "
-                    "from the Event Console.<br><br>Notification fallback can also configured in the global "
-                    'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
-                    "Fallback email address for notifications</a>."
-                )
-            )
+        )
 
         self._show_custom_user_attributes(custom_user_attr_topics.get("notify", []))
 
@@ -1304,10 +1166,6 @@ class ModeEditUser(WatoMode):
             html.set_focus("alias")
         html.hidden_fields()
         html.end_form()
-
-    def _rbn_enabled(self):
-        # Check if rule based notifications are enabled (via WATO)
-        return rulebased_notifications_enabled()
 
     def _pw_suffix(self) -> str:
         if self._is_new_user:

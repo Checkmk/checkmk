@@ -34,7 +34,6 @@ def test_registered_ac_tests() -> None:
         "ACTestNumberOfUsers",
         "ACTestOldDefaultCredentials",
         "ACTestPersistentConnections",
-        "ACTestRulebasedNotifications",
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",
         "ACTestUnexpectedAllowedIPRanges",

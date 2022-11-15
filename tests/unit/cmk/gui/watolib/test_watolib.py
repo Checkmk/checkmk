@@ -99,7 +99,6 @@ def test_registered_configvars() -> None:
         "default_bi_layout",
         "delay_precompile",
         "diskspace_cleanup",
-        "enable_rulebased_notifications",
         "enable_sounds",
         "escape_plugin_output",
         "event_limit",

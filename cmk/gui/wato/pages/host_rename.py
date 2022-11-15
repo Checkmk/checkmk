@@ -563,7 +563,6 @@ def render_renaming_actions(action_counts) -> list[str]:  # type:ignore[no-untyp
         "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),
         "notify_global": _("Global notification rule"),
-        "notify_flexible": _("Flexible notification rule"),
         "wato_rules": _("Host and service configuration rule"),
         "alert_rules": _("Alert handler rule"),
         "parents": _("Parent definition"),

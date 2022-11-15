@@ -70,7 +70,7 @@ def summarize_host_sections(
     source_results: SourceResults,
     include_ok_results: bool = False,
     override_non_ok_state: Optional[ServiceState] = None,
-    exit_spec_cb: Callable[[str], ExitSpec],
+    exit_spec_cb: Callable[[HostName, str], ExitSpec],
     time_settings_cb: Callable[[HostName], PiggybackTimeSettings],
     is_piggyback: bool,
 ) -> Iterable[ActiveCheckResult]:
@@ -79,7 +79,7 @@ def summarize_host_sections(
             source.hostname,
             source.ipaddress,
             host_sections,
-            exit_spec=exit_spec_cb(source.ident),
+            exit_spec=exit_spec_cb(source.hostname, source.ident),
             time_settings=time_settings_cb(source.hostname),
             is_piggyback=is_piggyback,
             fetcher_type=source.fetcher_type,

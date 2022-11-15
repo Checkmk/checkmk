@@ -450,7 +450,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 source.hostname,
                 source.ipaddress,
                 host_sections,
-                exit_spec=host_config.exit_code_spec(source.ident),
+                exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
@@ -1060,8 +1060,6 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
         hosts = sorted(config_cache.all_active_hosts())
 
     for host in hosts:
-        host_config = config_cache.get_host_config(host)
-
         out.output("%-20s: " % host)
         flushed = False
 
@@ -1111,7 +1109,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 out.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
-        count = host_config.remove_autochecks()
+        count = config_cache.remove_autochecks(host)
         if count:
             flushed = True
             out.output(tty.bold + tty.cyan + " autochecks(%d)" % count)

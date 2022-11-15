@@ -97,7 +97,7 @@ def execute_check_discovery(
         host_labels_result,
         *summarize_host_sections(
             source_results=source_results,
-            exit_spec_cb=host_config.exit_code_spec,
+            exit_spec_cb=config_cache.exit_code_spec,
             time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
                 piggybacked_hostname=hostname,
             ),

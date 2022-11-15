@@ -163,7 +163,7 @@ def _get_effective_service_level(
     if service_level is not None:
         return service_level
 
-    return config_cache.get_host_config(host).service_level or 0
+    return config_cache.service_level(host) or 0
 
 
 # OK      -> priority 5 (notice)

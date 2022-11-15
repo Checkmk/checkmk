@@ -1378,7 +1378,7 @@ def test_host_config_contactgroups(
         ("testhost2", {"empty_output": 1}),
     ],
 )
-def test_host_config_exit_code_spec_overall(
+def test_config_cache_exit_code_spec_overall(
     monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
@@ -1397,7 +1397,7 @@ def test_host_config_exit_code_spec_overall(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).exit_code_spec() == result
+    assert config_cache.exit_code_spec(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1407,7 +1407,7 @@ def test_host_config_exit_code_spec_overall(
         ("testhost2", {"empty_output": 4}),
     ],
 )
-def test_host_config_exit_code_spec_individual(
+def test_config_cache_exit_code_spec_individual(
     monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
@@ -1426,7 +1426,7 @@ def test_host_config_exit_code_spec_individual(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).exit_code_spec(data_source_id="snmp") == result
+    assert config_cache.exit_code_spec(hostname, data_source_id="snmp") == result
 
 
 @pytest.mark.parametrize(
@@ -1463,7 +1463,7 @@ def test_host_config_exit_code_spec_individual(
         },
     ],
 )
-def test_host_config_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str, Any]) -> None:
+def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str, Any]) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)
@@ -1477,9 +1477,8 @@ def test_host_config_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str,
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config(hostname)
 
-    exit_code_spec = host_config.exit_code_spec()
+    exit_code_spec = config_cache.exit_code_spec(hostname)
     assert "restricted_address_mismatch" in exit_code_spec
     assert exit_code_spec["restricted_address_mismatch"] == 2
 
@@ -1487,7 +1486,7 @@ def test_host_config_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str,
         "empty_output": 2,
         "restricted_address_mismatch": 2,
     }
-    snmp_exit_code_spec = host_config.exit_code_spec(data_source_id="snmp")
+    snmp_exit_code_spec = config_cache.exit_code_spec(hostname, data_source_id="snmp")
     assert snmp_exit_code_spec == result
 
 
@@ -2306,30 +2305,36 @@ def test_config_cache_get_host_config(
     assert host_config is cache.get_host_config(xyz_host)
 
 
-def test_host_config_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
+def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     xyz_host = HostName("xyz")
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(xyz_host)
     assert not config_cache.is_cluster(xyz_host)
-    assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.check_max_cachefile_age
-    assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.cluster_max_cachefile_age
+    assert (
+        config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
+        == config.check_max_cachefile_age
+    )
+    assert (
+        config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
+        != config.cluster_max_cachefile_age
+    )
 
 
-def test_host_config_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None:
+def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     clu = HostName("clu")
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(clu)
     assert config_cache.is_cluster(clu)
-    assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.check_max_cachefile_age
-    assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.cluster_max_cachefile_age
+    assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
+    assert (
+        config_cache.max_cachefile_age(clu).get(Mode.CHECKING) == config.cluster_max_cachefile_age
+    )
 
 
 @pytest.mark.parametrize(
@@ -2437,7 +2442,7 @@ def test_host_config_service_level(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).service_level == result
+    assert config_cache.service_level(hostname) == result
 
 
 def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:

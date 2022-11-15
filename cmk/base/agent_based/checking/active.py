@@ -48,7 +48,6 @@ def active_check_checking(
 
     """
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
     return error_handling.check_result(
         partial(
             execute_checkmk_checks,
@@ -58,7 +57,7 @@ def active_check_checking(
             selected_sections=selected_sections,
             submitter=submitter,
         ),
-        exit_spec=host_config.exit_code_spec(),
+        exit_spec=config_cache.exit_code_spec(hostname),
         host_name=hostname,
         service_name="Check_MK",
         plugin_name="mk",

@@ -609,7 +609,7 @@ def get_effective_service_level() -> ServiceState:
     if service_level is not None:
         return service_level
 
-    service_level = config_cache.get_host_config(_internal_host_name()).service_level
+    service_level = config_cache.service_level(_internal_host_name())
     if service_level is not None:
         return service_level
 

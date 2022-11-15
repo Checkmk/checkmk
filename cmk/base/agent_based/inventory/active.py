@@ -40,7 +40,7 @@ def active_check_inventory(
             host_config,
             config.HWSWInventoryParameters.from_raw(options),
         ),
-        exit_spec=host_config.exit_code_spec(),
+        exit_spec=config_cache.exit_code_spec(hostname),
         host_name=hostname,
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",

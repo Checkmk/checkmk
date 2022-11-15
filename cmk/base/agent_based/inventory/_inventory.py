@@ -128,7 +128,7 @@ def check_inventory_tree(
                 run_plugin_names=run_plugin_names,
             )
         ),
-        raw_intervals_from_config=host_config.inv_retention_intervals,
+        raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
         old_tree=old_tree,
     )
 
@@ -148,8 +148,8 @@ def check_inventory_tree(
                 # Do not use source states which would overwrite "State when inventory fails" in the
                 # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
                 override_non_ok_state=parameters.fail_status,
-                exit_spec_cb=host_config.exit_code_spec,
-                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                exit_spec_cb=config_cache.exit_code_spec,
+                time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
                 is_piggyback=host_config.is_piggyback_host,
@@ -231,7 +231,7 @@ def _fetch_real_host_data(
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_name, config.snmp_without_sys_descr
             ),
-            file_cache_max_age=host_config.max_cachefile_age,
+            file_cache_max_age=config_cache.max_cachefile_age(host_name),
         ),
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )

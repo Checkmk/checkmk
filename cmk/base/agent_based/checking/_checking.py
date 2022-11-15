@@ -100,7 +100,7 @@ def execute_checkmk_checks(
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
-    exit_spec = host_config.exit_code_spec()
+    exit_spec = config_cache.exit_code_spec(hostname)
 
     services = config.resolve_service_dependencies(
         host_name=hostname,
@@ -137,7 +137,7 @@ def execute_checkmk_checks(
             *summarize_host_sections(
                 source_results=source_results,
                 include_ok_results=True,
-                exit_spec_cb=host_config.exit_code_spec,
+                exit_spec_cb=config_cache.exit_code_spec,
                 time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),

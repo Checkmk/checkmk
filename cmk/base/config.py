@@ -3176,48 +3176,6 @@ class HostConfig:
             host_attributes.get(self.hostname, {}).get("additional_ipv6addresses", []),
         )
 
-    def exit_code_spec(self, data_source_id: Optional[str] = None) -> ExitSpec:
-        spec: _NestedExitSpec = {}
-        # TODO: Can we use host_extra_conf_merged?
-        specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
-        for entry in specs[::-1]:
-            spec.update(entry)
-
-        merged_spec = HostConfig._extract_data_source_exit_code_spec(spec, data_source_id)
-        return HostConfig._merge_with_optional_exit_code_parameters(spec, merged_spec)
-
-    @staticmethod
-    def _extract_data_source_exit_code_spec(
-        spec: _NestedExitSpec,
-        data_source_id: Optional[str],
-    ) -> ExitSpec:
-        if data_source_id is not None:
-            try:
-                return spec["individual"][data_source_id]
-            except KeyError:
-                pass
-
-        try:
-            return spec["overall"]
-        except KeyError:
-            pass
-
-        # Old configuration format
-        return spec
-
-    @staticmethod
-    def _merge_with_optional_exit_code_parameters(
-        spec: _NestedExitSpec,
-        merged_spec: ExitSpec,
-    ) -> ExitSpec:
-        # Additional optional parameters which are not part of individual
-        # or overall parameters
-        if (value := spec.get("restricted_address_mismatch")) is not None:
-            merged_spec["restricted_address_mismatch"] = value
-        if (value := spec.get("legacy_pull_mode")) is not None:
-            merged_spec["legacy_pull_mode"] = value
-        return merged_spec
-
     @property
     def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
         if self._config_cache.is_cluster(self.hostname):
@@ -3241,64 +3199,6 @@ class HostConfig:
     @property
     def do_status_data_inventory(self) -> bool:
         return self.hwsw_inventory_parameters.status_data_inventory
-
-    @property
-    def inv_retention_intervals(self) -> RawIntervalsFromConfig:
-        entries = self._config_cache.host_extra_conf(self.hostname, inv_retention_intervals)
-        return entries[0] if entries else []
-
-    @property
-    def service_level(self) -> Optional[int]:
-        entries = self._config_cache.host_extra_conf(self.hostname, host_service_levels)
-        if not entries:
-            return None
-        return entries[0]
-
-    def set_autochecks(
-        self,
-        new_services: Sequence[AutocheckServiceWithNodes],
-    ) -> None:
-        """Merge existing autochecks with the given autochecks for a host and save it"""
-        nodes = self._config_cache.nodes_of(self.hostname)
-        if self._config_cache.is_cluster(self.hostname):
-            if nodes:
-                autochecks.set_autochecks_of_cluster(
-                    nodes,
-                    self.hostname,
-                    new_services,
-                    self._config_cache.host_of_clustered_service,
-                    service_description,  # top level function!
-                )
-        else:
-            autochecks.set_autochecks_of_real_hosts(
-                self.hostname,
-                new_services,
-            )
-
-    def remove_autochecks(self) -> int:
-        """Remove all autochecks of a host while being cluster-aware
-
-        Cluster aware means that the autocheck files of the nodes are handled. Instead
-        of removing the whole file the file is loaded and only the services associated
-        with the given cluster are removed."""
-        nodes = self._config_cache.nodes_of(self.hostname) or [self.hostname]
-        return sum(
-            autochecks.remove_autochecks_of_host(
-                hostname,
-                self.hostname,
-                self._config_cache.host_of_clustered_service,
-                service_description,
-            )
-            for hostname in nodes
-        )
-
-    @property
-    def max_cachefile_age(self) -> cache_file.MaxAge:
-        return max_cachefile_age(
-            checking=None
-            if self._config_cache.nodes_of(self.hostname) is None
-            else cluster_max_cachefile_age,
-        )
 
     @property
     def is_dyndns_host(self) -> bool:
@@ -3608,6 +3508,96 @@ class ConfigCache:
             "site": omd_site(),
             "address_family": "ip-v4-only",
         }
+
+    def max_cachefile_age(self, hostname: HostName) -> cache_file.MaxAge:
+        return max_cachefile_age(
+            checking=None if self.nodes_of(hostname) is None else cluster_max_cachefile_age,
+        )
+
+    def exit_code_spec(self, hostname: HostName, data_source_id: Optional[str] = None) -> ExitSpec:
+        spec: _NestedExitSpec = {}
+        # TODO: Can we use host_extra_conf_merged?
+        specs = self.host_extra_conf(hostname, check_mk_exit_status)
+        for entry in specs[::-1]:
+            spec.update(entry)
+
+        merged_spec = ConfigCache._extract_data_source_exit_code_spec(spec, data_source_id)
+        return ConfigCache._merge_with_optional_exit_code_parameters(spec, merged_spec)
+
+    @staticmethod
+    def _extract_data_source_exit_code_spec(
+        spec: _NestedExitSpec,
+        data_source_id: Optional[str],
+    ) -> ExitSpec:
+        if data_source_id is not None:
+            try:
+                return spec["individual"][data_source_id]
+            except KeyError:
+                pass
+
+        try:
+            return spec["overall"]
+        except KeyError:
+            pass
+
+        # Old configuration format
+        return spec
+
+    @staticmethod
+    def _merge_with_optional_exit_code_parameters(
+        spec: _NestedExitSpec,
+        merged_spec: ExitSpec,
+    ) -> ExitSpec:
+        # Additional optional parameters which are not part of individual
+        # or overall parameters
+        if (value := spec.get("restricted_address_mismatch")) is not None:
+            merged_spec["restricted_address_mismatch"] = value
+        if (value := spec.get("legacy_pull_mode")) is not None:
+            merged_spec["legacy_pull_mode"] = value
+        return merged_spec
+
+    def set_autochecks(
+        self,
+        hostname: HostName,
+        new_services: Sequence[AutocheckServiceWithNodes],
+    ) -> None:
+        """Merge existing autochecks with the given autochecks for a host and save it"""
+        nodes = self.nodes_of(hostname)
+        if self.is_cluster(hostname):
+            if nodes:
+                autochecks.set_autochecks_of_cluster(
+                    nodes,
+                    hostname,
+                    new_services,
+                    self.host_of_clustered_service,
+                    service_description,  # top level function!
+                )
+        else:
+            autochecks.set_autochecks_of_real_hosts(hostname, new_services)
+
+    def remove_autochecks(self, hostname: HostName) -> int:
+        """Remove all autochecks of a host while being cluster-aware
+
+        Cluster aware means that the autocheck files of the nodes are handled. Instead
+        of removing the whole file the file is loaded and only the services associated
+        with the given cluster are removed."""
+        nodes = self.nodes_of(hostname) or [hostname]
+        return sum(
+            autochecks.remove_autochecks_of_host(
+                node, hostname, self.host_of_clustered_service, service_description
+            )
+            for node in nodes
+        )
+
+    def inv_retention_intervals(self, hostname: HostName) -> RawIntervalsFromConfig:
+        entries = self.host_extra_conf(hostname, inv_retention_intervals)
+        return entries[0] if entries else []
+
+    def service_level(self, hostname: HostName) -> Optional[int]:
+        entries = self.host_extra_conf(hostname, host_service_levels)
+        if not entries:
+            return None
+        return entries[0]
 
     def _snmp_credentials(self, host_name: HostName) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host

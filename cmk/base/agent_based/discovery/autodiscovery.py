@@ -137,7 +137,9 @@ def automation_discovery(
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode is DiscoveryMode.REFRESH:
-            result.self_removed += host_config.remove_autochecks()  # this is cluster-aware!
+            result.self_removed += config_cache.remove_autochecks(
+                host_name
+            )  # this is cluster-aware!
 
         ipaddress = (
             None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
@@ -202,7 +204,7 @@ def automation_discovery(
         final_services = _get_post_discovery_autocheck_services(
             host_name, services, service_filters or _ServiceFilters.accept_all(), result, mode
         )
-        host_config.set_autochecks(list(final_services.values()))
+        config_cache.set_autochecks(host_name, list(final_services.values()))
 
         result.diff_text = _make_diff(
             host_labels.vanished,

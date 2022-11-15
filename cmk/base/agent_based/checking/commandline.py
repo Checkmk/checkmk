@@ -34,7 +34,6 @@ def commandline_checking(
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(host_name)
     return error_handling.check_result(
         partial(
             _commandline_checking,
@@ -44,7 +43,7 @@ def commandline_checking(
             selected_sections=selected_sections,
             submitter=submitter,
         ),
-        exit_spec=host_config.exit_code_spec(),
+        exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK",
         plugin_name="mk",
@@ -86,7 +85,7 @@ def _commandline_checking(
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_name, config.snmp_without_sys_descr
             ),
-            file_cache_max_age=host_config.max_cachefile_age,
+            file_cache_max_age=config_cache.max_cachefile_age(host_name),
         ),
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )

@@ -38,7 +38,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.sources import fetch_all, make_sources
 
 from ._discovered_services import analyse_discovered_services
@@ -218,10 +218,9 @@ def commandline_check_discovery(
     keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
-    host_config = HostConfig.make_host_config(host_name)
     return error_handling.check_result(
         partial(_commandline_check_discovery, host_name, ipaddress),
-        exit_spec=host_config.exit_code_spec(),
+        exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",
         plugin_name="discover",

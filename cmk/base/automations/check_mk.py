@@ -276,7 +276,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # Not loading all checks improves performance of the calls and as a result the
         # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
         # because we already have calculated service descriptions. For clusters we have to load all
-        # checks for host_config.set_autochecks, because it needs to calculate the
+        # checks for config_cache.set_autochecks, because it needs to calculate the
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
         if config_cache.is_cluster(hostname):
@@ -301,7 +301,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 )
             )
 
-        host_config.set_autochecks(new_services)
+        config_cache.set_autochecks(hostname, new_services)
         self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.SetAutochecksResult()
 
@@ -1717,6 +1717,7 @@ class AutomationGetAgentOutput(Automation):
     def execute(self, args: List[str]) -> automation_results.GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
+        config_cache = config.get_config_cache()
         host_config = HostConfig.make_host_config(hostname)
 
         success = True
@@ -1750,8 +1751,8 @@ class AutomationGetAgentOutput(Automation):
                         source.hostname,
                         source.ipaddress,
                         host_sections,
-                        exit_spec=host_config.exit_code_spec(source.ident),
-                        time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
+                        exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                        time_settings=config_cache.get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
                         is_piggyback=host_config.is_piggyback_host,

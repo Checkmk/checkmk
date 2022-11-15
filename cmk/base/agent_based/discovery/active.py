@@ -31,10 +31,9 @@ def active_check_discovery(
     keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(host_name)
     return error_handling.check_result(
         partial(execute_check_discovery, host_name, fetched=fetched),
-        exit_spec=host_config.exit_code_spec(),
+        exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",
         plugin_name="discover",

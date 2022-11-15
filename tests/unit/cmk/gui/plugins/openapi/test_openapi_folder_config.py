@@ -13,7 +13,7 @@ import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import paths
+from cmk.utils import paths, version
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -787,6 +787,7 @@ def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-unt
         assert "batman" not in folder["id"]
 
 
+@pytest.mark.skipif(version.is_raw_edition(), reason="Tested Attribute is not in RAW")
 def test_bake_agent_package_attribute_regression(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:

@@ -579,7 +579,10 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
 
 def _make_tree_or_items(
-    previous_attributes_retentions: dict, previous_table_retentions: dict
+    *,
+    previous_attributes_retentions: dict,
+    previous_table_retentions: dict,
+    raw_cache_info: tuple[int, int] | None,
 ) -> tuple[StructuredDataNode, list[ItemsOfInventoryPlugin]]:
     previous_tree = StructuredDataNode.deserialize(
         {
@@ -677,8 +680,16 @@ def _make_tree_or_items(
     "previous_node",
     [
         StructuredDataNode(),
-        _make_tree_or_items({}, {})[0],
-        _make_tree_or_items({"old": (1, 2, 3)}, {("Ident 1",): {"old": (1, 2, 3)}})[0],
+        _make_tree_or_items(
+            previous_attributes_retentions={},
+            previous_table_retentions={},
+            raw_cache_info=None,
+        )[0],
+        _make_tree_or_items(
+            previous_attributes_retentions={"old": (1, 2, 3)},
+            previous_table_retentions={("Ident 1",): {"old": (1, 2, 3)}},
+            raw_cache_info=None,
+        )[0],
     ],
 )
 def test__inventorize_real_host_no_items(
@@ -708,236 +719,6 @@ def test__inventorize_real_host_no_items(
 @pytest.mark.parametrize(
     "filter_func, expected_retentions",
     [
-        (
-            lambda key: key in ["unknown", "keyz"],
-            {},
-        ),
-        (
-            lambda key: key in ["new", "keyz"],
-            {"new": RetentionIntervals(1, 2, 3)},
-        ),
-    ],
-)
-def test_updater_handle_inv_attributes(
-    filter_func: SDFilterFunc,
-    expected_retentions: dict,
-) -> None:
-    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
-    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-attrs",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-attrs"), "Attributes"): RetentionInfo(
-            filter_func,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=-1,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    fst_inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert isinstance(fst_inv_node, StructuredDataNode)
-
-    if expected_retentions:
-        assert update_result.save_tree
-        assert update_result.reason
-    else:
-        assert not update_result.save_tree
-        assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == expected_retentions
-
-
-@pytest.mark.parametrize(
-    "filter_func, expected_retentions",
-    [
-        (
-            lambda key: key in ["unknown", "keyz"],
-            {},
-        ),
-        (
-            lambda key: key in ["new", "keyz"],
-            {"new": RetentionIntervals(1, 2, 3)},
-        ),
-    ],
-)
-def test_updater_handle_inv_attributes_outdated(
-    filter_func: SDFilterFunc,
-    expected_retentions: dict,
-) -> None:
-    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
-    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-attrs",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-attrs"), "Attributes"): RetentionInfo(
-            filter_func,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=1000,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    fst_inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert isinstance(fst_inv_node, StructuredDataNode)
-
-    if expected_retentions:
-        assert update_result.save_tree
-        assert update_result.reason
-    else:
-        assert not update_result.save_tree
-        assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == expected_retentions
-
-
-@pytest.mark.parametrize(
-    "filter_func, expected_retentions",
-    [
-        (
-            lambda key: key in ["unknown", "keyz"],
-            {},
-        ),
-        (
-            lambda key: key in ["new", "keyz"],
-            {
-                ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
-                ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
-            },
-        ),
-    ],
-)
-def test_updater_handle_inv_tables(
-    filter_func: SDFilterFunc,
-    expected_retentions: dict,
-) -> None:
-    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
-    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-table",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-table"), "Table"): RetentionInfo(
-            filter_func,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=-1,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    fst_inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(fst_inv_node, StructuredDataNode)
-
-    if expected_retentions:
-        assert update_result.save_tree
-        assert update_result.reason
-    else:
-        assert not update_result.save_tree
-        assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == expected_retentions
-
-
-@pytest.mark.parametrize(
-    "filter_func, expected_retentions",
-    [
-        (
-            lambda key: key in ["unknown", "keyz"],
-            {},
-        ),
-        (
-            lambda key: key in ["new", "keyz"],
-            {
-                ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
-                ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
-            },
-        ),
-    ],
-)
-def test_updater_handle_inv_tables_outdated(
-    filter_func: SDFilterFunc,
-    expected_retentions: dict,
-) -> None:
-    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
-    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-table",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-table"), "Table"): RetentionInfo(
-            filter_func,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=1000,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    fst_inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(fst_inv_node, StructuredDataNode)
-
-    if expected_retentions:
-        assert update_result.save_tree
-        assert update_result.reason
-    else:
-        assert not update_result.save_tree
-        assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == expected_retentions
-
-
-@pytest.mark.parametrize(
-    "filter_func, expected_retentions",
-    [
         (lambda key: key in ["unknown", "keyz"], {}),
         (lambda key: key in ["old", "keyz"], {"old": RetentionIntervals(1, 2, 3)}),
     ],
@@ -946,7 +727,11 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ):
-    previous_tree, _items_of_inventory_plugins = _make_tree_or_items({"old": (1, 2, 3)}, {})
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
+        previous_attributes_retentions={"old": (1, 2, 3)},
+        previous_table_retentions={},
+        raw_cache_info=None,
+    )
     inv_tree = StructuredDataNode()
 
     tree_updater = RealHostTreeUpdater(
@@ -996,7 +781,11 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     ],
 )
 def test_updater_merge_previous_attributes_outdated(filter_func: SDFilterFunc) -> None:
-    previous_tree, _items_of_inventory_plugins = _make_tree_or_items({"old": (1, 2, 3)}, {})
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
+        previous_attributes_retentions={"old": (1, 2, 3)},
+        previous_table_retentions={},
+        raw_cache_info=None,
+    )
     inv_tree = StructuredDataNode()
 
     tree_updater = RealHostTreeUpdater(
@@ -1049,11 +838,12 @@ def test_updater_merge_previous_tables(
     expected_retentions: dict,
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        {},
-        {
+        previous_attributes_retentions={},
+        previous_table_retentions={
             ("Ident 1",): {"old": (1, 2, 3)},
-            ("Ident 2",): {"old": RetentionIntervals(1, 2, 3)},
+            ("Ident 2",): {"old": (1, 2, 3)},
         },
+        raw_cache_info=None,
     )
     inv_tree = StructuredDataNode()
 
@@ -1106,11 +896,12 @@ def test_updater_merge_previous_tables(
 )
 def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        {},
-        {
+        previous_attributes_retentions={},
+        previous_table_retentions={
             ("Ident 1",): {"old": (1, 2, 3)},
             ("Ident 2",): {"old": (1, 2, 3)},
         },
+        raw_cache_info=None,
     )
     inv_tree = StructuredDataNode()
 
@@ -1165,11 +956,12 @@ def test_updater_merge_attributes(
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
-        {
+        previous_attributes_retentions={
             "old": (1, 2, 3),
             "keys": (1, 2, 3),
         },
-        {},
+        previous_table_retentions={},
+        raw_cache_info=None,
     )
     inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
@@ -1232,11 +1024,12 @@ def test_updater_merge_attributes_outdated(
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
-        {
+        previous_attributes_retentions={
             "old": (1, 2, 3),
             "keys": (1, 2, 3),
         },
-        {},
+        previous_table_retentions={},
+        raw_cache_info=None,
     )
     inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
@@ -1306,8 +1099,8 @@ def test_updater_merge_tables(
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
-        {},
-        {
+        previous_attributes_retentions={},
+        previous_table_retentions={
             ("Ident 1",): {
                 "old": (1, 2, 3),
                 "keys": (1, 2, 3),
@@ -1317,6 +1110,7 @@ def test_updater_merge_tables(
                 "keys": (1, 2, 3),
             },
         },
+        raw_cache_info=None,
     )
     inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
@@ -1389,11 +1183,12 @@ def test_updater_merge_tables_outdated(
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
-        {},
-        {
+        previous_attributes_retentions={},
+        previous_table_retentions={
             ("Ident 1",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
             ("Ident 2",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
         },
+        raw_cache_info=None,
     )
     inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 

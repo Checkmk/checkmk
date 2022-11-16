@@ -1,0 +1,14 @@
+Title: Fix usage of "_trans_id=-1" in automation calls
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1668622382
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+Using "_trans_id=-1" with an automation user for Web API calls could not be
+processed successfully.
+
+The user was not authenticated correctly and the Web API command failed.

@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any
 
 from cmk.gui.watolib.services import _apply_state_change, DiscoveryState
 
-MOCK_KEY: Tuple[str, str] = ("local", "1st service")
-MOCK_VALUE: Tuple[str, Dict[str, Any], Dict[str, Any], List[str]] = (
+MOCK_KEY: tuple[str, str] = ("local", "1st service")
+MOCK_VALUE: tuple[str, dict[str, Any], dict[str, Any], list[str]] = (
     "1st service",
     {},
     {},
@@ -17,7 +17,7 @@ MOCK_VALUE: Tuple[str, Dict[str, Any], Dict[str, Any], List[str]] = (
 )
 MOCK_DESC = "1st service"
 
-RESULT = Tuple[Dict, Set, Set, Set]
+RESULT = tuple[dict, set, set, set]
 
 
 def _expected_clustered():
@@ -59,7 +59,7 @@ def _expected_ignored_standard():
     )
 
 
-def _get_combinations() -> List:
+def _get_combinations() -> list:
     states = [value for state, value in vars(DiscoveryState).items() if state.isupper()]
     return list(itertools.combinations_with_replacement(states, 2))
 
@@ -358,5 +358,5 @@ def test_apply_state_change() -> None:
             MOCK_DESC,
             *result,
         )
-        error_msg = "Error while applying changes from %s to %s" % (table_source, table_target)
+        error_msg = f"Error while applying changes from {table_source} to {table_target}"
         assert known_results.get((table_source, table_target), empty_result) == result, error_msg

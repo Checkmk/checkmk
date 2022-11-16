@@ -342,7 +342,7 @@ class _EvulToStr:
         ("backslash: \\", r"'backslash: \\'"),
         ("bsquote: \\'", r"'bsquote: \\\''"),
         # str() as fallback
-        (set([1, 2, 3]), "'{1, 2, 3}'"),
+        ({1, 2, 3}, "'{1, 2, 3}'"),
         (_EvulToStr(), r"'\' boom!'"),
     ],
 )

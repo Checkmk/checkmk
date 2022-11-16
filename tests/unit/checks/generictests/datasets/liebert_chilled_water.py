@@ -11,30 +11,30 @@
 checkname = 'liebert_chilled_water'
 
 
-info = [[u'Supply Chilled Water Over Temp',
-         u'Inactive Event',
-         u'Chilled Water Control Valve Failure',
-         u'Inactive Event',
-         u'Supply Chilled Water Loss of Flow',
-         u'Everything is on fire']]
+info = [['Supply Chilled Water Over Temp',
+         'Inactive Event',
+         'Chilled Water Control Valve Failure',
+         'Inactive Event',
+         'Supply Chilled Water Loss of Flow',
+         'Everything is on fire']]
 
 
 discovery = {
     '': [
-        (u'Supply Chilled Water Over Temp', {}),
-        (u'Chilled Water Control Valve Failure', {}),
-        (u'Supply Chilled Water Loss of Flow', {}),
+        ('Supply Chilled Water Over Temp', {}),
+        ('Chilled Water Control Valve Failure', {}),
+        ('Supply Chilled Water Loss of Flow', {}),
     ],
 }
 
 
 checks = {
     '': [
-        (u'Supply Chilled Water Over Temp', {}, [
-            (0, u'Normal', []),
+        ('Supply Chilled Water Over Temp', {}, [
+            (0, 'Normal', []),
         ]),
-        (u'Supply Chilled Water Loss of Flow', {}, [
-            (2, u'Everything is on fire', []),
+        ('Supply Chilled Water Loss of Flow', {}, [
+            (2, 'Everything is on fire', []),
         ]),
     ],
 }

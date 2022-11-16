@@ -126,7 +126,7 @@ class Site:
         assert "://" not in path
 
         if "/" not in urllib.parse.urlparse(path).path:
-            path = "/%s/check_mk/%s" % (self.id, path)
+            path = f"/{self.id}/check_mk/{path}"
         return f"{self.http_proto}://{self.http_address}:{self.apache_port}{path}"
 
     def wait_for_core_reloaded(self, after: float) -> None:
@@ -984,7 +984,7 @@ class Site:
         self._livestatus_port = port
 
     def get_free_port_from(self, port: int) -> int:
-        used_ports = set([])
+        used_ports = set()
         for cfg_path in Path("/omd/sites").glob("*/etc/omd/site.conf"):
             with cfg_path.open() as cfg_file:
                 for line in cfg_file:
@@ -1109,24 +1109,24 @@ class SiteFactory:
         return self._sites
 
     def get_site(self, name: str) -> Site:
-        if "%s%s" % (self._base_ident, name) in self._sites:
-            return self._sites["%s%s" % (self._base_ident, name)]
+        if f"{self._base_ident}{name}" in self._sites:
+            return self._sites[f"{self._base_ident}{name}"]
         # For convenience, allow to retreive site by name or full ident
         if name in self._sites:
             return self._sites[name]
         return self._new_site(name)
 
     def get_existing_site(self, name: str) -> Site:
-        if "%s%s" % (self._base_ident, name) in self._sites:
-            return self._sites["%s%s" % (self._base_ident, name)]
+        if f"{self._base_ident}{name}" in self._sites:
+            return self._sites[f"{self._base_ident}{name}"]
         # For convenience, allow to retreive site by name or full ident
         if name in self._sites:
             return self._sites[name]
         return self._site_obj(name)
 
     def remove_site(self, name: str) -> None:
-        if "%s%s" % (self._base_ident, name) in self._sites:
-            site_id = "%s%s" % (self._base_ident, name)
+        if f"{self._base_ident}{name}" in self._sites:
+            site_id = f"{self._base_ident}{name}"
         elif name in self._sites:
             site_id = name
         else:
@@ -1142,7 +1142,7 @@ class SiteFactory:
         return new_ident
 
     def _site_obj(self, name: str) -> Site:
-        site_id = "%s%s" % (self._base_ident, name)
+        site_id = f"{self._base_ident}{name}"
         return Site(
             site_id=site_id,
             reuse=False,

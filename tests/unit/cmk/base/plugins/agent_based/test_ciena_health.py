@@ -2,8 +2,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import Counter
 from inspect import signature
-from typing import Counter, Iterable
+from typing import Iterable  # We MUST use the Iterable from typing because of the signature hack
 
 import pytest
 

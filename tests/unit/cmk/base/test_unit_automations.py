@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict
 
 from tests.testlib.base import Scenario
 
@@ -81,7 +80,7 @@ def test_service_labels(monkeypatch):
     ts.add_host("test-host")
     ts.set_ruleset(
         "service_label_rules",
-        Ruleset[Dict[str, str]](
+        Ruleset[dict[str, str]](
             [
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},

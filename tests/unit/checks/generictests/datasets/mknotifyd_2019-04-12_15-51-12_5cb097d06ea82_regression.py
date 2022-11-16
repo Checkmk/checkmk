@@ -8,16 +8,16 @@
 
 
 
-checkname = u'mknotifyd'
+checkname = 'mknotifyd'
 
 
-info = [[u'[EX]'], [u'Binary file (standard input) matches']]
+info = [['[EX]'], ['Binary file (standard input) matches']]
 
 
-discovery = {'': [(u'EX', {})], 'connection': []}
+discovery = {'': [('EX', {})], 'connection': []}
 
 
-checks = {'': [(u'EX',
+checks = {'': [('EX',
                 {},
                 [(2,
                   'The state file seems to be empty or corrupted. It is very likely that the spooler is not working properly',

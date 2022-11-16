@@ -5,7 +5,7 @@
 
 import ast
 import math
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -40,7 +40,7 @@ def check_foo(item, params, parsed_item_data):
 
 
 def test_get_parsed_item_data() -> None:
-    params: Dict[Any, Any] = {}
+    params: dict[Any, Any] = {}
     parsed = {1: "one", 3: {}, 4: [], 5: ""}
     info = [[1, "one"], [2, "two"]]
     assert check_foo(1, params, parsed) == (2, "bar")
@@ -230,7 +230,7 @@ def test_discover_decorator_with_nested_entries() -> None:
                 and used != "NULL"
                 and avail != "NULL"
             ):
-                yield "%s:%s" % (instance, dbname)
+                yield f"{instance}:{dbname}"
 
     data = {
         "host": [["mysql", 10, 10], ["home", 5, 8]],

@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -19,7 +19,7 @@ def dummy_generator(section):  # pylint: disable=unused-argument
     yield  # pylint: disable=unreachable
 
 
-MINIMAL_CREATION_KWARGS: Dict[str, Any] = {
+MINIMAL_CREATION_KWARGS: dict[str, Any] = {
     "name": "norris",
     "service_name": "Norris Device",
     "discovery_function": dummy_generator,

@@ -37,32 +37,32 @@ info = [
 ]
 
 discovery = {
-    '': [(u'hugo-server/Testdatabase', {})],
-    'connections': [(u'hugo-server/Testdatabase', {})],
-    'deadlock': [(u'hugo-server/Testdatabase', {})],
-    'cpu': [(u'hugo-server/Testdatabase', {})],
-    'dtu': [(u'hugo-server/Testdatabase', {})],
-    'storage': [(u'hugo-server/Testdatabase', {})],
+    '': [('hugo-server/Testdatabase', {})],
+    'connections': [('hugo-server/Testdatabase', {})],
+    'deadlock': [('hugo-server/Testdatabase', {})],
+    'cpu': [('hugo-server/Testdatabase', {})],
+    'dtu': [('hugo-server/Testdatabase', {})],
+    'storage': [('hugo-server/Testdatabase', {})],
 }
 
 checks = {
     '': [(
-        u'hugo-server/Testdatabase',
+        'hugo-server/Testdatabase',
         {},
-        [(0, u'Location: westeurope', [])],
+        [(0, 'Location: westeurope', [])],
     ),],
-    'connections': [(u'hugo-server/Testdatabase', {}, [
+    'connections': [('hugo-server/Testdatabase', {}, [
         (0, 'Successful connections: 0', [('connections', 0, None, None, 0, None)]),
         (0, 'Rate of failed connections: 0.0', [('connections_failed_rate', 0.0, None, None, 0,
                                                  None)]),
     ]),],
     'deadlock': [(
-        u'hugo-server/Testdatabase',
+        'hugo-server/Testdatabase',
         {},
         [(0, 'Deadlocks: 0', [('deadlocks', 0, None, None, 0, None)])],
     ),],
     'dtu': [(
-        u'hugo-server/Testdatabase',
+        'hugo-server/Testdatabase',
         {
             'dtu_percent_levels': (85.0, 95.0)
         },
@@ -71,7 +71,7 @@ checks = {
         ],
     )],
     'cpu': [(
-        u'hugo-server/Testdatabase',
+        'hugo-server/Testdatabase',
         {
             'cpu_percent_levels': (85.0, 95.0)
         },
@@ -79,7 +79,7 @@ checks = {
             (0, 'Total CPU: 0%', [('util', 0.0, 85., 95., 0, 100)]),
         ],
     )],
-    'storage': [(u'hugo-server/Testdatabase', {
+    'storage': [('hugo-server/Testdatabase', {
         'storage_percent_levels': (85.0, 95.0),
     }, [
         (0, 'Storage: 10.00% (10.9 MiB)', [('storage_percent', 10.0, 85., 95., 0, None)]),

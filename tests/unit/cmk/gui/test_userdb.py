@@ -7,10 +7,10 @@ from __future__ import annotations
 import logging
 import os
 import uuid
+from collections.abc import Generator, Iterable
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Generator, Iterable
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch

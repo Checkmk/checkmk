@@ -11,11 +11,11 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, TextIO
+from typing import Any, TextIO
 
 import freezegun
 import pytest
@@ -88,7 +88,7 @@ def fake_version_and_paths() -> None:
         edition_short = "cre"
 
     monkeypatch.setattr(
-        cmk_version, "omd_version", lambda: "%s.%s" % (cmk_version.__version__, edition_short)
+        cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
     )
 
     # Unit test context: load all available modules
@@ -300,7 +300,7 @@ def wait_until_liveproxyd_ready(site: Site, site_ids: Sequence[str]) -> None:
 
     # First wait for the site sockets to appear
     def _all_sockets_opened() -> bool:
-        return all((site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids))
+        return all(site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids)
 
     wait_until(_all_sockets_opened, timeout=60, interval=0.5)
 
@@ -327,7 +327,7 @@ class WatchLog:
         if not self._site.file_exists(self._log_path):
             self._site.write_text_file(self._log_path, "")
 
-        _log = open(self._site.path(self._log_path), "r")
+        _log = open(self._site.path(self._log_path))
         _log.seek(0, 2)  # go to end of file
         self._log = _log
         return self

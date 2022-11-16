@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -137,7 +138,7 @@ def test_check(
 )
 def test_cluster_check(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
     expected_result: CheckResult,
 ) -> None:
     assert expected_result == list(cluster_check(params, section))

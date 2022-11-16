@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -19,7 +19,7 @@ def fixture_host_config() -> HostConfig:
     return HostConfig(logging.getLogger("cmk.mkeventd.EventServer"))
 
 
-def _heute_config() -> Dict[str, Any]:
+def _heute_config() -> dict[str, Any]:
     return {
         "name": "heute",
         "alias": "heute alias",
@@ -36,7 +36,7 @@ def _heute_config() -> Dict[str, Any]:
     }
 
 
-def _example_com_config() -> Dict[str, Any]:
+def _example_com_config() -> dict[str, Any]:
     return {
         "name": "example.com",
         "alias": "example.com alias",
@@ -53,7 +53,7 @@ def _example_com_config() -> Dict[str, Any]:
     }
 
 
-def _test_table() -> List[Dict[str, Any]]:
+def _test_table() -> list[dict[str, Any]]:
     return [
         _heute_config(),
         _example_com_config(),
@@ -84,7 +84,7 @@ def fixture_livestatus(mock_livestatus: MockLiveStatusConnection) -> MockLiveSta
                     "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
                 },
                 contacts=set(),
-                contact_groups=set(["all"]),
+                contact_groups={"all"},
             ),
         ),
         ("HEUTE", None),
@@ -95,7 +95,7 @@ def test_host_config(
     host_config: HostConfig,
     live: MockLiveStatusConnection,
     hostname_str: str,
-    result: Optional[HostInfo],
+    result: HostInfo | None,
 ) -> None:
     hostname = HostName(hostname_str)
     with live(expect_status_query=False):
@@ -129,7 +129,7 @@ def test_host_config_get_canonical_name(
     host_config: HostConfig,
     live: MockLiveStatusConnection,
     search_term: str,
-    result: Optional[HostName],
+    result: HostName | None,
 ) -> None:
     with live(expect_status_query=False):
         live.expect_query(["GET status", "Columns: program_start", "ColumnHeaders: off"])

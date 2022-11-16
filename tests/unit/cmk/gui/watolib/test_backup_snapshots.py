@@ -5,7 +5,7 @@
 
 import pathlib
 import tarfile
-from typing import Generator
+from collections.abc import Generator
 
 from cmk.gui.watolib import backup_snapshots
 

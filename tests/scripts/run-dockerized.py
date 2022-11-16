@@ -20,10 +20,9 @@ import os
 import sys
 import tempfile
 from pathlib import Path
-from typing import List
 
 # Make the tests.testlib available
-sys.path.insert(0, os.path.dirname((os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from tests.testlib.containers import execute_tests_in_container
 from tests.testlib.utils import current_base_branch_name
@@ -81,7 +80,7 @@ def _os_environ_get(key: str, default: str) -> str:
     return result
 
 
-def _parse_arguments(args: List[str]) -> argparse.Namespace:
+def _parse_arguments(args: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "make_target",

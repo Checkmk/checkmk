@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type
 
 import pytest
 
@@ -53,7 +52,7 @@ def test_rulespec_sub_group() -> None:
 
     class TestSubGroup(RulespecSubGroup):
         @property
-        def main_group(self) -> Type[RulespecGroup]:
+        def main_group(self) -> type[RulespecGroup]:
             return TestGroup
 
         @property

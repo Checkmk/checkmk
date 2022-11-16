@@ -5,9 +5,9 @@
 
 import json
 from collections import defaultdict
+from unittest.mock import call, MagicMock
 
 import pytest
-from mock import call, MagicMock
 from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK

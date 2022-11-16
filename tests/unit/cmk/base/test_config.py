@@ -5,9 +5,9 @@
 
 import re
 import shutil
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -209,7 +209,7 @@ def test_host_folder_matching(
     ],
 )
 def test_is_ipv4_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -229,7 +229,7 @@ def test_is_ipv4_host(
     ],
 )
 def test_is_ipv6_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -249,7 +249,7 @@ def test_is_ipv6_host(
     ],
 )
 def test_is_ipv4v6_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -266,7 +266,7 @@ def test_is_ipv4v6_host(
     ],
 )
 def test_is_piggyback_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -290,7 +290,7 @@ def test_is_piggyback_host(
     ],
 )
 def test_is_piggyback_host_auto(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], with_data: bool, result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], with_data: bool, result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
@@ -311,7 +311,7 @@ def test_is_piggyback_host_auto(
     ],
 )
 def test_is_no_ip_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -354,7 +354,7 @@ def test_is_no_ip_host(
     ],
 )
 def test_is_ipv6_primary_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool, ruleset: List
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool, ruleset: list
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -374,7 +374,7 @@ def test_is_ipv6_primary_host(
     ],
 )
 def test_host_config_management_address(
-    monkeypatch: MonkeyPatch, attrs: Dict[str, str], result: str
+    monkeypatch: MonkeyPatch, attrs: dict[str, str], result: str
 ) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
@@ -386,7 +386,7 @@ def test_host_config_management_address(
     assert config_cache.get_host_config(hostname).management_address == result
 
 
-def _management_config_ruleset() -> List[Dict[str, Any]]:
+def _management_config_ruleset() -> list[dict[str, Any]]:
     return [
         {"condition": {}, "value": ("snmp", "eee")},
         {"condition": {}, "value": ("ipmi", {"username": "eee", "password": "eee"})},
@@ -420,10 +420,10 @@ def _management_config_ruleset() -> List[Dict[str, Any]]:
 )
 def test_host_config_management_credentials(  # type:ignore[no-untyped-def]
     monkeypatch: MonkeyPatch,
-    protocol: Optional[str],
-    credentials: Optional[Dict[str, str]],
-    expected_result: Optional[Union[str, Dict[str, str]]],
-    ruleset: List,
+    protocol: str | None,
+    credentials: dict[str, str] | None,
+    expected_result: str | dict[str, str] | None,
+    ruleset: list,
 ):
     hostname = HostName("hostname")
     ts = Scenario()
@@ -464,7 +464,7 @@ def test_host_config_management_credentials(  # type:ignore[no-untyped-def]
     ],
 )
 def test_host_config_additional_ipaddresses(
-    monkeypatch: MonkeyPatch, attrs: Dict[str, List[str]], result: Tuple[List[str], List[str]]
+    monkeypatch: MonkeyPatch, attrs: dict[str, list[str]], result: tuple[list[str], list[str]]
 ) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
@@ -487,7 +487,7 @@ def test_host_config_additional_ipaddresses(
     ],
 )
 def test_is_tcp_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -513,7 +513,7 @@ def test_is_tcp_host(
     ],
 )
 def test_is_ping_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -533,7 +533,7 @@ def test_is_ping_host(
     ],
 )
 def test_is_snmp_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -579,7 +579,7 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_is_dual_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -599,7 +599,7 @@ def test_is_dual_host(
     ],
 )
 def test_is_all_agents_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -619,7 +619,7 @@ def test_is_all_agents_host(
     ],
 )
 def test_is_all_special_agents_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result: bool
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result: bool
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -728,7 +728,7 @@ def test_host_config_symmetric_agent_encryption(
     ],
 )
 def test_host_config_agent_target_version(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -754,7 +754,7 @@ def test_host_config_agent_target_version(
     ],
 )
 def test_host_config_datasource_program(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -786,7 +786,7 @@ def test_host_config_datasource_program(
     ],
 )
 def test_host_config_special_agents(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Tuple]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[tuple]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -820,7 +820,7 @@ def test_host_config_special_agents(
     ],
 )
 def test_host_config_only_from(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -854,7 +854,7 @@ def test_host_config_only_from(
     ],
 )
 def test_host_config_explicit_check_command(
-    monkeypatch: MonkeyPatch, hostname_str: str, core_name: str, result: Optional[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, core_name: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -889,7 +889,7 @@ def test_host_config_explicit_check_command(
     ],
 )
 def test_host_config_ping_levels(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -923,7 +923,7 @@ def test_host_config_ping_levels(
     ],
 )
 def test_host_config_icons_and_actions(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -957,7 +957,7 @@ def test_host_config_icons_and_actions(
     ],
 )
 def test_host_config_extra_host_attributes(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, List[str]]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, list[str]]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1005,7 +1005,7 @@ def test_host_config_extra_host_attributes(
     ],
 )
 def test_host_config_inventory_parameters(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1096,7 +1096,7 @@ def test_host_config_discovery_check_parameters(
     ],
 )
 def test_host_config_notification_plugin_parameters(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1147,7 +1147,7 @@ def test_host_config_notification_plugin_parameters(
     ],
 )
 def test_host_config_active_checks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Tuple]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[tuple]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1191,7 +1191,7 @@ def test_host_config_active_checks(
     ],
 )
 def test_host_config_custom_checks(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[Dict[str, int]]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[dict[str, int]]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1307,7 +1307,7 @@ def test_host_config_static_checks(
     ],
 )
 def test_host_config_hostgroups(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1339,7 +1339,7 @@ def test_host_config_hostgroups(
     ],
 )
 def test_host_config_contactgroups(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1379,7 +1379,7 @@ def test_host_config_contactgroups(
     ],
 )
 def test_config_cache_exit_code_spec_overall(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1408,7 +1408,7 @@ def test_config_cache_exit_code_spec_overall(
     ],
 )
 def test_config_cache_exit_code_spec_individual(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1463,7 +1463,7 @@ def test_config_cache_exit_code_spec_individual(
         },
     ],
 )
-def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: Dict[str, Any]) -> None:
+def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str, Any]) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)
@@ -1506,7 +1506,7 @@ def test_host_config_snmp_credentials_of_version(
     monkeypatch: MonkeyPatch,
     hostname_str: str,
     version: int,
-    result: Union[None, str, Tuple[str, str]],
+    result: None | str | tuple[str, str],
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1539,7 +1539,7 @@ def test_host_config_snmp_credentials_of_version(
     ],
 )
 def test_host_config_snmp_check_interval(
-    monkeypatch: MonkeyPatch, hostname_str: str, section_name: str, result: Optional[int]
+    monkeypatch: MonkeyPatch, hostname_str: str, section_name: str, result: int | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1564,7 +1564,7 @@ def test_http_proxies() -> None:
 
 
 @pytest.fixture(name="service_list")
-def _service_list() -> List[ConfiguredService]:
+def _service_list() -> list[ConfiguredService]:
     return [
         ConfiguredService(
             check_plugin_name=CheckPluginName("plugin_%s" % d),
@@ -1579,7 +1579,7 @@ def _service_list() -> List[ConfiguredService]:
 
 
 def test_get_sorted_check_table_cmc(
-    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
+    monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
 ) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: True)
 
@@ -1590,7 +1590,7 @@ def test_get_sorted_check_table_cmc(
 
 
 def test_get_sorted_check_table_no_cmc(
-    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
+    monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
 ) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(
@@ -1618,7 +1618,7 @@ def test_get_sorted_check_table_no_cmc(
 
 
 def test_resolve_service_dependencies_cyclic(
-    monkeypatch: MonkeyPatch, service_list: List[ConfiguredService]
+    monkeypatch: MonkeyPatch, service_list: list[ConfiguredService]
 ) -> None:
     monkeypatch.setattr(config, "is_cmc", lambda: False)
     monkeypatch.setattr(
@@ -1923,7 +1923,7 @@ def test_service_label_rules_default() -> None:
     ],
 )
 def test_config_cache_extra_attributes_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, Any]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, Any]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -1987,7 +1987,7 @@ def test_config_cache_extra_attributes_of_service(
     ],
 )
 def test_config_cache_icons_and_actions(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2037,7 +2037,7 @@ def test_config_cache_icons_and_actions(
     ],
 )
 def test_config_cache_servicegroups_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2072,7 +2072,7 @@ def test_config_cache_servicegroups_of_service(
     ],
 )
 def test_config_cache_contactgroups_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: List[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2160,7 +2160,7 @@ def test_config_cache_passive_check_period_of_service(
     ],
 )
 def test_config_cache_custom_attributes_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, str]
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2201,7 +2201,7 @@ def test_config_cache_custom_attributes_of_service(
     ],
 )
 def test_config_cache_service_level_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: int | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2238,7 +2238,7 @@ def test_config_cache_service_level_of_service(
     ],
 )
 def test_config_cache_check_period_of_service(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[str]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2399,7 +2399,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_host_config_do_status_data_inventory(
-    monkeypatch: MonkeyPatch, result: bool, ruleset: Optional[List[Tuple]]
+    monkeypatch: MonkeyPatch, result: bool, ruleset: list[tuple] | None
 ) -> None:
     abc_host = HostName("abc")
     ts = Scenario()
@@ -2423,7 +2423,7 @@ def test_host_config_do_status_data_inventory(
     ],
 )
 def test_host_config_service_level(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Optional[int]
+    monkeypatch: MonkeyPatch, hostname_str: str, result: int | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -2445,7 +2445,7 @@ def test_host_config_service_level(
     assert config_cache.service_level(hostname) == result
 
 
-def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:
+def _rule_val(check_interval: int | None) -> dict[str, Any]:
     return {
         "check_interval": check_interval,
         "severity_unmonitored": 0,
@@ -2468,7 +2468,7 @@ def _rule_val(check_interval: Optional[int]) -> dict[str, Any]:
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    rule_entries: Sequence[Optional[dict]],
+    rule_entries: Sequence[dict | None],
     ignored: bool,
     ping: bool,
     result: bool,
@@ -2706,7 +2706,7 @@ cmc_host_rrd_config = [
 
 
 def _add_explicit_setting_in_folder(
-    folder_path: Path, setting_name: str, values: Dict[str, Any]
+    folder_path: Path, setting_name: str, values: dict[str, Any]
 ) -> None:
     folder_path.mkdir(parents=True, exist_ok=True)
     with (folder_path / "hosts.mk").open("w", encoding="utf-8") as f:

@@ -32,5 +32,5 @@ def test_registered_jobs() -> None:
             "cmk.gui.watolib.host_label_sync.execute_host_label_sync_job",
         ]
 
-    found_jobs = sorted(["%s.%s" % (f.__module__, f.__name__) for f in cron.multisite_cronjobs])
+    found_jobs = sorted([f"{f.__module__}.{f.__name__}" for f in cron.multisite_cronjobs])
     assert found_jobs == sorted(expected)

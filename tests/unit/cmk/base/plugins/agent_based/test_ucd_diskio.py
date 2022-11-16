@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 import pytest
 
@@ -38,7 +37,7 @@ def snmp_section():
 
 
 def test_discover_ucd_diskio(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> None:
     discovery_results = list(discover_ucd_diskio(parse_ucd_diskio(string_table)))
     assert discovery_results == [
@@ -52,7 +51,7 @@ def test_discover_ucd_diskio_with_empty_section() -> None:
 
 
 def test_check_ucd_diskio_item_not_found(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> None:
     assert (
         list(
@@ -67,7 +66,7 @@ def test_check_ucd_diskio_item_not_found(
 
 
 def test_check_ucd_diskio_raise_get_rate_error(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> None:
     with pytest.raises(GetRateError):
         list(
@@ -80,7 +79,7 @@ def test_check_ucd_diskio_raise_get_rate_error(
 
 
 def test_check_ucd_diskio(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     value_store_patch: None,
 ) -> None:
     for field in ["read_ios", "write_ios", "read_throughput", "write_throughput"]:

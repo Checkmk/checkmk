@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 import pytest
 
@@ -3801,8 +3801,8 @@ def test_parse_winperf_if_dhcp() -> None:
 )
 def test_merge_sections(
     interfaces_in: Mapping[str, interfaces.InterfaceWithCounters],
-    section_teaming: Optional[SectionTeaming],
-    section_extended: Optional[SectionExtended],
+    section_teaming: SectionTeaming | None,
+    section_extended: SectionExtended | None,
     interfaces_out: interfaces.Section,
 ) -> None:
     assert (
@@ -3841,7 +3841,7 @@ def test_merge_sections(
         ),
     ],
 )
-def test_check_dhcp(item: str, result: Optional[Result]) -> None:
+def test_check_dhcp(item: str, result: Result | None) -> None:
     assert (
         _check_dhcp(
             item,

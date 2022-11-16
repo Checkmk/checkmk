@@ -17,7 +17,7 @@ def test_discovery() -> None:
     section = synology_fans.parse(SECTION_TABLE)
     assert section is not None
     services = list(synology_fans.discovery(section))
-    assert set(s.item for s in services) == {"System", "CPU"}
+    assert {s.item for s in services} == {"System", "CPU"}
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@
 
 # mypy: disallow_untyped_defs
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 import pytest_mock

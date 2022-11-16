@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import Optional, Tuple
 
 import pytest
 
@@ -217,10 +216,10 @@ def test_result_invalid(state_: object, summary: object, notice: object, details
 )
 def test_result(
     state_: State,
-    summary: Optional[str],
-    notice: Optional[str],
-    details: Optional[str],
-    expected_triple: Tuple[State, str, str],
+    summary: str | None,
+    notice: str | None,
+    details: str | None,
+    expected_triple: tuple[State, str, str],
 ) -> None:
     result = Result(
         state=state_,

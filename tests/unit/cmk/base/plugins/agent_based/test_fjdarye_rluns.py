@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping
+from collections.abc import Mapping
 
 import pytest
 
@@ -51,7 +51,7 @@ from cmk.base.plugins.agent_based.fjdarye_rluns import (
     ],
 )
 def test_parse_fjdarye_rluns(
-    section: List[StringTable],
+    section: list[StringTable],
     parse_result: Mapping[str, FjdaryeRlun],
 ) -> None:
     assert parse_fjdarye_rluns(section) == parse_result

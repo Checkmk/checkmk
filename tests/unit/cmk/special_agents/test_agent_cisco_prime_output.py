@@ -23,7 +23,7 @@ def fixture_accept_requests(return_code):
     for req in REQUESTS:
         responses.add(
             responses.GET,
-            "https://%s/%s/%s" % (HOST, API_PATH, req),
+            f"https://{HOST}/{API_PATH}/{req}",
             json={"authenticated": True, "user": "user"},
             status=return_code,
         )

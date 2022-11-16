@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_mobileiron import inventory_mobileiron
@@ -30,7 +30,7 @@ DEVICE_DATA = parse_mobileiron(
 )
 
 
-EXPECTED: Iterable[Union[Attributes, TableRow]] = [
+EXPECTED: Iterable[Attributes | TableRow] = [
     Attributes(
         path=["hardware", "system"],
         inventory_attributes={

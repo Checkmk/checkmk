@@ -10,28 +10,28 @@ checkname = 'msexch_rpcclientaccess'
 
 info = [
     [
-        u'ActiveUserCount', u'Caption', u'ClientBackgroundRPCsFailed',
-        u'ClientBackgroundRPCssucceeded', u'ClientForegroundRPCsFailed',
-        u'ClientForegroundRPCssucceeded', u'ClientLatency10secRPCs', u'ClientLatency2secRPCs',
-        u'ClientLatency5secRPCs', u'ClientRPCsattempted', u'ClientRPCsFailed',
-        u'ClientRPCssucceeded', u'ConnectionCount', u'Description', u'Frequency_Object',
-        u'Frequency_PerfTime', u'Frequency_Sys100NS', u'Name', u'RPCAveragedLatency',
-        u'RPCClientsBytesRead', u'RPCClientsBytesWritten', u'RPCClientsUncompressedBytesRead',
-        u'RPCClientsUncompressedBytesWritten', u'RPCdispatchtaskactivethreads',
-        u'RPCdispatchtaskoperationsPersec', u'RPCdispatchtaskqueuelength',
-        u'RPCdispatchtaskthreads', u'RpcHttpConnectionRegistrationdispatchtaskactivethreads',
-        u'RpcHttpConnectionRegistrationdispatchtaskoperationsPersec',
-        u'RpcHttpConnectionRegistrationdispatchtaskqueuelength',
-        u'RpcHttpConnectionRegistrationdispatchtaskthreads', u'RPCOperationsPersec',
-        u'RPCPacketsPersec', u'RPCRequests', u'Timestamp_Object', u'Timestamp_PerfTime',
-        u'Timestamp_Sys100NS', u'UserCount', u'XTCdispatchtaskactivethreads',
-        u'XTCdispatchtaskoperationsPersec', u'XTCdispatchtaskqueuelength', u'XTCdispatchtaskthreads'
+        'ActiveUserCount', 'Caption', 'ClientBackgroundRPCsFailed',
+        'ClientBackgroundRPCssucceeded', 'ClientForegroundRPCsFailed',
+        'ClientForegroundRPCssucceeded', 'ClientLatency10secRPCs', 'ClientLatency2secRPCs',
+        'ClientLatency5secRPCs', 'ClientRPCsattempted', 'ClientRPCsFailed',
+        'ClientRPCssucceeded', 'ConnectionCount', 'Description', 'Frequency_Object',
+        'Frequency_PerfTime', 'Frequency_Sys100NS', 'Name', 'RPCAveragedLatency',
+        'RPCClientsBytesRead', 'RPCClientsBytesWritten', 'RPCClientsUncompressedBytesRead',
+        'RPCClientsUncompressedBytesWritten', 'RPCdispatchtaskactivethreads',
+        'RPCdispatchtaskoperationsPersec', 'RPCdispatchtaskqueuelength',
+        'RPCdispatchtaskthreads', 'RpcHttpConnectionRegistrationdispatchtaskactivethreads',
+        'RpcHttpConnectionRegistrationdispatchtaskoperationsPersec',
+        'RpcHttpConnectionRegistrationdispatchtaskqueuelength',
+        'RpcHttpConnectionRegistrationdispatchtaskthreads', 'RPCOperationsPersec',
+        'RPCPacketsPersec', 'RPCRequests', 'Timestamp_Object', 'Timestamp_PerfTime',
+        'Timestamp_Sys100NS', 'UserCount', 'XTCdispatchtaskactivethreads',
+        'XTCdispatchtaskoperationsPersec', 'XTCdispatchtaskqueuelength', 'XTCdispatchtaskthreads'
     ],
     [
-        u'11', u'', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'0', u'', u'0',
-        u'2343747', u'10000000', u'', u'18', u'5368614', u'26082981', u'5368614', u'26082981', u'0',
-        u'79928', u'0', u'40', u'0', u'125960', u'0', u'32', u'24218', u'72654', u'0', u'0',
-        u'1025586759765', u'131287884133440000', u'0', u'0', u'0', u'0', u'0'
+        '11', '', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '', '0',
+        '2343747', '10000000', '', '18', '5368614', '26082981', '5368614', '26082981', '0',
+        '79928', '0', '40', '0', '125960', '0', '32', '24218', '72654', '0', '0',
+        '1025586759765', '131287884133440000', '0', '0', '0', '0', '0'
     ],
 ]
 

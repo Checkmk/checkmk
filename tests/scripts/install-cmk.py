@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, NewType, Optional
+from typing import NewType
 
 import requests
 
@@ -92,7 +92,7 @@ def get_omd_distro_name() -> str:
     raise NotImplementedError()
 
 
-def _read_os_release() -> Optional[Dict[str, str]]:
+def _read_os_release() -> dict[str, str] | None:
     os_release = Path("/etc/os-release")
     if not os_release.exists():
         return None
@@ -192,7 +192,7 @@ class ABCPackageManager(abc.ABC):
     def _install_package(self, package_path: Path) -> None:
         raise NotImplementedError()
 
-    def _execute(self, cmd: List[str]) -> None:
+    def _execute(self, cmd: list[str]) -> None:
         logger.debug("Executing: %s", subprocess.list2cmdline(list(map(str, cmd))))
 
         # Workaround to fix package installation issues
@@ -223,7 +223,7 @@ def sha256_file(path: Path) -> str:
 
 class PackageManagerDEB(ABCPackageManager):
     def _package_name(self, edition, version):
-        return "check-mk-%s-%s_0.%s_amd64.deb" % (edition, version, self.distro_name)
+        return f"check-mk-{edition}-{version}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path):
         # As long as we do not have all dependencies preinstalled, we need to ensure that the
@@ -234,7 +234,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 class ABCPackageManagerRPM(ABCPackageManager):
     def _package_name(self, edition, version):
-        return "check-mk-%s-%s-%s-38.x86_64.rpm" % (edition, version, self.distro_name)
+        return f"check-mk-{edition}-{version}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Dict, Mapping, Optional
+from typing import Optional
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -40,7 +41,7 @@ def patch_actual_lookup(monkeypatch: MonkeyPatch, mapping: _PatchMapping) -> Non
     )
 
 
-def _empty() -> Dict[ip_lookup.IPLookupCacheId, Optional[str]]:  # just centralize type hint...
+def _empty() -> dict[ip_lookup.IPLookupCacheId, str | None]:  # just centralize type hint...
     return {}
 
 
@@ -430,7 +431,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_lookup_mgmt_board_ip_address_ipv4_host(
-    monkeypatch: MonkeyPatch, hostname_str: str, tags: Dict[str, str], result_address: str
+    monkeypatch: MonkeyPatch, hostname_str: str, tags: dict[str, str], result_address: str
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -511,7 +512,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(  # type:ignore[no-untyped-def]
     ],
 )
 def test_lookup_mgmt_board_ip_address_unresolveable(
-    monkeypatch: MonkeyPatch, tags: Dict[str, str], family: socket.AddressFamily
+    monkeypatch: MonkeyPatch, tags: dict[str, str], family: socket.AddressFamily
 ) -> None:
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()

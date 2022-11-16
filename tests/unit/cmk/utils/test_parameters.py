@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Sequence, Tuple
+from collections.abc import Sequence
 
 from cmk.utils.parameters import (
     boil_down_parameters,
@@ -17,7 +17,7 @@ def _default() -> LegacyCheckParameters:
     return {"default": 42}
 
 
-def _tp_values() -> List[Tuple[str, LegacyCheckParameters]]:
+def _tp_values() -> list[tuple[str, LegacyCheckParameters]]:
     return [("tp1", {"value": "from tp1"}), ("tp2", {"value": "from tp2"})]
 
 
@@ -86,8 +86,8 @@ class TestTimespecificParameters:
         ).evaluate(lambda x: True) == {"key": "I am only default, but the most specific rule!"}
 
     def test_first_tuple_wins(self) -> None:
-        tuple_1: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (1, 1))]
-        tuple_2: List[Tuple[str, LegacyCheckParameters]] = [("tp3", (2, 2))]
+        tuple_1: list[tuple[str, LegacyCheckParameters]] = [("tp3", (1, 1))]
+        tuple_2: list[tuple[str, LegacyCheckParameters]] = [("tp3", (2, 2))]
         assert TimespecificParameters(
             (
                 TimespecificParameterSet(_default(), _tp_values()),

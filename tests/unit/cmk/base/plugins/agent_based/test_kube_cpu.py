@@ -7,7 +7,6 @@
 
 import itertools
 import json
-from typing import Dict, Optional, Tuple
 
 import pytest
 
@@ -50,7 +49,7 @@ def usage_cycle_age() -> int:
 @pytest.fixture
 def value_store(
     usage_cycle_age: int, usage_string_table: StringTable
-) -> Dict[str, Tuple[float, str]]:
+) -> dict[str, tuple[float, str]]:
     return {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * usage_cycle_age,
@@ -405,7 +404,7 @@ def test_overview_limits_contained(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize("usage_cycle_age", [1])
 @pytest.mark.parametrize("usage_section", [None])
 def test_stored_usage_value(  # type:ignore[no-untyped-def]
-    usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
+    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None, value_store
 ):
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"
@@ -415,7 +414,7 @@ def test_stored_usage_value(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("usage_section", [None])
 def test_stored_outdated_usage_value(  # type:ignore[no-untyped-def]
-    usage_section: Optional[cmk.base.plugins.agent_based.utils.kube.PerformanceUsage], value_store
+    usage_section: cmk.base.plugins.agent_based.utils.kube.PerformanceUsage | None, value_store
 ):
     performance_cpu = cmk.base.plugins.agent_based.utils.kube_resources.performance_cpu(
         usage_section, TIMESTAMP, value_store, "cpu_usage"

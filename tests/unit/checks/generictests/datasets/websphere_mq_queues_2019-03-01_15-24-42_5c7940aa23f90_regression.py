@@ -8,16 +8,16 @@
 
 
 
-checkname = u'websphere_mq_queues'
+checkname = 'websphere_mq_queues'
 
 
-info = [[u'0', u'ABC-123-DEF'], [u'TEST-FOO', u'RUNNING']]
+info = [['0', 'ABC-123-DEF'], ['TEST-FOO', 'RUNNING']]
 
 
-discovery = {'': [(u'ABC-123-DEF', 'websphere_mq_queues_default_levels')]}
+discovery = {'': [('ABC-123-DEF', 'websphere_mq_queues_default_levels')]}
 
 
-checks = {'': [(u'ABC-123-DEF',
+checks = {'': [('ABC-123-DEF',
                 {'message_count': (1000, 1200), 'message_count_perc': (80.0, 90.0)},
                 [(0,
                   'Messages in queue: 0',

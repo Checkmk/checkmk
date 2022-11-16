@@ -9,7 +9,6 @@ import json
 import os
 import re
 import subprocess
-from typing import List
 
 import pkg_resources as pkg
 import pytest
@@ -24,7 +23,7 @@ def _load_pipfile_data() -> dict:
     return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
 
 
-def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
+def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
 
     # We still have some exceptions to the rule...
     dist_renamings = {
@@ -34,13 +33,13 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
     metadata_dir = pkg.get_distribution(
         dist_renamings.get(dist_name, dist_name)
     ).egg_info  # type: ignore[attr-defined]
-    with open("%s/%s" % (metadata_dir, "top_level.txt")) as top_level:
+    with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)
         return [name.replace("/", ".") for name in import_names if not name.startswith("_")]
 
 
-def _get_import_names_from_pipfile() -> List[str]:
+def _get_import_names_from_pipfile() -> list[str]:
 
     # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
     static_import_names = ["black", "typing_extensions"]

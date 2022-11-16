@@ -5,7 +5,7 @@
 
 import logging
 import os
-from typing import Sequence
+from collections.abc import Sequence
 
 from tests.testlib import cmk_path
 
@@ -44,7 +44,7 @@ def needs_enterprise_license(path: str) -> bool:
 
 
 def get_file_header(path: str, length: int = 30) -> str:
-    with open(path, "r") as file:
+    with open(path) as file:
         head = [file.readline() for x in range(length)]
         return "\n".join(head)
 

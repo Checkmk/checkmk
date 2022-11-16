@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List
 
 import pytest
 
@@ -14,7 +13,7 @@ from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
 from cmk.gui.watolib.search import MatchItem
 
 
-def expected_items() -> Dict[str, List[str]]:
+def expected_items() -> dict[str, list[str]]:
     agents_items = []
 
     if cmk_version.is_raw_edition():
@@ -124,7 +123,7 @@ def expected_items() -> Dict[str, List[str]]:
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_get_wato_menu_items() -> None:
-    items_by_topic: Dict[str, List[str]] = {}
+    items_by_topic: dict[str, list[str]] = {}
     for topic in get_wato_menu_items():
         items = items_by_topic.setdefault(topic.name, [])
         for item in topic.items:

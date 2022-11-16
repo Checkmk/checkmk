@@ -7,8 +7,9 @@ import copy
 import logging
 import shutil
 import socket
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple
+from typing import Any, NamedTuple
 from unittest import mock
 
 import pytest

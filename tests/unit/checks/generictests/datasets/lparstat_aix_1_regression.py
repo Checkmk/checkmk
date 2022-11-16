@@ -13,27 +13,27 @@ checkname = 'lparstat_aix'
 parsed = parse_lparstat_aix([
     ['System', 'Config', 'type=Dedicated', 'ent=7.0', 'what=ever'],
     [
-        u'%user', u'%sys', u'%wait', u'%idle', u'physc', u'%entc', u'lbusy', u'vcsw', u'phint',
-        u'%nsp', u'%utcyc'
+        '%user', '%sys', '%wait', '%idle', 'physc', '%entc', 'lbusy', 'vcsw', 'phint',
+        '%nsp', '%utcyc'
     ],
     [
-        u'#', u'-----', u'-----', u'------', u'------', u'-----', u'-----', u'------', u'-----',
-        u'-----', u'-----', u'------'
+        '#', '-----', '-----', '------', '------', '-----', '-----', '------', '-----',
+        '-----', '-----', '------'
     ],
-    [u'0.2', u'0.4', u'0.0', u'99.3', u'0.02', u'1.7', u'0.0', u'215', u'3', u'101', u'0.64'],
+    ['0.2', '0.4', '0.0', '99.3', '0.02', '1.7', '0.0', '215', '3', '101', '0.64'],
 ])
 
 discovery = {'': [(None, {})], 'cpu_util': [(None, {})]}
 
 checks = {
     '': [(None, (5, 10), [
-        (0, u'Physc: 0.02', [(u'physc', 0.02, None, None, None, None)]),
-        (0, u'Entc: 1.7%', [(u'entc', 1.7, None, None, None, None)]),
-        (0, u'Lbusy: 0.0', [(u'lbusy', 0.0, None, None, None, None)]),
-        (0, u'Vcsw: 215.0', [(u'vcsw', 215.0, None, None, None, None)]),
-        (0, u'Phint: 3.0', [(u'phint', 3.0, None, None, None, None)]),
-        (0, u'Nsp: 101.0%', [(u'nsp', 101.0, None, None, None, None)]),
-        (0, u'Utcyc: 0.64%', [(u'utcyc', 0.64, None, None, None, None)]),
+        (0, 'Physc: 0.02', [('physc', 0.02, None, None, None, None)]),
+        (0, 'Entc: 1.7%', [('entc', 1.7, None, None, None, None)]),
+        (0, 'Lbusy: 0.0', [('lbusy', 0.0, None, None, None, None)]),
+        (0, 'Vcsw: 215.0', [('vcsw', 215.0, None, None, None, None)]),
+        (0, 'Phint: 3.0', [('phint', 3.0, None, None, None, None)]),
+        (0, 'Nsp: 101.0%', [('nsp', 101.0, None, None, None, None)]),
+        (0, 'Utcyc: 0.64%', [('utcyc', 0.64, None, None, None, None)]),
     ]),],
     'cpu_util': [(None, None, [
         (0, 'User: 0.20%', [('user', 0.2)]),

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Generator, Sequence
 from itertools import chain
-from typing import Dict, Generator, Sequence, Set, Tuple
 
 from tests.testlib.base import Scenario
 
@@ -18,7 +18,7 @@ from cmk.base.plugin_contexts import current_host
 
 def _section_permutations(
     parsed_section_names: Sequence[ParsedSectionName],
-) -> Generator[Tuple[SectionPlugin, ...], None, None]:
+) -> Generator[tuple[SectionPlugin, ...], None, None]:
 
     if not parsed_section_names:
         yield ()
@@ -161,7 +161,7 @@ def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[
     ):
         raise AssertionError(f"Unknown plugins in exception list: {', '.join(unknown_plugins)}")
 
-    plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
+    plugins_with_trivial_sections: dict[str, set[str]] = defaultdict(set)
     for plugin in registered_check_and_inventory_plugins:
         for section in plugin.sections:
             if section not in registered_sections and section not in known_exceptions:

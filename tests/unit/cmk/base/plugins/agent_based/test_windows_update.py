@@ -2,7 +2,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Final, Sequence, Union
+from collections.abc import Sequence
+from typing import Final
 
 import pytest
 from pytest_mock.plugin import MockerFixture
@@ -179,7 +180,7 @@ def test_time_until_force_reboot(  # type:ignore[no-untyped-def]
     mocker: MockerFixture,
     reboot_time: float,
     now: float,
-    results: Sequence[Union[Result, Metric]],
+    results: Sequence[Result | Metric],
 ) -> None:
     mocker.patch("time.time", return_value=now)
     section = Section(

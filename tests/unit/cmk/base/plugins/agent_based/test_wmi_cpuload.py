@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 from pytest import MonkeyPatch
@@ -1551,7 +1551,7 @@ from cmk.base.plugins.agent_based.wmi_cpuload import check_wmi_cpuload, parse_wm
 )
 def test_parse_wmi_cpuload(
     string_table: StringTable,
-    section: Optional[Section],
+    section: Section | None,
 ) -> None:
     assert parse_wmi_cpuload(string_table) == section
 
@@ -1630,7 +1630,7 @@ def test_parse_wmi_cpuload(
 def test_check_wmi_cpuload_ok_counter(
     monkeypatch: MonkeyPatch,
     section: Section,
-    check_results: Sequence[Union[Result, Metric]],
+    check_results: Sequence[Result | Metric],
 ) -> None:
     monkeypatch.setattr(
         wmi_cpuload,

@@ -11,7 +11,7 @@
 checkname = 'splunk_license_usage'
 
 
-info = [[u'license_usage'], [u'524288000', u'5895880']]
+info = [['license_usage'], ['524288000', '5895880']]
 
 
 discovery = {'': [(None, {})]}

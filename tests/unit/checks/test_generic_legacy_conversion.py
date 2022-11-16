@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -115,7 +115,7 @@ def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: F
         if i["check_function"]
     }
     failures = true_checks - migrated
-    assert not failures, "failed to migrate: {!r}".format(failures)
+    assert not failures, f"failed to migrate: {failures!r}"
 
 
 def test_all_check_variables_present(fix_plugin_legacy: FixPluginLegacy) -> None:

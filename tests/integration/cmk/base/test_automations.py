@@ -6,7 +6,7 @@
 import os
 import re
 import subprocess
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 
@@ -314,7 +314,7 @@ def test_automation_set_autochecks(test_cfg, site: Site) -> None:  # type:ignore
             results.SetAutochecksResult,
         )
 
-        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
+        autochecks_file = f"{cmk.utils.paths.autochecks_dir}/{hostname}.mk"
         assert os.path.exists(autochecks_file)
 
         data = autochecks.AutochecksStore(hostname).read()

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import FrozenSet, List
-
 import astroid  # type: ignore[import]
 from pylint.checkers import BaseChecker  # type: ignore[import]
 from pylint.lint import PyLinter  # type: ignore[import]
@@ -21,13 +19,13 @@ def register(linter: PyLinter) -> None:
 
 class ForbiddenObjectChecker(BaseChecker):
     name = "forbidden-object"
-    target_objects: FrozenSet[str] = frozenset([])
+    target_objects: frozenset[str] = frozenset([])
     target_lib = ""
 
     def __init__(self, linter: PyLinter) -> None:
         super().__init__(linter)
         self.was_imported = False
-        self.object_names: List[str] = []
+        self.object_names: list[str] = []
         self.library_name = self.target_lib
 
     def visit_import(self, node: astroid.node_classes.Import) -> None:

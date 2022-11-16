@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 
@@ -144,7 +144,7 @@ section_recreate = [
 def test_k8s_replicas(
     fix_register: FixRegister,
     section: StringTable,
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("k8s_replicas")]
     assert list(check.check_function(section=parse_json(section))) == expected_check_result
@@ -158,7 +158,7 @@ def test_k8s_replicas(
     ],
 )
 def test_surge_levels(
-    max_surge: Union[str, int],
+    max_surge: str | int,
     total_replicas: int,
     expected_upper_level: int,
 ) -> None:
@@ -173,7 +173,7 @@ def test_surge_levels(
     ],
 )
 def test_unavailability_levels(
-    max_unavailable: Union[str, int],
+    max_unavailable: str | int,
     total_replicas: int,
     expected_lower_level: int,
 ) -> None:

@@ -62,8 +62,8 @@ discovery = {
         ('MyInstance', {}),
     ],
     'pools': [
-        (u'MyInstance Memory Pool Code Cache', {}),
-        (u'MyInstance Memory Pool Metaspace', {}),
+        ('MyInstance Memory Pool Code Cache', {}),
+        ('MyInstance Memory Pool Metaspace', {}),
     ],
 }
 

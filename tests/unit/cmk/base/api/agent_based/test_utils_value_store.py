@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Dict, Tuple
 
 import pytest
 
@@ -86,7 +85,7 @@ def test_get_rate(
     ],
 )
 def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, float]]) -> None:
-    store: Dict[str, Tuple[float, float, float]] = {}
+    store: dict[str, tuple[float, float, float]] = {}
     for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = get_average(
             store,
@@ -95,4 +94,4 @@ def test_get_average(backlog_min: int, timeseries: Sequence[tuple[float, float, 
             this_value,
             backlog_min,
         )
-        assert avg == expected_average, "at [%r]: got %r expected %r" % (idx, avg, expected_average)
+        assert avg == expected_average, f"at [{idx!r}]: got {avg!r} expected {expected_average!r}"

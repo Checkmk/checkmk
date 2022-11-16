@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Tuple, TypedDict
+from collections.abc import Sequence
+from typing import TypedDict
 
 import pytest
 
@@ -150,7 +151,7 @@ class CombinedParams(TypedDict, total=False):
 def test_check_raritan_pdu_plugs(
     item: str,
     params: CombinedParams,
-    expected_result: Sequence[Tuple[int, str]],
+    expected_result: Sequence[tuple[int, str]],
 ) -> None:
     assert (
         list(

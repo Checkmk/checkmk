@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 
@@ -141,7 +141,7 @@ def test_active_check_macros(site: Site) -> None:
 
             assert (
                 expected_output == plugin_output
-            ), "Macro %s has wrong value (%r instead of %r)" % (var, plugin_output, expected_output)
+            ), f"Macro {var} has wrong value ({plugin_output!r} instead of {expected_output!r})"
 
     finally:
         for rule_id in rule_ids:

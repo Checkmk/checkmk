@@ -124,7 +124,7 @@ def test_check_liebert_temp_air(  # type:ignore[no-untyped-def]
 
 
 def test_check_liebert_temp_air_trend() -> None:
-    value_store: typing.Dict[str, typing.Any] = {}
+    value_store: dict[str, typing.Any] = {}
     params: TempParamDict = PARAMETERS.copy()
     trend_compute: TrendComputeDict = {"period": 60}
     params["trend_compute"] = trend_compute

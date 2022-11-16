@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple
 
 import pytest
 
@@ -13,7 +12,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 @pytest.fixture()
 def aut_user_auth_wsgi_app(
     wsgi_app: WebTestAppForCMK,
-    with_automation_user: Tuple[str, str],
+    with_automation_user: tuple[str, str],
 ) -> WebTestAppForCMK:
     wsgi_app.set_authorization(("Bearer", " ".join(with_automation_user)))
     return wsgi_app

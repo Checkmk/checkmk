@@ -11,7 +11,7 @@
 checkname = 'apc_inrow_fanspeed'
 
 
-info = [[u'518']]
+info = [['518']]
 
 
 discovery = {'': [(None, None)]}

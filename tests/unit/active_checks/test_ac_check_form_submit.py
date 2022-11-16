@@ -64,7 +64,7 @@ def test_check_form_submit_main(
     expected_exitcode: int,
     expected_info: str,
 ) -> None:
-    filepath = "%s/_check_form_submit_response" % os.path.dirname(os.path.abspath(__file__))
+    filepath = "%s/_check_form_submit_response" % os.path.dirname(__file__)
     with vcr.use_cassette(filepath, record_mode="none"):
         exitcode, info = check_form_submit.main(args)
         assert exitcode == expected_exitcode

@@ -8,7 +8,7 @@
 
 checkname = 'tplink_mem'
 
-info = [[u'30'], [u'60']] # multiple memory units
+info = [['30'], ['60']] # multiple memory units
 
 discovery = {'': [(None, {})]}
 

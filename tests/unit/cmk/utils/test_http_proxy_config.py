@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple, Union
 
 import pytest
 
@@ -101,7 +100,7 @@ _PROXIES_GLOBAL_SETTINGS = {
     ],
 )
 def test_http_proxy_config_from_user_setting(
-    rulesepc_value: Union[str, Tuple[str, Optional[str]]],
+    rulesepc_value: str | tuple[str, str | None],
     expected_result: HTTPProxyConfig,
 ) -> None:
     assert (

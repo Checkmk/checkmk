@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName
@@ -11,7 +10,7 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.check_utils import ConfiguredService
 
 
-def _service(plugin: str, item: Optional[str]) -> ConfiguredService:
+def _service(plugin: str, item: str | None) -> ConfiguredService:
     return ConfiguredService(
         check_plugin_name=CheckPluginName(plugin),
         item=item,

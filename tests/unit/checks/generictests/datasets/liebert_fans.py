@@ -11,16 +11,16 @@
 checkname = 'liebert_fans'
 
 
-info = [[u'Fan Speed', u'1.3', u'%']]
+info = [['Fan Speed', '1.3', '%']]
 
 
-discovery = {'': [(u'Fan Speed', {})]}
+discovery = {'': [('Fan Speed', {})]}
 
 
 checks = {
     '': [
-        (u'Fan Speed', {'levels': (80, 90), 'levels_lower': (2, 1)}, [
-            (1, u'1.30 % (warn/crit below 2.00 %/1.00 %)', [
+        ('Fan Speed', {'levels': (80, 90), 'levels_lower': (2, 1)}, [
+            (1, '1.30 % (warn/crit below 2.00 %/1.00 %)', [
                 ('filehandler_perc', 1.3, 80, 90, None, None),
             ]),
         ]),

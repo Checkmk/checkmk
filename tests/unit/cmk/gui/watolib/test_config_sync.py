@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Union
 
 import pytest
 import responses
@@ -125,7 +125,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             raising=False,
         )
-        dummy_password: Dict[str, Dict[str, Union[None, str, List]]] = {
+        dummy_password: dict[str, dict[str, None | str | list]] = {
             "password_1": {
                 "title": "testpwd",
                 "comment": "",

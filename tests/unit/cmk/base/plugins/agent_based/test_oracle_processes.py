@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 
@@ -193,7 +193,7 @@ def test_discover_oracle_processes(
 def test_check_oracle_processes(
     section: SectionOracleProcesses,
     item: str,
-    check_result: Sequence[Union[Result, Metric]],
+    check_result: Sequence[Result | Metric],
     fix_register: FixRegister,
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("oracle_processes")]

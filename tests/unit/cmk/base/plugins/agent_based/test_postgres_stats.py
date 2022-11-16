@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Any, Dict
+from typing import Any
 
 from cmk.base.plugins.agent_based import postgres_stats
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, Service, State
@@ -111,7 +111,7 @@ def test_check_postgres_stats_oldest_table() -> None:
 
 
 def _test_never_checked_nothing():
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
     assert list(postgres_stats._check_never_checked("", [], {}, value_store, NOW)) == [
         Result(state=State.OK, summary="No never checked tables"),
     ]
@@ -120,7 +120,7 @@ def _test_never_checked_nothing():
 
 
 def _test_never_checked_tables_never_seen():
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
     assert list(
         postgres_stats._check_never_checked(
             "loved",
@@ -141,7 +141,7 @@ def _test_never_checked_tables_never_seen():
 
 
 def _test_never_checked_tables_warn():
-    value_store: Dict[str, Any] = {"item": NOW - 24.23 * 3600}
+    value_store: dict[str, Any] = {"item": NOW - 24.23 * 3600}
     assert list(
         postgres_stats._check_never_checked(
             "loved",

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import pytest
 
@@ -112,7 +112,7 @@ def test_check() -> None:
 
 def test_stale_service_for_not_running_qmgr() -> None:
     check = Check(CHECK_NAME)
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     parsed = {"QM1": {"STATUS": "ENDED NORMALLY"}}
     with pytest.raises(MKCounterWrapped, match=r"Stale because queue manager ENDED NORMALLY"):
         list(check.run_check("QM1:MY.QUEUE", params, parsed))
@@ -120,7 +120,7 @@ def test_stale_service_for_not_running_qmgr() -> None:
 
 def test_vanished_service_for_running_qmgr() -> None:
     check = Check(CHECK_NAME)
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     parsed = {
         "QM1": {"STATUS": "RUNNING"},
         "QM1:QUEUE1": {"CURDEPTH": "0"},
@@ -133,21 +133,21 @@ def test_vanished_service_for_running_qmgr() -> None:
 # CURDEPTH, MAXDEPTH
 #
 def test_depth_no_params() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     curdepth, maxdepth = 0, 5000
     expected = (0, "Queue depth: 0", [("curdepth", 0, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_with_percentage() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     curdepth, maxdepth = 50, 5000
     expected = (0, "Queue depth: 50 (1.0%)", [("curdepth", 50, None, None, 0, 5000)])
     assert_depth(curdepth, maxdepth, params, expected)
 
 
 def test_depth_no_max_depth() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     curdepth, maxdepth = 50, None
     expected = (0, "Queue depth: 50", [("curdepth", 50, None, None, 0, None)])
     assert_depth(curdepth, maxdepth, params, expected)
@@ -269,16 +269,16 @@ def assert_depth(curdepth, maxdepth, params, expected):
 
 
 def test_age_no_params() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     msgage = 1800
     expected = (0, "Oldest message: 30 minutes 0 seconds", [("msgage", 1800, None, None)])
     assert_age(msgage, params, expected)
 
 
 def test_age_no_msgage() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     msgage = None
-    expected: Tuple[int, str, List[Tuple]] = (0, "Oldest message: n/a", [])
+    expected: tuple[int, str, list[tuple]] = (0, "Oldest message: n/a", [])
     assert_age(msgage, params, expected)
 
 
@@ -335,16 +335,16 @@ def assert_age(msgage, params, expected):
 def test_lget_ok_no_params() -> None:
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "11.19.05")
-    params: Dict[str, Any] = {}
-    expected: Tuple[int, str, List[Tuple]] = (0, "Last get: 1 hour 0 minutes", [])
+    params: dict[str, Any] = {}
+    expected: tuple[int, str, list[tuple]] = (0, "Last get: 1 hour 0 minutes", [])
     assert_last_get_age(lget, now, params, expected)
 
 
 def test_lget_ok_no_info() -> None:
     lget = ("", "")
     now = ("2018-04-19", "11.19.05")
-    params: Dict[str, Any] = {}
-    expected: Tuple[int, str, List[Tuple]] = (0, "Last get: n/a", [])
+    params: dict[str, Any] = {}
+    expected: tuple[int, str, list[tuple]] = (0, "Last get: n/a", [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -352,7 +352,7 @@ def test_lget_ok() -> None:
     lget = ("2018-04-19", "10.19.05")
     now = ("2018-04-19", "10.19.15")
     params = {"lgetage": (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (0, "Last get: 10 seconds", [])
+    expected: tuple[int, str, list[tuple]] = (0, "Last get: 10 seconds", [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -360,7 +360,7 @@ def test_lget_warn() -> None:
     lget = ("2018-04-19", "09.49.14")
     now = ("2018-04-19", "10.19.15")
     params = {"lgetage": (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (
+    expected: tuple[int, str, list[tuple]] = (
         1,
         "Last get: 30 minutes 1 second (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         [],
@@ -372,7 +372,7 @@ def test_lget_no_info_with_params() -> None:
     lget = ("", "")
     now = ("2018-04-19", "10.19.15")
     params = {"lgetage": (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (0, "Last get: n/a", [])
+    expected: tuple[int, str, list[tuple]] = (0, "Last get: n/a", [])
     assert_last_get_age(lget, now, params, expected)
 
 
@@ -380,7 +380,7 @@ def test_lget_crit() -> None:
     lget = ("2018-04-19", "09.19.14")
     now = ("2018-04-19", "10.19.15")
     params = {"lgetage": (1800, 3600)}
-    expected: Tuple[int, str, List[Tuple]] = (
+    expected: tuple[int, str, list[tuple]] = (
         2,
         "Last get: 1 hour 0 minutes (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         [],
@@ -391,7 +391,7 @@ def test_lget_crit() -> None:
 def assert_last_get_age(lget, now, params, expected):
     check = Check(CHECK_NAME)
     lgetdate, lgettime = lget
-    reference_iso_time = "%sT%s+0200" % (now[0], now[1].replace(".", ":"))
+    reference_iso_time = "{}T{}+0200".format(now[0], now[1].replace(".", ":"))
     parsed = {
         "QM1": {
             "STATUS": "RUNNING",
@@ -415,7 +415,7 @@ def assert_last_get_age(lget, now, params, expected):
 
 
 def test_procs_no_params() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     opprocs = 3
     expected = (0, "Open output handles: 3", [("opprocs", 3, None, None)])
     assert_procs(opprocs, params, expected)
@@ -506,7 +506,7 @@ def assert_procs(opprocs, params, expected):
 
 
 def test_qtime_no_values() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     qtime = ","
     expected = [
         (0, "Qtime short: n/a", [("qtime_short", 0, None, None)]),
@@ -516,7 +516,7 @@ def test_qtime_no_values() -> None:
 
 
 def test_qtime_only_short() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     qtime = "300000000,"
     expected = [
         (0, "Qtime short: 5 minutes 0 seconds", [("qtime_short", 300.0, None, None)]),
@@ -526,7 +526,7 @@ def test_qtime_only_short() -> None:
 
 
 def test_qtime_both() -> None:
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     qtime = "300000000,420000000"
     expected = [
         (0, "Qtime short: 5 minutes 0 seconds", [("qtime_short", 300.0, None, None)]),

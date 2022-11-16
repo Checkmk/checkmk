@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import List, Sequence
+from collections.abc import Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -80,7 +80,7 @@ def test_parse_inventory_fortinet_firewall() -> None:
 
 def test_parse_inventory_fortinet_firewall_empty_string_table() -> None:
 
-    string_table: List[StringTable] = []
+    string_table: list[StringTable] = []
 
     expected_parse_result: SectionFortinetInterface = {}
 

@@ -539,7 +539,7 @@ def test_user_needs_folder_permissions_to_move_rules(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     wsgi_app: WebTestAppForCMK,
-    with_user: typing.Tuple[str, str],
+    with_user: tuple[str, str],
 ) -> None:
     source_folder = "source"
     dest_folder = "dest"

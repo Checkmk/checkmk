@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, Iterable, Tuple
+from collections.abc import Iterable
+from typing import Any
 
 import pytest
 
@@ -137,7 +138,7 @@ def test_compute_rates_multiple_disks() -> None:
         "C:": DISK,
         "D:": DISK,
     }
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
     with on_time(0, "UTC"):
@@ -312,7 +313,7 @@ def test_combine_disks(
     ],
 )
 def test_summarize_disks(
-    disks_to_summarize: Iterable[Tuple[str, diskstat.Disk]],
+    disks_to_summarize: Iterable[tuple[str, diskstat.Disk]],
     expected_result: diskstat.Disk,
 ) -> None:
     assert diskstat.summarize_disks(disks_to_summarize) == expected_result
@@ -503,7 +504,7 @@ def test_load_levels_wato() -> None:
 )
 def test_check_diskstat_dict(params, disk, exp_res) -> None:  # type:ignore[no-untyped-def]
     exp_res = exp_res.copy()
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
 
     assert (
         list(

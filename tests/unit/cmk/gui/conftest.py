@@ -266,7 +266,7 @@ def get_link(resp: dict, rel: str) -> Mapping:
             for link in member["links"]:
                 if link["rel"].startswith(rel):
                     return link
-    raise KeyError("%r not found" % (rel,))
+    raise KeyError(f"{rel!r} not found")
 
 
 def _expand_rel(rel: str) -> str:

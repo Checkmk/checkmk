@@ -7,8 +7,8 @@ import glob
 import os
 import subprocess
 import time
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from tests.testlib.site import Site
 
@@ -66,8 +66,7 @@ def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
         command,
         encoding="utf-8",
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         close_fds=True,
         check=False,
     )

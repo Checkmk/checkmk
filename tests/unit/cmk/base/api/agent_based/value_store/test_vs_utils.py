@@ -5,7 +5,6 @@
 
 from ast import literal_eval
 from pathlib import Path
-from typing import Optional, Tuple
 
 # pylint: disable=protected-access
 import pytest
@@ -27,7 +26,7 @@ _TEST_KEY = ("check", "item", "user-key")
 
 class Test_DynamicDiskSyncedMapping:
     @staticmethod
-    def _get_ddsm() -> _DynamicDiskSyncedMapping[Tuple[str, str, str], object]:
+    def _get_ddsm() -> _DynamicDiskSyncedMapping[tuple[str, str, str], object]:
         return _DynamicDiskSyncedMapping()
 
     def test_init(self) -> None:
@@ -100,7 +99,7 @@ class Test_StaticDiskSyncedMapping:
     @staticmethod
     def _get_sdsm(
         tmp_path: Path,
-    ) -> _StaticDiskSyncedMapping[Tuple[str, Optional[str], str], object]:
+    ) -> _StaticDiskSyncedMapping[tuple[str, str | None, str], object]:
         return _StaticDiskSyncedMapping(
             path=tmp_path / "test-host",
             log_debug=lambda msg: None,
@@ -149,7 +148,7 @@ class Test_StaticDiskSyncedMapping:
 class Test_DiskSyncedMapping:
     @staticmethod
     def _get_dsm() -> _DiskSyncedMapping:
-        dynstore: _DynamicDiskSyncedMapping[Tuple[str, str, str], str] = _DynamicDiskSyncedMapping()
+        dynstore: _DynamicDiskSyncedMapping[tuple[str, str, str], str] = _DynamicDiskSyncedMapping()
         dynstore.update(
             {
                 ("dyn", "key", "1"): "dyn-val-1",

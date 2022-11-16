@@ -5,7 +5,7 @@
 
 # fmt: off
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 checkname = 'rabbitmq_vhosts'
 
@@ -15,9 +15,9 @@ info = [
     ]
 ]
 
-discovery: Dict[str, List[Tuple[str, Dict[Any, Any]]]] = {'': [('/', {})]}
+discovery: dict[str, list[tuple[str, dict[Any, Any]]]] = {'': [('/', {})]}
 
-checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tuple[str, float, Any, Any, Any, Any]]]]]]] = {
+checks: dict[str, list[tuple[str, dict[Any, Any], list[tuple[int, str, list[tuple[str, float, Any, Any, Any, Any]]]]]]] = {
     '': [
         (
             '/', {}, [

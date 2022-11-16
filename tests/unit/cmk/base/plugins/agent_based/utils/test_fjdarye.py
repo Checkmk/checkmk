@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
 
 import pytest
 
@@ -56,7 +55,7 @@ from cmk.base.plugins.agent_based.utils.fjdarye import (
     ],
 )
 def test_parse_fjdarye_item(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     parse_result: SectionFjdaryeItem,
 ) -> None:
     assert parse_fjdarye_item(string_table) == parse_result

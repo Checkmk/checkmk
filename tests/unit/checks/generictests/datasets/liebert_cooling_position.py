@@ -12,21 +12,21 @@ checkname = 'liebert_cooling_position'
 
 
 info = [
-    [u'Free Cooling Valve Open Position', u'42', u'%'],
-    [u'This is ignored', u'42', u'%'],
+    ['Free Cooling Valve Open Position', '42', '%'],
+    ['This is ignored', '42', '%'],
 ]
 
 
 discovery = {
     '': [
-        (u'Free Cooling Valve Open Position', {}),
+        ('Free Cooling Valve Open Position', {}),
     ],
 }
 
 
 checks = {
     '': [
-        (u'Free Cooling Valve Open Position', {"min_capacity": (50, 45)}, [
+        ('Free Cooling Valve Open Position', {"min_capacity": (50, 45)}, [
             (2, "42.00 % (warn/crit below 50.00 %/45.00 %)", [
                 ('capacity_perc', 42.0, None, None, None, None),
             ]),

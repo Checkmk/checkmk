@@ -8,17 +8,17 @@
 
 
 
-checkname = u'citrix_controller'
+checkname = 'citrix_controller'
 
 
-info = [[u'ControllerState'],
-        [u'ControllerVersion'],
-        [u'DesktopsRegistered'],
-        [u'LicensingServerState'],
-        [u'LicensingGraceState'],
-        [u'ActiveSiteServices'],
-        [u'TotalFarmActiveSessions', u'0'],
-        [u'TotalFarmInactiveSessions', u'0']]
+info = [['ControllerState'],
+        ['ControllerVersion'],
+        ['DesktopsRegistered'],
+        ['LicensingServerState'],
+        ['LicensingGraceState'],
+        ['ActiveSiteServices'],
+        ['TotalFarmActiveSessions', '0'],
+        ['TotalFarmInactiveSessions', '0']]
 
 
 discovery = {'': [(None, None)],

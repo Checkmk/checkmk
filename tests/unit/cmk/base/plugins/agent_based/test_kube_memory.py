@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from typing import Optional, Tuple, Union
 
 import pytest
 
@@ -398,10 +397,10 @@ def test_register_check_plugin_calls(check_plugin) -> None:  # type:ignore[no-un
     ],
 )
 def test_check_kube_memory(
-    section_kube_performance_memory: Optional[PerformanceUsage],
-    section_kube_memory_resources: Optional[Resources],
-    section_kube_memory_allocatable_resource: Optional[AllocatableResource],
-    expected_result: Tuple[Union[Result, Metric], ...],
+    section_kube_performance_memory: PerformanceUsage | None,
+    section_kube_memory_resources: Resources | None,
+    section_kube_memory_allocatable_resource: AllocatableResource | None,
+    expected_result: tuple[Result | Metric, ...],
 ) -> None:
     assert expected_result == tuple(
         check_kube_memory(

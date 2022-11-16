@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NamedTuple
+from typing import NamedTuple
 
 import pytest
 
@@ -13,9 +13,9 @@ from cmk.gui.plugins.views.icons.utils import get_multisite_icons
 
 class IconRenderArgs(NamedTuple):
     what: str
-    row: Dict
-    tags: List
-    custom_vars: Dict
+    row: dict
+    tags: list
+    custom_vars: dict
 
 
 class IconRenderResult(NamedTuple):

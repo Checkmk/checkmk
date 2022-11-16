@@ -11,13 +11,13 @@
 checkname = 'akcp_exp_humidity'
 
 
-info = [[u'Dual Humidity Port 1', u'30', u'7', u'1']]
+info = [['Dual Humidity Port 1', '30', '7', '1']]
 
 
-discovery = {'': [(u'Dual Humidity Port 1', 'akcp_humidity_defaultlevels')]}
+discovery = {'': [('Dual Humidity Port 1', 'akcp_humidity_defaultlevels')]}
 
 
-checks = {'': [(u'Dual Humidity Port 1',
+checks = {'': [('Dual Humidity Port 1',
                 (30, 35, 60, 65),
                 [(2, 'State: sensor error', []),
                  (1,

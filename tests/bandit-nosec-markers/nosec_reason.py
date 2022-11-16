@@ -20,8 +20,9 @@ import random
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Callable, Sequence, Tuple, TypeVar
+from typing import TypeVar
 
 DEFAULT_DOC = Path("bandit-exclusions.md")
 ID_LEN = 6
@@ -106,7 +107,7 @@ T = TypeVar("T")
 
 def _partition(
     predicate: Callable[[T], bool], input_list: Sequence[T]
-) -> Tuple[Sequence[T], Sequence[T]]:
+) -> tuple[Sequence[T], Sequence[T]]:
     yes, no = [], []
     for i in input_list:
         if predicate(i):
@@ -144,7 +145,7 @@ class BnsId:
 
 def existing_ids(exclusions_doc: Path) -> Sequence[BnsId]:
     """All existing IDs in the document as raw strings"""
-    with open(exclusions_doc, "r", encoding="utf-8") as f:
+    with open(exclusions_doc, encoding="utf-8") as f:
         return list(map(BnsId, re.findall(BNS_PATTERN, f.read())))
 
 

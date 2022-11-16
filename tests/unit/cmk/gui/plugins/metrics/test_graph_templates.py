@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Tuple
+from collections.abc import Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -67,7 +67,7 @@ _GRAPH_TEMPLATES = [
 def test_matching_graph_templates(
     monkeypatch: MonkeyPatch,
     graph_id_info: TemplateGraphSpec,
-    expected_result: Sequence[Tuple[int, GraphTemplate]],
+    expected_result: Sequence[tuple[int, GraphTemplate]],
 ) -> None:
     monkeypatch.setattr(
         graph_templates,

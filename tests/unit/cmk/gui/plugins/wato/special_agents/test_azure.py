@@ -12,14 +12,12 @@ from cmk.special_agents.agent_azure import ALL_METRICS
 
 def test_migrate_services():
     migrated_data = _migrate_services({})
-    some_expected_services = set(
-        (
-            "ad_connect",
-            "usage_details",
-            "Microsoft.Compute/virtualMachines",
-            "Microsoft.Storage/storageAccounts",
-        )
-    )
+    some_expected_services = {
+        "ad_connect",
+        "usage_details",
+        "Microsoft.Compute/virtualMachines",
+        "Microsoft.Storage/storageAccounts",
+    }
     enabled_services = set(migrated_data["services"])
     assert some_expected_services.issubset(enabled_services)
 

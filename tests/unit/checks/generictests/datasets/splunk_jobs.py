@@ -11,8 +11,8 @@
 checkname = 'splunk_jobs'
 
 
-info = [[u'2019-05-16T11:17:00.000+02:00', u'splunk-system-user', u'DONE', u'False'],
-        [u'2019-05-16T10:17:01.000+02:00', u'splunk-system-user', u'DONE', u'False']]
+info = [['2019-05-16T11:17:00.000+02:00', 'splunk-system-user', 'DONE', 'False'],
+        ['2019-05-16T10:17:01.000+02:00', 'splunk-system-user', 'DONE', 'False']]
 
 
 discovery = {'': [(None, {})]}

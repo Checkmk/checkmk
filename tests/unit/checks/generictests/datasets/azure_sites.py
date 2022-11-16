@@ -76,22 +76,22 @@ info = [
     ['{"name": "PrivateBytes", "timestamp": "1536073080", "aggregation": "total", "interval_id": "PT1M", "filter": "None", "value": 0.0, "unit": "bytes"}'],
 ]
 
-discovery = {'': [(u'spo-solutions-fa1', {}), (u'zcldazwamonseas-as', {})]}
+discovery = {'': [('spo-solutions-fa1', {}), ('zcldazwamonseas-as', {})]}
 
 checks = {
-    '': [(u'spo-solutions-fa1', {
+    '': [('spo-solutions-fa1', {
         'cpu_time_percent_levels': (85.0, 95.0),
         'avg_response_time_levels': (1.0, 10.0),
         'error_rate_levels': (0.01, 0.04)
     }, [
         (0, 'Rate of server errors: 0.0', [('error_rate', 0.0, 0.01, 0.04, 0, None)]),
-        (0, u'Location: westeurope', []),
-        (0, u'CostCenter: 0000252980', []),
-        (0, u'ITProduct: C89 Collaboration Platform', []),
-        (0, u'OpHours: 7x24', []),
-        (0, u'OpLevel: Operation', []),
+        (0, 'Location: westeurope', []),
+        (0, 'CostCenter: 0000252980', []),
+        (0, 'ITProduct: C89 Collaboration Platform', []),
+        (0, 'OpHours: 7x24', []),
+        (0, 'OpLevel: Operation', []),
     ]),
-         (u'zcldazwamonseas-as', {
+         ('zcldazwamonseas-as', {
              'cpu_time_percent_levels': (85.0, 95.0),
              'avg_response_time_levels': (1.0, 10.0),
              'error_rate_levels': (0.01, 0.04)
@@ -99,10 +99,10 @@ checks = {
              (0, 'CPU time: 0%', [('cpu_time_percent', 0.0, 85.0, 95.0, 0, None)]),
              (0, 'Average response time: 0.00 s', [('avg_response_time', 0.0, 1.0, 10.0, 0, None)]),
              (0, 'Rate of server errors: 0.0', [('error_rate', 0.0, 0.01, 0.04, 0, None)]),
-             (0, u'Location: southeastasia', []),
-             (0, u'CostCenter: 0000252980', []),
-             (0, u'ITProduct: CUV130_MS_IIS (Internet Information Server) Standard', []),
-             (0, u'OpHours: 7x24', []),
-             (0, u'OpLevel: Operation', []),
+             (0, 'Location: southeastasia', []),
+             (0, 'CostCenter: 0000252980', []),
+             (0, 'ITProduct: CUV130_MS_IIS (Internet Information Server) Standard', []),
+             (0, 'OpHours: 7x24', []),
+             (0, 'OpLevel: Operation', []),
          ])]
 }

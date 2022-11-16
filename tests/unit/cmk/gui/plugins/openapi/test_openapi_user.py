@@ -6,8 +6,9 @@ import datetime
 import json
 import random
 import string
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, Callable, ContextManager, Iterator, Mapping
+from typing import Any, ContextManager
 
 import pytest
 from freezegun import freeze_time

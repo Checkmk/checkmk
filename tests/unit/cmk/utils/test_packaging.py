@@ -7,10 +7,9 @@ import ast
 import json
 import shutil
 import tarfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from io import BytesIO
 from pathlib import Path
-from typing import Callable
 from unittest.mock import Mock
 
 import pytest

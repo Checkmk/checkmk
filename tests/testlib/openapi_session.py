@@ -5,8 +5,9 @@
 
 import logging
 import time
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, Iterator, Mapping, NamedTuple, NoReturn, Optional, Union
+from typing import Any, NamedTuple, NoReturn
 
 import requests
 
@@ -68,7 +69,7 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
     def request(  # type:ignore[no-untyped-def]
-        self, method: Union[str, bytes], url: Union[str, bytes], *args, **kwargs
+        self, method: str | bytes, url: str | bytes, *args, **kwargs
     ) -> requests.Response:
         """
         Suggested method to use a base url with a requests.Session
@@ -90,7 +91,7 @@ class CMKOpenApiSession(requests.Session):
 
     def activate_changes(
         self,
-        sites: Optional[list[str]] = None,
+        sites: list[str] | None = None,
         force_foreign_changes: bool = False,
     ) -> bool:
         """
@@ -119,7 +120,7 @@ class CMKOpenApiSession(requests.Session):
 
     def activate_changes_and_wait_for_completion(
         self,
-        sites: Optional[list[str]] = None,
+        sites: list[str] | None = None,
         force_foreign_changes: bool = False,
         timeout: int = 60,
     ) -> bool:
@@ -182,7 +183,7 @@ class CMKOpenApiSession(requests.Session):
         self,
         hostname: str,
         folder: str = "/",
-        attributes: Optional[dict[str, Any]] = None,
+        attributes: dict[str, Any] | None = None,
         bake_agent: bool = False,
     ) -> None:
         query_string = "?bake_agent=1" if bake_agent else ""
@@ -258,7 +259,7 @@ class CMKOpenApiSession(requests.Session):
         ruleset_name: str,
         value: object,
         folder: str = "/",
-        conditions: Optional[dict[str, Any]] = None,
+        conditions: dict[str, Any] | None = None,
     ) -> str:
         response = self.post(
             "/domain-types/rule/collections/all",

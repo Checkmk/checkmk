@@ -12,19 +12,19 @@ checkname = 'liebert_cooling_status'
 
 
 info = [
-    [u'Fancy cooling device', u'awesome'],
+    ['Fancy cooling device', 'awesome'],
 ]
 
 
 discovery = {
     '': [
-        (u'Fancy cooling device', {}),
+        ('Fancy cooling device', {}),
     ],
 }
 
 
 checks = {
     '': [
-        (u'Fancy cooling device', {}, [(0, "awesome", [])]),
+        ('Fancy cooling device', {}, [(0, "awesome", [])]),
     ],
 }

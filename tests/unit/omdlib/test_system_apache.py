@@ -6,9 +6,9 @@
 import stat
 from hashlib import sha256
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
-from mock import MagicMock
 from pytest_mock import MockerFixture
 
 from omdlib.contexts import SiteContext

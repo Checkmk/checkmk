@@ -11,14 +11,14 @@
 checkname = 'mongodb_mem'
 
 
-info = [[u'resident', u'79'],
-        [u'supported', u'True'],
-        [u'virtual', u'1021'],
-        [u'mappedWithJournal', u'0'],
-        [u'mapped', u'0'],
-        [u'bits', u'64'],
-        [u'note', u'fields', u'vary', u'by', u'platform'],
-        [u'page_faults', u'9']]
+info = [['resident', '79'],
+        ['supported', 'True'],
+        ['virtual', '1021'],
+        ['mappedWithJournal', '0'],
+        ['mapped', '0'],
+        ['bits', '64'],
+        ['note', 'fields', 'vary', 'by', 'platform'],
+        ['page_faults', '9']]
 
 
 discovery = {'': [(None, {})]}

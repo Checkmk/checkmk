@@ -6,7 +6,6 @@
 # pylint: disable=redefined-outer-name
 
 from collections.abc import Callable
-from typing import List, Optional, Tuple
 
 import pytest
 
@@ -48,7 +47,7 @@ def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
     return _create_cloudwatch_alarms_sections
 
 
-cloudwatch_params: List[Tuple[Optional[List[str]], int]] = [
+cloudwatch_params: list[tuple[list[str] | None, int]] = [
     (None, 2),
     ([], 2),
     (["AlarmName-0"], 1),

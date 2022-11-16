@@ -52,7 +52,7 @@ checks = {
             'levels': (35, 40)
         },
         [
-            (0, u'1 Sensors; Highest: 17.0 \xb0C, Average: 17.0 \xb0C, Lowest: 17.0 \xb0C',
+            (0, '1 Sensors; Highest: 17.0 \xb0C, Average: 17.0 \xb0C, Lowest: 17.0 \xb0C',
              [('temp', 17.0, None, None, None, None)]),
         ],
     )],

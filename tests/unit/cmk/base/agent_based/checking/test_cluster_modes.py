@@ -6,7 +6,8 @@
 # pylint: disable=protected-access
 
 import re
-from typing import Any, Iterable, Literal, Mapping, Optional, Union
+from collections.abc import Iterable, Mapping
+from typing import Any, Literal
 
 import pytest
 
@@ -70,7 +71,7 @@ def _simple_check(section: Iterable[int]) -> CheckResult:
                 yield Metric("n", value)
 
 
-def _is_ok(*elements: Union[Result, Metric, IgnoreResults]) -> bool:
+def _is_ok(*elements: Result | Metric | IgnoreResults) -> bool:
     return State.worst(*(r.state for r in elements if isinstance(r, Result))) is State.OK
 
 
@@ -108,7 +109,7 @@ def _get_cluster_check_function(
     *,
     mode: Literal["native", "failover", "worst", "best"],
     vsm: ValueStoreManager,
-    clusterization_parameters: Optional[Mapping[ſtr, Any]] = None,
+    clusterization_parameters: Mapping[ſtr, Any] | None = None,
 ) -> CheckFunction:
     """small wrapper for cluster_modes.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)

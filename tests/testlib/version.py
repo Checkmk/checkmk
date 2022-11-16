@@ -62,7 +62,7 @@ class CMKVersion:
         if version in [CMKVersion.DAILY, CMKVersion.GIT]:
             date_part = time.strftime("%Y.%m.%d")
             if branch != "master":
-                self.version = "%s-%s" % (branch, date_part)
+                self.version = f"{branch}-{date_part}"
             else:
                 self.version = date_part
 
@@ -101,7 +101,7 @@ class CMKVersion:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return "%s.%s" % (self.version, self.edition_short)
+        return f"{self.version}.{self.edition_short}"
 
     def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()

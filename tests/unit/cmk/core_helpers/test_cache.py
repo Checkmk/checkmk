@@ -6,7 +6,7 @@
 import copy
 import json
 import logging
-from typing import Sequence
+from collections.abc import Sequence
 
 from cmk.utils.type_defs import SectionName
 

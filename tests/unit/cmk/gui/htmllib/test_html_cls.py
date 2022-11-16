@@ -145,9 +145,9 @@ def test_HTMLWriter(request_context) -> None:  # type:ignore[no-untyped-def]
             try:
                 assert HTMLWriter.render_a(
                     "test",
-                    href=str("www.test.case"),
-                    id_=str("something"),
-                    class_=str("test_%s") % a,
+                    href="www.test.case",
+                    id_="something",
+                    class_="test_%s" % a,
                 )
             except Exception as e:
                 traceback.print_exc()

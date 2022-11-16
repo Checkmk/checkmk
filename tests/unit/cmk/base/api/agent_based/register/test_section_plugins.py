@@ -5,7 +5,6 @@
 
 # pylint: disable=protected-access
 
-from typing import List
 
 import pytest
 
@@ -66,7 +65,7 @@ def test_validate_parse_function_value(parse_function) -> None:  # type:ignore[n
 
 
 def test_validate_parse_function_annotation_string_table() -> None:
-    def _parse_function(string_table: List[StringTable]):  # type:ignore[no-untyped-def]
+    def _parse_function(string_table: list[StringTable]):  # type:ignore[no-untyped-def]
         return string_table
 
     with pytest.raises(TypeError):
@@ -77,7 +76,7 @@ def test_validate_parse_function_annotation_string_table() -> None:
 
     section_plugins._validate_parse_function(
         _parse_function,
-        expected_annotation=(List[StringTable], "List[StringTable]"),
+        expected_annotation=(list[StringTable], "List[StringTable]"),
     )
 
 
@@ -119,7 +118,7 @@ def test_create_agent_section_plugin() -> None:
 
 def test_create_snmp_section_plugin() -> None:
 
-    trees: List[SNMPTree] = [
+    trees: list[SNMPTree] = [
         SNMPTree(
             base=".1.2.3",
             oids=[OIDEnd(), "2.3"],

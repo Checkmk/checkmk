@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional
 
 import pytest
 
@@ -97,8 +96,8 @@ ITEM_RESULT = [
 
 def _run_parse_and_check(  # type:ignore[no-untyped-def]
     item: str,
-    info: List[StringTable],
-    params: Optional[VsResult] = None,
+    info: list[StringTable],
+    params: VsResult | None = None,
 ):
     if params is None:
         params = {}

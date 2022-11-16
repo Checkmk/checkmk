@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 import pytest
 
@@ -78,7 +77,7 @@ def test_request_memoize_unregister() -> None:
     # unregistered hooks used by memoize.
 
     @hooks.request_memoize()
-    def blah(a: List[int] = []) -> List[int]:  # pylint: disable=dangerous-default-value
+    def blah(a: list[int] = []) -> list[int]:  # pylint: disable=dangerous-default-value
         a.append(1)
         return a
 

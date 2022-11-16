@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -94,7 +94,7 @@ def test_registered_visual_type_attributes() -> None:
         assert plugin.title == spec["title"]
 
 
-expected_filters: Dict[str, Dict[str, Any]] = {
+expected_filters: dict[str, dict[str, Any]] = {
     "address_families": {
         "comment": None,
         "filter_class": "FilterOption",
@@ -4883,7 +4883,7 @@ def test_registered_filters() -> None:
             assert filt.ident in utils.RangedTableFilterName.__args__  # type: ignore[attr-defined]
 
 
-expected_infos: Dict[str, Dict[str, Any]] = {
+expected_infos: dict[str, dict[str, Any]] = {
     "aggr": {
         "single_spec": [("aggr_name", "TextInput")],
         "title": "BI Aggregation",

@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Iterable
 from itertools import chain
 from pathlib import Path
-from typing import Iterable, Set, Tuple
 
 from tests.testlib import cmk_path, is_enterprise_repo
 
 
-def scss_files() -> Set[Path]:
+def scss_files() -> set[Path]:
     return set(
         chain(
             Path(cmk_path(), "web", "htdocs", "themes").glob("**/*.scss"),
@@ -20,7 +20,7 @@ def scss_files() -> Set[Path]:
     )
 
 
-def _scss_variables(_scss_files: Iterable[Path]) -> Tuple[Set[str], Set[str]]:
+def _scss_variables(_scss_files: Iterable[Path]) -> tuple[set[str], set[str]]:
     variable_definition = re.compile(r"\s*(\$[-_a-zA-Z0-9]+)\s*:")
     variable_usage = re.compile(r"(\$[-_a-zA-Z0-9]+)")
 

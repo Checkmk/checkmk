@@ -19,8 +19,7 @@ _WARN_RESULT = Result(state=State.WARN, summary="Watch out")
 
 
 def _check_function_node(test_results):
-    for res in test_results:
-        yield res
+    yield from test_results
 
 
 def test_node_returns_nothing() -> None:

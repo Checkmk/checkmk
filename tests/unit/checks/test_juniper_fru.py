@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple
 
 import pytest
 
@@ -64,7 +63,7 @@ def test_parse_juniper_fru() -> None:
 )
 def test_check_juniper_fru(
     item: str,
-    expected_result: Tuple[int, str],
+    expected_result: tuple[int, str],
 ) -> None:
     assert (
         Check("juniper_fru").run_check(

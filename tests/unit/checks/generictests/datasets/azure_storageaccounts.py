@@ -45,7 +45,7 @@ info = [
     ['{"name": "Availability", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'],
 ]
 
-_common_discovery = [(u'glastonburydiag381', {}), (u'st0ragetestaccount', {})]
+_common_discovery = [('glastonburydiag381', {}), ('st0ragetestaccount', {})]
 
 MiB = 1024**2
 
@@ -53,27 +53,27 @@ discovery = {sub: _common_discovery for sub in ('', 'flow', 'performance')}
 
 checks = {
     '': [
-        (u'glastonburydiag381', {}, [
-            (0, u'Kind: Storage', []),
+        ('glastonburydiag381', {}, [
+            (0, 'Kind: Storage', []),
             (0, 'Used capacity: 10.0 GiB', [('used_space', 10773519964, None, None, 0, None)]),
-            (0, u'Location: westeurope', []),
+            (0, 'Location: westeurope', []),
         ]),
-        (u'st0ragetestaccount', {
+        ('st0ragetestaccount', {
             'used_capacity_levels': (2 * MiB, 4 * MiB)
         }, [
-            (0, u'Kind: BlobStorage', []),
+            (0, 'Kind: BlobStorage', []),
             (1, 'Used capacity: 3.65 MiB (warn/crit at 2.00 MiB/4.00 MiB)',
              [('used_space', 3822551, 2 * MiB, 4 * MiB, 0, None)]),
-            (0, u'Location: westeurope', []),
-            (0, u'Monitoring: some value', []),
+            (0, 'Location: westeurope', []),
+            (0, 'Monitoring: some value', []),
         ]),
     ],
-    'flow': [(u'glastonburydiag381', {}, [
+    'flow': [('glastonburydiag381', {}, [
         (0, 'Ingress: 41.2 MiB', [('ingress', 43202937, None, None, 0, None)]),
         (0, 'Egress: 5.57 MiB', [('egress', 5835881, None, None, 0, None)]),
         (0, 'Transactions: 1907', [('transactions', 1907.0, None, None, 0, None)]),
     ]),
-             (u'st0ragetestaccount', {
+             ('st0ragetestaccount', {
                  'egress_levels': (100 * MiB, 200 * MiB)
              }, [
                  (0, 'Ingress: 30.9 KiB', [('ingress', 31620, None, None, 0, None)]),
@@ -83,14 +83,14 @@ checks = {
                  (0, 'Transactions: 62', [('transactions', 62.0, None, None, 0, None)]),
              ])],
     'performance': [
-        (u'glastonburydiag381', {}, [
+        ('glastonburydiag381', {}, [
             (0, 'Success server latency: 20105 ms', [('server_latency', 20.105, None, None, 0,
                                                       None)]),
             (0, 'End-to-end server latency: 37606 ms', [('e2e_latency', 37.606, None, None, 0,
                                                          None)]),
             (0, 'Availability: 190700.00%', [('availability', 190700.0, None, None, 0, None)]),
         ]),
-        (u'st0ragetestaccount', {}, [
+        ('st0ragetestaccount', {}, [
             (0, 'Success server latency: 5624 ms', [('server_latency', 5.624, None, None, 0,
                                                      None)]),
             (0, 'End-to-end server latency: 9584 ms', [('e2e_latency', 9.584, None, None, 0,

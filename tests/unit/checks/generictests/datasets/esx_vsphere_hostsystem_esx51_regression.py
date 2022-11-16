@@ -14,21 +14,21 @@ parsed = parse_esx_vsphere_hostsystem([
         [
             # This is output from the old API endpoint for the check esx_vsphere_hostsystem.multipath
             # which is not supported anymore.
-            u'config.multipathState.path',
-            u'fc.20000024ff2e1b4c:21000024ff2e1b4c-fc.500a098088866d7e:500a098188866d7e-naa.60a9800044314f68553f436779684544',
-            u'active',
+            'config.multipathState.path',
+            'fc.20000024ff2e1b4c:21000024ff2e1b4c-fc.500a098088866d7e:500a098188866d7e-naa.60a9800044314f68553f436779684544',
+            'active',
         ],
-        [u'hardware.cpuInfo.hz', u'2792999719'],
-        [u'hardware.cpuInfo.numCpuCores', u'12'],
-        [u'hardware.cpuInfo.numCpuPackages', u'2'],
-        [u'hardware.cpuInfo.numCpuThreads', u'24'],
-        [u'hardware.memorySize', u'309224034304'],
-        [u'name', u'df1-esx03.roelfspartner.local'],
-        [u'overallStatus', u'green'],
-        [u'runtime.inMaintenanceMode', u'false'],
-        [u'runtime.powerState', u'poweredOn'],
-        [u'summary.quickStats.overallCpuUsage', u'1930'],
-        [u'summary.quickStats.overallMemoryUsage', u'79464'],
+        ['hardware.cpuInfo.hz', '2792999719'],
+        ['hardware.cpuInfo.numCpuCores', '12'],
+        ['hardware.cpuInfo.numCpuPackages', '2'],
+        ['hardware.cpuInfo.numCpuThreads', '24'],
+        ['hardware.memorySize', '309224034304'],
+        ['name', 'df1-esx03.roelfspartner.local'],
+        ['overallStatus', 'green'],
+        ['runtime.inMaintenanceMode', 'false'],
+        ['runtime.powerState', 'poweredOn'],
+        ['summary.quickStats.overallCpuUsage', '1930'],
+        ['summary.quickStats.overallMemoryUsage', '79464'],
     ]
 )
 

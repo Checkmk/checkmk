@@ -11,7 +11,7 @@
 checkname = 'juniper_trpz_flash'
 
 
-info = [[u'51439616', u'62900224']]
+info = [['51439616', '62900224']]
 
 
 discovery = {'': [(None, 'juniper_trpz_flash_default_levels')]}

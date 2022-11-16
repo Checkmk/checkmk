@@ -5,7 +5,7 @@
 
 import io
 import time
-from typing import Iterator
+from collections.abc import Iterator
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -128,7 +128,7 @@ def test_get_binary_input_type() -> None:
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_non_ascii() -> None:
-    assert request.get_binary_input("abc") == "äbc".encode("utf-8")
+    assert request.get_binary_input("abc") == "äbc".encode()
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -145,7 +145,7 @@ def test_get_binary_input_mandatory_input_type() -> None:
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_mandatory_non_ascii() -> None:
-    assert request.get_binary_input_mandatory("abc") == "äbc".encode("utf-8")
+    assert request.get_binary_input_mandatory("abc") == "äbc".encode()
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -344,9 +344,7 @@ def test_response_del_cookie(
 def test_pre_16_format_cookie_handling(monkeypatch: MonkeyPatch) -> None:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"
-        ),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
     )
     _request = http.Request(environ)
 

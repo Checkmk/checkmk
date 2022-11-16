@@ -10,7 +10,7 @@ import shutil
 import struct
 import uuid
 from functools import lru_cache
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -55,7 +55,7 @@ def test_crash_report_local_crash_report_url(crash) -> None:  # type:ignore[no-u
 
 
 def test_format_var_for_export_strip_nested_dict() -> None:
-    orig_var: Dict[str, Any] = {
+    orig_var: dict[str, Any] = {
         "a": {
             "b": {
                 "c": {
@@ -91,7 +91,7 @@ def test_format_var_for_export_strip_large_data() -> None:
 
 
 def test_format_var_for_export_strip_nested_dict_with_list() -> None:
-    orig_var: Dict[str, Any] = {
+    orig_var: dict[str, Any] = {
         "a": {
             "b": {
                 "c": [{}],

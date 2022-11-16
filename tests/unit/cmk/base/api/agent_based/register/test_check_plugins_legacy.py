@@ -6,7 +6,6 @@
 # pylint: disable=protected-access
 
 import inspect
-from typing import List
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
@@ -58,7 +57,7 @@ def test_create_discovery_function(monkeypatch) -> None:  # type:ignore[no-untyp
     assert inspect.isgeneratorfunction(new_function)
 
     result = list(new_function(["info"]))
-    expected: List = [
+    expected: list = [
         checking_classes.Service(item="foo"),
         checking_classes.Service(item="foo", parameters={"levels": "default"}),
         "some string",  # bogus value let through intentionally

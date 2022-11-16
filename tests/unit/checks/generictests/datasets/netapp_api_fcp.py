@@ -27,26 +27,26 @@ mock_item_state = {
 }
 
 
-info = [[u'instance_name node0',
-         u'state online',
-         u'port_wwpn de:ad:be:ef',
-         u'data-link-rate 16',
-         u'read_ops 20000',
-         u'write_ops 20000',
-         u'read_data 20000',
-         u'write_data 20000',
-         u'total_ops 20000',
-         u'avg_latency 10000000',
-         u'avg_read_latency 20000000',
-         u'avg_write_latency 5000000']]
+info = [['instance_name node0',
+         'state online',
+         'port_wwpn de:ad:be:ef',
+         'data-link-rate 16',
+         'read_ops 20000',
+         'write_ops 20000',
+         'read_data 20000',
+         'write_data 20000',
+         'total_ops 20000',
+         'avg_latency 10000000',
+         'avg_read_latency 20000000',
+         'avg_write_latency 5000000']]
 
 
-discovery = {'': [(u'node0', {'inv_speed': 16000000000, 'inv_state': u'online'})]}
+discovery = {'': [('node0', {'inv_speed': 16000000000, 'inv_state': 'online'})]}
 
 
 checks = {
     '': [
-        (u'node0', {'inv_speed': 16000000000, 'inv_state': u'online'}, [
+        ('node0', {'inv_speed': 16000000000, 'inv_state': 'online'}, [
             (0, 'Read: 150 B/s', [('read_bytes', 150.0)]),
             (0, 'Write: 160 B/s', [('write_bytes', 160.0)]),
             (0, 'Speed: 16 GBit/s', []),

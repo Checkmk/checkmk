@@ -8,23 +8,23 @@
 
 checkname = 'heartbeat_rscstatus'
 
-info = [[u'all']]
+info = [['all']]
 
-discovery = {'': [(None, {'discovered_state': u'all'})]}
+discovery = {'': [(None, {'discovered_state': 'all'})]}
 
 checks = {
     '': [
-        (None, {'discovered_state': u'all'}, [
-            (0, u'Current state: all', []),
+        (None, {'discovered_state': 'all'}, [
+            (0, 'Current state: all', []),
         ]),
-        (None, {'discovered_state': u'local'}, [
-            (2, u'Current state: all (Expected: local)', []),
+        (None, {'discovered_state': 'local'}, [
+            (2, 'Current state: all (Expected: local)', []),
         ]),
-        (None, u'"all"', [
-            (0, u'Current state: all', []),
+        (None, '"all"', [
+            (0, 'Current state: all', []),
         ]),
-        (None, u'"local"', [
-            (2, u'Current state: all (Expected: local)', []),
+        (None, '"local"', [
+            (2, 'Current state: all (Expected: local)', []),
         ]),
     ],
 }

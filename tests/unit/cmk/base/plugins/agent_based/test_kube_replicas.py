@@ -5,7 +5,8 @@
 
 import json
 import time
-from typing import Any, Mapping, MutableMapping, Sequence, Union
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
 import pytest
 
@@ -292,7 +293,7 @@ def test_check_kube_replicas_outdated_replicas(
     replicas: Replicas,
     strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(_check_kube_replicas(params, replicas, strategy, now=800.0, value_store=value_store))
@@ -375,7 +376,7 @@ def test_check_kube_replicas_misscheduled_pods(
     params: Mapping[str, VSResultAge],
     replicas: DaemonSetReplicas,
     value_store: MutableMapping[str, Any],
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
@@ -449,7 +450,7 @@ def test_check_kube_replicas_not_ready_replicas(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
@@ -538,7 +539,7 @@ def test_check_kube_replicas_not_ready_and_outdated(
     replicas: Replicas,
     strategy: UpdateStrategy,
     value_store: MutableMapping[str, Any],
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def mock_value_store():
@@ -650,7 +651,7 @@ def test_check_kube_replicas_value_store_reset(
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))

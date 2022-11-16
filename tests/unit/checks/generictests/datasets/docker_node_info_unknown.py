@@ -28,8 +28,8 @@ discovery = {
 checks = {
     '': [
         (None, {}, [
-            (0, u'Daemon running on host klappson', []),
-            (3, u'Plugin exception in section_node_disk_usage: Kokosnuss geklaut', []),
+            (0, 'Daemon running on host klappson', []),
+            (3, 'Plugin exception in section_node_disk_usage: Kokosnuss geklaut', []),
         ]),
     ],
 }

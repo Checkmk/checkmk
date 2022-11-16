@@ -2,7 +2,8 @@ import json
 import random
 import time
 from functools import partial
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 import pytest
 from faker import Faker

@@ -12,57 +12,57 @@ checkname = 'f5_bigip_vserver'
 
 
 info = [
-    [u'/Common/sight-seeing.wurmhole.univ', u'1', u'1', u'The virtual server is available', u'\xd4;xK',
-     u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
-    [u'/Common/www.wurmhole.univ_HTTP2HTTPS', u'4', u'1', (u"The children pool member(s) either don't"
-     u" have service checking enabled, or service check results are not available yet"),
-     u'\xd4;xI', u'', u'', u'', u'', u'', u'', u'', u'42', u'0', u''],
-    [u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', u'4', u'1', (u"The children pool member(s) either"
-     u" don't have service checking enabled, or service check results are not available yet"),
-     u'\xd4;xK', u'', u'', u'', u'', u'', u'', u'', u'', u'0', u''],
-    [u'/Common/starfleet.space', u'4', u'', u"To infinity and beyond!", u'\xde\xca\xff\xed', u'', u'',
-     u'', u'', u'42', u'32', u'', u'', u'0', u''],
+    ['/Common/sight-seeing.wurmhole.univ', '1', '1', 'The virtual server is available', '\xd4;xK',
+     '', '', '', '', '', '', '', '', '0', ''],
+    ['/Common/www.wurmhole.univ_HTTP2HTTPS', '4', '1', ("The children pool member(s) either don't"
+     " have service checking enabled, or service check results are not available yet"),
+     '\xd4;xI', '', '', '', '', '', '', '', '42', '0', ''],
+    ['/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', '4', '1', ("The children pool member(s) either"
+     " don't have service checking enabled, or service check results are not available yet"),
+     '\xd4;xK', '', '', '', '', '', '', '', '', '0', ''],
+    ['/Common/starfleet.space', '4', '', "To infinity and beyond!", '\xde\xca\xff\xed', '', '',
+     '', '', '42', '32', '', '', '0', ''],
 ]
 
 
 discovery = {
     '': [
-        (u'/Common/sight-seeing.wurmhole.univ', {}),
-        (u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}),
-        (u'/Common/www.wurmhole.univ_HTTP2HTTPS', {}),
-        (u'/Common/starfleet.space', {}),
+        ('/Common/sight-seeing.wurmhole.univ', {}),
+        ('/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}),
+        ('/Common/www.wurmhole.univ_HTTP2HTTPS', {}),
+        ('/Common/starfleet.space', {}),
     ],
 }
 
 
 checks = {
     '': [
-        (u'/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}, [
-            (0, u'Virtual Server with IP 212.59.120.75 is enabled', []),
-            (1, (u'State availability is unknown, Detail: The children pool member(s) either'
-                 u' don\'t have service checking enabled, or service check results are not'
-                 u' available yet'), []),
+        ('/Common/sight-seeing.wurmhole.univ_HTTP2HTTPS', {}, [
+            (0, 'Virtual Server with IP 212.59.120.75 is enabled', []),
+            (1, ('State availability is unknown, Detail: The children pool member(s) either'
+                 ' don\'t have service checking enabled, or service check results are not'
+                 ' available yet'), []),
             (0, 'Client connections: 0', [('connections', 0, None, None, None, None)]),
         ]),
-        (u'/Common/www.wurmhole.univ', {}, []),
-        (u'/Common/www.wurmhole.univ_HTTP2HTTPS', {}, [
-            (0, u'Virtual Server with IP 212.59.120.73 is enabled', []),
-            (1, (u'State availability is unknown, Detail: The children pool member(s) either'
-                 u' don\'t have service checking enabled, or service check results are not'
-                 u' available yet'), []),
+        ('/Common/www.wurmhole.univ', {}, []),
+        ('/Common/www.wurmhole.univ_HTTP2HTTPS', {}, [
+            (0, 'Virtual Server with IP 212.59.120.73 is enabled', []),
+            (1, ('State availability is unknown, Detail: The children pool member(s) either'
+                 ' don\'t have service checking enabled, or service check results are not'
+                 ' available yet'), []),
             (0, 'Client connections: 0', [
                 ('connections', 0, None, None, None, None),
                 ('connections_rate', 0, None, None, None, None),
             ]),
             (0, 'Connections rate: 0.00/sec', []),
         ]),
-        (u'/Common/starfleet.space', {
+        ('/Common/starfleet.space', {
             "if_in_octets": (-23, 42),
             "if_total_pkts_lower": (100, 200),
             "if_total_pkts": (300, 400),
         }, [
-            (1, u'Virtual Server with IP 222.202.255.237 is in unknown state', []),
-            (1, u'State availability is unknown, Detail: To infinity and beyond!', []),
+            (1, 'Virtual Server with IP 222.202.255.237 is in unknown state', []),
+            (1, 'State availability is unknown, Detail: To infinity and beyond!', []),
             (0, 'Client connections: 0', [
                 ('connections', 0, None, None, None, None),
                 ('if_in_octets', 0.0, None, None, None, None),

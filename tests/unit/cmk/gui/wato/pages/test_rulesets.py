@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -151,7 +150,7 @@ class TestRuleConditionRenderer:
     def test_single_tag_condition(
         self,
         taggroup_id: TaggroupID,
-        tag_spec: Union[Optional[TagID], TagConditionNE],
+        tag_spec: TagID | None | TagConditionNE,
         rendered_condition: HTML,
     ) -> None:
         assert (
@@ -423,7 +422,7 @@ class TestRuleConditionRenderer:
 
 def test_get_groups() -> None:
     """Test sort order of rules"""
-    expected_folder_order: List[CREFolder] = [
+    expected_folder_order: list[CREFolder] = [
         Folder("folder2/folder2/folder2", "folder2"),
         Folder("folder2/folder2/folder1", "folder1"),
         Folder("folder2/folder2", "folder2"),
@@ -444,7 +443,7 @@ def test_get_groups() -> None:
 
     root: CREFolder = Folder.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts", {"TAG1": "TG1"})
-    rules: List[Tuple[CREFolder, int, Rule]] = [
+    rules: list[tuple[CREFolder, int, Rule]] = [
         (root, 0, Rule.from_ruleset_defaults(root, ruleset))
     ]
 

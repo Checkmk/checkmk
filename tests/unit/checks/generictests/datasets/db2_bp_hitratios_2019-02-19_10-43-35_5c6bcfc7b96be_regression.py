@@ -8,33 +8,33 @@
 
 
 
-checkname = u'db2_bp_hitratios'
+checkname = 'db2_bp_hitratios'
 
 
-info = [[u'[[[serv0:ABC]]]'],
-        [u'node', u'0', u'foo1.bar2.baz3', u'0'],
-        [u'BP_NAME',
-         u'TOTAL_HIT_RATIO_PERCENT',
-         u'DATA_HIT_RATIO_PERCENT',
-         u'INDEX_HIT_RATIO_PERCENT',
-         u'XDA_HIT_RATIO_PERCENT'],
-        [u'IBMDEFAULTBP', u'83.62', u'78.70', u'99.74', u'50.00'],
-        [u'[[[serv1:XYZ]]]'],
-        [u'node', u'0', u'foo1.bar2.baz3', u'0']]
+info = [['[[[serv0:ABC]]]'],
+        ['node', '0', 'foo1.bar2.baz3', '0'],
+        ['BP_NAME',
+         'TOTAL_HIT_RATIO_PERCENT',
+         'DATA_HIT_RATIO_PERCENT',
+         'INDEX_HIT_RATIO_PERCENT',
+         'XDA_HIT_RATIO_PERCENT'],
+        ['IBMDEFAULTBP', '83.62', '78.70', '99.74', '50.00'],
+        ['[[[serv1:XYZ]]]'],
+        ['node', '0', 'foo1.bar2.baz3', '0']]
 
 
-discovery = {'': [(u'serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP', {})]}
+discovery = {'': [('serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP', {})]}
 
 
-checks = {'': [(u'serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP',
+checks = {'': [('serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP',
                 {},
                 [(0,
-                  u'Total: 83.62%',
-                  [(u'total_hitratio', 83.62, None, None, 0, 100)]),
+                  'Total: 83.62%',
+                  [('total_hitratio', 83.62, None, None, 0, 100)]),
                  (0,
-                  u'Data: 78.70%',
-                  [(u'data_hitratio', 78.7, None, None, 0, 100)]),
+                  'Data: 78.70%',
+                  [('data_hitratio', 78.7, None, None, 0, 100)]),
                  (0,
-                  u'Index: 99.74%',
-                  [(u'index_hitratio', 99.74, None, None, 0, 100)]),
-                 (0, u'XDA: 50.00%', [(u'xda_hitratio', 50.0, None, None, 0, 100)])])]}
+                  'Index: 99.74%',
+                  [('index_hitratio', 99.74, None, None, 0, 100)]),
+                 (0, 'XDA: 50.00%', [('xda_hitratio', 50.0, None, None, 0, 100)])])]}

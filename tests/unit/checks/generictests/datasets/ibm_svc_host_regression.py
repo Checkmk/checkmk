@@ -11,10 +11,10 @@
 checkname = 'ibm_svc_host'
 
 
-info = [[u'0', u'h_esx01', u'2', u'4', u'degraded'],
-        [u'1', u'host206', u'2', u'2', u'online'],
-        [u'2', u'host105', u'2', u'2', u'online'],
-        [u'3', u'host106', u'2', u'2', u'online']]
+info = [['0', 'h_esx01', '2', '4', 'degraded'],
+        ['1', 'host206', '2', '2', 'online'],
+        ['2', 'host105', '2', '2', 'online'],
+        ['3', 'host106', '2', '2', 'online']]
 
 
 discovery = {'': [(None, {})]}

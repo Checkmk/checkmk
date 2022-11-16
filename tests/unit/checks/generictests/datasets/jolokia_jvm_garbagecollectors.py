@@ -10,20 +10,20 @@ checkname = 'jolokia_jvm_garbagecollectors'
 
 info = [
     [
-        u'MyJIRA',
-        u'java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name',
-        u'{"java.lang:name=PS MarkSweep,type=GarbageCollector": {"CollectionTime": 4753, "Name": "PS MarkSweep", "CollectionCount": 7}, "java.lang:name=PS Scavenge,type=GarbageCollector": {"CollectionTime": 209798, "Name": "PS Scavenge", "CollectionCount": 2026}}'
+        'MyJIRA',
+        'java.lang:name=*,type=GarbageCollector/CollectionCount,CollectionTime,Name',
+        '{"java.lang:name=PS MarkSweep,type=GarbageCollector": {"CollectionTime": 4753, "Name": "PS MarkSweep", "CollectionCount": 7}, "java.lang:name=PS Scavenge,type=GarbageCollector": {"CollectionTime": 209798, "Name": "PS Scavenge", "CollectionCount": 2026}}'
     ]
 ]
 
 discovery = {
-    '': [(u'MyJIRA GC PS MarkSweep', {}), (u'MyJIRA GC PS Scavenge', {})]
+    '': [('MyJIRA GC PS MarkSweep', {}), ('MyJIRA GC PS Scavenge', {})]
 }
 
 checks = {
     '': [
         (
-            u'MyJIRA GC PS MarkSweep', {}, [
+            'MyJIRA GC PS MarkSweep', {}, [
                 (
                     0, 'Garbage collections: 0.00/s', [
                         (
@@ -43,7 +43,7 @@ checks = {
             ]
         ),
         (
-            u'MyJIRA GC PS Scavenge', {}, [
+            'MyJIRA GC PS Scavenge', {}, [
                 (
                     0, 'Garbage collections: 0.00/s', [
                         (
@@ -63,7 +63,7 @@ checks = {
             ]
         ),
         (
-            u'MyJIRA GC PS Scavenge', {
+            'MyJIRA GC PS Scavenge', {
                 'CollectionCount': (-6.0, 6.0)
             }, [
                 (
@@ -87,7 +87,7 @@ checks = {
             ]
         ),
         (
-            u'MyJIRA GC PS Scavenge', {
+            'MyJIRA GC PS Scavenge', {
                 'collection_time': (-0.1, 0.1)
             }, [
                 (

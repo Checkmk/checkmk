@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping, Optional, Set
+from typing import Optional
 
 import pytest
 
@@ -152,8 +153,8 @@ def test_find_missing_plugins(
 ) -> None:
     missing_plugins = (
         set(all_pages)
-        - set(str(plugin_name) for plugin_name in fix_register.check_plugins)
-        - set(f"check_{name}" for name in fix_plugin_legacy.active_check_info)
+        - {str(plugin_name) for plugin_name in fix_register.check_plugins}
+        - {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
         - {
             "check-mk",
             "check-mk-inventory",
@@ -168,8 +169,8 @@ def test_cluster_check_functions_match_manpages_cluster_sections(  # type:ignore
     fix_register: FixRegister,
     all_pages: ManPages,
 ):
-    missing_cluster_description: Set[str] = set()
-    unexpected_cluster_description: Set[str] = set()
+    missing_cluster_description: set[str] = set()
+    unexpected_cluster_description: set[str] = set()
 
     for plugin in fix_register.check_plugins.values():
         man_page = all_pages[str(plugin.name)]

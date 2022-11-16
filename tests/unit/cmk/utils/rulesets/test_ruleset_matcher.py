@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -340,7 +340,7 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     )
 
 
-dict_ruleset: Ruleset[Dict[str, str]] = [
+dict_ruleset: Ruleset[dict[str, str]] = [
     {
         "id": "1",
         "value": {"hu": "BLA"},
@@ -423,7 +423,7 @@ def test_basic_host_ruleset_get_merged_dict_values(monkeypatch: MonkeyPatch) -> 
     }
 
 
-binary_ruleset: List[RuleSpec] = [
+binary_ruleset: list[RuleSpec] = [
     {
         "id": "1",
         "value": True,

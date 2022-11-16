@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 
@@ -725,7 +725,7 @@ def test_discover_mtr() -> None:
 def test_check_mtr(
     item: str,
     params: CheckParams,
-    check_result: Sequence[Union[Result, Metric]],
+    check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(

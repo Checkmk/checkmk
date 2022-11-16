@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.zpool_status import Section
 
 
 @pytest.mark.parametrize("string_table, expected_result", [([], None)])
-def test_zpool_status_parse(string_table: StringTable, expected_result: Optional[Section]) -> None:
+def test_zpool_status_parse(string_table: StringTable, expected_result: Section | None) -> None:
     section = zpool_status.parse_zpool_status(string_table)
     assert section == expected_result
 

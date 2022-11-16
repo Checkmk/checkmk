@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, NamedTuple
 
 import pytest
 
@@ -367,7 +368,7 @@ def test_iter_active_check_services(  # type:ignore[no-untyped-def]
     active_check_info: Mapping[str, Mapping[str, str]],
     hostname: str,
     host_attrs: dict[str, Any],
-    expected_result: Sequence[Tuple[str, str]],
+    expected_result: Sequence[tuple[str, str]],
     monkeypatch,
 ):
     monkeypatch.setattr(config, "active_check_info", active_check_info)
@@ -398,7 +399,7 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
         hostname,
         config.HostConfig.make_host_config(hostname),
         ipaddress,
-    ) == "<NOTHING>x%sx%sx<host>x<ip>x" % (ipaddress if ipaddress is not None else "", hostname)
+    ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 
 
 # The types between core config and the argument thingies is not shared due to
@@ -406,11 +407,11 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
 # SpecialAgentConfiguration.
 class TestSpecialAgentConfiguration(NamedTuple):
     args: Sequence[str]
-    stdin: Optional[str]
+    stdin: str | None
 
 
 # Hocus pocus...
-fun_args_stdin: Tuple[Tuple[config.SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
+fun_args_stdin: tuple[tuple[config.SpecialAgentInfoFunctionResult, tuple[str, str | None]]] = (
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
     (TestSpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
@@ -471,7 +472,7 @@ class TestMakeSpecialAgentCmdline:
         monkeypatch,
     ):
         hostname = HostName("testhost")
-        params: Dict[Any, Any] = {}
+        params: dict[Any, Any] = {}
         ts = Scenario()
         ts.add_host(hostname)
         ts.apply(monkeypatch)

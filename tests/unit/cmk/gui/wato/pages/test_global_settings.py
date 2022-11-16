@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableGroup
 from cmk.gui.valuespec import TextInput, ValueSpec
@@ -28,7 +28,7 @@ def test_match_item_generator_settings(  # type:ignore[no-untyped-def]
     class SomeSettingsMode(ModeEditGlobals):
         def iter_all_configuration_variables(
             self,
-        ) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
             return [
                 (
                     ConfigVariableGroup(),

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -306,7 +306,7 @@ def test_discover_k8s_stats_network(section, expected_items) -> None:  # type:ig
     ],
 )
 def test__check_k8s_stats_fs(section, expected_results) -> None:  # type:ignore[no-untyped-def]
-    vs: Dict[str, Any] = {}
+    vs: dict[str, Any] = {}
     for _ in range(2):
         results = list(
             _check__k8s_stats_fs__core(
@@ -357,7 +357,7 @@ def test__check_k8s_stats_fs(section, expected_results) -> None:  # type:ignore[
     ],
 )
 def test__check_k8s_stats_network(section, expected_results) -> None:  # type:ignore[no-untyped-def]
-    vs: Dict[str, Any] = {}
+    vs: dict[str, Any] = {}
     for _ in range(2):
         section = {
             **section,

@@ -4,38 +4,38 @@
 checkname = 'watchdog_sensors'
 
 
-info = [[[u'3.2.0', u'1']],
-        [[u'1', u'First Floor Ambient', u'1', u'213', u'37', u'60', u''],
-         [u'2', u'Second Floor Ambient', u'1', u'200', u'30', u'40', u'']]]
+info = [[['3.2.0', '1']],
+        [['1', 'First Floor Ambient', '1', '213', '37', '60', ''],
+         ['2', 'Second Floor Ambient', '1', '200', '30', '40', '']]]
 
 
-discovery = {'': [(u'Watchdog 1', {}), (u'Watchdog 2', {})],
-             'dew': [(u'Dew point 1', {}), (u'Dew point 2', {})],
-             'humidity': [(u'Humidity 1', {}), (u'Humidity 2', {})],
-             'temp': [(u'Temperature 1', {}), (u'Temperature 2', {})]}
+discovery = {'': [('Watchdog 1', {}), ('Watchdog 2', {})],
+             'dew': [('Dew point 1', {}), ('Dew point 2', {})],
+             'humidity': [('Humidity 1', {}), ('Humidity 2', {})],
+             'temp': [('Temperature 1', {}), ('Temperature 2', {})]}
 
 
-checks = {'': [(u'Watchdog 1',
+checks = {'': [('Watchdog 1',
                 {},
-                [(0, 'available', []), (0, u'Location: First Floor Ambient', [])]),
-               (u'Watchdog 2',
+                [(0, 'available', []), (0, 'Location: First Floor Ambient', [])]),
+               ('Watchdog 2',
                 {},
-                [(0, 'available', []), (0, u'Location: Second Floor Ambient', [])])],
-          'dew': [(u'Dew point 1',
+                [(0, 'available', []), (0, 'Location: Second Floor Ambient', [])])],
+          'dew': [('Dew point 1',
                    {},
-                   [(0, u'6.0 \xb0C', [('temp', 6.0, None, None, None, None)])]),
-                  (u'Dew point 2',
+                   [(0, '6.0 \xb0C', [('temp', 6.0, None, None, None, None)])]),
+                  ('Dew point 2',
                    {},
-                   [(0, u'4.0 \xb0C', [('temp', 4.0, None, None, None, None)])])],
-          'humidity': [(u'Humidity 1',
+                   [(0, '4.0 \xb0C', [('temp', 4.0, None, None, None, None)])])],
+          'humidity': [('Humidity 1',
                         {'levels': (50, 55), 'levels_lower': (10, 15)},
                         [(0, '37.0%', [('humidity', 37, 50, 55, None, None)])]),
-                       (u'Humidity 2',
+                       ('Humidity 2',
                         {'levels': (50, 55), 'levels_lower': (10, 15)},
                         [(0, '30.0%', [('humidity', 30, 50, 55, None, None)])])],
-          'temp': [(u'Temperature 1',
+          'temp': [('Temperature 1',
                     {},
-                    [(0, u'21.3 \xb0C', [('temp', 21.3, None, None, None, None)])]),
-                   (u'Temperature 2',
+                    [(0, '21.3 \xb0C', [('temp', 21.3, None, None, None, None)])]),
+                   ('Temperature 2',
                     {},
-                    [(0, u'20.0 \xb0C', [('temp', 20.0, None, None, None, None)])])]}
+                    [(0, '20.0 \xb0C', [('temp', 20.0, None, None, None, None)])])]}

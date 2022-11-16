@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Optional
 
 import pytest
 
@@ -51,8 +50,8 @@ from cmk.base.plugins.agent_based.fjdarye_summary_status import (
     ],
 )
 def test_parse_fjdarye_sum(
-    section: List[StringTable],
-    parse_sum_result: Optional[FjdaryeDeviceStatus],
+    section: list[StringTable],
+    parse_sum_result: FjdaryeDeviceStatus | None,
 ) -> None:
     assert parse_fjdarye_sum(section) == parse_sum_result
 
@@ -74,7 +73,7 @@ def test_parse_fjdarye_sum(
     ],
 )
 def test_discover_fjdarye_sum(
-    section: Optional[FjdaryeDeviceStatus],
+    section: FjdaryeDeviceStatus | None,
     discovery_result: DiscoveryResult,
 ) -> None:
     assert list(discover_fjdarye_sum(section)) == discovery_result
@@ -111,7 +110,7 @@ def test_discover_fjdarye_sum(
     ],
 )
 def test_check_fjdarye_sum(
-    section: Optional[FjdaryeDeviceStatus],
+    section: FjdaryeDeviceStatus | None,
     check_sum_result: CheckResult,
 ) -> None:
     assert list(check_fjdarye_sum(section=section)) == check_sum_result

@@ -22,11 +22,11 @@ checks = {
                 (
                     0, 'No levels reached', [
                         (
-                            u'aws_cloudwatch_alarms_cloudwatch_alarms', 1,
+                            'aws_cloudwatch_alarms_cloudwatch_alarms', 1,
                             None, None, None, None
                         )
                     ]
-                ), (0, u'\nTITEL: 1 (of max. 10)')
+                ), (0, '\nTITEL: 1 (of max. 10)')
             ]
         )
     ]

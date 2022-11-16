@@ -7,7 +7,8 @@
 # pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
 
 import logging
-from typing import Any, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -511,7 +512,7 @@ def test_remove_leading_bom(teststr: str, expected_result: str) -> None:
     ],
 )
 def test_split_syslog_structured_data_and_message(
-    sd_and_message: str, expected_result: Tuple[Optional[str], str]
+    sd_and_message: str, expected_result: tuple[str | None, str]
 ) -> None:
     assert split_syslog_structured_data_and_message(sd_and_message) == expected_result
 
@@ -579,7 +580,7 @@ def test_split_syslog_structured_data_and_message(
 )
 def test_split_syslog_nonnil_sd_and_message(
     sd_and_message: str,
-    expected_result: Tuple[str, str],
+    expected_result: tuple[str, str],
 ) -> None:
     assert _split_syslog_nonnil_sd_and_message(sd_and_message) == expected_result
 
@@ -663,7 +664,7 @@ def test_split_syslog_structured_data_and_message_exception(sd_and_message: str)
 )
 def test_parse_syslog_message_structured_data(
     structured_data: str,
-    expected_result: Tuple[Mapping[str, str], str],
+    expected_result: tuple[Mapping[str, str], str],
 ) -> None:
     assert parse_syslog_message_structured_data(structured_data) == expected_result
 

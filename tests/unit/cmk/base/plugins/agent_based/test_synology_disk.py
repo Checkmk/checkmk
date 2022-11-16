@@ -20,7 +20,7 @@ def test_parsing() -> None:
 def test_discovery() -> None:
     section = synology_disks.parse_synology(SECTION_TABLE)
     services = list(synology_disks.discover_synology_disks(section))
-    assert set(s.item for s in services) == set(el[0] for el in SECTION_TABLE)
+    assert {s.item for s in services} == {el[0] for el in SECTION_TABLE}
 
 
 def make_section(

@@ -304,7 +304,7 @@ def test_agent_aws_cloudfront(
         assert len(cloudfront_results) == 1
         cloudfront_result = cloudfront_results[0]
         assert cloudfront_result.piggyback_hostname == (PIGGYBACK_HOSTNAME if use_piggyback else "")
-        assert set(e["Label"] for e in cloudfront_result.content) == set(found_distributions)
+        assert {e["Label"] for e in cloudfront_result.content} == set(found_distributions)
         # We are retrieving 6 metrics for each CloudFront distribution
         assert len(cloudfront_result.content) == 6 * len(found_distributions)
     else:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import freezegun
 import pytest
@@ -86,7 +86,7 @@ def test_health_check_accepts_volume_name_and_durable_id_as_item() -> None:
 
 def test_df_discovery_yields_volume_name_as_item() -> None:
     parsed = {"Foo": {"durable-id": "Bar"}}
-    expected_yield: Tuple[str, Dict[Any, Any]] = ("Foo", {})
+    expected_yield: tuple[str, dict[Any, Any]] = ("Foo", {})
     check = Check("hp_msa_volume.df")
     for item in check.run_discovery(parsed):
         assert item == expected_yield

@@ -7,15 +7,15 @@ import os
 import pprint
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Union
+from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from mock import MagicMock
 
 import cmk.utils.paths
 from cmk.utils.type_defs import ContactgroupName, UserId
@@ -157,7 +157,7 @@ def test_host_is_ping_host(attributes: dict[str, str], result: bool) -> None:
     ],
 )
 def test_write_and_read_host_attributes(
-    tmp_path: Path, attributes: dict[str, Union[str, list[str]]]
+    tmp_path: Path, attributes: dict[str, str | list[str]]
 ) -> None:
     folder_path = str(tmp_path)
     # Used to write the data
@@ -248,8 +248,8 @@ def test_mgmt_inherit_credentials_explicit_host(
     protocol: str,
     host_attribute: str,
     base_variable: str,
-    credentials: Union[str, dict[str, str]],
-    folder_credentials: Union[str, dict[str, str]],
+    credentials: str | dict[str, str],
+    folder_credentials: str | dict[str, str],
 ) -> None:
 
     folder = hosts_and_folders.Folder.root_folder()
@@ -294,7 +294,7 @@ def test_mgmt_inherit_credentials(
     protocol: str,
     host_attribute: str,
     base_variable: str,
-    folder_credentials: Union[str, dict[str, str]],
+    folder_credentials: str | dict[str, str],
 ) -> None:
     folder = hosts_and_folders.Folder.root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
@@ -341,8 +341,8 @@ def test_mgmt_inherit_protocol_explicit_host(
     protocol: str,
     host_attribute: str,
     base_variable: str,
-    credentials: Union[str, dict[str, str]],
-    folder_credentials: Union[str, dict[str, str]],
+    credentials: str | dict[str, str],
+    folder_credentials: str | dict[str, str],
 ) -> None:
     folder = hosts_and_folders.Folder.root_folder()
     folder.set_attribute("management_protocol", None)
@@ -387,7 +387,7 @@ def test_mgmt_inherit_protocol(
     protocol: str,
     host_attribute: str,
     base_variable: str,
-    folder_credentials: Union[str, dict[str, str]],
+    folder_credentials: str | dict[str, str],
 ) -> None:
     folder = hosts_and_folders.Folder.root_folder()
     folder.set_attribute("management_protocol", protocol)
@@ -590,8 +590,8 @@ def test_match_item_generator_hosts() -> None:
 @dataclass
 class _TreeStructure:
     path: str
-    attributes: Dict[str, Any]
-    subfolders: List["_TreeStructure"]
+    attributes: dict[str, Any]
+    subfolders: list["_TreeStructure"]
     num_hosts: int = 0
 
 
@@ -774,7 +774,7 @@ def test_folder_permissions(  # type:ignore[no-untyped-def]
 
 def _convert_folder_tree_to_all_folders(  # type:ignore[no-untyped-def]
     root_folder,
-) -> Dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
+) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
     all_folders = {}
 
     def parse_folder(folder):
@@ -788,7 +788,7 @@ def _convert_folder_tree_to_all_folders(  # type:ignore[no-untyped-def]
 
 @dataclass
 class _UserTest:
-    contactgroups: List[ContactgroupName]
+    contactgroups: list[ContactgroupName]
     hide_folders_without_permission: bool
     expected_num_hosts: int
     fix_legacy_visibility: bool = False
@@ -804,7 +804,7 @@ def hide_folders_without_permission(do_hide) -> Iterator[None]:  # type:ignore[n
         active_config.wato_hide_folders_without_read_permissions = old_value
 
 
-def _default_groups(configured_groups: List[ContactgroupName]):  # type:ignore[no-untyped-def]
+def _default_groups(configured_groups: list[ContactgroupName]):  # type:ignore[no-untyped-def]
     return {
         "contactgroups": {
             "groups": configured_groups,
@@ -931,7 +931,7 @@ def _fake_redis_num_hosts_answer(  # type:ignore[no-untyped-def]
 
 @contextmanager
 def get_fake_setup_redis_client(  # type:ignore[no-untyped-def]
-    monkeypatch, all_folders, redis_answers: List
+    monkeypatch, all_folders, redis_answers: list
 ):
     monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
     mock_redis_client = MockRedisClient(redis_answers)
@@ -954,7 +954,7 @@ def get_fake_setup_redis_client(  # type:ignore[no-untyped-def]
 
 
 class MockRedisClient:
-    def __init__(self, answers: List[List[str]]) -> None:
+    def __init__(self, answers: list[list[str]]) -> None:
         class FakePipeline:
             def __init__(self, answers) -> None:  # type:ignore[no-untyped-def]
                 self._answers = answers

@@ -8,15 +8,15 @@
 
 
 
-checkname = u'cisco_fan'
+checkname = 'cisco_fan'
 
 
-info = [[u'Fan_1_rpm', u'', u'0'],
-        [u'Fan_2_rpm', u'1', u'1'],
-        [u'Fan_3_rpm', u'999', u'2']]
+info = [['Fan_1_rpm', '', '0'],
+        ['Fan_2_rpm', '1', '1'],
+        ['Fan_3_rpm', '999', '2']]
 
 
-discovery = {'': [(u'Fan_2_rpm 1', None)]}
+discovery = {'': [('Fan_2_rpm 1', None)]}
 
 
-checks = {'': [(u'Fan_2_rpm 1', {}, [(0, u'Status: normal', [])])]}
+checks = {'': [('Fan_2_rpm 1', {}, [(0, 'Status: normal', [])])]}

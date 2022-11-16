@@ -28,7 +28,7 @@ from cmk.special_agents import agent_innovaphone
 def test_agent_innovaphone_main(  # type:ignore[no-untyped-def]
     args, expected_stdout, capsys
 ) -> None:
-    filepath = "%s/_innovaphone_vcrtrace" % os.path.dirname(os.path.abspath(__file__))
+    filepath = "%s/_innovaphone_vcrtrace" % os.path.dirname(__file__)
     with vcr.use_cassette(filepath, record_mode="none"):
         agent_innovaphone.main(args)
         assert expected_stdout == capsys.readouterr().out

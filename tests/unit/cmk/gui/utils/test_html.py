@@ -28,7 +28,7 @@ def test_class_HTML() -> None:
     a = "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ"
     b = "two"
     c = "Three"
-    d = str("u")
+    d = "u"
 
     A = HTML(a)
     B = HTML(b)
@@ -93,8 +93,8 @@ def test_class_HTML() -> None:
 
     assert B + C != C + B
 
-    assert HTML(A) == A, "%s %s" % (HTML(A), A)
-    assert HTML(a) == A, "%s %s" % (HTML(a), A)
+    assert HTML(A) == A, f"{HTML(A)} {A}"
+    assert HTML(a) == A, f"{HTML(a)} {A}"
 
     # Not supported any more!
     # assert  (A < B) == (a < b), "%s %s" % (A < B, a < b)

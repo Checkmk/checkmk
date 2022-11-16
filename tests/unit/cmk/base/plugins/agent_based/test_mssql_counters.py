@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 
 # fmt: off
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -51,7 +51,7 @@ from cmk.base.plugins.agent_based.mssql_counters_transactions import (
 )
 from cmk.base.plugins.agent_based.utils.mssql_counters import Section
 
-ValueStore = Dict[str, Any]
+ValueStore = dict[str, Any]
 
 big_string_table = [
     ['None', 'utc_time', 'None', '19.08.2020 14:25:04'],
@@ -436,7 +436,7 @@ def test_discovery_mssql_counters_locks_per_batch(section:Section, expected_serv
 ])
 def test_check_mssql_locks_per_batch(item:str, params:Mapping[str,object], section:Section, expected_results:Sequence[Result|Metric|IgnoreResults]) -> None:
     # re-run check_locks_per_batch_base() once in order to get rates
-    vs: Dict[str, Any] = {}
+    vs: dict[str, Any] = {}
     results = []
     for time in range(2):
         for result in check_locks_per_batch_base(vs, item, params, section, time*60):

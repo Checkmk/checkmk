@@ -5,7 +5,7 @@
 
 import datetime
 import itertools
-from typing import Any, Dict, List, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -19,12 +19,12 @@ from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 def splitter(
     text: str,
-    split_symbol: Optional[str] = None,
-) -> List[List[str]]:
+    split_symbol: str | None = None,
+) -> list[list[str]]:
     return [line.split(split_symbol) for line in text.split("\n")]
 
 
-def generate_inputs() -> List[List[List[str]]]:
+def generate_inputs() -> list[list[list[str]]]:
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)
@@ -529,7 +529,7 @@ check_results = [
     ids=[s.item for s in PS_DISCOVERED_ITEMS],
 )
 def test_check_ps_common(inv_item, reference) -> None:  # type:ignore[no-untyped-def]
-    parsed: List = []
+    parsed: list = []
     for info in generate_inputs():
         _cpu_cores, data = ps_section.parse_ps(info)
         parsed.extend((None, ps_info, cmd_line) for (ps_info, cmd_line) in data)
@@ -556,7 +556,7 @@ class cpu_config(NamedTuple):
     cputime: float
     cpu_cores: int
     exp_load: float
-    cpu_rescale_max: Optional[bool]
+    cpu_rescale_max: bool | None
 
 
 cpu_util_data = [
@@ -753,7 +753,7 @@ def test_subset_patterns() -> None:
     )
 
     # Boundary in match is necessary otherwise main instance accumulates all
-    inv_params: List[Dict] = [
+    inv_params: list[dict] = [
         {
             "default_params": {"cpu_rescale_max": True, "levels": (1, 1, 99999, 99999)},
             "match": "~(main.*)\\b",
@@ -822,7 +822,7 @@ def test_cpu_util_single_process_levels(cpu_cores) -> None:  # type:ignore[no-un
     - Check that Number of cores weight is active
     - Check that single process CPU utilization is present only on warn/crit states"""
 
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "process": "~.*firefox",
         "process_info": "text",
         "cpu_rescale_max": True,

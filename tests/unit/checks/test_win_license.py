@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional, Sequence, Tuple, TypedDict
+from collections.abc import Sequence
+from typing import NamedTuple, TypedDict
 
 import pytest
 
@@ -110,11 +111,11 @@ def test_parse_win_license(capture, result) -> None:  # type:ignore[no-untyped-d
 
 class CheckParameters(TypedDict):
     status: Sequence[str]
-    expiration_time: Tuple[int, int]
+    expiration_time: tuple[int, int]
 
 
 class check_ref(NamedTuple):
-    parameters: Optional[CheckParameters]
+    parameters: CheckParameters | None
     check_output: CheckResult
 
 

@@ -41,14 +41,14 @@ discovery = {
 }
 
 checks = {
-    '': [('Rack Unit 1 CPU 1', {}, [(0, u'58.4 \xb0C', [('temp', 58.4, None, None, None, None)])]),
-         ('Rack Unit 1 CPU 2', {}, [(0, u'60.4 \xb0C', [('temp', 60.4, None, None, None, None)])]),
+    '': [('Rack Unit 1 CPU 1', {}, [(0, '58.4 \xb0C', [('temp', 58.4, None, None, None, None)])]),
+         ('Rack Unit 1 CPU 2', {}, [(0, '60.4 \xb0C', [('temp', 60.4, None, None, None, None)])]),
          ('Rack Unit 1 Memory Array 1 Memory DIMM 1', {},
-          [(0, u'40.4 \xb0C', [('temp', 40.4, None, None, None, None)])]),
+          [(0, '40.4 \xb0C', [('temp', 40.4, None, None, None, None)])]),
          ('Rack Unit 1 Memory Array 1 Memory DIMM 2', {},
-          [(0, u'61.4 \xb0C', [('temp', 61.4, None, None, None, None)])]),
-         ('Rack Unit 1 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None, None)
+          [(0, '61.4 \xb0C', [('temp', 61.4, None, None, None, None)])]),
+         ('Rack Unit 1 Motherboard', {}, [(0, '50.0 \xb0C', [('temp', 50.0, None, None, None, None)
                                                              ])]),
-         ('Rack Unit 2 Motherboard', {}, [(0, u'50.0 \xb0C', [('temp', 50.0, None, None, None, None)
+         ('Rack Unit 2 Motherboard', {}, [(0, '50.0 \xb0C', [('temp', 50.0, None, None, None, None)
                                                              ])])]
 }

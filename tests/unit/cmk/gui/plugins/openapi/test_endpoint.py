@@ -7,7 +7,8 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 """
 
 import json
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -122,12 +123,12 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
     # here we create a code path, that requests the permission "one"
     call("one")
     # we expect to see this permission in the collection:
-    assert test_endpoint.endpoint._used_permissions == set(["one"])
+    assert test_endpoint.endpoint._used_permissions == {"one"}
     # then we create a code path that requests the permission "two"
     call("two")
     # and expect only "two" in the collection, because "one" was requested in
     # another call. before the fix, both "one" and "two" were in this set.
-    assert test_endpoint.endpoint._used_permissions == set(["two"])
+    assert test_endpoint.endpoint._used_permissions == {"two"}
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")

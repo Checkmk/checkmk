@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 import pytest
 
@@ -34,12 +33,12 @@ def fixture_temperature() -> int:
 
 
 @pytest.fixture(name="string_table_element")
-def fixture_string_table_element(sensor_id: str, temperature: int) -> List[str]:
+def fixture_string_table_element(sensor_id: str, temperature: int) -> list[str]:
     return [sensor_id, str(temperature)]
 
 
 @pytest.fixture(name="string_table")
-def fixture_string_table(string_table_element: List[str]) -> StringTable:
+def fixture_string_table(string_table_element: list[str]) -> StringTable:
     return [string_table_element]
 
 

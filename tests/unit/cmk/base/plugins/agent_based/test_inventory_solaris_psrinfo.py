@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, NamedTuple, Optional, TypeVar
+from collections.abc import Callable
+from typing import NamedTuple, TypeVar
 
 import pytest
 
@@ -26,7 +27,7 @@ class PsrInfo(NamedTuple):
     psrinfo: str
     psrinfo_pv: str
     psrinfo_p: str
-    psrinfo_t: Optional[str]
+    psrinfo_t: str | None
 
 
 test_set_1 = PsrInfo(
@@ -117,9 +118,7 @@ test_set_2 = PsrInfo(
 )
 
 
-def _section(
-    section_function: Callable[[StringTable], T], agent_output: Optional[str]
-) -> Optional[T]:
+def _section(section_function: Callable[[StringTable], T], agent_output: str | None) -> T | None:
     if agent_output is None:
         return None
 

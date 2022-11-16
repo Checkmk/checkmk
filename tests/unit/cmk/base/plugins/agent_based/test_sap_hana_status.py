@@ -120,9 +120,7 @@ def test_sap_hana_status_discovery() -> None:
 )
 def test_sap_hana_status_check(check_type, results, section) -> None:  # type:ignore[no-untyped-def]
 
-    yielded_results = list(
-        sap_hana_status.check_sap_hana_status("%s %s" % (check_type, ITEM), section)
-    )
+    yielded_results = list(sap_hana_status.check_sap_hana_status(f"{check_type} {ITEM}", section))
     assert yielded_results == [results]
 
 

@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Sequence
+from typing import Any
 
 from _pytest.monkeypatch import MonkeyPatch
 
@@ -58,10 +59,10 @@ class Scenario:
     def add_host(
         self,
         hostname: HostName,
-        tags: Optional[dict[str, str]] = None,
+        tags: dict[str, str] | None = None,
         host_path: str = "/wato/hosts.mk",
-        labels: Optional[dict[str, str]] = None,
-        ipaddress: Optional[HostAddress] = None,
+        labels: dict[str, str] | None = None,
+        ipaddress: HostAddress | None = None,
     ) -> None:
         if tags is None:
             tags = {}
@@ -100,9 +101,9 @@ class Scenario:
     def add_cluster(
         self,
         hostname: HostName,
-        tags: Optional[dict[str, str]] = None,
+        tags: dict[str, str] | None = None,
         host_path: str = "/wato/hosts.mk",
-        nodes: Optional[Sequence[HostName]] = None,
+        nodes: Sequence[HostName] | None = None,
     ) -> None:
         if tags is None:
             tags = {}
@@ -149,7 +150,7 @@ class Scenario:
                 raise Exception("Unknown tag group: %s" % tg_id)
 
             if tag_id not in tag_group.get_tag_ids():
-                raise Exception("Unknown tag ID %s in tag group %s" % (tag_id, tg_id))
+                raise Exception(f"Unknown tag ID {tag_id} in tag group {tg_id}")
 
             tag_config.update(tag_group.get_tag_group_config(tag_id))
 
@@ -168,7 +169,7 @@ class Scenario:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
     def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
-        check_vars: Dict = {}
+        check_vars: dict = {}
         for key, value in self.config.items():
             if key in config._check_variables:
                 check_vars.setdefault(key, value)

@@ -9,17 +9,17 @@
 checkname = 'k8s_conditions'
 
 info = [[
-    u'{"DiskPressure": "False", "OutOfDisk": "False", "MemoryPressure": "False", "Ready": "False", "NetworkUnavailable": "False", "KernelDeadlock": "True"}'
+    '{"DiskPressure": "False", "OutOfDisk": "False", "MemoryPressure": "False", "Ready": "False", "NetworkUnavailable": "False", "KernelDeadlock": "True"}'
 ]]
 
 discovery = {
-    '': [(u'DiskPressure', {}), (u'KernelDeadlock', {}), (u'MemoryPressure', {}),
-         (u'NetworkUnavailable', {}), (u'OutOfDisk', {}), (u'Ready', {})]
+    '': [('DiskPressure', {}), ('KernelDeadlock', {}), ('MemoryPressure', {}),
+         ('NetworkUnavailable', {}), ('OutOfDisk', {}), ('Ready', {})]
 }
 
 checks = {
-    '': [(u'DiskPressure', {}, [(0, u'False', [])]), (u'KernelDeadlock', {}, [(2, u'True', [])]),
-         (u'MemoryPressure', {}, [(0, u'False', [])]),
-         (u'NetworkUnavailable', {}, [(0, u'False', [])]), (u'OutOfDisk', {}, [(0, u'False', [])]),
-         (u'Ready', {}, [(2, u'False', [])])]
+    '': [('DiskPressure', {}, [(0, 'False', [])]), ('KernelDeadlock', {}, [(2, 'True', [])]),
+         ('MemoryPressure', {}, [(0, 'False', [])]),
+         ('NetworkUnavailable', {}, [(0, 'False', [])]), ('OutOfDisk', {}, [(0, 'False', [])]),
+         ('Ready', {}, [(2, 'False', [])])]
 }

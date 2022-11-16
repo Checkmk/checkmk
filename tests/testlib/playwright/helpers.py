@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import expect, Locator, Page, Response
@@ -203,7 +203,7 @@ class PPage(LocatorHelper):
         self,
         page: Page,
         site_id: str,
-        site_url: Optional[str] = None,
+        site_url: str | None = None,
     ) -> None:
         super().__init__(page)
         self.main_menu = MainMenu(self.page)
@@ -291,11 +291,11 @@ class PPage(LocatorHelper):
 
     def go(
         self,
-        url: Optional[str] = None,
-        timeout: Optional[float] = None,
-        wait_until: Optional[Literal["commit", "domcontentloaded", "load", "networkidle"]] = None,
-        referer: Optional[str] = None,
-    ) -> Optional[Response]:
+        url: str | None = None,
+        timeout: float | None = None,
+        wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None = None,
+        referer: str | None = None,
+    ) -> Response | None:
         """calls page.goto() but will accept relative urls"""
         return self.page.goto(
             urljoin(self.site_url, url), timeout=timeout, wait_until=wait_until, referer=referer

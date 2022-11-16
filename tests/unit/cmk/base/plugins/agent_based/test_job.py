@@ -5,7 +5,6 @@
 
 import time
 from copy import copy
-from typing import List, Union
 
 import pytest
 
@@ -117,7 +116,7 @@ TIME = 1594300620.0, "CET"
 
 def _modify_start_time(
     j: job.Job,
-    start_time: Union[float, List[int]],
+    start_time: float | list[int],
 ) -> job.Job:
     new_job: job.Job = copy(j)
     if isinstance(start_time, list):

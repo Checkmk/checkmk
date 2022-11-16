@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 import pytest
 
@@ -93,6 +92,6 @@ from cmk.base.plugins.agent_based.utils.cpu import Load, Section
 )
 def test_parse_hpux_cpu(
     string_table: StringTable,
-    expected_section: Optional[Section],
+    expected_section: Section | None,
 ) -> None:
     assert parse_hpux_cpu(string_table) == expected_section

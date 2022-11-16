@@ -8,26 +8,26 @@
 
 
 
-checkname = u'mbg_lantime_ng_refclock'
+checkname = 'mbg_lantime_ng_refclock'
 
 
-info = [[u'1',
-         u'15',
-         u'3',
-         u'2',
-         u'101',
-         u'0',
-         u'0',
-         u'0',
-         u'0',
-         u'0',
-         u'not announced']]
+info = [['1',
+         '15',
+         '3',
+         '2',
+         '101',
+         '0',
+         '0',
+         '0',
+         '0',
+         '0',
+         'not announced']]
 
 
-discovery = {'': [(u'1', None)], 'gps': []}
+discovery = {'': [('1', None)], 'gps': []}
 
 
-checks = {'': [(u'1',
+checks = {'': [('1',
                 {},
                 [(1,
                   'Type: tcr511, Usage: primary, State: not synchronized (TCT sync)',

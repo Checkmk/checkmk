@@ -34,7 +34,7 @@ def _check_generic_crash_info(crash):
         "local_vars": str,
     }.items():
         assert key in crash.crash_info
-        assert isinstance(crash.crash_info[key], ty), "Key %r has an invalid type %r" % (
+        assert isinstance(crash.crash_info[key], ty), "Key {!r} has an invalid type {!r}".format(
             key,
             type(crash.crash_info[key]),
         )

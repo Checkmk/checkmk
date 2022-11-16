@@ -58,7 +58,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
         p  #
         for base_path in [cmk_path(), cmc_path(), cme_path()]  #
         for dir_path in check_paths  #
-        for p in ["%s/%s" % (base_path, dir_path)]
+        for p in [f"{base_path}/{dir_path}"]
         if os.path.exists(p)
     ],
 )
@@ -68,7 +68,7 @@ def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ign
     for dirpath, _, filenames in os.walk(path):
         scanned += 1
         for filename in filenames:
-            file_path = "%s/%s" % (dirpath, filename)
+            file_path = f"{dirpath}/{filename}"
 
             if not changed_files.is_changed(file_path):
                 continue

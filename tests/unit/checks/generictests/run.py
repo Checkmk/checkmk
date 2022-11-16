@@ -78,7 +78,7 @@ def get_merged_parameters(check, provided_p):
     if isinstance(provided_p, dict):
         default_p.update(provided_p)
         return default_p
-    raise DiscoveryParameterTypeError("unhandled: %r/%r" % (default_p, provided_p))
+    raise DiscoveryParameterTypeError(f"unhandled: {default_p!r}/{provided_p!r}")
 
 
 def get_mock_values(dataset, subcheck):
@@ -97,7 +97,7 @@ def get_discovery_expected(subcheck, dataset):
 
 def get_discovery_actual(check, info_arg, immu):
     """Validate and return actual DiscoveryResult"""
-    print("discovery: %r" % (check.name,))
+    print(f"discovery: {check.name!r}")
 
     disco_func = check.info.get("inventory_function")
     if not disco_func:
@@ -155,7 +155,7 @@ def run_test_on_parse(dataset, immu):
     test it, and return the result. Otherwise return None.
     If the .parsed attribute is present, it is compared to the result.
     """
-    print("parse: %r" % (dataset.checkname,))
+    print(f"parse: {dataset.checkname!r}")
     info = getattr(dataset, "info", None)
     parsed_expected = getattr(dataset, "parsed", None)
 
@@ -173,7 +173,7 @@ def run_test_on_parse(dataset, immu):
 
     if parsed_expected is not None:
         # we *must* have a parse function in this case!
-        assert parse_function, "%s has no parse function!" % (dataset.checkname,)
+        assert parse_function, f"{dataset.checkname} has no parse function!"
     elif not parse_function:  # we may not have one:
         return None
 
@@ -201,7 +201,7 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
 
     for item, params, results_expected_raw in test_cases:
 
-        print("Dataset item %r in check %r" % (item, check.name))
+        print(f"Dataset item {item!r} in check {check.name!r}")
         immu.register(params, "params")
 
         with current_service(check_plugin_name, "unit test description"):
@@ -230,9 +230,9 @@ def optional_freeze_time(dataset):
 
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
-    print("START: %r" % (dataset,))
+    print(f"START: {dataset!r}")
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
-    assert checklist, "Found no check plugin for %r" % (dataset.checkname,)
+    assert checklist, f"Found no check plugin for {dataset.checkname!r}"
 
     immu = Immutables()
 
@@ -259,4 +259,4 @@ def run(check_info, dataset):
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)
 
-        immu.test(" at end of subcheck loop %r " % (subcheck,))
+        immu.test(f" at end of subcheck loop {subcheck!r} ")

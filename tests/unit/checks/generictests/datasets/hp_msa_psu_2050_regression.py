@@ -86,6 +86,6 @@ checks = {
     ],
     'temp': [
         ('Enclosure 1 Right', {'levels': (40, 45)}, [
-            (0, u'0.0 \xb0C', [('temp', 0.0, 40, 45, None, None)]),
+            (0, '0.0 \xb0C', [('temp', 0.0, 40, 45, None, None)]),
         ]),
     ]}

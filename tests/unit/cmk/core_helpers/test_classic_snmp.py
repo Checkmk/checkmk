@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import pytest
 
@@ -71,7 +71,7 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected) -> None:  # type:ignore
 
 class SNMPSettings(NamedTuple):
     snmp_config: SNMPHostConfig
-    context_name: Optional[str]
+    context_name: str | None
 
 
 @pytest.mark.parametrize(

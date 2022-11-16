@@ -2,7 +2,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict
+from typing import Any
 from unittest import mock
 
 import pytest
@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.utils.timesync import store_sync_time, toleran
 
 def test_tolerance_check_set_sync_time() -> None:
     sync_time = 23.0
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
 
     store_sync_time(value_store, sync_time, value_store_key="time_server")
 
@@ -23,7 +23,7 @@ def test_tolerance_check_set_sync_time() -> None:
 @mock.patch("time.time", mock.Mock(return_value=100.0))
 def test_tolerance_check_new_sync_time() -> None:
     sync_time = 90.0
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
     assert list(
         tolerance_check(
             sync_time=sync_time,
@@ -66,7 +66,7 @@ def test_tolerance_check_new_sync_time() -> None:
 )
 @mock.patch("time.time", mock.Mock(return_value=42.0))
 def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result) -> None:
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
     assert list(
         tolerance_check(
             sync_time=None,
@@ -83,7 +83,7 @@ def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result
 
 @mock.patch("time.time", mock.Mock(return_value=42.0))
 def test_host_time_ahead():
-    value_store: Dict[str, Any] = {"time_server": 43.0}
+    value_store: dict[str, Any] = {"time_server": 43.0}
     assert list(
         tolerance_check(
             sync_time=None,
@@ -104,7 +104,7 @@ def test_host_time_ahead():
 @mock.patch("time.time", mock.Mock(return_value=100.0))
 def test_tolerance_check_stored_sync_time() -> None:
     sync_time = 90.0
-    value_store: Dict[str, Any] = {
+    value_store: dict[str, Any] = {
         "time_server": sync_time,
     }
     assert list(

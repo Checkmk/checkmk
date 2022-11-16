@@ -14,22 +14,20 @@ def test_load(site: Site) -> None:
 
 
 def test_make_sure_werks_have_mandatory_fields(site: Site) -> None:
-    mandatory_werk_fields = set(
+    mandatory_werk_fields = {
         # ATTENTION! If you have to change this list, you have to talk
         # to the website team first! They rely on those fields.
-        [
-            "class",
-            "compatible",
-            "component",
-            "date",
-            "description",
-            "edition",
-            "id",
-            "level",
-            "title",
-            "version",
-        ]
-    )
+        "class",
+        "compatible",
+        "component",
+        "date",
+        "description",
+        "edition",
+        "id",
+        "level",
+        "title",
+        "version",
+    }
     werks = cmk.utils.werks.load()
     for werk in werks.values():
         missing_fields = mandatory_werk_fields - set(werk.keys())

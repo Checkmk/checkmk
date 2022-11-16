@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable
 from functools import partial
-from typing import Callable
 
 import pytest
 

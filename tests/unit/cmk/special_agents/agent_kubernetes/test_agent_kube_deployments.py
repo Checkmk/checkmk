@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Mapping
+from collections.abc import Mapping
 
 from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]

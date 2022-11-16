@@ -6,7 +6,8 @@
 # pylint: disable=redefined-outer-name
 
 import datetime
-from typing import Callable, Final, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from typing import Final
 
 import pytest
 from dateutil.tz import tzutc

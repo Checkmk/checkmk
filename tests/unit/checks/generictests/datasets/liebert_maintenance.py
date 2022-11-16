@@ -11,8 +11,8 @@
 checkname = 'liebert_maintenance'
 
 
-info = [[u'Calculated Next Maintenance Month', u'9'],
-        [u'Calculated Next Maintenance Year', u'2019']]
+info = [['Calculated Next Maintenance Month', '9'],
+        ['Calculated Next Maintenance Year', '2019']]
 
 
 freeze_time = "2019-08-23T12:00:00"

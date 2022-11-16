@@ -57,7 +57,7 @@ check_info["test_check_1"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
     config.load(with_conf_d=False)
     site.activate_changes_and_wait_for_core_reload()
 
@@ -142,7 +142,7 @@ check_info["test_check_2"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
     config.load(with_conf_d=False)
     site.activate_changes_and_wait_for_core_reload()
 
@@ -215,7 +215,7 @@ check_info["test_check_3"] = {
 """,
     )
 
-    config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
+    config.load_checks(check_api.get_check_api_context, [f"{site.root}/{test_check_path}"])
     config.load(with_conf_d=False)
     site.activate_changes_and_wait_for_core_reload()
 

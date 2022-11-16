@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional
 
 import pytest
 
@@ -20,7 +19,7 @@ from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 # .1.3.6.1.4.1.14823.2.2.1.5.2.1.8.1.2.5.87.105.76.65.78 37 --> WLSX-WLAN-MIB::wlanESSIDNumStations."WiLAN"
 # .1.3.6.1.4.1.14823.2.2.1.5.2.1.8.1.2.7.77.45.87.105.76.65.78 44 --> WLSX-WLAN-MIB::wlanESSIDNumStations."M-WiLAN"
 
-INFO: List[StringTable] = [
+INFO: list[StringTable] = [
     [
         ["0", "0"],
         ["4.86.111.73.80", "0"],
@@ -56,8 +55,8 @@ ITEM_RESULT = [
 
 def _run_parse_and_check(  # type:ignore[no-untyped-def]
     item: str,
-    info: List[StringTable],
-    params: Optional[VsResult] = None,
+    info: list[StringTable],
+    params: VsResult | None = None,
 ):
     if params is None:
         params = {}

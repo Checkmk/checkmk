@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
 
 import pytest
 
@@ -204,8 +203,8 @@ from cmk.gui.wato.pages.rulesets import _is_var_to_delete
     ],
 )
 def test_vars_to_delete(  # type:ignore[no-untyped-def]
-    request_vars: List[Tuple[str, str]],
-    expected_removed: List[str],
+    request_vars: list[tuple[str, str]],
+    expected_removed: list[str],
 ):
     form_prefix: str = "search_p_rule"
     for var, val in request_vars:

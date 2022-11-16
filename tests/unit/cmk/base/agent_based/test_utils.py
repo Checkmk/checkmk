@@ -5,7 +5,8 @@
 
 # pylint: disable=protected-access
 
-from typing import Any, Callable, Dict, Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from typing import Any
 
 import pytest
 
@@ -100,7 +101,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
     ],
 )
 def test_get_section_kwargs(
-    required_sections: Sequence[str], expected_result: Dict[str, Dict[str, str]]
+    required_sections: Sequence[str], expected_result: dict[str, dict[str, str]]
 ) -> None:
 
     node_sections = HostSections[AgentRawDataSection](
@@ -172,7 +173,7 @@ def test_get_section_kwargs(
     ],
 )
 def test_get_section_cluster_kwargs(
-    required_sections: Sequence[str], expected_result: Dict[str, Any]
+    required_sections: Sequence[str], expected_result: dict[str, Any]
 ) -> None:
 
     node1_sections = HostSections[AgentRawDataSection](

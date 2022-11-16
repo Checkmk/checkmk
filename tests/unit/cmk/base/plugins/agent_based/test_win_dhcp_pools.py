@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 
@@ -49,7 +49,7 @@ pytestmark = pytest.mark.checks
 )
 def test_check_win_dhcp_pools(
     string_table: StringTable,
-    expected_check_result: Sequence[Union[Result, Metric]],
+    expected_check_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(wdp.check_win_dhcp_pools("127.0.0.1", {}, wdp.parse_win_dhcp_pools(string_table)))

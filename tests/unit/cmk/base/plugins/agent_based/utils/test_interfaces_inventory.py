@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -401,7 +401,7 @@ def test_inventorize_interfaces(  # type:ignore[no-untyped-def]
     params: InventoryParams,
     interfaces: Sequence[Interface],
     n_total: int,
-    uptime_sec: Optional[float],
+    uptime_sec: float | None,
     expected_result: InventoryResult,
 ) -> None:
     with on_time(500000, "UTC"):

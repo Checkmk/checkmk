@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple
 
 import pytest
 
@@ -189,7 +188,7 @@ def test_find_usages_of_contact_group_in_ec_rules(  # type:ignore[no-untyped-def
     monkeypatch,
     contact_group: str,
     rule_packs: list[ECRulePack],
-    expected_result: List[Tuple[str, str]],
+    expected_result: list[tuple[str, str]],
 ) -> None:
     monkeypatch.setattr(cmk.gui.watolib.mkeventd, "load_mkeventd_rules", rule_packs)
     assert (

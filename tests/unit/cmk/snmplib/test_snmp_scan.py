@@ -180,7 +180,7 @@ def backend() -> Iterator[SNMPBackend]:
         yield SNMPTestBackend(SNMPConfig, logger)
     finally:
         cachefile = Path(
-            "tmp/check_mk/snmp_scan_cache/%s.%s" % (SNMPConfig.hostname, SNMPConfig.ipaddress)
+            f"tmp/check_mk/snmp_scan_cache/{SNMPConfig.hostname}.{SNMPConfig.ipaddress}"
         )
         try:
             cachefile.unlink()

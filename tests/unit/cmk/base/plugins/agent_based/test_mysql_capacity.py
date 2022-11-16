@@ -2,7 +2,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Optional
 
 import pytest
 
@@ -19,7 +18,7 @@ from cmk.base.plugins.agent_based import mysql_capacity
         pytest.param("[[cmk]]", "cmk", id="named instance"),
     ],
 )
-def test_parse(sub_section: Optional[str], instance_name: str) -> None:
+def test_parse(sub_section: str | None, instance_name: str) -> None:
     args: StringTable = [
         ["greendb", "163840", "1428160512"],
     ]

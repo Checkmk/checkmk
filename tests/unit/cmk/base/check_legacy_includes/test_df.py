@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import pytest
 from pytest_mock import MockerFixture
@@ -137,9 +137,7 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 )
 def test_df_check_filesystem_single_coroutine(
     mocker: MockerFixture,
-    data: tuple[
-        Optional[float], Optional[float], Optional[float], Optional[float], Optional[float]
-    ],
+    data: tuple[float | None, float | None, float | None, float | None, float | None],
     expected_result: Sequence[tuple[int, str, Sequence[tuple]]],
 ) -> None:
     mocker.patch(

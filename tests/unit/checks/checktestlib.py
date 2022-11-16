@@ -6,9 +6,10 @@
 import copy
 import os
 import types
-from typing import Any, Callable, NamedTuple
+from collections.abc import Callable
+from typing import Any, NamedTuple
+from unittest import mock
 
-import mock
 import pytest
 
 from cmk.base.check_api import Service
@@ -32,8 +33,7 @@ class Tuploid:
         raise NotImplementedError()
 
     def __iter__(self):
-        for x in self.tuple:
-            yield x
+        yield from self.tuple
 
 
 class PerfValue(Tuploid):
@@ -58,7 +58,7 @@ class PerfValue(Tuploid):
         assert len(key.split()) == 1, "PerfValue: key %r must not contain whitespaces" % key
         #       Parsing around this is way too funky and doesn't work properly
         for c in "=\n":
-            assert c not in key, "PerfValue: key %r must not contain %r" % (key, c)
+            assert c not in key, f"PerfValue: key {key!r} must not contain {c!r}"
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
         #       string value that may contain a unit, which is in turn available
         #       for use in PNP4Nagios templates. Checkmk defines its own semantic
@@ -90,24 +90,28 @@ def assertPerfValuesEqual(actual, expected):
     """
     assert isinstance(actual, PerfValue), "not a PerfValue: %r" % actual
     assert isinstance(expected, PerfValue), "not a PerfValue: %r" % expected
-    assert expected.key == actual.key, "expected %r, but key is %r" % (expected, actual.key)
-    assert expected.value == pytest.approx(actual.value), "expected %r, but value is %r" % (
+    assert expected.key == actual.key, f"expected {expected!r}, but key is {actual.key!r}"
+    assert expected.value == pytest.approx(actual.value), "expected {!r}, but value is {!r}".format(
         expected,
         actual.value,
     )
-    assert pytest.approx(expected.warn, rel=0.1) == actual.warn, "expected %r, but warn is %r" % (
+    assert (
+        pytest.approx(expected.warn, rel=0.1) == actual.warn
+    ), "expected {!r}, but warn is {!r}".format(
         expected,
         actual.warn,
     )
-    assert pytest.approx(expected.crit, rel=0.1) == actual.crit, "expected %r, but crit is %r" % (
+    assert (
+        pytest.approx(expected.crit, rel=0.1) == actual.crit
+    ), "expected {!r}, but crit is {!r}".format(
         expected,
         actual.crit,
     )
-    assert expected.minimum == actual.minimum, "expected %r, but minimum is %r" % (
+    assert expected.minimum == actual.minimum, "expected {!r}, but minimum is {!r}".format(
         expected,
         actual.minimum,
     )
-    assert expected.maximum == actual.maximum, "expected %r, but maximum is %r" % (
+    assert expected.maximum == actual.maximum, "expected {!r}, but maximum is {!r}".format(
         expected,
         actual.maximum,
     )
@@ -135,11 +139,11 @@ class BasicCheckResult(Tuploid):
             1,
             2,
             3,
-        ], "BasicCheckResult: status must be in (0, 1, 2, 3) - not %r" % (status,)
+        ], f"BasicCheckResult: status must be in (0, 1, 2, 3) - not {status!r}"
 
         assert isinstance(
             infotext, str
-        ), "BasicCheckResult: infotext %r must be of type str or unicode - not %r" % (
+        ), "BasicCheckResult: infotext {!r} must be of type str or unicode - not {!r}".format(
             infotext,
             type(infotext),
         )
@@ -148,7 +152,9 @@ class BasicCheckResult(Tuploid):
 
         if perfdata is not None:
             tp = type(perfdata)
-            assert tp == list, "BasicCheckResult: perfdata %r must be of type list - not %r" % (
+            assert (
+                tp == list
+            ), "BasicCheckResult: perfdata {!r} must be of type list - not {!r}".format(
                 perfdata,
                 tp,
             )
@@ -334,7 +340,7 @@ def assertDiscoveryResultsEqual(check, actual, expected):
     assert isinstance(expected, DiscoveryResult), "%r is not a DiscoveryResult instance" % expected
     assert len(actual.entries) == len(
         expected.entries
-    ), "DiscoveryResults entries are not of equal length: %r != %r" % (actual, expected)
+    ), f"DiscoveryResults entries are not of equal length: {actual!r} != {expected!r}"
 
     for enta, ente in zip(actual.entries, expected.entries):
         item_a, default_params_a = enta
@@ -349,8 +355,10 @@ def assertDiscoveryResultsEqual(check, actual, expected):
                 default_params_e, check.context, check.context
             )
 
-        assert item_a == item_e, "items differ: %r != %r" % (item_a, item_e)
-        assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (
+        assert item_a == item_e, f"items differ: {item_a!r} != {item_e!r}"
+        assert (
+            default_params_a == default_params_e
+        ), "default parameters differ: {!r} != {!r}".format(
             default_params_a,
             default_params_e,
         )
@@ -524,7 +532,9 @@ def assertEqual(first, second, descr=""):
     if first == second:
         return
 
-    assert isinstance(first, type(second)), "%sdiffering type: %r != %r for values %r and %r" % (
+    assert isinstance(
+        first, type(second)
+    ), "{}differing type: {!r} != {!r} for values {!r} and {!r}".format(
         descr,
         type(first),
         type(second),
@@ -535,14 +545,14 @@ def assertEqual(first, second, descr=""):
     if isinstance(first, dict):
         remainder = set(second.keys())
         for k in first:
-            assert k in second, "%sadditional key %r in %r" % (descr, k, first)
+            assert k in second, f"{descr}additional key {k!r} in {first!r}"
             remainder.remove(k)
             assertEqual(first[k], second[k], descr + " [%s]" % repr(k))
-        assert not remainder, "%smissing keys %r in %r" % (descr, list(remainder), first)
+        assert not remainder, f"{descr}missing keys {list(remainder)!r} in {first!r}"
 
     if isinstance(first, (list, tuple)):
-        assert len(first) == len(second), "%svarying length: %r != %r" % (descr, first, second)
+        assert len(first) == len(second), f"{descr}varying length: {first!r} != {second!r}"
         for (c, fst), snd in zip(enumerate(first), second):
             assertEqual(fst, snd, descr + "[%d] " % c)
 
-    raise AssertionError("%snot equal (%r): %r != %r" % (descr, type(first), first, second))
+    raise AssertionError(f"{descr}not equal ({type(first)!r}): {first!r} != {second!r}")

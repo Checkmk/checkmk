@@ -10,12 +10,12 @@ checkname = 'mssql_blocked_sessions'
 
 info = [
     ['ID-1', 'No blocking sessions'],
-    [u'MSSQLSERVER_SA', u'No blocking sessions'],
-    [u'MSSQLSERVER_LIVE', u'No blocking sessions']
+    ['MSSQLSERVER_SA', 'No blocking sessions'],
+    ['MSSQLSERVER_LIVE', 'No blocking sessions']
 ]
 
 discovery = {
-    '': [('ID-1', {}), (u'MSSQLSERVER_LIVE', {}), (u'MSSQLSERVER_SA', {})]
+    '': [('ID-1', {}), ('MSSQLSERVER_LIVE', {}), ('MSSQLSERVER_SA', {})]
 }
 
 checks = {
@@ -26,10 +26,10 @@ checks = {
         ('ID-1', {
             'state': 2
         }, [(0, 'No blocking sessions', [])]),
-        (u'MSSQLSERVER_LIVE', {
+        ('MSSQLSERVER_LIVE', {
             'state': 2
         }, [(0, 'No blocking sessions', [])]),
-        (u'MSSQLSERVER_SA', {
+        ('MSSQLSERVER_SA', {
             'state': 2
         }, [(0, 'No blocking sessions', [])])
     ]

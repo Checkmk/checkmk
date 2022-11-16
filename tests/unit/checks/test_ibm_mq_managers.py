@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -62,7 +62,7 @@ QMNAME(THE.LOCAL.ONE)                                     STATUS(RUNNING) DEFAUL
     assert attrs["QMNAME"] == "THE.LOCAL.ONE"
     assert attrs["STATUS"] == "RUNNING"
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     actual = list(check.run_check("THE.LOCAL.ONE", params, parsed))
     expected = [
         (0, "Status: RUNNING"),
@@ -87,7 +87,7 @@ QMNAME(THE.STANDBY.RDQM)                                  STATUS(RUNNING ELSEWHE
     assert attrs["QMNAME"] == "THE.RDQM.ONE"
     assert attrs["STATUS"] == "RUNNING"
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     actual = list(check.run_check("THE.RDQM.ONE", params, parsed))
     expected = [
         (0, "Status: RUNNING"),
@@ -106,7 +106,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PREEMPTIV
     check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
         (1, "Status: ENDED PREEMPTIVELY"),
@@ -140,7 +140,7 @@ QMNAME(THE.ENDED.ONE)                                     STATUS(ENDED PRE-EMPTI
     parsed = parse_ibm_mq_managers(section)
 
     # Factory defaults
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     actual = list(check.run_check("THE.ENDED.ONE", params, parsed))
     expected = [
         (1, "Status: ENDED PRE-EMPTIVELY"),
@@ -181,7 +181,7 @@ QMNAME(THE.RUNNING.ONE)                                   STATUS(RUNNING) DEFAUL
     check = Check(CHECK_NAME)
     parsed = parse_ibm_mq_managers(section)
 
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     params.update({"version": (("at_least", "8.0"), 2)})
     actual = list(check.run_check("THE.RUNNING.ONE", params, parsed))
     expected = [

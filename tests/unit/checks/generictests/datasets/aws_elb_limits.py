@@ -23,9 +23,9 @@ checks = {
             }, [
                 (
                     0, 'No levels reached', [
-                        (u'aws_elb_load_balancers', 1, None, None, None, None)
+                        ('aws_elb_load_balancers', 1, None, None, None, None)
                     ]
-                ), (0, u'\nTITLE: 1 (of max. 10)')
+                ), (0, '\nTITLE: 1 (of max. 10)')
             ]
         )
     ]

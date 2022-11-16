@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Set, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -359,9 +360,9 @@ def test__get_post_discovery_services(
     monkeypatch: MonkeyPatch,
     grouped_services: ServicesByTransition,
     mode: DiscoveryMode,
-    parameters_rediscovery: Dict[str, List[str]],
-    result_new_item_names: List[str],
-    result_counts: Tuple[int, int, int],
+    parameters_rediscovery: dict[str, list[str]],
+    result_new_item_names: list[str],
+    result_counts: tuple[int, int, int],
 ) -> None:
     def _get_service_description(  # type:ignore[no-untyped-def]
         _hostname, _check_plugin_name, item
@@ -791,7 +792,7 @@ def test__find_candidates() -> None:
     }
 
 
-_expected_services: Dict = {
+_expected_services: dict = {
     (CheckPluginName("apache_status"), "127.0.0.1:5000"): {},
     (CheckPluginName("apache_status"), "127.0.0.1:5004"): {},
     (CheckPluginName("apache_status"), "127.0.0.1:5007"): {},
@@ -910,7 +911,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        Ruleset[Dict[str, List[str]]](
+        Ruleset[dict[str, list[str]]](
             [
                 {
                     "id": "nobody-cares-about-the-id-in-this-test",
@@ -1017,7 +1018,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        Ruleset[Dict[str, List[str]]](
+        Ruleset[dict[str, list[str]]](
             [
                 {
                     "id": "nobody-cares-about-the-id-in-this-test",
@@ -1149,23 +1150,23 @@ class ExpectedDiscoveryResultRealHost(NamedTuple):
     expected_vanished_host_labels: Sequence[HostLabel]
     expected_old_host_labels: Sequence[HostLabel]
     expected_new_host_labels: Sequence[HostLabel]
-    expected_stored_labels: Dict
+    expected_stored_labels: dict
 
 
 class ExpectedDiscoveryResultCluster(NamedTuple):
     expected_vanished_host_labels: Sequence[HostLabel]
     expected_old_host_labels: Sequence[HostLabel]
     expected_new_host_labels: Sequence[HostLabel]
-    expected_stored_labels_cluster: Dict
-    expected_stored_labels_node1: Dict
-    expected_stored_labels_node2: Dict
+    expected_stored_labels_cluster: dict
+    expected_stored_labels_node1: dict
+    expected_stored_labels_node2: dict
 
 
 class DiscoveryTestCase(NamedTuple):
     load_labels: bool
     save_labels: bool
     only_host_labels: bool
-    expected_services: Set[Tuple[CheckPluginName, str]]
+    expected_services: set[tuple[CheckPluginName, str]]
     on_realhost: ExpectedDiscoveryResultRealHost
     on_cluster: ExpectedDiscoveryResultCluster
 
@@ -1657,7 +1658,7 @@ def test_make_discovery_diff_empty() -> None:
 
 class _MockService(NamedTuple):
     check_plugin_name: CheckPluginName
-    item: Optional[str]
+    item: str | None
 
 
 def test_make_discovery_diff() -> None:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -70,7 +70,7 @@ RESULT = {
     ],
 )
 def test_agent_alertmanager_parse(  # type:ignore[no-untyped-def]
-    data: Dict[str, Any],
+    data: dict[str, Any],
     ignore_alerts: agent_alertmanager.IgnoreAlerts,
     result: agent_alertmanager.Groups,
 ):

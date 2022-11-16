@@ -14,19 +14,11 @@ import re
 import tarfile
 import time
 from collections import deque
+from collections.abc import Generator, Iterable, MutableMapping, MutableSequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import (
-    Generator,
-    Iterable,
-    MutableMapping,
-    MutableSequence,
-    NamedTuple,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import NamedTuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
 import playwright.async_api
@@ -96,8 +88,8 @@ class Url:
     def __init__(
         self,
         url: str,
-        orig_url: Optional[str] = None,
-        referer_url: Optional[str] = None,
+        orig_url: str | None = None,
+        referer_url: str | None = None,
         follow: bool = True,
     ) -> None:
         self.url = url
@@ -123,7 +115,7 @@ class Url:
 @dataclass
 class ErrorResult:
     message: str
-    referer_url: Optional[str] = None
+    referer_url: str | None = None
 
 
 @dataclass
@@ -135,7 +127,7 @@ class CrawlSkipInfo:
 @dataclass
 class CrawlResult:
     duration: float = 0.0
-    skipped: Optional[CrawlSkipInfo] = None
+    skipped: CrawlSkipInfo | None = None
     errors: MutableSequence[ErrorResult] = field(default_factory=list)
 
 
@@ -155,7 +147,7 @@ def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.asy
 
 
 class Crawler:
-    def __init__(self, site: Site, report_file: Optional[str]) -> None:
+    def __init__(self, site: Site, report_file: str | None) -> None:
         self.duration = 0.0
         self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site
@@ -175,7 +167,7 @@ class Crawler:
             )
 
         with Progress() as progress:
-            tasks: Set = set()
+            tasks: set = set()
             while tasks or self._todos:
                 while self._todos and len(tasks) < max_tasks:
                     tasks.add(
@@ -190,7 +182,7 @@ class Crawler:
 
     async def create_browser_and_storage_state(
         self,
-    ) -> Tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
+    ) -> tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
         pw = await async_playwright().start()
         browser = await pw.chromium.launch()
 
@@ -330,7 +322,7 @@ class Crawler:
             except playwright.async_api.Error as e:
                 self.handle_error(url, "BrowserError", repr(e))
         elif any(
-            (content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"])
+            content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"]
         ):
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
         elif content_type in [
@@ -419,7 +411,7 @@ class Crawler:
         ]
         for element in soup.select("div.error"):
             inner_html = str(element)
-            if not any((ignore_text in inner_html for ignore_text in ignore_texts)):
+            if not any(ignore_text in inner_html for ignore_text in ignore_texts):
                 self.handle_error(url, "HtmlError", f"Found error: {inner_html}")
 
     def check_frames(self, url: Url, soup: BeautifulSoup) -> None:

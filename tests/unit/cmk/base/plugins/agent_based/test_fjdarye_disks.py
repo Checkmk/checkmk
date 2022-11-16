@@ -2,7 +2,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -129,7 +130,7 @@ from cmk.base.plugins.agent_based.fjdarye_disks import (
     ],
 )
 def test_parse_fjdarye_disks(
-    section: List[StringTable],
+    section: list[StringTable],
     parse_result: SectionFjdaryeDisk,
 ) -> None:
     assert parse_fjdarye_disks(section) == parse_result
@@ -171,7 +172,7 @@ def test_parse_fjdarye_disks(
     ],
 )
 def test_parse_fjdarye_disks_with_error_input(
-    section: List[StringTable],
+    section: list[StringTable],
 ) -> None:
     with pytest.raises(ValueError):
         assert parse_fjdarye_disks(section)

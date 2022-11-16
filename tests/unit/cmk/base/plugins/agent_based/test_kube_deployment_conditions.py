@@ -6,7 +6,8 @@
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
-from typing import Any, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -23,7 +24,7 @@ WARN = 10
 CRIT = 20
 
 
-def condition_true(time_diff_minutes: int = 0) -> Mapping[str, Union[str, int]]:
+def condition_true(time_diff_minutes: int = 0) -> Mapping[str, str | int]:
     return {
         "status": "True",
         "reason": "reason",
@@ -32,7 +33,7 @@ def condition_true(time_diff_minutes: int = 0) -> Mapping[str, Union[str, int]]:
     }
 
 
-def condition_false(time_diff_minutes: int = 0) -> Mapping[str, Union[str, int]]:
+def condition_false(time_diff_minutes: int = 0) -> Mapping[str, str | int]:
     return {
         "status": "False",
         "reason": "reason",
@@ -71,27 +72,27 @@ def state_replicafailure(state: int) -> int:
 
 
 @pytest.fixture
-def status_progressing() -> Optional[bool]:
+def status_progressing() -> bool | None:
     return True
 
 
 @pytest.fixture
-def status_available() -> Optional[bool]:
+def status_available() -> bool | None:
     return True
 
 
 @pytest.fixture
-def status_replicafailure() -> Optional[bool]:
+def status_replicafailure() -> bool | None:
     return False
 
 
 @pytest.fixture
 def string_table_element(
-    status_progressing: Optional[bool],
+    status_progressing: bool | None,
     state_progressing: int,
-    status_available: Optional[bool],
+    status_available: bool | None,
     state_available: int,
-    status_replicafailure: Optional[bool],
+    status_replicafailure: bool | None,
     state_replicafailure: int,
 ) -> Mapping[str, Any]:
     return {

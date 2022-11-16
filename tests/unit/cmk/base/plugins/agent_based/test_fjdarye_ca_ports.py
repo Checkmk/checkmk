@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -51,7 +51,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_parse_fjdarye_ca_ports(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     parse_result: Mapping[str, Mapping[str, float | str]],
 ) -> None:
     assert parse_fjdarye_ca_ports(string_table) == parse_result

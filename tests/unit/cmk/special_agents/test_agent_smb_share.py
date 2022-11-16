@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
-from typing import Dict, List, Tuple
 from unittest import mock
 
 import freezegun
@@ -44,12 +43,12 @@ class MockSMBConnection:
     def connect(*args):
         return True
 
-    def listPath(self, shared_folder: str, path: str) -> List[SharedFile]:
+    def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
         if shared_folder not in self.filesystem:
             return []
         return self.filesystem[shared_folder].get(path)
 
-    def listShares(self) -> List[MockShare]:
+    def listShares(self) -> list[MockShare]:
         if not self.shares:
             return []
         return [MockShare(s) for s in self.shares]
@@ -59,7 +58,7 @@ class MockSMBConnection:
 
 
 class MockSectionWriter:
-    writer: List[str] = []
+    writer: list[str] = []
 
     def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self.writer.clear()
@@ -255,10 +254,10 @@ def test_parse_arguments() -> None:
     ],
 )
 def test_iter_shared_files(
-    filesystem: Dict,
+    filesystem: dict,
     shared_folder: str,
-    pattern: List[str],
-    expected_file_data: List[Tuple[str, str]],
+    pattern: list[str],
+    expected_file_data: list[tuple[str, str]],
 ) -> None:
     conn = MockSMBConnection(filesystem=filesystem)
     files = list(iter_shared_files(conn, "HOSTNAME", shared_folder, pattern))
@@ -291,9 +290,9 @@ def test_iter_shared_files(
     ],
 )
 def test_get_all_shared_files(  # type:ignore[no-untyped-def]
-    patterns: List[str],
-    file_data: List[Tuple[str, str]],
-    expected_file_data: List[Tuple[str, List[Tuple[str, str]]]],
+    patterns: list[str],
+    file_data: list[tuple[str, str]],
+    expected_file_data: list[tuple[str, list[tuple[str, str]]]],
 ):
     with mock.patch("cmk.special_agents.agent_smb_share.iter_shared_files", return_value=file_data):
         conn = MockSMBConnection(shares=["SharedFolder1", "SharedFolder2"])
@@ -317,7 +316,7 @@ def test_get_all_shared_files(  # type:ignore[no-untyped-def]
     ],
 )
 def test_get_all_shared_files_errors(  # type:ignore[no-untyped-def]
-    patterns: List[str],
+    patterns: list[str],
     expected_error_message: str,
 ):
     conn = MockSMBConnection()

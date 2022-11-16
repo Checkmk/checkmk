@@ -5,7 +5,6 @@
 
 import copy
 import itertools
-from typing import List, Optional
 
 import pytest
 
@@ -16,12 +15,12 @@ from cmk.base.plugins.agent_based.utils import ps
 
 def splitter(
     text: str,
-    split_symbol: Optional[str] = None,
-) -> List[List[str]]:
+    split_symbol: str | None = None,
+) -> list[list[str]]:
     return [line.split(split_symbol) for line in text.split("\n") if line]
 
 
-def generate_inputs() -> List[List[List[str]]]:
+def generate_inputs() -> list[list[list[str]]]:
     return [
         # CMK 1.5
         # linux, openwrt agent(5 entry, cmk>=1.2.7)

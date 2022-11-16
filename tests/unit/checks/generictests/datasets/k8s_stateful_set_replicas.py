@@ -9,7 +9,7 @@
 
 checkname = 'k8s_stateful_set_replicas'
 
-parsed = {u'ready_replicas': 2, u'replicas': 2, u'strategy_type': 'RollingUpdate'}
+parsed = {'ready_replicas': 2, 'replicas': 2, 'strategy_type': 'RollingUpdate'}
 
 discovery = {
     '': [(None, {})],

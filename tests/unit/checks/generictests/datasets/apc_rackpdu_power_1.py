@@ -11,28 +11,28 @@ from cmk.base.plugins.agent_based.apc_rackpdu_power import parse_apc_rackpdu_pow
 checkname = 'apc_rackpdu_power'
 
 parsed = parse_apc_rackpdu_power(
-    [[[u'luz0010x', u'0']],
-     [[u'3']],
-     [[u'0', u'1', u'1', u'0'], [u'0', u'1', u'2', u'0'], [u'0', u'1', u'3', u'0']]],
+    [[['luz0010x', '0']],
+     [['3']],
+     [['0', '1', '1', '0'], ['0', '1', '2', '0'], ['0', '1', '3', '0']]],
 )
 
-discovery = {'': [(u'Device luz0010x', {}),
-                  (u'Phase 1', {}),
-                  (u'Phase 2', {}),
-                  (u'Phase 3', {})]}
+discovery = {'': [('Device luz0010x', {}),
+                  ('Phase 1', {}),
+                  ('Phase 2', {}),
+                  ('Phase 3', {})]}
 
-checks = {'': [(u'Device luz0010x',
+checks = {'': [('Device luz0010x',
                 {},
                 [(0, 'Power: 0.0 W', [('power', 0.0, None, None, None, None)])]),
-               (u'Phase 1',
+               ('Phase 1',
                 {},
                 [(0, 'Current: 0.0 A', [('current', 0.0, None, None, None, None)]),
                  (0, 'load normal', [])]),
-               (u'Phase 2',
+               ('Phase 2',
                 {},
                 [(0, 'Current: 0.0 A', [('current', 0.0, None, None, None, None)]),
                  (0, 'load normal', [])]),
-               (u'Phase 3',
+               ('Phase 3',
                 {},
                 [(0, 'Current: 0.0 A', [('current', 0.0, None, None, None, None)]),
                  (0, 'load normal', [])])]}

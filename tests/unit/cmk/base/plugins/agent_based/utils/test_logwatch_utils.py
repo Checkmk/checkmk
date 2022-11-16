@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Counter
+from collections import Counter
 
 from cmk.base.plugins.agent_based.utils.logwatch import reclassify
 

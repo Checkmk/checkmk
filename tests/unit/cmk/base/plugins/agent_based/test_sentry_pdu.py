@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, Union
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -118,7 +118,7 @@ def test_inventory_sentry_pdu() -> None:
 def test_check_sentry_pdu(
     item: str,
     params: Mapping[str, str],
-    expected_result: Sequence[Union[Metric, Result]],
+    expected_result: Sequence[Metric | Result],
 ) -> None:
     assert (
         list(
@@ -162,6 +162,6 @@ def test_check_sentry_pdu(
 )
 def test_check_sentry_pdu_v4(
     item: str,
-    expected_result: Sequence[Union[Metric, Result]],
+    expected_result: Sequence[Metric | Result],
 ) -> None:
     assert list(check_sentry_pdu_v4(item, _SECTION_V4)) == expected_result

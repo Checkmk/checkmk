@@ -35,7 +35,7 @@ checks = {
                 (
                     0, 'Total virtual memory: 69.08% - 47.9 GiB of 69.3 GiB', []
                 ),
-                (2, u'Swap error: some error message', []),
+                (2, 'Swap error: some error message', []),
             ]
         )
     ]

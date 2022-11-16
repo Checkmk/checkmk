@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Tuple
+from collections.abc import Sequence
 
 # No stub file
 import pytest
@@ -685,7 +685,7 @@ def test_make_column_displayhint_from_hint(
     ],
 )
 def test_sort_attributes_pairs_displayhint(
-    pairs: SDPairs, expected: Sequence[Tuple[SDKey, SDValue]]
+    pairs: SDPairs, expected: Sequence[tuple[SDKey, SDValue]]
 ) -> None:
     raw_path = ".software.applications.kube.metadata."
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path

@@ -28,7 +28,7 @@ def get_dictionary_vs(**kwargs) -> vs.Dictionary:  # type:ignore[no-untyped-def]
 
 class TestValueSpecDictionary:
     def test_init(self) -> None:
-        get_dictionary_vs(optional_keys=set([]))
+        get_dictionary_vs(optional_keys=set())
         get_dictionary_vs(optional_keys=[])
         get_dictionary_vs(optional_keys=False)
         get_dictionary_vs(optional_keys=True)
@@ -36,7 +36,7 @@ class TestValueSpecDictionary:
         with pytest.raises(
             TypeError, match="optional_keys and required_keys can not be set at the same time."
         ):
-            get_dictionary_vs(optional_keys=set(["a"]), required_keys=["b"])
+            get_dictionary_vs(optional_keys={"a"}, required_keys=["b"])
 
         with pytest.raises(
             TypeError,

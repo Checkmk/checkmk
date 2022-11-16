@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 
@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
-def splitter(text: str, split_symbol: Optional[str] = None) -> Sequence[Sequence[str]]:
+def splitter(text: str, split_symbol: str | None = None) -> Sequence[Sequence[str]]:
     return [line.split(split_symbol) for line in text.split("\n")]
 
 
@@ -186,7 +186,7 @@ def test_check_functions_perfdata(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_parse_and_discovery_function_2(line: List[str], item: str) -> None:
+def test_parse_and_discovery_function_2(line: list[str], item: str) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.discover_lnx_thermal(section)) == [Service(item=item)]
 
@@ -209,7 +209,7 @@ def test_parse_and_discovery_function_2(line: List[str], item: str) -> None:
         ),
     ],
 )
-def test_parse_and_discovery_function_2_no_item(line: List[str]) -> None:
+def test_parse_and_discovery_function_2_no_item(line: list[str]) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.discover_lnx_thermal(section)) == []
 
@@ -271,7 +271,7 @@ def test_parse_and_discovery_function_2_no_item(line: List[str]) -> None:
     ],
 )
 def test_check_functions_perfdata_2(
-    line: List[str], item: str, result: List[Union[Metric, Result]]
+    line: list[str], item: str, result: list[Metric | Result]
 ) -> None:
     section = lnx_thermal.parse_lnx_thermal([line])
     assert list(lnx_thermal.check_lnx_thermal(item, {}, section)) == result

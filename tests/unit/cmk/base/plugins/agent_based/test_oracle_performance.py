@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, Tuple
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -237,7 +237,7 @@ def test_inventory_oracle_performance(
 def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
-    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result,
 ):
@@ -276,7 +276,7 @@ def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
 )
 def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
     item: str,
-    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result,
 ):
@@ -322,7 +322,7 @@ def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
 def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
-    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result,
 ):
@@ -360,7 +360,7 @@ def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
 def test_check_oracle_performance_waitclasses(  # type:ignore[no-untyped-def]
     get_rate_zero: None,
     item: str,
-    params: Mapping[str, Sequence[Tuple[str, Tuple[float, float]]]],
+    params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
     expected_result,
 ):

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional
 
 import pytest
 
@@ -86,9 +85,9 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_vsphere_argument_parsing(
-    params: Dict,
-    expected_args: List[str],
-    ip_address: Optional[str],
+    params: dict,
+    expected_args: list[str],
+    ip_address: str | None,
     expected_host_address: str,
 ) -> None:
     """Tests if all required arguments are present."""

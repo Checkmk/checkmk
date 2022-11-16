@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch

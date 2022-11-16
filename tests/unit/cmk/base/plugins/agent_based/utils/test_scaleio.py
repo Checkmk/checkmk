@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 

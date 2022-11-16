@@ -89,7 +89,7 @@ def test_perfcounters_column_default_values() -> None:
             assert default_value == 0.0
 
         elif column_name.startswith("status_"):
-            assert isinstance(default_value, int), "Wrong column type %r: %s" % (
+            assert isinstance(default_value, int), "Wrong column type {!r}: {}".format(
                 column_name,
                 type(default_value),
             )
@@ -129,7 +129,7 @@ def test_perfcounters_correct_status_values() -> None:
 
         elif column_name.startswith("status_"):
             counter_name = "_".join(column_name.split("_")[1:])
-            assert column_value == c._counters[counter_name], "Invalid value %r: %r" % (
+            assert column_value == c._counters[counter_name], "Invalid value {!r}: {!r}".format(
                 column_name,
                 c._counters[counter_name],
             )

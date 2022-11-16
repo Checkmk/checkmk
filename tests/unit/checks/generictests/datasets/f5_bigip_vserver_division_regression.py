@@ -11,33 +11,33 @@
 checkname = 'f5_bigip_vserver'
 
 
-info = [[u'VS_BM',
-         u'1',
-         u'1',
-         u'The virtual server is available',
-         u'\xac\x14\xcad',
-         u'38',
-         u'76766',
-         u'10744',
-         u'70981',
-         u'84431',
-         u'10961763',
-         u'83403367',
-         u'2535',
-         u'0',
-         u'0'],
+info = [['VS_BM',
+         '1',
+         '1',
+         'The virtual server is available',
+         '\xac\x14\xcad',
+         '38',
+         '76766',
+         '10744',
+         '70981',
+         '84431',
+         '10961763',
+         '83403367',
+         '2535',
+         '0',
+         '0'],
         ]
 
 
-discovery = {'': [(u'VS_BM', {}),
+discovery = {'': [('VS_BM', {}),
                   ]}
 
 
-checks = {'': [(u'VS_BM',
+checks = {'': [('VS_BM',
                 {},
                 [(0, 'Virtual Server with IP 172.20.202.100 is enabled', []),
                  (0,
-                  u'State is up and available, Detail: The virtual server is available',
+                  'State is up and available, Detail: The virtual server is available',
                   []),
                  (0,
                   'Client connections: 0',

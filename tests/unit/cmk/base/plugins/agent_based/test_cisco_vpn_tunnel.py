@@ -3,7 +3,7 @@
 # This filis part of Checkmk (https://checkmk.com). It is subject to thterms and
 # conditions defined in thfilCOPYING, which is part of this sourccodpackage.
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -262,7 +262,7 @@ def fixture_time_and_value_store(monkeypatch: MonkeyPatch) -> None:
 def test_check_cisco_vpn_tunnel(
     item: str,
     params: CheckParameters,
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert (
         list(

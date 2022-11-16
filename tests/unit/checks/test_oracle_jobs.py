@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Tuple
+from collections.abc import Sequence
 
 import pytest
 
@@ -115,7 +115,7 @@ def test_discovery_cdb_noncdb() -> None:
 )
 def test_check_cdb_noncdb(
     item: str,
-    result: Tuple[int, str, Sequence[Tuple[str, int]]],
+    result: tuple[int, str, Sequence[tuple[str, int]]],
 ) -> None:
     assert (
         Check("oracle_jobs").run_check(

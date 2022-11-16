@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Tuple
 
 import pytest
 
@@ -33,7 +32,7 @@ def endpoint(name: str) -> str:
 def test_openapi_graph_custom(
     wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
-    with_automation_user: Tuple[str, str],
+    with_automation_user: tuple[str, str],
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     username, _ = with_automation_user

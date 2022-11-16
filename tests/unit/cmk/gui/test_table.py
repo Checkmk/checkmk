@@ -259,5 +259,5 @@ def test_table_cubical(  # type:ignore[no-untyped-def]
         limit = len(rows)
 
     # Assert data correctness
-    assert len(data) <= limit, "Wrong number of rows: Got %s, should be <= %s" % (len(data), limit)
-    assert data == rows[:limit], "Incorrect data: %s\n\nVS\n%s" % (data, rows[:limit])
+    assert len(data) <= limit, f"Wrong number of rows: Got {len(data)}, should be <= {limit}"
+    assert data == rows[:limit], f"Incorrect data: {data}\n\nVS\n{rows[:limit]}"

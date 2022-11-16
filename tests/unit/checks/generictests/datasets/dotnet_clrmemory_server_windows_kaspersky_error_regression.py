@@ -9,55 +9,55 @@
 checkname = 'dotnet_clrmemory'
 
 info = [[
-    u'AllocatedBytesPersec', u'Caption', u'Description', u'FinalizationSurvivors',
-    u'Frequency_Object', u'Frequency_PerfTime', u'Frequency_Sys100NS', u'Gen0heapsize',
-    u'Gen0PromotedBytesPerSec', u'Gen1heapsize', u'Gen1PromotedBytesPerSec', u'Gen2heapsize',
-    u'LargeObjectHeapsize', u'Name', u'NumberBytesinallHeaps', u'NumberGCHandles',
-    u'NumberGen0Collections', u'NumberGen1Collections', u'NumberGen2Collections',
-    u'NumberInducedGC', u'NumberofPinnedObjects', u'NumberofSinkBlocksinuse',
-    u'NumberTotalcommittedBytes', u'NumberTotalreservedBytes', u'PercentTimeinGC',
-    u'PercentTimeinGC_Base', u'ProcessID', u'PromotedFinalizationMemoryfromGen0',
-    u'PromotedMemoryfromGen0', u'PromotedMemoryfromGen1', u'Timestamp_Object',
-    u'Timestamp_PerfTime', u'Timestamp_Sys100NS'
+    'AllocatedBytesPersec', 'Caption', 'Description', 'FinalizationSurvivors',
+    'Frequency_Object', 'Frequency_PerfTime', 'Frequency_Sys100NS', 'Gen0heapsize',
+    'Gen0PromotedBytesPerSec', 'Gen1heapsize', 'Gen1PromotedBytesPerSec', 'Gen2heapsize',
+    'LargeObjectHeapsize', 'Name', 'NumberBytesinallHeaps', 'NumberGCHandles',
+    'NumberGen0Collections', 'NumberGen1Collections', 'NumberGen2Collections',
+    'NumberInducedGC', 'NumberofPinnedObjects', 'NumberofSinkBlocksinuse',
+    'NumberTotalcommittedBytes', 'NumberTotalreservedBytes', 'PercentTimeinGC',
+    'PercentTimeinGC_Base', 'ProcessID', 'PromotedFinalizationMemoryfromGen0',
+    'PromotedMemoryfromGen0', 'PromotedMemoryfromGen1', 'Timestamp_Object',
+    'Timestamp_PerfTime', 'Timestamp_Sys100NS'
 ],
         [
-            u'46584024', u'', u'', u'201', u'0', u'3914064', u'10000000', u'6291456', u'1110904',
-            u'1100372', u'850168', u'3279916', u'73912', u'_Global_', u'4454200', u'1470', u'4',
-            u'3', u'1', u'0', u'39', u'135', u'10493952', u'33546240', u'3003926', u'-1', u'0',
-            u'15076', u'1110904', u'850168', u'0', u'9918361461', u'131261124692120000'
+            '46584024', '', '', '201', '0', '3914064', '10000000', '6291456', '1110904',
+            '1100372', '850168', '3279916', '73912', '_Global_', '4454200', '1470', '4',
+            '3', '1', '0', '39', '135', '10493952', '33546240', '3003926', '-1', '0',
+            '15076', '1110904', '850168', '0', '9918361461', '131261124692120000'
         ],
         [
-            u'0', u'', u'', u'0', u'0', u'3914064', u'10000000', u'0', u'0', u'0', u'0', u'0', u'0',
-            u'isa', u'0', u'41', u'0', u'0', u'0', u'0', u'0', u'8', u'0', u'0', u'0', u'0', u'0',
-            u'0', u'0', u'0', u'0', u'9918361461', u'131261124692120000'
+            '0', '', '', '0', '0', '3914064', '10000000', '0', '0', '0', '0', '0', '0',
+            'isa', '0', '41', '0', '0', '0', '0', '0', '8', '0', '0', '0', '0', '0',
+            '0', '0', '0', '0', '9918361461', '131261124692120000'
         ],
         [
-            u'0', u'', u'', u'0', u'0', u'3914064', u'10000000', u'0', u'0', u'0', u'0', u'0', u'0',
-            u'SCNotification', u'0', u'390', u'0', u'0', u'0', u'0', u'0', u'65', u'0', u'0', u'0',
-            u'0', u'0', u'0', u'0', u'0', u'0', u'9918361461', u'131261124692120000'
+            '0', '', '', '0', '0', '3914064', '10000000', '0', '0', '0', '0', '0', '0',
+            'SCNotification', '0', '390', '0', '0', '0', '0', '0', '65', '0', '0', '0',
+            '0', '0', '0', '0', '0', '0', '9918361461', '131261124692120000'
         ],
         [
-            u'23292012', u'', u'', u'201', u'0', u'3914064', u'10000000', u'6291456', u'1110904',
-            u'1100372', u'850168', u'3279916', u'73912', u'IAStorDataMgrSvc', u'4454200', u'678',
-            u'4', u'3', u'1', u'0', u'39', u'30', u'10493952', u'33546240', u'162041', u'46336747',
-            u'5804', u'15076', u'1110904', u'850168', u'0', u'9918361461', u'131261124692120000'
+            '23292012', '', '', '201', '0', '3914064', '10000000', '6291456', '1110904',
+            '1100372', '850168', '3279916', '73912', 'IAStorDataMgrSvc', '4454200', '678',
+            '4', '3', '1', '0', '39', '30', '10493952', '33546240', '162041', '46336747',
+            '5804', '15076', '1110904', '850168', '0', '9918361461', '131261124692120000'
         ],
         [
-            u'0', u'', u'', u'0', u'0', u'3914064', u'10000000', u'0', u'0', u'0', u'0', u'0', u'0',
-            u'CcmExec', u'0', u'21', u'0', u'0', u'0', u'0', u'0', u'2', u'0', u'0', u'0', u'0',
-            u'0', u'0', u'0', u'0', u'0', u'9918361461', u'131261124692120000'
+            '0', '', '', '0', '0', '3914064', '10000000', '0', '0', '0', '0', '0', '0',
+            'CcmExec', '0', '21', '0', '0', '0', '0', '0', '2', '0', '0', '0', '0',
+            '0', '0', '0', '0', '0', '9918361461', '131261124692120000'
         ],
         [
-            u'0', u'', u'', u'0', u'0', u'3914064', u'10000000', u'0', u'0', u'0', u'0', u'0', u'0',
-            u'IAStorIcon', u'0', u'340', u'0', u'0', u'0', u'0', u'0', u'30', u'0', u'0', u'0',
-            u'0', u'0', u'0', u'0', u'0', u'0', u'9918361461', u'131261124692120000'
+            '0', '', '', '0', '0', '3914064', '10000000', '0', '0', '0', '0', '0', '0',
+            'IAStorIcon', '0', '340', '0', '0', '0', '0', '0', '30', '0', '0', '0',
+            '0', '0', '0', '0', '0', '0', '9918361461', '131261124692120000'
         ]]
 
-discovery = {'': [(u'_Global_', 'dotnet_clrmemory_defaultlevels')]}
+discovery = {'': [('_Global_', 'dotnet_clrmemory_defaultlevels')]}
 
 checks = {
     '': [
-        (u'_Global_', {"upper": (10.0, 15.0)}, [
+        ('_Global_', {"upper": (10.0, 15.0)}, [
             (0, 'Time in GC: 0.07%', [
                 ('percent', 0.06994060242314372, 10.0, 15.0, 0, 100),
             ]),

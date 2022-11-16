@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
+
 # pylint: disable=redefined-outer-name
 from dataclasses import dataclass
-from typing import Callable
 
 import pytest
 

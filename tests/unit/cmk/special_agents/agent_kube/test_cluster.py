@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping, NoReturn, Sequence, Tuple
+from collections.abc import Iterable, Mapping, Sequence
+from typing import NoReturn
 from unittest.mock import MagicMock
 
 import pytest
@@ -286,7 +287,7 @@ def test_cluster_allocatable_cpu_resource_cluster(  # type:ignore[no-untyped-def
 )
 def test_cluster_usage_resources(  # type:ignore[no-untyped-def]
     excluded_node_role: str,
-    node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
+    node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
 ):
     total = sum(count for _, count, roles in node_podcount_roles if excluded_node_role not in roles)
     pods = [
@@ -329,7 +330,7 @@ def test_cluster_usage_resources(  # type:ignore[no-untyped-def]
 )
 def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
     excluded_node_role: str,
-    node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
+    node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
 ):
     allocatable = 110
     capacity = 111  # can not be different in pratice, but better for testing
@@ -382,7 +383,7 @@ def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
 def test_create_correct_number_pod_names_for_cluster_host(
     phase_all_pods: api.Phase,
     excluded_node_role: str,
-    node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
+    node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
 ) -> None:
     # Initialize API data
     pods = [

@@ -25,13 +25,11 @@ def version_info() -> VersionInfo:
 
 @pytest.fixture()
 def site_context(tmp_path: Path, monkeypatch: MonkeyPatch) -> SiteContext:
-    monkeypatch.setattr(
-        SiteContext, "dir", property(lambda s: "%s/omd/sites/%s" % (tmp_path, s.name))
-    )
+    monkeypatch.setattr(SiteContext, "dir", property(lambda s: f"{tmp_path}/omd/sites/{s.name}"))
     monkeypatch.setattr(
         SiteContext,
         "real_dir",
-        property(lambda s: "%s/opt/omd/sites/%s" % (tmp_path, s.name)),
+        property(lambda s: f"{tmp_path}/opt/omd/sites/{s.name}"),
     )
 
     return SiteContext("unit")

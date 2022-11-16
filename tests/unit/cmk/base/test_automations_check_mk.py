@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence, Tuple
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -189,7 +189,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
     ],
 )
 def test_automation_active_check(  # type:ignore[no-untyped-def]
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
     active_check_args: list[str],
@@ -236,7 +236,7 @@ def test_automation_active_check(  # type:ignore[no-untyped-def]
     ],
 )
 def test_automation_active_check_invalid_args(  # type:ignore[no-untyped-def]
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: Mapping[str, str],
     active_check_args: list[str],

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import Counter
-from typing import Dict
 
 import pytest
 
@@ -84,7 +83,7 @@ def test_updated_data() -> None:
         ]
     }
     section = Section(*PARSED)
-    last_status: Dict = {}
+    last_status: dict = {}
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
@@ -114,7 +113,7 @@ def test_not_configured() -> None:
     item = "File /tmp/noti/nodata"
     params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {}, {})
-    last_status: Dict = {}
+    last_status: dict = {}
     now = 1465470156
 
     assert not list(check_inotify(item, params, section, last_status, now))
@@ -125,7 +124,7 @@ def test_nodata() -> None:
     item = "File /tmp/noti/nodata"
     params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
-    last_status: Dict = {}
+    last_status: dict = {}
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [

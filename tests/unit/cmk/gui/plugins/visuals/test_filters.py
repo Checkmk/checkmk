@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 import pytest
 from pytest_mock import MockerFixture
@@ -127,7 +128,7 @@ def test_filters_filter_with_empty_request(  # type:ignore[no-untyped-def]
 
 class FilterTest(NamedTuple):
     ident: str
-    request_vars: Sequence[Tuple[str, str]]
+    request_vars: Sequence[tuple[str, str]]
     expected_filters: str
 
 
@@ -603,7 +604,7 @@ def test_filters_filter(request_context, test, set_config) -> None:  # type:igno
 
 class FilterTableTest(NamedTuple):
     ident: str
-    request_vars: Sequence[Tuple[str, str]]
+    request_vars: Sequence[tuple[str, str]]
     rows: Sequence[Mapping[str, Any]]
     expected_rows: Sequence[Mapping[str, Any]]
 

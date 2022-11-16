@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence, Tuple, Type
+from collections.abc import Mapping, Sequence
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -211,7 +212,7 @@ def test_process_vm(
     ],
 )
 def test_get_vm_labels_section(
-    vm: AzureResource, group_tags: GroupLabels, expected_result: Tuple[Sequence[str], Sequence[str]]
+    vm: AzureResource, group_tags: GroupLabels, expected_result: tuple[Sequence[str], Sequence[str]]
 ) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
@@ -376,7 +377,7 @@ def test_process_resource(
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
     args: Args,
-    expected_result: Sequence[Tuple[Type[Section], Sequence[str], Sequence[str]]],
+    expected_result: Sequence[tuple[type[Section], Sequence[str], Sequence[str]]],
 ) -> None:
     resource = AzureResource(resource_info)
     function_args = (mgmt_client, resource, group_tags, args)

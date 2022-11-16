@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Sequence, Tuple
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -21,7 +22,7 @@ RESULT: object = None
 @dataclass
 class ResultTest(ABCAutomationResult):
     field_1: int
-    field_2: Optional[str]
+    field_2: str | None
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
@@ -62,7 +63,7 @@ class TestCheckmkAutomationBackgroundJob:
     @staticmethod
     def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
         **_kwargs,
-    ) -> Tuple[Sequence[str], str]:
+    ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
             "(2, None)",

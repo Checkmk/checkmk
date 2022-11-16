@@ -5,8 +5,8 @@
 
 import abc
 import random
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Container, Optional, TypedDict
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from typing import Any, Optional, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -68,7 +68,7 @@ class Dict(Entity):
         dict_ = {}
         if self._enumerate_keys:
             for x in range(amount):
-                this_idx = "%s-%s" % (self._enumerate_keys.key, x)
+                this_idx = f"{self._enumerate_keys.key}-{x}"
                 dict_.update({this_idx: self._enumerate_keys.create(this_idx, amount)})
         dict_.update({v.key: v.create(idx, amount) for v in self._values})
         return dict_
@@ -83,7 +83,7 @@ class Str(Entity):
         self.value = value
 
     def create(self, idx, amount):
-        return "%s-%s" % (self.value or self.key, idx)
+        return f"{self.value or self.key}-{idx}"
 
 
 class Int(Entity):
@@ -106,7 +106,7 @@ class Timestamp(Entity):
 
 class Enum(Entity):
     def create(self, idx, amount):
-        return ["%s-%s-%s" % (self.key, idx, x) for x in range(amount)]
+        return [f"{self.key}-{idx}-{x}" for x in range(amount)]
 
 
 class Choice(Entity):
@@ -198,10 +198,10 @@ class DictInstanceBuilder(abc.ABC):
         self._idx = idx
         self._amount = amount
 
-    def _key(self) -> Optional[Entity]:
+    def _key(self) -> Entity | None:
         return None
 
-    def _value(self) -> Optional[Entity]:
+    def _value(self) -> Entity | None:
         return None
 
     @classmethod

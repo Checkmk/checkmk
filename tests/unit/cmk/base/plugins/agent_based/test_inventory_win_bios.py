@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, Union
+from collections.abc import Mapping
+from typing import Final
 
 import pytest
 
@@ -23,11 +24,11 @@ SMBIOSMinorVersion : 5
 
 
 @pytest.fixture(name="section")
-def _get_section() -> Mapping[str, Union[str, int]]:
+def _get_section() -> Mapping[str, str | int]:
     return parse_win_bios([line.split(":") for line in OUTPUT.split("\n")])
 
 
-def test_inventory_win_bios(section: Mapping[str, Union[str, int]]) -> None:
+def test_inventory_win_bios(section: Mapping[str, str | int]) -> None:
     assert list(inventory_win_bios({**section, "date": 0})) == [  # aviod TZ issues in C
         Attributes(
             path=["software", "bios"],

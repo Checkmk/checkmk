@@ -9,42 +9,42 @@
 checkname = 'msoffice_licenses'
 
 info = [
-    [u'sx:MYLICENSE1', u'55', u'0', u'55'],
-    [u'sx:MYLICENSE2', u'1000000', u'0', u''], [u'sx:MYLICENSE3'],
-    [u'sx:MYLICENSE4', u'130', u'0', u'120'],
-    [u'sx:MYLICENSE5', u'10000', u'0', u'1'],
-    [u'sx:MYLICENSE6', u'6575', u'0', u'6330'],
-    [u'sx:MYLICENSE7', u'3800', u'0', u'3756'],
-    [u'sx:MYLICENSE8', u'10000', u'0', u'1424'],
-    [u'sx:MYLICENSE9', u'10000', u'0', u'4'],
-    [u'sx:MYLICENSE10', u'10000', u'0', u'5'],
-    [u'sx:MYLICENSE11', u'100', u'0', u'46'],
-    [u'sx:MYLICENSE12', u'1000000', u'0', u'194'],
-    [u'sx:MYLICENSE12', u'5925', u'0', u'1'],
-    [u'sx:MYLICENSE12', u'3600', u'0', u'5'],
-    [u'sx:MYLICENSE13', u'10665', u'0', u'10461'],
-    [u'sx:MYLICENSE13', u'840', u'0', u'803'],
-    [u'sx:MYLICENSE14', u'0', u'0',
-     u'2'], [u'sx:MYLICENSE15', u'0', u'0', u'0'],
-    [u'sx:MYLICENSE16', u'5', u'1', u'4']
+    ['sx:MYLICENSE1', '55', '0', '55'],
+    ['sx:MYLICENSE2', '1000000', '0', ''], ['sx:MYLICENSE3'],
+    ['sx:MYLICENSE4', '130', '0', '120'],
+    ['sx:MYLICENSE5', '10000', '0', '1'],
+    ['sx:MYLICENSE6', '6575', '0', '6330'],
+    ['sx:MYLICENSE7', '3800', '0', '3756'],
+    ['sx:MYLICENSE8', '10000', '0', '1424'],
+    ['sx:MYLICENSE9', '10000', '0', '4'],
+    ['sx:MYLICENSE10', '10000', '0', '5'],
+    ['sx:MYLICENSE11', '100', '0', '46'],
+    ['sx:MYLICENSE12', '1000000', '0', '194'],
+    ['sx:MYLICENSE12', '5925', '0', '1'],
+    ['sx:MYLICENSE12', '3600', '0', '5'],
+    ['sx:MYLICENSE13', '10665', '0', '10461'],
+    ['sx:MYLICENSE13', '840', '0', '803'],
+    ['sx:MYLICENSE14', '0', '0',
+     '2'], ['sx:MYLICENSE15', '0', '0', '0'],
+    ['sx:MYLICENSE16', '5', '1', '4']
 ]
 
 discovery = {
     '': [
-        (u'sx:MYLICENSE1', {}),
-        (u'sx:MYLICENSE10', {}), (u'sx:MYLICENSE11', {}),
-        (u'sx:MYLICENSE12', {}), (u'sx:MYLICENSE13', {}),
-        (u'sx:MYLICENSE14', {}), (u'sx:MYLICENSE15', {}),
-        (u'sx:MYLICENSE16', {}), (u'sx:MYLICENSE4', {}),
-        (u'sx:MYLICENSE5', {}), (u'sx:MYLICENSE6', {}), (u'sx:MYLICENSE7', {}),
-        (u'sx:MYLICENSE8', {}), (u'sx:MYLICENSE9', {})
+        ('sx:MYLICENSE1', {}),
+        ('sx:MYLICENSE10', {}), ('sx:MYLICENSE11', {}),
+        ('sx:MYLICENSE12', {}), ('sx:MYLICENSE13', {}),
+        ('sx:MYLICENSE14', {}), ('sx:MYLICENSE15', {}),
+        ('sx:MYLICENSE16', {}), ('sx:MYLICENSE4', {}),
+        ('sx:MYLICENSE5', {}), ('sx:MYLICENSE6', {}), ('sx:MYLICENSE7', {}),
+        ('sx:MYLICENSE8', {}), ('sx:MYLICENSE9', {})
     ]
 }
 
 checks = {
     '': [
         (
-            u'sx:MYLICENSE1', {
+            'sx:MYLICENSE1', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -65,7 +65,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE10', {
+            'sx:MYLICENSE10', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -86,7 +86,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE11', {
+            'sx:MYLICENSE11', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -107,7 +107,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE12', {
+            'sx:MYLICENSE12', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -128,7 +128,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE13', {
+            'sx:MYLICENSE13', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -152,17 +152,17 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE14', {
+            'sx:MYLICENSE14', {
                 'usage': (80.0, 90.0)
             }, [(0, 'No active licenses', [])]
         ),
         (
-            u'sx:MYLICENSE15', {
+            'sx:MYLICENSE15', {
                 'usage': (80.0, 90.0)
             }, [(0, 'No active licenses', [])]
         ),
         (
-            u'sx:MYLICENSE16', {
+            'sx:MYLICENSE16', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -183,7 +183,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE4', {
+            'sx:MYLICENSE4', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -207,7 +207,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE5', {
+            'sx:MYLICENSE5', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -228,7 +228,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE6', {
+            'sx:MYLICENSE6', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -252,7 +252,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE7', {
+            'sx:MYLICENSE7', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -276,7 +276,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE8', {
+            'sx:MYLICENSE8', {
                 'usage': (80.0, 90.0)
             }, [
                 (
@@ -297,7 +297,7 @@ checks = {
             ]
         ),
         (
-            u'sx:MYLICENSE9', {
+            'sx:MYLICENSE9', {
                 'usage': (80.0, 90.0)
             }, [
                 (

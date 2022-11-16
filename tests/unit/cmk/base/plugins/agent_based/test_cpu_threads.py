@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -20,7 +20,7 @@ def test_cpu_threads() -> None:
         num_cpus=4,
         threads=Threads(count=1234),
     )
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {
         Metric("threads", 1234.0),
@@ -34,7 +34,7 @@ def test_cpu_threads_max_threads() -> None:
         num_cpus=4,
         threads=Threads(count=1234, max=2468),
     )
-    params: Dict[str, Any] = {}
+    params: dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {
         Metric("thread_usage", 50.0),

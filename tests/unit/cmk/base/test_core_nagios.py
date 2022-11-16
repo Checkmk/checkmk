@@ -10,8 +10,9 @@ import io
 import itertools
 import os
 import subprocess
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Dict, Mapping, Sequence, Tuple
+from typing import Any
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -220,7 +221,7 @@ def test_format_nagios_object() -> None:
 )
 @pytest.mark.usefixtures("fixup_ip_lookup")
 def test_create_nagios_host_spec(
-    hostname_str: str, result: Dict[str, str], monkeypatch: MonkeyPatch
+    hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
     if cmk_version.is_managed_edition():
         result = result.copy()
@@ -626,9 +627,9 @@ def mock_service_description(params: Mapping[str, str]) -> str:
     ],
 )
 def test_create_nagios_servicedefs_active_check(
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    host_attrs: Dict[str, Any],
+    host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -719,9 +720,9 @@ def test_create_nagios_servicedefs_active_check(
     ],
 )
 def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    host_attrs: Dict[str, Any],
+    host_attrs: dict[str, Any],
     expected_result: str,
     expected_warning: str,
     monkeypatch: MonkeyPatch,
@@ -771,9 +772,9 @@ def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
     ],
 )
 def test_create_nagios_servicedefs_omit_service(
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    host_attrs: Dict[str, Any],
+    host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -819,9 +820,9 @@ def test_create_nagios_servicedefs_omit_service(
     ],
 )
 def test_create_nagios_servicedefs_invalid_args(
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    host_attrs: Dict[str, Any],
+    host_attrs: dict[str, Any],
     error_message: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -888,9 +889,9 @@ def test_create_nagios_servicedefs_invalid_args(
     ],
 )
 def test_create_nagios_config_commands(
-    active_checks: Tuple[str, Sequence[Mapping[str, str]]],
+    active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    host_attrs: Dict[str, Any],
+    host_attrs: dict[str, Any],
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:

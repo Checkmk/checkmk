@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 from freezegun import freeze_time

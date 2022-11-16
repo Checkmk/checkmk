@@ -44,7 +44,7 @@ class SNMPTestBackend(SNMPBackend):
         pass
 
     def walk(self, oid, section_name=None, table_base_oid=None, context_name=None):
-        return [("%s.%s" % (oid, r), b"C0FEFE") for r in (1, 2, 3)]
+        return [(f"{oid}.{r}", b"C0FEFE") for r in (1, 2, 3)]
 
 
 @pytest.mark.parametrize(

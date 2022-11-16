@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Mapping, Optional, Tuple
+from typing import Any
 
 import pytest
 from freezegun import freeze_time
@@ -170,7 +171,7 @@ WLAN_CONTROLLERS_SECTION = {
     ],
 )
 def test_get_controllers(
-    controller_data: Dict[str, Any], expected_result: List[Dict[str, Any]]
+    controller_data: dict[str, Any], expected_result: list[dict[str, Any]]
 ) -> None:
     controllers = get_controllers(controller_data)
     assert list(controllers) == expected_result
@@ -183,7 +184,7 @@ def test_get_controllers(
         ("2020-07-27T17:27:39.000Z", datetime(2020, 7, 27, 17, 27, 39, tzinfo=timezone.utc)),
     ],
 )
-def test_get_last_backup(last_backup: Optional[str], expected_result: Optional[datetime]) -> None:
+def test_get_last_backup(last_backup: str | None, expected_result: datetime | None) -> None:
     assert get_last_backup(last_backup) == expected_result
 
 
@@ -192,7 +193,7 @@ def test_get_last_backup(last_backup: Optional[str], expected_result: Optional[d
     [(WLAN_CONTROLLERS, WLAN_CONTROLLERS_SECTION)],
 )
 def test_parse_cisco_prime_wlan_controller(  # type:ignore[no-untyped-def]
-    controller_data: Dict[str, Any], expected_result: Dict[str, WlanController]
+    controller_data: dict[str, Any], expected_result: dict[str, WlanController]
 ):
     string_table = [[json.dumps(controller_data)]]
     assert parse_cisco_prime_wlan_controller(string_table) == expected_result
@@ -203,7 +204,7 @@ def test_parse_cisco_prime_wlan_controller(  # type:ignore[no-untyped-def]
     [(WLAN_CONTROLLERS_SECTION, [Service(item="wism21"), Service(item="wism22")])],
 )
 def test_discovery_wlan_controller(  # type:ignore[no-untyped-def]
-    section: Dict[str, WlanController], expected_result: List[Service]
+    section: dict[str, WlanController], expected_result: list[Service]
 ):
     services = discovery_wlan_controller(section)
 
@@ -230,7 +231,7 @@ def test_discovery_wlan_controller(  # type:ignore[no-untyped-def]
     ],
 )
 def test_check_wlan_controller_metadata(  # type:ignore[no-untyped-def]
-    item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
+    item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
 ):
     result = check_wlan_controller_metadata(item, section)
     assert list(result) == expected_result
@@ -248,7 +249,7 @@ def test_check_wlan_controller_metadata(  # type:ignore[no-untyped-def]
     ],
 )
 def test_check_wlan_controller_alarm_status(  # type:ignore[no-untyped-def]
-    item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
+    item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
 ):
     result = check_wlan_controller_alarm_status(item, section)
     assert list(result) == expected_result
@@ -271,9 +272,9 @@ def test_check_wlan_controller_alarm_status(  # type:ignore[no-untyped-def]
 )
 def test_check_wlan_controller_access_points(  # type:ignore[no-untyped-def]
     item: str,
-    params: Mapping[str, Tuple[float, float]],
-    section: Dict[str, WlanController],
-    expected_result: List[CheckResult],
+    params: Mapping[str, tuple[float, float]],
+    section: dict[str, WlanController],
+    expected_result: list[CheckResult],
 ):
     result = check_wlan_controller_access_points(item, params, section)
     assert list(result) == expected_result
@@ -296,9 +297,9 @@ def test_check_wlan_controller_access_points(  # type:ignore[no-untyped-def]
 )
 def test_check_wlan_controller_clients(  # type:ignore[no-untyped-def]
     item: str,
-    params: Mapping[str, Tuple[float, float]],
-    section: Dict[str, WlanController],
-    expected_result: List[CheckResult],
+    params: Mapping[str, tuple[float, float]],
+    section: dict[str, WlanController],
+    expected_result: list[CheckResult],
 ):
     result = check_wlan_controller_clients(item, params, section)
     assert list(result) == expected_result
@@ -321,7 +322,7 @@ def test_check_wlan_controller_clients(  # type:ignore[no-untyped-def]
     ],
 )
 def test_check_wlan_controller_reachability(  # type:ignore[no-untyped-def]
-    item: str, section: Dict[str, WlanController], expected_result: List[CheckResult]
+    item: str, section: dict[str, WlanController], expected_result: list[CheckResult]
 ):
     result = check_wlan_controller_reachability(item, section)
     assert list(result) == expected_result
@@ -354,9 +355,9 @@ def test_check_wlan_controller_reachability(  # type:ignore[no-untyped-def]
 @freeze_time("2021-10-27 00:00:00.000000")
 def test_check_wlan_controller_last_backup(  # type:ignore[no-untyped-def]
     item: str,
-    params: Mapping[str, Tuple[float, float]],
-    section: Dict[str, WlanController],
-    expected_result: List[CheckResult],
+    params: Mapping[str, tuple[float, float]],
+    section: dict[str, WlanController],
+    expected_result: list[CheckResult],
 ):
     result = check_wlan_controller_last_backup(item, params, section)
     assert list(result) == expected_result

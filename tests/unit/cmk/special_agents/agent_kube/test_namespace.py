@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package
 
-from typing import Optional
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
@@ -249,8 +248,8 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
 
 
 def _pod_with_scopes_factory(  # type:ignore[no-untyped-def]
-    name: Optional[str] = None,
-    priority_class: Optional[str] = None,
+    name: str | None = None,
+    priority_class: str | None = None,
     best_effort: bool = False,
     terminating: bool = False,
 ):

@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -20,7 +20,7 @@ def test_check_cpu_util() -> None:
     Test a quite straight forward case. Nothing in particular, just to have at least any test.
     """
 
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
 
     assert list(
         cpu_util.check_cpu_util(
@@ -85,7 +85,7 @@ def test_check_cpu_util_unix() -> None:
 
 def test_cpu_util_time() -> None:
 
-    value_store: Dict[str, Any] = {}
+    value_store: dict[str, Any] = {}
 
     # over threshold for the first time
     assert not list(

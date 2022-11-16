@@ -10,7 +10,7 @@ import itertools
 import logging
 import time
 from collections import defaultdict
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 

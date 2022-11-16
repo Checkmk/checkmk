@@ -34,5 +34,5 @@ checks = {'': [('Chassis 2', {}, [(3, 'Fan statistics not available', [])]),
           'temp': [('Ambient Chassis 2 FAN',
                     {'levels': (40, 50)},
                     [(0,
-                      u'1 Sensors; Highest: 29.0 \xb0C, Average: 29.0 \xb0C, Lowest: 29.0 \xb0C',
+                      '1 Sensors; Highest: 29.0 \xb0C, Average: 29.0 \xb0C, Lowest: 29.0 \xb0C',
                       [('temp', 29.0, None, None, None, None)])])]}

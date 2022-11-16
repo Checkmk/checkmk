@@ -9,12 +9,12 @@
 checkname = 'postgres_instances'
 
 info = [
-    [u'[[[postgres]]]'],
+    ['[[[postgres]]]'],
     [
-        u'psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)',
+        'psql (PostgreSQL) 10.12 (Ubuntu 10.12-0ubuntu0.18.04.1)',
     ],
 ]
 
-discovery = {'': [(u'POSTGRES', {})]}
+discovery = {'': [('POSTGRES', {})]}
 
-checks = {'': [(u'POSTGRES', {}, [(2, u'Instance POSTGRES not running or postgres DATADIR name is not identical with instance name.', [])])]}
+checks = {'': [('POSTGRES', {}, [(2, 'Instance POSTGRES not running or postgres DATADIR name is not identical with instance name.', [])])]}

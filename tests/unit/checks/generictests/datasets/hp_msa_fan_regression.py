@@ -8,34 +8,34 @@
 
 checkname = 'hp_msa_fan'
 
-info = [[u'fan', u'2', u'durable-id', u'fan_1.1'],
-        [u'fan', u'2', u'name', u'Fan', u'Loc:left-PSU', u'1'],
-        [u'fan', u'2', u'location', u'Enclosure', u'1', u'-', u'Left'],
-        [u'fan', u'2', u'status-ses', u'OK'], [u'fan', u'2', u'status-ses-numeric', u'1'],
-        [u'fan', u'2', u'extended-status', u'16'], [u'fan', u'2', u'status', u'Up'],
-        [u'fan', u'2', u'status-numeric', u'0'], [u'fan', u'2', u'speed', u'3780'],
-        [u'fan', u'2', u'position', u'Left'], [u'fan', u'2', u'position-numeric', u'0'],
-        [u'fan', u'2', u'serial-number', u'N/A'], [u'fan', u'2', u'part-number', u'N/A'],
-        [u'fan', u'2', u'fw-revision'], [u'fan', u'2', u'hw-revision'],
-        [u'fan', u'2', u'locator-led', u'Off'], [u'fan', u'2', u'locator-led-numeric', u'0'],
-        [u'fan', u'2', u'health', u'OK'], [u'fan', u'2', u'health-numeric', u'0'],
-        [u'fan', u'2', u'health-reason'], [u'fan', u'2', u'health-recommendation'],
-        [u'fan', u'4', u'durable-id', u'fan_1.2'],
-        [u'fan', u'4', u'name', u'Fan', u'Loc:right-PSU', u'2'],
-        [u'fan', u'4', u'location', u'Enclosure', u'1', u'-', u'Right'],
-        [u'fan', u'4', u'status-ses', u'OK'], [u'fan', u'4', u'status-ses-numeric', u'1'],
-        [u'fan', u'4', u'extended-status', u'16'], [u'fan', u'4', u'status', u'Up'],
-        [u'fan', u'4', u'status-numeric', u'0'], [u'fan', u'4', u'speed', u'3840'],
-        [u'fan', u'4', u'position', u'Right'], [u'fan', u'4', u'position-numeric', u'1'],
-        [u'fan', u'4', u'serial-number', u'N/A'], [u'fan', u'4', u'part-number', u'N/A'],
-        [u'fan', u'4', u'fw-revision'], [u'fan', u'4', u'hw-revision'],
-        [u'fan', u'4', u'locator-led', u'Off'], [u'fan', u'4', u'locator-led-numeric', u'0'],
-        [u'fan', u'4', u'health', u'OK'], [u'fan', u'4', u'health-numeric', u'0'],
-        [u'fan', u'4', u'health-reason'], [u'fan', u'4', u'health-recommendation']]
+info = [['fan', '2', 'durable-id', 'fan_1.1'],
+        ['fan', '2', 'name', 'Fan', 'Loc:left-PSU', '1'],
+        ['fan', '2', 'location', 'Enclosure', '1', '-', 'Left'],
+        ['fan', '2', 'status-ses', 'OK'], ['fan', '2', 'status-ses-numeric', '1'],
+        ['fan', '2', 'extended-status', '16'], ['fan', '2', 'status', 'Up'],
+        ['fan', '2', 'status-numeric', '0'], ['fan', '2', 'speed', '3780'],
+        ['fan', '2', 'position', 'Left'], ['fan', '2', 'position-numeric', '0'],
+        ['fan', '2', 'serial-number', 'N/A'], ['fan', '2', 'part-number', 'N/A'],
+        ['fan', '2', 'fw-revision'], ['fan', '2', 'hw-revision'],
+        ['fan', '2', 'locator-led', 'Off'], ['fan', '2', 'locator-led-numeric', '0'],
+        ['fan', '2', 'health', 'OK'], ['fan', '2', 'health-numeric', '0'],
+        ['fan', '2', 'health-reason'], ['fan', '2', 'health-recommendation'],
+        ['fan', '4', 'durable-id', 'fan_1.2'],
+        ['fan', '4', 'name', 'Fan', 'Loc:right-PSU', '2'],
+        ['fan', '4', 'location', 'Enclosure', '1', '-', 'Right'],
+        ['fan', '4', 'status-ses', 'OK'], ['fan', '4', 'status-ses-numeric', '1'],
+        ['fan', '4', 'extended-status', '16'], ['fan', '4', 'status', 'Up'],
+        ['fan', '4', 'status-numeric', '0'], ['fan', '4', 'speed', '3840'],
+        ['fan', '4', 'position', 'Right'], ['fan', '4', 'position-numeric', '1'],
+        ['fan', '4', 'serial-number', 'N/A'], ['fan', '4', 'part-number', 'N/A'],
+        ['fan', '4', 'fw-revision'], ['fan', '4', 'hw-revision'],
+        ['fan', '4', 'locator-led', 'Off'], ['fan', '4', 'locator-led-numeric', '0'],
+        ['fan', '4', 'health', 'OK'], ['fan', '4', 'health-numeric', '0'],
+        ['fan', '4', 'health-reason'], ['fan', '4', 'health-recommendation']]
 
-discovery = {'': [(u'Enclosure 1 Left', None), (u'Enclosure 1 Right', None)]}
+discovery = {'': [('Enclosure 1 Left', None), ('Enclosure 1 Right', None)]}
 
 checks = {
-    '': [(u'Enclosure 1 Left', {}, [(0, 'Status: up, speed: 3780 RPM', [])]),
-         (u'Enclosure 1 Right', {}, [(0, 'Status: up, speed: 3840 RPM', [])])]
+    '': [('Enclosure 1 Left', {}, [(0, 'Status: up, speed: 3780 RPM', [])]),
+         ('Enclosure 1 Right', {}, [(0, 'Status: up, speed: 3840 RPM', [])])]
 }

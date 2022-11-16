@@ -8,10 +8,10 @@
 
 
 
-checkname = u'rstcli'
+checkname = 'rstcli'
 
 
-info = [[u'rstcli not found']]
+info = [['rstcli not found']]
 
 
 discovery = {'': [], 'pdisks': []}

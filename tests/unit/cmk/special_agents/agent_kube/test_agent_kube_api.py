@@ -5,7 +5,6 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
-from typing import Optional
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -58,10 +57,10 @@ ONE_MiB = 1024 * ONE_KiB
 
 
 def container_spec(
-    request_cpu: Optional[float] = 1.0,
-    limit_cpu: Optional[float] = 2.0,
-    request_memory: Optional[float] = 1.0 * ONE_MiB,
-    limit_memory: Optional[float] = 2.0 * ONE_MiB,
+    request_cpu: float | None = 1.0,
+    limit_cpu: float | None = 2.0,
+    request_memory: float | None = 1.0 * ONE_MiB,
+    limit_memory: float | None = 2.0 * ONE_MiB,
 ) -> api.ContainerSpec:
     return ContainerSpecFactory.build(
         resources=api.ContainerResources(

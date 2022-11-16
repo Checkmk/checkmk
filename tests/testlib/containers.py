@@ -12,7 +12,6 @@ import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import docker  # type: ignore[import]
 import dockerpty  # type: ignore[import]
@@ -36,14 +35,14 @@ def execute_tests_in_container(
     docker_tag: str,
     version: CMKVersion,
     result_path: Path,
-    command: List[str],
+    command: list[str],
     interactive: bool,
 ) -> int:
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
-    base_image_name = "%s/%s" % (_DOCKER_REGISTRY, distro_name)
+    base_image_name = f"{_DOCKER_REGISTRY}/{distro_name}"
     image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
 
     # Start the container
@@ -130,7 +129,7 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
+def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) -> Image | None:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
@@ -164,7 +163,7 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
     return None
 
 
-def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
+def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Image | None:
     try:
         registry_data = client.images.get_registry_data(image_name_with_tag)
         return registry_data.pull()
@@ -194,14 +193,14 @@ def _handle_api_error(e):
 def _create_cmk_image(
     client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
 ) -> str:
-    base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+    base_image_name_with_tag = f"{base_image_name}:{docker_tag}"
     logger.info("Preparing base image [%s]", base_image_name_with_tag)
     base_image = _get_or_load_image(client, base_image_name_with_tag)
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
-    image_name_with_tag = "%s:%s" % (image_name, docker_tag)
+    image_name = f"{base_image_name}-{version.edition_short}-{version.version}"
+    image_name_with_tag = f"{image_name}:{docker_tag}"
 
     logger.info("Preparing image [%s]", image_name_with_tag)
     # First try to get the pre-built image from the local or remote registry
@@ -308,7 +307,7 @@ def _create_cmk_image(
     return image_name_with_tag
 
 
-def _is_based_on_current_base_image(image: Image, base_image: Optional[Image]) -> bool:
+def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> bool:
     logger.info("  Check whether or not image is based on the current base image")
     if base_image is None:
         logger.info("  Base image not available, assuming it's up-to-date")
@@ -405,7 +404,7 @@ def _git_repos():
         },
     }
     if os.path.isfile(git_entry):  # if not, it's a directory
-        with open(git_entry, "r") as f:
+        with open(git_entry) as f:
             real_path = f.read()
             real_path = real_path[8:]  # skip "gitdir: "
             real_path = real_path.split("/.git")[0]  # cut off .git/...
@@ -432,7 +431,7 @@ def _runtime_volumes():
     return volumes
 
 
-def _container_env(version: CMKVersion) -> Dict[str, str]:
+def _container_env(version: CMKVersion) -> dict[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -627,7 +626,7 @@ def _prepare_git_overlay(container, lower_path, target_path):
                 "overlay",
                 "overlay",
                 "-o",
-                "lowerdir=%s,upperdir=%s,workdir=%s" % (lower_path, upperdir_path, workdir_path),
+                f"lowerdir={lower_path},upperdir={upperdir_path},workdir={workdir_path}",
                 target_path,
             ],
         )

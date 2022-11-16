@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -146,7 +146,7 @@ SECTION_LIVESTATUS_STATUS = {
         "service_checks_rate": "2.28431",
     },
 }
-SECTION_OMD_STATUS: Dict[str, Dict[str, Any]] = {
+SECTION_OMD_STATUS: dict[str, dict[str, Any]] = {
     "cisco": {
         "stopped": [
             "mkeventd",

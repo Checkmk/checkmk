@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict
 
 import pytest
 
@@ -295,7 +294,7 @@ def test_get_history() -> None:
 )
 def test_load_delta_tree(
     search_timestamp: int,
-    expected_raw_delta_tree: Dict,
+    expected_raw_delta_tree: dict,
 ) -> None:
     hostname = "inv-host"
     expected_delta_tree = StructuredDataNode.deserialize(expected_raw_delta_tree)

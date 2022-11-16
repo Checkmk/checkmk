@@ -15,5 +15,5 @@ discovery = {'': [('CPMA', {})]}
 checks = {
     '': [('CPMA', {
         'levels': (45, 50)
-    }, [(2, u'50 \xb0C (warn/crit at 45/50 \xb0C)', [('temp', 50, 45, 50, None, None)])])]
+    }, [(2, '50 \xb0C (warn/crit at 45/50 \xb0C)', [('temp', 50, 45, 50, None, None)])])]
 }

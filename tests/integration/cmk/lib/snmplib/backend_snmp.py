@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import List, Literal, Optional, Tuple, Type
+from typing import Literal
 
 import pytest
 
@@ -147,8 +147,8 @@ def test_walk_auth(oid) -> None:  # type:ignore[no-untyped-def]
 
 
 def _create_results_snmpbackend_get(
-    oid: str, configs: List[SNMPHostConfig]
-) -> Tuple[List[Optional[SNMPRawValue]], List[Optional[SNMPRawValue]]]:
+    oid: str, configs: list[SNMPHostConfig]
+) -> tuple[list[SNMPRawValue | None], list[SNMPRawValue | None]]:
 
     return (
         [_create_result_for_backend_get(InlineSNMPBackend, oid, c) for c in configs],
@@ -157,8 +157,8 @@ def _create_results_snmpbackend_get(
 
 
 def _create_result_for_backend_get(
-    backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig
-) -> Optional[SNMPRawValue]:
+    backend: type[SNMPBackend], oid: OID, config: SNMPHostConfig
+) -> SNMPRawValue | None:
     return backend(config, logger).get(
         oid,
         context_name="public"
@@ -185,7 +185,7 @@ def _create_results_snmpbackend_walk(oid, configs, check_plugin_name=None, table
 
 
 def _create_result_for_backend_walk(  # type:ignore[no-untyped-def]
-    backend: Type[SNMPBackend], oid: OID, config: SNMPHostConfig, check_plugin_name, table_base_oid
+    backend: type[SNMPBackend], oid: OID, config: SNMPHostConfig, check_plugin_name, table_base_oid
 ) -> SNMPRowInfo:
     return backend(config, logger).walk(
         oid,
@@ -211,7 +211,7 @@ def _create_result_for_backend_walk(  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def _create_configs_ipv4() -> List[SNMPHostConfig]:
+def _create_configs_ipv4() -> list[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -268,7 +268,7 @@ def _create_configs_ipv4() -> List[SNMPHostConfig]:
     ]
 
 
-def _create_configs_ipv6() -> List[SNMPHostConfig]:
+def _create_configs_ipv6() -> list[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=True,
@@ -325,7 +325,7 @@ def _create_configs_ipv6() -> List[SNMPHostConfig]:
     ]
 
 
-def _create_configs_special_auth() -> List[SNMPHostConfig]:
+def _create_configs_special_auth() -> list[SNMPHostConfig]:
     return [
         SNMPHostConfig(
             is_ipv6_primary=False,
@@ -368,7 +368,7 @@ def _create_configs_special_auth() -> List[SNMPHostConfig]:
     ]
 
 
-def _create_configs_oidranges() -> List:
+def _create_configs_oidranges() -> list:
     first_str: Literal["first", "last"] = "first"
     mid_str: Literal["mid"] = "mid"
     last_str: Literal["first", "last"] = "last"

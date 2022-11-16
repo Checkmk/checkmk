@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Iterable, List, Optional, Tuple
+from collections.abc import Iterable
 
 from ..conftest import ChangedFiles
 from .test_scss_variables import scss_files
@@ -13,8 +13,8 @@ from .test_scss_variables import scss_files
 def _get_regex_matches_in_scss_files(
     regex_pattern: re.Pattern,
     changed_files: ChangedFiles,
-    exclude_files: Optional[Iterable[str]] = None,
-) -> Iterable[Tuple[str, Iterable[Tuple[str, str]]]]:
+    exclude_files: Iterable[str] | None = None,
+) -> Iterable[tuple[str, Iterable[tuple[str, str]]]]:
     """Return a generator holding all matches of regex_pattern in scss_files (without exclude_files)
     Returned tuples hold the scss file's path and a list of line and match per match
     E.g.: (
@@ -33,7 +33,7 @@ def _get_regex_matches_in_scss_files(
             continue
 
         with open(scss_file) as f:
-            file_matches: List[Tuple[str, str]] = []
+            file_matches: list[tuple[str, str]] = []
             for i, l in enumerate(f):
                 if match := regex_pattern.search(l):
                     file_matches.append((f"Line: {str(i)}", match.group()))

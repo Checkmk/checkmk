@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 # pylint: disable=redefined-outer-name
 from pathlib import Path
-from typing import Dict, Optional, Sequence
 
 import pytest
 
@@ -81,7 +82,7 @@ def test_manager_get_autochecks_of(
     assert test_config.get_autochecks_of(HostName("host")) == result
 
 
-def _entry(name: str, params: Optional[Dict[str, str]] = None) -> autochecks.AutocheckEntry:
+def _entry(name: str, params: dict[str, str] | None = None) -> autochecks.AutocheckEntry:
     return autochecks.AutocheckEntry(CheckPluginName(name), None, params or {}, {})
 
 

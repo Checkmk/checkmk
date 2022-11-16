@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -322,13 +322,13 @@ class TestCheckVersion:
         assert expected == actual
 
     def test_unparseable_without_wato_rule(self) -> None:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         actual = ibm_mq_check_version("2.x", params, "MyLabel")
         expected = (0, "MyLabel: 2.x")
         assert expected == actual
 
     def test_no_version(self) -> None:
-        params: Dict[str, Any] = {}
+        params: dict[str, Any] = {}
         actual = ibm_mq_check_version(None, params, "MyLabel")
         expected = (3, "MyLabel: None (no agent info)")
         assert expected == actual

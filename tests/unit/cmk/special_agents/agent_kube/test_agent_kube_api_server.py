@@ -5,7 +5,7 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from pydantic_factories import ModelFactory
 

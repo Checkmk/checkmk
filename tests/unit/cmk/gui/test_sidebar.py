@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 import pytest
 
@@ -105,7 +104,7 @@ def test_user_config_move_snapin_before(  # type:ignore[no-untyped-def]
         raise
 
     try:
-        before: Optional[UserSidebarSnapin] = user_config.get_snapin(before_id)
+        before: UserSidebarSnapin | None = user_config.get_snapin(before_id)
     except KeyError:
         before = None
 

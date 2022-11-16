@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict
 
 import pytest
 
@@ -141,7 +140,7 @@ def make_agent_output_2():
     ]
 
 
-def make_section_2() -> Dict[str, Dict[str, float]]:
+def make_section_2() -> dict[str, dict[str, float]]:
     return {
         "MY CHECK MK": {
             "BusyWorkers": 1,

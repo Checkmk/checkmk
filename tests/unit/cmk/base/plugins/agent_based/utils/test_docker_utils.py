@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
 
 import pytest
 
@@ -114,5 +113,5 @@ def test_parse_remove_error_message(data_in, data_out) -> None:  # type:ignore[n
         [MemorySection(mem_total=16, mem_usage=3, mem_cache=4), {"MemFree": 16, "MemTotal": 16}],
     ],
 )
-def test_to_mem_used(memory_section: MemorySection, result: typing.Dict[str, int]) -> None:
+def test_to_mem_used(memory_section: MemorySection, result: dict[str, int]) -> None:
     assert memory_section.to_mem_used() == result

@@ -7,7 +7,7 @@ import json
 import re
 import uuid
 from ast import literal_eval
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 

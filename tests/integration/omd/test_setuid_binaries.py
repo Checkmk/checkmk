@@ -58,7 +58,7 @@ def test_binary_capability(  # type:ignore[no-untyped-def]
         # pre 2.41 format:
         # > getcap test
         # test = cap_net_raw+ep
-        assert completed_process.stdout == "%s = %s\n" % (
+        assert completed_process.stdout == "{} = {}\n".format(
             path,
             expected_capability.replace("=", "+"),
         )
@@ -66,4 +66,4 @@ def test_binary_capability(  # type:ignore[no-untyped-def]
         # 2.41 format:
         # > getcap test
         # test cap_net_raw=ep
-        assert completed_process.stdout == "%s %s\n" % (path, expected_capability)
+        assert completed_process.stdout == f"{path} {expected_capability}\n"

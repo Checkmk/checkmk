@@ -225,7 +225,7 @@ def test_get_graph_templates(  # type:ignore[no-untyped-def]
 ) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert set(graph_ids) == set(t["id"] for t in utils.get_graph_templates(translated_metrics))
+    assert set(graph_ids) == {t["id"] for t in utils.get_graph_templates(translated_metrics)}
 
 
 def test_replace_expression() -> None:

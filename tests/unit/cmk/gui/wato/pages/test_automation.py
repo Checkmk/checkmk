@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence, Tuple
 
 import pytest
 
@@ -21,7 +21,7 @@ from cmk.gui.watolib.utils import mk_repr
 @dataclass
 class ResultTest(ABCAutomationResult):
     field_1: tuple[int, int]
-    field_2: Optional[str]
+    field_2: str | None
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
@@ -49,7 +49,7 @@ class TestModeAutomation:
     @staticmethod
     def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
         **_kwargs,
-    ) -> Tuple[Sequence[str], str]:
+    ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],
             "((1, 2), 'abc')",

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-from typing import Any, MutableMapping, Optional
+from collections.abc import MutableMapping
+from typing import Any
 
 import freezegun
 import pytest
@@ -956,7 +957,7 @@ def test_check_temperature_ignores_trend_computation() -> None:
     ],
 )
 def test_check_temperature_either_unique_name_or_value_store(
-    unique_name: Optional[str], value_store: Optional[MutableMapping[str, Any]]
+    unique_name: str | None, value_store: MutableMapping[str, Any] | None
 ) -> None:
     with pytest.raises(ValueError):
         list(

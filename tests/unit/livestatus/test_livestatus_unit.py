@@ -131,7 +131,7 @@ def test_livestatus_ipv6_connection() -> None:
         # Pick a random port
         try:
             sock.bind(("::1", 0))
-        except socket.error as e:
+        except OSError as e:
             # Skip this test in case ::1 can not be bound to
             # (happened in docker container with IPv6 disabled)
             if e.errno == errno.EADDRNOTAVAIL:

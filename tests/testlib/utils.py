@@ -12,7 +12,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
 logger = logging.getLogger()
 
@@ -64,7 +63,7 @@ def virtualenv_path() -> Path:
     return Path(venv.rstrip("\n"))
 
 
-def find_git_rm_mv_files(dirpath: Path) -> List[str]:
+def find_git_rm_mv_files(dirpath: Path) -> list[str]:
     del_files = []
 
     out = subprocess.check_output(
@@ -151,7 +150,7 @@ def get_cmk_download_credentials() -> tuple[str, str]:
         with open(credentials_file_path) as credentials_file:
             username, password = credentials_file.read().strip().split(":", maxsplit=1)
             return username, password
-    except IOError:
+    except OSError:
         raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 

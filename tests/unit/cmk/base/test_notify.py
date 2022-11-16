@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from typing import Mapping
+from collections.abc import Mapping
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -100,6 +100,6 @@ def test_rbn_groups_contacts(
     ts.apply(monkeypatch)
     assert notify.rbn_groups_contacts([]) == set()
     assert notify.rbn_groups_contacts(["nono"]) == set()
-    assert notify.rbn_groups_contacts(["all"]) == set(["dong"])
-    assert notify.rbn_groups_contacts(["foo"]) == set(["ding", "harry"])
-    assert notify.rbn_groups_contacts(["foo", "all"]) == set(["ding", "dong", "harry"])
+    assert notify.rbn_groups_contacts(["all"]) == {"dong"}
+    assert notify.rbn_groups_contacts(["foo"]) == {"ding", "harry"}
+    assert notify.rbn_groups_contacts(["foo", "all"]) == {"ding", "dong", "harry"}

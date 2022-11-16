@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 import pytest
 
@@ -47,7 +48,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_check_sftp_argument_parsing(
-    params: Tuple[Any],
+    params: tuple[Any],
     expected_args: Sequence[str],
 ) -> None:
     """Tests if all required arguments are present."""

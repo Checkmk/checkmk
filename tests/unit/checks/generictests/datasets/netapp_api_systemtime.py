@@ -5,15 +5,15 @@
 
 # fmt: off
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 checkname = 'netapp_api_systemtime'
 
 info = [['FAS8020-2', '1498108660', '1498108660']]
 
-discovery: Dict[str, List[Tuple[str, Dict[Any, Any]]]] = {'': [('FAS8020-2', {})]}
+discovery: dict[str, list[tuple[str, dict[Any, Any]]]] = {'': [('FAS8020-2', {})]}
 
-checks: Dict[str, List[Tuple[str, Dict[Any, Any], List[Tuple[int, str, List[Tuple[str, int, Any, Any, Any, Any]]]]]]] = {
+checks: dict[str, list[tuple[str, dict[Any, Any], list[tuple[int, str, list[tuple[str, int, Any, Any, Any, Any]]]]]]] = {
     '': [
         (
             'FAS8020-2', {}, [

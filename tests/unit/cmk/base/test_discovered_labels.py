@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -63,7 +62,7 @@ def discovered_host_labels_dir_fixture(tmp_path: Path, monkeypatch: MonkeyPatch)
 def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"))
 
-    label_dict: Dict[str, HostLabelValueDict] = {  # save below expects Dict[Any, Any] :-|
+    label_dict: dict[str, HostLabelValueDict] = {  # save below expects Dict[Any, Any] :-|
         "xyz": {"value": "äbc", "plugin_name": "sectionname"}
     }
 
@@ -79,7 +78,7 @@ def test_label() -> None:
     l = _Label(name, value)
     assert l.name == name
     assert l.value == value
-    assert l.label == "%s:%s" % (name, value)
+    assert l.label == f"{name}:{value}"
 
 
 def test_label_validation() -> None:

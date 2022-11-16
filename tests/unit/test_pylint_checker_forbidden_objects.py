@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 import astroid  # type: ignore[import]
 import pytest
@@ -138,7 +138,7 @@ def test_import_typing(
     ],
 )
 def test_multiple_modules_typing(
-    namedtuple_checker: TypingNamedTupleChecker, modules: Iterable[Tuple[str, str, bool]]
+    namedtuple_checker: TypingNamedTupleChecker, modules: Iterable[tuple[str, str, bool]]
 ) -> None:
     for import_code, call_code, ref_value in modules:
         node = astroid.extract_node(import_code)
@@ -231,7 +231,7 @@ def test_function_as_argument_name(
     ],
 )
 def test_multiple_modules_multiple_functions(
-    six_checker: SixEnsureStrBinChecker, modules: Iterable[Tuple[str, str, bool]]
+    six_checker: SixEnsureStrBinChecker, modules: Iterable[tuple[str, str, bool]]
 ) -> None:
     for import_code, call_code, ref_value in modules:
         node = astroid.extract_node(import_code)

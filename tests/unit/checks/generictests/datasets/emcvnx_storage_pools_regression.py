@@ -9,121 +9,121 @@
 checkname = 'emcvnx_storage_pools'
 
 parsed = {
-    u'backup': {
-        u'Disk Type': u'Mixed',
-        u'Relocation Type': u'Scheduled',
-        u'Performance_User Capacity (GBs)': u'4400.83',
-        u"Deduplicated LUNs' Tiering Policy": u'Auto Tier',
-        u'Compression Savings (GBs)': u'N/A',
-        u'Raw Capacity (GBs)': u'20177.924',
-        u'Capacity_Consumed Capacity (GBs)': u'9096.98',
-        u'Efficiency Savings (Blocks)': u'N/A',
-        u'Deduplication Status': u'OK(0x0)',
-        u'Current Operation State': u'N/A',
-        u'Deduplication Remaining Size (GBs)': u'N/A',
-        u'Deduplication Percent Completed': u'-42',
-        u'Performance_Data Targeted for Higher Tier (GBs)': u'0.00',
-        u'Consumed Capacity (GBs)': u'13058.455',
-        u'Current Operation Percent Completed': u'0',
-        'tier_names': [u'Performance', u'Capacity'],
-        u'Rebalance Percent Complete': u'N/A',
-        u"Deduplicated LUNs' Initial Tier": u'Highest Available',
-        u'Deduplication Remaining Size (Blocks)': u'N/A',
-        u'Snapshot Subscribed Capacity (GBs)': u'0.000',
-        u'FAST Cache': u'Disabled',
-        u'Percent Full': u'84.763',
-        u'User Capacity (GBs)': u'15405.781',
-        u'Performance_Data Targeted Within Tier (GBs)': u'0.00',
-        u'Deduplication Shared Capacity (Blocks)': u'N/A',
-        u'Deduplication State': u'Idle (No Deduplicated LUNs)',
-        u'Percent Full Threshold': u'80',
-        u'Metadata Subscribed Capacity (GBs)': u'433.954',
-        u'Raw Capacity (Blocks)': u'42316172978',
-        u'Capacity_Data Targeted for Lower Tier (GBs)': u'0.00',
-        u'Schedule Duration Remaining': u'None',
-        u'Total Subscribed Capacity (Blocks)': u'27384514560',
-        u'Data to Move Within Tiers (GBs)': u'0.00',
-        u'State': u'Ready',
-        u'Efficiency Savings (GBs)': u'N/A',
-        u'LUN Allocation (GBs)': u'12624.000',
-        u'Capacity_Raid Drive Count': u'8',
-        u'Available Capacity (GBs)': u'2347.326',
-        u'Data to Move Up (GBs)': u'17.03',
-        u'Available Capacity (Blocks)': u'4922698752',
-        u'Deduplication Shared Capacity (GBs)': u'N/A',
-        u'Auto-Delete Pool Full High Watermark': u'95.00',
-        u'Auto-Tiering': u'Scheduled',
-        u'Auto-Delete Pool Full State': u'Idle',
-        u'Auto-Delete Snapshot Space Used State': u'Idle',
-        u'Compression Savings (Blocks)': u'N/A',
-        u'LUN Allocation (Blocks)': u'26474446848',
-        u'LUN Subscribed Capacity (GBs)': u'12624.000',
-        u'LUNs':
-        u'395, 328, 164, 70, 356, 80, 360, 330, 273, 62, 347, 267, 299, 263, 209, 264, 206, 89, 307, 364, 64, 371, 135, 323, 268, 315, 69, 332, 326, 376, 77, 394, 57, 261, 122, 271, 170, 266, 246, 272, 73, 167, 366, 179, 156, 381, 310, 344, 270, 86, 317, 75, 336, 117, 52, 107, 378, 240, 374, 112, 312, 291, 59, 253, 321, 68, 55, 274, 162, 385, 265, 95, 369, 359, 334, 386, 142, 358, 380, 128, 338, 319, 269, 66, 383, 32, 257, 275, 96, 27, 149, 102, 50',
-        u'Metadata Subscribed Capacity (Blocks)': u'910067712',
-        u'Capacity_Percent Subscribed': u'82.66%',
-        u'Performance_Data Targeted for Lower Tier (GBs)': u'17.03',
-        u'Performance_Raid Type': u'r_5',
-        u'Oversubscribed by (GBs)': u'0.000',
-        u'Deduplication Rate': u'Medium',
-        u'Auto-Delete Pool Full Threshold Enabled': u'On',
-        u'Snapshot Allocation (GBs)': u'0.000',
-        u'Performance_Percent Subscribed': u'90.01%',
-        u'Estimated Time to Complete': u'4 minutes',
-        u'Capacity_Data Targeted for Higher Tier (GBs)': u'17.03',
-        u'Total Subscribed Capacity (GBs)': u'13057.954',
-        u'User Capacity (Blocks)': u'32308263936',
-        u'Auto-Delete Snapshot Space Used Low Watermark': u'20.00',
-        u'Status': u'OK(0x0)',
-        u'Oversubscribed by (Blocks)': u'0',
-        u'Pool ID': u'2',
-        u'Relocation Rate': u'Medium',
-        u'Auto-Delete Pool Full Low Watermark': u'85.00',
-        u'Capacity_Data Targeted Within Tier (GBs)': u'0.00',
-        u'Current Operation Status': u'N/A',
-        u'Relocation Status': u'Inactive',
-        u'Disks': u'',
-        u'Performance_Raid Drive Count': u'5',
-        u'Metadata Allocation (GBs)': u'434.455',
-        u'Metadata Allocation (Blocks)': u'911118336',
-        u'Data to Move Down (GBs)': u'17.03',
-        u'Optimal Deduplicated LUN SP Owner': u'N/A',
-        u'Snapshot Subscribed Capacity (Blocks)': u'0',
-        u'LUN Subscribed Capacity (Blocks)': u'26474446848',
-        u'Current Operation': u'None',
-        u'Description': u'',
-        u'Capacity_Raid Type': u'r_6',
-        u'Performance_Consumed Capacity (GBs)': u'3960.97',
-        u'Snapshot Allocation (Blocks)': u'0',
-        u'Storage Pool ID': u'2',
-        u'Performance_Available Capacity (GBs)': u'439.86',
-        u'Raid Type': u'Mixed',
-        u'Capacity_Available Capacity (GBs)': u'1907.97',
-        u'Consumed Capacity (Blocks)': u'27385565184',
-        u'Capacity_User Capacity (GBs)': u'11004.95',
-        u'Data Movement Completed (GBs)': u'102.70',
-        u'Auto-Delete Snapshot Space Used Threshold Enabled': u'Off',
-        u'Auto-Delete Snapshot Space Used High Watermark': u'25.00',
-        u'Percent Subscribed': u'84.760'
+    'backup': {
+        'Disk Type': 'Mixed',
+        'Relocation Type': 'Scheduled',
+        'Performance_User Capacity (GBs)': '4400.83',
+        "Deduplicated LUNs' Tiering Policy": 'Auto Tier',
+        'Compression Savings (GBs)': 'N/A',
+        'Raw Capacity (GBs)': '20177.924',
+        'Capacity_Consumed Capacity (GBs)': '9096.98',
+        'Efficiency Savings (Blocks)': 'N/A',
+        'Deduplication Status': 'OK(0x0)',
+        'Current Operation State': 'N/A',
+        'Deduplication Remaining Size (GBs)': 'N/A',
+        'Deduplication Percent Completed': '-42',
+        'Performance_Data Targeted for Higher Tier (GBs)': '0.00',
+        'Consumed Capacity (GBs)': '13058.455',
+        'Current Operation Percent Completed': '0',
+        'tier_names': ['Performance', 'Capacity'],
+        'Rebalance Percent Complete': 'N/A',
+        "Deduplicated LUNs' Initial Tier": 'Highest Available',
+        'Deduplication Remaining Size (Blocks)': 'N/A',
+        'Snapshot Subscribed Capacity (GBs)': '0.000',
+        'FAST Cache': 'Disabled',
+        'Percent Full': '84.763',
+        'User Capacity (GBs)': '15405.781',
+        'Performance_Data Targeted Within Tier (GBs)': '0.00',
+        'Deduplication Shared Capacity (Blocks)': 'N/A',
+        'Deduplication State': 'Idle (No Deduplicated LUNs)',
+        'Percent Full Threshold': '80',
+        'Metadata Subscribed Capacity (GBs)': '433.954',
+        'Raw Capacity (Blocks)': '42316172978',
+        'Capacity_Data Targeted for Lower Tier (GBs)': '0.00',
+        'Schedule Duration Remaining': 'None',
+        'Total Subscribed Capacity (Blocks)': '27384514560',
+        'Data to Move Within Tiers (GBs)': '0.00',
+        'State': 'Ready',
+        'Efficiency Savings (GBs)': 'N/A',
+        'LUN Allocation (GBs)': '12624.000',
+        'Capacity_Raid Drive Count': '8',
+        'Available Capacity (GBs)': '2347.326',
+        'Data to Move Up (GBs)': '17.03',
+        'Available Capacity (Blocks)': '4922698752',
+        'Deduplication Shared Capacity (GBs)': 'N/A',
+        'Auto-Delete Pool Full High Watermark': '95.00',
+        'Auto-Tiering': 'Scheduled',
+        'Auto-Delete Pool Full State': 'Idle',
+        'Auto-Delete Snapshot Space Used State': 'Idle',
+        'Compression Savings (Blocks)': 'N/A',
+        'LUN Allocation (Blocks)': '26474446848',
+        'LUN Subscribed Capacity (GBs)': '12624.000',
+        'LUNs':
+        '395, 328, 164, 70, 356, 80, 360, 330, 273, 62, 347, 267, 299, 263, 209, 264, 206, 89, 307, 364, 64, 371, 135, 323, 268, 315, 69, 332, 326, 376, 77, 394, 57, 261, 122, 271, 170, 266, 246, 272, 73, 167, 366, 179, 156, 381, 310, 344, 270, 86, 317, 75, 336, 117, 52, 107, 378, 240, 374, 112, 312, 291, 59, 253, 321, 68, 55, 274, 162, 385, 265, 95, 369, 359, 334, 386, 142, 358, 380, 128, 338, 319, 269, 66, 383, 32, 257, 275, 96, 27, 149, 102, 50',
+        'Metadata Subscribed Capacity (Blocks)': '910067712',
+        'Capacity_Percent Subscribed': '82.66%',
+        'Performance_Data Targeted for Lower Tier (GBs)': '17.03',
+        'Performance_Raid Type': 'r_5',
+        'Oversubscribed by (GBs)': '0.000',
+        'Deduplication Rate': 'Medium',
+        'Auto-Delete Pool Full Threshold Enabled': 'On',
+        'Snapshot Allocation (GBs)': '0.000',
+        'Performance_Percent Subscribed': '90.01%',
+        'Estimated Time to Complete': '4 minutes',
+        'Capacity_Data Targeted for Higher Tier (GBs)': '17.03',
+        'Total Subscribed Capacity (GBs)': '13057.954',
+        'User Capacity (Blocks)': '32308263936',
+        'Auto-Delete Snapshot Space Used Low Watermark': '20.00',
+        'Status': 'OK(0x0)',
+        'Oversubscribed by (Blocks)': '0',
+        'Pool ID': '2',
+        'Relocation Rate': 'Medium',
+        'Auto-Delete Pool Full Low Watermark': '85.00',
+        'Capacity_Data Targeted Within Tier (GBs)': '0.00',
+        'Current Operation Status': 'N/A',
+        'Relocation Status': 'Inactive',
+        'Disks': '',
+        'Performance_Raid Drive Count': '5',
+        'Metadata Allocation (GBs)': '434.455',
+        'Metadata Allocation (Blocks)': '911118336',
+        'Data to Move Down (GBs)': '17.03',
+        'Optimal Deduplicated LUN SP Owner': 'N/A',
+        'Snapshot Subscribed Capacity (Blocks)': '0',
+        'LUN Subscribed Capacity (Blocks)': '26474446848',
+        'Current Operation': 'None',
+        'Description': '',
+        'Capacity_Raid Type': 'r_6',
+        'Performance_Consumed Capacity (GBs)': '3960.97',
+        'Snapshot Allocation (Blocks)': '0',
+        'Storage Pool ID': '2',
+        'Performance_Available Capacity (GBs)': '439.86',
+        'Raid Type': 'Mixed',
+        'Capacity_Available Capacity (GBs)': '1907.97',
+        'Consumed Capacity (Blocks)': '27385565184',
+        'Capacity_User Capacity (GBs)': '11004.95',
+        'Data Movement Completed (GBs)': '102.70',
+        'Auto-Delete Snapshot Space Used Threshold Enabled': 'Off',
+        'Auto-Delete Snapshot Space Used High Watermark': '25.00',
+        'Percent Subscribed': '84.760'
     }
 }
 
 discovery = {
-    '': [(u'backup', {})],
-    'tieringtypes': [(u'backup Capacity', {}), (u'backup Performance', {})],
-    'tiering': [(u'backup', {})],
-    'deduplication': [(u'backup', {})]
+    '': [('backup', {})],
+    'tieringtypes': [('backup Capacity', {}), ('backup Performance', {})],
+    'tiering': [('backup', {})],
+    'deduplication': [('backup', {})]
 }
 
 checks = {
     '': [
         (
-            u'backup', {
+            'backup', {
                 'percent_full': (70.0, 90.0)
             }, [
                 (
                     0,
-                    u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.0 TiB, Consumed capacity: 12.8 TiB, Available capacity: 2.29 TiB',
+                    'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.0 TiB, Consumed capacity: 12.8 TiB, Available capacity: 2.29 TiB',
                     []
                 ),
                 (1, 'Percent full: 84.76% (warn/crit at 70 B/90 B)', []),
@@ -159,7 +159,7 @@ checks = {
     ],
     'tieringtypes': [
         (
-            u'backup Capacity', {}, [
+            'backup Capacity', {}, [
                 (0, 'User capacity: 10.7 TiB', []),
                 (
                     0, 'Consumed capacity: 8.88 TiB', [
@@ -205,7 +205,7 @@ checks = {
             ]
         ),
         (
-            u'backup Performance', {}, [
+            'backup Performance', {}, [
                 (0, 'User capacity: 4.30 TiB', []),
                 (
                     0, 'Consumed capacity: 3.87 TiB', [
@@ -252,12 +252,12 @@ checks = {
     ],
     'tiering': [
         (
-            u'backup', {
+            'backup', {
                 'time_to_complete': (1814400, 2419200)
             }, [
-                (0, u'Fast cache: Disabled', []),
-                (0, u'Relocation status: Inactive', []),
-                (0, u'Relocation rate: Medium', []),
+                (0, 'Fast cache: Disabled', []),
+                (0, 'Relocation status: Inactive', []),
+                (0, 'Relocation rate: Medium', []),
                 (
                     0, 'Move up: 17.0 GiB', [
                         (
@@ -286,7 +286,7 @@ checks = {
                             None, None, None
                         )
                     ]
-                ), (0, u'Estimated time to complete: 4 minutes', []),
+                ), (0, 'Estimated time to complete: 4 minutes', []),
                 (
                     0, 'Age: 4 minutes 0 seconds', [
                         (
@@ -300,9 +300,9 @@ checks = {
     ],
     'deduplication': [
         (
-            u'backup', {}, [
-                (0, u'State: Idle (No Deduplicated LUNs)', []),
-                (0, u'Status: OK', []), (0, u'Rate: Medium', []),
+            'backup', {}, [
+                (0, 'State: Idle (No Deduplicated LUNs)', []),
+                (0, 'Status: OK', []), (0, 'Rate: Medium', []),
                 (0, 'Efficiency savings: N/A', []),
                 (
                     0, 'Percent completed: -42.00%', [

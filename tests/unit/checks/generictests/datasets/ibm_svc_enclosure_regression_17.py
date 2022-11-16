@@ -11,32 +11,32 @@
 checkname = 'ibm_svc_enclosure'
 
 
-info = [[u'6',
-         u'online',
-         u'expansion',
-         u'yes',
-         u'0',
-         u'io_grp0',
-         u'2072-24E',
-         u'7804352',
-         u'2',
-         u'2',
-         u'2',
-         u'2',
-         u'24',
-         u'0',
-         u'0',
-         u'0',
-         u'0']]
+info = [['6',
+         'online',
+         'expansion',
+         'yes',
+         '0',
+         'io_grp0',
+         '2072-24E',
+         '7804352',
+         '2',
+         '2',
+         '2',
+         '2',
+         '24',
+         '0',
+         '0',
+         '0',
+         '0']]
 
 
-discovery = {'': [(u'6', {})]}
+discovery = {'': [('6', {})]}
 
 
-checks = {'': [(u'6',
+checks = {'': [('6',
                 {},
-                [(0, u'Status: online', []),
-                 (0, u'Online canisters: 2 of 2', []),
-                 (0, u'Online PSUs: 2 of 2', []),
-                 (0, u'Online fan modules: 0 of 0', []),
-                 (0, u'Online secondary expander modules: 0 of 0', [])])]}
+                [(0, 'Status: online', []),
+                 (0, 'Online canisters: 2 of 2', []),
+                 (0, 'Online PSUs: 2 of 2', []),
+                 (0, 'Online fan modules: 0 of 0', []),
+                 (0, 'Online secondary expander modules: 0 of 0', [])])]}

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Mapping, NamedTuple, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 import pytest
 
@@ -46,8 +47,8 @@ class DiscoveryScenario(NamedTuple):
 class CheckScenario(NamedTuple):
     item: str
     section: Mapping[str, Statistics]
-    value_store: Dict[str, object]
-    expected_result: Sequence[Union[Result, Metric]]
+    value_store: dict[str, object]
+    expected_result: Sequence[Result | Metric]
 
 
 _SCENARIOS = []

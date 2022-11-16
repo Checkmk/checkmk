@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -243,7 +243,7 @@ def test_data_is_valid(
 )
 def test_parse_apt(
     string_table: StringTable,
-    expected_result: Optional[Section],
+    expected_result: Section | None,
 ) -> None:
     assert parse_apt(string_table) == expected_result
 

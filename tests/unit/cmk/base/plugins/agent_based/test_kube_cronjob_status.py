@@ -2,7 +2,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Union
 
 from pydantic_factories import ModelFactory
 
@@ -50,7 +49,7 @@ class CronJobStatusFactory(ModelFactory):
 
 
 def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
-    state: Union[ContainerRunningState, ContainerTerminatedState, ContainerWaitingState]
+    state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
 ):
     # The check only requires the state field to be populated, therefore all the other fields are
     # filled with some arbitrary values.

@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
+from collections.abc import Generator
 from pathlib import Path
-from typing import Final, Generator
+from typing import Final
 
 import pytest
 

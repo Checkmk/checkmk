@@ -5,8 +5,8 @@
 
 import fnmatch
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Tuple
 
 from tests.testlib import cmk_path
 
@@ -26,7 +26,7 @@ _GLOBAL_EXCLUDES = [
     ".f12",
 ]
 
-_PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str], List[str]]] = [
+_PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
     # globbing pattern                check function,   explicit excludes, exclude patterns
     ("active_checks/*", is_executable, ["Makefile", "check_mkevents.cc"], []),
     ("agents/special/agent_*", is_executable, [], []),
@@ -81,4 +81,4 @@ def test_permissions(changed_files: ChangedFiles) -> None:
                 continue
             if any(fnmatch.fnmatch(f.name, p) for p in exclude_patterns):
                 continue
-            assert check_func(f), "%s has wrong permissions (%r)" % (f, check_func)
+            assert check_func(f), f"{f} has wrong permissions ({check_func!r})"

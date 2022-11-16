@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
 
 import pytest
 
@@ -113,9 +112,9 @@ RESULTS_NOT_ON_BATTERY: type_defs.CheckResult = [
 )
 def test_check_ups_capacity(
     params: UpsParameters,
-    section_ups_battery_capacity: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_capacity: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
     results: type_defs.CheckResult,
 ) -> None:
     assert (
@@ -184,9 +183,9 @@ SECTION_BATTERY_WARNINGS_OK = Battery(
     ids=["some_not_ok", "all_ok"],
 )
 def test_check_ups_battery_state(
-    section_ups_battery_warnings: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_warnings: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
     results: type_defs.CheckResult,
 ) -> None:
     assert (

@@ -6,7 +6,7 @@
 # mypy: disallow-untyped-defs
 import json
 import logging
-from typing import Mapping, Sequence, Union
+from collections.abc import Mapping, Sequence
 
 import pytest
 from kubernetes import client  # type: ignore[import]
@@ -182,7 +182,7 @@ def test_version_endpoint_invalid_json(raw_api: RawAPI) -> None:
 @pytest.mark.parametrize("version_json, result", version_json_pytest_params)
 def test_version_from_json(
     version_json: Mapping[str, str],
-    result: Union[api.UnknownKubernetesVersion, api.KubernetesVersion],
+    result: api.UnknownKubernetesVersion | api.KubernetesVersion,
 ) -> None:
     assert result == version_from_json(json.dumps(version_json))
 
@@ -261,7 +261,7 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
 )
 def test_decompose_git_version(
     git_version: api.GitVersion,
-    result: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
+    result: api.KubernetesVersion | api.UnknownKubernetesVersion,
     logs: Sequence[str],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -304,7 +304,7 @@ def test_decompose_git_version(
     ],
 )
 def test__verify_version_support_continue_processing(
-    kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
+    kubernetes_version: api.KubernetesVersion | api.UnknownKubernetesVersion,
     logs: Sequence[str],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -331,7 +331,7 @@ def test__verify_version_support_continue_processing(
     ],
 )
 def test__verify_version_support_abort_processing(
-    kubernetes_version: Union[api.KubernetesVersion, api.UnknownKubernetesVersion],
+    kubernetes_version: api.KubernetesVersion | api.UnknownKubernetesVersion,
     message: str,
 ) -> None:
 

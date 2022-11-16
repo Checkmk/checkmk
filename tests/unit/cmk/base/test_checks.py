@@ -25,7 +25,7 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
                 if re.search(deprecated_pattern, line.strip())
             ]
     except UnicodeDecodeError as exc:
-        return ["%s:-1:Unable to reade file: %s" % (check_file_path.name, exc)]
+        return [f"{check_file_path.name}:-1:Unable to reade file: {exc}"]
 
 
 @pytest.mark.parametrize(

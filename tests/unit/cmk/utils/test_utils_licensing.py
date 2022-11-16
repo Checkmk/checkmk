@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 from pytest import MonkeyPatch
@@ -32,7 +33,7 @@ from cmk.utils.licensing.export import (
 
 
 def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
-    def _mock_livestatus(query: str) -> Tuple[int, int]:
+    def _mock_livestatus(query: str) -> tuple[int, int]:
         if "GET hosts" in query:
             return 10, 5
         return 100, 10
@@ -64,7 +65,7 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
 def test_update_license_usage_livestatus_socket_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> Tuple[int, int]:
+    def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusSocketError()
 
     monkeypatch.setattr(
@@ -94,7 +95,7 @@ def test_update_license_usage_livestatus_socket_error(
 def test_update_license_usage_livestatus_not_found_error(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> Tuple[int, int]:
+    def _mock_livestatus(query: str) -> tuple[int, int]:
         raise livestatus.MKLivestatusNotFoundError()
 
     monkeypatch.setattr(
@@ -124,7 +125,7 @@ def test_update_license_usage_livestatus_not_found_error(
 def test_update_license_usage_next_run_ts_not_reached(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    def _mock_livestatus(query: str) -> Tuple[int, int]:
+    def _mock_livestatus(query: str) -> tuple[int, int]:
         if "GET hosts" in query:
             return 10, 5
         return 100, 10

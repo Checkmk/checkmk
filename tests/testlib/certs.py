@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
 
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
@@ -40,7 +39,7 @@ def check_certificate_against_public_key(
 
 
 def check_cn(
-    cert_or_csr: Union[Certificate, CertificateSigningRequest],
+    cert_or_csr: Certificate | CertificateSigningRequest,
     expected_cn: str,
 ) -> bool:
     return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn

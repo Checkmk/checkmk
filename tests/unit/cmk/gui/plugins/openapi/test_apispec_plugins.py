@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # fmt: off
-from typing import Type
 
 import pytest
 from apispec import APISpec
@@ -24,7 +23,7 @@ class Movie:
         self.value = tuple(sorted(kw.items()))
 
     def __repr__(self) -> str:
-        return "<Movie %r>" % (self.kw,)
+        return f"<Movie {self.kw!r}>"
 
     def __lt__(self, other):
         return self.kw["year"] > other.kw["year"]
@@ -114,8 +113,8 @@ def test_apispec_plugin_string_to_schema_dict(spec) -> None: # type:ignore[no-un
 
     schemas = spec.to_dict()['components']['schemas']
     assert schemas['MovieDict'] == {
-        u'type': u'object',
-        u'additionalProperties': {
+        'type': 'object',
+        'additionalProperties': {
             '$ref': '#/components/schemas/Movie'
         }
     }
@@ -126,8 +125,8 @@ def test_apispec_plugin_string_to_string_dict(spec) -> None: # type:ignore[no-un
     spec.components.schema('CustomTagDict', schema=CustomTagDictSchema)
     schemas = spec.to_dict()['components']['schemas']
     assert schemas['CustomTagDict'] == {
-        u'type': u'object',
-        u'additionalProperties': {
+        'type': 'object',
+        'additionalProperties': {
             'type': 'string',
             'description': 'Tag value here',
             'pattern': 'foo|bar',
@@ -149,7 +148,7 @@ def test_apispec_plugin_parameters(spec) -> None: # type:ignore[no-untyped-def]
         (EmailSchema, {'bob': 'bob@example.com'}, {'bob': 'bob@example.com'}),
     ],
 )
-def test_typed_dictionary_success(schema_class: Type[SchemaABC], in_data, expected_result) -> None: # type:ignore[no-untyped-def]
+def test_typed_dictionary_success(schema_class: type[SchemaABC], in_data, expected_result) -> None: # type:ignore[no-untyped-def]
     schema = schema_class()
     result = schema.load(in_data)
     assert result == expected_result

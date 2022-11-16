@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-from typing import List, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -12,6 +11,8 @@ import cmk.utils.paths
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.base.autochecks.utils import AutocheckEntry, AutochecksSerializer, AutochecksStore
+
+# pylint: disable=redefined-outer-name
 
 
 @pytest.fixture(autouse=True)
@@ -22,7 +23,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 class TestAutochecksSerializer:
     def test_empty(self) -> None:
         serial = b"[\n]\n"
-        obj: List[AutocheckEntry] = []
+        obj: list[AutocheckEntry] = []
         assert AutochecksSerializer.serialize(obj) == serial
         assert AutochecksSerializer.deserialize(serial) == obj
 

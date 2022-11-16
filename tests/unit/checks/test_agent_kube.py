@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -508,7 +509,7 @@ def test_client_configuration_host(  # type:ignore[no-untyped-def]
     params: Mapping[str, Any], host
 ) -> None:
     agent = SpecialAgent("agent_kube")
-    arguments: List[str] = []
+    arguments: list[str] = []
     argument_raw: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
     # this does not feel right:
     assert isinstance(argument_raw, list)

@@ -6,7 +6,6 @@
 import json as _json
 import time as _time
 import uuid as _uuid
-from typing import Dict, List
 
 import pytest
 
@@ -28,7 +27,7 @@ def default_cfg_fixture(request: pytest.FixtureRequest, site: Site) -> None:
 # queries each of those tables without any columns and filters
 @pytest.mark.usefixtures("default_cfg")
 def test_tables(site: Site) -> None:
-    columns_per_table: Dict[str, List[str]] = {}
+    columns_per_table: dict[str, list[str]] = {}
     for row in site.live.query_table_assoc("GET columns\n"):
         columns_per_table.setdefault(row["table"], []).append(row["name"])
     assert len(columns_per_table) > 5
@@ -193,7 +192,7 @@ class TestCrashReport:
     @pytest.fixture(autouse=True)
     def crash_report(self, site, component, uuid, crash_info):
         assert site.file_exists("var/check_mk/crashes")
-        dir_path = "var/check_mk/crashes/%s/%s/" % (component, uuid)
+        dir_path = f"var/check_mk/crashes/{component}/{uuid}/"
         site.makedirs(dir_path)
         site.write_text_file(dir_path + "crash.info", _json.dumps(crash_info))
         yield
@@ -212,7 +211,7 @@ class TestCrashReport:
             "\n".join(
                 (
                     "GET crashreports",
-                    "Columns: file:f0:%s/%s/crash.info" % (component, uuid),
+                    f"Columns: file:f0:{component}/{uuid}/crash.info",
                     "Filter: id = %s" % uuid,
                 )
             )

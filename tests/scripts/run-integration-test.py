@@ -94,7 +94,7 @@ def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
         if varname in os.environ:
             env_vars[varname] = os.environ[varname]
 
-    env_var_str = " ".join(["%s=%s" % (k, shlex.quote(v)) for k, v in env_vars.items()]) + " "
+    env_var_str = " ".join([f"{k}={shlex.quote(v)}" for k, v in env_vars.items()]) + " "
 
     cmd_parts = [
         "python3",

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from datetime import datetime
-from typing import Iterator
 
 import pytest
 from werkzeug.test import create_environ
@@ -52,9 +52,7 @@ def test_authenticate_fails(
 def fixture_pre_16_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"
-        ),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
     )
 
     with application_and_request_context(environ):
@@ -65,9 +63,7 @@ def fixture_pre_16_cookie() -> Iterator[str]:
 def fixture_pre_20_cookie() -> Iterator[str]:
     environ = dict(
         create_environ(),
-        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"
-        ),
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
     )
 
     with application_and_request_context(environ):
@@ -87,7 +83,7 @@ def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> It
     cookie_name = login.auth_cookie_name()
     cookie_value = login._auth_cookie_value(user_id, session_id)
 
-    environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode("utf-8"))
+    environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode())
 
     with application_and_request_context(environ):
         load_config()

@@ -8,7 +8,6 @@ Tests for legacy tuple rulesets.
 """
 
 # pylint: disable=redefined-outer-name
-from typing import Dict, List, Tuple
 
 import pytest
 
@@ -299,18 +298,24 @@ def test_all_matching_hosts(ts) -> None:  # type:ignore[no-untyped-def]
         {"host_tags": {"criticality": {"$ne": "test"}}}, with_foreign_hosts=True
     ) == {"host2", "host3"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {"agent": "no-agent"}, "host_name": []}, with_foreign_hosts=True
-    ) == set([])
+    assert (
+        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+            {"host_tags": {"agent": "no-agent"}, "host_name": []}, with_foreign_hosts=True
+        )
+        == set()
+    )
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {"agent": "no-agent"}, "host_name": ["host1"]}, with_foreign_hosts=True
     ) == {"host1"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {"agent": {"$ne": "no-agent"}}, "host_name": ["host1"]},
-        with_foreign_hosts=False,
-    ) == set([])
+    assert (
+        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+            {"host_tags": {"agent": {"$ne": "no-agent"}}, "host_name": ["host1"]},
+            with_foreign_hosts=False,
+        )
+        == set()
+    )
 
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "h"}]},
@@ -327,10 +332,13 @@ def test_all_matching_hosts(ts) -> None:  # type:ignore[no-untyped-def]
         with_foreign_hosts=False,
     ) == {"host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        {"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "2"}]},
-        with_foreign_hosts=False,
-    ) == set([])
+    assert (
+        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+            {"host_tags": {"agent": "no-agent"}, "host_name": [{"$regex": "2"}]},
+            with_foreign_hosts=False,
+        )
+        == set()
+    )
 
 
 def test_in_extraconf_hostlist() -> None:
@@ -359,18 +367,18 @@ def test_in_extraconf_hostlist() -> None:
 
 def test_get_rule_options_regular_rule() -> None:
     options = {"description": 'Put all hosts into the contact group "all"'}
-    entry: Tuple[str, List[str], List[str], Dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
+    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_empty_options() -> None:
-    options: Dict = {}
-    entry: Tuple[str, List[str], List[str], Dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
+    options: dict = {}
+    entry: tuple[str, list[str], list[str], dict] = ("all", [], tuple_rulesets.ALL_HOSTS, options)
     assert tuple_rulesets.get_rule_options(entry) == (entry[:-1], options)
 
 
 def test_get_rule_options_missing_options() -> None:
-    entry: Tuple[str, List[str], List[str]] = ("all", [], tuple_rulesets.ALL_HOSTS)
+    entry: tuple[str, list[str], list[str]] = ("all", [], tuple_rulesets.ALL_HOSTS)
     assert tuple_rulesets.get_rule_options(entry) == (entry, {})
 
 

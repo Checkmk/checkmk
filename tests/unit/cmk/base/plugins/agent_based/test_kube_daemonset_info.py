@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disallow_untyped_defs
-from typing import Tuple
 
 import pytest
 
@@ -44,6 +43,6 @@ from cmk.base.plugins.agent_based.utils.kube import (
     ],
 )
 def test_check_kube_daemonset_info(
-    section: DaemonSetInfo, expected_check_result: Tuple[Result, ...]
+    section: DaemonSetInfo, expected_check_result: tuple[Result, ...]
 ) -> None:
     assert tuple(check_kube_daemonset_info(1600000001.0, section)) == expected_check_result

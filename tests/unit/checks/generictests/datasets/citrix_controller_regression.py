@@ -8,17 +8,17 @@
 
 
 
-checkname = u'citrix_controller'
+checkname = 'citrix_controller'
 
 
-info = [[u'ControllerState', u'Active'],
-        [u'ControllerVersion', u'7.6.0.5024'],
-        [u'DesktopsRegistered', u'29'],
-        [u'LicensingServerState', u'OK'],
-        [u'LicensingGraceState', u'NotActive'],
-        [u'ActiveSiteServices', u'XenPool01', u'-', u'Cisco', u'UCS', u'VMware'],
-        [u'TotalFarmActiveSessions', u'262'],
-        [u'TotalFarmInactiveSessions', u'14']]
+info = [['ControllerState', 'Active'],
+        ['ControllerVersion', '7.6.0.5024'],
+        ['DesktopsRegistered', '29'],
+        ['LicensingServerState', 'OK'],
+        ['LicensingGraceState', 'NotActive'],
+        ['ActiveSiteServices', 'XenPool01', '-', 'Cisco', 'UCS', 'VMware'],
+        ['TotalFarmActiveSessions', '262'],
+        ['TotalFarmInactiveSessions', '14']]
 
 
 discovery = {'': [(None, None)],
@@ -28,7 +28,7 @@ discovery = {'': [(None, None)],
              'sessions': [(None, {})]}
 
 
-checks = {'': [(None, {}, [(0, u'Active', [])])],
+checks = {'': [(None, {}, [(0, 'Active', [])])],
           'licensing': [(None,
                          {},
                          [(0, 'Licensing Server State: OK', []),
@@ -38,7 +38,7 @@ checks = {'': [(None, {}, [(0, u'Active', [])])],
                           [(0,
                             '29',
                             [('registered_desktops', 29, None, None, None, None)])])],
-          'services': [(None, {}, [(0, u'XenPool01 - Cisco UCS VMware', [])])],
+          'services': [(None, {}, [(0, 'XenPool01 - Cisco UCS VMware', [])])],
           'sessions': [(None,
                         {},
                         [(0,

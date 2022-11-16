@@ -197,7 +197,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
             if not all_unescapable and parent_is_HTML(node):
                 if [x for x in tags if x != "img"]:
                     message = "OK! Is protected by HTML(...)!\n"
-                    message += "'''%s'''\n----> %s" % (first.value, ", ".join(tags))
+                    message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
                     self.add_message(self.MESSAGE_ID, args=message, node=node)
                     return False
         return True
@@ -241,7 +241,7 @@ class EscapingChecker(TranslationBaseChecker):
             # Case 3
             if not all_unescapable and not parent_is_HTML(node):
                 message = "String contains unprotected tags! Protect them using HTML(...), escape them or replace them!\n"
-                message += "'''%s'''\n----> %s" % (first.value, ", ".join(tags))
+                message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
                 self.add_message(self.MESSAGE_ID, args=message, node=node)
                 return False
         return True

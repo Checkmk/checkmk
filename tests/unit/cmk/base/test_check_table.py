@@ -5,7 +5,6 @@
 
 # pylint: disable=protected-access
 
-from typing import Dict, List
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -431,7 +430,7 @@ def test_get_check_table(
     ],
 )
 def test_get_check_table_of_mgmt_boards(
-    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: List[ServiceID]
+    monkeypatch: MonkeyPatch, hostname_str: str, expected_result: list[ServiceID]
 ) -> None:
     hostname = HostName(hostname_str)
 
@@ -522,7 +521,7 @@ def test_check_table__get_static_check_entries(
     hostname = HostName("hostname")
 
     static_parameters_default = {"levels": (1, 2, 3, 4)}
-    static_checks: Dict[str, List] = {
+    static_checks: dict[str, list] = {
         "ps": [
             {
                 "condition": {"service_description": [], "host_name": [hostname]},

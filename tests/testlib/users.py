@@ -5,7 +5,7 @@
 
 import contextlib
 import shutil
-from typing import Iterator, Optional
+from collections.abc import Iterator
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
@@ -49,7 +49,7 @@ def _mk_user_obj(  # type:ignore[no-untyped-def]
 
 @contextlib.contextmanager
 def create_and_destroy_user(
-    *, automation: bool = False, role: str = "user", username: Optional[str] = None
+    *, automation: bool = False, role: str = "user", username: str | None = None
 ) -> Iterator[tuple[UserId, str]]:
     if username is None:
         username = "test123-" + get_random_string(size=5, from_ascii=ord("a"), to_ascii=ord("z"))

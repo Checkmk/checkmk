@@ -8,15 +8,15 @@
 
 
 
-checkname = u'enterasys_powersupply'
+checkname = 'enterasys_powersupply'
 
 
-info = [[u'101', u'3', u'1', u'1'], [u'102', u'', u'', u'1']]
+info = [['101', '3', '1', '1'], ['102', '', '', '1']]
 
 
-discovery = {'': [(u'101', {})]}
+discovery = {'': [('101', {})]}
 
 
-checks = {'': [(u'101',
+checks = {'': [('101',
                 {'redundancy_ok_states': [1]},
                 [(0, 'Status: working and redundant (ac-dc)', [])])]}

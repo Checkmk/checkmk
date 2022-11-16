@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Iterable, Sequence, Set, Tuple
+from collections.abc import Iterable, Sequence
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
@@ -16,7 +16,7 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 # import pytest
 
 
-def _section(name: str, parsed_section_name: str, supersedes: Set[str]) -> SectionPlugin:
+def _section(name: str, parsed_section_name: str, supersedes: set[str]) -> SectionPlugin:
     section = trivial_section_factory(SectionName(name))
     return section._replace(
         parsed_section_name=ParsedSectionName(parsed_section_name),
@@ -37,7 +37,7 @@ class TestPArsedSectionsResolver:
     @staticmethod
     def make_provider(
         section_plugins: Sequence[SectionPlugin],
-    ) -> Tuple[ParsedSectionsResolver, _FakeParser]:
+    ) -> tuple[ParsedSectionsResolver, _FakeParser]:
         return (
             ParsedSectionsResolver(
                 section_plugins=section_plugins,

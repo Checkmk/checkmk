@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from itertools import count
-from typing import Optional, Union
 
 import pytest
 
@@ -30,7 +29,7 @@ from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_p
 
 
 def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
-    state: Union[ContainerRunningState, ContainerTerminatedState, ContainerWaitingState]
+    state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
 ):
     # The check only requires the state field to be populated, therefore all the other fields are
     # filled with some arbitrary values.
@@ -100,8 +99,8 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
     ],
 )
 def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untyped-def]
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result,
 ) -> None:
     """
@@ -166,8 +165,8 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
     ],
 )
 def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result,
 ) -> None:
     """
@@ -258,8 +257,8 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
     ],
 )
 def test_check_kube_pod_status_multiple_issues(  # type:ignore[no-untyped-def]
-    section_kube_pod_containers: Optional[PodContainers],
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_containers: PodContainers | None,
+    section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result,
 ) -> None:
     """
@@ -336,7 +335,7 @@ def test_check_alert_if_pending_too_long() -> None:
 def test_check_kube_pod_status_init_container_broken(  # type:ignore[no-untyped-def]
     section_kube_pod_init_containers: PodContainers,
     section_kube_pod_containers: PodContainers,
-    section_kube_pod_lifecycle: Optional[PodLifeCycle],
+    section_kube_pod_lifecycle: PodLifeCycle | None,
     expected_result,
 ) -> None:
     """

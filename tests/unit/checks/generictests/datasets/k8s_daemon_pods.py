@@ -12,16 +12,16 @@
 checkname = 'k8s_daemon_pods'
 
 parsed = {
-    u'collision_count': None,
-    u'conditions': None,
-    u'current_number_scheduled': 1,
-    u'desired_number_scheduled': 1,
-    u'number_available': 1,
-    u'number_misscheduled': 0,
-    u'number_ready': 1,
-    u'number_unavailable': None,
-    u'observed_generation': 1,
-    u'updated_number_scheduled': 1
+    'collision_count': None,
+    'conditions': None,
+    'current_number_scheduled': 1,
+    'desired_number_scheduled': 1,
+    'number_available': 1,
+    'number_misscheduled': 0,
+    'number_ready': 1,
+    'number_unavailable': None,
+    'observed_generation': 1,
+    'updated_number_scheduled': 1
 }
 
 discovery = {

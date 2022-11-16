@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import pytest
 
@@ -280,7 +281,7 @@ def test_check_memory(
     section: Section,
     item: str,
     params: Mapping[str, Any],
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_memory()(item, params, section)) == expected_result
 
@@ -332,7 +333,7 @@ def test_check_cpu(
     section: Section,
     item: str,
     params: Mapping[str, Any],
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_cpu()(item, params, section)) == expected_result
 
@@ -357,7 +358,7 @@ def test_check_connections(
     section: Section,
     item: str,
     params: Mapping[str, Any],
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_connections()(item, params, section)) == expected_result
 
@@ -384,7 +385,7 @@ def test_check_network(
     section: Section,
     item: str,
     params: Mapping[str, Any],
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_network()(item, params, section)) == expected_result
 
@@ -415,6 +416,6 @@ def test_check_storage(
     section: Section,
     item: str,
     params: Mapping[str, Any],
-    expected_result: Sequence[Union[Result, Metric]],
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     assert list(check_storage()(item, params, section)) == expected_result

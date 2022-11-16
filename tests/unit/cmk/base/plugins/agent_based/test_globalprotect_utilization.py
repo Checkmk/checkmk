@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -22,7 +23,7 @@ from cmk.base.plugins.agent_based.globalprotect_utilization import (
     [([[3, 250, 8]], Section(utilization=3, max_tunnels=250, active_tunnels=8)), ([[]], None)],
 )
 def test_parse_globalprotect_utilization(  # type:ignore[no-untyped-def]
-    string_table: StringTable, expected_result: Optional[Section]
+    string_table: StringTable, expected_result: Section | None
 ):
     section = parse_globalprotect_utilization(string_table)
     assert section == expected_result
@@ -33,7 +34,7 @@ def test_parse_globalprotect_utilization(  # type:ignore[no-untyped-def]
     [(Section(utilization=3, max_tunnels=250, active_tunnels=8), [Service()])],
 )
 def test_discover_globalprotect_utilization(
-    section: Section, expected_result: List[Service]
+    section: Section, expected_result: list[Service]
 ) -> None:
     services = list(discover_globalprotect_utilization(section))
     assert services == expected_result
@@ -56,7 +57,7 @@ def test_discover_globalprotect_utilization(
     ],
 )
 def test_check_globalprotect_utilization(  # type:ignore[no-untyped-def]
-    params: Mapping[str, Any], section: Section, expected_result: List[Union[Metric, Result]]
+    params: Mapping[str, Any], section: Section, expected_result: list[Metric | Result]
 ):
     result = list(check_globalprotect_utilization(params, section))
     assert result == expected_result

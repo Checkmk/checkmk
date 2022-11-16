@@ -7,7 +7,6 @@ import io
 import logging
 import tarfile
 from pathlib import Path
-from typing import List
 
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
@@ -35,7 +34,7 @@ def restore_orig_replication_paths():
     activate_changes._replication_paths = _orig_paths
 
 
-def _expected_replication_paths(edition: cmk_version.Edition) -> List[ReplicationPath]:
+def _expected_replication_paths(edition: cmk_version.Edition) -> list[ReplicationPath]:
     expected = [
         ReplicationPath("dir", "check_mk", "etc/check_mk/conf.d/wato/", []),
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),

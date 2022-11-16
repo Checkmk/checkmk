@@ -11,7 +11,7 @@
 checkname = 'teracom_tcw241_digital'
 
 
-info = [[[u'Tank_Status', u'NEA_Status', u'Digital Input 3', u'Digital Input 4']], [[u'1', u'1', u'1', u'1']]]
+info = [[['Tank_Status', 'NEA_Status', 'Digital Input 3', 'Digital Input 4']], [['1', '1', '1', '1']]]
 
 
 discovery = {'': [('4', {}),

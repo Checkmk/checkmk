@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, Mapping, MutableMapping, Optional, TypedDict, Union
+from typing import Any, TypedDict
 
 import pytest
 
@@ -20,7 +21,7 @@ class ArgsDict(TypedDict):
     levels: Mapping[str, Any]
     used_mb: float
     size_mb: float
-    timestamp: Optional[float]
+    timestamp: float | None
 
 
 @pytest.fixture(name="args")
@@ -40,7 +41,7 @@ def fixture_args() -> ArgsDict:
     }
 
 
-def _call_size_trend_with(args: ArgsDict) -> list[Union[IgnoreResults, Metric, Result]]:
+def _call_size_trend_with(args: ArgsDict) -> list[IgnoreResults | Metric | Result]:
     return list(
         size_trend(
             value_store=args["value_store"],

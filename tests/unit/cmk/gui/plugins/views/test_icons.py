@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 import cmk.utils.version as cmk_version
 
@@ -67,7 +67,7 @@ def test_builtin_icons_and_actions() -> None:
 
 
 def test_legacy_icon_plugin(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    icon: Dict[str, Any] = {
+    icon: dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],

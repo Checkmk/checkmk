@@ -49,12 +49,10 @@ def _collectors():
 
 
 def test_diagnostics_dump_elements() -> None:
-    fixed_element_classes = set(
-        [
-            diagnostics.GeneralDiagnosticsElement,
-        ]
-    )
-    element_classes = set(type(e) for e in diagnostics.DiagnosticsDump().elements)
+    fixed_element_classes = {
+        diagnostics.GeneralDiagnosticsElement,
+    }
+    element_classes = {type(e) for e in diagnostics.DiagnosticsDump().elements}
     assert fixed_element_classes.issubset(element_classes)
 
 
@@ -788,7 +786,7 @@ def test_diagnostics_element_checkmk_files(  # type:ignore[no-untyped-def]
     diagnostics_element = diag_elem(files)
     assert diagnostics_element.ident == ident
     assert diagnostics_element.title == title
-    assert diagnostics_element.description == ("%s %s" % (description, ", ".join(files)))
+    assert diagnostics_element.description == ("{} {}".format(description, ", ".join(files)))
 
 
 @pytest.mark.parametrize(
@@ -837,7 +835,7 @@ def test_diagnostics_element_checkmk_files_content(
     tmppath.mkdir(parents=True, exist_ok=True)
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
-    assert filepath == tmppath.joinpath("%s/test/%s" % (relative_path, test_filename))
+    assert filepath == tmppath.joinpath(f"{relative_path}/test/{test_filename}")
 
     with filepath.open("r", encoding="utf-8") as f:
         content = f.read()

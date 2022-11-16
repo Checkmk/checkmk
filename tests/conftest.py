@@ -116,7 +116,7 @@ def pytest_collection_modifyitems(items):
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
             if not isinstance(item, DoctestItem):
-                raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
+                raise Exception(f"Test in {repo_rel_path} not TYPE marked: {item!r} ({ty!r})")
 
         item.add_marker(pytest.mark.type.with_args(ty))
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 import pytest
 
@@ -15,7 +14,7 @@ def written(funnel: OutputFunnel) -> bytes:
     return funnel._response_stack[-1].get_data()
 
 
-def response_texts(funnel: OutputFunnel) -> List[List[str]]:
+def response_texts(funnel: OutputFunnel) -> list[list[str]]:
     return [[e.decode("utf-8") for e in r.iter_encoded()] for r in funnel._response_stack[1:]]
 
 

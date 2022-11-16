@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import List
 
 import pytest
 
@@ -44,7 +43,7 @@ STRING_TABLE = [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "0"]]]
     ],
 )
 def test_discover_vxvm_multipath(
-    section: List[StringTable],
+    section: list[StringTable],
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
@@ -96,7 +95,7 @@ def test_discover_vxvm_multipath(
     ],
 )
 def test_check_fortigate_sync_status(
-    section: List[StringTable],
+    section: list[StringTable],
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (

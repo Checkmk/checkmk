@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -150,11 +150,11 @@ from cmk.base.plugins.agent_based.utils.kube import (
 )
 def test_inventory_kube_pod(
     section_info: PodInfo,
-    section_containers: Optional[PodContainers],
-    section_init_containers: Optional[PodContainers],
+    section_containers: PodContainers | None,
+    section_init_containers: PodContainers | None,
     section_container_specs: ContainerSpecs,
     section_init_container_specs: ContainerSpecs,
-    expected_check_result: Sequence[Union[TableRow, Attributes]],
+    expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
 
     assert expected_check_result == list(
@@ -268,8 +268,8 @@ def test_inventory_kube_pod(
 )
 def test_container_to_table(
     container_specs: ContainerSpecs,
-    container_statuses: Optional[PodContainers],
-    expected_check_result: Sequence[Union[TableRow, Attributes]],
+    container_statuses: PodContainers | None,
+    expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
 
     assert expected_check_result == list(

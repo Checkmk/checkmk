@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Literal, Tuple
+from typing import Any, Literal
 
 import pytest
 from pytest_mock import MockerFixture
@@ -157,7 +157,7 @@ def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_registered_commands() -> None:
-    expected: Dict[str, Dict[str, Any]] = {
+    expected: dict[str, dict[str, Any]] = {
         "acknowledge": {
             "group": "acknowledge",
             "permission": "action.acknowledge",
@@ -310,7 +310,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_datasources() -> None:
-    expected: Dict[str, Dict[str, Any]] = {
+    expected: dict[str, dict[str, Any]] = {
         "alert_stats": {
             "add_columns": [
                 "log_alerts_ok",
@@ -659,7 +659,7 @@ def test_registered_datasources() -> None:
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     painters: list[Painter] = [painter_class() for painter_class in painter_registry.values()]
-    painters_and_cells: list[Tuple[Painter, Cell]] = [
+    painters_and_cells: list[tuple[Painter, Cell]] = [
         (painter, Cell(PainterSpec(name=painter.ident), None)) for painter in painters
     ]
 
@@ -714,7 +714,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_sorters() -> None:
-    expected: Dict[str, Dict[str, Any]] = {
+    expected: dict[str, dict[str, Any]] = {
         "aggr_group": {"columns": ["aggr_group"], "title": "Aggregation group"},
         "aggr_name": {"columns": ["aggr_name"], "title": "Aggregation name"},
         "alerts_crit": {"columns": ["log_alerts_crit"], "title": "Number of critical alerts"},

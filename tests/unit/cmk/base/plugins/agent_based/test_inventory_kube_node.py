@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -90,7 +90,7 @@ from .utils_inventory import sort_inventory_result
 def test_inventory_kube_node(
     section_info: NodeInfo,
     section_kubelet: KubeletInfo,
-    expected_check_result: Sequence[Union[TableRow, Attributes]],
+    expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
     assert sort_inventory_result(
         inventory_kube_node(section_info, section_kubelet)

@@ -21,7 +21,7 @@ def fixture_conf_dir(tmp_path: Path) -> Path:
     return path
 
 
-AAA_MARKER: Final = "{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}".encode("ascii")
+AAA_MARKER: Final = b"{AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA}"
 MARKER: Final = msi_patch.TRADITIONAL_UUID.encode("ascii")
 TEST_FILE: Final = Path("test_bin.tst")
 
@@ -33,9 +33,9 @@ def _get_test_file(fname: Path) -> Path:
     root_path = (
         Path(__file__).parent.joinpath("../../../../agents/wnx/test_files/msibuild/msi").resolve()
     )
-    assert root_path.exists(), "test dir is absent, work dir is '{}'".format(os.getcwd())
+    assert root_path.exists(), f"test dir is absent, work dir is '{os.getcwd()}'"
     src = root_path / fname
-    assert src.exists(), "test file '{}' is absent, work dir is '{}'".format(src, os.getcwd())
+    assert src.exists(), f"test file '{src}' is absent, work dir is '{os.getcwd()}'"
     return src
 
 

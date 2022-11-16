@@ -7,8 +7,8 @@ import io
 import json
 import logging
 import stat
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Mapping
 from unittest import mock
 from uuid import UUID
 from zlib import compress

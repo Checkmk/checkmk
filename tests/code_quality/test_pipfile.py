@@ -7,10 +7,11 @@ import ast
 import json
 import logging
 import warnings
+from collections.abc import Iterable
 from functools import lru_cache
 from itertools import chain, permutations
 from pathlib import Path
-from typing import Iterable, NewType
+from typing import NewType
 
 import isort
 import pytest

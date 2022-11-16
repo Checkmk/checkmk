@@ -8,10 +8,10 @@
 
 
 
-checkname = u'eltek_fans'
+checkname = 'eltek_fans'
 
 
-info = [[u'1', u'', u'']]
+info = [['1', '', '']]
 
 
 discovery = {'': []}

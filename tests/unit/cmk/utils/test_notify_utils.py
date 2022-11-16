@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 from tests.testlib import on_time
 
@@ -36,10 +35,10 @@ def test_notification_result_message() -> None:
     """Regression test for Werk #8783"""
     plugin = notify.NotificationPluginName("bulk asciimail")
     exit_code = notify.NotificationResultCode(0)
-    output: List[str] = []
+    output: list[str] = []
     context = notify.NotificationContext({"CONTACTNAME": "harri", "HOSTNAME": "test"})
     actual = notify.notification_result_message(plugin, context, exit_code, output)
-    expected = "%s: %s;%s;%s;%s;%s;%s" % (
+    expected = "{}: {};{};{};{};{};{}".format(
         "HOST NOTIFICATION RESULT",
         "harri",
         "test",

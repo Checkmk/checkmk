@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
@@ -265,9 +266,7 @@ def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
     ],
 )
 def test_df_check_filesystem_single(
-    data: tuple[
-        Optional[float], Optional[float], Optional[float], Optional[float], Optional[float]
-    ],
+    data: tuple[float | None, float | None, float | None, float | None, float | None],
     expected_result: CheckResult,
 ) -> None:
     assert (

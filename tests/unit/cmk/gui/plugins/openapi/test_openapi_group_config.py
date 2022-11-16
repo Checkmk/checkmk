@@ -203,7 +203,7 @@ def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
     base = "/NO_SITE/check_mk/api/1.0"
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
-        base + "/domain-types/%s_group_config/collections/all" % (group_type,),
+        base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(group),
         headers={"Accept": "application/json"},
         status=200,

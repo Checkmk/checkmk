@@ -5,7 +5,6 @@
 
 # mypy: disallow_untyped_defs
 
-from typing import Tuple
 
 import pytest
 
@@ -45,6 +44,6 @@ from cmk.base.plugins.agent_based.utils.kube import (
     ],
 )
 def test_check_kube_statefulset_info(
-    section: StatefulSetInfo, expected_check_result: Tuple[Result, ...]
+    section: StatefulSetInfo, expected_check_result: tuple[Result, ...]
 ) -> None:
     assert tuple(check_kube_statefulset_info(1600000001.0, section)) == expected_check_result

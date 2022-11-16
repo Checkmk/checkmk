@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -1692,7 +1693,7 @@ def test_check_multiple_interfaces_duplicate_descr(
     result: CheckResults,
 ) -> None:
     description = "description"
-    item = "%s %s" % (description, item)
+    item = f"{description} {item}"
     list(
         interfaces.check_multiple_interfaces(
             item,
@@ -1722,7 +1723,7 @@ def test_check_multiple_interfaces_duplicate_alias(
 ) -> None:
     alias = "alias"
     index = item
-    item = "%s %s" % (alias, index)
+    item = f"{alias} {index}"
     list(
         interfaces.check_multiple_interfaces(
             item,
@@ -1735,7 +1736,7 @@ def test_check_multiple_interfaces_duplicate_alias(
     assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
         Result(
             state=State.OK,
-            summary="[%s/%s]" % (alias, ifaces[int(index) - 1].attributes.descr),
+            summary=f"[{alias}/{ifaces[int(index) - 1].attributes.descr}]",
         ),
         *result[1:],
     ]

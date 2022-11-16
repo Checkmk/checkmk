@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, MutableMapping, Tuple
+from collections.abc import MutableMapping
 
 import pytest
 
@@ -142,7 +142,7 @@ def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> Non
 
 def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
 
-    walk_cache: MutableMapping[str, Tuple[bool, List[Tuple[str, bytes]]]] = {}
+    walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
 
     _ = snmp_table.get_snmp_table(
         section_name=SectionName("my_Section"),

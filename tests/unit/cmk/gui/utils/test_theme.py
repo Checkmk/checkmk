@@ -162,9 +162,7 @@ def test_theme_choices_override(theme_dirs: tuple[Path, Path]) -> None:
 
 
 def test_theme_broken_meta(my_theme: Path) -> None:
-    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
-        str('{"titlewrong": xyz"bla"}')
-    )
+    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write('{"titlewrong": xyz"bla"}')
 
     assert theme_choices() == sorted(
         [

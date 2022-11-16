@@ -6,9 +6,10 @@
 import json
 import os
 import socket
+from collections.abc import Sequence
 from itertools import product as cartesian_product
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional, Sequence, Union
+from typing import Any, NamedTuple
 from zlib import compress
 
 import pytest
@@ -53,11 +54,11 @@ class SensorReading(NamedTuple):
     states: Sequence[str]
     health: int
     name: str
-    imprecision: Optional[float]
-    units: Union[bytes, str]
+    imprecision: float | None
+    units: bytes | str
     state_ids: Sequence[int]
     type: str
-    value: Optional[float]
+    value: float | None
     unavailable: int
 
 
@@ -171,7 +172,7 @@ class StubFileCache(FileCache[TRawData]):
 
     def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
-        self.cache: Optional[TRawData] = None
+        self.cache: TRawData | None = None
 
     @staticmethod
     def _from_cache_file(raw_data: bytes) -> TRawData:
@@ -184,7 +185,7 @@ class StubFileCache(FileCache[TRawData]):
     def write(self, raw_data: TRawData, mode: Mode) -> None:
         self.cache = raw_data
 
-    def read(self, mode: Mode) -> Optional[TRawData]:
+    def read(self, mode: Mode) -> TRawData | None:
         return self.cache
 
 
@@ -635,7 +636,7 @@ class TestSNMPFetcherFetch:
         )
 
     @pytest.fixture(name="set_sections")
-    def _set_sections(self, monkeypatch: MonkeyPatch) -> List[List[str]]:
+    def _set_sections(self, monkeypatch: MonkeyPatch) -> list[list[str]]:
         table = [["1"]]
         monkeypatch.setattr(snmp_table, "get_snmp_table", lambda tree, **__: table)
         monkeypatch.setattr(
@@ -649,7 +650,7 @@ class TestSNMPFetcherFetch:
         return table
 
     def test_mode_inventory_do_status_data_inventory(
-        self, set_sections: List[List[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
@@ -672,7 +673,7 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_inventory_not_do_status_data_inventory(
-        self, set_sections: List[List[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
@@ -695,7 +696,7 @@ class TestSNMPFetcherFetch:
         )
 
     def test_mode_checking_do_status_data_inventory(
-        self, set_sections: List[List[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
+        self, set_sections: list[list[str]], fetcher: SNMPFetcher, monkeypatch: MonkeyPatch
     ) -> None:
         table = set_sections
         monkeypatch.setattr(fetcher, "do_status_data_inventory", True)

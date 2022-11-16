@@ -7,7 +7,7 @@
 #   ---specific Cisco devices-----------------------------------------------
 
 
-from typing import Callable
+from collections.abc import Callable
 
 
 def snmp_scan_cisco_cpu(oid: Callable[[str], str]) -> bool:

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Callable
+from collections.abc import Callable
 
 
 def _is_fsc_or_windows(oid: Callable[[str], str]) -> bool:

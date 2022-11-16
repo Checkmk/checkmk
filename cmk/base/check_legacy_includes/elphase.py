@@ -55,7 +55,7 @@ def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
                 state = 0
         else:
             state = device_state
-        yield state, "Device status: %s(%s)" % (device_state_readable, device_state)
+        yield state, f"Device status: {device_state_readable}({device_state})"
 
     for what, title, unit, bound, factor in [
         ("voltage", "Voltage", "V", Bounds.Lower, 1),

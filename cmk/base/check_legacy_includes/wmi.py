@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Iterable
 from math import ceil
-from typing import Callable, Iterable, Optional, Set, Union
 
 from cmk.base.check_api import (
     check_levels,
@@ -50,10 +50,10 @@ class WMITableLegacy(WMITable):
 
     def get(  # type:ignore[no-untyped-def]
         self,
-        row: Union[str, int],
-        column: Union[str, int],
+        row: str | int,
+        column: str | int,
         silently_skip_timed_out=False,
-    ) -> Optional[str]:
+    ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
             raise MKCounterWrapped("WMI query timed out")
         return self._get_row_col_value(row, column)
@@ -83,7 +83,7 @@ def parse_wmi_table(
 
 def wmi_filter_global_only(
     tables: WMISection,
-    row: Union[str, int],
+    row: str | int,
 ) -> bool:
     for table in tables.values():
         try:
@@ -108,8 +108,8 @@ def wmi_filter_global_only(
 
 def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
     tables: WMISection,
-    required_tables: Optional[Iterable[str]] = None,
-    filt: Optional[Callable[[WMISection, Union[str, int]], bool]] = None,
+    required_tables: Iterable[str] | None = None,
+    filt: Callable[[WMISection, str | int], bool] | None = None,
     levels=None,
 ):
     if required_tables is None:
@@ -118,7 +118,7 @@ def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
     if required_tables_missing(tables, required_tables):
         return []
 
-    potential_instances: Set = set()
+    potential_instances: set = set()
     # inventarize one item per instance that exists in all tables
     for required_table in required_tables:
         table_rows = tables[required_table].row_labels
@@ -135,8 +135,8 @@ def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
 
 def inventory_wmi_table_total(  # type:ignore[no-untyped-def]
     tables: WMISection,
-    required_tables: Optional[Iterable[str]] = None,
-    filt: Optional[Callable[[WMISection, None], bool]] = None,
+    required_tables: Iterable[str] | None = None,
+    filt: Callable[[WMISection, None], bool] | None = None,
     levels=None,
 ):
     if required_tables is None:
@@ -182,10 +182,10 @@ def get_levels_quadruple(params):
 
 def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
     table: WMITable,
-    row: Union[str, int],
-    column: Union[str, int],
-    infoname: Optional[str],
-    perfvar: Optional[str],
+    row: str | int,
+    column: str | int,
+    infoname: str | None,
+    perfvar: str | None,
     levels=None,
 ):
     if table is None:
@@ -202,7 +202,7 @@ def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
     except KeyError:
         return 3, "Item not present anymore", []
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name), get_wmi_time(table, row), int(value))
+    value_per_sec = get_rate(f"{column}_{table.name}", get_wmi_time(table, row), int(value))
 
     return check_levels(
         value_per_sec,
@@ -214,10 +214,10 @@ def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
 
 def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
     table: WMITable,
-    row: Union[str, int],
-    column: Union[str, int],
-    infoname: Optional[str],
-    perfvar: Optional[str],
+    row: str | int,
+    column: str | int,
+    infoname: str | None,
+    perfvar: str | None,
     levels=None,
     unit: str = "",
 ):
@@ -228,7 +228,7 @@ def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
         value = table.get(row, column)
         assert value
     except KeyError:
-        return 3, "counter %r not present anymore" % ((row, column),), []
+        return 3, f"counter {(row, column)!r} not present anymore", []
 
     return check_levels(
         int(value),
@@ -242,7 +242,7 @@ def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
 
 def wmi_calculate_raw_average(
     table: WMITable,
-    row: Union[str, int],
+    row: str | int,
     column: str,
     factor: float,
 ) -> float:
@@ -282,7 +282,7 @@ def scale_counter(
 
 def wmi_calculate_raw_average_time(
     table: WMITable,
-    row: Union[str, int],
+    row: str | int,
     column: str,
 ) -> float:
     measure = table.get(row, column)
@@ -292,8 +292,8 @@ def wmi_calculate_raw_average_time(
 
     sample_time = get_wmi_time(table, row)
 
-    measure_per_sec = get_rate("%s_%s" % (column, table.name), sample_time, int(measure))
-    base_per_sec = get_rate("%s_%s_Base" % (column, table.name), sample_time, int(base))
+    measure_per_sec = get_rate(f"{column}_{table.name}", sample_time, int(measure))
+    base_per_sec = get_rate(f"{column}_{table.name}_Base", sample_time, int(base))
 
     if base_per_sec == 0:
         return 0
@@ -302,10 +302,10 @@ def wmi_calculate_raw_average_time(
 
 def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
     table: WMITable,
-    row: Union[str, int],
+    row: str | int,
     column: str,
-    infoname: Optional[str],
-    perfvar: Optional[str],
+    infoname: str | None,
+    perfvar: str | None,
     levels=None,
     perfscale: float = 1.0,
 ):
@@ -325,10 +325,10 @@ def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
 
 def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
     table: WMITable,
-    row: Union[str, int],
+    row: str | int,
     column: str,
-    infoname: Optional[str],
-    perfvar: Optional[str],
+    infoname: str | None,
+    perfvar: str | None,
     levels=None,
 ):
     assert table.frequency
@@ -354,10 +354,10 @@ def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
 
 def wmi_yield_raw_fraction(  # type:ignore[no-untyped-def]
     table: WMITable,
-    row: Union[str, int],
+    row: str | int,
     column: str,
-    infoname: Optional[str],
-    perfvar: Optional[str],
+    infoname: str | None,
+    perfvar: str | None,
     levels=None,
 ):
     try:

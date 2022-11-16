@@ -202,10 +202,7 @@ def check_cpu_util_unix(  # type:ignore[no-untyped-def]
             total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
             summary_cores.append((core.name, total_perc))
 
-    for check_result in check_cpu_util(
-        util_total_perc, params, this_time, summary_cores, perf_max=None
-    ):
-        yield check_result
+    yield from check_cpu_util(util_total_perc, params, this_time, summary_cores, perf_max=None)
 
 
 # ALREADY MIGRATED

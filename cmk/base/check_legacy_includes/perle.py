@@ -15,7 +15,7 @@ def perle_check_alarms(alarms_str):
         state = 2
         alarminfo += " (User intervention is needed to resolve the outstanding alarms)"
 
-    return state, "Alarms: %s%s" % (alarms_str, alarminfo)
+    return state, f"Alarms: {alarms_str}{alarminfo}"
 
 
 #   .--modules-------------------------------------------------------------.
@@ -114,12 +114,12 @@ def check_perle_cm_modules(item, _no_params, info):
                 ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
             ]:
 
-                yield 0, "%s Speed: %s" % (what, mappings["speed"][speed])  # type: ignore[index]
+                yield 0, "{} Speed: {}".format(what, mappings["speed"][speed])  # type: ignore[index]
 
                 for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:
-                    state, state_readable = mappings["%s_%s" % (what.lower(), what_key.lower())][  # type: ignore[index]
+                    state, state_readable = mappings[f"{what.lower()}_{what_key.lower()}"][  # type: ignore[index]
                         what_state
                     ]
-                    yield state, "%s: %s" % (what_key, state_readable)
+                    yield state, f"{what_key}: {state_readable}"
 
                 yield 0, "Connector: %s" % mappings["%s_connector" % what.lower()][connector]  # type: ignore[index]

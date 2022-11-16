@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import time
-from typing import AnyStr, List, Optional, Tuple, Union
+from typing import AnyStr, Union
 
 from cmk.base.check_api import check_levels, get_average, get_rate, MKCounterWrapped, state_markers
 from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import; # reimported from checks!; See warning below
@@ -19,14 +18,14 @@ from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=
     TwoLevelsType,
 )
 
-Number = Union[int, float]
+Number = int | float
 
 # ('foo', 5), ('foo', 5, 2, 7), ('foo', 5, None, None)
-PerfDataEntryType = Union[Tuple[AnyStr, Number], Tuple[AnyStr, Number, Optional[Number]]]
-PerfDataType = List[PerfDataEntryType]
+PerfDataEntryType = Union[tuple[AnyStr, Number], tuple[AnyStr, Number, Number | None]]
+PerfDataType = list[PerfDataEntryType]
 
 # Generic Check Type. Can be used elsewhere too.
-CheckType = Tuple[StatusType, AnyStr, PerfDataType]
+CheckType = tuple[StatusType, AnyStr, PerfDataType]
 
 #################################################################################################
 #
@@ -177,9 +176,7 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)
         sign = "+" if trend > 0 else ""
-        combiner(
-            0, "rate: %s%s/%g min" % (sign, render_temp(trend, output_unit, True), trend_range_min)
-        )
+        combiner(0, f"rate: {sign}{render_temp(trend, output_unit, True)}/{trend_range_min:g} min")
 
         if "trend_levels" in params:
             warn_upper_trend, crit_upper_trend = params["trend_levels"]
@@ -189,7 +186,7 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         # number or positive. This works either way. Having a positive lower bound makes no
         # sense anyway.
         if "trend_levels_lower" in params:
-            warn_lower_trend, crit_lower_trend = [abs(x) * -1 for x in params["trend_levels_lower"]]
+            warn_lower_trend, crit_lower_trend = (abs(x) * -1 for x in params["trend_levels_lower"])
         else:
             warn_lower_trend = crit_lower_trend = None
 
@@ -251,11 +248,11 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
 def check_temperature(  # pylint: disable=too-many-branches
     reading: Number,
     params: TempParamType,
-    unique_name: Optional[AnyStr],
+    unique_name: AnyStr | None,
     dev_unit: AnyStr = "c",  # type: ignore[assignment]
-    dev_levels: Optional[TwoLevelsType] = None,
-    dev_levels_lower: Optional[TwoLevelsType] = None,
-    dev_status: Optional[StatusType] = None,
+    dev_levels: TwoLevelsType | None = None,
+    dev_levels_lower: TwoLevelsType | None = None,
+    dev_status: StatusType | None = None,
     dev_status_name: AnyStr = None,  # type: ignore[assignment]
 ) -> CheckType:
     """Check temperature levels and trends.
@@ -268,10 +265,10 @@ def check_temperature(  # pylint: disable=too-many-branches
         params (dict): A dictionary giving the user's configuration. See below.
         unique_name (str): The name under which to track perf-data.
         dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
-        dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
-        dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
-        dev_status (Optional[Number]): The status according to the device itself.
-        dev_status_name (Optional[AnyStr]): What the device thinks the status should be called.
+        dev_levels (LevelsType | None): The upper levels (warn, crit)
+        dev_levels_lower (LevelsType | None): The lower levels (warn, crit)
+        dev_status (Number | None): The status according to the device itself.
+        dev_status_name (AnyStr | None): What the device thinks the status should be called.
 
     Configuration:
         The parameter `params` may contain user configurable settings with the following keys:
@@ -357,7 +354,7 @@ def check_temperature(  # pylint: disable=too-many-branches
             status = max(status, dev_status)
 
     # Render actual temperature, e.g. "17.8 °F"
-    infotext = "%s %s" % (render_temp(temp, output_unit), temp_unitsym[output_unit])
+    infotext = f"{render_temp(temp, output_unit)} {temp_unitsym[output_unit]}"
 
     if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
         infotext += ", %s" % dev_status_name  # type: ignore[str-bytes-safe]
@@ -370,28 +367,28 @@ def check_temperature(  # pylint: disable=too-many-branches
         dev_levelstext_lower = ""
 
         if usr_warn is not None and usr_crit is not None:
-            usr_levelstext = " (warn/crit at %s/%s %s)" % (
+            usr_levelstext = " (warn/crit at {}/{} {})".format(
                 render_temp(usr_warn, output_unit),
                 render_temp(usr_crit, output_unit),
                 temp_unitsym[output_unit],
             )
 
         if usr_warn_lower is not None and usr_crit_lower is not None:
-            usr_levelstext_lower = " (warn/crit below %s/%s %s)" % (
+            usr_levelstext_lower = " (warn/crit below {}/{} {})".format(
                 render_temp(usr_warn_lower, output_unit),
                 render_temp(usr_crit_lower, output_unit),
                 temp_unitsym[output_unit],
             )
 
         if dev_levels:
-            dev_levelstext = " (device warn/crit at %s/%s %s)" % (
+            dev_levelstext = " (device warn/crit at {}/{} {})".format(
                 render_temp(dev_warn, output_unit),
                 render_temp(dev_crit, output_unit),
                 temp_unitsym[output_unit],
             )
 
         if dev_levels_lower:
-            dev_levelstext_lower = " (device warn/crit below %s/%s %s)" % (
+            dev_levelstext_lower = " (device warn/crit below {}/{} {})".format(
                 render_temp(dev_warn_lower, output_unit),
                 render_temp(dev_crit_lower, output_unit),
                 temp_unitsym[output_unit],

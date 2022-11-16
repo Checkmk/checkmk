@@ -37,7 +37,7 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
         state = 1
     if state != 0:
         levels_text = " (warn/crit at %d/%d)" % (warn, crit)
-    yield state, "Stratum: %s%s" % (stratum, levels_text)
+    yield state, f"Stratum: {stratum}{levels_text}"
 
     # Add refclock information
     yield 0, "Reference clock: " + refclock_name
@@ -55,6 +55,6 @@ def check_mbg_lantime_state_common(states, _no_item, params, info):
     elif pos_refclock_offset >= warn:
         state = 1
     if state != 0:
-        levels_text = " (warn/crit at %s/%s µs)" % (warn, crit)
+        levels_text = f" (warn/crit at {warn}/{crit} µs)"
     perfdata = [("offset", refclock_offset, warn, crit)]  # all in us
-    yield state, "Reference clock offset: %g µs%s" % (refclock_offset, levels_text), perfdata
+    yield state, f"Reference clock offset: {refclock_offset:g} µs{levels_text}", perfdata

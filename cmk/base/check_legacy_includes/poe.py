@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from cmk.base.check_api import check_levels, get_percent_human_readable
 
@@ -23,7 +23,7 @@ class PoeValues(NamedTuple):
     poe_max: float
     poe_used: float
     poe_status: PoeStatus
-    poe_status_detail: Optional[str]
+    poe_status_detail: str | None
 
 
 def check_poe_data(params, poe_data):
@@ -54,7 +54,7 @@ def check_poe_data(params, poe_data):
             "power_usage_percentage",
             params.get("levels", poe_default_levels),
             human_readable_func=get_percent_human_readable,
-            infoname="POE usage (%sW/%sW): " % (poe_data.poe_used, poe_data.poe_max),
+            infoname=f"POE usage ({poe_data.poe_used}W/{poe_data.poe_max}W): ",
         )
 
     # PoE on device is turned OFF

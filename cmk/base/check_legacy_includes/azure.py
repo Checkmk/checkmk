@@ -55,7 +55,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         return None
 
     if use_rate:
-        countername = "%s.%s" % (resource.id, metric_key)
+        countername = f"{resource.id}.{metric_key}"
         value = get_rate(countername, time.time(), metric.value)
         unit = "%s_rate" % metric.unit
     else:

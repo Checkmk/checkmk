@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any
 
 
 def scan_infoblox(oid):
@@ -17,15 +17,15 @@ def inventory_infoblox_statistics(info):
 
 
 def check_infoblox_statistics(ty, stats):
-    texts: Dict[Any, Any] = {}
+    texts: dict[Any, Any] = {}
     perfdata = []
     for what, what_val, what_textfield, what_info in stats:
         texts.setdefault(what_textfield, [])
         texts[what_textfield].append("%d %s" % (what_val, what_info))
-        perfdata.append(("%s_%s" % (ty, what), what_val))
+        perfdata.append((f"{ty}_{what}", what_val))
 
     infotexts = []
     for what, entries in texts.items():
-        infotexts.append("%s: %s" % (what, ", ".join(entries)))
+        infotexts.append("{}: {}".format(what, ", ".join(entries)))
 
     return 0, " - ".join(infotexts), perfdata

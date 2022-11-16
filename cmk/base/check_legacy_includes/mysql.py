@@ -5,7 +5,8 @@
 
 
 import functools
-from typing import Any, Callable, Dict, Mapping, MutableSequence, Sequence
+from collections.abc import Callable, Mapping, MutableSequence, Sequence
+from typing import Any
 
 
 def mysql_parse_per_item(
@@ -14,7 +15,7 @@ def mysql_parse_per_item(
     @functools.wraps(parse_function)
     def wrapped_parse_function(info: Sequence[Sequence[str]]) -> Mapping[str, Any]:
         item = "mysql"
-        grouped: Dict[str, MutableSequence[Sequence[str]]] = {}
+        grouped: dict[str, MutableSequence[Sequence[str]]] = {}
         for line in info:
             if line[0].startswith("[["):
                 item = " ".join(line).strip("[ ]") or item

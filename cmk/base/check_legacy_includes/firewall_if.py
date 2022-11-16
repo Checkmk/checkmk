@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import time
-from typing import Any, List
+from typing import Any
 
 from cmk.base.check_api import check_levels, get_average, get_parsed_item_data, get_rate, RAISE
 
@@ -20,13 +19,11 @@ def check_firewall_if(item, params, data):
     this_time = time.time()
 
     for what, counter in data.items():
-        rate = get_rate("firewall_if-%s.%s" % (what, item), this_time, counter, onwrap=RAISE)
+        rate = get_rate(f"firewall_if-{what}.{item}", this_time, counter, onwrap=RAISE)
 
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
-            avgrate = get_average(
-                "firewall_if-%s.%s" % (what, item), this_time, rate, backlog_minutes
-            )
+            avgrate = get_average(f"firewall_if-{what}.{item}", this_time, rate, backlog_minutes)
             check_against = avgrate
         else:
             check_against = rate
@@ -39,7 +36,7 @@ def check_firewall_if(item, params, data):
             infoname=infotext_names[what],
         )
 
-        perfdata: List[Any]
+        perfdata: list[Any]
         perfdata = [(what, rate)] + extraperf[:1]
 
         yield status, infotext, perfdata

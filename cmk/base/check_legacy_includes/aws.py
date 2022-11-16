@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+from collections.abc import Callable, Iterable
 
 import cmk.utils.aws_constants as agent_aws_types
 
@@ -41,7 +41,7 @@ def inventory_aws_generic_single(parsed, required_metrics, requirement=all):
 def check_aws_elb_summary_generic(item, params, load_balancers):
     yield 0, "Balancers: %s" % len(load_balancers)
 
-    balancers_by_avail_zone: Dict[str, List] = {}
+    balancers_by_avail_zone: dict[str, list] = {}
     long_output = []
     for row in load_balancers:
         balancer_name = row["LoadBalancerName"]
@@ -54,18 +54,18 @@ def check_aws_elb_summary_generic(item, params, load_balancers):
                 avail_zone = avail_zone["ZoneName"]
 
             try:
-                avail_zone_readable = "%s (%s)" % (AWSRegions[avail_zone[:-1]], avail_zone[-1])
+                avail_zone_readable = f"{AWSRegions[avail_zone[:-1]]} ({avail_zone[-1]})"
             except KeyError:
                 avail_zone_readable = "unknown (%s)" % avail_zone
 
             balancers_by_avail_zone.setdefault(avail_zone_readable, []).append(balancer_name)
             avail_zones_txt.append(avail_zone_readable)
         long_output.append(
-            "Balancer: %s, Availability zones: %s" % (balancer_name, ", ".join(avail_zones_txt))
+            "Balancer: {}, Availability zones: {}".format(balancer_name, ", ".join(avail_zones_txt))
         )
 
     for avail_zone, balancers in sorted(balancers_by_avail_zone.items()):
-        yield 0, "%s: %s" % (avail_zone, len(balancers))
+        yield 0, f"{avail_zone}: {len(balancers)}"
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
@@ -94,12 +94,12 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         else:
             limit_ref = p_limit
 
-        infotext = "%s: %s (of max. %s)" % (
+        infotext = "{}: {} (of max. {})".format(
             resource_title,
             human_readable_func(amount),
             human_readable_func(limit_ref),
         )
-        perfvar = "aws_%s_%s" % (aws_service, resource_key)
+        perfvar = f"aws_{aws_service}_{resource_key}"
         if aws.is_valid_aws_limits_perf_data(resource_key):
             perfdata.append((perfvar, amount))
 
@@ -117,7 +117,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         max_state = max(state, max_state)
         if state:
             levels_reached.add(resource_title)
-            infotext += ", %s%s" % (extrainfo, state_markers[state])
+            infotext += f", {extrainfo}{state_markers[state]}"
         long_output.append(infotext)
 
     if levels_reached:
@@ -155,7 +155,7 @@ def check_aws_error_rate(
 
     yield (
         0,
-        "%s: %s" % (display_text, aws_get_counts_rate_human_readable(error_rate)),
+        f"{display_text}: {aws_get_counts_rate_human_readable(error_rate)}",
         [(metric_name_rate, error_rate)],
     )
 
@@ -185,19 +185,18 @@ def check_aws_http_errors(
 
     for http_err_code in http_err_codes:
         # CloudWatch only reports HTTPCode_... if the value is nonzero
-        for result in check_aws_error_rate(
+        yield from check_aws_error_rate(
             parsed.get(cloudwatch_metrics_format % http_err_code.upper(), 0),
             request_rate,
             "aws_http_%s_rate" % http_err_code,
             "aws_http_%s_perc" % http_err_code,
             params.get("levels_http_%s_perc" % http_err_code),
             "%s-Errors" % http_err_code.upper(),
-        ):
-            yield result
+        )
 
 
 def check_aws_metrics(
-    metric_infos: List[Dict[str, Union[float, Optional[str], Optional[Tuple], Optional[Callable]]]]
+    metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]]
 ) -> Iterable[ServiceCheckResult]:
 
     go_stale = True

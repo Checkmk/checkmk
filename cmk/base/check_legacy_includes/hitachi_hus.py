@@ -83,13 +83,13 @@ def check_hitachi_hus(item, _no_params, info):
         for what, device_state in zip(component, line[1:]):
             state, state_readable = hus_map_states[device_state]
             if state == 0:
-                ok_states.append("%s: %s" % (what, state_readable))
+                ok_states.append(f"{what}: {state_readable}")
             if state == 1:
-                warn_states.append("%s: %s" % (what, state_readable))
+                warn_states.append(f"{what}: {state_readable}")
             if state == 2:
-                crit_states.append("%s: %s" % (what, state_readable))
+                crit_states.append(f"{what}: {state_readable}")
             if state == 3:
-                unknown_states.append("%s: %s" % (what, state_readable))
+                unknown_states.append(f"{what}: {state_readable}")
 
         for state, states, text in [
             (0, ok_states, "OK"),
@@ -98,4 +98,4 @@ def check_hitachi_hus(item, _no_params, info):
             (2, crit_states, "CRIT"),
         ]:
             if states:
-                yield state, "%s: %s" % (text, ", ".join(states))
+                yield state, "{}: {}".format(text, ", ".join(states))

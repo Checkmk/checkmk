@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from ipaddress import IPv6Address
-from typing import Sequence, Union
 
 
-def clean_v4_address(chunks: Sequence[Union[int, str]]) -> str:
+def clean_v4_address(chunks: Sequence[int | str]) -> str:
     return "%d.%d.%d.%d" % tuple(int(i) for i in chunks)
 
 
-def clean_v6_address(chunks: Sequence[Union[int, str]]) -> str:
+def clean_v6_address(chunks: Sequence[int | str]) -> str:
     """
     >>> clean_v6_address([32,1,7,40,0,0,80,0,0,0,0,0,0,0,14,249])
     '[2001:728:0:5000::ef9]'

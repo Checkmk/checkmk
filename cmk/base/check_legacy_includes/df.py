@@ -5,7 +5,7 @@
 
 # pylint: disable=chained-comparison,unused-import
 
-from typing import Any, Dict, List
+from typing import Any
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
@@ -25,8 +25,8 @@ from .size_trend import size_trend
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels: List[Any] = []  # obsolete. Just here to check config and warn if changed
-filesystem_default_levels: Dict[str, Any] = {}  # can also be dropped some day in future
+filesystem_levels: list[Any] = []  # obsolete. Just here to check config and warn if changed
+filesystem_default_levels: dict[str, Any] = {}  # can also be dropped some day in future
 
 # Grouping of filesystems into groups that are monitored as one entity
 # Example:
@@ -190,7 +190,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #
             if subtract_reserved
-            else "therein reserved for root: %s (%s)" % (reserved_perc_hr, reserved_hr)  #
+            else f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})"  #
         )
 
     if subtract_reserved or show_reserved:

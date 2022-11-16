@@ -86,7 +86,7 @@ def check_dell_poweredge_mem(item, _no_params, info):
             }
             infotext, state = state_table.get(status, ("unknown state", 2))
             for parameter, value in di.items():
-                infotext += ", %s: %s" % (parameter, value)
+                infotext += f", {parameter}: {value}"
 
             infotext = re.sub("^, ", "", infotext)
 
@@ -140,9 +140,9 @@ def check_dell_poweredge_netdev(item, _no_params, info):
             dev_state_txt, dev_state = state_table.get(status, ("unknown device status,", 2))
             conn_state_txt, conn_state = connection_table.get(connection_status, ("", 0))
             state = max(dev_state, conn_state)
-            infotext = "%s %s" % (dev_state_txt, conn_state_txt)
+            infotext = f"{dev_state_txt} {conn_state_txt}"
             for parameter, value in di.items():
-                infotext += "%s: %s, " % (parameter, value)
+                infotext += f"{parameter}: {value}, "
             infotext = re.sub(", $", "", infotext)
 
             return state, infotext
@@ -185,7 +185,7 @@ def check_dell_poweredge_pci(item, _no_params, info):
             }
             infotext, state = state_table.get(status, ("unknown state", 2))
             for parameter, value in di.items():
-                infotext += ", %s: %s" % (parameter, value)
+                infotext += f", {parameter}: {value}"
 
             infotext = re.sub("^, ", "", infotext)
 
@@ -233,7 +233,7 @@ def check_dell_poweredge_status(item, _no_params, info):
     }
     infotext, state = state_table.get(status, "2")  # type: ignore[misc]
     for parameter, value in di.items():
-        infotext += "%s: %s, " % (parameter, value)
+        infotext += f"{parameter}: {value}, "
     infotext = re.sub(", $", "", infotext)
 
     return state, infotext
@@ -297,7 +297,7 @@ def check_dell_poweredge_amperage(item, _no_params, info):
             state_txt, state = state_table.get(Status, "2")  # type: ignore[misc]
 
             if UpperNonCritical and UpperCritical:
-                limittext = " (upper limits %s/%s)" % (UpperNonCritical, UpperCritical)
+                limittext = f" (upper limits {UpperNonCritical}/{UpperCritical})"
                 maxi = savefloat(UpperCritical) * 1.1
             else:
                 limittext = ""
@@ -305,10 +305,10 @@ def check_dell_poweredge_amperage(item, _no_params, info):
 
             if ProbeType in ("23", "25"):  # Amps
                 current = str(int(Reading) / 10.0)
-                infotext = "%s Ampere %s" % (current, state_txt)
+                infotext = f"{current} Ampere {state_txt}"
                 perfdata = [("current", current + "A", UpperNonCritical, UpperCritical, "", maxi)]
             elif ProbeType in ("24", "26"):  # Watts
-                infotext = "%s Watt %s" % (Reading, state_txt)
+                infotext = f"{Reading} Watt {state_txt}"
                 perfdata = [("power", Reading + "W", UpperNonCritical, UpperCritical, "", maxi)]
             else:
                 infotext = "Unknown Probe Type %s" % ProbeType

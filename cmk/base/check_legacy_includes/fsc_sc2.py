@@ -50,7 +50,7 @@ def check_fsc_sc2_cpu_status(item, _no_params, info):
     for designation, status, model, speed, cores in info:
         if designation == item:
             status_state, status_txt = get_cpu_status(status)
-            return status_state, "Status is {0}, {1}, {2} cores @ {3} MHz".format(
+            return status_state, "Status is {}, {}, {} cores @ {} MHz".format(
                 status_txt, model, cores, speed
             )
 
@@ -116,7 +116,7 @@ def check_fsc_sc2_mem_status(item, _no_params, info):
     for designation, status, capacity in info:
         if designation == item:
             status_state, status_txt = get_mem_status(status)
-            return status_state, "Status is {0}, Size {1} MB".format(status_txt, capacity)
+            return status_state, f"Status is {status_txt}, Size {capacity} MB"
 
 
 # .
@@ -252,7 +252,7 @@ def check_fsc_sc2_info(_no_item, _no_params, info):
     if info:
         return (
             0,
-            "Model: {0}, Serial Number: {1}, BIOS Version: {2}".format(
+            "Model: {}, Serial Number: {}, BIOS Version: {}".format(
                 info[0][0], info[0][1], info[0][2]
             ),
         )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NamedTuple, Optional
+from typing import NamedTuple
 
 from cmk.base.check_api import OID_END
 
@@ -32,7 +32,7 @@ huawei_mpu_board_name_start = "mpu board"
 class HuaweiPhysicalEntityValue(NamedTuple):
     physical_index: str
     stack_member: int
-    value: Optional[str]
+    value: str | None
 
 
 def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board_name_start):
@@ -89,7 +89,7 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
     entities_info, values_info = info
     stack_member_number = 0
     # groups entities per stack member
-    entities_per_member: Dict[int, List[HuaweiPhysicalEntityValue]] = {}
+    entities_per_member: dict[int, list[HuaweiPhysicalEntityValue]] = {}
 
     for entity_line in entities_info:
         lower_entity_name = entity_line[1].lower()

@@ -3,19 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import MutableMapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import MutableMapping, Sequence
+from typing import NamedTuple
 
 
 class Item(NamedTuple):
     item: str
-    status: Tuple[int, str]
+    status: tuple[int, str]
     name: str
-    value: Optional[float]
-    lower_levels: Tuple[Optional[float], Optional[float]]
-    upper_levels: Tuple[Optional[float], Optional[float]]
+    value: float | None
+    lower_levels: tuple[float | None, float | None]
+    upper_levels: tuple[float | None, float | None]
 
 
-def _translate_dev_status(status: str) -> Tuple[int, str]:
+def _translate_dev_status(status: str) -> tuple[int, str]:
     status_dict = {
         "1": (1, "other"),
         "2": (3, "unknown"),
@@ -35,15 +36,15 @@ def _translate_dev_status(status: str) -> Tuple[int, str]:
 def _validate_levels(
     dev_warn: str,
     dev_crit: str,
-) -> Tuple[Optional[float], Optional[float]]:
+) -> tuple[float | None, float | None]:
     # If this value cannot be determined by software, then a value of -99 will be returned
     if dev_crit and dev_crit != "-99":
-        crit: Optional[float] = float(dev_crit)
+        crit: float | None = float(dev_crit)
     else:
         crit = None
 
     if dev_warn and dev_warn != "-99":
-        warn: Optional[float] = float(dev_warn)
+        warn: float | None = float(dev_warn)
     elif crit is not None:
         warn = crit
     else:
@@ -66,7 +67,7 @@ def parse_quanta(info: Sequence[Sequence[Sequence[str]]]) -> MutableMapping[str,
     ) in info[0]:
 
         try:
-            value: Optional[float] = float(dev_value)
+            value: float | None = float(dev_value)
         except ValueError:
             value = None
 

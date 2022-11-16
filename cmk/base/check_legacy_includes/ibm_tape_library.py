@@ -65,4 +65,4 @@ def ibm_tape_library_get_device_state(avail, status):
     }
     for what, val, text in [("avail", avail, "Availability"), ("status", status, "Status")]:
         state, state_readable = mapping[what][val]
-        yield state, "%s: %s" % (text, state_readable)
+        yield state, f"{text}: {state_readable}"

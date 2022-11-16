@@ -58,7 +58,7 @@ def check_cmciii_lcp_fanunit(item, params, info):
 
     output_unit = params.get("output_unit", "c")
 
-    message += " ; Top/Mid/Bottom: %s/%s/%s" % (
+    message += " ; Top/Mid/Bottom: {}/{}/{}".format(
         render_temp(temps[5], output_unit),
         render_temp(temps[6], output_unit),
         render_temp(temps[7], output_unit),

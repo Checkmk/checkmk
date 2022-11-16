@@ -139,13 +139,13 @@ def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-bran
                 unit_normalised = unit.lower()
                 if int(high_crit) > 100:
                     # Devices with "F" or "C" have the levels in degrees * 10
-                    low_crit, low_warn, high_warn, high_crit = [
+                    low_crit, low_warn, high_warn, high_crit = (
                         float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)
-                    ]
+                    )
                 else:
-                    low_crit, low_warn, high_warn, high_crit = [
+                    low_crit, low_warn, high_warn, high_crit = (
                         float(t) for t in (low_crit, low_warn, high_warn, high_crit)
-                    ]
+                    )
 
             if degreeraw and degreeraw != "0":
                 temperature = float(degreeraw) / 10.0

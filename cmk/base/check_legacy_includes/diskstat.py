@@ -3,25 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 # pylint: disable=consider-using-in
-
 # pylint: disable=no-else-continue
-
 # pylint: disable=no-else-return
 
 import re
 import time
-from typing import (
-    Any,
-    Iterable,
-    Mapping,
-    MutableMapping,
-    MutableSequence,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Any
 
 from cmk.base.check_api import (
     check_levels,
@@ -61,7 +50,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     line: Sequence[Any],
     mode: str = "sectors",
-) -> Tuple[int, str, MutableSequence[Any],]:
+) -> tuple[int, str, MutableSequence[Any],]:
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
@@ -75,9 +64,9 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
 
     for what, ctr in [("read", line[2]), ("write", line[3])]:
         if node:
-            countername = "diskstat.%s.%s.%s" % (node, item, what)
+            countername = f"diskstat.{node}.{item}.{what}"
         else:
-            countername = "diskstat.%s.%s" % (item, what)
+            countername = f"diskstat.{item}.{what}"
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
@@ -180,7 +169,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
     # I have not understood, why....
     if len(line) >= 9:
         for what, ctr in [("read", line[7]), ("write", line[8])]:
-            countername = "diskstat.%s.ql.%s" % (item, what)
+            countername = f"diskstat.{item}.ql.{what}"
             levels = params.get(what + "_ql")
             if levels:
                 warn, crit = levels
@@ -229,7 +218,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
 # ==================================================================================================
 def diskstat_select_disk(  # pylint: disable=too-many-branches
     disks: Mapping[str, MutableMapping[str, Any]], item: str
-) -> Optional[MutableMapping[str, Any]]:
+) -> MutableMapping[str, Any] | None:
 
     # In summary mode we add up the throughput values, but
     # we average the other values for disks that have a throughput
@@ -345,7 +334,7 @@ def check_diskstat_dict(  # pylint: disable=too-many-branches
         for key, value in disk.items():
             if isinstance(value, (int, float)):
                 avg_disk[key] = get_average(
-                    "diskstat.%s.%s.avg" % (item, key), this_time, value, averaging / 60.0
+                    f"diskstat.{item}.{key}.avg", this_time, value, averaging / 60.0
                 )
             else:
                 avg_disk[key] = value

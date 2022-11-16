@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional
-
 from cmk.base.check_api import get_parsed_item_data
 
 from .humidity import check_humidity
@@ -36,7 +34,7 @@ HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
 def parse_hwg(info):
 
-    parsed: Dict[str, Dict] = {}
+    parsed: dict[str, dict] = {}
 
     for index, descr, sensorstatus, current, unit in info:
 
@@ -56,7 +54,7 @@ def parse_hwg(info):
         # Parse Temperature
         else:
             try:
-                tempval: Optional[float] = float(current)
+                tempval: float | None = float(current)
             except ValueError:
                 tempval = None
 
@@ -85,7 +83,7 @@ def inventory_hwg_humidity(parsed):
 def check_hwg_humidity(item, params, parsed):
 
     status, infotext, perfdata = check_humidity(parsed["humidity"], params)
-    infotext += " (Description: %s, Status: %s)" % (parsed["descr"], parsed["dev_status_name"])
+    infotext += " (Description: {}, Status: {})".format(parsed["descr"], parsed["dev_status_name"])
     return status, infotext, perfdata
 
 
@@ -113,5 +111,5 @@ def check_hwg_temp(item, params, parsed):
         dev_status_name=state_readable,
     )
 
-    infotext += " (Description: %s, Status: %s)" % (parsed["descr"], parsed["dev_status_name"])
+    infotext += " (Description: {}, Status: {})".format(parsed["descr"], parsed["dev_status_name"])
     return state, "%s" % infotext, perfdata

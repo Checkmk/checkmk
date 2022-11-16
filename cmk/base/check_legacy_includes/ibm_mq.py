@@ -47,7 +47,7 @@ def ibm_mq_check_version(actual_version, params, label):
             for g in re.findall(r"(\d+|[pbi]+)", version)
         ]
 
-    info = "%s: %s" % (label, actual_version)
+    info = f"{label}: {actual_version}"
     if actual_version is None:
         return 3, info + " (no agent info)"
     if "version" not in params:

@@ -6,7 +6,7 @@
 import collections
 import time
 from numbers import Integral
-from typing import Any, List, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from cmk.base.check_api import get_average, get_bytes_human_readable, get_percent_human_readable
 from cmk.base.plugins.agent_based.utils.memory import compute_state, get_levels_mode_from_value
@@ -58,7 +58,7 @@ def check_memory_element(
         show_value = used
         show_text = ""
 
-    infotext = "%s: %s%s - %s of %s%s" % (
+    infotext = "{}: {}{} - {} of {}{}".format(
         label,
         get_percent_human_readable(100.0 * show_value / total),
         show_text,
@@ -75,7 +75,7 @@ def check_memory_element(
     warn, crit, levels_text = normalize_mem_levels(mode, warn, crit, total)
     state = _compute_state(used, warn, crit)
     if state and levels_text:
-        infotext = "%s (%s)" % (infotext, levels_text)
+        infotext = f"{infotext} ({levels_text})"
 
     perf = []
     if metric_name:
@@ -250,9 +250,9 @@ def check_memory(params, meminfo):  # pylint: disable=too-many-branches
     memtotal = MemBytes(meminfo["MemTotal"])
     memused = MemBytes(memtotal.kb - meminfo["MemFree"])
 
-    swaptotal: Optional[MemBytes]
-    swapused: Optional[MemBytes]
-    perfdata: List[Any]
+    swaptotal: MemBytes | None
+    swapused: MemBytes | None
+    perfdata: list[Any]
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo["SwapTotal"])
         swapused = MemBytes(swaptotal.kb - meminfo["SwapFree"])
@@ -265,7 +265,7 @@ def check_memory(params, meminfo):  # pylint: disable=too-many-branches
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
-    pagetables: Optional[MemBytes]
+    pagetables: MemBytes | None
     if "PageTables" in meminfo:
         pagetables = MemBytes(meminfo["PageTables"])
         perfdata.append(("mem_lnx_page_tables", pagetables.bytes))
@@ -333,7 +333,7 @@ def check_memory(params, meminfo):  # pylint: disable=too-many-branches
     # Check levels
     state = _compute_state(comp_mb, warn_mb, crit_mb)
     if state and levels_text:
-        infotext = "%s (%s)" % (infotext, levels_text)
+        infotext = f"{infotext} ({levels_text})"
 
     yield state, infotext, perfdata
 
@@ -368,4 +368,4 @@ def check_memory(params, meminfo):  # pylint: disable=too-many-branches
             ("Shmem", "Shared", "mem_lnx_shmem"),
         ):
             value = MemBytes(meminfo.get(key, 0))
-            yield 0, "%s: %s" % (label, value.render()), [(metric, value.bytes)]
+            yield 0, f"{label}: {value.render()}", [(metric, value.bytes)]

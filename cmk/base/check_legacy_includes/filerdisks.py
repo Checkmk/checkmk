@@ -51,7 +51,7 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             spare_state = 1
 
         if spare_state:
-            spare_infotext += " (warn/crit below %s/%s)" % (warn, crit)
+            spare_infotext += f" (warn/crit below {warn}/{crit})"
     yield spare_state, spare_infotext, [("spare_disks", spare_disks)]
 
     parity_disks = [disk for disk in disks if disk["type"] == "parity"]
@@ -73,14 +73,14 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             for disk in prefailed_disks:
                 info_texts.append(disk["identifier"])
             if len(info_texts) > 0:
-                yield 0, "%s Disk Details: %s" % (name, " / ".join(info_texts))
+                yield 0, "{} Disk Details: {}".format(name, " / ".join(info_texts))
 
     for disk_state in ["failed", "offline"]:
         info_texts = []
         for disk in state[disk_state]:
             info_texts.append(disk["identifier"])
         if len(info_texts) > 0:
-            yield 0, "%s Disk Details: %s" % (disk_state, " / ".join(info_texts))
+            yield 0, "{} Disk Details: {}".format(disk_state, " / ".join(info_texts))
             warn, crit = params["%s_spare_ratio" % disk_state]
             ratio = (
                 float(len(state[disk_state])) / (len(state[disk_state]) + len(state["spare"])) * 100
@@ -91,7 +91,7 @@ def check_filer_disks(disks, params):  # pylint: disable=too-many-branches
             elif ratio >= warn:
                 return_state = 1
             if return_state:
-                yield return_state, "Too many %s disks (warn/crit at %.1f%%/%.1f%%)" % (
+                yield return_state, "Too many {} disks (warn/crit at {:.1f}%/{:.1f}%)".format(
                     disk_state,
                     warn,
                     crit,

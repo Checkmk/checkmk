@@ -3,19 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import json
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Mapping,
-    MutableMapping,
-    MutableSequence,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, Sequence
+from typing import Any
 
 #   .--Parse---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -27,7 +17,7 @@ from typing import (
 #   '----------------------------------------------------------------------'
 
 
-def parse_jolokia_json_output(info: Sequence[Sequence[str]]) -> Iterable[Tuple[str, str, Any]]:
+def parse_jolokia_json_output(info: Sequence[Sequence[str]]) -> Iterable[tuple[str, str, Any]]:
     for line in info:
         try:
             instance, mbean, raw_json_data = line
@@ -60,7 +50,7 @@ def jolokia_basic_split(line: MutableSequence[str], expected_length: int) -> Mut
     return tokens
 
 
-def jolokoia_extract_opt(instance_raw: str) -> Tuple[str, MutableMapping[str, str], Sequence[str]]:
+def jolokoia_extract_opt(instance_raw: str) -> tuple[str, MutableMapping[str, str], Sequence[str]]:
     if "," not in instance_raw:
         return instance_raw, {}, []
 
@@ -91,7 +81,7 @@ def jolokoia_extract_opt(instance_raw: str) -> Tuple[str, MutableMapping[str, st
 
 
 def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, Mapping[str, Any]]:
-    parsed: Dict[str, Dict[str, Any]] = {}
+    parsed: dict[str, dict[str, Any]] = {}
     for line in info:
         if len(line) > 1 and line[1] == "ERROR":
             continue
@@ -158,12 +148,12 @@ def jolokia_metrics_parse(info: Sequence[MutableSequence[str]]) -> Mapping[str, 
 def inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
     info: Any,
     what: str,
-) -> Sequence[Tuple[str, Optional[str]]]:
+) -> Sequence[tuple[str, str | None]]:
     inv = []
     parsed = jolokia_metrics_parse(info)
 
     if what == "app_sess":
-        levels: Optional[str] = "jolokia_metrics_app_sess_default_levels"
+        levels: str | None = "jolokia_metrics_app_sess_default_levels"
         needed_key = ["Sessions", "activeSessions"]
     elif what == "bea_app_sess":
         levels = "jolokia_metrics_app_sess_default_levels"
@@ -197,7 +187,7 @@ def inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
                     for nk in needed_key:
                         for servlet in appstate["servlets"]:
                             if nk in appstate["servlets"][servlet]:
-                                inv.append(("%s %s %s" % (inst, app, servlet), levels))
+                                inv.append((f"{inst} {app} {servlet}", levels))
                                 continue
     # This does the same for tomcat
     for inst, vals in parsed.items():
@@ -207,6 +197,6 @@ def inventory_jolokia_metrics_apps(  # pylint: disable=too-many-branches
         for app, appstate in vals.get("apps", {}).items():
             for nk in needed_key:
                 if nk in appstate:
-                    inv.append(("%s %s" % (inst, app), levels))
+                    inv.append((f"{inst} {app}", levels))
                     continue
     return inv

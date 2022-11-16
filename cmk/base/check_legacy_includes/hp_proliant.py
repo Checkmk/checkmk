@@ -102,7 +102,7 @@ def check_hp_proliant_da_cntlr(item, params, info):
                 elif this_state == 2:
                     state_txt = " (!!)"
                 sum_state = max(sum_state, this_state)
-                output.append("%s: %s%s" % (label, map_[val][1], state_txt))
+                output.append(f"{label}: {map_[val][1]}{state_txt}")
 
             output.append(
                 "(Role: %s, Model: %s, Slot: %s, Serial: %s)"
@@ -148,7 +148,7 @@ def check_hp_proliant_cpu(item, params, info):
 
             return (
                 status,
-                'CPU%s "%s" in slot %s is in state "%s"' % (index, name, slot, snmp_status),
+                f'CPU{index} "{name}" in slot {slot} is in state "{snmp_status}"',
             )
     return (3, "item not found in snmp data")
 
@@ -189,7 +189,7 @@ def inventory_hp_proliant_fans(info):
             label = "other"
             if int(line[1]) in hp_proliant_fans_locale:
                 label = hp_proliant_fans_locale[int(line[1])]
-            items.append(("%s (%s)" % (line[0], label), None))
+            items.append((f"{line[0]} ({label})", None))
         return items
     return []
 
@@ -200,7 +200,7 @@ def check_hp_proliant_fans(item, params, info):
         if len(line) > 1 and int(line[1]) in hp_proliant_fans_locale:
             label = hp_proliant_fans_locale[int(line[1])]
 
-        if "%s (%s)" % (line[0], label) == item:
+        if f"{line[0]} ({label})" == item:
             index, _name, _present, speed, status, currentSpeed = line
             snmp_status = hp_proliant_fans_status_map[int(status)]
             status = hp_proliant_status2nagios_map[snmp_status]
@@ -232,7 +232,7 @@ def check_hp_proliant_fans(item, params, info):
 
 
 def format_hp_proliant_name(line):
-    return "%s (%s)" % (line[0], hp_proliant_locale[int(line[1])])
+    return f"{line[0]} ({hp_proliant_locale[int(line[1])]})"
 
 
 def inventory_hp_proliant_temp(info):

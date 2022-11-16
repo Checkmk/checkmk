@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Optional, Tuple, Union
+from collections.abc import Iterable
 
 alcatel_cpu_default_levels = (90.0, 95.0)
 
@@ -11,7 +11,7 @@ ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
     "levels": (45.0, 50.0),
 }
 
-DiscoveryResult = Union[Iterable[Tuple[None, Optional[str]]], Iterable[Tuple[str, Optional[str]]]]
+DiscoveryResult = Iterable[tuple[None, str | None]] | Iterable[tuple[str, str | None]]
 
 
 def alcatel_networking_products_scan_function(oid):
@@ -47,7 +47,7 @@ def check_alcatel_cpu(_no_item, params, info):
     elif cpu_perc >= warn:
         status = 1
     if status:
-        levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+        levelstext = f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
     perfdata = [("util", cpu_perc, warn, crit, 0, 100)]
     return status, "total: %.1f%%" % cpu_perc + levelstext, perfdata
 
@@ -79,6 +79,6 @@ def inventory_alcatel_temp(info) -> DiscoveryResult:  # type:ignore[no-untyped-d
         for oid, name in enumerate(["Board", "CPU"]):
             if row[oid] != "0":
                 if with_slot:
-                    yield "Slot %s %s" % (index + 1, name), {}
+                    yield f"Slot {index + 1} {name}", {}
                 else:
                     yield name, {}

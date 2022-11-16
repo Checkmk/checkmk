@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from .temperature import check_temperature
 
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
@@ -145,7 +144,7 @@ def parse_raritan_sensors(info):
         if sensor_type_readable != "":
             extra_name += " " + sensor_type_readable
 
-        sensor_name = ("Sensor %s%s %s" % (sensor_id, extra_name, sensor_name)).strip()
+        sensor_name = (f"Sensor {sensor_id}{extra_name} {sensor_name}").strip()
 
         sensor_unit = raritan_map_unit.get(sensor_unit, " Other")
 
@@ -205,18 +204,13 @@ def check_raritan_sensors(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
         unit = parsed[item]["sensor_unit"]
-        reading, crit_lower, warn_lower, crit, warn = parsed[item]["sensor_data"]
-        infotext = "%s%s, status: %s" % (reading, unit, state_readable)
+        reading, _crit_lower, warn_lower, crit, warn = parsed[item]["sensor_data"]
+        infotext = f"{reading}{unit}, status: {state_readable}"
 
         if state > 0 and reading >= warn:
-            infotext += " (device warn/crit at %.1f%s/%.1f%s)" % (warn, unit, crit, unit)
+            infotext += f" (device warn/crit at {warn:.1f}{unit}/{crit:.1f}{unit})"
         elif state > 0 and reading < warn_lower:
-            infotext += " (device warn/crit below %.1f%s/%.1f%s)" % (
-                warn_lower,
-                unit,
-                crit_lower,
-                unit,
-            )
+            infotext += f" (device warn/crit below {warn_lower:.1f}{unit}/{warn_lower:.1f}{unit})"
 
         return state, infotext, [(parsed[item]["sensor_type"], reading, warn, crit)]
     return None

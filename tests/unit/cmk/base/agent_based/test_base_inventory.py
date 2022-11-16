@@ -11,12 +11,9 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import (
-    ATTRIBUTES_KEY,
     RetentionIntervals,
     SDFilterFunc,
-    SDPath,
     StructuredDataNode,
-    TABLE_KEY,
     UpdateResult,
 )
 from cmk.utils.type_defs import EVERYTHING
@@ -212,549 +209,369 @@ def test__inventorize_real_host_only_items() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_type, path, raw_cache_info",
+    "attrs_choices, attrs_expected_retentions",
     [
-        # === Attributes ===
-        # empty config
-        ([], "", tuple(), None),
-        ([], "Attributes", tuple(), None),
-        ([], "Attributes", ("path-to", "node"), None),
-        ([], "Attributes", ("path-to", "node"), (1, 2)),
-        # config, wrong path
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Attributes",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Attributes",
-            ("path-to", "node"),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Attributes",
-            ("path-to", "node"),
-            (1, 2),
-        ),
-        # config, right path, no choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Attributes",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Attributes",
-            ("path-to", "node"),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Attributes",
-            ("path-to", "node"),
-            (1, 2),
-        ),
-        # config, right path, all attributes
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": "all",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": "all",
-                }
-            ],
-            "Attributes",
-            tuple(),
-            None,
-        ),
-        # config, right path, attributes choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": ("choices", ["some", "keys"]),
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Attributes",
-            tuple(),
-            None,
-        ),
-        # === Table ===
-        # empty config
-        ([], "", tuple(), None),
-        ([], "Table", tuple(), None),
-        ([], "Table", ("path-to", "node"), None),
-        ([], "Table", ("path-to", "node"), (1, 2)),
-        # config, wrong path
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Table",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Table",
-            ("path-to", "node"),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.foo",
-                }
-            ],
-            "Table",
-            ("path-to", "node"),
-            (1, 2),
-        ),
-        # config, right path, no choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Table",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Table",
-            ("path-to", "node"),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                }
-            ],
-            "Table",
-            ("path-to", "node"),
-            (1, 2),
-        ),
-        # config, right path, all columns
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": "all",
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": "all",
-                }
-            ],
-            "Table",
-            tuple(),
-            None,
-        ),
-        # config, right path, columns choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": ("choices", ["some", "keys"]),
-                }
-            ],
-            "",
-            tuple(),
-            None,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Table",
-            tuple(),
-            None,
-        ),
+        ("all", {"foo0": (10, 0, 3), "foo1": (10, 0, 3), "foo2": (10, 0, 3)}),
+        ("nothing", {}),
+        (("choices", ["foo0"]), {"foo0": (10, 0, 3)}),
+        (("choices", ["unknown"]), {}),
     ],
 )
-def test_retentions_add_cache_info_no_match(
-    raw_intervals: list[dict],
-    node_type: str,
-    path: SDPath,
-    raw_cache_info: tuple[int, int] | None,
+@pytest.mark.parametrize(
+    "table_choices, table_expected_retentions",
+    [
+        (
+            "all",
+            {
+                ("bar0",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar1",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
+            },
+        ),
+        ("nothing", {}),
+        (("choices", ["col0"]), {("bar0",): {"col0": (10, 0, 5)}, ("bar1",): {"col0": (10, 0, 5)}}),
+        (("choices", ["unknown"]), {}),
+    ],
+)
+def test__inventorize_real_host_only_intervals(
+    attrs_choices: tuple[str, list[str]] | str,
+    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    table_choices: tuple[str, list[str]] | str,
+    table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
-    items: list[Attributes | TableRow]
-    if node_type == ATTRIBUTES_KEY:
-        items = [
-            Attributes(
-                path=["path-to", "node"] if path else ["unknown-to", "node"],
-                inventory_attributes={},
-                status_attributes={},
-            ),
-        ]
-    elif node_type == TABLE_KEY:
-        items = [
-            TableRow(
-                path=["path-to", "node"] if path else ["unknown-to", "node"],
-                key_columns={"foo": "Foo"},
-                inventory_columns={},
-                status_columns={},
-            ),
-        ]
-    else:
-        items = []
-
-    now = 100
-    tree_updater = RealHostTreeUpdater(raw_intervals)
-    tree_updater.may_add_cache_info(
-        now=now,
+    trees, update_result = _inventorize_real_host(
+        now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
-                items=items,
-                raw_cache_info=raw_cache_info,
-            ),
+                items=[
+                    Attributes(
+                        path=["path-to", "node-with-attrs"],
+                        inventory_attributes={
+                            "foo0": "bar0",
+                            "foo1": "bar1",
+                        },
+                    ),
+                    Attributes(
+                        path=["path-to", "node-with-attrs"],
+                        inventory_attributes={
+                            "foo1": "2. bar1",
+                            "foo2": "bar2",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col0": "bar0 val0",
+                            "col1": "bar0 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar1"},
+                        inventory_columns={
+                            "col0": "bar1 val0",
+                            "col1": "bar1 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col1": "2. bar0 val1",
+                        },
+                    ),
+                ],
+                raw_cache_info=None,
+            )
         ],
+        raw_intervals_from_config=[
+            {
+                "interval": 3,
+                "visible_raw_path": "path-to.node-with-attrs",
+                "attributes": attrs_choices,
+            },
+            {
+                "interval": 5,
+                "visible_raw_path": "path-to.node-with-table",
+                "columns": table_choices,
+            },
+        ],
+        old_tree=StructuredDataNode(),
     )
-    assert tree_updater._retention_infos == {}
+
+    if attrs_expected_retentions:
+        raw_attributes = {
+            "Pairs": {
+                "foo0": "bar0",
+                "foo1": "2. bar1",
+                "foo2": "bar2",
+            },
+            "Retentions": attrs_expected_retentions,
+        }
+    else:
+        raw_attributes = {
+            "Pairs": {
+                "foo0": "bar0",
+                "foo1": "2. bar1",
+                "foo2": "bar2",
+            },
+        }
+
+    if table_expected_retentions:
+        table_retentions = {"Retentions": table_expected_retentions}
+    else:
+        table_retentions = {}
+
+    assert trees.inventory.serialize() == {
+        "Attributes": {},
+        "Nodes": {
+            "path-to": {
+                "Attributes": {},
+                "Nodes": {
+                    "node-with-attrs": {
+                        "Attributes": raw_attributes,
+                        "Nodes": {},
+                        "Table": {},
+                    },
+                    "node-with-table": {
+                        "Attributes": {},
+                        "Nodes": {},
+                        "Table": {
+                            "KeyColumns": ["foo"],
+                            "Rows": [
+                                {
+                                    "foo": "bar0",
+                                    "col0": "bar0 val0",
+                                    "col1": "2. bar0 val1",
+                                },
+                                {
+                                    "foo": "bar1",
+                                    "col0": "bar1 val0",
+                                    "col1": "bar1 val1",
+                                },
+                            ],
+                            **table_retentions,
+                        },
+                    },
+                },
+                "Table": {},
+            },
+            "software": {
+                "Attributes": {},
+                "Nodes": {
+                    "applications": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "check_mk": {
+                                "Attributes": {},
+                                "Nodes": {
+                                    "cluster": {
+                                        "Attributes": {"Pairs": {"is_cluster": False}},
+                                        "Nodes": {},
+                                        "Table": {},
+                                    }
+                                },
+                                "Table": {},
+                            }
+                        },
+                        "Table": {},
+                    }
+                },
+                "Table": {},
+            },
+        },
+        "Table": {},
+    }
+
+    if attrs_expected_retentions or table_expected_retentions:
+        assert update_result.save_tree
+        assert update_result.reason.startswith("retention intervals ")
+    else:
+        assert not update_result.save_tree
+        assert not update_result.reason
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_type, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
+    "attrs_choices, attrs_expected_retentions",
     [
-        # === Attributes ===
-        # config, right path, all attributes
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": "all",
-                }
-            ],
-            "Attributes",
-            None,
-            RetentionIntervals(
-                cached_at=100,
-                cache_interval=0,
-                retention_interval=3,
-            ),
-            True,
-            True,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": "all",
-                }
-            ],
-            "Attributes",
-            (1, 2),
-            RetentionIntervals(
-                cached_at=1,
-                cache_interval=2,
-                retention_interval=3,
-            ),
-            True,
-            True,
-        ),
-        # config, right path, attributes choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Attributes",
-            None,
-            RetentionIntervals(
-                cached_at=100,
-                cache_interval=0,
-                retention_interval=3,
-            ),
-            True,
-            False,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "attributes": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Attributes",
-            (1, 2),
-            RetentionIntervals(
-                cached_at=1,
-                cache_interval=2,
-                retention_interval=3,
-            ),
-            True,
-            False,
-        ),
-        # === Table ===
-        # config, right path, all columns
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": "all",
-                }
-            ],
-            "Table",
-            None,
-            RetentionIntervals(
-                cached_at=100,
-                cache_interval=0,
-                retention_interval=3,
-            ),
-            True,
-            True,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": "all",
-                }
-            ],
-            "Table",
-            (1, 2),
-            RetentionIntervals(
-                cached_at=1,
-                cache_interval=2,
-                retention_interval=3,
-            ),
-            True,
-            True,
-        ),
-        # config, right path, columns choices
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Table",
-            None,
-            RetentionIntervals(
-                cached_at=100,
-                cache_interval=0,
-                retention_interval=3,
-            ),
-            True,
-            False,
-        ),
-        (
-            [
-                {
-                    "interval": 3,
-                    "visible_raw_path": "path-to.node",
-                    "columns": ("choices", ["some", "keys"]),
-                }
-            ],
-            "Table",
-            (1, 2),
-            RetentionIntervals(
-                cached_at=1,
-                cache_interval=2,
-                retention_interval=3,
-            ),
-            True,
-            False,
-        ),
+        ("all", {"foo0": (1, 2, 3), "foo1": (1, 2, 3), "foo2": (1, 2, 3)}),
+        ("nothing", {}),
+        (("choices", ["foo0"]), {"foo0": (1, 2, 3)}),
+        (("choices", ["unknown"]), {}),
     ],
 )
-def test_retentions_add_cache_info(
-    raw_intervals: list[dict],
-    node_type: str,
-    raw_cache_info: tuple[int, int] | None,
-    expected_intervals: RetentionIntervals,
-    match_some_keys: bool,
-    match_other_keys: bool,
+@pytest.mark.parametrize(
+    "table_choices, table_expected_retentions",
+    [
+        (
+            "all",
+            {
+                ("bar0",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar1",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
+            },
+        ),
+        ("nothing", {}),
+        (("choices", ["col0"]), {("bar0",): {"col0": (1, 2, 5)}, ("bar1",): {"col0": (1, 2, 5)}}),
+        (("choices", ["unknown"]), {}),
+    ],
+)
+def test__inventorize_real_host_raw_cache_info_and_only_intervals(
+    attrs_choices: tuple[str, list[str]] | str,
+    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    table_choices: tuple[str, list[str]] | str,
+    table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
-    items: list[Attributes | TableRow]
-    if node_type == ATTRIBUTES_KEY:
-        items = [
-            Attributes(
-                path=["path-to", "node"],
-                inventory_attributes={},
-                status_attributes={},
-            ),
-        ]
-    elif node_type == TABLE_KEY:
-        items = [
-            TableRow(
-                path=["path-to", "node"],
-                key_columns={"foo": "Foo"},
-                inventory_columns={},
-                status_columns={},
-            ),
-        ]
-    else:
-        items = []
-
-    now = 100
-    tree_updater = RealHostTreeUpdater(raw_intervals)
-    tree_updater.may_add_cache_info(
-        now=now,
+    trees, update_result = _inventorize_real_host(
+        now=10,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
-                items=items,
-                raw_cache_info=raw_cache_info,
-            ),
+                items=[
+                    Attributes(
+                        path=["path-to", "node-with-attrs"],
+                        inventory_attributes={
+                            "foo0": "bar0",
+                            "foo1": "bar1",
+                        },
+                    ),
+                    Attributes(
+                        path=["path-to", "node-with-attrs"],
+                        inventory_attributes={
+                            "foo1": "2. bar1",
+                            "foo2": "bar2",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col0": "bar0 val0",
+                            "col1": "bar0 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar1"},
+                        inventory_columns={
+                            "col0": "bar1 val0",
+                            "col1": "bar1 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col1": "2. bar0 val1",
+                        },
+                    ),
+                ],
+                raw_cache_info=(1, 2),
+            )
         ],
+        raw_intervals_from_config=[
+            {
+                "interval": 3,
+                "visible_raw_path": "path-to.node-with-attrs",
+                "attributes": attrs_choices,
+            },
+            {
+                "interval": 5,
+                "visible_raw_path": "path-to.node-with-table",
+                "columns": table_choices,
+            },
+        ],
+        old_tree=StructuredDataNode(),
     )
 
-    retention_info = tree_updater._retention_infos.get((("path-to", "node"), node_type))
-    assert retention_info is not None
+    if attrs_expected_retentions:
+        raw_attributes = {
+            "Pairs": {
+                "foo0": "bar0",
+                "foo1": "2. bar1",
+                "foo2": "bar2",
+            },
+            "Retentions": attrs_expected_retentions,
+        }
+    else:
+        raw_attributes = {
+            "Pairs": {
+                "foo0": "bar0",
+                "foo1": "2. bar1",
+                "foo2": "bar2",
+            },
+        }
 
-    assert retention_info.intervals == expected_intervals
+    if table_expected_retentions:
+        table_retentions = {"Retentions": table_expected_retentions}
+    else:
+        table_retentions = {}
 
-    for key in ["some", "keys"]:
-        assert retention_info.filter_func(key) is match_some_keys
+    assert trees.inventory.serialize() == {
+        "Attributes": {},
+        "Nodes": {
+            "path-to": {
+                "Attributes": {},
+                "Nodes": {
+                    "node-with-attrs": {
+                        "Attributes": raw_attributes,
+                        "Nodes": {},
+                        "Table": {},
+                    },
+                    "node-with-table": {
+                        "Attributes": {},
+                        "Nodes": {},
+                        "Table": {
+                            "KeyColumns": ["foo"],
+                            "Rows": [
+                                {
+                                    "foo": "bar0",
+                                    "col0": "bar0 val0",
+                                    "col1": "2. bar0 val1",
+                                },
+                                {
+                                    "foo": "bar1",
+                                    "col0": "bar1 val0",
+                                    "col1": "bar1 val1",
+                                },
+                            ],
+                            **table_retentions,
+                        },
+                    },
+                },
+                "Table": {},
+            },
+            "software": {
+                "Attributes": {},
+                "Nodes": {
+                    "applications": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "check_mk": {
+                                "Attributes": {},
+                                "Nodes": {
+                                    "cluster": {
+                                        "Attributes": {"Pairs": {"is_cluster": False}},
+                                        "Nodes": {},
+                                        "Table": {},
+                                    }
+                                },
+                                "Table": {},
+                            }
+                        },
+                        "Table": {},
+                    }
+                },
+                "Table": {},
+            },
+        },
+        "Table": {},
+    }
 
-    for key in ["other", "keyz"]:
-        assert retention_info.filter_func(key) is match_other_keys
+    if attrs_expected_retentions or table_expected_retentions:
+        assert update_result.save_tree
+        assert update_result.reason.startswith("retention intervals ")
+    else:
+        assert not update_result.save_tree
+        assert not update_result.reason
 
 
 def _make_trees(

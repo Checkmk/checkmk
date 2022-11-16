@@ -83,6 +83,10 @@ def authenticate(req: Request) -> Iterator[bool]:
 def UserSessionContext(user_id: UserId) -> Iterator[None]:
     """Managing context of authenticated user session with cleanup before logout."""
     with UserContext(user_id):
+        # Auth with automation secret succeeded before - mark transid as
+        # unneeded in this case
+        if auth_type == "automation":
+            transactions.ignore()
         try:
             yield
         finally:
@@ -337,8 +341,6 @@ def _check_auth_automation() -> UserId:
     request.del_var_from_env("_secret")
 
     if verify_automation_secret(user_id, secret):
-        # Auth with automation secret succeeded - mark transid as unneeded in this case
-        transactions.ignore()
         set_auth_type("automation")
         return user_id
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)

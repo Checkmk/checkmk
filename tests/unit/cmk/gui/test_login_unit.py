@@ -19,6 +19,7 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.userdb import session
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.utils.transaction_manager import transactions
 
 
 @pytest.fixture(name="user_id")
@@ -135,3 +136,12 @@ def test_web_server_auth_session(user_id: UserId) -> None:
             assert user.id == user_id
             assert session.user_id == user.id
         assert user.id is None
+
+
+def test_ignore_transaction_ids(request_context, monkeypatch, with_automation_user):
+    user_id, password = with_automation_user
+    request.set_var("_secret", password)
+    request.set_var("_username", user_id)
+    with login.authenticate(request):
+        assert transactions._ignore_transids
+    assert transactions._ignore_transids is False

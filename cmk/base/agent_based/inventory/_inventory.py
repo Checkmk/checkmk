@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Collection, Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Collection, Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
+from typing import NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -216,7 +217,7 @@ def _fetch_real_host_data(
     config_cache = config.get_config_cache()
 
     fetched: Sequence[
-        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
         make_sources(
             host_name,

@@ -5,8 +5,9 @@
 
 
 import logging
+from collections import Counter
+from collections.abc import Callable, Container, Sequence
 from functools import partial
-from typing import Callable, Container, Counter, Optional, Sequence, Set, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -49,7 +50,7 @@ __all__ = ["commandline_discovery", "commandline_check_discovery"]
 
 
 def commandline_discovery(
-    arg_hostnames: Set[HostName],
+    arg_hostnames: set[HostName],
     *,
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[CheckPluginName],
@@ -76,7 +77,7 @@ def commandline_discovery(
         section.section_begin(host_name)
         try:
             fetched: Sequence[
-                Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+                tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
             ] = fetch_all(
                 make_sources(
                     host_name,
@@ -122,10 +123,10 @@ def commandline_discovery(
 
 
 def _preprocess_hostnames(
-    arg_host_names: Set[HostName],
+    arg_host_names: set[HostName],
     config_cache: ConfigCache,
     only_host_labels: bool,
-) -> Set[HostName]:
+) -> set[HostName]:
     """Default to all hosts and expand cluster names to their nodes"""
     if not arg_host_names:
         console.verbose(
@@ -139,7 +140,7 @@ def _preprocess_hostnames(
             % ("services and " if not only_host_labels else "", ", ".join(sorted(arg_host_names)))
         )
 
-    host_names: Set[HostName] = set()
+    host_names: set[HostName] = set()
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
@@ -212,7 +213,7 @@ def _commandline_discovery_on_host(
 
 def commandline_check_discovery(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    ipaddress: HostAddress | None,
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
@@ -233,7 +234,7 @@ def commandline_check_discovery(
 
 def _commandline_check_discovery(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    ipaddress: HostAddress | None,
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)

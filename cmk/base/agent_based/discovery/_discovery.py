@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Counter, Sequence, Tuple
+from collections import Counter
+from collections.abc import Sequence
 
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
@@ -39,7 +40,7 @@ def execute_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[
-        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -119,7 +120,7 @@ def _check_service_lists(
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
     discovery_mode: DiscoveryMode,
-) -> Tuple[Sequence[ActiveCheckResult], bool]:
+) -> tuple[Sequence[ActiveCheckResult], bool]:
 
     subresults = []
     need_rediscovery = False
@@ -214,7 +215,7 @@ def _check_host_labels(
     host_labels: QualifiedDiscovery[HostLabel],
     severity_new_host_label: int,
     discovery_mode: DiscoveryMode,
-) -> Tuple[ActiveCheckResult, bool]:
+) -> tuple[ActiveCheckResult, bool]:
     return (
         (
             ActiveCheckResult(severity_new_host_label, f"New host labels: {len(host_labels.new)}"),

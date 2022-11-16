@@ -15,11 +15,11 @@ import shlex
 import shutil
 import subprocess
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
-from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, cast
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -99,7 +99,7 @@ from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources import parse as parse_raw_data
 
 HistoryFile = str
-HistoryFilePair = Tuple[HistoryFile, HistoryFile]
+HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
@@ -131,7 +131,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # "refresh" - drop all services and reinventorize
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
-    def execute(self, args: List[str]) -> automation_results.DiscoveryResult:
+    def execute(self, args: list[str]) -> automation_results.DiscoveryResult:
         # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]
@@ -157,7 +157,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
 
-        results: Dict[HostName, DiscoveryResult] = {}
+        results: dict[HostName, DiscoveryResult] = {}
 
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
@@ -188,7 +188,7 @@ class AutomationTryDiscovery(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.TryDiscoveryResult:
+    def execute(self, args: list[str]) -> automation_results.TryDiscoveryResult:
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
@@ -224,8 +224,8 @@ class AutomationTryDiscovery(Automation):
             )
 
     def _execute_discovery(
-        self, args: List[str]
-    ) -> Tuple[
+        self, args: list[str]
+    ) -> tuple[
         Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
     ]:
 
@@ -264,11 +264,9 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # table of (checktype, item). No parameters are specified. Those
     # are either (1) kept from existing autochecks or (2) computed
     # from a new inventory.
-    def execute(self, args: List[str]) -> automation_results.SetAutochecksResult:
+    def execute(self, args: list[str]) -> automation_results.SetAutochecksResult:
         hostname = HostName(args[0])
-        new_items: Union[SetAutochecksTable, SetAutochecksTablePre20] = ast.literal_eval(
-            sys.stdin.read()
-        )
+        new_items: SetAutochecksTable | SetAutochecksTablePre20 = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -285,7 +283,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             )
 
         # Fix data from version <2.0
-        new_services: List[AutocheckServiceWithNodes] = []
+        new_services: list[AutocheckServiceWithNodes] = []
         for (raw_check_plugin_name, item), (
             _descr,
             params,
@@ -307,7 +305,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
 
 def _transform_pre_20_items(
-    new_items: Union[SetAutochecksTablePre20, SetAutochecksTable]
+    new_items: SetAutochecksTablePre20 | SetAutochecksTable,
 ) -> SetAutochecksTable:
     if _is_20_set_autochecks_format(new_items):
         return cast(SetAutochecksTable, new_items)
@@ -325,9 +323,7 @@ def _transform_pre_20_items(
     return fixed_items
 
 
-def _is_20_set_autochecks_format(
-    new_items: Union[SetAutochecksTablePre20, SetAutochecksTable]
-) -> bool:
+def _is_20_set_autochecks_format(new_items: SetAutochecksTablePre20 | SetAutochecksTable) -> bool:
     # try-inventory in 2.0 generates a different data format if it detects that the remote version
     # is too old (<2.0). It reports a shorter tuple. The paramstring gets repurposed and
     # acts as generic data container.
@@ -346,7 +342,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: List[str]) -> automation_results.UpdateHostLabelsResult:
+    def execute(self, args: list[str]) -> automation_results.UpdateHostLabelsResult:
         hostname = HostName(args[0])
         new_host_labels = ast.literal_eval(sys.stdin.read())
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
@@ -367,16 +363,16 @@ class AutomationRenameHosts(Automation):
 
     def __init__(self) -> None:
         super().__init__()
-        self._finished_history_files: Dict[HistoryFilePair, List[HistoryFile]] = {}
+        self._finished_history_files: dict[HistoryFilePair, list[HistoryFile]] = {}
 
     # WATO calls this automation when hosts have been renamed. We need to change
     # several file and directory names. This function has no argument but reads
     # Python pair-list from stdin:
     # [("old1", "new1"), ("old2", "new2")])
-    def execute(self, args: List[str]) -> automation_results.RenameHostsResult:
-        renamings: List[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
+    def execute(self, args: list[str]) -> automation_results.RenameHostsResult:
+        renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
-        actions: List[str] = []
+        actions: list[str] = []
 
         # The history archive can be renamed with running core. We need to keep
         # the list of already handled history archive files, because a new history
@@ -416,7 +412,7 @@ class AutomationRenameHosts(Automation):
                     actions.append("dnsfail-" + hostname)
 
         # Convert actions into a dictionary { "what" : count }
-        action_counts: Dict[str, int] = {}
+        action_counts: dict[str, int] = {}
         for action in actions:
             action_counts.setdefault(action, 0)
             action_counts[action] += 1
@@ -441,7 +437,7 @@ class AutomationRenameHosts(Automation):
         self,
         oldname: HistoryFile,
         newname: HistoryFile,
-    ) -> List[str]:
+    ) -> list[str]:
         actions = []
 
         if self._rename_host_file(autochecks_dir, oldname + ".mk", newname + ".mk"):
@@ -523,7 +519,7 @@ class AutomationRenameHosts(Automation):
         self,
         oldname: str,
         newname: str,
-    ) -> List[str]:
+    ) -> list[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
         actions = []
 
@@ -595,7 +591,7 @@ class AutomationRenameHosts(Automation):
             # Create a file "renamed_hosts" with the information about the
             # renaming of the hosts. The core will honor this file when it
             # reads the status file with the saved state.
-            Path(var_dir, "core/renamed_hosts").write_text("%s\n%s\n" % (oldname, newname))
+            Path(var_dir, "core/renamed_hosts").write_text(f"{oldname}\n{newname}\n")
             actions.append("retention")
 
         # NagVis maps
@@ -609,19 +605,19 @@ class AutomationRenameHosts(Automation):
 
         return actions
 
-    def _rename_host_in_remaining_core_history_files(self, oldname: str, newname: str) -> List[str]:
+    def _rename_host_in_remaining_core_history_files(self, oldname: str, newname: str) -> list[str]:
         """Perform the rename operation in all history archive files that have not been handled yet"""
         finished_file_paths = self._finished_history_files[(oldname, newname)]
         all_file_paths = set(self._get_core_history_files(only_archive=False))
         todo_file_paths = list(all_file_paths.difference(finished_file_paths))
         return self._rename_host_in_core_history_files(todo_file_paths, oldname, newname)
 
-    def _rename_host_in_core_history_archive(self, oldname: str, newname: str) -> List[str]:
+    def _rename_host_in_core_history_archive(self, oldname: str, newname: str) -> list[str]:
         """Perform the rename operation in all history archive files"""
         file_paths = self._get_core_history_files(only_archive=True)
         return self._rename_host_in_core_history_files(file_paths, oldname, newname)
 
-    def _get_core_history_files(self, only_archive: bool) -> List[str]:
+    def _get_core_history_files(self, only_archive: bool) -> list[str]:
         path_patterns = [
             "var/check_mk/core/archive/*",
             "var/nagios/archive/*",
@@ -633,30 +629,30 @@ class AutomationRenameHosts(Automation):
                 "var/nagios/nagios.log",
             ]
 
-        file_paths: List[str] = []
+        file_paths: list[str] = []
         for path_pattern in path_patterns:
-            file_paths += glob.glob("%s/%s" % (omd_root, path_pattern))
+            file_paths += glob.glob(f"{omd_root}/{path_pattern}")
         return file_paths
 
     def _rename_host_in_core_history_files(
-        self, file_paths: List[str], oldname: str, newname: str
-    ) -> List[str]:
+        self, file_paths: list[str], oldname: str, newname: str
+    ) -> list[str]:
         oldregex = self._escape_name_for_regex_matching(oldname)
 
         # Logfiles and history files of CMC and Nagios. Problem
         # here: the exact place of the hostname varies between the
         # various log entry lines
         sed_commands = r"""
-s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
-s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
-s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
-s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
-""" % {
-            "old": oldregex,
-            "new": newname,
-        }
+s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: {old};/\1 \2 STATE: {new};/
+s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: {old};/\1 \2ALERT: {new};/
+s/PASSIVE (HOST|SERVICE) CHECK: {old};/PASSIVE \1 CHECK: {new};/
+s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{old};/\1 NOTIFICATION: \2;{new};/
+""".format(
+            old=oldregex,
+            new=newname,
+        )
 
-        handled_files: List[str] = []
+        handled_files: list[str] = []
 
         subprocess.run(
             ["sed", "-ri", "--file=/dev/fd/0", *file_paths],
@@ -680,7 +676,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         if paths:
             extended = ["-r"] if extended_regex else []
             subprocess.call(
-                ["sed", "-i"] + extended + ["s@%s@%s@" % (old, new)] + paths,
+                ["sed", "-i"] + extended + [f"s@{old}@{new}@"] + paths,
                 stderr=subprocess.DEVNULL,
             )
             return True
@@ -699,7 +695,7 @@ class AutomationGetServicesLabels(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.GetServicesLabelsResult:
+    def execute(self, args: list[str]) -> automation_results.GetServicesLabelsResult:
         hostname, services = HostName(args[0]), args[1:]
         ruleset_matcher = config.get_config_cache().ruleset_matcher
 
@@ -716,7 +712,7 @@ class AutomationAnalyseServices(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.AnalyseServiceResult:
+    def execute(self, args: list[str]) -> automation_results.AnalyseServiceResult:
         hostname = HostName(args[0])
         servicedesc = args[1]
         config_cache = config.get_config_cache()
@@ -816,7 +812,7 @@ class AutomationAnalyseServices(Automation):
     @staticmethod
     def _get_service_info_from_autochecks(
         config_cache: ConfigCache, host_name: HostName, servicedesc: str
-    ) -> Optional[automation_results.ServiceInfo]:
+    ) -> automation_results.ServiceInfo | None:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
@@ -869,7 +865,7 @@ class AutomationAnalyseHost(Automation):
     needs_config = True
     needs_checks = False
 
-    def execute(self, args: List[str]) -> automation_results.AnalyseHostResult:
+    def execute(self, args: list[str]) -> automation_results.AnalyseHostResult:
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         return automation_results.AnalyseHostResult(
@@ -885,7 +881,7 @@ class ABCDeleteHosts:
     needs_config = False
     needs_checks = False
 
-    def _execute(self, args: List[str]) -> None:
+    def _execute(self, args: list[str]) -> None:
         for hostname_str in args:
             self._delete_host_files(HostName(hostname_str))
 
@@ -907,7 +903,7 @@ class ABCDeleteHosts:
                 raise
 
         for data_source_name in ds_directories:
-            filename = "%s/%s/%s" % (data_source_cache_dir, data_source_name, hostname)
+            filename = f"{data_source_cache_dir}/{data_source_name}/{hostname}"
             self._delete_if_exists(filename)
 
     def _delete_baked_agents(self, hostname: HostName) -> None:
@@ -916,13 +912,13 @@ class ABCDeleteHosts:
         baked_agents_dir = var_dir + "/agents/"
         if os.path.exists(baked_agents_dir):
             for folder in os.listdir(baked_agents_dir):
-                self._delete_if_exists("%s/%s" % (folder, hostname))
+                self._delete_if_exists(f"{folder}/{hostname}")
 
     def _delete_logwatch_and_piggyback_dirs(self, hostname: HostName) -> None:
         # logwatch and piggyback folders
         for what_dir in [
-            "%s/%s" % (logwatch_dir, hostname),
-            "%s/piggyback/%s" % (tmp_dir, hostname),
+            f"{logwatch_dir}/{hostname}",
+            f"{tmp_dir}/piggyback/{hostname}",
         ]:
             try:
                 shutil.rmtree(what_dir)
@@ -943,21 +939,21 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts, Automation):
     cmd = "delete-hosts"
 
-    def execute(self, args: List[str]) -> automation_results.DeleteHostsResult:
+    def execute(self, args: list[str]) -> automation_results.DeleteHostsResult:
         self._execute(args)
         return automation_results.DeleteHostsResult()
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
-            "%s/%s" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.mk" % (autochecks_dir, hostname),
-            "%s/%s" % (counters_dir, hostname),
-            "%s/%s" % (tcp_cache_dir, hostname),
-            "%s/persisted/%s" % (var_dir, hostname),
-            "%s/inventory/%s" % (var_dir, hostname),
-            "%s/inventory/%s.gz" % (var_dir, hostname),
-            "%s/agent_deployment/%s" % (var_dir, hostname),
+            f"{precompiled_hostchecks_dir}/{hostname}",
+            f"{precompiled_hostchecks_dir}/{hostname}.py",
+            f"{autochecks_dir}/{hostname}.mk",
+            f"{counters_dir}/{hostname}",
+            f"{tcp_cache_dir}/{hostname}",
+            f"{var_dir}/persisted/{hostname}",
+            f"{var_dir}/inventory/{hostname}",
+            f"{var_dir}/inventory/{hostname}.gz",
+            f"{var_dir}/agent_deployment/{hostname}",
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:
@@ -984,20 +980,20 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
 
     cmd = "delete-hosts-known-remote"
 
-    def execute(self, args: List[str]) -> automation_results.DeleteHostsKnownRemoteResult:
+    def execute(self, args: list[str]) -> automation_results.DeleteHostsKnownRemoteResult:
         self._execute(args)
         return automation_results.DeleteHostsKnownRemoteResult()
 
     def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
-            "%s/%s" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.mk" % (autochecks_dir, hostname),
-            "%s/%s" % (counters_dir, hostname),
-            "%s/%s" % (tcp_cache_dir, hostname),
-            "%s/persisted/%s" % (var_dir, hostname),
-            "%s/inventory/%s" % (var_dir, hostname),
-            "%s/inventory/%s.gz" % (var_dir, hostname),
+            f"{precompiled_hostchecks_dir}/{hostname}",
+            f"{precompiled_hostchecks_dir}/{hostname}.py",
+            f"{autochecks_dir}/{hostname}.mk",
+            f"{counters_dir}/{hostname}",
+            f"{tcp_cache_dir}/{hostname}",
+            f"{var_dir}/persisted/{hostname}",
+            f"{var_dir}/inventory/{hostname}",
+            f"{var_dir}/inventory/{hostname}.gz",
         ]
 
     def _delete_host_files(self, hostname: HostName) -> None:
@@ -1027,7 +1023,7 @@ class AutomationRestart(Automation):
             return CoreAction.RELOAD
         return CoreAction.RESTART
 
-    def execute(self, args: List[str]) -> automation_results.RestartResult:
+    def execute(self, args: list[str]) -> automation_results.RestartResult:
         with redirect_stdout(open(os.devnull, "w")):
             log.setup_console_logging()
             try:
@@ -1090,7 +1086,7 @@ class AutomationReload(AutomationRestart):
             return CoreAction.RESTART
         return CoreAction.RELOAD
 
-    def execute(self, args: List[str]) -> automation_results.ReloadResult:
+    def execute(self, args: list[str]) -> automation_results.ReloadResult:
         return automation_results.ReloadResult(super().execute(args).config_warnings)
 
 
@@ -1120,7 +1116,7 @@ class AutomationGetConfiguration(Automation):
     # this option (like before).
     needs_checks = False
 
-    def execute(self, args: List[str]) -> automation_results.GetConfigurationResult:
+    def execute(self, args: list[str]) -> automation_results.GetConfigurationResult:
         config.load(with_conf_d=False)
 
         # We read the list of variable names from stdin since
@@ -1152,10 +1148,10 @@ class AutomationGetCheckInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.GetCheckInformationResult:
+    def execute(self, args: list[str]) -> automation_results.GetCheckInformationResult:
         manuals = man_pages.all_man_pages()
 
-        plugin_infos: Dict[CheckPluginNameStr, Dict[str, Any]] = {}
+        plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
@@ -1183,7 +1179,7 @@ class AutomationGetCheckInformation(Automation):
             except Exception as e:
                 if cmk.utils.debug.enabled():
                     raise
-                raise MKAutomationError("Failed to parse man page '%s': %s" % (plugin.name, e))
+                raise MKAutomationError(f"Failed to parse man page '{plugin.name}': {e}")
         return str(plugin.name)
 
 
@@ -1195,7 +1191,7 @@ class AutomationGetSectionInformation(Automation):
     needs_config = False
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.GetSectionInformationResult:
+    def execute(self, args: list[str]) -> automation_results.GetSectionInformationResult:
 
         section_infos = {
             str(section.name): {
@@ -1225,7 +1221,7 @@ class AutomationScanParents(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.ScanParentsResult:
+    def execute(self, args: list[str]) -> automation_results.ScanParentsResult:
         settings = {
             "timeout": int(args[0]),
             "probes": int(args[1]),
@@ -1256,7 +1252,7 @@ class AutomationDiagHost(Automation):
 
     def execute(  # pylint: disable=too-many-branches
         self,
-        args: List[str],
+        args: list[str],
     ) -> automation_results.DiagHostResult:
         hostname = HostName(args[0])
         test, ipaddress, snmp_community = args[1:4]
@@ -1367,7 +1363,7 @@ class AutomationDiagHost(Automation):
                 str(e),
             )
 
-    def _execute_ping(self, host_config: HostConfig, ipaddress: str) -> Tuple[int, str]:
+    def _execute_ping(self, host_config: HostConfig, ipaddress: str) -> tuple[int, str]:
         base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
         completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
@@ -1385,8 +1381,8 @@ class AutomationDiagHost(Automation):
         ipaddress: HostAddress,
         agent_port: int,
         cmd: str,
-        tcp_connect_timeout: Optional[float],
-    ) -> Tuple[int, str]:
+        tcp_connect_timeout: float | None,
+    ) -> tuple[int, str]:
         state, output = 0, ""
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_name,
@@ -1443,7 +1439,7 @@ class AutomationDiagHost(Automation):
 
         return state, output
 
-    def _execute_traceroute(self, host_config: HostConfig, ipaddress: str) -> Tuple[int, str]:
+    def _execute_traceroute(self, host_config: HostConfig, ipaddress: str) -> tuple[int, str]:
         family_flag = "-6" if host_config.is_ipv6_primary else "-4"
         try:
             completed_process = subprocess.run(
@@ -1582,7 +1578,7 @@ class AutomationActiveCheck(Automation):
     needs_config = True
     needs_checks = True
 
-    def execute(self, args: List[str]) -> automation_results.ActiveCheckResult:
+    def execute(self, args: list[str]) -> automation_results.ActiveCheckResult:
         hostname = HostName(args[0])
         plugin, item = args[1:]
 
@@ -1637,7 +1633,7 @@ class AutomationActiveCheck(Automation):
             "Failed to compute check result",
         )
 
-    def _load_resource_file(self, macros: Dict[str, str]) -> None:
+    def _load_resource_file(self, macros: dict[str, str]) -> None:
         try:
             for line in (omd_root / "etc/nagios/resource.cfg").open():
                 line = line.strip()
@@ -1662,7 +1658,7 @@ class AutomationActiveCheck(Automation):
         self._load_resource_file(macros)
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})
 
-    def _execute_check_plugin(self, commandline: str) -> Tuple[ServiceState, ServiceDetails]:
+    def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
         try:
             result = subprocess.run(
                 shlex.split(commandline),
@@ -1690,7 +1686,7 @@ class AutomationUpdateDNSCache(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.UpdateDNSCacheResult:
+    def execute(self, args: list[str]) -> automation_results.UpdateDNSCacheResult:
         config_cache = config.get_config_cache()
         return automation_results.UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
@@ -1714,7 +1710,7 @@ class AutomationGetAgentOutput(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.GetAgentOutputResult:
+    def execute(self, args: list[str]) -> automation_results.GetAgentOutputResult:
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
@@ -1776,18 +1772,18 @@ class AutomationGetAgentOutput(Automation):
                 for walk_oid in snmp_modes.oids_to_walk():
                     try:
                         for oid, value in snmp_modes.walk_for_export(walk_oid, backend=backend):
-                            raw_oid_value = "%s %s\n" % (oid, value)
+                            raw_oid_value = f"{oid} {value}\n"
                             lines.append(raw_oid_value.encode())
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise
                         success = False
-                        output += "OID '%s': %s\n" % (oid, e)
+                        output += f"OID '{oid}': {e}\n"
 
                 info = b"".join(lines)
         except Exception as e:
             success = False
-            output = "Failed to fetch data from %s: %s\n" % (hostname, e)
+            output = f"Failed to fetch data from {hostname}: {e}\n"
             if cmk.utils.debug.enabled():
                 raise
 
@@ -1806,7 +1802,7 @@ class AutomationNotificationReplay(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.NotificationReplayResult:
+    def execute(self, args: list[str]) -> automation_results.NotificationReplayResult:
         nr = args[0]
         notify.notification_replay_backlog(int(nr))
         return automation_results.NotificationReplayResult()
@@ -1820,7 +1816,7 @@ class AutomationNotificationAnalyse(Automation):
     needs_config = True
     needs_checks = True  # TODO: Can we change this?
 
-    def execute(self, args: List[str]) -> automation_results.NotificationAnalyseResult:
+    def execute(self, args: list[str]) -> automation_results.NotificationAnalyseResult:
         nr = args[0]
         return automation_results.NotificationAnalyseResult(
             notify.notification_analyse_backlog(int(nr))
@@ -1835,7 +1831,7 @@ class AutomationGetBulks(Automation):
     needs_config = False
     needs_checks = False
 
-    def execute(self, args: List[str]) -> automation_results.NotificationGetBulksResult:
+    def execute(self, args: list[str]) -> automation_results.NotificationGetBulksResult:
         only_ripe = args[0] == "1"
         return automation_results.NotificationGetBulksResult(notify.find_bulks(only_ripe))
 

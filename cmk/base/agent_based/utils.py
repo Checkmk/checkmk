@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, Mapping, Optional, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import PiggybackTimeSettings
@@ -53,7 +53,7 @@ def get_section_cluster_kwargs(
     It returns a dictionary containing one optional dictionary[Host, ParsedSection]
     for each of the required sections, or an empty dictionary if no data was found at all.
     """
-    kwargs: Dict[str, Dict[str, ParsedSectionContent]] = {}
+    kwargs: dict[str, dict[str, ParsedSectionContent]] = {}
     for node_key in node_keys:
         node_kwargs = get_section_kwargs(parsed_sections_broker, node_key, parsed_section_names)
         for key, sections_node_data in node_kwargs.items():
@@ -69,7 +69,7 @@ def summarize_host_sections(
     *,
     source_results: SourceResults,
     include_ok_results: bool = False,
-    override_non_ok_state: Optional[ServiceState] = None,
+    override_non_ok_state: ServiceState | None = None,
     exit_spec_cb: Callable[[HostName, str], ExitSpec],
     time_settings_cb: Callable[[HostName], PiggybackTimeSettings],
     is_piggyback: bool,

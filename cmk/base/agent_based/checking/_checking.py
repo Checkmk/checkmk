@@ -6,19 +6,9 @@
 
 import logging
 from collections import defaultdict
+from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import (
-    Container,
-    DefaultDict,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -87,13 +77,13 @@ class _AggregatedResult(NamedTuple):
     submit: bool
     data_received: bool
     result: ServiceCheckResult
-    cache_info: Optional[Tuple[int, int]]
+    cache_info: tuple[int, int] | None
 
 
 def execute_checkmk_checks(
     *,
     hostname: HostName,
-    fetched: Sequence[Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
+    fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     submitter: Submitter,
@@ -182,7 +172,7 @@ def _do_inventory_actions_during_checking_for(
 
 
 def _timing_results(
-    total_times: Snapshot, fetched: Sequence[Tuple[SourceInfo, Snapshot]]
+    total_times: Snapshot, fetched: Sequence[tuple[SourceInfo, Snapshot]]
 ) -> ActiveCheckResult:
     for duration in (f[1] for f in fetched):
         total_times += duration
@@ -214,7 +204,7 @@ def _timing_results(
             ] += duration
 
     for phase, duration in summary.items():
-        perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
+        perfdata.append(f"cmk_time_{phase}={duration.idle:.3f}")
 
     return ActiveCheckResult(0, infotext, (), perfdata)
 
@@ -268,7 +258,7 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
-    rtc_package: Optional[AgentRawData],
+    rtc_package: AgentRawData | None,
 ) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
@@ -331,9 +321,7 @@ def _filter_services_to_check(
     ]
 
 
-def service_outside_check_period(
-    description: ServiceName, period: Optional[TimeperiodName]
-) -> bool:
+def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:
     if period is None:
         return False
     if cmk.base.core.check_timeperiod(period):
@@ -348,9 +336,9 @@ def get_aggregated_result(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: HostConfig,
     service: ConfiguredService,
-    plugin: Optional[checking_classes.CheckPlugin],
+    plugin: checking_classes.CheckPlugin | None,
     *,
-    rtc_package: Optional[AgentRawData],
+    rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
 ) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
@@ -481,8 +469,8 @@ def _get_monitoring_data_kwargs(
     config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
-    source_type: Optional[SourceType] = None,
-) -> Tuple[Mapping[str, object], ServiceCheckResult]:
+    source_type: SourceType | None = None,
+) -> tuple[Mapping[str, object], ServiceCheckResult]:
     if source_type is None:
         source_type = (
             SourceType.MANAGEMENT
@@ -517,7 +505,7 @@ def _get_monitoring_data_kwargs(
 
 
 def _final_read_only_check_parameters(
-    entries: Union[TimespecificParameters, LegacyCheckParameters]
+    entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
     raw_parameters = (
         entries.evaluate(cmk.base.core.timeperiod_active)
@@ -542,8 +530,8 @@ def _add_state_marker(
 def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheckResult:
     perfdata, results = _consume_and_dispatch_result_types(subresults)
     needs_marker = len(results) > 1
-    summaries: List[str] = []
-    details: List[str] = []
+    summaries: list[str] = []
+    details: list[str] = []
     status = checking_classes.State.OK
     for result in results:
         status = checking_classes.State.worst(status, result.state)
@@ -577,13 +565,13 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
 def _consume_and_dispatch_result_types(
     subresults: checking_classes.CheckResult,
-) -> Tuple[List[MetricTuple], List[checking_classes.Result]]:
+) -> tuple[list[MetricTuple], list[checking_classes.Result]]:
     """Consume *all* check results, and *then* raise, if we encountered
     an IgnoreResults instance.
     """
-    ignore_results: List[checking_classes.IgnoreResults] = []
-    results: List[checking_classes.Result] = []
-    perfdata: List[MetricTuple] = []
+    ignore_results: list[checking_classes.IgnoreResults] = []
+    results: list[checking_classes.Result] = []
+    perfdata: list[MetricTuple] = []
     for subr in subresults:
         if isinstance(subr, checking_classes.IgnoreResults):
             ignore_results.append(subr)

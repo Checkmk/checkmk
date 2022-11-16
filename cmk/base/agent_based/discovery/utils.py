@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Callable, Final, Generic, Hashable, Iterable, Literal, Sequence, Tuple, TypeVar
+from collections.abc import Callable, Hashable, Iterable, Sequence
+from typing import Final, Generic, Literal, TypeVar
 
 
 class DiscoveryMode(enum.Enum):
@@ -54,7 +55,7 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
 
     def chain_with_qualifier(
         self,
-    ) -> Iterable[Tuple[Literal["vanished", "old", "new"], _DiscoveredItem]]:
+    ) -> Iterable[tuple[Literal["vanished", "old", "new"], _DiscoveredItem]]:
         for i in self.vanished:
             yield "vanished", i
         for i in self.old:

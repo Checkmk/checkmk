@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Dict, List, NamedTuple, Optional
+from collections.abc import Callable
+from typing import Any, NamedTuple
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
@@ -16,10 +17,10 @@ _MATCH_NOTHING = regex("((?!x)x)")
 
 
 class _ServiceFilterLists(NamedTuple):
-    new_whitelist: Optional[List[str]]
-    new_blacklist: Optional[List[str]]
-    vanished_whitelist: Optional[List[str]]
-    vanished_blacklist: Optional[List[str]]
+    new_whitelist: list[str] | None
+    new_blacklist: list[str] | None
+    vanished_whitelist: list[str] | None
+    vanished_blacklist: list[str] | None
 
 
 class ServiceFilters(NamedTuple):
@@ -31,7 +32,7 @@ class ServiceFilters(NamedTuple):
         return cls(_accept_all_services, _accept_all_services)
 
     @classmethod
-    def from_settings(cls, rediscovery_parameters: Dict[str, Any]) -> "ServiceFilters":
+    def from_settings(cls, rediscovery_parameters: dict[str, Any]) -> "ServiceFilters":
         service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
 
         new_services_filter = _get_service_filter_func(
@@ -47,7 +48,7 @@ class ServiceFilters(NamedTuple):
         return cls(new_services_filter, vanished_services_filter)
 
 
-def _get_service_filter_lists(rediscovery_parameters: Dict[str, Any]) -> _ServiceFilterLists:
+def _get_service_filter_lists(rediscovery_parameters: dict[str, Any]) -> _ServiceFilterLists:
 
     if "service_filters" not in rediscovery_parameters:
         # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
@@ -112,8 +113,8 @@ def _get_service_filter_lists(rediscovery_parameters: Dict[str, Any]) -> _Servic
 
 
 def _get_service_filter_func(
-    service_whitelist: Optional[List[str]],
-    service_blacklist: Optional[List[str]],
+    service_whitelist: list[str] | None,
+    service_blacklist: list[str] | None,
 ) -> _ServiceFilter:
     if not service_whitelist and not service_blacklist:
         return _accept_all_services

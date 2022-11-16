@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from collections.abc import Callable
 from contextlib import suppress
-from typing import Callable, Optional, Tuple
 
 import cmk.utils.debug
 from cmk.utils.check_utils import ActiveCheckResult
@@ -67,7 +67,7 @@ def check_result(
     return state
 
 
-def _handle_success(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
+def _handle_success(result: ActiveCheckResult) -> tuple[ServiceState, str]:
     return result.state, "\n".join(
         (
             " | ".join((result.summary, " ".join(result.metrics))),
@@ -85,9 +85,9 @@ def _handle_failure(
     plugin_name: CheckPluginNameStr,
     is_cluster: bool,
     snmp_backend: SNMPBackendEnum,
-    rtc_package: Optional[AgentRawData],
+    rtc_package: AgentRawData | None,
     keepalive: bool,
-) -> Tuple[ServiceState, str]:
+) -> tuple[ServiceState, str]:
     if isinstance(exc, MKTimeout):
         if keepalive:
             raise exc

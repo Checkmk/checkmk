@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Container
 from functools import partial
-from typing import Callable, Container, Optional
 
 import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import ActiveCheckResult
@@ -24,7 +24,7 @@ from ._checking import execute_checkmk_checks
 
 def commandline_checking(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    ipaddress: HostAddress | None,
     *,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
@@ -56,7 +56,7 @@ def commandline_checking(
 
 def _commandline_checking(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    ipaddress: HostAddress | None,
     *,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,

@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Container, Sequence
 from functools import partial
-from typing import Callable, Container, Sequence, Tuple
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import (
@@ -34,7 +34,7 @@ def active_check_checking(
     *,
     submitter: Submitter,
     fetched: Sequence[
-        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,

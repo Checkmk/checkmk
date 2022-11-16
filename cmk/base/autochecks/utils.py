@@ -5,8 +5,9 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

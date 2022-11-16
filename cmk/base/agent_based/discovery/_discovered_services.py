@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Iterator, List, MutableMapping, Sequence, Set
+from collections.abc import Container, Iterator, MutableMapping, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -62,7 +62,7 @@ def analyse_discovered_services(
 def _analyse_discovered_services(
     *,
     existing_services: Sequence[AutocheckEntry],
-    discovered_services: List[AutocheckEntry],
+    discovered_services: list[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
@@ -104,7 +104,7 @@ def _services_to_keep(
     choose_from: Sequence[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     keep_vanished: bool,
-) -> List[AutocheckEntry]:
+) -> list[AutocheckEntry]:
     """Compile a list of services to keep in addition to the discovered ones
 
     These services are considered to be currently present (even if they are not discovered).
@@ -120,7 +120,7 @@ def _services_to_keep(
 def _drop_plugins_services(
     services: Sequence[AutocheckEntry],
     plugin_names: Container[CheckPluginName],
-) -> List[AutocheckEntry]:
+) -> list[AutocheckEntry]:
     return [s for s in services if s.check_plugin_name not in plugin_names]
 
 
@@ -130,7 +130,7 @@ def _discover_services(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     on_error: OnError,
-) -> List[AutocheckEntry]:
+) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
@@ -178,7 +178,7 @@ def _discover_services(
 def _find_candidates(
     broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
-) -> Set[CheckPluginName]:
+) -> set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
 
@@ -211,9 +211,9 @@ def _find_candidates(
 
 def _find_host_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: List[checking_classes.CheckPlugin],
-    parsed_sections_of_interest: Set[ParsedSectionName],
-) -> Set[CheckPluginName]:
+    preliminary_candidates: list[checking_classes.CheckPlugin],
+    parsed_sections_of_interest: set[ParsedSectionName],
+) -> set[CheckPluginName]:
 
     available_parsed_sections = broker.filter_available(
         parsed_sections_of_interest,
@@ -231,9 +231,9 @@ def _find_host_candidates(
 
 def _find_mgmt_candidates(
     broker: ParsedSectionsBroker,
-    preliminary_candidates: List[checking_classes.CheckPlugin],
-    parsed_sections_of_interest: Set[ParsedSectionName],
-) -> Set[CheckPluginName]:
+    preliminary_candidates: list[checking_classes.CheckPlugin],
+    parsed_sections_of_interest: set[ParsedSectionName],
+) -> set[CheckPluginName]:
 
     available_parsed_sections = broker.filter_available(
         parsed_sections_of_interest,

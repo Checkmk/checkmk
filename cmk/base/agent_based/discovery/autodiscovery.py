@@ -7,20 +7,9 @@
 import logging
 import socket
 import time
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Literal, TypeVar, Union
 
 from typing_extensions import assert_never
 
@@ -81,9 +70,9 @@ _Transition = Union[
 
 _L = TypeVar("_L", bound=str)
 
-ServicesTableEntry = Tuple[_L, autochecks.AutocheckEntry, List[HostName]]
-ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
-ServicesByTransition = Dict[_Transition, List[autochecks.AutocheckServiceWithNodes]]
+ServicesTableEntry = tuple[_L, autochecks.AutocheckEntry, list[HostName]]
+ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
+ServicesByTransition = dict[_Transition, list[autochecks.AutocheckServiceWithNodes]]
 
 
 # TODO: Move to livestatus module!
@@ -118,7 +107,7 @@ def automation_discovery(
     config_cache: ConfigCache,
     host_config: HostConfig,
     mode: DiscoveryMode,
-    service_filters: Optional[_ServiceFilters],
+    service_filters: _ServiceFilters | None,
     on_error: OnError,
     use_cached_snmp_data: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
@@ -146,7 +135,7 @@ def automation_discovery(
         )
 
         fetched: Sequence[
-            Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+            tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
         ] = fetch_all(
             make_sources(
                 host_name,
@@ -659,7 +648,7 @@ def _node_service_source(
 def _reclassify_disabled_items(
     host_name: HostName,
     services: ServicesTable[_Transition],
-) -> Iterable[Tuple[ServiceID, ServicesTableEntry]]:
+) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
         (service.id(), ("ignored", service, [host_name]))
@@ -733,8 +722,8 @@ def _cluster_service_entry(
     node_name: HostName,
     services_cluster: HostName,
     entry: autochecks.AutocheckEntry,
-    existing_entry: Optional[ServicesTableEntry[_BasicTransition]],
-) -> Iterable[Tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
+    existing_entry: ServicesTableEntry[_BasicTransition] | None,
+) -> Iterable[tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
     if host_name != services_cluster:
         return  # not part of this host
 

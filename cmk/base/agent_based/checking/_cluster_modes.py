@@ -5,21 +5,9 @@
 """Compute the cluster check function from the plugin and parameters."""
 
 from collections import defaultdict
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Final,
-    Iterable,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Protocol,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Final, NamedTuple, Protocol
 
 from cmk.utils.type_defs import ClusterMode, ServiceID, state_markers
 
@@ -121,7 +109,7 @@ def _cluster_check(
     check_function: Callable,
     label: str,
     selector: Selector,
-    levels_additional_nodes_count: Tuple[float, float],
+    levels_additional_nodes_count: tuple[float, float],
     unpreferred_node_state: State,
     **cluster_kwargs: Any,
 ) -> CheckResult:
@@ -159,7 +147,7 @@ class Summarizer:
         node_results: NodeResults,
         label: str,
         selector: Selector,
-        preferred: Optional[str],
+        preferred: str | None,
         unpreferred_node_state: State,
     ) -> None:
         self._node_results = node_results
@@ -176,7 +164,7 @@ class Summarizer:
     def _get_selected_nodes(
         results_map: Mapping[str, Sequence[Result]],
         selector: Selector,
-    ) -> Set[str]:
+    ) -> set[str]:
         """Determine the best/worst nodes names"""
         nodes_by_states = defaultdict(set)
         for node, results in ((n, r) for n, r in results_map.items() if r):
@@ -209,7 +197,7 @@ class Summarizer:
     def secondary_results(
         self,
         *,
-        levels_additional_nodes_count: Tuple[float, float],
+        levels_additional_nodes_count: tuple[float, float],
     ) -> Iterable[Result]:
         secondary_nodes = sorted(
             node
@@ -236,12 +224,12 @@ class Summarizer:
     @staticmethod
     def _secondary_nodes_state(
         secondary_nodes: Sequence[str],
-        levels: Tuple[float, float],
+        levels: tuple[float, float],
     ) -> State:
         count = len(secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
-    def metrics(self, node_name: Optional[str]) -> CheckResult:
+    def metrics(self, node_name: str | None) -> CheckResult:
         used_node = node_name or self._pivoting
         if not (metrics := self._node_results.metrics.get(used_node, ())):
             return
@@ -285,10 +273,10 @@ class NodeCheckExecutor:
 
         return NodeResults(results, metrics, ignores)
 
-    def _iter_node_kwargs(self, cluster_kwargs: _Kwargs) -> Iterable[Tuple[str, _Kwargs]]:
+    def _iter_node_kwargs(self, cluster_kwargs: _Kwargs) -> Iterable[tuple[str, _Kwargs]]:
         """create kwargs for every nodes check function"""
         section_names = set(cluster_kwargs) - _NON_SECTION_KEYS
-        all_nodes: Set[str] = {
+        all_nodes: set[str] = {
             node for section_name in section_names for node in cluster_kwargs[section_name]
         }
         yield from (
@@ -301,7 +289,7 @@ class NodeCheckExecutor:
     def _extract_node_kwargs(
         nodes: Iterable[str],
         cluster_kwargs: _Kwargs,
-    ) -> Iterable[Tuple[str, _Kwargs]]:
+    ) -> Iterable[tuple[str, _Kwargs]]:
         yield from (
             (n, {k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()})
             for n in nodes
@@ -316,7 +304,7 @@ class NodeCheckExecutor:
         node: str,
         result_generator: CheckResult,
         value_store_manager: ValueStoreManager,
-    ) -> Sequence[Union[Result, Metric, IgnoreResults]]:
+    ) -> Sequence[Result | Metric | IgnoreResults]:
         with value_store_manager.namespace(self._service_id, host_name=node):
             try:
                 return list(result_generator)

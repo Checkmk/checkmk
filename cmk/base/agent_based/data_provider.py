@@ -6,20 +6,8 @@
 from __future__ import annotations
 
 import logging
-from typing import (
-    Any,
-    Dict,
-    Final,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import Any, Final, NamedTuple, Optional
 
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
@@ -44,12 +32,12 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
-CacheInfo = Optional[Tuple[int, int]]
+CacheInfo = Optional[tuple[int, int]]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
 
-SourceResults = Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]]
+SourceResults = Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
 
 
 class ParsingResult(NamedTuple):
@@ -72,12 +60,12 @@ class SectionsParser:
     ) -> None:
         super().__init__()
         self._host_sections = host_sections
-        self._parsing_errors: List[str] = []
-        self._memoized_results: Dict[SectionName, Optional[ParsingResult]] = {}
+        self._parsing_errors: list[str] = []
+        self._memoized_results: dict[SectionName, ParsingResult | None] = {}
         self._host_name = host_name
 
     def __repr__(self) -> str:
-        return "%s(host_sections=%r, host_name=%r)" % (
+        return "{}(host_sections={!r}, host_name={!r})".format(
             type(self).__name__,
             self._host_sections,
             self._host_name,
@@ -87,7 +75,7 @@ class SectionsParser:
     def parsing_errors(self) -> Sequence[str]:
         return self._parsing_errors
 
-    def parse(self, section: SectionPlugin) -> Optional[ParsingResult]:
+    def parse(self, section: SectionPlugin) -> ParsingResult | None:
         if section.name in self._memoized_results:
             return self._memoized_results[section.name]
 
@@ -143,7 +131,7 @@ class ParsedSectionsResolver:
         section_plugins: Sequence[SectionPlugin],
     ) -> None:
         self._section_plugins = section_plugins
-        self._memoized_results: Dict[ParsedSectionName, Optional[ResolvedResult]] = {}
+        self._memoized_results: dict[ParsedSectionName, ResolvedResult | None] = {}
         self._superseders = self._init_superseders()
         self._producers = self._init_producers()
 
@@ -151,14 +139,14 @@ class ParsedSectionsResolver:
         return f"{self.__class__.__name__}(section_plugins={self._section_plugins})"
 
     def _init_superseders(self) -> Mapping[SectionName, Sequence[SectionPlugin]]:
-        superseders: Dict[SectionName, List[SectionPlugin]] = {}
+        superseders: dict[SectionName, list[SectionPlugin]] = {}
         for section in self._section_plugins:
             for superseded in section.supersedes:
                 superseders.setdefault(superseded, []).append(section)
         return superseders
 
     def _init_producers(self) -> Mapping[ParsedSectionName, Sequence[SectionPlugin]]:
-        producers: Dict[ParsedSectionName, List[SectionPlugin]] = {}
+        producers: dict[ParsedSectionName, list[SectionPlugin]] = {}
         for section in self._section_plugins:
             producers.setdefault(section.parsed_section_name, []).append(section)
         return producers
@@ -167,7 +155,7 @@ class ParsedSectionsResolver:
         self,
         parser: SectionsParser,
         parsed_section_name: ParsedSectionName,
-    ) -> Optional[ResolvedResult]:
+    ) -> ResolvedResult | None:
         if parsed_section_name in self._memoized_results:
             return self._memoized_results[parsed_section_name]
 
@@ -209,7 +197,7 @@ class ParsedSectionsBroker:
 
     def __init__(
         self,
-        providers: Mapping[HostKey, Tuple[ParsedSectionsResolver, SectionsParser]],
+        providers: Mapping[HostKey, tuple[ParsedSectionsResolver, SectionsParser]],
     ) -> None:
         super().__init__()
         self._providers: Final = providers
@@ -219,7 +207,7 @@ class ParsedSectionsBroker:
 
     def get_cache_info(
         self,
-        parsed_section_names: List[ParsedSectionName],
+        parsed_section_names: list[ParsedSectionName],
     ) -> CacheInfo:
         # TODO: should't the host key be provided here?
         """Aggregate information about the age of the data in the agent sections
@@ -251,7 +239,7 @@ class ParsedSectionsBroker:
         self,
         host_key: HostKey,
         parsed_section_name: ParsedSectionName,
-    ) -> Optional[ParsedSectionContent]:
+    ) -> ParsedSectionContent | None:
         try:
             resolver, parser = self._providers[host_key]
         except KeyError:
@@ -265,9 +253,9 @@ class ParsedSectionsBroker:
 
     def filter_available(
         self,
-        parsed_section_names: Set[ParsedSectionName],
+        parsed_section_names: set[ParsedSectionName],
         source_type: SourceType,
-    ) -> Set[ParsedSectionName]:
+    ) -> set[ParsedSectionName]:
         return {
             parsed_section_name
             for host_key, (resolver, parser) in self._providers.items()
@@ -294,13 +282,13 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
-    fetched: Iterable[Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
     logger: logging.Logger,
-) -> Tuple[
+) -> tuple[
     Mapping[HostKey, HostSections],
-    Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]],
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -311,8 +299,8 @@ def parse_messages(
     """
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
-    collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
+    collected_host_sections: dict[HostKey, HostSections] = {}
+    results: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for source, raw_data in fetched:

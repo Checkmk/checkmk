@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Dict, Literal, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -61,7 +62,7 @@ def get_check_preview(
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
-) -> Tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
+) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -76,7 +77,7 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     fetched: Sequence[
-        Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
         make_sources(
             host_name,
@@ -172,7 +173,7 @@ def _check_preview_table_row(
     *,
     host_config: HostConfig,
     service: ConfiguredService,
-    check_source: Union[_Transition, Literal["manual"]],
+    check_source: _Transition | Literal["manual"],
     parsed_sections_broker: ParsedSectionsBroker,
     found_on_nodes: Sequence[HostName],
     value_store_manager: ValueStoreManager,
@@ -255,16 +256,16 @@ def _make_check_preview_entry(
     *,
     host_name: HostName,
     check_plugin_name: str,
-    item: Optional[str],
+    item: str | None,
     description: ServiceName,
     check_source: str,
-    ruleset_name: Optional[RulesetName] = None,
+    ruleset_name: RulesetName | None = None,
     discovered_parameters: LegacyCheckParameters = None,
-    effective_parameters: Union[LegacyCheckParameters, TimespecificParameters] = None,
-    exitcode: Optional[int] = None,
+    effective_parameters: LegacyCheckParameters | TimespecificParameters = None,
+    exitcode: int | None = None,
     output: str = "",
-    found_on_nodes: Optional[Sequence[HostName]] = None,
-    labels: Optional[Dict[str, str]] = None,
+    found_on_nodes: Sequence[HostName] | None = None,
+    labels: dict[str, str] | None = None,
 ) -> CheckPreviewEntry:
     return CheckPreviewEntry(
         check_source=check_source,
@@ -288,7 +289,7 @@ def _make_check_preview_entry(
 
 
 def _wrap_timespecific_for_preview(
-    params: Union[LegacyCheckParameters, TimespecificParameters]
+    params: LegacyCheckParameters | TimespecificParameters,
 ) -> LegacyCheckParameters:
     return (
         params.preview(cmk.base.core.timeperiod_active)

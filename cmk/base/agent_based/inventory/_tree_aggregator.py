@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
 from dataclasses import dataclass
-from typing import Collection, NamedTuple
+from typing import NamedTuple
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,

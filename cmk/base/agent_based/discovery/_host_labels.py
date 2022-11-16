@@ -10,7 +10,7 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import Dict, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
@@ -109,7 +109,7 @@ def analyse_cluster_labels(
     if not nodes:
         return QualifiedDiscovery.empty()
 
-    nodes_host_labels: Dict[str, HostLabel] = {}
+    nodes_host_labels: dict[str, HostLabel] = {}
     for node in nodes:
         node_result = analyse_node_labels(
             host_name=node,

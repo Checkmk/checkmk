@@ -20,7 +20,7 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 enable_rulebased_notifications = False
 notification_fallback_email = ""
 notification_fallback_format: tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
-notification_rules: list["EventRule"] = []
+notification_rules: list[EventRule] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10
 notification_plugin_timeout = 60

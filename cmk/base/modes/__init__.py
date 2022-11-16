@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from typing import Callable, Dict, List, Optional, Set, Tuple, Union
+from collections.abc import Callable
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -19,16 +20,16 @@ OptionName = str
 OptionFunction = Callable
 ModeFunction = Callable
 ConvertFunction = Callable
-Options = List[Tuple[OptionSpec, Argument]]
-Arguments = List[str]
+Options = list[tuple[OptionSpec, Argument]]
+Arguments = list[str]
 
 
 class Modes:
     def __init__(self) -> None:
         super().__init__()
-        self._mode_map: Dict[OptionName, Mode] = {}
-        self._modes: List[Mode] = []
-        self._general_options: List[Option] = []
+        self._mode_map: dict[OptionName, Mode] = {}
+        self._modes: list[Mode] = []
+        self._general_options: list[Option] = []
 
     def register(self, mode: "Mode") -> None:
         self._modes.append(mode)
@@ -46,13 +47,11 @@ class Modes:
         except KeyError:
             return False
 
-    def call(
-        self, opt: str, arg: Optional[Argument], all_opts: Options, all_args: Arguments
-    ) -> int:
+    def call(self, opt: str, arg: Argument | None, all_opts: Options, all_args: Arguments) -> int:
         mode = self._get(opt)
         sub_options = mode.get_sub_options(all_opts)
 
-        handler_args: List = []
+        handler_args: list = []
         if mode.sub_options:
             handler_args.append(sub_options)
 
@@ -89,8 +88,8 @@ class Modes:
             options += "".join(option.short_getopt_specs())
         return options
 
-    def long_getopt_specs(self) -> List[str]:
-        options: List[str] = []
+    def long_getopt_specs(self) -> list[str]:
+        options: list[str] = []
         for mode in self._modes:
             options += mode.long_getopt_specs()
         for option in self._general_options:
@@ -113,23 +112,23 @@ class Modes:
                 texts.append(text)
         return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def non_config_options(self) -> List[str]:
-        options: List[str] = []
+    def non_config_options(self) -> list[str]:
+        options: list[str] = []
         for mode in self._modes:
             if not mode.needs_config:
                 options += mode.options()
         return options
 
-    def non_checks_options(self) -> List[str]:
-        options: List[str] = []
+    def non_checks_options(self) -> list[str]:
+        options: list[str] = []
         for mode in self._modes:
             if not mode.needs_checks:
                 options += mode.options()
         return options
 
     def parse_hostname_list(
-        self, args: List[str], with_clusters: bool = True, with_foreign_hosts: bool = False
-    ) -> List[HostName]:
+        self, args: list[str], with_clusters: bool = True, with_foreign_hosts: bool = False
+    ) -> list[HostName]:
         config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()
@@ -203,15 +202,15 @@ class Option:
         self,
         long_option: str,
         short_help: str,
-        short_option: Optional[str] = None,
+        short_option: str | None = None,
         argument: bool = False,
-        argument_descr: Optional[str] = None,
-        argument_conv: Optional[ConvertFunction] = None,
+        argument_descr: str | None = None,
+        argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         count: bool = False,
-        handler_function: Optional[OptionFunction] = None,
+        handler_function: OptionFunction | None = None,
         *,
-        deprecated_long_options: Optional[Set[str]] = None,
+        deprecated_long_options: set[str] | None = None,
     ) -> None:
         super().__init__()
         self.long_option = long_option
@@ -233,7 +232,7 @@ class Option:
     def name(self) -> str:
         return self.long_option
 
-    def options(self) -> List[str]:
+    def options(self) -> list[str]:
         options = []
         if self.short_option:
             options.append(f"-{self.short_option}")
@@ -250,7 +249,7 @@ class Option:
     def takes_argument(self) -> bool:
         return self.argument
 
-    def short_help_text(self, fmt: str) -> Optional[str]:
+    def short_help_text(self, fmt: str) -> str | None:
         if self.short_help is None:
             return None
 
@@ -273,7 +272,7 @@ class Option:
         )
         return wrapper.fill(self.short_help)
 
-    def short_getopt_specs(self) -> List[str]:
+    def short_getopt_specs(self) -> list[str]:
         if not self.has_short_option():
             return []
 
@@ -284,7 +283,7 @@ class Option:
             spec += ":"
         return [spec]
 
-    def long_getopt_specs(self) -> List[str]:
+    def long_getopt_specs(self) -> list[str]:
         specs = [self.long_option]
         specs.extend(self._deprecated_long_options)
         if self.argument and not self.argument_optional:
@@ -298,15 +297,15 @@ class Mode(Option):
         long_option: OptionName,
         handler_function: ModeFunction,
         short_help: str,
-        short_option: Optional[OptionName] = None,
+        short_option: OptionName | None = None,
         argument: bool = False,
-        argument_descr: Optional[str] = None,
-        argument_conv: Optional[ConvertFunction] = None,
+        argument_descr: str | None = None,
+        argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
-        long_help: Optional[List[str]] = None,
+        long_help: list[str] | None = None,
         needs_config: bool = True,
         needs_checks: bool = True,
-        sub_options: Optional[List[Option]] = None,
+        sub_options: list[Option] | None = None,
     ) -> None:
         super().__init__(
             long_option,
@@ -323,13 +322,13 @@ class Mode(Option):
         self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
-    def short_getopt_specs(self) -> List[str]:
+    def short_getopt_specs(self) -> list[str]:
         specs = super().short_getopt_specs()
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
-    def long_getopt_specs(self) -> List[str]:
+    def long_getopt_specs(self) -> list[str]:
         specs = super().long_getopt_specs()
         for option in self.sub_options:
             specs += option.long_getopt_specs()
@@ -339,11 +338,11 @@ class Mode(Option):
     #  -i, --inventory does a HW/SW-Inventory for all, one or several
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
-    def long_help_text(self) -> Optional[str]:
+    def long_help_text(self) -> str | None:
         if not self.long_help and not self.sub_options:
             return None
 
-        text: List[str] = []
+        text: list[str] = []
 
         option_text = "  "
         if self.short_option:
@@ -376,13 +375,11 @@ class Mode(Option):
 
         return "\n\n".join(text)
 
-    def get_sub_options(
-        self, all_opts: Options
-    ) -> Optional[Dict[OptionName, Union[Argument, int, bool]]]:
+    def get_sub_options(self, all_opts: Options) -> dict[OptionName, Argument | int | bool] | None:
         if not self.sub_options:
             return None
 
-        options: Dict[OptionName, Union[Argument, int, bool]] = {}
+        options: dict[OptionName, Argument | int | bool] = {}
 
         for o, a in all_opts:
             for option in self.sub_options:
@@ -395,7 +392,7 @@ class Mode(Option):
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
 
-                val: Union[Argument, bool] = a
+                val: Argument | bool = a
                 if not option.takes_argument():
                     if option.count:
                         value = options.setdefault(option.name(), 0)

@@ -5,8 +5,9 @@
 """Caring about persistance of the discovered services (aka autochecks)"""
 
 import logging
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import Callable, Dict, Iterable, Mapping, NamedTuple, Sequence
+from typing import Dict, NamedTuple
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
@@ -41,13 +42,13 @@ class AutochecksManager:
 
     def __init__(self) -> None:
         super().__init__()
-        self._autochecks: Dict[HostName, Sequence[ConfiguredService]] = {}
+        self._autochecks: dict[HostName, Sequence[ConfiguredService]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().
-        self._discovered_labels_of: Dict[
-            HostName, Dict[ServiceName, Mapping[str, ServiceLabel]]
+        self._discovered_labels_of: dict[
+            HostName, dict[ServiceName, Mapping[str, ServiceLabel]]
         ] = {}
-        self._raw_autochecks_cache: Dict[HostName, Sequence[AutocheckEntry]] = {}
+        self._raw_autochecks_cache: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     def get_autochecks_of(
         self,

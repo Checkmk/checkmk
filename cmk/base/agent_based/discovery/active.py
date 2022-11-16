@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
 from functools import partial
-from typing import Callable, Sequence, Tuple
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import AgentRawData, HostName, result, ServiceState
@@ -25,7 +25,7 @@ def active_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[
-        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,

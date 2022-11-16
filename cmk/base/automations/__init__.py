@@ -33,14 +33,14 @@ class MKAutomationError(MKException):
 class Automations:
     def __init__(self) -> None:
         super().__init__()
-        self._automations: Dict[str, Automation] = {}
+        self._automations: dict[str, Automation] = {}
 
     def register(self, automation: "Automation") -> None:
         if automation.cmd is None:
             raise TypeError()
         self._automations[automation.cmd] = automation
 
-    def execute(self, cmd: str, args: List[str]) -> Any:
+    def execute(self, cmd: str, args: list[str]) -> Any:
         self._handle_generic_arguments(args)
 
         try:
@@ -81,7 +81,7 @@ class Automations:
 
         return 0
 
-    def _handle_generic_arguments(self, args: List[str]) -> None:
+    def _handle_generic_arguments(self, args: list[str]) -> None:
         """Handle generic arguments (currently only the optional timeout argument)"""
         if len(args) > 1 and args[0] == "--timeout":
             args.pop(0)
@@ -91,17 +91,17 @@ class Automations:
                 signal.signal(signal.SIGALRM, self._raise_automation_timeout)
                 signal.alarm(timeout)
 
-    def _raise_automation_timeout(self, signum: int, stackframe: Optional[FrameType]) -> NoReturn:
+    def _raise_automation_timeout(self, signum: int, stackframe: FrameType | None) -> NoReturn:
         raise MKTimeout("Action timed out.")
 
 
 class Automation(abc.ABC):
-    cmd: Optional[str] = None
+    cmd: str | None = None
     needs_checks = False
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: List[str]) -> ABCAutomationResult:
+    def execute(self, args: list[str]) -> ABCAutomationResult:
         ...
 
 

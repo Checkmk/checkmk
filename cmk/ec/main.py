@@ -64,7 +64,7 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
 from .helpers import ECLock
-from .history import ActiveHistoryPeriod, get_logfile, History, quote_tab, scrub_string
+from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, scrub_string
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
@@ -875,7 +875,7 @@ class EventServer(ECServerThread):
             self._logger.log(
                 VERBOSE, "Remove event %d (created in downtime, host left downtime)", event["id"]
             )
-            self._event_status.remove_event(event)
+            self._event_status.remove_event(event, "AUTODELETE")
 
     def hk_handle_event_timeouts(self) -> None:  # pylint: disable=too-many-branches
         # 1. Automatically delete all events that are in state "counting"
@@ -883,10 +883,10 @@ class EventServer(ECServerThread):
         #    time is elapsed.
         # 2. Automatically delete all events that are in state "open"
         #    and whose livetime is elapsed.
-        events_to_delete = []
+        events_to_delete: list[tuple[Event, HistoryWhat]] = []
         events = self._event_status.events()
         now = time.time()
-        for nr, event in enumerate(events):
+        for event in events:
             rule = self._rule_by_id.get(event["rule_id"])
 
             if event["phase"] == "counting":
@@ -899,8 +899,7 @@ class EventServer(ECServerThread):
                         event["rule_id"],
                     )
                     event["phase"] = "closed"
-                    self._history.add(event, "ORPHANED")
-                    events_to_delete.append(nr)
+                    events_to_delete.append((event, "ORPHANED"))
 
                 elif "count" not in rule and "expect" not in rule:
                     self._logger.info(
@@ -910,8 +909,7 @@ class EventServer(ECServerThread):
                         event["rule_id"],
                     )
                     event["phase"] = "closed"
-                    self._history.add(event, "NOCOUNT")
-                    events_to_delete.append(nr)
+                    events_to_delete.append((event, "NOCOUNT"))
 
                 # handle counting
                 elif "count" in rule:
@@ -947,8 +945,7 @@ class EventServer(ECServerThread):
                                     event["id"],
                                 )
                                 event["phase"] = "closed"
-                                self._history.add(event, "COUNTFAILED")
-                                events_to_delete.append(nr)
+                                events_to_delete.append((event, "COUNTFAILED"))
 
                     else:  # algorithm 'interval'
                         if event["first"] + count["period"] <= now:  # End of period reached
@@ -962,8 +959,7 @@ class EventServer(ECServerThread):
                                 count["period"],
                             )
                             event["phase"] = "closed"
-                            self._history.add(event, "COUNTFAILED")
-                            events_to_delete.append(nr)
+                            events_to_delete.append((event, "COUNTFAILED"))
 
             # Handle delayed actions
             elif event["phase"] == "delayed":
@@ -989,8 +985,7 @@ class EventServer(ECServerThread):
                         )
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            self._history.add(event, "AUTODELETE")
-                            events_to_delete.append(nr)
+                            events_to_delete.append((event, "AUTODELETE"))
 
                     else:
                         self._logger.info(
@@ -1002,17 +997,15 @@ class EventServer(ECServerThread):
                 allowed_phases = event.get("live_until_phases", ["open"])
                 if event["phase"] in allowed_phases:
                     event["phase"] = "closed"
-                    events_to_delete.append(nr)
+                    events_to_delete.append((event, "EXPIRED"))
                     self._logger.info(
                         "Livetime of event %d (rule %s) exceeded. Deleting event.",
                         event["id"],
                         event["rule_id"],
                     )
-                    self._history.add(event, "EXPIRED")
 
-        # Do delayed deletion now (was delayed in order to keep list indices OK)
-        for nr in events_to_delete[::-1]:
-            self._event_status.remove_event(events[nr])
+        for event, reason in events_to_delete:
+            self._event_status.remove_event(event, reason)
 
     def hk_check_expected_messages(self) -> None:
         now = time.time()
@@ -1056,13 +1049,14 @@ class EventServer(ECServerThread):
 
                 # First look for case 1: rule that already have at least one hit
                 # and this events in the state "counting" exist.
-                events_to_delete = []
+                events_to_delete: list[tuple[Event, HistoryWhat]] = []
                 events = self._event_status.events()
-                for nr, event in enumerate(events):
+                for event in events:
                     if event["rule_id"] == rule["id"] and event["phase"] == "counting":
                         # time has elapsed. Now lets see if we have reached
                         # the necessary count:
                         if event["count"] < expected_count:  # no -> trigger alarm
+                            events_to_delete.append((event, "AUTODELETE"))
                             self._handle_absent_event(
                                 rule, event["count"], expected_count, event["last"]
                             )
@@ -1075,17 +1069,16 @@ class EventServer(ECServerThread):
                                 event["count"],
                                 expected_count,
                             )
-                            self._history.add(event, "COUNTREACHED")
                         # Counting event is no longer needed.
-                        events_to_delete.append(nr)
+                        events_to_delete.append((event, "COUNTREACHED"))
                         break
 
                 # Ou ou, no event found at all.
                 else:
                     self._handle_absent_event(rule, 0, expected_count, interval_start)
 
-                for nr in events_to_delete[::-1]:
-                    self._event_status.remove_event(events[nr])
+                for event, reason in events_to_delete:
+                    self._event_status.remove_event(event, reason)
 
     def _handle_absent_event(
         self, rule: Rule, event_count: int, expected_count: int, interval_start: float
@@ -1174,8 +1167,7 @@ class EventServer(ECServerThread):
             )
             if rule.get("autodelete"):
                 event["phase"] = "closed"
-                self._history.add(event, "AUTODELETE")
-                self._event_status.remove_event(event)
+                self._event_status.remove_event(event, "AUTODELETE")
 
     def reload_configuration(self, config: Config) -> None:
         self._config = config
@@ -1472,9 +1464,8 @@ class EventServer(ECServerThread):
 
                         if "delay" not in rule and rule.get("autodelete"):
                             existing_event["phase"] = "closed"
-                            self._history.add(existing_event, "AUTODELETE")
                             with self._event_status.lock:
-                                self._event_status.remove_event(existing_event)
+                                self._event_status.remove_event(existing_event, "AUTODELETE")
                 elif "expect" in rule:
                     self._event_status.count_expected_event(self, event)
                 else:
@@ -1501,9 +1492,8 @@ class EventServer(ECServerThread):
                         )
                         if rule.get("autodelete"):
                             event["phase"] = "closed"
-                            self._history.add(event, "AUTODELETE")
                             with self._event_status.lock:
-                                self._event_status.remove_event(event)
+                                self._event_status.remove_event(event, "AUTODELETE")
                 return
 
         # End of loop over rules.
@@ -3167,9 +3157,10 @@ class EventStatus:
         event["phase"] = "closed"
         self._history.add(event, "ARCHIVED")
 
-    def remove_event(self, event: Event) -> None:
+    def remove_event(self, event: Event, delete_reason: HistoryWhat, user: str = "") -> None:
         try:
             self._events.remove(event)
+            self._history.add(event, delete_reason, user)
             self._count_event_remove(event)
         except ValueError:
             self._logger.exception("Cannot remove event %d: not present", event["id"])
@@ -3179,8 +3170,7 @@ class EventStatus:
         if ty == "overall":
             self._logger.log(VERBOSE, "  Removing oldest event")
             oldest_event = self._events[0]
-            self._history.add(oldest_event, "AUTODELETE")
-            self.remove_event(oldest_event)
+            self.remove_event(oldest_event, "AUTODELETE")
         elif ty == "by_rule" and event["rule_id"] is not None:
             self._logger.log(VERBOSE, '  Removing oldest event of rule "%s"', event["rule_id"])
             self._remove_oldest_event_of_rule(event["rule_id"])
@@ -3192,16 +3182,14 @@ class EventStatus:
     def _remove_oldest_event_of_rule(self, rule_id: str) -> None:
         for event in self._events:
             if event["rule_id"] == rule_id:
-                self._history.add(event, "AUTODELETE")
-                self.remove_event(event)
+                self.remove_event(event, "AUTODELETE")
                 return
 
     # protected by self.lock
     def _remove_oldest_event_of_host(self, hostname: str) -> None:
         for event in self._events:
             if event["host"] == hostname:
-                self._history.add(event, "AUTODELETE")
-                self.remove_event(event)
+                self.remove_event(event, "AUTODELETE")
                 return
 
     # protected by self.lock
@@ -3248,7 +3236,6 @@ class EventStatus:
                     event["time"] = new_event["time"]
                     event["last"] = new_event["time"]
                     event["priority"] = new_event["priority"]
-                    self._history.add(event, "CANCELLED")
                     actions = rule.get("cancel_actions", [])
                     if actions:
                         if (
@@ -3277,7 +3264,7 @@ class EventStatus:
                     to_delete.append(event)
 
             for e in to_delete:
-                self.remove_event(e)
+                self.remove_event(e, "CANCELLED")
 
     def cancelling_match(  # pylint: disable=too-many-branches
         self, match_groups: dict, new_event: Event, event: Event, rule: Rule
@@ -3465,9 +3452,7 @@ class EventStatus:
                 event["phase"] = "closed"
                 if user:
                     event["owner"] = user
-                self._history.add(event, "DELETE", user)
-                self.remove_event(event)
-                self._count_event_remove(event)
+                self.remove_event(event, "DELETE", user)
 
     def get_events(self) -> list[Any]:
         return self._events

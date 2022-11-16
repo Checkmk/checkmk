@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.gui.plugins.views.perfometers.check_mk import perfometer_fileinfo_groups
 from cmk.gui.utils.html import HTML
+from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_fileinfo_groups
 
 
 @pytest.mark.parametrize(

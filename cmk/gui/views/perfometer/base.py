@@ -3,23 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from typing import Any
-
 import cmk.gui.metrics as metrics
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.painters.v0.base import Cell, CellSpec, Painter, painter_registry
-from cmk.gui.painters.v1.helpers import is_stale
-from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
-from cmk.gui.type_defs import ColumnName, Perfdata, PerfometerSpec, Row, TranslatedMetrics
+from cmk.gui.type_defs import Perfdata, PerfometerSpec, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
-from cmk.gui.views.graph import cmk_graph_url
-from cmk.gui.views.sorter import Sorter, sorter_registry
+
+from .legacy_perfometers import perfometers, render_metricometer
 
 
 class Perfometer:
@@ -182,113 +171,3 @@ class Perfometer:
 
     def _has_legacy_perfometer(self) -> bool:
         return self._check_command in perfometers
-
-
-# .
-#   .--Painter-------------------------------------------------------------.
-#   |                   ____       _       _                               |
-#   |                  |  _ \ __ _(_)_ __ | |_ ___ _ __                    |
-#   |                  | |_) / _` | | '_ \| __/ _ \ '__|                   |
-#   |                  |  __/ (_| | | | | | ||  __/ |                      |
-#   |                  |_|   \__,_|_|_| |_|\__\___|_|                      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | The perfometers are registered through a painter and sorter          |
-#   '----------------------------------------------------------------------'
-
-
-@painter_registry.register
-class PainterPerfometer(Painter):
-    @property
-    def ident(self) -> str:
-        return "perfometer"
-
-    def title(self, cell):
-        return _("Service Perf-O-Meter")
-
-    def short_title(self, cell):
-        return _("Perf-O-Meter")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "service_staleness",
-            "service_perf_data",
-            "service_state",
-            "service_check_command",
-            "service_pnpgraph_present",
-            "service_plugin_output",
-        ]
-
-    @property
-    def printable(self):
-        return "perfometer"
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        classes = ["perfometer"]
-        if is_stale(row):
-            classes.append("stale")
-
-        try:
-            title, h = Perfometer(row).render()
-            if title is None and h is None:
-                return "", ""
-        except Exception as e:
-            logger.exception("error rendering performeter")
-            if active_config.debug:
-                raise
-            return " ".join(classes), _("Exception: %s") % e
-
-        assert h is not None
-        content = (
-            HTMLWriter.render_div(HTML(h), class_=["content"])
-            + HTMLWriter.render_div(title, class_=["title"])
-            + HTMLWriter.render_div("", class_=["glass"])
-        )
-
-        # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
-        if display_options.enabled(display_options.X) and row["service_pnpgraph_present"] != 0:
-            url = cmk_graph_url(row, "service")
-            disabled = False
-        else:
-            url = "javascript:void(0)"
-            disabled = True
-
-        return " ".join(classes), HTMLWriter.render_a(
-            content=content,
-            href=url,
-            title=escaping.strip_tags(title),
-            class_=["disabled"] if disabled else [],
-        )
-
-
-@sorter_registry.register
-class SorterPerfometer(Sorter):
-    @property
-    def ident(self) -> str:
-        return "perfometer"
-
-    @property
-    def title(self) -> str:
-        return _("Perf-O-Meter")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "service_perf_data",
-            "service_state",
-            "service_check_command",
-            "service_pnpgraph_present",
-            "service_plugin_output",
-        ]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        try:
-            v1 = tuple(-float("inf") if s is None else s for s in Perfometer(r1).sort_value())
-            v2 = tuple(-float("inf") if s is None else s for s in Perfometer(r2).sort_value())
-            return (v1 > v2) - (v1 < v2)
-        except Exception:
-            logger.exception("error sorting perfometer values")
-            if active_config.debug:
-                raise
-            return 0

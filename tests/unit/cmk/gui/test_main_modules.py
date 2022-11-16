@@ -80,7 +80,6 @@ def test_load_local_plugin(main_module_name: str) -> None:
         "openapi",
         "openapi/endpoints",
         "views",
-        "views/perfometers",
         "views/icons",
         "metrics",
     ],

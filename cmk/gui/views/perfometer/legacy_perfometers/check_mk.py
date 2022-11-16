@@ -8,7 +8,10 @@ from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.plugins.views.perfometers.utils import (
+from cmk.gui.utils.html import HTML
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
+
+from .utils import (
     LegacyPerfometerResult,
     Perfdata,
     perfometer_linear,
@@ -19,8 +22,206 @@ from cmk.gui.plugins.views.perfometers.utils import (
     render_perfometer,
     Row,
 )
-from cmk.gui.utils.html import HTML
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
+
+
+def register() -> None:
+    perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+    perfometers["check_mk-mem.linux"] = perfometer_check_mk_mem_used
+    perfometers["check_mk-aix_memory"] = perfometer_check_mk_mem_used
+    perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
+    perfometers["check_mk-mem.win"] = perfometer_check_mk_mem_win
+    perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
+    perfometers["check_mk-ntp"] = perfometer_check_mk_ntp
+    perfometers["check_mk-ntp.time"] = perfometer_check_mk_ntp
+    perfometers["check_mk-chrony"] = perfometer_check_mk_ntp
+    perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
+    perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
+    perfometers["check_mk-nvidia.temp"] = perfometer_temperature
+    perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
+    perfometers["check_mk-cisco_temp_perf"] = perfometer_temperature
+    perfometers["check_mk-cmctc_lcp.temp"] = perfometer_temperature
+    perfometers["check_mk-cmctc.temp"] = perfometer_temperature
+    perfometers["check_mk-smart.temp"] = perfometer_temperature
+    perfometers["check_mk-f5_bigip_chassis_temp"] = perfometer_temperature
+    perfometers["check_mk-f5_bigip_cpu_temp"] = perfometer_temperature
+    perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
+    perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
+    perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
+    perfometers["check_mk-fsc_temp"] = perfometer_temperature
+    perfometers["check_mk-viprinet_temp"] = perfometer_temperature
+    perfometers["check_mk-hwg_temp"] = perfometer_temperature
+    perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
+    perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
+    perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
+    perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
+    perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
+    perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
+    perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
+    perfometers["check_mk-cmciii.temp"] = perfometer_temperature
+    perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
+    perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
+    perfometers["check_mk-enterasys_temp"] = perfometer_temperature
+    perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
+    perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
+    perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
+    perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
+    perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
+    perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
+    perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
+    perfometers["check_mk-rms200_temp"] = perfometer_temperature
+    perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
+    perfometers["check_mk-lnx_thermal"] = perfometer_temperature
+    perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
+    perfometers["check_mk-carel_sensors"] = perfometer_temperature
+    perfometers["check_mk-netscaler_health.temp"] = perfometer_temperature
+    perfometers["check_mk-kentix_temp"] = perfometer_temperature
+    perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
+    perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
+    perfometers["check_mk-cisco_temperature"] = perfometer_temperature
+    perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
+    perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
+    perfometers["check_mk-dell_chassis_power"] = perfometer_power
+    perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
+    perfometers["check_mk-hp-proliant_power"] = perfometer_power
+    perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
+    perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
+    perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
+    perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
+    perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
+    perfometers["check_mk-if"] = perfometer_check_mk_if
+    perfometers["check_mk-if64"] = perfometer_check_mk_if
+    perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
+    perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
+    perfometers["check_mk-vms_if"] = perfometer_check_mk_if
+    perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
+    perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
+    perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
+    perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
+    perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
+    perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
+    perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
+    perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
+    perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
+    perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
+    perfometers["check_mk-aix_if"] = perfometer_check_mk_if
+    perfometers["check_mk-if_fortigate"] = perfometer_check_mk_if
+    perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
+    perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
+    perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
+    perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
+    perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
+    perfometers["check_mk-oracle_dataguard_stats"] = perfometer_check_oracle_dataguard_stats
+    perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
+    perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
+    perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
+    perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
+    perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
+    perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
+    perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
+    perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
+    perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
+    perfometers["check_mk-sni_octopuse_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
+    perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
+    perfometers["check_mk-ps"] = perfometer_ps
+    perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
+    perfometers["check_mk-uptime"] = perfometer_check_mk_uptime
+    perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
+    perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
+    perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
+    perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
+    perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
+    perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
+    perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
+    perfometers["check_mk-ibm_svc_systemstats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
+    perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
+    perfometers["check_mk-emcvnx_hba"] = perfometer_check_mk_hba
+    perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
+    perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
+    perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
+    perfometers["check_mk-printer_pages"] = perfometer_printer_pages
+    perfometers["check_mk-canon_pages"] = perfometer_printer_pages
+    perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
+    perfometers["check_mk-fileinfo"] = perfometer_fileinfo
+    perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
+    perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
+    perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_cache_hits
+    perfometers["check_mk-hpux_tunables.nproc"] = perfometer_hpux_tunables
+    perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
+    perfometers["check_mk-hpux_tunables.semmni"] = perfometer_hpux_tunables
+    perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
+    perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
+    perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
+    perfometers["check_mk-mysql_capacity"] = perfometer_mysql_capacity
+    perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
+    perfometers["check_mk-vms_system.procs"] = perfometer_check_mk_vms_system_procs
+    perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
+    perfometers["check_mk-carel_uniflair_cooling"] = perfometer_humidity
+    perfometers["check_mk-cmciii.humidity"] = perfometer_humidity
+    perfometers["check_mk-allnet_ip_sensoric.humidity"] = perfometer_humidity
+    perfometers["check_mk-knuerr_rms_humidity"] = perfometer_humidity
+    perfometers["check_mk-ups_eaton_enviroment"] = perfometer_eaton
+    perfometers["check_mk-emc_datadomain_nvbat"] = perfometer_battery
+    perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
+    perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-esx_vsphere_hostsystem.mem_usage"] = perfometer_simple_mem_usage
+    perfometers["check_mk-brocade_mlx.module_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-innovaphone_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-juniper_screenos_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-netscaler_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-arris_cmts_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-juniper_trpz_mem"] = perfometer_simple_mem_usage
+    perfometers["check_mk-esx_vsphere_vm.mem_usage"] = perfometer_vmguest_mem_usage
+    perfometers["check_mk-esx_vsphere_hostsystem.cpu_usage"] = perfometer_esx_vsphere_hostsystem_cpu
+    perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
+    perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
+    perfometers["check_mk-wagner_titanus_topsense.airflow_deviation"] = perfometer_airflow_deviation
+    perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
+    perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
+    perfometers["check_mk-bintec_sensors.fan"] = perfometer_fanspeed_logarithmic
+    perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
+    perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
+    perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
+    perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
+    perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
+    perfometers["check_mk-innovaphone_licenses"] = perfometer_licenses_percent
+    perfometers["check_mk-citrix_licenses"] = perfometer_licenses_percent
+    perfometers["check_mk-wagner_titanus_topsense.smoke"] = perfometer_smoke_percent
+    perfometers["check_mk-wagner_titanus_topsense.chamber_deviation"] = perfometer_chamber_deviation
+    perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
+    perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio
+    perfometers["check_mk-adva_fsp_current"] = perfometer_current
+    perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
+    perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_raritan_pdu_inlet
+    perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount
+    perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension
+    perfometers["check_mk-allnet_ip_sensoric.pressure"] = perfometer_pressure
+    perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
+    perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
+    perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
+    perfometers["check_mk-veeam_client"] = perfometer_veeam_client
+    perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
+    perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
+    perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
+    perfometers["check_mk-ucs_bladecenter_psu.switch_power"] = perfometer_el_inphase
+    perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
+    perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat
+
 
 # Perf-O-Meters for Checkmk's checks
 #
@@ -103,12 +304,6 @@ def perfometer_check_mk_mem_used(
     return "%d%%" % (100 * (virt_used / ram_total)), render_perfometer(data)  # fixed: true-division
 
 
-perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
-perfometers["check_mk-mem.linux"] = perfometer_check_mk_mem_used
-perfometers["check_mk-aix_memory"] = perfometer_check_mk_mem_used
-perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
-
-
 def perfometer_check_mk_mem_win(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -122,17 +317,11 @@ def perfometer_check_mk_mem_win(
     return "%d%%" % perc, perfometer_linear(perc, color)
 
 
-perfometers["check_mk-mem.win"] = perfometer_check_mk_mem_win
-
-
 def perfometer_check_mk_kernel(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     rate = float(perf_data[0][1])
     return "%.1f/s" % rate, perfometer_logarithmic(rate, 1000, 2, "#da6")
-
-
-perfometers["check_mk-kernel"] = perfometer_check_mk_kernel
 
 
 def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
@@ -157,12 +346,6 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
             (50, get_themed_perfometer_bg_color()),
         ]
     return f"{offset:.2f} {unit}", render_perfometer(data)
-
-
-perfometers["check_mk-ntp"] = perfometer_check_mk_ntp
-perfometers["check_mk-ntp.time"] = perfometer_check_mk_ntp
-perfometers["check_mk-chrony"] = perfometer_check_mk_ntp
-perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
 
 
 def perfometer_ipmi_sensors(
@@ -199,59 +382,12 @@ def perfometer_ipmi_sensors(
     return ("%d%s" % (int(value), unit)), render_perfometer(data)
 
 
-perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
-
-
 def perfometer_temperature(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     color = "#39f"
     value = float(perf_data[0][1])
     return "%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
-
-
-perfometers["check_mk-nvidia.temp"] = perfometer_temperature
-perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
-perfometers["check_mk-cisco_temp_perf"] = perfometer_temperature
-perfometers["check_mk-cmctc_lcp.temp"] = perfometer_temperature
-perfometers["check_mk-cmctc.temp"] = perfometer_temperature
-perfometers["check_mk-smart.temp"] = perfometer_temperature
-perfometers["check_mk-f5_bigip_chassis_temp"] = perfometer_temperature
-perfometers["check_mk-f5_bigip_cpu_temp"] = perfometer_temperature
-perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
-perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
-perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
-perfometers["check_mk-fsc_temp"] = perfometer_temperature
-perfometers["check_mk-viprinet_temp"] = perfometer_temperature
-perfometers["check_mk-hwg_temp"] = perfometer_temperature
-perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
-perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
-perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
-perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
-perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
-perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
-perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
-perfometers["check_mk-cmciii.temp"] = perfometer_temperature
-perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
-perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
-perfometers["check_mk-enterasys_temp"] = perfometer_temperature
-perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
-perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
-perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
-perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
-perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
-perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
-perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
-perfometers["check_mk-rms200_temp"] = perfometer_temperature
-perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
-perfometers["check_mk-lnx_thermal"] = perfometer_temperature
-perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
-perfometers["check_mk-carel_sensors"] = perfometer_temperature
-perfometers["check_mk-netscaler_health.temp"] = perfometer_temperature
-perfometers["check_mk-kentix_temp"] = perfometer_temperature
-perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
-perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
-perfometers["check_mk-cisco_temperature"] = perfometer_temperature
 
 
 def perfometer_temperature_multi(
@@ -274,9 +410,6 @@ def perfometer_temperature_multi(
     return display_string, perfometer_linear(display_value, display_color)
 
 
-perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
-
-
 def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     display_color = "#60f020"
 
@@ -296,12 +429,6 @@ def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> Legac
     return display_string, perfometer_linear(power_perc, display_color)
 
 
-perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
-perfometers["check_mk-dell_chassis_power"] = perfometer_power
-perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
-perfometers["check_mk-hp-proliant_power"] = perfometer_power
-
-
 def perfometer_power_simple(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -310,17 +437,10 @@ def perfometer_power_simple(
     return text, perfometer_logarithmic(watt, 150, 2, "#60f020")
 
 
-perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
-perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
-
-
 def perfometer_users(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     color = "#39f"
     value = float(perf_data[0][1])
     return "%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
-
-
-perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
 
 
 def perfometer_blower(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
@@ -328,17 +448,11 @@ def perfometer_blower(row: Row, check_command: str, perf_data: Perfdata) -> Lega
     return "%d RPM" % rpm, perfometer_logarithmic(rpm, 2000, 1.5, "#88c")
 
 
-perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
-
-
 def perfometer_lcp_regulator(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     value = int(perf_data[0][1])
     return "%d%%" % value, perfometer_linear(value, "#8c8")
-
-
-perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
 
 
 def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
@@ -385,25 +499,6 @@ def perfometer_check_mk_if(
     )
 
 
-perfometers["check_mk-if"] = perfometer_check_mk_if
-perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
-perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
-perfometers["check_mk-vms_if"] = perfometer_check_mk_if
-perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
-perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
-perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
-perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
-perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
-perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
-perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
-perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
-perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
-perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
-perfometers["check_mk-aix_if"] = perfometer_check_mk_if
-perfometers["check_mk-if_fortigate"] = perfometer_check_mk_if
-
-
 def perfometer_check_mk_fc_port(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -417,9 +512,6 @@ def perfometer_check_mk_fc_port(
     )
 
 
-perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
-
-
 def perfometer_check_mk_brocade_fcport(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -429,10 +521,6 @@ def perfometer_check_mk_brocade_fcport(
         in_bw=utils.savefloat(perf_data[0][6]),
         out_bw=utils.savefloat(perf_data[1][6]),
     )
-
-
-perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
-perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 
 
 def perfometer_check_mk_cisco_qos(
@@ -446,9 +534,6 @@ def perfometer_check_mk_cisco_qos(
         out_bw=utils.savefloat(perf_data[1][5]),
         unit=unit,
     )
-
-
-perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
 
 
 def perfometer_oracle_tablespaces(
@@ -465,9 +550,6 @@ def perfometer_oracle_tablespaces(
         (100 - used_perc - curr_perc, "#80c0ff"),
     ]
     return "%.1f%%" % used_perc, render_perfometer(data)
-
-
-perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 
 def perfometer_check_oracle_dataguard_stats(
@@ -496,9 +578,6 @@ def perfometer_check_oracle_dataguard_stats(
     )
 
 
-perfometers["check_mk-oracle_dataguard_stats"] = perfometer_check_oracle_dataguard_stats
-
-
 def perfometer_oracle_sessions(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -512,11 +591,6 @@ def perfometer_oracle_sessions(
     return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color)
 
 
-perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
-perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
-perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
-
-
 def perfometer_cpu_utilization(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -526,23 +600,6 @@ def perfometer_cpu_utilization(
 
 
 # perfometer_linear(perc, color)
-perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
-perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
-perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
-perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
-perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
-perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
-perfometers["check_mk-sni_octopuse_cpu"] = perfometer_cpu_utilization
-perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
-perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
 def perfometer_ps(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
@@ -552,9 +609,6 @@ def perfometer_ps(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPe
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
     except Exception:
         return None
-
-
-perfometers["check_mk-ps"] = perfometer_ps
 
 
 def perfometer_hpux_snmp_cs_cpu(
@@ -570,9 +624,6 @@ def perfometer_hpux_snmp_cs_cpu(
     return "%.0f%%" % total, render_perfometer(data)
 
 
-perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
-
-
 def perfometer_check_mk_uptime(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -584,12 +635,6 @@ def perfometer_check_mk_uptime(
     return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(
         seconds, 2592000.0, 2, "#80F000"
     )
-
-
-perfometers["check_mk-uptime"] = perfometer_check_mk_uptime
-perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
-perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
-perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
 
 
 def perfometer_check_mk_diskstat(
@@ -617,16 +662,6 @@ def perfometer_check_mk_diskstat(
     )
 
 
-perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
-perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
-perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
-perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
-perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
-perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
-perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
-perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
-
-
 def perfometer_check_mk_iops_r_w(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -635,10 +670,6 @@ def perfometer_check_mk_iops_r_w(
     text = f"{iops_r:.0f} IO/s {iops_w:.0f} IO/s"
 
     return text, perfometer_logarithmic_dual(iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
-
-
-perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
-perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
 
 
 def perfometer_check_mk_disk_latency_r_w(
@@ -651,10 +682,6 @@ def perfometer_check_mk_disk_latency_r_w(
     return text, perfometer_logarithmic_dual(latency_r, "#60e0a0", latency_w, "#60a0e0", 20, 10)
 
 
-perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
-perfometers["check_mk-ibm_svc_systemstats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
-
-
 def perfometer_in_out_mb_per_sec(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -664,9 +691,6 @@ def perfometer_in_out_mb_per_sec(
     text = f"{read_mbit:<.2f}Mb/s  {write_mbit:<.2f}Mb/s"
 
     return text, perfometer_logarithmic_dual(read_mbit, "#30d050", write_mbit, "#0060c0", 100, 10)
-
-
-perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
 
 
 def perfometer_check_mk_hba(
@@ -685,9 +709,6 @@ def perfometer_check_mk_hba(
     )
 
 
-perfometers["check_mk-emcvnx_hba"] = perfometer_check_mk_hba
-
-
 def perfometer_check_mk_iops(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -695,9 +716,6 @@ def perfometer_check_mk_iops(
     text = "%d/s" % iops
 
     return text, perfometer_logarithmic(iops, 100000, 2, "#30d050")
-
-
-perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
 
 
 def perfometer_check_mk_printer_supply(
@@ -731,19 +749,11 @@ def perfometer_check_mk_printer_supply(
     return "%.0f%%" % left, perfometer_linear(left, color)
 
 
-perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
-perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
-
-
 def perfometer_printer_pages(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     color = "#909090"
     return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 50000, 6, color)
-
-
-perfometers["check_mk-printer_pages"] = perfometer_printer_pages
-perfometers["check_mk-canon_pages"] = perfometer_printer_pages
 
 
 def perfometer_msx_queues(
@@ -758,9 +768,6 @@ def perfometer_msx_queues(
     else:
         color = "#6090ff"
     return "%d" % length, perfometer_logarithmic(length, 100, 2, color)
-
-
-perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
 
 
 def perfometer_fileinfo(
@@ -803,10 +810,6 @@ def perfometer_fileinfo_groups(
     return " / ".join(texts), HTMLWriter.render_div(HTML().join(code), class_="stacked")
 
 
-perfometers["check_mk-fileinfo"] = perfometer_fileinfo
-perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
-
-
 def perfometer_mssql_tablespaces(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -827,18 +830,12 @@ def perfometer_mssql_tablespaces(
     )
 
 
-perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
-
-
 def perfometer_mssql_counters_cache_hits(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     perc = float(perf_data[0][1])
     data = [(perc, "#69EA96"), (100 - perc, get_themed_perfometer_bg_color())]
     return "%.1f%%" % perc, render_perfometer(data)
-
-
-perfometers["check_mk-mssql_counters.cache_hits"] = perfometer_mssql_counters_cache_hits
 
 
 def perfometer_hpux_tunables(
@@ -868,13 +865,7 @@ def perfometer_hpux_tunables(
     return "%.0f%%" % (used), perfometer_linear(used, color)
 
 
-perfometers["check_mk-hpux_tunables.nproc"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
 # this one still doesn't load. I need more test data to find out why.
-perfometers["check_mk-hpux_tunables.semmni"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 
 
 # This will probably move to a generic DB one
@@ -889,9 +880,6 @@ def perfometer_mysql_capacity(
     median = 40 * 1024 * 1024 * 1024
 
     return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
-
-
-perfometers["check_mk-mysql_capacity"] = perfometer_mysql_capacity
 
 
 def perfometer_vms_system_ios(
@@ -910,17 +898,11 @@ def perfometer_vms_system_ios(
     )
 
 
-perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
-
-
 def perfometer_check_mk_vms_system_procs(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     color = {0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
     return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 100, 2, color)
-
-
-perfometers["check_mk-vms_system.procs"] = perfometer_check_mk_vms_system_procs
 
 
 def perfometer_cmc_lcp(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
@@ -930,9 +912,6 @@ def perfometer_cmc_lcp(row: Row, check_command: str, perf_data: Perfdata) -> Leg
     return f"{val:.1f} {unit}", perfometer_logarithmic(val, 4, 2, color)
 
 
-perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
-
-
 def perfometer_humidity(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -940,32 +919,17 @@ def perfometer_humidity(
     return "%3.1f% %" % humidity, perfometer_linear(humidity, "#6f2")
 
 
-perfometers["check_mk-carel_uniflair_cooling"] = perfometer_humidity
-perfometers["check_mk-cmciii.humidity"] = perfometer_humidity
-perfometers["check_mk-allnet_ip_sensoric.humidity"] = perfometer_humidity
-perfometers["check_mk-knuerr_rms_humidity"] = perfometer_humidity
-
-
 def perfometer_eaton(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     return "%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), "silver")
-
-
-perfometers["check_mk-ups_eaton_enviroment"] = perfometer_eaton
 
 
 def perfometer_battery(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     return "%s%%" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), "#C98D5C")
 
 
-perfometers["check_mk-emc_datadomain_nvbat"] = perfometer_battery
-
-
 def perfometer_genu_screen(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     value = int(perf[0][1])
     return "%d Sessions" % value, perfometer_logarithmic(value, 5000, 2, "#7109AA")
-
-
-perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
 
 
 def perfometer_simple_mem_usage(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
@@ -977,24 +941,11 @@ def perfometer_simple_mem_usage(row: Row, command: str, perf: Perfdata) -> Legac
     return "%d%%" % used_perc, perfometer_linear(used_perc, "#20cf80")
 
 
-perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-esx_vsphere_hostsystem.mem_usage"] = perfometer_simple_mem_usage
-perfometers["check_mk-brocade_mlx.module_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-innovaphone_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-juniper_screenos_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-netscaler_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-arris_cmts_mem"] = perfometer_simple_mem_usage
-perfometers["check_mk-juniper_trpz_mem"] = perfometer_simple_mem_usage
-
-
 def perfometer_vmguest_mem_usage(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     used = float(perf[0][1])
     return number_human_readable(used), perfometer_logarithmic(
         used, 1024 * 1024 * 2000, 2, "#20cf80"
     )
-
-
-perfometers["check_mk-esx_vsphere_vm.mem_usage"] = perfometer_vmguest_mem_usage
 
 
 def perfometer_esx_vsphere_hostsystem_cpu(
@@ -1004,17 +955,11 @@ def perfometer_esx_vsphere_hostsystem_cpu(
     return "%d%%" % used_perc, perfometer_linear(used_perc, "#60f020")
 
 
-perfometers["check_mk-esx_vsphere_hostsystem.cpu_usage"] = perfometer_esx_vsphere_hostsystem_cpu
-
-
 def perfometer_apc_mod_pdu_modules(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     value = int(utils.savefloat(perf_data[0][1]) * 100)
     return "%skw" % perf_data[0][1], perfometer_logarithmic(value, 500, 2, "#3366CC")
-
-
-perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
 
 
 # Aiflow in l/s
@@ -1025,18 +970,12 @@ def perfometer_airflow_ls(
     return "%sl/s" % perf_data[0][1], perfometer_logarithmic(value, 1000, 2, "#3366cc")
 
 
-perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
-
-
 # Aiflow Deviation in Percent
 def perfometer_airflow_deviation(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     value = float(perf_data[0][1])
     return "%0.2f%%" % value, perfometer_linear(abs(value), "silver")
-
-
-perfometers["check_mk-wagner_titanus_topsense.airflow_deviation"] = perfometer_airflow_deviation
 
 
 def perfometer_fanspeed(
@@ -1046,18 +985,11 @@ def perfometer_fanspeed(
     return "%.2f%%" % value, perfometer_linear(value, "silver")
 
 
-perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
-
-
 def perfometer_fanspeed_logarithmic(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     value = float(perf_data[0][1])
     return "%d rpm" % value, perfometer_logarithmic(value, 5000, 2, "silver")
-
-
-perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
-perfometers["check_mk-bintec_sensors.fan"] = perfometer_fanspeed_logarithmic
 
 
 def perfometer_check_mk_arcserve_backup(
@@ -1067,9 +999,6 @@ def perfometer_check_mk_arcserve_backup(
     text = number_human_readable(bytes_)
 
     return text, perfometer_logarithmic(bytes_, 1000 * 1024 * 1024 * 1024, 2, "#BDC6DE")
-
-
-perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
 
 
 def perfometer_check_mk_ibm_svc_host(
@@ -1105,9 +1034,6 @@ def perfometer_check_mk_ibm_svc_host(
     return "%d active" % active, render_perfometer(data)
 
 
-perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
-
-
 def perfometer_check_mk_ibm_svc_license(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -1125,9 +1051,6 @@ def perfometer_check_mk_ibm_svc_license(
     return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
 
 
-perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
-
-
 def perfometer_check_mk_ibm_svc_cache(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -1143,10 +1066,6 @@ def perfometer_check_mk_ibm_svc_cache(
     return "%d %% write, %d %% read" % (write_cache_pc, read_cache_pc), render_perfometer(data)
 
 
-perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
-perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
-
-
 def perfometer_licenses_percent(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -1158,24 +1077,14 @@ def perfometer_licenses_percent(
     return "%.0f%% used" % used_perc, perfometer_linear(used_perc, "orange")
 
 
-perfometers["check_mk-innovaphone_licenses"] = perfometer_licenses_percent
-perfometers["check_mk-citrix_licenses"] = perfometer_licenses_percent
-
-
 def perfometer_smoke_percent(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     used_perc = float(perf[0][1])
     return "%0.6f%%" % used_perc, perfometer_linear(used_perc, "#404040")
 
 
-perfometers["check_mk-wagner_titanus_topsense.smoke"] = perfometer_smoke_percent
-
-
 def perfometer_chamber_deviation(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
     chamber_dev = float(perf[0][1])
     return "%0.6f%%" % chamber_dev, perfometer_linear(chamber_dev, "#000080")
-
-
-perfometers["check_mk-wagner_titanus_topsense.chamber_deviation"] = perfometer_chamber_deviation
 
 
 def perfometer_cache_hit_ratio(
@@ -1184,10 +1093,6 @@ def perfometer_cache_hit_ratio(
     hit_ratio = float(perf_data[0][1])  # is already percentage
     color = "#60f020"
     return "%.2f %% hits" % hit_ratio, perfometer_linear(hit_ratio, color)
-
-
-perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
-perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio
 
 
 def perfometer_current(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
@@ -1207,9 +1112,6 @@ def perfometer_current(row: Row, check_command: str, perf_data: Perfdata) -> Leg
 
     display_string = "%.1f Ampere" % value
     return display_string, perfometer_linear(current_perc, display_color)
-
-
-perfometers["check_mk-adva_fsp_current"] = perfometer_current
 
 
 def perfometer_raritan_pdu_inlet(
@@ -1239,18 +1141,11 @@ def perfometer_raritan_pdu_inlet(
     return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
 
 
-perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
-perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_raritan_pdu_inlet
-
-
 def perfometer_raritan_pdu_outletcount(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     outletcount = float(perf_data[0][1])
     return "%d" % outletcount, perfometer_logarithmic(outletcount, 20, 2, "#da6")
-
-
-perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount
 
 
 def perfometer_allnet_ip_sensoric_tension(
@@ -1261,17 +1156,11 @@ def perfometer_allnet_ip_sensoric_tension(
     return str(value), perfometer_linear(value, display_color)
 
 
-perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension
-
-
 def perfometer_pressure(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     pressure = float(perf_data[0][1])
     return "%0.5f bars" % pressure, perfometer_logarithmic(pressure, 1, 2, "#da6")
-
-
-perfometers["check_mk-allnet_ip_sensoric.pressure"] = perfometer_pressure
 
 
 def perfometer_voltage(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
@@ -1280,16 +1169,9 @@ def perfometer_voltage(row: Row, check_command: str, perf_data: Perfdata) -> Leg
     return "%0.3f V" % value, perfometer_logarithmic(value, 12, 2, color)
 
 
-perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
-
-
 def perfometer_dbmv(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     dbmv = float(perf_data[0][1])
     return "%.1f dBmV" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#da6")
-
-
-perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
-perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
 
 
 def perfometer_veeam_client(
@@ -1310,17 +1192,11 @@ def perfometer_veeam_client(
     return f"{avgspeed}/s&nbsp;&nbsp;&nbsp;{duration}", h
 
 
-perfometers["check_mk-veeam_client"] = perfometer_veeam_client
-
-
 def perfometer_ups_outphase(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     load = int(perf_data[2][1])
     return "%d%%" % load, perfometer_linear(load, "#8050ff")
-
-
-perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
 
 
 def perfometer_el_inphase(
@@ -1332,19 +1208,11 @@ def perfometer_el_inphase(
     return "%.0f W" % power, perfometer_linear(power, "#8050ff")
 
 
-perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
-perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
-perfometers["check_mk-ucs_bladecenter_psu.switch_power"] = perfometer_el_inphase
-
-
 def perfometer_f5_bigip_vserver(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
     connections = int(perf_data[0][1])
     return str(connections), perfometer_logarithmic(connections, 100, 2, "#46a")
-
-
-perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
 
 
 def perfometer_nfsiostat(
@@ -1356,6 +1224,3 @@ def perfometer_nfsiostat(
             color = "#ff6347"
             return "%d op/s" % ops, perfometer_linear(ops, color)
     return None
-
-
-perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat

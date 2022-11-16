@@ -18,7 +18,7 @@ from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.type_defs import CombinedGraphSpec, Row
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views import datasource_selection, graph
+from cmk.gui.views import datasource_selection, graph, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
     command_registry,
@@ -107,3 +107,4 @@ register_sorters(sorter_registry)
 register_command_groups(command_group_registry)
 register_commands(command_registry)
 register_data_sources(data_source_registry)
+perfometer.register(sorter_registry, painter_registry)

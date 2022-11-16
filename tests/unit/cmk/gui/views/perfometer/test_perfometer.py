@@ -7,8 +7,8 @@ import functools
 
 import pytest
 
-from cmk.gui.plugins.views.perfometer import Perfometer, SorterPerfometer
 from cmk.gui.type_defs import Row
+from cmk.gui.views.perfometer import Perfometer, SorterPerfometer
 
 
 @pytest.mark.parametrize(

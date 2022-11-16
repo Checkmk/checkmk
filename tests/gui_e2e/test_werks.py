@@ -5,22 +5,36 @@
 
 import logging
 
-import pytest
-
 from tests.testlib import repo_path
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.playwright.pom.werks import Werks
 
+import cmk.utils.version as cmk_version
 import cmk.utils.werks
 
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.xfail(reason="Test currently failing - need to investigate.")
 def test_werks_available(logged_in_page: PPage) -> None:
+    # get the expected editions for the werks
+    # NOTE: We can not use cmk_version to detect the edition due to monkey-patching in the testlib!
+    # since the tests are always running in a CEE environment, we do not consider other editions
+    werk_editions = {
+        cmk_version.Edition.CRE.short,
+        cmk_version.Edition.CFE.short,
+        cmk_version.Edition.CEE.short,
+    }
+    logger.info("Checking for editions: %s", ",".join(werk_editions))
     # get all werks (list is required to retain the order)
     internal_werks = cmk.utils.werks.load_raw_files(repo_path() / ".werks")
+    # sort werks by date
     internal_werks = dict(sorted(internal_werks.items(), key=lambda item: item[1]["date"]))
+    # filter werks by edition
+    internal_werks = {
+        werk_id: werk
+        for werk_id, werk in internal_werks.items()
+        if werk["edition"] in werk_editions
+    }
     internal_werk_ids = list(internal_werks.keys())
     assert len(internal_werk_ids) > 0, "No werks found in the repo!"
 

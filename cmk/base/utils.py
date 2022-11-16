@@ -7,7 +7,7 @@ Check_MK modules and/or cmk.base modules code."""
 
 import signal
 from types import FrameType
-from typing import NoReturn, Optional
+from typing import NoReturn
 
 from cmk.utils.exceptions import MKTerminate
 
@@ -25,7 +25,7 @@ from cmk.utils.exceptions import MKTerminate
 
 
 # register SIGINT handler for consistent CTRL+C handling
-def _handle_keepalive_interrupt(signum: int, frame: Optional[FrameType]) -> NoReturn:
+def _handle_keepalive_interrupt(signum: int, frame: FrameType | None) -> NoReturn:
     raise MKTerminate()
 
 

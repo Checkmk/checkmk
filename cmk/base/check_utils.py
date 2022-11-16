@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters, ServiceID, ServiceName
@@ -19,7 +20,7 @@ class ConfiguredService(NamedTuple):
     description: ServiceName
     parameters: TimespecificParameters
     # Explicitly optional b/c enforced services don't have disocvered params.
-    discovered_parameters: Optional[LegacyCheckParameters]
+    discovered_parameters: LegacyCheckParameters | None
     service_labels: Mapping[str, ServiceLabel]
 
     def id(self) -> ServiceID:

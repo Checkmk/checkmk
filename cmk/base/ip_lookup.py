@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, MutableMapping, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -18,10 +19,10 @@ from cmk.utils.type_defs import HostAddress, HostName, UpdateDNSCacheResult
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
-IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
+IPLookupCacheId = tuple[HostName, socket.AddressFamily]
 
 
-_fake_dns: Optional[HostAddress] = None
+_fake_dns: HostAddress | None = None
 _enforce_localhost = False
 
 
@@ -66,14 +67,14 @@ def lookup_ip_address(
     *,
     host_name: HostName,
     family: socket.AddressFamily,
-    configured_ip_address: Optional[HostAddress],
+    configured_ip_address: HostAddress | None,
     simulation_mode: bool,
     is_snmp_usewalk_host: bool,
-    override_dns: Optional[HostAddress],
+    override_dns: HostAddress | None,
     is_dyndns_host: bool,
     is_no_ip_host: bool,
     force_file_cache_renewal: bool,
-) -> Optional[HostAddress]:
+) -> HostAddress | None:
     """This function *may* look up an IP address, or return a host name"""
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
@@ -112,7 +113,7 @@ def cached_dns_lookup(
     *,
     family: socket.AddressFamily,
     force_file_cache_renewal: bool,
-) -> Optional[HostAddress]:
+) -> HostAddress | None:
     """Cached DNS lookup in *two* caching layers
 
     1) outer layer (this function):
@@ -188,7 +189,7 @@ def _actual_dns_lookup(
     *,
     host_name: HostName,
     family: socket.AddressFamily,
-    fallback: Optional[HostAddress] = None,
+    fallback: HostAddress | None = None,
 ) -> HostAddress:
     try:
         return socket.getaddrinfo(host_name, None, family)[0][4][0]
@@ -248,7 +249,7 @@ class IPLookupCache:
             self._persist_on_update = old_persist_flag
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._cache)
+        return f"{type(self).__name__}({self._cache!r})"
 
     def __eq__(self, other: Any) -> bool:
         return other == self._cache
@@ -259,7 +260,7 @@ class IPLookupCache:
     def __len__(self) -> int:
         return len(self._cache)
 
-    def get(self, key: IPLookupCacheId) -> Optional[HostAddress]:
+    def get(self, key: IPLookupCacheId) -> HostAddress | None:
         return self._cache.get(key)
 
     def load_persisted(self) -> None:
@@ -331,7 +332,7 @@ def update_dns_cache(
     # Do these two even make sense? If either is set, this function
     # will just clear the cache.
     simulation_mode: bool,
-    override_dns: Optional[HostAddress],
+    override_dns: HostAddress | None,
 ) -> UpdateDNSCacheResult:
 
     failed = []
@@ -389,7 +390,7 @@ def update_dns_cache(
 
 def _annotate_family(
     ip_lookup_configs: Iterable[IPLookupConfig],
-) -> Iterable[Tuple[HostName, IPLookupConfig, socket.AddressFamily]]:
+) -> Iterable[tuple[HostName, IPLookupConfig, socket.AddressFamily]]:
     for host_config in ip_lookup_configs:
 
         if host_config.is_ipv4_host:

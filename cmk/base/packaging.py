@@ -8,7 +8,7 @@ import os
 import sys
 import tarfile
 from pathlib import Path
-from typing import AbstractSet, List
+from typing import AbstractSet
 
 import cmk.utils.debug
 import cmk.utils.packaging as packaging
@@ -64,7 +64,7 @@ Package files are located in %s.
     )
 
 
-def do_packaging(args: List[str]) -> None:
+def do_packaging(args: list[str]) -> None:
     if len(args) == 0:
         packaging_usage()
         sys.exit(1)
@@ -101,7 +101,7 @@ def do_packaging(args: List[str]) -> None:
         sys.exit(1)
 
 
-def package_list(args: List[str]) -> None:
+def package_list(args: list[str]) -> None:
     if len(args) > 0:
         for name in args:
             show_package_contents(name)
@@ -122,7 +122,7 @@ def package_list(args: List[str]) -> None:
                 sys.stdout.write("%s\n" % pacname)
 
 
-def package_info(args: List[str]) -> None:
+def package_info(args: list[str]) -> None:
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
     for name in args:
@@ -158,7 +158,7 @@ def show_package(  # pylint: disable=too-many-branches
     except PackageException:
         raise
     except Exception as e:
-        raise PackageException("Cannot open package %s: %s" % (name, e))
+        raise PackageException(f"Cannot open package {name}: {e}")
 
     if show_info:
         sys.stdout.write("Name:                          %s\n" % package.name)
@@ -178,7 +178,7 @@ def show_package(  # pylint: disable=too-many-branches
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
                 if part_files := package.files.get(part.ident, []):
-                    sys.stdout.write("  %s%s%s:\n" % (tty.bold, part.title, tty.normal))
+                    sys.stdout.write(f"  {tty.bold}{part.title}{tty.normal}:\n")
                     for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
@@ -187,7 +187,7 @@ def show_package(  # pylint: disable=too-many-branches
                     sys.stdout.write(part.path + "/" + fn + "\n")
 
 
-def package_create(args: List[str]) -> None:
+def package_create(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P create NAME")
 
@@ -222,7 +222,7 @@ def package_create(args: List[str]) -> None:
     )
 
 
-def package_find(_no_args: List[str]) -> None:
+def package_find(_no_args: list[str]) -> None:
     visited: AbstractSet[Path] = set()
     for part, files in unpackaged_files().items():
         if files:
@@ -245,14 +245,14 @@ def package_find(_no_args: List[str]) -> None:
         logger.log(VERBOSE, "No unpackaged files found.")
 
 
-def package_release(args: List[str]) -> None:
+def package_release(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
     pacname = args[0]
     packaging.release(pacname)
 
 
-def package_pack(args: List[str]) -> None:
+def package_pack(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
@@ -279,7 +279,7 @@ def package_pack(args: List[str]) -> None:
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
-def package_remove(args: List[str]) -> None:
+def package_remove(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
     pacname = args[0]
@@ -292,7 +292,7 @@ def package_remove(args: List[str]) -> None:
     logger.log(VERBOSE, "Successfully uninstalled package %s.", pacname)
 
 
-def package_install(args: List[str]) -> None:
+def package_install(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P install PACK.mkp")
     path = Path(args[0])
@@ -307,14 +307,14 @@ def package_install(args: List[str]) -> None:
     )
 
 
-def package_disable(args: List[str]) -> None:
+def package_disable(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P disable NAME")
     package_name = args[0]
     packaging.disable(package_name)
 
 
-def package_enable(args: List[str]) -> None:
+def package_enable(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P enable NAME")
     package = read_package_info(args[0])
@@ -325,7 +325,7 @@ def package_enable(args: List[str]) -> None:
     )
 
 
-def package_disable_outdated(args: List[str]) -> None:
+def package_disable_outdated(args: list[str]) -> None:
     """Disable MKP packages that are declared to be outdated with the new version
 
     Since 1.6 there is the option version.usable_until available in MKP packages.
@@ -338,7 +338,7 @@ def package_disable_outdated(args: List[str]) -> None:
     packaging.disable_outdated()
 
 
-def package_update_active(args: List[str]) -> None:
+def package_update_active(args: list[str]) -> None:
     """Disable MKP packages that are not suitable for this version, and enable others
 
     Packages can declare their minimum or maximum required Checkmk versions.

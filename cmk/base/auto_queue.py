@@ -5,21 +5,11 @@
 
 import signal
 import time
+from collections.abc import Callable, Container, Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
 from types import FrameType, TracebackType
-from typing import (
-    Callable,
-    Container,
-    Final,
-    Iterable,
-    NoReturn,
-    Optional,
-    Sequence,
-    Set,
-    Type,
-    TypeVar,
-)
+from typing import Final, NoReturn, TypeVar
 
 import livestatus
 
@@ -36,7 +26,7 @@ class _Timeout(MKException):
 
 class TimeLimitFilter:
     @classmethod
-    def _raise_timeout(cls, signum: int, stack_frame: Optional[FrameType]) -> NoReturn:
+    def _raise_timeout(cls, signum: int, stack_frame: FrameType | None) -> NoReturn:
         raise _Timeout()
 
     def __init__(
@@ -59,9 +49,9 @@ class TimeLimitFilter:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> bool:
         signal.alarm(0)
         if isinstance(exc_val, _Timeout):
@@ -101,7 +91,7 @@ class AutoQueue:
     def __len__(self) -> int:
         return len(self._ls())
 
-    def oldest(self) -> Optional[float]:
+    def oldest(self) -> float | None:
         return min((f.stat().st_mtime for f in self._ls()), default=None)
 
     def queued_hosts(self) -> Iterable[HostName]:
@@ -121,7 +111,7 @@ class AutoQueue:
             self.remove(host_name)
 
 
-def get_up_hosts() -> Optional[Set[HostName]]:
+def get_up_hosts() -> set[HostName] | None:
     query = "GET hosts\nColumns: name state"
     try:
         response = livestatus.LocalConnection().query(query)

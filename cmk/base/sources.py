@@ -9,20 +9,10 @@
 
 import logging
 import os.path
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from pathlib import Path
-from typing import (
-    Callable,
-    Dict,
-    Final,
-    FrozenSet,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Final
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -166,7 +156,7 @@ def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
     )
 
 
-def _make_inventory_sections() -> FrozenSet[SectionName]:
+def _make_inventory_sections() -> frozenset[SectionName]:
     return frozenset(
         s
         for s in agent_based_register.get_relevant_raw_sections(
@@ -198,7 +188,7 @@ def make_check_intervals(
     host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
-) -> Mapping[SectionName, Optional[int]]:
+) -> Mapping[SectionName, int | None]:
     return {
         section_name: host_config.snmp_fetch_interval(section_name)
         for section_name in _make_checking_sections(host_name, selected_sections=selected_sections)
@@ -210,7 +200,7 @@ def make_sections(
     host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
-) -> Dict[SectionName, SectionMeta]:
+) -> dict[SectionName, SectionMeta]:
     def needs_redetection(section_name: SectionName) -> bool:
         section = agent_based_register.get_section_plugin(section_name)
         return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
@@ -232,7 +222,7 @@ def _make_checking_sections(
     hostname: HostName,
     *,
     selected_sections: SectionNameCollection,
-) -> FrozenSet[SectionName]:
+) -> frozenset[SectionName]:
     if selected_sections is not NO_SELECTION:
         checking_sections = selected_sections
     else:
@@ -257,7 +247,7 @@ class _Builder:
     def __init__(
         self,
         host_name: HostName,
-        ipaddress: Optional[HostAddress],
+        ipaddress: HostAddress | None,
         *,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
@@ -277,12 +267,12 @@ class _Builder:
         self.simulation_mode: Final = simulation_mode
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
-        self._elems: Dict[str, Tuple[SourceInfo, FileCache, Fetcher]] = {}
+        self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
 
         self._initialize()
 
     @property
-    def sources(self) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
+    def sources(self) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
@@ -506,7 +496,7 @@ class _Builder:
             fetcher,
         )
 
-    def _get_agent(self) -> Tuple[SourceInfo, Fetcher, FileCache]:
+    def _get_agent(self) -> tuple[SourceInfo, Fetcher, FileCache]:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             source = SourceInfo(
@@ -601,7 +591,7 @@ class _Builder:
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
-    def _get_special_agents(self) -> Iterable[Tuple[SourceInfo, Fetcher, FileCache]]:
+    def _get_special_agents(self) -> Iterable[tuple[SourceInfo, Fetcher, FileCache]]:
         def make_id(agentname: str) -> str:
             return f"special_{agentname}"
 
@@ -644,7 +634,7 @@ class _Builder:
 
 def make_non_cluster_sources(
     host_name: HostName,
-    ipaddress: Optional[HostAddress],
+    ipaddress: HostAddress | None,
     *,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
@@ -652,7 +642,7 @@ def make_non_cluster_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
+) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
         host_name,
@@ -667,16 +657,16 @@ def make_non_cluster_sources(
 
 
 def fetch_all(
-    sources: Iterable[Tuple[SourceInfo, FileCache, Fetcher]],
+    sources: Iterable[tuple[SourceInfo, FileCache, Fetcher]],
     *,
     mode: Mode,
-) -> Sequence[Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
+) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: List[
-        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    out: list[
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = []
     for source, file_cache, fetcher in sources:
-        console.vverbose("  Source: %s\n" % (source,))
+        console.vverbose(f"  Source: {source}\n")
 
         with CPUTracker() as tracker:
             raw_data = get_raw_data(file_cache, fetcher, mode)
@@ -686,16 +676,16 @@ def fetch_all(
 
 def make_sources(
     host_name: HostName,
-    ip_address: Optional[HostAddress],
+    ip_address: HostAddress | None,
     *,
-    ip_lookup: Callable[[HostName], Optional[HostAddress]],
+    ip_lookup: Callable[[HostName], HostAddress | None],
     selected_sections: SectionNameCollection,
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
+) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:

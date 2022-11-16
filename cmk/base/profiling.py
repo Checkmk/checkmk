@@ -50,5 +50,6 @@ stats.sort_stats('cumtime').print_stats()"""
 
     show_profile.chmod(0o755)
     out.output(
-        "Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile), stream=sys.stderr
+        f"Profile '{_profile_path}' written. Please run {show_profile}.\n",
+        stream=sys.stderr,
     )

@@ -8,7 +8,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -80,7 +79,7 @@ Available commands are:
     )
 
 
-def do_localize(args: List[str]) -> None:
+def do_localize(args: list[str]) -> None:
     if len(args) == 0:
         _localize_usage()
         sys.exit(1)
@@ -95,7 +94,7 @@ def do_localize(args: List[str]) -> None:
     if not lang:
         raise LocalizeException("No language given")
 
-    alias: Optional[str] = None
+    alias: str | None = None
     if len(args) > 2:
         alias = args[2]
 
@@ -123,7 +122,7 @@ def do_localize(args: List[str]) -> None:
         sys.exit(1)
 
 
-def _write_alias(lang: LanguageName, alias: Optional[str]) -> None:
+def _write_alias(lang: LanguageName, alias: str | None) -> None:
     if not alias:
         return
 
@@ -149,7 +148,7 @@ def _check_binaries() -> None:
             raise LocalizeException("%s binary not found in PATH\n" % b)
 
 
-def _get_languages() -> List[LanguageName]:
+def _get_languages() -> list[LanguageName]:
     return [l.name for l in _locale_base().iterdir() if l.is_dir()]
 
 

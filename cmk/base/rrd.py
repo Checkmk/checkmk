@@ -5,7 +5,6 @@
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Optional, Tuple
 
 from six import ensure_str
 
@@ -26,14 +25,14 @@ def xml_path_for(hostname: HostName, servicedesc: RRDServiceName = "_HOST_") -> 
     return host_dir + "/" + cmk.utils.pnp_cleanup(servicedesc) + ".xml"
 
 
-def text_attr(node: ET.Element, attr_name: str) -> Optional[str]:
+def text_attr(node: ET.Element, attr_name: str) -> str | None:
     attr = node.find(attr_name)
     if attr is None:
         raise AttributeError()
     return attr.text
 
 
-def set_text_attr(node: ET.Element, attr_name: str, value: Optional[str]) -> None:
+def set_text_attr(node: ET.Element, attr_name: str, value: str | None) -> None:
     attr = node.find(attr_name)
     if attr is None:
         raise AttributeError()
@@ -55,7 +54,7 @@ def write_xml(element: ET.Element, filepath: str) -> None:
 
 def update_metric_pnp_xml_info_file(
     perfvar: MetricName, newvar: MetricName, filepath: str
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Update xml file related to the service described in filepath
 
     - Change DATASOURCE: NAME & LABEL to newvar

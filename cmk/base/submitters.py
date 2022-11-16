@@ -8,9 +8,10 @@ from __future__ import annotations
 import abc
 import os
 import time
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import Final, IO, Iterable, Iterator, Literal, NamedTuple, Optional
+from typing import Final, IO, Literal, NamedTuple, Optional
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -60,7 +61,7 @@ def _serialize_value(x: float | None) -> str:
     return "" if x is None else ("%.6f" % x).rstrip("0").rstrip(".")
 
 
-def _extract_check_command(infotext: str) -> Optional[str]:
+def _extract_check_command(infotext: str) -> str | None:
     """
     Check may append the name of the check command to the
     details of service output.
@@ -236,7 +237,7 @@ class _RandomNameSequence:
             self._rng_pid = cur_pid
         return self._rng
 
-    def __iter__(self) -> "_RandomNameSequence":
+    def __iter__(self) -> _RandomNameSequence:
         return self
 
     def __next__(self) -> str:

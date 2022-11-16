@@ -10,7 +10,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -25,16 +24,16 @@ import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache
 
 
-def do_scan_parents(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
+def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
 
     if not hosts:
         hosts = list(sorted(config_cache.all_active_realhosts()))
 
     parent_hosts = []
-    parent_ips: Dict[HostName, HostAddress] = {}
+    parent_ips: dict[HostName, HostAddress] = {}
     parent_rules = []
-    gateway_hosts: Set[HostName] = set()
+    gateway_hosts: set[HostName] = set()
 
     # TODO: Sneakily changing a global variable looks like a bad idea!
     config.max_num_processes = max(config.max_num_processes, 1)
@@ -62,7 +61,7 @@ def do_scan_parents(hosts: List[HostName]) -> None:  # pylint: disable=too-many-
 
     out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
     while hosts:
-        chunk: List[HostName] = []
+        chunk: list[HostName] = []
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
             host = hosts.pop()
 
@@ -114,7 +113,7 @@ def do_scan_parents(hosts: List[HostName]) -> None:  # pylint: disable=too-many-
     out.output("\nWrote %s\n" % outfilename)
 
 
-def traceroute_available() -> Optional[str]:
+def traceroute_available() -> str | None:
     for path in os.environ["PATH"].split(os.pathsep):
         f = path + "/traceroute"
         if os.path.exists(f) and os.access(f, os.X_OK):
@@ -124,9 +123,9 @@ def traceroute_available() -> Optional[str]:
 
 def scan_parents_of(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
-    hosts: List[HostName],
+    hosts: list[HostName],
     silent: bool = False,
-    settings: Optional[Dict[str, int]] = None,
+    settings: dict[str, int] | None = None,
 ) -> Gateways:
     if settings is None:
         settings = {}
@@ -141,7 +140,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     os.putenv("LC_ALL", "")
 
     # Start processes in parallel
-    procs: List[Tuple[HostName, Optional[HostAddress], Union[str, subprocess.Popen]]] = []
+    procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
         host_config = config_cache.get_host_config(host)
@@ -222,7 +221,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
 
         if len(lines) < 2:
             if not silent:
-                console.error("%s: %s\n" % (host, " ".join(lines)))
+                console.error("{}: {}\n".format(host, " ".join(lines)))
             gateways.append(
                 (
                     None,
@@ -248,7 +247,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
         # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
         # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-        routes: List[Optional[str]] = []
+        routes: list[str | None] = []
         for line in lines[1:]:
             parts = line.split()
             route = parts[1]
@@ -258,11 +257,11 @@ def scan_parents_of(  # pylint: disable=too-many-branches
                 routes.append(None)  # No answer from this router
             else:
                 if not silent:
-                    console.error("%s: invalid output line from traceroute: '%s'\n" % (host, line))
+                    console.error(f"{host}: invalid output line from traceroute: '{line}'\n")
 
         if len(routes) == 0:
             error = "incomplete output from traceroute. No routes found."
-            console.error("%s: %s\n" % (host, error))
+            console.error(f"{host}: {error}\n")
             gateways.append((None, "garbled", 0, error))
             dot(tty.red)
             continue
@@ -285,7 +284,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         # Try far most route which is not identical with host itself
         ping_probes = settings.get("ping_probes", 5)
         skipped_gateways = 0
-        this_route: Optional[HostAddress] = None
+        this_route: HostAddress | None = None
         for r in routes[::-1]:
             if not r or (r == ip):
                 continue
@@ -301,7 +300,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         if not this_route:
             error = "No usable routing information"
             if not silent:
-                console.error("%s: %s\n" % (host, error))
+                console.error(f"{host}: {error}\n")
             gateways.append((None, "notfound", 0, error))
             dot(tty.blue)
             continue
@@ -337,7 +336,7 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 # reverse DNS but the Checkmk mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
-def _ip_to_hostname(config_cache: ConfigCache, ip: Optional[HostAddress]) -> Optional[HostName]:
+def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostName | None:
     if "ip_to_hostname" not in _config_cache:
         cache = _config_cache.get("ip_to_hostname")
 
@@ -353,7 +352,7 @@ def _ip_to_hostname(config_cache: ConfigCache, ip: Optional[HostAddress]) -> Opt
     return cache.get(ip)
 
 
-def _ip_to_dnsname(ip: HostAddress) -> Optional[HostName]:
+def _ip_to_dnsname(ip: HostAddress) -> HostName | None:
     try:
         return HostName(socket.gethostbyaddr(ip)[0])
     except Exception:

@@ -8,7 +8,8 @@ import json
 import logging
 import math
 import time
-from typing import Callable, Final, List, NamedTuple, Optional, Tuple
+from collections.abc import Callable
+from typing import Final, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.defines as defines
@@ -35,8 +36,8 @@ from cmk.utils.type_defs import HostName, MetricName, ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 
-_GroupByFunction = Callable[[Timestamp], Tuple[Timegroup, Timestamp]]
-_TimeSlices = List[Tuple[Timestamp, Timestamp]]
+_GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
+_TimeSlices = list[tuple[Timestamp, Timestamp]]
 
 
 class _PeriodInfo(NamedTuple):
@@ -52,21 +53,21 @@ def _window_start(timestamp: int, span: int) -> int:
     return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % span
 
 
-def _group_by_wday(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
+def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     wday = time.localtime(t).tm_wday
     return Timegroup(defines.weekday_ids()[wday]), _window_start(t, 86400)
 
 
-def _group_by_day(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
+def _group_by_day(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     return Timegroup("everyday"), _window_start(t, 86400)
 
 
-def _group_by_day_of_month(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
+def _group_by_day_of_month(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     mday = time.localtime(t).tm_mday
     return Timegroup(str(mday)), _window_start(t, 86400)
 
 
-def _group_by_everyhour(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
+def _group_by_everyhour(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     return Timegroup("everyhour"), _window_start(t, 3600)
 
 
@@ -97,7 +98,7 @@ _PREDICTION_PERIODS: Final = {
 def _get_prediction_timegroup(
     t: Timestamp,
     period_info: _PeriodInfo,
-) -> Tuple[Timegroup, Timestamp, Timestamp, Seconds]:
+) -> tuple[Timegroup, Timestamp, Timestamp, Seconds]:
     """
     Return:
     timegroup: name of the group, like 'monday' or '12'
@@ -143,7 +144,7 @@ def _time_slices(
 def _retrieve_grouped_data_from_rrd(
     rrd_column: RRDColumnFunction,
     time_windows: _TimeSlices,
-) -> Tuple[TimeWindow, List[TimeSeriesValues]]:
+) -> tuple[TimeWindow, list[TimeSeriesValues]]:
     "Collect all time slices and up-sample them to same resolution"
     from_time = time_windows[0][0]
 
@@ -159,7 +160,7 @@ def _retrieve_grouped_data_from_rrd(
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 
 
-def _data_stats(slices: List[TimeSeriesValues]) -> DataStats:
+def _data_stats(slices: list[TimeSeriesValues]) -> DataStats:
     "Statistically summarize all the upsampled RRD data"
 
     descriptors: DataStats = []
@@ -199,7 +200,7 @@ def _calculate_data_for_prediction(
     )
 
 
-def _std_dev(point_line: List[float], average: float) -> float:
+def _std_dev(point_line: list[float], average: float) -> float:
     samples = len(point_line)
     # In the case of a single data-point an unbiased standard deviation is
     # undefined. In this case we take the magnitude of the measured value
@@ -212,7 +213,7 @@ def _std_dev(point_line: List[float], average: float) -> float:
 
 
 def _is_prediction_up_to_date(
-    last_info: Optional[PredictionInfo],
+    last_info: PredictionInfo | None,
     timegroup: Timegroup,
     params: _PredictionParameters,
 ) -> bool:
@@ -251,7 +252,7 @@ def get_levels(
     params: _PredictionParameters,
     cf: ConsolidationFunctionName,
     levels_factor: float = 1.0,
-) -> Tuple[Optional[float], EstimatedLevels]:
+) -> tuple[float | None, EstimatedLevels]:
     now = int(time.time())
     period_info = _PREDICTION_PERIODS[params["period"]]
 
@@ -260,7 +261,7 @@ def get_levels(
     prediction_store = PredictionStore(hostname, service_description, dsname)
     prediction_store.clean_prediction_files(timegroup)
 
-    data_for_pred: Optional[PredictionData] = None
+    data_for_pred: PredictionData | None = None
     if _is_prediction_up_to_date(
         last_info=prediction_store.get_info(timegroup),
         timegroup=timegroup,

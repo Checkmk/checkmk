@@ -16,9 +16,10 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, List
 
 import requests
 
@@ -69,7 +70,7 @@ else:
 SUFFIX = ".tar.gz"
 
 
-def create_diagnostics_dump(parameters: Optional[DiagnosticsOptionalParameters]) -> None:
+def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) -> None:
     dump = DiagnosticsDump(parameters)
     dump.create()
 
@@ -93,11 +94,11 @@ _GAP = 4 * " "
 
 
 def _format_filepath(filepath: Path) -> str:
-    return "%s%s" % (_GAP, str(filepath.relative_to(cmk.utils.paths.omd_root)))
+    return f"{_GAP}{str(filepath.relative_to(cmk.utils.paths.omd_root))}"
 
 
 def _format_title(title: str) -> str:
-    return "%s%s%s%s:" % (_GAP, tty.green, title, tty.normal)
+    return f"{_GAP}{tty.green}{title}{tty.normal}:"
 
 
 def _format_description(description: str) -> str:
@@ -110,7 +111,7 @@ def _format_description(description: str) -> str:
 
 
 def _format_error(error):
-    return "%s%s - %s" % (2 * _GAP, tty.error, error)
+    return f"{2 * _GAP}{tty.error} - {error}"
 
 
 # .
@@ -129,7 +130,7 @@ class DiagnosticsDump:
 
     _keep_num_dumps = 5
 
-    def __init__(self, parameters: Optional[DiagnosticsOptionalParameters] = None) -> None:
+    def __init__(self, parameters: DiagnosticsOptionalParameters | None = None) -> None:
         self.fixed_elements = self._get_fixed_elements()
         self.optional_elements = self._get_optional_elements(parameters)
         self.elements = self.fixed_elements + self.optional_elements
@@ -150,12 +151,12 @@ class DiagnosticsDump:
         ]
 
     def _get_optional_elements(
-        self, parameters: Optional[DiagnosticsOptionalParameters]
+        self, parameters: DiagnosticsOptionalParameters | None
     ) -> "List[ABCDiagnosticsElement]":
         if parameters is None:
             return []
 
-        optional_elements: List[ABCDiagnosticsElement] = []
+        optional_elements: list[ABCDiagnosticsElement] = []
         if parameters.get(OPT_LOCAL_FILES):
             optional_elements.append(LocalFilesJSONDiagnosticsElement())
             optional_elements.append(LocalFilesCSVDiagnosticsElement())
@@ -203,7 +204,7 @@ class DiagnosticsDump:
                 tar.add(str(filepath), arcname=rel_path)
                 self.tarfile_created = True
 
-    def _get_filepaths(self, tmp_dump_folder: Path) -> List[Path]:
+    def _get_filepaths(self, tmp_dump_folder: Path) -> list[Path]:
         section.section_step("Collect diagnostics information", verbose=False)
 
         collectors = Collectors()
@@ -271,7 +272,7 @@ class Collectors:
     def get_omd_config(self) -> site.OMDConfig:
         return self._omd_config_collector.get_infos()
 
-    def get_checkmk_server_name(self) -> Optional[HostName]:
+    def get_checkmk_server_name(self) -> HostName | None:
         return self._checkmk_server_name_collector.get_infos()
 
 
@@ -299,7 +300,7 @@ class OMDConfigCollector(ABCCollector):
 
 
 class CheckmkServerNameCollector(ABCCollector):
-    def _collect_infos(self) -> Optional[HostName]:
+    def _collect_infos(self) -> HostName | None:
         query = (
             "GET services\nColumns: host_name\nFilter: service_description ~ OMD %s performance\n"
             % omd_site()
@@ -524,24 +525,24 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
         return hw_info
 
-    def _get_proc_content(self, filepath: Path) -> List[str]:
+    def _get_proc_content(self, filepath: Path) -> list[str]:
         with open(filepath) as f:
             return f.read().splitlines()
 
-    def _meminfo_proc_parser(self, content: List[str]) -> Dict[str, str]:
-        info: Dict[str, str] = {}
+    def _meminfo_proc_parser(self, content: list[str]) -> dict[str, str]:
+        info: dict[str, str] = {}
 
         for line in content:
             if line == "":
                 continue
 
-            key, value = [w.strip() for w in line.split(":", 1)]
+            key, value = (w.strip() for w in line.split(":", 1))
             info[key.replace(" ", "_")] = value
 
         return info
 
-    def _cpuinfo_proc_parser(self, content: List[str]) -> Dict[str, str]:
-        cpu_info: Dict[str, Any] = {}
+    def _cpuinfo_proc_parser(self, content: list[str]) -> dict[str, str]:
+        cpu_info: dict[str, Any] = {}
         num_processors = 0
 
         # Example lines from /proc/cpuinfo output:
@@ -575,7 +576,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if line == "":
                 continue
 
-            key, value = [w.strip() for w in line.split(":", 1)]
+            key, value = (w.strip() for w in line.split(":", 1))
             key = key.replace(" ", "_")
 
             if key not in _KEYS_TO_IGNORE:
@@ -587,7 +588,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         cpu_info["num_processors"] = str(num_processors)
         return cpu_info
 
-    def _load_avg_proc_parser(self, content: List[str]) -> Dict[str, str]:
+    def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
         return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
 
 
@@ -715,7 +716,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, rel_checkmk_files: List[str]) -> None:
+    def __init__(self, rel_checkmk_files: list[str]) -> None:
         self.rel_checkmk_files = rel_checkmk_files
 
     @property
@@ -867,7 +868,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         automation_secret = self._get_automation_secret()
 
         omd_config = collectors.get_omd_config()
-        url = "http://%s:%s/%s/check_mk/report.py?" % (
+        url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
             omd_site(),
@@ -930,7 +931,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 console.info("%s\n", _format_error(str(e)))
                 continue
 
-            filepath = tmpdir.joinpath("%s%s" % (self.ident, suffix))
+            filepath = tmpdir.joinpath(f"{self.ident}{suffix}")
             with filepath.open("w") as f:
                 f.write(output)
 

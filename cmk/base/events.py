@@ -12,7 +12,8 @@ import select
 import socket
 import sys
 import time
-from typing import Any, Callable, Iterable, List, Mapping, Optional, Union
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any, Optional
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -26,7 +27,7 @@ from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 import cmk.base.config as config
 import cmk.base.core
 
-ContactList = List  # TODO Improve this
+ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
@@ -42,9 +43,9 @@ def _send_reply_ready() -> None:
 
 def event_keepalive(  # pylint: disable=too-many-branches
     event_function: Callable,
-    call_every_loop: Optional[Callable] = None,
-    loop_interval: Optional[int] = None,
-    shutdown_function: Optional[Callable] = None,
+    call_every_loop: Callable | None = None,
+    loop_interval: int | None = None,
+    shutdown_function: Callable | None = None,
 ) -> None:
     last_config_timestamp = config_timestamp()
 
@@ -91,7 +92,7 @@ def event_keepalive(  # pylint: disable=too-many-branches
                     try:
                         new_data = b""
                         new_data = os.read(0, 32768)
-                    except IOError:
+                    except OSError:
                         new_data = b""
                     except Exception as e:
                         if cmk.utils.debug.enabled():
@@ -151,7 +152,7 @@ def config_timestamp() -> float:
     return mtime
 
 
-def event_data_available(loop_interval: Optional[int]) -> bool:
+def event_data_available(loop_interval: int | None) -> bool:
     return bool(select.select([0], [], [], loop_interval)[0])
 
 
@@ -216,9 +217,7 @@ def find_host_service_in_context(context: EventContext) -> str:
 # Fetch information about an objects contacts via Livestatus. This is
 # neccessary for notifications from Nagios, which does not send this
 # information in macros.
-def livestatus_fetch_contacts(
-    host: HostName, service: Optional[ServiceName]
-) -> Optional[ContactList]:
+def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> ContactList | None:
     try:
         if service:
             query = (
@@ -432,7 +431,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         log_context = "\n".join(
             sorted(
                 [
-                    "                    %s=%s" % (key, value)
+                    f"                    {key}={value}"
                     for key, value in raw_context.items()
                     if key not in raw_keys
                 ]
@@ -460,7 +459,7 @@ def get_readable_rel_date(timestamp: Any) -> str:
 # Python world moves backwards in time. :-P So let's introduce this helper...
 def apply_matchers(
     matchers: Iterable[Matcher], rule: EventRule, context: EventContext
-) -> Optional[str]:
+) -> str | None:
     for matcher in matchers:
         result = matcher(rule, context)
         if result is not None:
@@ -468,7 +467,7 @@ def apply_matchers(
     return None
 
 
-def event_match_rule(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_rule(rule: EventRule, context: EventContext) -> str | None:
     return apply_matchers(
         [
             event_match_site,
@@ -495,7 +494,7 @@ def event_match_rule(rule: EventRule, context: EventContext) -> Optional[str]:
     )
 
 
-def event_match_site(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_site(rule: EventRule, context: EventContext) -> str | None:
     if "match_site" not in rule:
         return None
 
@@ -505,14 +504,14 @@ def event_match_site(rule: EventRule, context: EventContext) -> Optional[str]:
     site_id = context.get("OMD_SITE", omd_site())
 
     if site_id not in required_site_ids:
-        return "The site '%s' is not in the required sites list: %s" % (
+        return "The site '{}' is not in the required sites list: {}".format(
             site_id,
             ",".join(required_site_ids),
         )
     return None
 
 
-def event_match_folder(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_folder(rule: EventRule, context: EventContext) -> str | None:
     if "match_folder" in rule:
         mustfolder = rule["match_folder"]
         mustpath = mustfolder.split("/")
@@ -527,7 +526,7 @@ def event_match_folder(rule: EventRule, context: EventContext) -> Optional[str]:
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires folder '%s', but the host is in '%s'" % (
+                        return "The rule requires folder '{}', but the host is in '{}'".format(
                             mustfolder,
                             hasfolder,
                         )
@@ -539,29 +538,29 @@ def event_match_folder(rule: EventRule, context: EventContext) -> Optional[str]:
     return None
 
 
-def event_match_hosttags(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_hosttags(rule: EventRule, context: EventContext) -> str | None:
     required = rule.get("match_hosttags")
     if required:
         tags = context.get("HOSTTAGS", "").split()
         if not config.hosttags_match_taglist(tags, required):
-            return "The host's tags %s do not match the required tags %s" % (
+            return "The host's tags {} do not match the required tags {}".format(
                 "|".join(tags),
                 "|".join(required),
             )
     return None
 
 
-def event_match_servicegroups_fixed(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
     return _event_match_servicegroups(rule, context, is_regex=True)
 
 
 def _event_match_servicegroups(  # pylint: disable=too-many-branches
     rule: EventRule, context: EventContext, is_regex: bool
-) -> Optional[str]:
+) -> str | None:
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
@@ -584,7 +583,7 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
         if sgn:
             servicegroups = sgn.split(",")
         else:
-            return "The service is in no service group, but %s%s is required" % (
+            return "The service is in no service group, but {}{} is required".format(
                 (is_regex and "regex " or ""),
                 " or ".join(required_groups),
             )
@@ -620,28 +619,24 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
                 + '"'
             )
 
-        return "The service is only in the groups %s, but %s is required" % (
+        return "The service is only in the groups {}, but {} is required".format(
             sgn,
             " or ".join(required_groups),
         )
     return None
 
 
-def event_match_exclude_servicegroups_fixed(
-    rule: EventRule, context: EventContext
-) -> Optional[str]:
+def event_match_exclude_servicegroups_fixed(rule: EventRule, context: EventContext) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=False)
 
 
-def event_match_exclude_servicegroups_regex(
-    rule: EventRule, context: EventContext
-) -> Optional[str]:
+def event_match_exclude_servicegroups_regex(rule: EventRule, context: EventContext) -> str | None:
     return _event_match_exclude_servicegroups(rule, context, is_regex=True)
 
 
 def _event_match_exclude_servicegroups(
     rule: EventRule, context: EventContext, is_regex: bool
-) -> Optional[str]:
+) -> str | None:
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
     else:
@@ -671,17 +666,19 @@ def _event_match_exclude_servicegroups(
                     )
 
                     if r.search(match_value):
-                        return 'The service group "%s" (%s) is excluded per regex pattern: %s' % (
-                            match_value,
-                            match_value_inverse,
-                            group,
+                        return (
+                            'The service group "{}" ({}) is excluded per regex pattern: {}'.format(
+                                match_value,
+                                match_value_inverse,
+                                group,
+                            )
                         )
             elif group in servicegroups:
                 return "The service group %s is excluded" % group
     return None
 
 
-def event_match_contacts(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_contacts(rule: EventRule, context: EventContext) -> str | None:
     if "match_contacts" not in rule:
         return None
 
@@ -695,13 +692,13 @@ def event_match_contacts(rule: EventRule, context: EventContext) -> Optional[str
         if contact in contacts:
             return None
 
-    return "The object has the contacts %s, but %s is required" % (
+    return "The object has the contacts {}, but {} is required".format(
         contacts_text,
         " or ".join(required_contacts),
     )
 
 
-def event_match_contactgroups(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_contactgroups(rule: EventRule, context: EventContext) -> str | None:
     required_groups = rule.get("match_contactgroups")
     if required_groups is None:
         return None
@@ -722,13 +719,13 @@ def event_match_contactgroups(rule: EventRule, context: EventContext) -> Optiona
         if group in contactgroups:
             return None
 
-    return "The object is only in the groups %s, but %s is required" % (
+    return "The object is only in the groups {}, but {} is required".format(
         cgn,
         " or ".join(required_groups),
     )
 
 
-def event_match_hostgroups(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_hostgroups(rule: EventRule, context: EventContext) -> str | None:
     required_groups = rule.get("match_hostgroups")
     if required_groups is not None:
         hgn = context.get("HOSTGROUPNAMES")
@@ -746,31 +743,31 @@ def event_match_hostgroups(rule: EventRule, context: EventContext) -> Optional[s
             if group in hostgroups:
                 return None
 
-        return "The host is only in the groups %s, but %s is required" % (
+        return "The host is only in the groups {}, but {} is required".format(
             hgn,
             " or ".join(required_groups),
         )
     return None
 
 
-def event_match_hosts(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_hosts(rule: EventRule, context: EventContext) -> str | None:
     if "match_hosts" in rule:
         hostlist = rule["match_hosts"]
         if context["HOSTNAME"] not in hostlist:
-            return "The host's name '%s' is not on the list of allowed hosts (%s)" % (
+            return "The host's name '{}' is not on the list of allowed hosts ({})".format(
                 context["HOSTNAME"],
                 ", ".join(hostlist),
             )
     return None
 
 
-def event_match_exclude_hosts(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_exclude_hosts(rule: EventRule, context: EventContext) -> str | None:
     if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
         return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
     return None
 
 
-def event_match_services(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_services(rule: EventRule, context: EventContext) -> str | None:
     if "match_services" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of services, but this is a host notification."
@@ -784,7 +781,7 @@ def event_match_services(rule: EventRule, context: EventContext) -> Optional[str
     return None
 
 
-def event_match_exclude_services(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_exclude_services(rule: EventRule, context: EventContext) -> str | None:
     if context["WHAT"] != "SERVICE":
         return None
     excludelist = rule.get("match_exclude_services", [])
@@ -797,7 +794,7 @@ def event_match_exclude_services(rule: EventRule, context: EventContext) -> Opti
     return None
 
 
-def event_match_plugin_output(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_plugin_output(rule: EventRule, context: EventContext) -> str | None:
     if "match_plugin_output" in rule:
         r = regex(rule["match_plugin_output"])
 
@@ -806,14 +803,14 @@ def event_match_plugin_output(rule: EventRule, context: EventContext) -> Optiona
         else:
             output = context["HOSTOUTPUT"]
         if not r.search(output):
-            return "The expression '%s' cannot be found in the plugin output '%s'" % (
+            return "The expression '{}' cannot be found in the plugin output '{}'".format(
                 rule["match_plugin_output"],
                 output,
             )
     return None
 
 
-def event_match_checktype(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_checktype(rule: EventRule, context: EventContext) -> str | None:
     if "match_checktype" in rule:
         if context["WHAT"] != "SERVICE":
             return "The rule specifies a list of Check_MK plugins, but this is a host notification."
@@ -823,14 +820,14 @@ def event_match_checktype(rule: EventRule, context: EventContext) -> Optional[st
         plugin = command[9:]
         allowed = rule["match_checktype"]
         if plugin not in allowed:
-            return "The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" % (
+            return "The Check_MK plugin '{}' is not on the list of allowed plugins ({})".format(
                 plugin,
                 ", ".join(allowed),
             )
     return None
 
 
-def event_match_timeperiod(rule: EventRule, _context: EventContext) -> Optional[str]:
+def event_match_timeperiod(rule: EventRule, _context: EventContext) -> str | None:
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
         if timeperiod != "24X7" and not cmk.base.core.check_timeperiod(timeperiod):
@@ -838,7 +835,7 @@ def event_match_timeperiod(rule: EventRule, _context: EventContext) -> Optional[
     return None
 
 
-def event_match_servicelevel(rule: EventRule, context: EventContext) -> Optional[str]:
+def event_match_servicelevel(rule: EventRule, context: EventContext) -> str | None:
     if "match_sl" in rule:
         from_sl, to_sl = rule["match_sl"]
         if context["WHAT"] == "SERVICE" and context.get("SVC_SL", "").isdigit():
@@ -852,7 +849,7 @@ def event_match_servicelevel(rule: EventRule, context: EventContext) -> Optional
 
 
 def add_context_to_environment(
-    plugin_context: Union[Mapping[str, str], EventContext], prefix: str
+    plugin_context: Mapping[str, str] | EventContext, prefix: str
 ) -> None:
     for key, value in plugin_context.items():
         assert isinstance(value, str)
@@ -867,7 +864,7 @@ def add_context_to_environment(
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
 def add_to_event_context(
-    context: Union[EventContext, dict[str, str]], prefix: str, param: object
+    context: EventContext | dict[str, str], prefix: str, param: object
 ) -> None:
     if isinstance(param, (list, tuple)):
         if all(isinstance(p, str) for p in param):

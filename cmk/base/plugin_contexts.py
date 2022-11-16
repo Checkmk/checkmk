@@ -10,16 +10,15 @@ from collections.abc import Iterator
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 from contextlib import contextmanager
-from typing import Optional
 
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
 
 # Is set before check/discovery function execution
 # Host currently being checked
 # Types must remain string, they're passed to API clients!
-_hostname: Optional[HostName] = None
-_check_type: Optional[str] = None
-_service_description: Optional[str] = None
+_hostname: HostName | None = None
+_check_type: str | None = None
+_service_description: str | None = None
 
 
 @contextmanager

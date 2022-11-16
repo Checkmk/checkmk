@@ -6,7 +6,6 @@
 import socket
 import time
 from pathlib import Path
-from typing import Optional, Union
 
 import cmk.utils.render
 import cmk.utils.tty as tty
@@ -46,7 +45,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
         if fetcher.username:
             items.append("User: %s" % fetcher.username)
         if items:
-            description = "%s (%s)" % (description, ", ".join(items))
+            description = "{} ({})".format(description, ", ".join(items))
         return description
 
     if isinstance(fetcher, PiggybackFetcher):
@@ -115,7 +114,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         hostname, host_config, family=host_config.default_address_family
     )
 
-    addresses: Optional[str] = ""
+    addresses: str | None = ""
     if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
@@ -128,7 +127,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         except Exception:
             secondary = "X.X.X.X"
 
-        addresses = "%s, %s" % (ipaddress, secondary)
+        addresses = f"{ipaddress}, {secondary}"
         if host_config.is_ipv6_primary:
             addresses += " (Primary: IPv6)"
         else:
@@ -223,13 +222,13 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     tty.print_table(headers, colors, table_data, "  ")
 
 
-def _evaluate_params(params: Union[LegacyCheckParameters, TimespecificParameters]) -> str:
+def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> str:
     if not isinstance(params, TimespecificParameters):
         return repr(params)
 
     if params.is_constant():
         return repr(params.evaluate(cmk.base.core.timeperiod_active))
-    return "Timespecific parameters at %s: %r" % (
+    return "Timespecific parameters at {}: {!r}".format(
         cmk.utils.render.date_and_time(time.time()),
         params.evaluate(cmk.base.core.timeperiod_active),
     )
@@ -240,7 +239,7 @@ def _ip_address_for_dump_host(
     host_config: HostConfig,
     *,
     family: socket.AddressFamily,
-) -> Optional[str]:
+) -> str | None:
     config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(host_config, family=family)

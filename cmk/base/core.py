@@ -7,8 +7,9 @@
 import enum
 import os
 import subprocess
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Iterator, Literal, Optional, Sequence
+from typing import Literal, Optional
 
 # suppress "Cannot find module" error from mypy
 import livestatus
@@ -93,7 +94,7 @@ def do_restart(
 # GUI process. In case the GUI calls an automation process, we would have a dead lock of these two
 # processes. We'll have to check whether or not we can move the locking.
 @contextmanager
-def activation_lock(mode: Optional[Literal["abort", "wait"]]) -> Iterator[None]:
+def activation_lock(mode: Literal["abort", "wait"] | None) -> Iterator[None]:
     """Try to acquire the activation lock and raise exception in case it was not possible"""
     if mode is None:
         # TODO: We really should purge this strange case from being configurable
@@ -142,7 +143,7 @@ def do_core_action(
         if not quiet:
             out.output("ERROR: %r\n" % completed_process.stdout)
         raise MKGeneralException(
-            "Cannot %s the monitoring core: %r" % (action.value, completed_process.stdout)
+            f"Cannot {action.value} the monitoring core: {completed_process.stdout!r}"
         )
     if not quiet:
         out.output(tty.ok + "\n")
@@ -183,7 +184,7 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
     return _config_cache.get("timeperiods_cache").get(timeperiod, True)
 
 
-def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
+def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
     """Returns
     True : active
     False: inactive

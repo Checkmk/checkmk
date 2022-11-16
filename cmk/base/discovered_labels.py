@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Final, Optional
+from typing import Any, Final
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostLabelValueDict, SectionName
@@ -33,7 +33,7 @@ class _Label:
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %s to %s" % (type(self), type(other)))
+            raise TypeError(f"cannot compare {type(self)} to {type(other)}")
         return self.name == other.name and self.value == other.value
 
 
@@ -63,7 +63,7 @@ class HostLabel(_Label):
         self,
         name: str,
         value: str,
-        plugin_name: Optional[SectionName] = None,
+        plugin_name: SectionName | None = None,
     ) -> None:
         super().__init__(name, value)
         self.plugin_name: Final = plugin_name

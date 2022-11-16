@@ -5,8 +5,8 @@
 """Code for computing the table of checks of hosts."""
 
 import enum
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import suppress
-from typing import Iterable, Iterator, Mapping, Set
 
 from cmk.utils.type_defs import CheckPluginName, HostName, ServiceID
 
@@ -38,7 +38,7 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
     def __iter__(self) -> Iterator[ServiceID]:
         return iter(self._data)
 
-    def needed_check_names(self) -> Set[CheckPluginName]:
+    def needed_check_names(self) -> set[CheckPluginName]:
         return {s.check_plugin_name for s in self.values()}
 
 
@@ -141,8 +141,7 @@ def _get_services_from_cluster_nodes(
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(hostname):
         cluster_config = config_cache.get_host_config(cluster)
-        for service in _get_clustered_services(config_cache, cluster, cluster_config, False):
-            yield service
+        yield from _get_clustered_services(config_cache, cluster, cluster_config, False)
 
 
 def _get_clustered_services(

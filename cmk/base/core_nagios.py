@@ -9,9 +9,10 @@ import os
 import py_compile
 import socket
 import sys
+from collections.abc import Mapping
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, List, Literal, Mapping, Optional, Set, Tuple
+from typing import Any, cast, IO, Literal
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -47,7 +48,7 @@ import cmk.base.utils
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
 from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
 
-ObjectSpec = Dict[str, Any]
+ObjectSpec = dict[str, Any]
 
 CHECK_INFO_BY_MIGRATED_NAME = {
     k: config.check_info[v] for k, v in config.legacy_check_plugin_names.items()
@@ -105,25 +106,25 @@ class NagiosCore(core_config.MonitoringCore):
 
 
 class NagiosConfig:
-    def __init__(self, outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
+    def __init__(self, outfile: IO[str], hostnames: list[HostName] | None) -> None:
         super().__init__()
         self._outfile = outfile
         self.hostnames = hostnames
 
-        self.hostgroups_to_define: Set[HostgroupName] = set()
-        self.servicegroups_to_define: Set[ServicegroupName] = set()
-        self.contactgroups_to_define: Set[ContactgroupName] = set()
-        self.checknames_to_define: Set[CheckPluginName] = set()
-        self.active_checks_to_define: Set[CheckPluginNameStr] = set()
-        self.custom_commands_to_define: Set[CoreCommandName] = set()
-        self.hostcheck_commands_to_define: List[Tuple[CoreCommand, str]] = []
+        self.hostgroups_to_define: set[HostgroupName] = set()
+        self.servicegroups_to_define: set[ServicegroupName] = set()
+        self.contactgroups_to_define: set[ContactgroupName] = set()
+        self.checknames_to_define: set[CheckPluginName] = set()
+        self.active_checks_to_define: set[CheckPluginNameStr] = set()
+        self.custom_commands_to_define: set[CoreCommandName] = set()
+        self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
 
     def write(self, x: str) -> None:
         # TODO: Something seems to be mixed up in our call sites...
         self._outfile.write(x)
 
 
-def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
+def create_config(outfile: IO[str], hostnames: list[HostName] | None) -> None:
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -346,7 +347,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
-    used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
+    used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
 
         if not service.description:
@@ -476,7 +477,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                         )
                         cfg.custom_commands_to_define.add(command_name)
                     else:
-                        command = "check_mk_active-%s!%s" % (acttype, escaped_args)
+                        command = f"check_mk_active-{acttype}!{escaped_args}"
 
                     service_spec = {
                         "use": "%scheck_mk_default" % template,
@@ -562,7 +563,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             used_descriptions[description] = ("custom(%s)" % command_name, description)
 
             template = "check_mk_perf," if has_perfdata else ""
-            command = "%s!%s" % (command_name, command_line)
+            command = f"{command_name}!{command_line}"
 
             service_spec = {
                 "use": "%scheck_mk_default" % template,
@@ -663,7 +664,7 @@ def _add_ping_service(
     ipaddress: HostAddress,
     family: int,
     descr: ServiceName,
-    node_ips: Optional[str],
+    node_ips: str | None,
 ) -> None:
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
@@ -678,7 +679,7 @@ def _add_ping_service(
         "use": config.pingonly_template,
         "host_name": host_name,
         "service_description": descr,
-        "check_command": "%s!%s" % (ping_command, arguments),
+        "check_command": f"{ping_command}!{arguments}",
     }
     service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
     service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
@@ -853,18 +854,18 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
                     # below to distinguish between a list of TimeperiodNames for "exclude" and the
                     # list of tuples for the time ranges.
                     times = ",".join(
-                        ("%s-%s" % (fr, to)) for (fr, to) in cast(List[Tuple[str, str]], value)
+                        (f"{fr}-{to}") for (fr, to) in cast(list[tuple[str, str]], value)
                     )
                     if times:
                         timeperiod_spec[key] = times
 
             if "exclude" in tp:
-                timeperiod_spec["exclude"] = ",".join(cast(List[TimeperiodName], tp["exclude"]))
+                timeperiod_spec["exclude"] = ",".join(cast(list[TimeperiodName], tp["exclude"]))
 
             cfg.write(_format_nagios_object("timeperiod", timeperiod_spec))
 
 
-def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: List[HostName]) -> None:
+def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName]) -> None:
     if config.contacts:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Contact definitions (controlled by variable 'contacts')\n")
@@ -1002,7 +1003,7 @@ def _extra_service_conf_of(
 #   '----------------------------------------------------------------------'
 
 
-def _find_check_plugins(checktype: CheckPluginNameStr) -> List[str]:
+def _find_check_plugins(checktype: CheckPluginNameStr) -> list[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
@@ -1095,7 +1096,7 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            console.error("Error precompiling checks for host %s: %s\n" % (hostname, e))
+            console.error(f"Error precompiling checks for host {hostname}: {e}\n")
             sys.exit(5)
 
 
@@ -1105,7 +1106,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     hostname: HostName,
     *,
     verify_site_python: bool = True,
-) -> Optional[str]:
+) -> str | None:
     host_config = config_cache.get_host_config(hostname)
 
     (
@@ -1335,7 +1336,7 @@ if '-d' in sys.argv:
 def _get_needed_plugin_names(
     host_name: HostName,
     host_config: HostConfig,
-) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
+) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 
     needed_legacy_check_plugin_names = {f"agent_{name}" for name, _p in host_config.special_agents}
@@ -1358,7 +1359,7 @@ def _get_needed_plugin_names(
 
     # Inventory plugins get passed parsed data these days.
     # Load the required sections, or inventory plugins will crash upon unparsed data.
-    needed_agent_based_inventory_plugin_names: Set[InventoryPluginName] = set()
+    needed_agent_based_inventory_plugin_names: set[InventoryPluginName] = set()
     if host_config.do_status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
@@ -1377,7 +1378,7 @@ def _get_needed_plugin_names(
     )
 
 
-def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[CheckPluginNameStr]:
+def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPluginNameStr | None:
     legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
     if legacy_name:
         return legacy_name
@@ -1398,12 +1399,12 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[
 
 
 def _get_legacy_check_file_names_to_load(
-    needed_check_plugin_names: Set[CheckPluginNameStr],
-) -> List[str]:
+    needed_check_plugin_names: set[CheckPluginNameStr],
+) -> list[str]:
     # check info table
     # We need to include all those plugins that are referenced in the host's
     # check table.
-    filenames: List[str] = []
+    filenames: list[str] = []
     for check_plugin_name in needed_check_plugin_names:
         section_name = section_name_of(check_plugin_name)
         # Add library files needed by check (also look in local)
@@ -1433,9 +1434,9 @@ def _get_legacy_check_file_names_to_load(
 
 
 def _get_needed_agent_based_modules(
-    check_plugin_names: Set[CheckPluginName],
-    inventory_plugin_names: Set[InventoryPluginName],
-) -> List[str]:
+    check_plugin_names: set[CheckPluginName],
+    inventory_plugin_names: set[InventoryPluginName],
+) -> list[str]:
 
     modules = {
         plugin.module
@@ -1443,32 +1444,26 @@ def _get_needed_agent_based_modules(
         if plugin is not None and plugin.module is not None
     }
     modules.update(
-        (
-            plugin.module
-            for plugin in [
-                agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names
-            ]
-            if plugin is not None and plugin.module is not None
-        )
+        plugin.module
+        for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
+        if plugin is not None and plugin.module is not None
     )
     modules.update(
-        (
-            section.module
-            for section in agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=check_plugin_names,
-                inventory_plugin_names=inventory_plugin_names,
-            ).values()
-            if section.module is not None
-        )
+        section.module
+        for section in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=check_plugin_names,
+            inventory_plugin_names=inventory_plugin_names,
+        ).values()
+        if section.module is not None
     )
 
     return sorted(modules)
 
 
 def _get_required_legacy_check_sections(
-    check_plugin_names: Set[CheckPluginName],
-    inventory_plugin_names: Set[InventoryPluginName],
-) -> Set[str]:
+    check_plugin_names: set[CheckPluginName],
+    inventory_plugin_names: set[InventoryPluginName],
+) -> set[str]:
     """
     new style plugin may have a dependency to a legacy check
     """

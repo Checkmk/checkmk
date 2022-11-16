@@ -18,7 +18,7 @@ Do not store long-time things here. Also do not store complex
 structures like log files or stuff.
 """
 
-from typing import Any, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.api.agent_based.value_store import get_value_store
@@ -107,7 +107,7 @@ def _get_counter(
     this_val: float,
     allow_negative: bool = False,
     is_rate: bool = False,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     old_state = get_item_state(countername, None)
     set_item_state(countername, (this_time, this_val))
 
@@ -149,7 +149,7 @@ def reset_wrapped_counters() -> None:
 
 
 # TODO: Can we remove this? (check API)
-def last_counter_wrap() -> Optional[GetRateError]:
+def last_counter_wrap() -> GetRateError | None:
     return g_last_counter_wrap
 
 

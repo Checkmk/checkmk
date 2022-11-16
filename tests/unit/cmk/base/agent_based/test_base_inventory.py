@@ -578,9 +578,6 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
         assert not update_result.reason
 
 
-#   ---previous node--------------------------------------------------------
-
-
 def _make_tree_or_items(
     previous_attributes_retentions: dict, previous_table_retentions: dict
 ) -> tuple[StructuredDataNode, list[ItemsOfInventoryPlugin]]:
@@ -655,132 +652,57 @@ def _make_tree_or_items(
     return previous_tree, items_of_inventory_plugins
 
 
-def test_updater_null_obj_attributes() -> None:
-    inv_tree = StructuredDataNode()
+#   ---no items-------------------------------------------------------------
 
-    tree_updater = RealHostTreeUpdater(
+
+@pytest.mark.parametrize(
+    "raw_intervals",
+    [
+        [],
         [
             {
                 "interval": 3,
                 "visible_raw_path": "path-to.node-with-attrs",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-attrs"), "Attributes"): RetentionInfo(
-            lambda key: True,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=-1,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    assert not update_result.save_tree
-    assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.is_empty()
-
-
-def test_updater_null_obj_attributes_outdated() -> None:
-    inv_tree = StructuredDataNode()
-
-    tree_updater = RealHostTreeUpdater(
-        [
+                "attributes": "all",
+            },
             {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-attrs",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-attrs"), "Attributes"): RetentionInfo(
-            lambda key: True,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=1000,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    assert not update_result.save_tree
-    assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.is_empty()
-
-
-def test_updater_null_obj_tables() -> None:
-    inv_tree = StructuredDataNode()
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
+                "interval": 5,
                 "visible_raw_path": "path-to.node-with-table",
-                "columns": "foo",  # Value is not important here
-            }
+                "columns": "all",
+            },
         ],
+    ],
+)
+@pytest.mark.parametrize(
+    "previous_node",
+    [
+        StructuredDataNode(),
+        _make_tree_or_items({}, {})[0],
+        _make_tree_or_items({"old": (1, 2, 3)}, {("Ident 1",): {"old": (1, 2, 3)}})[0],
+    ],
+)
+def test__inventorize_real_host_no_items(
+    raw_intervals: list, previous_node: StructuredDataNode
+) -> None:
+    trees, update_result = _inventorize_real_host(
+        now=0,
+        items_of_inventory_plugins=[],
+        raw_intervals_from_config=raw_intervals,
+        old_tree=previous_node,
     )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-table"), "Table"): RetentionInfo(
-            lambda key: True,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=-1,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
+
+    assert trees.inventory.is_empty()
+    assert trees.status_data.is_empty()
 
     assert not update_result.save_tree
-    assert not update_result.reason
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.is_empty()
+    if raw_intervals:
+        assert not update_result.reason
+    else:
+        assert update_result.reason == "No retention intervals found."
 
 
-def test_updater_null_obj_tables_outdated() -> None:
-    inv_tree = StructuredDataNode()
-
-    tree_updater = RealHostTreeUpdater(
-        [
-            {
-                "interval": 3,
-                "visible_raw_path": "path-to.node-with-table",
-                "columns": "foo",  # Value is not important here
-            }
-        ],
-    )
-    tree_updater._retention_infos = {
-        (("path-to", "node-with-table"), "Table"): RetentionInfo(
-            lambda key: True,
-            RetentionIntervals(1, 2, 3),
-        ),
-    }
-    update_result = tree_updater.may_update(
-        now=1000,
-        inventory_tree=inv_tree,
-        previous_tree=StructuredDataNode(),
-    )
-
-    assert not update_result.save_tree
-    assert not update_result.reason
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.is_empty()
+#   ---previous node--------------------------------------------------------
 
 
 @pytest.mark.parametrize(

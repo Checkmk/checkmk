@@ -82,17 +82,17 @@ def register_painters() -> None:
     graphs.PainterHostGraphs.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
-    painters.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
+    graphs.PainterSvcPnpgraph.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
-    painters.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
+    graphs.PainterHostPnpgraph.resolve_combined_single_metric_spec = (
         resolve_combined_single_metric_spec
     )
 
     painter_registry.register(graphs.PainterServiceGraphs)
     painter_registry.register(graphs.PainterHostGraphs)
-    painter_registry.register(painters.PainterSvcPnpgraph)
-    painter_registry.register(painters.PainterHostPnpgraph)
+    painter_registry.register(graphs.PainterSvcPnpgraph)
+    painter_registry.register(graphs.PainterHostPnpgraph)
 
     painters.PainterDowntimeRecurring.renderer = painter_downtime_recurring_renderer
     painter_registry.register(painters.PainterDowntimeRecurring)

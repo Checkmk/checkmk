@@ -27,7 +27,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import paint_age, painter_option_registry, PainterOption
-from cmk.gui.painters.v0.base import Cell, Painter, Painter2, painter_registry
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
 from cmk.gui.painters.v0.helpers import (
     get_label_sources,
     get_tag_groups,
@@ -39,7 +39,6 @@ from cmk.gui.painters.v0.helpers import (
 )
 from cmk.gui.painters.v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
-from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
 from cmk.gui.plugins.views.icons.utils import (
     get_icons,
     IconEntry,
@@ -64,8 +63,6 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListChoiceChoices,
     TextInput,
-    Timerange,
-    Transform,
 )
 from cmk.gui.view_utils import (
     CellSpec,
@@ -73,7 +70,6 @@ from cmk.gui.view_utils import (
     CSVExportError,
     format_plugin_output,
     get_labels,
-    JSONExportError,
     render_labels,
     render_tag_groups,
 )
@@ -97,21 +93,6 @@ from cmk.gui.visual_link import render_link_to_view
 #   | options are stored together with "refresh" and "columns" as "View    |
 #   | options".                                                            |
 #   '----------------------------------------------------------------------'
-
-
-@painter_option_registry.register
-class PainterOptionPNPTimerange(PainterOption):
-    @property
-    def ident(self) -> str:
-        return "pnp_timerange"
-
-    @property
-    def valuespec(self) -> Timerange:
-        return Timerange(
-            title=_("Graph time range"),
-            default_value=None,
-            include_time=True,
-        )
 
 
 @painter_option_registry.register
@@ -1389,48 +1370,6 @@ class PainterSvcGroupMemberlist(Painter):
         return "", HTML(", ").join(links)
 
 
-class PainterSvcPnpgraph(Painter2):
-    @property
-    def ident(self) -> str:
-        return "svc_pnpgraph"
-
-    def title(self, cell: Cell) -> str:
-        return _("Service graphs")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return [
-            "host_name",
-            "service_description",
-            "service_perf_data",
-            "service_metrics",
-            "service_check_command",
-        ]
-
-    @property
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    def painter_options(self) -> list[str]:
-        return ["pnp_timerange"]
-
-    @property
-    def parameters(self) -> Transform:
-        return cmk_time_graph_params()
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
-
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        raise CSVExportError()
-
-    def export_for_json(self, row: Row, cell: Cell) -> object:
-        raise JSONExportError()
-
-
 @painter_registry.register
 class PainterCheckManpage(Painter):
     @property
@@ -2367,45 +2306,6 @@ class PainterHostNotificationsEnabled(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_notifications_enabled", False)
-
-
-class PainterHostPnpgraph(Painter2):
-    @property
-    def ident(self) -> str:
-        return "host_pnpgraph"
-
-    def title(self, cell: Cell) -> str:
-        return _("Host graph")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Graph")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
-
-    @property
-    def printable(self) -> str:
-        return "time_graph"
-
-    @property
-    def painter_options(self) -> list[str]:
-        return ["pnp_timerange"]
-
-    @property
-    def parameters(self) -> Transform:
-        return cmk_time_graph_params()
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
-        assert resolve_combined_single_metric_spec is not None
-        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
-
-    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
-        raise CSVExportError()
-
-    def export_for_json(self, row: Row, cell: Cell) -> object:
-        raise JSONExportError()
 
 
 @painter_registry.register

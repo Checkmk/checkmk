@@ -32,7 +32,14 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import Dictionary, DropdownChoice, MigrateNotUpdated, ValueSpec
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    MigrateNotUpdated,
+    Timerange,
+    Transform,
+    ValueSpec,
+)
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -358,6 +365,102 @@ class PainterOptionGraphRenderOptions(PainterOption):
     @property
     def valuespec(self) -> ValueSpec:
         return vs_graph_render_options()
+
+
+@painter_option_registry.register
+class PainterOptionPNPTimerange(PainterOption):
+    @property
+    def ident(self) -> str:
+        return "pnp_timerange"
+
+    @property
+    def valuespec(self) -> Timerange:
+        return Timerange(
+            title=_("Graph time range"),
+            default_value=None,
+            include_time=True,
+        )
+
+
+class PainterSvcPnpgraph(Painter2):
+    @property
+    def ident(self) -> str:
+        return "svc_pnpgraph"
+
+    def title(self, cell: Cell) -> str:
+        return _("Service graphs")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return [
+            "host_name",
+            "service_description",
+            "service_perf_data",
+            "service_metrics",
+            "service_check_command",
+        ]
+
+    @property
+    def printable(self) -> str:
+        return "time_graph"
+
+    @property
+    def painter_options(self) -> list[str]:
+        return ["pnp_timerange"]
+
+    @property
+    def parameters(self) -> Transform:
+        return cmk_time_graph_params()
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
+        assert resolve_combined_single_metric_spec is not None
+        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
+
+
+class PainterHostPnpgraph(Painter2):
+    @property
+    def ident(self) -> str:
+        return "host_pnpgraph"
+
+    def title(self, cell: Cell) -> str:
+        return _("Host graph")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Graph")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
+
+    @property
+    def printable(self) -> str:
+        return "time_graph"
+
+    @property
+    def painter_options(self) -> list[str]:
+        return ["pnp_timerange"]
+
+    @property
+    def parameters(self) -> Transform:
+        return cmk_time_graph_params()
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
+        assert resolve_combined_single_metric_spec is not None
+        return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
+
+    def export_for_json(self, row: Row, cell: Cell) -> object:
+        raise JSONExportError()
 
 
 def cmk_graph_url(row, what):

@@ -565,6 +565,7 @@ class Site:
             cmk_path() + "/inventory",
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
+            cmk_path() + "/agent-receiver",
         ]
 
         if self.version.is_raw_edition():

@@ -6,7 +6,7 @@
 # pylint: disable=too-many-branches,no-else-break
 
 from ssl import SSLObject
-from typing import Iterator, Optional
+from typing import Optional
 
 from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
     asyncio,
@@ -20,19 +20,21 @@ from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
 from uvicorn.workers import UvicornWorker  # type: ignore[import]
 
 
-def _extract_client_cert_cns(ssl_object: Optional[SSLObject]) -> Iterator[str]:
+def _extract_client_cert_cn(ssl_object: Optional[SSLObject]) -> Optional[str]:
     if ssl_object is None:
-        return
+        return None
     try:
         client_cert = ssl_object.getpeercert()
     except ValueError:
-        return
+        return None
     if client_cert is None:
-        return
+        return None
 
     for distinguished_name in client_cert.get("subject", ()):
         if cn := dict(dn for dn in distinguished_name if isinstance(dn, tuple)).get("commonName"):
-            yield cn
+            return cn
+
+    return None
 
 
 class _ClientCertProtocol(H11Protocol):
@@ -66,15 +68,17 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
                 # OUR CUSTOM EXTENSION
 
+                client_cn = _extract_client_cert_cn(self.transport.get_extra_info("ssl_object"))
                 self.headers = [
-                    *self.headers,
-                    *(
-                        (b"verified-uuid", cn.encode())
-                        for cn in _extract_client_cert_cns(
-                            self.transport.get_extra_info("ssl_object")
-                        )
+                    (
+                        b"verified-uuid",
+                        client_cn.encode()
+                        if client_cn is not None
+                        else b"missing: no client certificate provided",
                     ),
+                    *self.headers,
                 ]
+
                 # ==================================================================================
                 # ==================================================================================
 

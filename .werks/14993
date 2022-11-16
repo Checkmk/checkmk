@@ -1,0 +1,23 @@
+Title: reports: Fix possible KeyError on update from 2.0 to 2.1
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1668600003
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+If you had reports configured in 2.0 with datasource "customer" and a customer
+defined in "Context / Search Filters", the update to 2.1 showed the error
+"KeyError: 'customer'".
+
+Since the UI was unusable after that error, a possible workaroud was to search
+for affected reports in ~/var/check_mk/web, e.g. with:
+
+find . -name 'user_reports*' -exec grep -l "'context': {'customer'" {} \;
+
+If you changed "'context': {'customer':'mycustomer'}" in the found files to
+"'context': {}" and deleted the cache file
+~/tmp/check_mk/visuals_cache/cached_reports, the UI was usable again und you
+could configure the customer in the report again.

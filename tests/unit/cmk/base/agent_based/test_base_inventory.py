@@ -24,6 +24,7 @@ import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._inventory import (
+    _create_trees_from_inventory_plugin_items,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
     InventoryTrees,
@@ -580,9 +581,9 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 #   ---previous node--------------------------------------------------------
 
 
-def _make_trees(
+def _make_tree_or_items(
     previous_attributes_retentions: dict, previous_table_retentions: dict
-) -> tuple[StructuredDataNode, StructuredDataNode]:
+) -> tuple[StructuredDataNode, list[ItemsOfInventoryPlugin]]:
     previous_tree = StructuredDataNode.deserialize(
         {
             "Attributes": {},
@@ -617,39 +618,41 @@ def _make_trees(
             },
         }
     )
-    inv_tree = StructuredDataNode.deserialize(
-        {
-            "Attributes": {},
-            "Table": {},
-            "Nodes": {
-                "path-to": {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "node-with-attrs": {
-                            "Attributes": {
-                                "Pairs": {"new": "Key", "keys": "New Keys"},
-                            },
-                            "Nodes": {},
-                            "Table": {},
-                        },
-                        "node-with-table": {
-                            "Attributes": {},
-                            "Nodes": {},
-                            "Table": {
-                                "KeyColumns": ["ident"],
-                                "Rows": [
-                                    {"ident": "Ident 1", "new": "Key 1", "keys": "New Keys 1"},
-                                    {"ident": "Ident 2", "new": "Key 2", "keys": "New Keys 2"},
-                                ],
-                            },
-                        },
+    items_of_inventory_plugins = [
+        ItemsOfInventoryPlugin(
+            items=[
+                Attributes(
+                    path=["path-to", "node-with-attrs"],
+                    inventory_attributes={
+                        "new": "Key",
+                        "keys": "New Keys",
                     },
-                }
-            },
-        }
-    )
-    return previous_tree, inv_tree
+                ),
+                TableRow(
+                    path=["path-to", "node-with-table"],
+                    key_columns={
+                        "ident": "Ident 1",
+                    },
+                    inventory_columns={
+                        "new": "Key 1",
+                        "keys": "New Keys 1",
+                    },
+                ),
+                TableRow(
+                    path=["path-to", "node-with-table"],
+                    key_columns={
+                        "ident": "Ident 2",
+                    },
+                    inventory_columns={
+                        "new": "Key 2",
+                        "keys": "New Keys 2",
+                    },
+                ),
+            ],
+            raw_cache_info=None,
+        ),
+    ]
+    return previous_tree, items_of_inventory_plugins
 
 
 def test_updater_null_obj_attributes() -> None:
@@ -797,7 +800,8 @@ def test_updater_handle_inv_attributes(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    _previous_tree, inv_tree = _make_trees({}, {})
+    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -852,7 +856,8 @@ def test_updater_handle_inv_attributes_outdated(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    _previous_tree, inv_tree = _make_trees({}, {})
+    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -910,7 +915,8 @@ def test_updater_handle_inv_tables(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    _previous_tree, inv_tree = _make_trees({}, {})
+    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -968,7 +974,8 @@ def test_updater_handle_inv_tables_outdated(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    _previous_tree, inv_tree = _make_trees({}, {})
+    _previous_tree, items_of_inventory_plugins = _make_tree_or_items({}, {})
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -1017,7 +1024,7 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ):
-    previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
 
     tree_updater = RealHostTreeUpdater(
@@ -1067,7 +1074,7 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     ],
 )
 def test_updater_merge_previous_attributes_outdated(filter_func: SDFilterFunc) -> None:
-    previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
 
     tree_updater = RealHostTreeUpdater(
@@ -1119,7 +1126,7 @@ def test_updater_merge_previous_tables(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    previous_tree, _inv_tree = _make_trees(
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         {},
         {
             ("Ident 1",): {"old": (1, 2, 3)},
@@ -1176,7 +1183,7 @@ def test_updater_merge_previous_tables(
     ],
 )
 def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> None:
-    previous_tree, _inv_tree = _make_trees(
+    previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         {},
         {
             ("Ident 1",): {"old": (1, 2, 3)},
@@ -1235,13 +1242,14 @@ def test_updater_merge_attributes(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    previous_tree, inv_tree = _make_trees(
+    previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         {
             "old": (1, 2, 3),
             "keys": (1, 2, 3),
         },
         {},
     )
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -1301,13 +1309,14 @@ def test_updater_merge_attributes_outdated(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    previous_tree, inv_tree = _make_trees(
+    previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         {
             "old": (1, 2, 3),
             "keys": (1, 2, 3),
         },
         {},
     )
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -1374,7 +1383,7 @@ def test_updater_merge_tables(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    previous_tree, inv_tree = _make_trees(
+    previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         {},
         {
             ("Ident 1",): {
@@ -1387,6 +1396,7 @@ def test_updater_merge_tables(
             },
         },
     )
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [
@@ -1456,13 +1466,14 @@ def test_updater_merge_tables_outdated(
     filter_func: SDFilterFunc,
     expected_retentions: dict,
 ) -> None:
-    previous_tree, inv_tree = _make_trees(
+    previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         {},
         {
             ("Ident 1",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
             ("Ident 2",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
         },
     )
+    inv_tree = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins).inventory
 
     tree_updater = RealHostTreeUpdater(
         [

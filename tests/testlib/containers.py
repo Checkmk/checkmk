@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import os
 import subprocess
@@ -40,8 +39,6 @@ def execute_tests_in_container(
     command: List[str],
     interactive: bool,
 ) -> int:
-    _docker_config_check()
-
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -127,15 +124,6 @@ def execute_tests_in_container(
         _copy_directory(container, Path("/results"), result_path)
 
         return exit_code
-
-
-def _docker_config_check() -> None:
-    docker_cfg_path = "/etc/docker/daemon.json"
-    err_msg = """Docker IPv6 support disabled, but required for snmplib tests!
-            See https://docs.docker.com/config/daemon/ipv6/ for details."""
-    assert os.path.exists(docker_cfg_path), err_msg
-    with open(docker_cfg_path, "r") as docker_cfg_file:
-        assert json.load(docker_cfg_file).get("ipv6"), err_msg
 
 
 def _docker_client():

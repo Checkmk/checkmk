@@ -21,17 +21,33 @@ regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
 
+import pytest
+
 from tests.testlib import on_time
 
 from tests.unit.conftest import FixPluginLegacy
 
 from . import generictests
 
-
 # Making this a single test with a loop instead of a parameterized test cuts down the runtime
-# from 9.2s to 4.9s. Furthermore, freezing the time only once is a big win, too.
-def test_dataset(fix_plugin_legacy: FixPluginLegacy) -> None:
+# from 15.7s to 4.3s. Furthermore, freezing the time only once is a big win, too. OTOH, if
+# something goes wrong, pinning down the exact dataset is very helpful, so we use the "slow"
+# marker below for the latter use case.
+
+
+def test_all_datasets(fix_plugin_legacy: FixPluginLegacy) -> None:
     with on_time(1572247138, "CET"):
         for datasetname in generictests.DATASET_NAMES:
-            dataset = import_module(f"tests.unit.checks.generictests.datasets.{datasetname}")
-            generictests.run(fix_plugin_legacy.check_info, dataset)
+            run_tests_for(datasetname, fix_plugin_legacy)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
+def test_dataset_one_by_one(datasetname: str, fix_plugin_legacy: FixPluginLegacy) -> None:
+    with on_time(1572247138, "CET"):
+        run_tests_for(datasetname, fix_plugin_legacy)
+
+
+def run_tests_for(datasetname: str, fix_plugin_legacy: FixPluginLegacy) -> None:
+    dataset = import_module(f"tests.unit.checks.generictests.datasets.{datasetname}")
+    generictests.run(fix_plugin_legacy.check_info, dataset)

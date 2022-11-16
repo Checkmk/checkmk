@@ -107,24 +107,25 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     switch to the new API. Until then let's not bother the users with it.
     """
     # Needs to be a local import to not influence the regular plugin loading order
-    import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
-    import cmk.gui.livestatus_data_source as livestatus_data_source
     import cmk.gui.painter_options as painter_options
     import cmk.gui.painters.v0.base as painter_base
     import cmk.gui.painters.v0.helpers as painter_helpers
     import cmk.gui.painters.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module
-    import cmk.gui.views.sorter as sorter
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.views import command, inventory, layout, store
+
+    from . import command, data_source, inventory, layout, sorter, store
 
     for name in (
         "ABCDataSource",
         "data_source_registry",
         "row_id",
         "RowTable",
+        "DataSourceLivestatus",
+        "RowTableLivestatus",
+        "query_livestatus",
     ):
         api_module.__dict__[name] = data_source.__dict__[name]
 
@@ -133,13 +134,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "exporter_registry",
     ):
         api_module.__dict__[name] = exporter.__dict__[name]
-
-    for name in (
-        "DataSourceLivestatus",
-        "RowTableLivestatus",
-        "query_livestatus",
-    ):
-        api_module.__dict__[name] = livestatus_data_source.__dict__[name]
 
     for name in (
         "get_graph_timerange_from_painter_options",

@@ -6,19 +6,35 @@ from collections.abc import Sequence
 
 from livestatus import LivestatusColumn, OnlySites, Query, QuerySpecification
 
-from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.i18n import _
-from cmk.gui.livestatus_data_source import (
-    DataSourceLivestatus,
-    query_livestatus,
-    RowTableLivestatus,
-)
 from cmk.gui.painters.v0.base import Cell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 
+from .base import ABCDataSource, RowTable
+from .livestatus import DataSourceLivestatus, query_livestatus, RowTableLivestatus
+from .registry import DataSourceRegistry
 
-@data_source_registry.register
+
+def register_data_sources(registry: DataSourceRegistry) -> None:
+    registry.register(DataSourceHosts)
+    registry.register(DataSourceHostsByGroup)
+    registry.register(DataSourceServices)
+    registry.register(DataSourceServicesByGroup)
+    registry.register(DataSourceServicesByHostGroup)
+    registry.register(DataSourceHostGroups)
+    registry.register(DataSourceMergedHostGroups)
+    registry.register(DataSourceServiceGroups)
+    registry.register(DataSourceMergedServiceGroups)
+    registry.register(DataSourceComments)
+    registry.register(DataSourceDowntimes)
+    registry.register(DataSourceLog)
+    registry.register(DataSourceLogHostAndServiceEvents)
+    registry.register(DataSourceLogHostEvents)
+    registry.register(DataSourceLogAlertStatistics)
+    registry.register(DataSourceServiceDiscovery)
+
+
 class DataSourceHosts(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -54,7 +70,6 @@ class DataSourceHosts(DataSourceLivestatus):
         }
 
 
-@data_source_registry.register
 class DataSourceHostsByGroup(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -81,7 +96,6 @@ class DataSourceHostsByGroup(DataSourceLivestatus):
         return ("services", "host_name")
 
 
-@data_source_registry.register
 class DataSourceServices(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -118,7 +132,6 @@ class DataSourceServices(DataSourceLivestatus):
         }
 
 
-@data_source_registry.register
 class DataSourceServicesByGroup(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -141,7 +154,6 @@ class DataSourceServicesByGroup(DataSourceLivestatus):
         return ["site", "servicegroup_name", "host_name", "service_description"]
 
 
-@data_source_registry.register
 class DataSourceServicesByHostGroup(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -164,7 +176,6 @@ class DataSourceServicesByHostGroup(DataSourceLivestatus):
         return ["site", "hostgroup_name", "host_name", "service_description"]
 
 
-@data_source_registry.register
 class DataSourceHostGroups(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -187,7 +198,6 @@ class DataSourceHostGroups(DataSourceLivestatus):
         return ["site", "hostgroup_name"]
 
 
-@data_source_registry.register
 class DataSourceMergedHostGroups(DataSourceLivestatus):
     """Merged groups across sites"""
 
@@ -220,7 +230,6 @@ class DataSourceMergedHostGroups(DataSourceLivestatus):
         return "hostgroup_name"
 
 
-@data_source_registry.register
 class DataSourceServiceGroups(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -243,7 +252,6 @@ class DataSourceServiceGroups(DataSourceLivestatus):
         return ["site", "servicegroup_name"]
 
 
-@data_source_registry.register
 class DataSourceMergedServiceGroups(ABCDataSource):
     """Merged groups across sites"""
 
@@ -276,7 +284,6 @@ class DataSourceMergedServiceGroups(ABCDataSource):
         return "servicegroup_name"
 
 
-@data_source_registry.register
 class DataSourceComments(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -299,7 +306,6 @@ class DataSourceComments(DataSourceLivestatus):
         return ["comment_id"]
 
 
-@data_source_registry.register
 class DataSourceDowntimes(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -348,14 +354,12 @@ class LogDataSource(DataSourceLivestatus):
         return ["logtime"]
 
 
-@data_source_registry.register
 class DataSourceLog(LogDataSource):
     @property
     def title(self) -> str:
         return _("The Logfile")
 
 
-@data_source_registry.register
 class DataSourceLogHostAndServiceEvents(LogDataSource):
     @property
     def ident(self) -> str:
@@ -374,7 +378,6 @@ class DataSourceLogHostAndServiceEvents(LogDataSource):
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\n"
 
 
-@data_source_registry.register
 class DataSourceLogHostEvents(LogDataSource):
     @property
     def ident(self) -> str:
@@ -393,7 +396,6 @@ class DataSourceLogHostEvents(LogDataSource):
         return "Filter: class = 1\nFilter: class = 3\nFilter: class = 8\nOr: 3\nFilter: service_description = \n"
 
 
-@data_source_registry.register
 class DataSourceLogAlertStatistics(LogDataSource):
     @property
     def ident(self) -> str:
@@ -430,7 +432,6 @@ class DataSourceLogAlertStatistics(LogDataSource):
         return True
 
 
-@data_source_registry.register
 class DataSourceServiceDiscovery(ABCDataSource):
     @property
     def ident(self) -> str:

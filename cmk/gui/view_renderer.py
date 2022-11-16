@@ -19,7 +19,6 @@ import cmk.gui.weblib as weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -55,6 +54,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
+from cmk.gui.views.data_source import row_id
 from cmk.gui.visuals import view_title
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 

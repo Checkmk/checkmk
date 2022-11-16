@@ -34,7 +34,6 @@ import cmk.gui.inventory as inventory
 import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
-from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
@@ -89,6 +88,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
+from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 

@@ -12,7 +12,6 @@ from livestatus import OnlySites
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.bi as bi
-from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -26,6 +25,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTable
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___

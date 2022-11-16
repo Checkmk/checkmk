@@ -10,7 +10,6 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, overload
 
 from cmk.gui import visuals
-from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -38,6 +37,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views, get_permitted_views

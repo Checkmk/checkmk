@@ -6,16 +6,13 @@
 from __future__ import annotations
 
 import abc
-import hashlib
 from collections.abc import Sequence
 
 from livestatus import OnlySites
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui.painters.v0.base import Cell
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
+from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 
 
 class RowTable(abc.ABC):
@@ -158,27 +155,3 @@ class ABCDataSource(abc.ABC):
         """Optional function to postprocess the resulting data after executing
         the regular data fetching"""
         return rows
-
-
-class DataSourceRegistry(Registry[type[ABCDataSource]]):
-    def plugin_name(self, instance: type[ABCDataSource]) -> str:
-        return instance().ident
-
-    # TODO: Sort the datasources by (assumed) common usage
-    def data_source_choices(self) -> list[tuple[str, str]]:
-        datasources = []
-        for ident, ds_class in self.items():
-            datasources.append((ident, ds_class().title))
-        return sorted(datasources, key=lambda x: x[1])
-
-
-data_source_registry = DataSourceRegistry()
-
-
-def row_id(datasource: str, row: Row) -> str:
-    """Calculates a uniq id for each data row which identifies the current
-    row accross different page loadings."""
-    key = ""
-    for col in data_source_registry[datasource]().id_keys:
-        key += "~%s" % row[col]
-    return hashlib.sha256(key.encode("utf-8")).hexdigest()

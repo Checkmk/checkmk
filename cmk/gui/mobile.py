@@ -11,7 +11,6 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
-from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -30,6 +29,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.view import View
 from cmk.gui.views.command import command_registry, CommandSpec, core_command
+from cmk.gui.views.data_source import ABCDataSource, data_source_registry
 from cmk.gui.views.page_show_view import (
     ABCViewRenderer,
     get_limit,

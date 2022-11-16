@@ -29,7 +29,6 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
@@ -101,6 +100,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, TextInput, Transform, ValueSpec
+from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.page_edit_view import view_choices

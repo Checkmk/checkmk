@@ -26,6 +26,7 @@ from cmk.gui.views.command import (
     register_command_groups,
     register_commands,
 )
+from cmk.gui.views.data_source import data_source_registry, register_data_sources
 from cmk.gui.views.host_tag_plugins import register_tag_plugins
 from cmk.gui.views.layout import layout_registry, register_layouts
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
@@ -106,3 +107,4 @@ register_layouts(layout_registry)
 register_sorters(sorter_registry)
 register_command_groups(command_group_registry)
 register_commands(command_registry)
+register_data_sources(data_source_registry)

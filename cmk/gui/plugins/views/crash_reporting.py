@@ -11,12 +11,10 @@ import livestatus
 from livestatus import OnlySites, SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
-from cmk.gui.livestatus_data_source import DataSourceLivestatus
 from cmk.gui.painter_options import paint_age
 from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
 from cmk.gui.permissions import Permission, permission_registry
@@ -29,6 +27,12 @@ from cmk.gui.views.command import (
     command_registry,
     CommandActionResult,
     PermissionSectionAction,
+)
+from cmk.gui.views.data_source import (
+    ABCDataSource,
+    data_source_registry,
+    DataSourceLivestatus,
+    RowTable,
 )
 from cmk.gui.views.sorter import cmp_simple_number, Sorter, sorter_registry
 

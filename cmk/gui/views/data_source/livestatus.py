@@ -15,13 +15,14 @@ from cmk.utils.check_utils import worst_service_state
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
-from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.painters.v0.base import Cell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Rows, VisualContext
+
+from .base import ABCDataSource, RowTable
 
 
 class DataSourceLivestatus(ABCDataSource):

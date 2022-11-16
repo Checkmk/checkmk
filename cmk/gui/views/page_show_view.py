@@ -25,7 +25,6 @@ import cmk.gui.log as log
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.exporter import exporter_registry
@@ -47,6 +46,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
+from cmk.gui.views.data_source import data_source_registry
 
 from . import availability
 from .sorter import SorterEntry

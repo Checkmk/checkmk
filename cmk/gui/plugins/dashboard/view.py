@@ -7,7 +7,6 @@ from collections.abc import Callable
 from typing import TypeVar
 
 import cmk.gui.visuals as visuals
-from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -28,6 +27,7 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
+from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.page_edit_view import (
     create_view_from_valuespec,
     render_view_config,

@@ -13,7 +13,7 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
  There are no default levels. Upper levels
- are configurable via the rule "GCP/Cloud SQL Network".
+ are configurable via the rule "GCP/Cloud SQL network".
 
 discovery:
  One service is created for each bucket.

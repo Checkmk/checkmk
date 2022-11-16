@@ -12,7 +12,7 @@ description:
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.
 
- Upper levels are configurable via the rule "GCP/GCE CPU".
+ Upper levels are configurable via the rule "GCP/GCE CPU utilization".
 
 discovery:
  One service is created.

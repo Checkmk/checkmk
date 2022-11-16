@@ -46,7 +46,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_requests,
-        title=lambda: _("GCP/GCS Requests"),
+        title=lambda: _("GCP/GCS requests"),
         item_spec=_item_spec_gcs,
     )
 )
@@ -68,7 +68,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_network,
-        title=lambda: _("GCP/GCS Network"),
+        title=lambda: _("GCP/GCS network"),
         item_spec=_item_spec_gcs,
     )
 )
@@ -93,7 +93,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_gcs_bucket_objects,
-        title=lambda: _("GCP/GCS Objects"),
+        title=lambda: _("GCP/GCS objects"),
         item_spec=_item_spec_gcs,
     )
 )
@@ -167,7 +167,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_run_cpu,
-        title=lambda: _("GCP/Cloud SQL CPU"),
+        title=lambda: _("GCP/Cloud SQL CPU utilization"),
         item_spec=_item_spec_sql,
     )
 )
@@ -177,7 +177,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_run_memory,
-        title=lambda: _("GCP/Cloud SQL memory"),
+        title=lambda: _("GCP/Cloud SQL memory utilization"),
         item_spec=_item_spec_sql,
     )
 )
@@ -188,7 +188,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_run_network,
-        title=lambda: _("GCP/Cloud SQL Network"),
+        title=lambda: _("GCP/Cloud SQL network"),
         item_spec=_item_spec_sql,
     )
 )
@@ -249,7 +249,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_gce_cpu,
-        title=lambda: _("GCP/GCE CPU"),
+        title=lambda: _("GCP/GCE CPU utilization"),
     )
 )
 
@@ -334,7 +334,7 @@ def _item_spec_http_lb() -> ValueSpec:
 def _vs_gcs_http_lb_requests() -> ValueSpec:
     return Dictionary(
         title=_("Parameters for the  requests"),
-        elements=[("requests", Levels(title=_("Parameters for the  requests"), unit="1/second"))],
+        elements=[("requests", Levels(title=_("Parameters for the requests"), unit="1/second"))],
     )
 
 
@@ -363,7 +363,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_vs_gcs_http_lb_latencies,
-        title=lambda: _("GCP/HTTP(S) load balancer Latencies"),
+        title=lambda: _("GCP/HTTP(S) load balancer latencies"),
         item_spec=_item_spec_http_lb,
     )
 )

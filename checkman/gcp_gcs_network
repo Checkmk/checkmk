@@ -13,7 +13,7 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
  There are no default levels. Upper levels on the received bytes
- are configurable via the rule "GCP/GCS Network".
+ are configurable via the rule "GCP/GCS network".
 
 discovery:
  One service is created for each bucket.

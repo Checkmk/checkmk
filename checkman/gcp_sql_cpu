@@ -12,7 +12,7 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
  There are no default levels. Upper levels on the utilization
- are configurable via the rule "GCP/Cloud SQL CPU".
+ are configurable via the rule "GCP/Cloud SQL CPU utilization".
 
 discovery:
  One service is created for each server.

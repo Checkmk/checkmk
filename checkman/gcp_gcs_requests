@@ -12,7 +12,7 @@ description:
  special agent {Google Cloud Platform (GCP)}.
 
  There are no default levels. Upper levels on the number of requests
- are configurable via the rule "GCP/GCS Request Count".
+ are configurable via the rule "GCP/GCS requests".
 
 discovery:
  One service is created for each bucket.

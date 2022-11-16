@@ -91,17 +91,47 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
     assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
-def test_integrate_attributes() -> None:
-    trees, _update_result = _inventorize_real_host(
-        now=1000,
+def test__inventorize_real_host_only_items() -> None:
+    trees, update_result = _inventorize_real_host(
+        now=0,
         items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
                 items=[
                     Attributes(
-                        path=["a", "b", "c"],
+                        path=["path-to", "node-with-attrs"],
                         inventory_attributes={
                             "foo0": "bar0",
                             "foo1": "bar1",
+                        },
+                    ),
+                    Attributes(
+                        path=["path-to", "node-with-attrs"],
+                        inventory_attributes={
+                            "foo1": "2. bar1",
+                            "foo2": "bar2",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col0": "bar0 val0",
+                            "col1": "bar0 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar1"},
+                        inventory_columns={
+                            "col0": "bar1 val0",
+                            "col1": "bar1 val1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to", "node-with-table"],
+                        key_columns={"foo": "bar0"},
+                        inventory_columns={
+                            "col1": "2. bar0 val1",
                         },
                     ),
                 ],
@@ -115,22 +145,39 @@ def test_integrate_attributes() -> None:
     assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
-            "a": {
+            "path-to": {
                 "Attributes": {},
                 "Nodes": {
-                    "b": {
-                        "Attributes": {},
-                        "Nodes": {
-                            "c": {
-                                "Attributes": {
-                                    "Pairs": {"foo0": "bar0", "foo1": "bar1"},
-                                },
-                                "Nodes": {},
-                                "Table": {},
-                            }
+                    "node-with-attrs": {
+                        "Attributes": {
+                            "Pairs": {
+                                "foo0": "bar0",
+                                "foo1": "2. bar1",
+                                "foo2": "bar2",
+                            },
                         },
+                        "Nodes": {},
                         "Table": {},
-                    }
+                    },
+                    "node-with-table": {
+                        "Attributes": {},
+                        "Nodes": {},
+                        "Table": {
+                            "KeyColumns": ["foo"],
+                            "Rows": [
+                                {
+                                    "foo": "bar0",
+                                    "col0": "bar0 val0",
+                                    "col1": "2. bar0 val1",
+                                },
+                                {
+                                    "foo": "bar1",
+                                    "col0": "bar1 val0",
+                                    "col1": "bar1 val1",
+                                },
+                            ],
+                        },
+                    },
                 },
                 "Table": {},
             },
@@ -160,109 +207,8 @@ def test_integrate_attributes() -> None:
         },
         "Table": {},
     }
-
-
-def test_integrate_table_row() -> None:
-    trees, _update_result = _inventorize_real_host(
-        now=1000,
-        items_of_inventory_plugins=[
-            ItemsOfInventoryPlugin(
-                items=[
-                    TableRow(
-                        path=["a", "b", "c"],
-                        key_columns={"foo": "baz"},
-                        inventory_columns={
-                            "col1": "baz val1",
-                            "col2": "baz val2",
-                            "col3": "baz val3",
-                        },
-                    ),
-                    TableRow(
-                        path=["a", "b", "c"],
-                        key_columns={"foo": "bar"},
-                        inventory_columns={
-                            "col1": "bar val1",
-                            "col2": "bar val2",
-                        },
-                    ),
-                    TableRow(
-                        path=["a", "b", "c"],
-                        key_columns={"foo": "bar"},
-                        inventory_columns={
-                            "col1": "new bar val1",
-                            "col3": "bar val3",
-                        },
-                    ),
-                ],
-                raw_cache_info=None,
-            ),
-        ],
-        raw_intervals_from_config=[],
-        old_tree=StructuredDataNode(),
-    )
-
-    assert trees.inventory.serialize() == {
-        "Attributes": {},
-        "Nodes": {
-            "a": {
-                "Attributes": {},
-                "Nodes": {
-                    "b": {
-                        "Attributes": {},
-                        "Nodes": {
-                            "c": {
-                                "Attributes": {},
-                                "Nodes": {},
-                                "Table": {
-                                    "KeyColumns": ["foo"],
-                                    "Rows": [
-                                        {
-                                            "col1": "baz " "val1",
-                                            "col2": "baz " "val2",
-                                            "col3": "baz " "val3",
-                                            "foo": "baz",
-                                        },
-                                        {
-                                            "col1": "new " "bar " "val1",
-                                            "col2": "bar " "val2",
-                                            "col3": "bar " "val3",
-                                            "foo": "bar",
-                                        },
-                                    ],
-                                },
-                            }
-                        },
-                        "Table": {},
-                    }
-                },
-                "Table": {},
-            },
-            "software": {
-                "Attributes": {},
-                "Nodes": {
-                    "applications": {
-                        "Attributes": {},
-                        "Nodes": {
-                            "check_mk": {
-                                "Attributes": {},
-                                "Nodes": {
-                                    "cluster": {
-                                        "Attributes": {"Pairs": {"is_cluster": False}},
-                                        "Nodes": {},
-                                        "Table": {},
-                                    }
-                                },
-                                "Table": {},
-                            }
-                        },
-                        "Table": {},
-                    }
-                },
-                "Table": {},
-            },
-        },
-        "Table": {},
-    }
+    assert not update_result.save_tree
+    assert update_result.reason == "No retention intervals found."
 
 
 @pytest.mark.parametrize(

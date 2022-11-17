@@ -198,7 +198,7 @@ def _create_nagios_config_host(
 def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
 ) -> ObjectSpec:
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     ip = attrs["address"]
 
@@ -314,7 +314,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 ) -> None:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
@@ -1109,7 +1109,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     *,
     verify_site_python: bool = True,
 ) -> str | None:
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     (
         needed_legacy_check_plugin_names,
@@ -1123,7 +1123,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             raise TypeError()
 
         for node in nodes:
-            node_config = config_cache.get_host_config(node)
+            node_config = config_cache.make_host_config(node)
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
@@ -1253,7 +1253,7 @@ if '-d' in sys.argv:
             raise TypeError()
 
         for node in nodes:
-            node_config = config_cache.get_host_config(node)
+            node_config = config_cache.make_host_config(node)
             if ConfigCache.is_ipv4_host(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     node_config, family=socket.AF_INET

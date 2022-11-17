@@ -2458,14 +2458,6 @@ class HostConfig:
             is_dyndns_host=self.is_dyndns_host,
         )
 
-    @staticmethod
-    def make_snmp_config(hostname: HostName, address: HostAddress) -> SNMPHostConfig:
-        return get_config_cache().get_host_config(hostname).snmp_config(address)
-
-    @staticmethod
-    def make_host_config(hostname: HostName) -> HostConfig:
-        return get_config_cache().get_host_config(hostname)
-
     @property
     def alias(self) -> str:
         # Alias by explicit matching
@@ -2511,30 +2503,6 @@ class HostConfig:
         if mode == "push-agent":
             return "push-agent"
         raise NotImplementedError(f"unknown connection mode: {mode!r}")
-
-    def snmp_config(self, ip_address: HostAddress | None) -> SNMPHostConfig:
-        return SNMPHostConfig(
-            is_ipv6_primary=self._config_cache.is_ipv6_primary(self.hostname),
-            hostname=self.hostname,
-            ipaddress=ip_address,
-            credentials=self._config_cache._snmp_credentials(self.hostname),
-            port=self._config_cache._snmp_port(self.hostname),
-            is_bulkwalk_host=self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts),
-            is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
-                self.hostname, snmpv2c_hosts
-            ),
-            bulk_walk_size_of=self._config_cache._bulk_walk_size(self.hostname),
-            timing=self._config_cache._snmp_timing(self.hostname),
-            oid_range_limits={
-                SectionName(name): rule
-                for name, rule in reversed(
-                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
-                )
-            },
-            snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
-            character_encoding=self._config_cache._snmp_character_encoding(self.hostname),
-            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
-        )
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
@@ -3203,7 +3171,29 @@ class ConfigCache:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
-    def get_host_config(self, hostname: HostName) -> HostConfig:
+    def make_snmp_config(
+        self, host_name: HostName, ip_address: HostAddress | None
+    ) -> SNMPHostConfig:
+        return SNMPHostConfig(
+            is_ipv6_primary=self.is_ipv6_primary(host_name),
+            hostname=host_name,
+            ipaddress=ip_address,
+            credentials=self._snmp_credentials(host_name),
+            port=self._snmp_port(host_name),
+            is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
+            is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(host_name, snmpv2c_hosts),
+            bulk_walk_size_of=self._bulk_walk_size(host_name),
+            timing=self._snmp_timing(host_name),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(self.host_extra_conf(host_name, snmp_limit_oid_range))
+            },
+            snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
+            character_encoding=self._snmp_character_encoding(host_name),
+            snmp_backend=self.get_snmp_backend(host_name),
+        )
+
+    def make_host_config(self, hostname: HostName) -> HostConfig:
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime
@@ -4149,7 +4139,7 @@ class CEEConfigCache(ConfigCache):
         # contravariance is not a problem here.
         self._host_configs: dict[HostName, CEEHostConfig] = {}  # type: ignore[assignment]
 
-    def get_host_config(self, hostname: HostName) -> CEEHostConfig:
+    def make_host_config(self, hostname: HostName) -> CEEHostConfig:
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime

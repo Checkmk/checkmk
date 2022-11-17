@@ -89,7 +89,7 @@ def execute_checkmk_checks(
     submitter: Submitter,
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
     exit_spec = config_cache.exit_code_spec(hostname)
 
     services = config.resolve_service_dependencies(
@@ -459,7 +459,7 @@ def _get_clustered_service_node_keys(
             source_type,
         )
         for nodename in used_nodes
-        if (nc := config_cache.get_host_config(nodename))
+        if (nc := config_cache.make_host_config(nodename))
     ]
 
 

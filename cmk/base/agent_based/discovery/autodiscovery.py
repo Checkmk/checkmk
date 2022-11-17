@@ -141,7 +141,7 @@ def automation_discovery(
                 host_name,
                 ipaddress,
                 ip_lookup=lambda host_name: config.lookup_ip_address(
-                    config_cache.get_host_config(host_name)
+                    config_cache.make_host_config(host_name)
                 ),
                 selected_sections=NO_SELECTION,
                 force_snmp_cache_refresh=not use_cached_snmp_data,
@@ -384,7 +384,7 @@ def discover_marked_hosts(
             activation_required |= _discover_marked_host(
                 host_name,
                 config_cache=config_cache,
-                host_config=config_cache.get_host_config(host_name),
+                host_config=config_cache.make_host_config(host_name),
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,

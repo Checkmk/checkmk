@@ -64,7 +64,7 @@ def _commandline_checking(
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(host_name)
+    host_config = config_cache.make_host_config(host_name)
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
@@ -76,7 +76,7 @@ def _commandline_checking(
             host_name,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.get_host_config(host_name)
+                config_cache.make_host_config(host_name)
             ),
             selected_sections=selected_sections,
             force_snmp_cache_refresh=False,

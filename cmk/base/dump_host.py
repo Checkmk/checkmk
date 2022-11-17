@@ -96,7 +96,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     out.output("\n")
     if config_cache.is_cluster(hostname):

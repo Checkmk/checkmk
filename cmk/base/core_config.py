@@ -241,7 +241,7 @@ def check_icmp_arguments_of(
     add_defaults: bool = True,
     family: int | None = None,
 ) -> str:
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
     levels = host_config.ping_levels
 
     if not add_defaults and not levels:
@@ -792,13 +792,13 @@ def _set_addresses(
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
     attrs = host_config.extra_host_attributes
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
-    attrs["_TAGS"] = " ".join(sorted(config_cache.get_host_config(hostname).tags))
+    attrs["_TAGS"] = " ".join(sorted(config_cache.make_host_config(hostname).tags))
 
     attrs.update(_get_tag_attributes(host_config.tag_groups, "TAG"))
     attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
@@ -872,7 +872,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
-            node_config = config_cache.get_host_config(h)
+            node_config = config_cache.make_host_config(h)
             addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
@@ -883,7 +883,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
-            node_config = config_cache.get_host_config(h)
+            node_config = config_cache.make_host_config(h)
             addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
@@ -957,7 +957,7 @@ def _verify_cluster_datasource(
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
     for nodename in nodes:
-        node_tg = config_cache.get_host_config(nodename).tag_groups
+        node_tg = config_cache.make_host_config(nodename).tag_groups
         node_agent_ds = node_tg.get("agent")
         node_snmp_ds = node_tg.get("snmp_ds")
         warn_text = "Cluster '%s' has different datasources as its node" % host_name

@@ -16,7 +16,7 @@ from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName
 from cmk.core_helpers.type_defs import SectionNameCollection
 
 import cmk.base.section as section
-from cmk.base.config import HostConfig
+from cmk.base.config import get_config_cache, HostConfig
 
 from ._inventory import check_inventory_tree
 
@@ -32,13 +32,13 @@ def commandline_inventory(
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
 
+    config_cache = get_config_cache()
     for hostname in hostnames:
         section.section_begin(hostname)
-        host_config = HostConfig.make_host_config(hostname)
         try:
             _commandline_inventory_on_host(
                 hostname,
-                host_config=host_config,
+                host_config=config_cache.make_host_config(hostname),
                 selected_sections=selected_sections,
                 run_plugin_names=run_plugin_names,
             )

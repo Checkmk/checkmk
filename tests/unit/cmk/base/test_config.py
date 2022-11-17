@@ -195,7 +195,7 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).agent_port == result
+    assert config_cache.make_host_config(hostname).agent_port == result
 
 
 @pytest.mark.parametrize(
@@ -272,7 +272,7 @@ def test_is_piggyback_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_piggyback_host == result
+    assert config_cache.make_host_config(hostname).is_piggyback_host == result
 
 
 @pytest.mark.parametrize(
@@ -297,7 +297,7 @@ def test_is_piggyback_host_auto(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_piggyback_host == result
+    assert config_cache.make_host_config(hostname).is_piggyback_host == result
 
 
 @pytest.mark.parametrize(
@@ -383,7 +383,7 @@ def test_host_config_management_address(
     ts.set_option("host_attributes", {hostname: attrs})
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.get_host_config(hostname).management_address == result
+    assert config_cache.make_host_config(hostname).management_address == result
 
 
 def _management_config_ruleset() -> list[dict[str, Any]]:
@@ -441,7 +441,7 @@ def test_host_config_management_credentials(  # type:ignore[no-untyped-def]
 
     ts.set_ruleset("management_board_config", ruleset)
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     assert host_config.management_credentials == expected_result
 
@@ -493,7 +493,7 @@ def test_is_tcp_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_tcp_host == result
+    assert config_cache.make_host_config(hostname).is_tcp_host == result
 
 
 @pytest.mark.parametrize(
@@ -519,7 +519,7 @@ def test_is_ping_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_ping_host == result
+    assert config_cache.make_host_config(hostname).is_ping_host == result
 
 
 @pytest.mark.parametrize(
@@ -539,7 +539,7 @@ def test_is_snmp_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_snmp_host == result
+    assert config_cache.make_host_config(hostname).is_snmp_host == result
 
 
 def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -585,7 +585,7 @@ def test_is_dual_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_dual_host == result
+    assert config_cache.make_host_config(hostname).is_dual_host == result
 
 
 @pytest.mark.parametrize(
@@ -605,7 +605,7 @@ def test_is_all_agents_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_all_agents_host == result
+    assert config_cache.make_host_config(hostname).is_all_agents_host == result
 
 
 @pytest.mark.parametrize(
@@ -625,7 +625,7 @@ def test_is_all_special_agents_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_all_special_agents_host == result
+    assert config_cache.make_host_config(hostname).is_all_special_agents_host == result
 
 
 @pytest.mark.parametrize(
@@ -644,7 +644,7 @@ def test_host_config_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, res
         [{"condition": {"host_name": ["testhost2"]}, "value": 1337, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).agent_port == result
+    assert config_cache.make_host_config(hostname).agent_port == result
 
 
 @pytest.mark.parametrize(
@@ -665,7 +665,7 @@ def test_host_config_tcp_connect_timeout(
         [{"condition": {"host_name": ["testhost2"]}, "value": 12.0, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).tcp_connect_timeout == result
+    assert config_cache.make_host_config(hostname).tcp_connect_timeout == result
 
 
 @pytest.mark.parametrize(
@@ -691,7 +691,7 @@ def test_host_config_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).encryption_handling is result
+    assert config_cache.make_host_config(hostname).encryption_handling is result
 
 
 @pytest.mark.parametrize(
@@ -717,7 +717,7 @@ def test_host_config_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).symmetric_agent_encryption is result
+    assert config_cache.make_host_config(hostname).symmetric_agent_encryption is result
 
 
 @pytest.mark.parametrize(
@@ -743,7 +743,7 @@ def test_host_config_agent_target_version(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).agent_target_version == result
+    assert config_cache.make_host_config(hostname).agent_target_version == result
 
 
 @pytest.mark.parametrize(
@@ -769,7 +769,7 @@ def test_host_config_datasource_program(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).datasource_program == result
+    assert config_cache.make_host_config(hostname).datasource_program == result
 
 
 @pytest.mark.parametrize(
@@ -809,7 +809,7 @@ def test_host_config_special_agents(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).special_agents == result
+    assert config_cache.make_host_config(hostname).special_agents == result
 
 
 @pytest.mark.parametrize(
@@ -841,7 +841,7 @@ def test_host_config_only_from(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).only_from == result
+    assert config_cache.make_host_config(hostname).only_from == result
 
 
 @pytest.mark.parametrize(
@@ -878,7 +878,7 @@ def test_host_config_explicit_check_command(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).explicit_check_command == result
+    assert config_cache.make_host_config(hostname).explicit_check_command == result
 
 
 @pytest.mark.parametrize(
@@ -912,7 +912,7 @@ def test_host_config_ping_levels(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).ping_levels == result
+    assert config_cache.make_host_config(hostname).ping_levels == result
 
 
 @pytest.mark.parametrize(
@@ -946,7 +946,7 @@ def test_host_config_icons_and_actions(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.get_host_config(hostname).icons_and_actions) == sorted(result)
+    assert sorted(config_cache.make_host_config(hostname).icons_and_actions) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -988,7 +988,7 @@ def test_host_config_extra_host_attributes(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).extra_host_attributes == result
+    assert config_cache.make_host_config(hostname).extra_host_attributes == result
 
 
 @pytest.mark.parametrize(
@@ -1026,7 +1026,7 @@ def test_host_config_inventory_parameters(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).inventory_parameters(RuleSetName("if")) == result
+    assert config_cache.make_host_config(hostname).inventory_parameters(RuleSetName("if")) == result
 
 
 @pytest.mark.parametrize(
@@ -1079,7 +1079,7 @@ def test_host_config_discovery_check_parameters(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).discovery_check_parameters() == result
+    assert config_cache.make_host_config(hostname).discovery_check_parameters() == result
 
 
 @pytest.mark.parametrize(
@@ -1122,7 +1122,7 @@ def test_host_config_notification_plugin_parameters(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).notification_plugin_parameters("mail") == result
+    assert config_cache.make_host_config(hostname).notification_plugin_parameters("mail") == result
 
 
 @pytest.mark.parametrize(
@@ -1180,7 +1180,7 @@ def test_host_config_active_checks(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).active_checks == result
+    assert config_cache.make_host_config(hostname).active_checks == result
 
 
 @pytest.mark.parametrize(
@@ -1214,7 +1214,7 @@ def test_host_config_custom_checks(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).custom_checks == result
+    assert config_cache.make_host_config(hostname).custom_checks == result
 
 
 @pytest.mark.parametrize(
@@ -1296,7 +1296,7 @@ def test_host_config_static_checks(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).enforced_services_table() == result
+    assert config_cache.make_host_config(hostname).enforced_services_table() == result
 
 
 @pytest.mark.parametrize(
@@ -1322,7 +1322,7 @@ def test_host_config_hostgroups(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).hostgroups == result
+    assert config_cache.make_host_config(hostname).hostgroups == result
 
 
 @pytest.mark.parametrize(
@@ -1368,7 +1368,7 @@ def test_host_config_contactgroups(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.get_host_config(hostname).contactgroups) == sorted(result)
+    assert sorted(config_cache.make_host_config(hostname).contactgroups) == sorted(result)
 
 
 @pytest.mark.parametrize(
@@ -1554,7 +1554,7 @@ def test_host_config_snmp_check_interval(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).snmp_fetch_interval(
+    assert config_cache.make_host_config(hostname).snmp_fetch_interval(
         SectionName(section_name)
     ) == (60 * result if result else None)
 
@@ -1694,11 +1694,11 @@ def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).parents == []
-    assert cluster_config.get_host_config(HostName("host1")).parents == []
+    assert cluster_config.make_host_config(HostName("node1")).parents == []
+    assert cluster_config.make_host_config(HostName("host1")).parents == []
     # TODO: Move cluster/node parent handling to HostConfig
-    # assert cluster_config.get_host_config("cluster1").parents == ["node1"]
-    assert cluster_config.get_host_config(HostName("cluster1")).parents == []
+    # assert cluster_config.make_host_config("cluster1").parents == ["node1"]
+    assert cluster_config.make_host_config(HostName("cluster1")).parents == []
 
 
 def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
@@ -1754,7 +1754,7 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(xyz_host)
     config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.get_host_config(xyz_host)
+    cfg = config_cache.make_host_config(xyz_host)
     assert cfg.tag_groups == {
         "address_family": "ip-v4-only",
         "agent": "cmk-agent",
@@ -1769,7 +1769,7 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
     }
     assert config_cache.tags_of_host(xyz_host) == cfg.tag_groups
 
-    cfg = config_cache.get_host_config(test_host)
+    cfg = config_cache.make_host_config(test_host)
     assert cfg.tag_groups == {
         "address_family": "ip-v4-only",
         "agent": "no-agent",
@@ -1809,7 +1809,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.get_host_config(xyz_host)
+    cfg = config_cache.make_host_config(xyz_host)
     assert cfg.tag_groups == {
         "address_family": "ip-v4-only",
         "agent": "cmk-agent",
@@ -1824,7 +1824,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
     }
     assert config_cache.tags_of_service(xyz_host, "CPU load") == {}
 
-    cfg = config_cache.get_host_config(test_host)
+    cfg = config_cache.make_host_config(test_host)
     assert cfg.tag_groups == {
         "address_family": "ip-v4-only",
         "agent": "no-agent",
@@ -1865,10 +1865,10 @@ def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(xyz_host)
     config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.get_host_config(xyz_host)
+    cfg = config_cache.make_host_config(xyz_host)
     assert cfg.labels == {"cmk/site": "NO_SITE"}
 
-    cfg = config_cache.get_host_config(test_host)
+    cfg = config_cache.make_host_config(test_host)
     assert cfg.labels == {
         "cmk/site": "NO_SITE",
         "explicit": "ding",
@@ -1894,11 +1894,11 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
         f.write(repr({"äzzzz": {"value": "eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(test_host).labels == {
+    assert config_cache.make_host_config(test_host).labels == {
         "cmk/site": "NO_SITE",
         "äzzzz": "eeeeez",
     }
-    assert config_cache.get_host_config(test_host).label_sources == {
+    assert config_cache.make_host_config(test_host).label_sources == {
         "cmk/site": "discovered",
         "äzzzz": "discovered",
     }
@@ -2299,10 +2299,10 @@ def test_config_cache_get_host_config(
 
     assert cache.__class__.__name__ == expected_cache_class_name
 
-    host_config = cache.get_host_config(xyz_host)
+    host_config = cache.make_host_config(xyz_host)
     assert host_config.__class__.__name__ == expected_host_class_name
     assert isinstance(host_config, HostConfig)
-    assert host_config is cache.get_host_config(xyz_host)
+    assert host_config is cache.make_host_config(xyz_host)
 
 
 def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:
@@ -2412,7 +2412,7 @@ def test_host_config_do_status_data_inventory(
     )
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.get_host_config(abc_host).do_status_data_inventory == result
+    assert config_cache.make_host_config(abc_host).do_status_data_inventory == result
 
 
 @pytest.mark.parametrize(
@@ -2515,7 +2515,7 @@ def test_host_config_add_discovery_check(
 
     monkeypatch.setattr(config, "inventory_check_interval", 42)
 
-    host_config = config_cache.get_host_config(xyz_host)
+    host_config = config_cache.make_host_config(xyz_host)
     assert host_config.discovery_check_parameters().commandline_only == result
 
 

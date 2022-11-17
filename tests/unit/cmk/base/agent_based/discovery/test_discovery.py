@@ -1014,7 +1014,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
             }
         ],
     )
-    host_config = ts.apply(monkeypatch).get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).make_host_config(hostname)
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),

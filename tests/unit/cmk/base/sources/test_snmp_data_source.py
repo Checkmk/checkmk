@@ -36,7 +36,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-
         },
     )
 
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = config.get_config_cache().make_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) is None
 
 

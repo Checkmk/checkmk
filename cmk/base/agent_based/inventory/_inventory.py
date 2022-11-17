@@ -223,7 +223,7 @@ def _fetch_real_host_data(
             host_name,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.get_host_config(host_name)
+                config_cache.make_host_config(host_name)
             ),
             selected_sections=selected_sections,
             force_snmp_cache_refresh=False,

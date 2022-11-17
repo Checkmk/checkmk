@@ -390,7 +390,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     config_cache = config.get_config_cache()
     assert ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.get_host_config(hn).ip_lookup_config()
+            config_cache.make_host_config(hn).ip_lookup_config()
             for hn in config_cache.all_active_hosts()
         ),
         configured_ipv4_addresses={},
@@ -435,8 +435,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    ts.apply(monkeypatch)
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).make_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
@@ -458,8 +457,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
             "address_family": "ip-v6-only",
         },
     )
-    ts.apply(monkeypatch)
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).make_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
@@ -481,8 +479,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(  # type:ignore[no-untyped-def]
             "address_family": "ip-v4v6",
         },
     )
-    ts.apply(monkeypatch)
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).make_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
@@ -516,6 +513,5 @@ def test_lookup_mgmt_board_ip_address_unresolveable(
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    ts.apply(monkeypatch)
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = ts.apply(monkeypatch).make_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) is None

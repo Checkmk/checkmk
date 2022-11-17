@@ -569,7 +569,7 @@ def test_check_table__get_static_check_entries(
         ),
     )
 
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
     static_check_parameters = [
         service.parameters for service in check_table._get_enforced_services(host_config)
     ]

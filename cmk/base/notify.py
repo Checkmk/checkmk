@@ -717,7 +717,7 @@ def rbn_finalize_plugin_parameters(
     if not isinstance(rule_parameters, dict):
         return rule_parameters
 
-    host_config = config.get_config_cache().get_host_config(hostname)
+    host_config = config.get_config_cache().make_host_config(hostname)
     parameters = host_config.notification_plugin_parameters(plugin_name).copy()
     parameters.update(rule_parameters)
 

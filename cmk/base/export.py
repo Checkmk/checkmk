@@ -73,4 +73,4 @@ def ruleset_match_object_for_checkgroup_parameters(
 def get_host_labels(hostname: HostName) -> Labels:
     _load_config()
     config_cache = config.get_config_cache()
-    return config_cache.get_host_config(hostname).labels
+    return config_cache.make_host_config(hostname).labels

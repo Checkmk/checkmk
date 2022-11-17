@@ -149,7 +149,8 @@ def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
-    host_config = HostConfig.make_host_config(hostname)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.make_host_config(hostname)
     return SNMPParserConfig(
         check_intervals=make_check_intervals(hostname, host_config, selected_sections=NO_SELECTION),
         keep_outdated=FileCacheGlobals.keep_outdated,
@@ -259,7 +260,7 @@ class _Builder:
         super().__init__()
         self.host_name: Final = host_name
         self.config_cache: Final = config.get_config_cache()
-        self.host_config: Final = self.config_cache.get_host_config(self.host_name)
+        self.host_config: Final = self.config_cache.make_host_config(self.host_name)
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
@@ -385,7 +386,7 @@ class _Builder:
                 missing_sys_description=self.missing_sys_description,
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
                 section_store_path=make_persisted_section_dir(source),
-                snmp_config=self.host_config.snmp_config(source.ipaddress),
+                snmp_config=self.config_cache.make_snmp_config(source.hostname, source.ipaddress),
             ),
             SNMPFileCache(
                 source.hostname,
@@ -435,7 +436,9 @@ class _Builder:
                     missing_sys_description=self.missing_sys_description,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
                     section_store_path=make_persisted_section_dir(source),
-                    snmp_config=self.host_config.snmp_config(source.ipaddress),
+                    snmp_config=self.config_cache.make_snmp_config(
+                        source.hostname, source.ipaddress
+                    ),
                 ),
                 SNMPFileCache(
                     source.hostname,

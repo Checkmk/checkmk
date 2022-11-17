@@ -35,7 +35,7 @@ def test_mgmt_explicit_settings(  # type:ignore[no-untyped-def]
     ts.set_option(cred_attribute, {"mgmt-host": credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
     assert host_config.management_address == "127.0.0.1"
@@ -50,7 +50,7 @@ def test_mgmt_explicit_address(monkeypatch) -> None:  # type:ignore[no-untyped-d
     ts.set_option("host_attributes", {"mgmt-host": {"management_address": "127.0.0.2"}})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == "snmp"
     assert host_config.management_address == "127.0.0.2"
@@ -66,7 +66,7 @@ def test_mgmt_disabled(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ts.set_option("management_snmp_credentials", {"mgmt-host": "HOST"})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board is False
     assert host_config.management_protocol is None
     assert host_config.management_address == "127.0.0.1"
@@ -111,7 +111,7 @@ def test_mgmt_config_ruleset(
     ts.set_option("management_protocol", {"mgmt-host": protocol})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
     assert host_config.management_address == "127.0.0.1"
@@ -161,7 +161,7 @@ def test_mgmt_config_ruleset_order(
     ts.set_option("management_protocol", {"mgmt-host": "snmp"})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == "snmp"
     assert host_config.management_address == "127.0.0.1"
@@ -207,7 +207,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
     ts.set_option(cred_attribute, {"mgmt-host": host_credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config("mgmt-host")
+    host_config = config_cache.make_host_config("mgmt-host")
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol
     assert host_config.management_address == "127.0.0.1"
@@ -426,7 +426,7 @@ def test_mgmt_board_ip_addresses(
     ts.set_option(cred_attribute, {hostname: credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     assert host_config.has_management_board
     assert host_config.management_protocol == protocol

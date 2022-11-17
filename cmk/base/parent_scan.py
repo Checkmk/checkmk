@@ -65,7 +65,7 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
             host = hosts.pop()
 
-            host_config = config_cache.get_host_config(host)
+            host_config = config_cache.make_host_config(host)
 
             # skip hosts that already have a parent
             if host_config.parents:
@@ -131,7 +131,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         settings = {}
 
     if config.monitoring_host:
-        host_config = config_cache.get_host_config(config.monitoring_host)
+        host_config = config_cache.make_host_config(config.monitoring_host)
         nagios_ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
     else:
         nagios_ip = None
@@ -143,7 +143,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
-        host_config = config_cache.get_host_config(host)
+        host_config = config_cache.make_host_config(host)
         try:
             ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
             if ip is None:
@@ -341,7 +341,7 @@ def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostNa
         cache = _config_cache.get("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
-            host_config = config_cache.get_host_config(host)
+            host_config = config_cache.make_host_config(host)
             try:
                 cache[config.lookup_ip_address(host_config, family=socket.AF_INET)] = host
             except Exception:

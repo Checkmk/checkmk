@@ -32,7 +32,7 @@ def active_check_inventory(
     keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
     return error_handling.check_result(
         partial(
             execute_active_check_inventory,

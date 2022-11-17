@@ -126,7 +126,7 @@ def test_sanitize_snmp_encoding(
     )
     config_cache = ts.apply(monkeypatch)
 
-    snmp_config = config_cache.get_host_config("localhost").snmp_config("")
+    snmp_config = config_cache.make_snmp_config("localhost", "")
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
@@ -139,8 +139,8 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     ts.add_host("abc")
     ts.add_host("localhost")
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config("abc").snmp_config("").is_bulkwalk_host is False
-    assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True
+    assert config_cache.make_snmp_config("abc", "").is_bulkwalk_host is False
+    assert config_cache.make_snmp_config("localhost", "").is_bulkwalk_host is True
 
 
 def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
@@ -161,23 +161,10 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     # not bulkwalk and not v2c
-    assert (
-        config_cache.get_host_config("not_included").snmp_config("").snmp_backend
-        == SNMPBackendEnum.CLASSIC
-    )
-
-    assert (
-        config_cache.get_host_config("bulkwalk_h").snmp_config("").snmp_backend
-        == SNMPBackendEnum.INLINE
-    )
-
-    assert (
-        config_cache.get_host_config("v2c_h").snmp_config("").snmp_backend == SNMPBackendEnum.INLINE
-    )
+    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.CLASSIC
+    assert config_cache.get_snmp_backend("bulkwalk_h") is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend("v2c_h") is SNMPBackendEnum.INLINE
 
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
-    assert (
-        config_cache.get_host_config("not_included").snmp_config("").snmp_backend
-        == SNMPBackendEnum.INLINE
-    )
+    assert config_cache.get_snmp_backend("not_included") is SNMPBackendEnum.INLINE

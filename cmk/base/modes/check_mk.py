@@ -67,7 +67,6 @@ import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.auto_queue import AutoQueue
-from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import parse as parse_raw_data
@@ -250,7 +249,7 @@ def _list_all_hosts(hostgroups: list[HostgroupName], options: dict) -> list[Host
 
     hostlist = []
     for hn in hostnames:
-        host_config = config_cache.get_host_config(hn)
+        host_config = config_cache.make_host_config(hn)
         for hg in host_config.hostgroups:
             if hg in hostgroups:
                 hostlist.append(hn)
@@ -424,7 +423,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         if config_cache.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
         ipaddress = config.lookup_ip_address(host_config)
 
         output = []
@@ -795,7 +794,7 @@ def mode_update_dns_cache() -> None:
     config_cache = config.get_config_cache()
     ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.get_host_config(hn).ip_lookup_config()
+            config_cache.make_host_config(hn).ip_lookup_config()
             for hn in config_cache.all_active_hosts()
         ),
         configured_ipv6_addresses=config.ipaddresses,
@@ -944,11 +943,11 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     config_cache = config.get_config_cache()
 
     for hostname in (HostName(hn) for hn in hostnames):
-        ipaddress = config.lookup_ip_address(config_cache.get_host_config(hostname))
+        ipaddress = config.lookup_ip_address(config_cache.make_host_config(hostname))
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
         snmp_modes.do_snmpwalk(options, backend=snmp_factory.backend(snmp_config, log.logger))
 
 
@@ -1013,17 +1012,17 @@ def mode_snmpget(args: list[str]) -> None:
         hostnames.extend(
             host
             for host in config_cache.all_active_realhosts()
-            if config_cache.get_host_config(host).is_snmp_host
+            if config_cache.make_host_config(host).is_snmp_host
         )
 
     assert hostnames
     for hostname in (HostName(hn) for hn in hostnames):
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
         ipaddress = config.lookup_ip_address(host_config)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
         snmp_modes.do_snmpget(oid, backend=snmp_factory.backend(snmp_config, log.logger))
 
 

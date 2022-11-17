@@ -160,7 +160,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryResult] = {}
 
         for hostname in hostnames:
-            host_config = config_cache.get_host_config(hostname)
+            host_config = config_cache.make_host_config(hostname)
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
@@ -269,7 +269,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         new_items: SetAutochecksTable | SetAutochecksTablePre20 = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
 
         # Not loading all checks improves performance of the calls and as a result the
         # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
@@ -348,7 +348,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
         self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.UpdateHostLabelsResult()
 
@@ -728,7 +728,7 @@ class AutomationAnalyseServices(Automation):
                 service_info := self._get_service_info(
                     config_cache=config_cache,
                     host_name=hostname,
-                    host_config=config_cache.get_host_config(hostname),
+                    host_config=config_cache.make_host_config(hostname),
                     host_attrs=core_config.get_host_attributes(hostname, config_cache),
                     servicedesc=servicedesc,
                 )
@@ -869,8 +869,8 @@ class AutomationAnalyseHost(Automation):
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         return automation_results.AnalyseHostResult(
-            config_cache.get_host_config(host_name).labels,
-            config_cache.get_host_config(host_name).label_sources,
+            config_cache.make_host_config(host_name).labels,
+            config_cache.make_host_config(host_name).label_sources,
         )
 
 
@@ -1259,7 +1259,7 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1582,7 +1582,7 @@ class AutomationActiveCheck(Automation):
         plugin, item = args[1:]
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
         with redirect_stdout(open(os.devnull, "w")):
             host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
@@ -1690,7 +1690,7 @@ class AutomationUpdateDNSCache(Automation):
         return automation_results.UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
                 ip_lookup_configs=(
-                    config_cache.get_host_config(hn).ip_lookup_config()
+                    config_cache.make_host_config(hn).ip_lookup_config()
                     for hn in config_cache.all_active_hosts()
                 ),
                 configured_ipv4_addresses=config.ipaddresses,
@@ -1713,7 +1713,7 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
-        host_config = HostConfig.make_host_config(hostname)
+        host_config = config_cache.make_host_config(hostname)
 
         success = True
         output = ""
@@ -1764,7 +1764,7 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                snmp_config = HostConfig.make_snmp_config(hostname, ipaddress)
+                snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
                 backend = factory.backend(snmp_config, log.logger, use_cache=False)
 
                 lines = []

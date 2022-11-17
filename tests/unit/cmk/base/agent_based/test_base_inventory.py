@@ -35,7 +35,6 @@ from cmk.base.agent_based.inventory._tree_aggregator import (
     RetentionInfo,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.config import HostConfig
 
 
 @pytest.mark.parametrize(
@@ -1247,7 +1246,7 @@ def test_check_inventory_tree(
     hostname = "my-host"
     ts = Scenario()
     ts.add_host(hostname)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
         _inventory,
@@ -1275,7 +1274,7 @@ def test_check_inventory_tree(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
-        host_config=HostConfig.make_host_config(hostname),
+        host_config=config_cache.make_host_config(hostname),
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=config.HWSWInventoryParameters.from_raw(
@@ -1296,7 +1295,7 @@ def test_check_inventory_tree_no_data_or_files(
     hostname = "my-host"
     ts = Scenario()
     ts.add_host(hostname)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
         _inventory,
@@ -1324,7 +1323,7 @@ def test_check_inventory_tree_no_data_or_files(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
-        host_config=HostConfig.make_host_config(hostname),
+        host_config=config_cache.make_host_config(hostname),
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=config.HWSWInventoryParameters.from_raw({}),

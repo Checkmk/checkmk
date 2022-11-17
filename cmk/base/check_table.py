@@ -140,7 +140,7 @@ def _get_services_from_cluster_nodes(
     config_cache: ConfigCache, hostname: HostName
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(hostname):
-        cluster_config = config_cache.get_host_config(cluster)
+        cluster_config = config_cache.make_host_config(cluster)
         yield from _get_clustered_services(config_cache, cluster, cluster_config, False)
 
 
@@ -154,7 +154,7 @@ def _get_clustered_services(
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
-        node_config = config_cache.get_host_config(node)
+        node_config = config_cache.make_host_config(node)
         node_checks = list(_get_enforced_services(node_config))
         if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
@@ -175,7 +175,7 @@ def get_check_table(
     skip_ignored: bool = True,
 ) -> HostCheckTable:
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(hostname)
+    host_config = config_cache.make_host_config(hostname)
 
     cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
 

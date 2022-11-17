@@ -50,7 +50,7 @@ def execute_check_discovery(
     # 2. Then these settings are used to read cache file or not
 
     config_cache = config.get_config_cache()
-    host_config = config_cache.get_host_config(host_name)
+    host_config = config_cache.make_host_config(host_name)
     params = host_config.discovery_check_parameters()
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))

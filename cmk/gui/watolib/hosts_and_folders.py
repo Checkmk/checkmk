@@ -2538,14 +2538,17 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         Folder.invalidate_caches()
 
-        # Reload folder at new location and rewrite host files
-        # Again, some special handling because of the missing slash in the main folder
-        if not target_folder.is_root():
-            moved_subfolder = Folder.folder(f"{target_folder.path()}/{subfolder.name()}")
-        else:
-            moved_subfolder = Folder.folder(subfolder.name())
-
+        # Since redis only updates on the next request, we can no longer use it here
+        # We COULD enforce a redis update here, but this would take too much time
+        # After the move action, the request is finished anyway.
         with disable_redis():
+            # Reload folder at new location and rewrite host files
+            # Again, some special handling because of the missing slash in the main folder
+            if not target_folder.is_root():
+                moved_subfolder = Folder.folder(f"{target_folder.path()}/{subfolder.name()}")
+            else:
+                moved_subfolder = Folder.folder(subfolder.name())
+
             # Do not update redis while rewriting a plethora of host files
             # Redis automatically updates on the next request
             moved_subfolder.rewrite_hosts_files()  # fixes changed inheritance

@@ -1,0 +1,14 @@
+Title: Setup/Move folder: Fixed unknown folder exception after moving folder
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1668674672
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+Moving a folder always lead to an exception stating the location of the target folder was not found.
+The actual move operation always worked.
+However, this exception prevented an entry in the audit log and the <tt>Activate changes</tt> page showed no changes to be activated on any site.
+

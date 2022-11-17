@@ -19,29 +19,9 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
-from cmk.gui.views.command import (
-    Command,
-    command_registry,
-    CommandExecutor,
-    CommandGroup,
-    CommandSpec,
-)
 
-# .
-#   .--Commands------------------------------------------------------------.
-#   |         ____                                          _              |
-#   |        / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___          |
-#   |       | |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|         |
-#   |       | |__| (_) | | | | | | | | | | | (_| | | | | (_| \__ \         |
-#   |        \____\___/|_| |_| |_|_| |_| |_|\__,_|_| |_|\__,_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Functions dealing with external commands send to the monitoring      |
-#   | core. The commands themselves are defined as a plugin. Shipped       |
-#   | command definitions are in plugins/views/commands.py.                |
-#   | We apologize for the fact that we one time speak of "commands" and   |
-#   | the other time of "action". Both is the same here...                 |
-#   '----------------------------------------------------------------------'
+from .base import Command, CommandExecutor, CommandGroup, CommandSpec
+from .registry import command_registry
 
 
 def core_command(

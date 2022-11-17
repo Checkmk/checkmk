@@ -28,6 +28,8 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
+from cmk.gui.views.command import group as group_module
+from cmk.gui.views.command import registry as registry_module
 from cmk.gui.views.inventory import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
@@ -146,10 +148,12 @@ def test_registered_command_groups() -> None:
 
 
 def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(command, "command_group_registry", command.CommandGroupRegistry())
+    monkeypatch.setattr(
+        group_module, "command_group_registry", registry := command.CommandGroupRegistry()
+    )
     command.register_command_group("abc", "A B C", 123)
 
-    group = command.command_group_registry["abc"]()
+    group = registry["abc"]()
     assert isinstance(group, command.CommandGroup)
     assert group.ident == "abc"
     assert group.title == "A B C"
@@ -281,7 +285,7 @@ def test_registered_commands() -> None:
 
 
 def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(command, "command_registry", command.CommandRegistry())
+    monkeypatch.setattr(registry_module, "command_registry", registry := command.CommandRegistry())
 
     def render() -> None:
         pass
@@ -299,7 +303,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     )
 
-    cmd = command.command_registry["blabla"]()
+    cmd = registry["blabla"]()
     assert isinstance(cmd, command.Command)
     assert cmd.ident == "blabla"
     assert cmd.title == "Bla Bla"

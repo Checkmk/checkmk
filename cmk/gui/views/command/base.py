@@ -4,68 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import re
 import time
 from collections.abc import Callable, Sequence
-from typing import Any, Literal, Union
+from typing import Literal, Union
 
 from livestatus import SiteId
 
-from cmk.utils.plugin_registry import Registry
-
 from cmk.gui import sites
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
+
+from .group import command_group_registry, CommandGroup
 
 CommandSpecWithoutSite = str
 CommandSpecWithSite = tuple[str | None, CommandSpecWithoutSite]
 CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
 CommandActionResult = Union[tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None]
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
-
-
-class CommandGroup(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        """The identity of a command group. One word, may contain alpha numeric characters"""
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def title(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
-    def sort_index(self) -> int:
-        raise NotImplementedError()
-
-
-class CommandGroupRegistry(Registry[type[CommandGroup]]):
-    def plugin_name(self, instance: type[CommandGroup]) -> str:
-        return instance().ident
-
-
-command_group_registry = CommandGroupRegistry()
-
-
-# TODO: Kept for pre 1.6 compatibility
-def register_command_group(ident: str, title: str, sort_index: int) -> None:
-    cls = type(
-        "LegacyCommandGroup%s" % ident.title(),
-        (CommandGroup,),
-        {
-            "_ident": ident,
-            "_title": title,
-            "_sort_index": sort_index,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-            "sort_index": property(lambda s: s._sort_index),
-        },
-    )
-    command_group_registry.register(cls)
 
 
 class Command(abc.ABC):
@@ -164,38 +120,3 @@ class Command(abc.ABC):
         # object type for the command
         assert isinstance(command, str)
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
-
-
-class CommandRegistry(Registry[type[Command]]):
-    def plugin_name(self, instance: type[Command]) -> str:
-        return instance().ident
-
-
-command_registry = CommandRegistry()
-
-
-# TODO: Kept for pre 1.6 compatibility
-def register_legacy_command(spec: dict[str, Any]) -> None:
-    ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
-    cls = type(
-        "LegacyCommand%s" % str(ident).title(),
-        (Command,),
-        {
-            "_ident": ident,
-            "_spec": spec,
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._spec["title"]),
-            "permission": property(lambda s: permission_registry[s._spec["permission"]]),
-            "tables": property(lambda s: s._spec["tables"]),
-            "render": lambda s: s._spec["render"](),
-            "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"](
-                cmdtag, spec, row
-            ),
-            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"](
-                cmdtag, spec, row
-            ),
-            "group": lambda s: command_group_registry[s._spec.get("group", "various")],
-            "only_view": lambda s: s._spec.get("only_view"),
-        },
-    )
-    command_registry.register(cls)

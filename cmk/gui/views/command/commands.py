@@ -30,18 +30,37 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
-from cmk.gui.views.command import (
-    Command,
-    command_group_registry,
-    command_registry,
-    CommandActionResult,
-    CommandGroup,
-    CommandSpec,
-)
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
+from .base import Command, CommandActionResult, CommandGroup, CommandSpec
+from .group import CommandGroupRegistry
+from .registry import CommandRegistry
 
-@command_group_registry.register
+
+def register_command_groups(registry: CommandGroupRegistry) -> None:
+    registry.register(CommandGroupVarious)
+    registry.register(CommandGroupFakeCheck)
+    registry.register(CommandGroupAcknowledge)
+    registry.register(CommandGroupDowntimes)
+
+
+def register_commands(registry: CommandRegistry) -> None:
+
+    registry.register(CommandReschedule)
+    registry.register(CommandNotifications)
+    registry.register(CommandToggleActiveChecks)
+    registry.register(CommandTogglePassiveChecks)
+    registry.register(CommandClearModifiedAttributes)
+    registry.register(CommandFakeCheckResult)
+    registry.register(CommandCustomNotification)
+    registry.register(CommandAcknowledge)
+    registry.register(CommandAddComment)
+    registry.register(CommandScheduleDowntimes)
+    registry.register(CommandRemoveDowntime)
+    registry.register(CommandRemoveComments)
+    registry.register(CommandFavorites)
+
+
 class CommandGroupVarious(CommandGroup):
     @property
     def ident(self) -> str:
@@ -91,7 +110,6 @@ PermissionActionReschedule = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandReschedule(Command):
     @property
     def ident(self) -> str:
@@ -171,7 +189,6 @@ PermissionActionNotifications = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandNotifications(Command):
     @property
     def ident(self) -> str:
@@ -236,7 +253,6 @@ PermissionActionEnableChecks = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandToggleActiveChecks(Command):
     @property
     def ident(self) -> str:
@@ -285,7 +301,6 @@ class CommandToggleActiveChecks(Command):
 #   '----------------------------------------------------------------------'
 
 
-@command_registry.register
 class CommandTogglePassiveChecks(Command):
     @property
     def ident(self) -> str:
@@ -353,7 +368,6 @@ PermissionActionClearModifiedAttributes = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandClearModifiedAttributes(Command):
     @property
     def ident(self) -> str:
@@ -405,7 +419,6 @@ PermissionActionFakeChecks = permission_registry.register(
 )
 
 
-@command_group_registry.register
 class CommandGroupFakeCheck(CommandGroup):
     @property
     def ident(self) -> str:
@@ -420,7 +433,6 @@ class CommandGroupFakeCheck(CommandGroup):
         return 15
 
 
-@command_registry.register
 class CommandFakeCheckResult(Command):
     @property
     def ident(self) -> str:
@@ -547,7 +559,6 @@ PermissionActionCustomNotification = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandCustomNotification(Command):
     @property
     def ident(self) -> str:
@@ -634,7 +645,6 @@ PermissionActionAcknowledge = permission_registry.register(
 )
 
 
-@command_group_registry.register
 class CommandGroupAcknowledge(CommandGroup):
     @property
     def ident(self) -> str:
@@ -649,7 +659,6 @@ class CommandGroupAcknowledge(CommandGroup):
         return 5
 
 
-@command_registry.register
 class CommandAcknowledge(Command):
     @property
     def ident(self) -> str:
@@ -823,7 +832,6 @@ PermissionActionAddComment = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandAddComment(Command):
     @property
     def ident(self) -> str:
@@ -910,7 +918,6 @@ permission_registry.register(
 )
 
 
-@command_group_registry.register
 class CommandGroupDowntimes(CommandGroup):
     @property
     def ident(self) -> str:
@@ -925,7 +932,6 @@ class CommandGroupDowntimes(CommandGroup):
         return 10
 
 
-@command_registry.register
 class CommandScheduleDowntimes(Command):
     @property
     def ident(self) -> str:
@@ -1402,7 +1408,6 @@ def time_interval_to_human_readable(next_time_interval, prefix):
     return title % prefix
 
 
-@command_registry.register
 class CommandRemoveDowntime(Command):
     @property
     def ident(self) -> str:
@@ -1439,7 +1444,6 @@ class CommandRemoveDowntime(Command):
         return None
 
 
-@command_registry.register
 class CommandRemoveComments(Command):
     @property
     def ident(self) -> str:
@@ -1516,7 +1520,6 @@ PermissionActionStar = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandFavorites(Command):
     @property
     def ident(self) -> str:

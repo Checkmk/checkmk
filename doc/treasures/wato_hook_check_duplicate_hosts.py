@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -22,10 +21,11 @@ def pre_activate_changes_check_duplicate_host(hosts):
 
     for address, host_names in addresses.items():
         if len(host_names) > 1:
-            message = "The IP address %s is used for multiple hosts: %s" % (address,
-                                                                            ", ".join(host_names))
+            message = "The IP address {} is used for multiple hosts: {}".format(
+                address, ", ".join(host_names)
+            )
             html.show_warning(message)
             logger.warning(message)
 
 
-register_hook('pre-activate-changes', pre_activate_changes_check_duplicate_host)
+register_hook("pre-activate-changes", pre_activate_changes_check_duplicate_host)

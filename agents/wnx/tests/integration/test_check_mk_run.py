@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, Final, List, Sequence, Union
+from typing import Final
 
 import pytest
 
@@ -19,7 +19,7 @@ def _make_config(config: YamlDict, only_from: Sequence[str]) -> YamlDict:
     return config
 
 
-def _get_ctl_status_line(data: Sequence[str]) -> Dict[str, Union[str, List, bool]]:
+def _get_ctl_status_line(data: Sequence[str]) -> dict[str, str | list | bool]:
     s = data[CTL_STATUS_LINE].replace(":false", ":False").replace(":true", ":True")
     return ast.literal_eval(s)
 
@@ -59,7 +59,7 @@ def test_check_mk_base(
     main_exe: Path,
     default_yaml_config: YamlDict,
     data_dir: Path,
-    only_from: List[str],
+    only_from: list[str],
     description: str,
 ) -> None:
     output = obtain_agent_data(

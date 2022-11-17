@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 
 import os
 import platform
@@ -26,7 +24,7 @@ global:
 """
 
 if not it_utils.check_os():
-    print("Unsupported platform {}".format(platform.system()))
+    print(f"Unsupported platform {platform.system()}")
     sys.exit(13)
 
 
@@ -157,7 +155,7 @@ def local_test(
 
         assert (
             expected == actual or re.match(expected, actual) is not None
-        ), "\nExpected '%r'\nActual   '%r'" % (
+        ), "\nExpected '{!r}'\nActual   '{!r}'".format(
             expected,
             actual,
         )

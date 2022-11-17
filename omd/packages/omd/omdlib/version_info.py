@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -25,7 +24,6 @@
 
 
 from pathlib import Path
-from typing import Dict
 
 import omdlib
 
@@ -53,8 +51,8 @@ class VersionInfo:
         for k, v in self._read_info().items():
             setattr(self, k, v)
 
-    def _read_info(self) -> Dict[str, str]:
-        info: Dict[str, str] = {}
+    def _read_info(self) -> dict[str, str]:
+        info: dict[str, str] = {}
         info_dir = Path("/omd", "versions", omdlib.__version__, "share", "omd")
         for f in info_dir.iterdir():
             if f.suffix == ".info":
@@ -77,6 +75,6 @@ class VersionInfo:
                                 info[var.strip()] = value
                         except Exception:
                             raise Exception(
-                                'Unable to parse line "%s" in file "%s"' % (line, info_dir / f)
+                                f'Unable to parse line "{line}" in file "{info_dir / f}"'
                             )
         return info

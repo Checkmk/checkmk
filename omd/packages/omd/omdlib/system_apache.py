@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -153,7 +152,7 @@ def delete_apache_hook(sitename: str) -> None:
     except FileNotFoundError:
         return
     except Exception as e:
-        sys.stderr.write("Cannot remove apache hook %s: %s\n" % (hook_path, e))
+        sys.stderr.write(f"Cannot remove apache hook {hook_path}: {e}\n")
 
 
 def has_old_apache_hook_in_site(site: SiteContext) -> bool:

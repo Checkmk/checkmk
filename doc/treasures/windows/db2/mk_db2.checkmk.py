@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -9,13 +8,13 @@ import os
 import platform
 import sys
 import time
+from collections.abc import Iterable
 from subprocess import DEVNULL, PIPE, Popen, run
-from typing import Dict, Iterable, List, Optional
 
 LISTER = "db2ilist.exe"
 
 
-def make_env(instance: Optional[str]) -> Dict[str, str]:
+def make_env(instance: str | None) -> dict[str, str]:
     env = os.environ.copy()
     env["DB2CLP"] = "DB20FADE"
     if instance is not None:
@@ -47,11 +46,11 @@ class Database:
         print(database)
 
     @staticmethod
-    def cleanup_input(data: str) -> List[str]:
+    def cleanup_input(data: str) -> list[str]:
         return [_line.replace("\r", "") for _line in data.split(sep="\n") if len(_line)]  #
 
     @staticmethod
-    def run_db2(args: List[str], instance: str) -> Popen:
+    def run_db2(args: list[str], instance: str) -> Popen:
         return Popen(
             args=["db2.exe"] + args,
             shell=False,
@@ -63,7 +62,7 @@ class Database:
             env=make_env(instance=instance),
         )
 
-    def list_instances(self) -> List[str]:
+    def list_instances(self) -> list[str]:
         try:
             completed_process = run(
                 args=LISTER,
@@ -85,7 +84,7 @@ class Database:
                 )
             return []
 
-    def check_database(self, instance: str, name: str) -> List[str]:
+    def check_database(self, instance: str, name: str) -> list[str]:
         try:
             process = Database.run_db2(args=["connect", "to", name], instance=instance)
             stdout = process.communicate()[0]
@@ -98,7 +97,7 @@ class Database:
             )
             return []
 
-    def get_list_databases(self, instance: str) -> List[str]:
+    def get_list_databases(self, instance: str) -> list[str]:
         try:
             process = Database.run_db2(args=["list", "db", "directory"], instance=instance)
             stdout = process.communicate()[0]
@@ -111,7 +110,7 @@ class Database:
             )
             return []
 
-    def snapshot_databases(self, instance: str) -> List[str]:
+    def snapshot_databases(self, instance: str) -> list[str]:
         try:
             process = Database.run_db2(args=["get", "snapshot", "for", "dbm"], instance=instance)
             stdout = process.communicate()[0]
@@ -134,7 +133,7 @@ class Database:
         return ""
 
     @staticmethod
-    def is_database_presented(db_list: List[str]) -> bool:
+    def is_database_presented(db_list: list[str]) -> bool:
         return len(db_list) > 3
 
     def process_databases(self, database: str, port: int, now: int, instance: str) -> None:
@@ -144,22 +143,22 @@ class Database:
         # output = Database.cleanup_input(stdout)
 
         print("<<<db2_connections>>>")
-        print("[[[{}:{}]]]".format(instance, database))
-        print("{}".format(port))
+        print(f"[[[{instance}:{database}]]]")
+        print(f"{port}")
         print("connections ")  # | tr -d '\n'
         # db2 -x "SELECT count(*)-1 FROM TABLE(mon_get_connection(CAST(NULL AS BIGINT), -2)) AS t"
         # after = time.time()
         # diff = round((after - before), ndigits=3)*1000
 
-        print("latency {}".format(123435))
+        print(f"latency {123435}")
 
         print("<<<db2_tablespaces>>>")
-        print("[[[{}:{}]]]".format(instance, database))
+        print(f"[[[{instance}:{database}]]]")
         _ = "SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)"  # noqa: E501
         # db2 "${SQL}" | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7}' | sed -e '/^[ ]*$/d' -e '/^-/d' -e '/selected/d'
 
         print("<<<db2_counters>>>")
-        print("TIMESTAMP {}".format(now))
+        print(f"TIMESTAMP {now}")
         # echo "$INSTANCE:$DB deadlocks " | tr -d '\n'
         # db2 -x "SELECT deadlocks from sysibmadm.snapdb" | tr -d ' '
         # echo "$INSTANCE:$DB lockwaits " | tr -d '\n'
@@ -167,22 +166,22 @@ class Database:
         # echo "$INSTANCE:$DB sortoverflows " | tr -d '\n'
         # db2 -x "SELECT sort_overflows from sysibmadm.snapdb" | tr -d ' '
         print("<<<db2_logsizes>>>")
-        print("TIMESTAMP {}".format(now))
-        print("[[[{}:{}]]]".format(instance, database))
+        print(f"TIMESTAMP {now}")
+        print(f"[[[{instance}:{database}]]]")
         # echo "usedspace " | tr -d '\n'
         # db2 -x "SELECT total_log_used from sysibmadm.snapdb" | tr -d ' '
         # db2 -x "SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')"| awk '{print $1" "$2}'
 
         print("<<<db2_bp_hitratios>>>")
-        print("[[[{}:{}]]]".format(instance, database))
+        print(f"[[[{instance}:{database}]]]")
         # db2 "SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO" | grep -v "selected." | sed -e '/^$/d' -e '/^-/d'
 
         print("<<<db2_sort_overflow>>>")
-        print("[[[{}:{}]]]".format(instance, database))
+        print(f"[[[{instance}:{database}]]]")
         # db2 -x "get snapshot for database on $DB" | grep -e "^Total sorts" -e "^Sort overflows" | tr -d '='
 
         print("<<<db2_backup>>>")
-        print("[[[{}:{}]]]".format(instance, database))
+        print(f"[[[{instance}:{database}]]]")
         # if compare_version_greater_equal "$VERSION_NUMBER" 10.5; then
         #  # MON_GET_DATBASE(-2) gets information of all active members
         #  db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
@@ -211,7 +210,7 @@ class Database:
         # Directory entry type = $2
         # .......
         db_name = ""
-        db_names: List[str] = []
+        db_names: list[str] = []
         for entry in db_list:
             line = entry.split("=")
             if len(line) != 2:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -24,13 +23,13 @@
 # Boston, MA 02110-1301 USA.
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Optional
 
 from cmk.utils.type_defs import result
 
-Config = Dict[str, str]
-Replacements = Dict[str, str]
-CommandOptions = Dict[str, Optional[str]]
+Config = dict[str, str]
+Replacements = dict[str, str]
+CommandOptions = dict[str, Optional[str]]
 
 
 class ConfigChoiceHasError(ABC):

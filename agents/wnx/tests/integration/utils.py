@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -10,13 +9,14 @@ import subprocess
 import sys
 import telnetlib  # nosec
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Final, Iterator, List, NamedTuple
+from typing import Any, Final, NamedTuple
 
 import yaml
 
-YamlDict = Dict[str, Dict[str, Any]]
+YamlDict = dict[str, dict[str, Any]]
 INTEGRATION_PORT: Final = 25998
 AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _HOST: Final = "localhost"
@@ -59,7 +59,7 @@ def create_legacy_pull_file(directory: Path) -> None:
         f.write("Created by integration tests")
 
 
-def _get_data_using_telnet(host: str, port: int) -> List[str]:
+def _get_data_using_telnet(host: str, port: int) -> list[str]:
     # overloaded CI Node may delay start/init of the agent process
     # we must retry connection few times to avoid complaints
     for _ in range(5):
@@ -103,7 +103,7 @@ def obtain_agent_data(
     *,
     main_exe: Path,
     data_dir: Path,
-) -> List[str]:
+) -> list[str]:
     with (
         _write_config(work_config, data_dir),
         subprocess.Popen(

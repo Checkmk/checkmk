@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -57,20 +56,29 @@ else:
     cert_option = ""
 
 if automation_secret != "":
-    url = '%s://localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' \
-          '&_username=%s&_secret=%s' % (protocol, url_prefix, user, automation_secret)
+    url = (
+        "%s://localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python"
+        "&_username=%s&_secret=%s" % (protocol, url_prefix, user, automation_secret)
+    )
 elif password != "":
-    url = '%s://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
-          '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
-          (protocol, url_prefix, user, password)
+    url = (
+        "%s://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s"
+        "&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python"
+        % (protocol, url_prefix, user, password)
+    )
 else:
     sys.stderr.write(
-        "You need to specify a password or an automation secret in the script source\n")
+        "You need to specify a password or an automation secret in the script source\n"
+    )
     sys.exit(1)
 
 try:
-    command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost %s --silent '%s'" % \
-                    (user, password, cert_option, url)
+    command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost %s --silent '%s'" % (
+        user,
+        password,
+        cert_option,
+        url,
+    )
     output = os.popen(command).read()  # nosec
     data = eval(output)
 except Exception:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -82,9 +81,7 @@ def expected_output_engine():
 def manage_plugin(request):
     Globals.newline = request.param
     plugin_dir = Globals.mrpedir if Globals.newline < 0 else Globals.includedir
-    source_dir = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\regression"
-    )
+    source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\regression")
     target_dir = os.path.join(user_dir, plugin_dir)
     if not os.path.exists(target_dir):
         os.mkdir(target_dir)
@@ -97,7 +94,7 @@ def manage_plugin(request):
             path = os.path.join(target_dir, Globals.pluginname)
             if Globals.newline == 2:
                 path = path.replace("\\", "/")
-            cfg_line = "check = %s '%s'%s" % (
+            cfg_line = "check = {} '{}'{}".format(
                 Globals.checkname,
                 path,
                 "\n" if Globals.newline > 0 else "",

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -17,8 +16,8 @@ from cmk.utils.site import omd_site
 # for this to work you need to have one folder per customer on the top
 # level and one site per customer with exactly the same name
 def pre_activate_changes_cleanup(_unused):
-    log = open('%s/tmp/hook.log' % cmk.utils.paths.omd_root, 'w')
-    log.write('omd_site: %s, omd_root: %s\n' % (omd_site(), cmk.utils.paths.omd_root))
+    log = open("%s/tmp/hook.log" % cmk.utils.paths.omd_root, "w")
+    log.write("omd_site: {}, omd_root: {}\n".format(omd_site(), cmk.utils.paths.omd_root))
     confd = "%s/etc/check_mk/conf.d/wato/" % cmk.utils.paths.omd_root
     for _dirname, dirnames, _filenames in os.walk(confd):
         for subdirname in dirnames:
@@ -31,4 +30,4 @@ def pre_activate_changes_cleanup(_unused):
     log.close()
 
 
-register_hook('pre-activate-changes', pre_activate_changes_cleanup)
+register_hook("pre-activate-changes", pre_activate_changes_cleanup)

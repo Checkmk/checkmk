@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -7,8 +6,8 @@
 # small mock server simulating a jolokia server. Not very sophisticated
 # but enough to get several checks to display something
 
-import socketserver
 import http.server
+import socketserver
 from urllib.parse import urlparse
 
 PORT = 8080
@@ -17,12 +16,12 @@ PORT = 8080
 class FakeHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsedParams = urlparse(self.path)
-        params = [par for par in parsedParams.path.split('/') if par]
+        params = [par for par in parsedParams.path.split("/") if par]
 
         print(params)
 
         self.send_response(200)
-        self.send_header('Content-Type', 'application/xml')
+        self.send_header("Content-Type", "application/xml")
         self.end_headers()
 
         if len(params) > 1:

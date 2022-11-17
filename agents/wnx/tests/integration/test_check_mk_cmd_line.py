@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Final
+from typing import Final
 
 import pytest
 
@@ -29,7 +28,7 @@ def test_check_mk_agent_cmd_line_help(
     assert 100 > len(output.stdout.split("\r\n")) > 50
 
 
-def _splitter(line: str) -> Dict[str, str]:
+def _splitter(line: str) -> dict[str, str]:
     l = line.split("DIR=")
     return {l[0]: l[1]}
 

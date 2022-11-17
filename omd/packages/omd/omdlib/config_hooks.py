@@ -37,9 +37,11 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from ipaddress import ip_network
 from pathlib import Path
-from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
+from re import Pattern
+from typing import TYPE_CHECKING, Union
 
 from omdlib.type_defs import ConfigChoiceHasError
 
@@ -52,11 +54,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger("cmk.omd")
 
-ConfigHookChoiceItem = Tuple[str, str]
-ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem], ConfigChoiceHasError]
-ConfigHook = Dict[str, Union[str, bool, ConfigHookChoices]]
-ConfigHooks = Dict[str, ConfigHook]
-ConfigHookResult = Tuple[int, str]
+ConfigHookChoiceItem = tuple[str, str]
+ConfigHookChoices = Union[None, Pattern, list[ConfigHookChoiceItem], ConfigChoiceHasError]
+ConfigHook = dict[str, Union[str, bool, ConfigHookChoices]]
+ConfigHooks = dict[str, ConfigHook]
+ConfigHookResult = tuple[int, str]
 
 
 class IpAddressListHasError(ConfigChoiceHasError):
@@ -85,7 +87,7 @@ def save_site_conf(site: "SiteContext") -> None:
     confdir.mkdir(exist_ok=True)
     with Path(site.dir, "etc/omd/site.conf").open(mode="w") as f:
         for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
-            f.write("CONFIG_%s='%s'\n" % (hook_name, value))
+            f.write(f"CONFIG_{hook_name}='{value}'\n")
 
 
 # Get information about all hooks. Just needed for
@@ -187,7 +189,7 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
 
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
-def sort_hooks(hook_names: List[str]) -> Iterable[str]:
+def sort_hooks(hook_names: list[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
@@ -198,7 +200,7 @@ def hook_exists(site: "SiteContext", hook_name: str) -> bool:
     return os.path.exists(hook_file)
 
 
-def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHookResult:
+def call_hook(site: "SiteContext", hook_name: str, args: list[str]) -> ConfigHookResult:
 
     if not site.hook_dir:
         # IMHO this should be unreachable...
@@ -227,6 +229,6 @@ def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHoo
     content = completed_process.stdout.strip()
 
     if completed_process.returncode and args[0] != "depends":
-        sys.stderr.write("Error running %s: %s\n" % (subprocess.list2cmdline(cmd), content))
+        sys.stderr.write(f"Error running {subprocess.list2cmdline(cmd)}: {content}\n")
 
     return completed_process.returncode, content

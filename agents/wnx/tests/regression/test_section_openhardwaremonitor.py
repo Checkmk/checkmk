@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -70,9 +69,7 @@ def manage_ohm_binaries():
     if platform.system() == "Windows":
         binaries = ["OpenHardwareMonitorCLI.exe", "OpenHardwareMonitorLib.dll"]
 
-        source_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "files\\ohm\\cli"
-        )
+        source_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "files\\ohm\\cli")
         target_dir = os.path.join(user_dir, "bin")
 
         it_utils.make_dir(target_dir)

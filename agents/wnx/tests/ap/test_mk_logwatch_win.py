@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
 # pylint: disable=protected-access,redefined-outer-name
-from __future__ import print_function
 
 import locale
 import os
@@ -18,7 +16,7 @@ import pytest
 import agents.plugins.mk_logwatch as lw
 
 try:
-    from typing import Sequence
+    from collections.abc import Sequence
 except ImportError:
     pass  # only needed for type comments
 
@@ -44,12 +42,12 @@ if os.name == "nt":
     _OH_NO_BYTES = _OH_NO.encode()
     _WAT_BAD_BYTES = _WAT_BAD.encode()
 else:
-    _OH_NO_STR = u"oh-no-\uFFFD"  # replace char
-    _WAT_BAD_STR = u"wat\u203D"  # actual interobang
+    _OH_NO_STR = "oh-no-\uFFFD"  # replace char
+    _WAT_BAD_STR = "wat\u203D"  # actual interobang
     _OH_NO_BYTES = _OH_NO
     _WAT_BAD_BYTES = _WAT_BAD
 
-_TEST_CONFIG = u"""
+_TEST_CONFIG = """
 
 GLOBAL OPTIONS
  ignore invalid options
@@ -227,40 +225,40 @@ def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw
     assert len(l_config) == 6
     assert all(isinstance(lf, lw.PatternConfigBlock) for lf in l_config)
 
-    assert l_config[0].files == [u'not', u'a', u'cluster', u'line']
+    assert l_config[0].files == ['not', 'a', 'cluster', 'line']
     assert not l_config[0].patterns
 
-    assert l_config[1].files == [u'{}'.format(os.path.join(os.sep, "var", "log", "messages"))]
+    assert l_config[1].files == ['{}'.format(os.path.join(os.sep, "var", "log", "messages"))]
     assert l_config[1].patterns == [
-        (u'C', u'Fail event detected on md device', [], []),
-        (u'I', u'mdadm.*: Rebuild.*event detected', [], []),
-        (u'W', u'mdadm\\[', [], []),
-        (u'W', u'ata.*hard resetting link', [], []),
-        (u'W', u'ata.*soft reset failed (.*FIS failed)', [], []),
-        (u'W', u'device-mapper: thin:.*reached low water mark', [], []),
-        (u'C', u'device-mapper: thin:.*no free space', [], []),
-        (u'C', u'Error: (.*)', [], []),
+        ('C', 'Fail event detected on md device', [], []),
+        ('I', 'mdadm.*: Rebuild.*event detected', [], []),
+        ('W', 'mdadm\\[', [], []),
+        ('W', 'ata.*hard resetting link', [], []),
+        ('W', 'ata.*soft reset failed (.*FIS failed)', [], []),
+        ('W', 'device-mapper: thin:.*reached low water mark', [], []),
+        ('C', 'device-mapper: thin:.*no free space', [], []),
+        ('C', 'Error: (.*)', [], []),
     ]
 
-    assert l_config[2].files == [u'{}'.format(os.path.join(os.sep, "var", "log", "auth.log"))]
-    assert l_config[2].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
+    assert l_config[2].files == ['{}'.format(os.path.join(os.sep, "var", "log", "auth.log"))]
+    assert l_config[2].patterns == [('W', 'sshd.*Corrupted MAC on input', [], [])]
 
-    assert l_config[3].files == [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces']
-    assert l_config[3].patterns == [(u'I', u'registered panic notifier', [], []),
-                                    (u'C', u'panic', [], []),
-                                    (u'C', u'Oops', [], []),
-                                    (u'W', u'generic protection rip', [], []),
-                                    (u'W', u'.*Unrecovered read error - auto reallocate failed', [],
+    assert l_config[3].files == ['c:\\a path\\with spaces', 'd:\\another path\\with spaces']
+    assert l_config[3].patterns == [('I', 'registered panic notifier', [], []),
+                                    ('C', 'panic', [], []),
+                                    ('C', 'Oops', [], []),
+                                    ('W', 'generic protection rip', [], []),
+                                    ('W', '.*Unrecovered read error - auto reallocate failed', [],
                                      []),
                                     ]
 
-    assert l_config[4].files == [u'{}'.format(os.path.join(_SEP_U, u"var", u"log", u"äumlaut.log"))]
-    assert l_config[4].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
+    assert l_config[4].files == ['{}'.format(os.path.join(_SEP_U, "var", "log", "äumlaut.log"))]
+    assert l_config[4].patterns == [('W', 'sshd.*Corrupted MAC on input', [], [])]
 
     assert l_config[5].files == [
-        u'{}'.format(os.path.join(os.sep, "var", "log", "test_append.log"))]
+        '{}'.format(os.path.join(os.sep, "var", "log", "test_append.log"))]
     assert l_config[5].patterns == [
-        (u'C', u'.*Error.*', [u'.*more information.*', u'.*also important.*'], [])
+        ('C', '.*Error.*', ['.*more information.*', '.*also important.*'], [])
     ]
 
 
@@ -296,9 +294,9 @@ def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> 
 
 
 @pytest.mark.parametrize("state_data, state_dict", [
-    ((u"/var/log/messages|7767698|32455445\n"
-      u"/var/foo|42\n"
-      u"/var/test/x12134.log|12345"), {
+    (("/var/log/messages|7767698|32455445\n"
+      "/var/foo|42\n"
+      "/var/test/x12134.log|12345"), {
          '/var/log/messages': {
              "file": "/var/log/messages",
              "offset": 7767698,
@@ -315,9 +313,9 @@ def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> 
              "inode": -1,
          }
      }),
-    ((u"{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
-      u"{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
-      u"{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"), {
+    (("{'file': '/var/log/messages', 'offset': 7767698, 'inode': 32455445}\n"
+      "{'file': '/var/foo', 'offset': 42, 'inode': -1}\n"
+      "{'file': '/var/test/x12134.log', 'offset': 12345, 'inode': -1}\n"), {
          '/var/log/messages': {
              "file": "/var/log/messages",
              "offset": 7767698,
@@ -334,16 +332,16 @@ def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> 
              "inode": -1,
          }
      }),
-    (u"{'file': 'I/am/a/byte/\\x89', 'offset': 23, 'inode': 42}\n", {
+    ("{'file': 'I/am/a/byte/\\x89', 'offset': 23, 'inode': 42}\n", {
         'I/am/a/byte/\x89': {
             "file": "I/am/a/byte/\x89",
             "offset": 23,
             "inode": 42,
         },
     }),
-    (u"{'file': u'I/am/unicode\\u203d', 'offset': 23, 'inode': 42}\n", {
-        u'I/am/unicode\u203d': {
-            "file": u"I/am/unicode‽",
+    ("{'file': u'I/am/unicode\\u203d', 'offset': 23, 'inode': 42}\n", {
+        'I/am/unicode\u203d': {
+            "file": "I/am/unicode‽",
             "offset": 23,
             "inode": 42,
         },
@@ -407,11 +405,11 @@ def test_state_write(tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
 
 
 STAR_FILES = [
-    (b"file.log", u"file.log"),
-    (b"hard_link_to_file.log", u"hard_link_to_file.log"),
-    (b"hard_linked_file.log", u"hard_linked_file.log"),
+    (b"file.log", "file.log"),
+    (b"hard_link_to_file.log", "hard_link_to_file.log"),
+    (b"hard_linked_file.log", "hard_linked_file.log"),
     (_OH_NO_BYTES, _OH_NO_STR),
-    (b"symlink_to_file.log", u"symlink_to_file.log"),
+    (b"symlink_to_file.log", "symlink_to_file.log"),
     (_WAT_BAD_BYTES, _WAT_BAD_STR),
 ]
 
@@ -437,11 +435,11 @@ def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    (u"/*", _fix_for_os(STAR_FILES)),
-    (u"/**", _fix_for_os(STAR_FILES)),
-    (u"/subdir/*", [(b"/subdir/symlink_to_file.log", u"/subdir/symlink_to_file.log")]),
-    (u"/symlink_to_dir/*", [
-        (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
+    ("/*", _fix_for_os(STAR_FILES)),
+    ("/**", _fix_for_os(STAR_FILES)),
+    ("/subdir/*", [(b"/subdir/symlink_to_file.log", "/subdir/symlink_to_file.log")]),
+    ("/symlink_to_dir/*", [
+        (b"/symlink_to_dir/yet_another_file.log", "/symlink_to_dir/yet_another_file.log")
     ]),
 ])
 def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes) -> None:  # type:ignore[no-untyped-def]
@@ -492,12 +490,12 @@ def test_log_lines_iter() -> None:
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
-        assert line == u"# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
+        assert line == "# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
         assert log_iter.get_position() == 207
 
-        log_iter.push_back_line(u'Täke this!')
+        log_iter.push_back_line('Täke this!')
         assert log_iter.get_position() == 196
-        assert log_iter.next_line() == u'Täke this!'
+        assert log_iter.next_line() == 'Täke this!'
 
         log_iter.skip_remaining()
         assert log_iter.next_line() is None
@@ -514,32 +512,32 @@ def _latin_1_encoding():
         # UTF-8 encoding works by default in Linux and must be selected in Windows
         ("utf-8" if os.name == "nt" else None, [
             b"abc1",
-            u"äbc2".encode("utf-8"),
+            "äbc2".encode(),
             b"abc3",
         ], [
-             u"abc1\n",
-             u"äbc2\n",
-             u"abc3\n",
+             "abc1\n",
+             "äbc2\n",
+             "abc3\n",
          ]),
         # Replace characters that can not be decoded
         ("utf-8" if os.name == "nt" else None, [
             b"abc1",
-            u"äbc2".encode(_latin_1_encoding()),
+            "äbc2".encode(_latin_1_encoding()),
             b"abc3",
         ], [
-             u"abc1\n",
-             u"\ufffdbc2\n",
-             u"abc3\n",
+             "abc1\n",
+             "\ufffdbc2\n",
+             "abc3\n",
          ]),
         # Set custom encoding
         (_latin_1_encoding(), [
             b"abc1",
-            u"äbc2".encode(_latin_1_encoding()),
+            "äbc2".encode(_latin_1_encoding()),
             b"abc3",
         ], [
-             u"abc1\n",
-             u"äbc2\n",
-             u"abc3\n",
+             "abc1\n",
+             "äbc2\n",
+             "abc3\n",
          ]),
     ])
 def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, lines,
@@ -593,7 +591,7 @@ def _path_to_testfile(filename):
         _linux_dataset_path(filename)) else _windows_dataset_path(filename)
 
 
-class MockStdout(object):  # pylint: disable=useless-object-inheritance
+class MockStdout:  # pylint: disable=useless-object-inheritance
     def isatty(self):
         return False
 
@@ -604,8 +602,8 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         (
             __file__,
             [
-                ('W', re.compile(u'^[^u]*W.*I mätch önly mysélf 🧚', re.UNICODE), [], []),
-                ('I', re.compile(u'.*', re.UNICODE), [], []),
+                ('W', re.compile('^[^u]*W.*I mätch önly mysélf 🧚', re.UNICODE), [], []),
+                ('I', re.compile('.*', re.UNICODE), [], []),
             ],
             {
                 'nocontext': True
@@ -614,39 +612,39 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
                 'offset': 0,
             },
             [
-                u"[[[%s]]]\n" % __file__,
-                u"W                 ('W', re.compile(u'^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
+                "[[[%s]]]\n" % __file__,
+                "W                 ('W', re.compile(u'^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
             ],
         ),
         (
             __file__,
             [
-                ('W', re.compile(u'I don\'t match anything at all!', re.UNICODE), [], []),
+                ('W', re.compile('I don\'t match anything at all!', re.UNICODE), [], []),
             ],
             {},
             {
                 'offset': 0,
             },
             [
-                u"[[[%s]]]\n" % __file__,
+                "[[[%s]]]\n" % __file__,
             ],
         ),
         (
             __file__,
             [
-                ('W', re.compile(u'.*', re.UNICODE), [], []),
+                ('W', re.compile('.*', re.UNICODE), [], []),
             ],
             {},
             {},
             [  # nothing for new files
-                u"[[[%s]]]\n" % __file__,
+                "[[[%s]]]\n" % __file__,
             ],
         ),
         (
             __file__,
             [
-                ('C', re.compile(u'🐉', re.UNICODE), [], []),
-                ('I', re.compile(u'.*', re.UNICODE), [], []),
+                ('C', re.compile('🐉', re.UNICODE), [], []),
+                ('I', re.compile('.*', re.UNICODE), [], []),
             ],
             {
                 'nocontext': True
@@ -655,20 +653,20 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
                 'offset': 0,
             },
             [
-                u"[[[%s]]]\n" % __file__,
-                u"C                 ('C', re.compile(u'\U0001f409', re.UNICODE), [], []),\n",
+                "[[[%s]]]\n" % __file__,
+                "C                 ('C', re.compile(u'\U0001f409', re.UNICODE), [], []),\n",
             ],
         ),
-        ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
+        ('locked door', [], {}, {}, ["[[[locked door:cannotopen]]]\n"]),
         (
             _path_to_testfile("test_append.log"),
             [
                 (
-                    u'C',
-                    re.compile(u'.*Error.*'),
+                    'C',
+                    re.compile('.*Error.*'),
                     [
-                        re.compile(u'.*more information.*'),
-                        re.compile(u'.*also important.*'),
+                        re.compile('.*more information.*'),
+                        re.compile('.*also important.*'),
                     ],
                     [],
                 ),
@@ -680,8 +678,8 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
                 'offset': 0,
             },
             [
-                u'[[[%s]]]\n' % _path_to_testfile("test_append.log"),
-                u'C Error: Everything down!\x01more information: very useful\x01also important: please inform admins\n',
+                '[[[%s]]]\n' % _path_to_testfile("test_append.log"),
+                'C Error: Everything down!\x01more information: very useful\x01also important: please inform admins\n',
             ]
         ),
     ])

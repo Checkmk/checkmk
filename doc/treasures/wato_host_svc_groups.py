@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -8,15 +7,16 @@
 # Converts a File with host- and/or service groups definitions
 # into a dict. The output can be used to paste it into the wato/rules.mk
 # The input format must be :
-#define hostgroup{
+# define hostgroup{
 #    ....
 #    hostgroup_name  hostgroup_name
 #    alias   alias
 #    ....
-#}
+# }
 # Means alias has to follow the name
 
 import sys
+
 path = sys.argv[1]
 
 alias = False
@@ -26,7 +26,7 @@ servicegroups = {}
 hostgroups = {}
 for line in open(path).readlines():
     line = line.strip()
-    if line != "" and line[0] != '#' and line != '}' and not line.startswith('define'):
+    if line != "" and line[0] != "#" and line != "}" and not line.startswith("define"):
         try:
             attr, value = line.split(" ", 1)
             attr = attr.strip()

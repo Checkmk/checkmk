@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -61,8 +60,10 @@ def remove_nonrelated_site_folders(effective_hosts):
     file_vars = {}
     try:
         exec(
-            open(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").read(), file_vars_g,
-            file_vars)
+            open(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").read(),
+            file_vars_g,
+            file_vars,
+        )
     except Exception:
         # Return on any error
         return
@@ -74,10 +75,11 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     # Get all folders in WATO dir
     config_dir = cmk.utils.paths.check_mk_config_dir + "/wato/"
-    all_folders = sorted([x[0][len(config_dir):] for x in os.walk(config_dir)
-                         ])[1:]  # Skip first folder (WATO root!)
+    all_folders = sorted([x[0][len(config_dir) :] for x in os.walk(config_dir)])[
+        1:
+    ]  # Skip first folder (WATO root!)
 
-    keep_folders = set([])
+    keep_folders = set()
     total_hosts = 0
     for attributes in effective_hosts.values():
         host_folder = attributes[".folder"][".path"]
@@ -110,11 +112,12 @@ def remove_nonrelated_site_folders(effective_hosts):
 
     if do_remove_folders:
         import shutil
+
         for folder in remove_folders:
             if folder:  # This is just another safety mechanism to prevent the deletion of the
                 # WATO root folder. The WATO root folder should never appear in this list of folders,
                 # because it is filtered out earlier on. Just in case..
-                the_folder = "%s%s" % (config_dir, folder)
+                the_folder = "{}{}".format(config_dir, folder)
                 if os.path.exists(the_folder):
                     shutil.rmtree(the_folder)
 

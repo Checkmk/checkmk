@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import os
 import platform
 import re
@@ -95,7 +93,7 @@ def fixture_testconfig(request, make_ini_config):
     Globals.config_param_in_use = request.param[0]
     tag = "" if request.param[0] == "default" else "%s " % request.param[0]
     make_ini_config.set(
-        Globals.section, "textfile", "%s%s|%s%s" % (tag, Globals.testlog1, tag, Globals.testlog2)
+        Globals.section, "textfile", f"{tag}{Globals.testlog1}|{tag}{Globals.testlog2}"
     )
     return make_ini_config
 
@@ -219,7 +217,7 @@ def manage_logfiles(request):
     Globals.utf_encoding = request.param
     if platform.system() == "Windows":
         for log in [Globals.testlog1, Globals.testlog2]:
-            with io.open(log, "w", encoding=request.param) as logfile:
+            with open(log, "w", encoding=request.param) as logfile:
                 for entry in [str(Globals.testentry1), str(Globals.testentry2)]:
                     logfile.write("%s\r\n" % entry)
     yield

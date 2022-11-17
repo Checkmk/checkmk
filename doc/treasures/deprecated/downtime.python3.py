@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #  type: ignore
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -24,7 +23,6 @@
 import getopt
 import os
 import sys
-import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -135,7 +133,7 @@ if omd_site and not opt_secret:
             open(omd_root + "/var/check_mk/web/" + opt_user + "/automation.secret").read().strip()
         )
     except Exception as e:
-        bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))
+        bail_out("Cannot read automation secret from user {}: {}".format(opt_user, e))
 
 elif not omd_site and not opt_secret:
     bail_out("Please specify the automation secret for the user '%s'!" % opt_user)
@@ -167,7 +165,7 @@ verbose("Secret:        " + (opt_secret or "(none specified)"))
 
 def make_url(base, variables):
     vartext = "&".join(
-        ["%s=%s" % (varname, urllib.parse.quote(value)) for (varname, value) in variables]
+        ["{}={}".format(varname, urllib.parse.quote(value)) for (varname, value) in variables]
     )
     return base + "?" + vartext
 

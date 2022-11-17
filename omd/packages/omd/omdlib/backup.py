@@ -31,7 +31,8 @@ import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, Callable, Iterator, List, Tuple, Union
+from collections.abc import Callable, Iterator
+from typing import BinaryIO
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -39,7 +40,7 @@ from omdlib.type_defs import CommandOptions
 
 def backup_site_to_tarfile(
     site: SiteContext,
-    fh: Union[BinaryIO, io.BufferedWriter],
+    fh: BinaryIO | io.BufferedWriter,
     mode: str,
     options: CommandOptions,
     verbose: bool,
@@ -84,7 +85,7 @@ def backup_site_to_tarfile(
             )
 
 
-def get_exclude_patterns(options: CommandOptions) -> List[str]:
+def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes = []
     excludes.append("tmp/*")  # Exclude all tmpfs files
 
@@ -187,7 +188,7 @@ class RRDSocket(contextlib.AbstractContextManager):
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 sock.connect(self._rrdcached_socket_path)
-            except IOError as e:
+            except OSError as e:
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (%s)\n" % e)
                 return
@@ -201,7 +202,7 @@ class RRDSocket(contextlib.AbstractContextManager):
             answer = ""
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024).decode("utf-8")
-        except IOError:
+        except OSError:
             self._sock = None
             if self._verbose:
                 sys.stdout.write("skipping rrdcached command (broken pipe)\n")
@@ -221,7 +222,7 @@ class RRDSocket(contextlib.AbstractContextManager):
             or (cmd.startswith("RESUME") and msg.endswith("not suspended"))  # ok, if resuming
             or msg.endswith("No such file or directory")  # is fine (unknown RRD)
         ):
-            raise Exception("Error while processing rrdcached command (%s): %s" % (cmd, msg))
+            raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
     def __exit__(self, exc_type: object, exc_value: object, exc_tb: object) -> None:
         self._resume_all_rrds()
@@ -283,7 +284,7 @@ def tar_add(
         )
 
 
-def get_site_and_version_from_backup(tar: tarfile.TarFile) -> Tuple[str, str]:
+def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
     """Get the first file of the tar archive. Expecting <site>/version symlink
     for validation reasons."""
     site_tarinfo = tar.next()

@@ -25,7 +25,7 @@
 import contextlib
 import os
 import shutil
-from typing import Iterator
+from collections.abc import Iterator
 
 
 def is_containerized() -> bool:

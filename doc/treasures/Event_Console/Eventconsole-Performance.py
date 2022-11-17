@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -21,11 +20,13 @@ def perfometer_get_event_status(row, check_command, perfdata):
     else:
         busytd = busy
         freetd = 100 - busy
-    return "%.1f %% " % busy, \
-        '<table><tr>' \
-        + perfometer_td(busytd, color) \
-        + perfometer_td(freetd, "#ffffff") \
-        + '</tr></table>'
+    return (
+        "%.1f %% " % busy,
+        "<table><tr>"
+        + perfometer_td(busytd, color)
+        + perfometer_td(freetd, "#ffffff")
+        + "</tr></table>",
+    )
 
 
 perfometers["get_event_status"] = perfometer_get_event_status

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -14,7 +13,7 @@ import sys
 import time
 
 if len(sys.argv) < 6:
-    print('This script sends a message via upd to a syslogserver')
+    print("This script sends a message via upd to a syslogserver")
     print('Usage: %s SYSLOGSERVER HOSTNAME PRIO APPLICATION "MESSAGE"' % sys.argv[0])
     sys.exit()
 
@@ -29,6 +28,6 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 sock.connect((host, port))
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-dgram = "<%s>%s %s %s: %s\n" % (prio, timestamp, event_host, application, message)
+dgram = "<{}>{} {} {}: {}\n".format(prio, timestamp, event_host, application, message)
 sock.send(dgram.encode("utf-8"))
 sock.close()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -28,7 +27,7 @@ import logging
 import os
 import subprocess
 import sys
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -44,8 +43,8 @@ logger = logging.getLogger("cmk.omd")
 def call_init_scripts(
     site: "SiteContext",
     command: str,
-    daemon: Optional[str] = None,
-    exclude_daemons: Optional[List[str]] = None,
+    daemon: str | None = None,
+    exclude_daemons: list[str] | None = None,
 ) -> int:
     # Restart: Do not restart each service after another,
     # but first do stop all, then start all again! This
@@ -59,7 +58,7 @@ def call_init_scripts(
     # OMD guarantees OMD_ROOT to be the current directory
     with chdir(site.dir):
         if daemon:
-            success = _call_init_script("%s/etc/init.d/%s" % (site.dir, daemon), command)
+            success = _call_init_script(f"{site.dir}/etc/init.d/{daemon}", command)
 
         else:
             # Call stop scripts in reverse order. If daemon is set,
@@ -73,7 +72,7 @@ def call_init_scripts(
                 if exclude_daemons and script in exclude_daemons:
                     continue
 
-                if not _call_init_script("%s/%s" % (rc_dir, script), command):
+                if not _call_init_script(f"{rc_dir}/{script}", command):
                     success = False
 
     if success:
@@ -82,7 +81,7 @@ def call_init_scripts(
 
 
 def check_status(  # pylint: disable=too-many-branches
-    site: "SiteContext", display: bool = True, daemon: Optional[str] = None, bare: bool = False
+    site: "SiteContext", display: bool = True, daemon: str | None = None, bare: bool = False
 ) -> int:
     num_running = 0
     num_unused = 0
@@ -153,7 +152,7 @@ def check_status(  # pylint: disable=too-many-branches
 
 
 # TODO: Use site context
-def _init_scripts(sitename: str) -> Tuple[str, List[str]]:
+def _init_scripts(sitename: str) -> tuple[str, list[str]]:
     rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
     try:
         scripts = sorted(os.listdir(rc_dir))
@@ -170,5 +169,5 @@ def _call_init_script(scriptpath: str, command: str) -> bool:
     try:
         return subprocess.call([scriptpath, command]) in [0, 5]
     except OSError as e:
-        sys.stderr.write("ERROR: Failed to run '%s': %s\n" % (scriptpath, e))
+        sys.stderr.write(f"ERROR: Failed to run '{scriptpath}': {e}\n")
         return False

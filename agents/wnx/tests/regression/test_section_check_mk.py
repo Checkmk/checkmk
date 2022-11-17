@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
-from typing import Optional
 
 import pytest
 
@@ -17,7 +15,7 @@ class Globals:
     section = "check_mk"
     alone = True
     output_file = "agentoutput.txt"
-    only_from: Optional[str] = None
+    only_from: str | None = None
     ipv4_to_ipv6 = {"127.0.0.1": "0:0:0:0:0:ffff:7f00:1", "10.1.2.3": "0:0:0:0:0:ffff:a01:203"}
 
 

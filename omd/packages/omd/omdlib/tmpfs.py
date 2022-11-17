@@ -32,7 +32,6 @@ import sys
 import tarfile
 import time
 from pathlib import Path
-from typing import Optional
 
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
@@ -207,13 +206,13 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
     ) in [1, 32]
 
 
-def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
+def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
     if not (path_fstab := fstab_path()).exists():
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = site.real_tmp_dir
-    sys.stdout.write("Adding %s to %s.\n" % (mountpoint, path_fstab))
+    sys.stdout.write(f"Adding {mountpoint} to {path_fstab}.\n")
 
     # No size option: using up to 50% of the RAM
     sizespec = ""

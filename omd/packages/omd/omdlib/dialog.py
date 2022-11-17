@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -28,8 +27,9 @@ import os
 import subprocess
 import sys
 import termios
+from re import Pattern
 from tty import setraw
-from typing import List, Optional, Pattern, Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
@@ -37,14 +37,14 @@ from cmk.utils.exceptions import MKTerminate
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 
-DialogResult = Tuple[bool, str]
+DialogResult = tuple[bool, str]
 
 
 def dialog_menu(
     title: str,
     text: str,
-    choices: List[Tuple[str, str]],
-    defvalue: Optional[str],
+    choices: list[tuple[str, str]],
+    defvalue: str | None,
     oktext: str,
     canceltext: str,
 ) -> DialogResult:
@@ -95,7 +95,7 @@ def dialog_message(text: str, buttonlabel: str = "OK") -> None:
     _run_dialog(["--ok-label", buttonlabel, "--msgbox", text, "0", "0"])
 
 
-def _run_dialog(args: List[str]) -> DialogResult:
+def _run_dialog(args: list[str]) -> DialogResult:
     dialog_env = {
         "TERM": os.environ.get("TERM", "linux"),
         # TODO: Why de_DE?
@@ -151,7 +151,7 @@ def user_confirms(
 
 
 # TODO: Use standard textwrap module?
-def _wrap_text(text: str, width: int) -> List[str]:
+def _wrap_text(text: str, width: int) -> list[str]:
     def fillup(line, width):
         if len(line) < width:
             line += " " * (width - len(line))
@@ -210,7 +210,7 @@ def _getch() -> str:
     return ch
 
 
-def ask_user_choices(title: str, message: str, choices: List[Tuple[str, str]]) -> str:
+def ask_user_choices(title: str, message: str, choices: list[tuple[str, str]]) -> str:
     sys.stdout.write("\n")
 
     def pl(line):
@@ -221,7 +221,7 @@ def ask_user_choices(title: str, message: str, choices: List[Tuple[str, str]]) -
     for line in _wrap_text(message, 76):
         pl(line)
     pl("")
-    chars: List[str] = []
+    chars: list[str] = []
     empty_line = " %s%-78s%s\n" % (tty.bgblue + tty.white, "", tty.normal)
     sys.stdout.write(empty_line)
     for choice, choice_title in choices:
@@ -250,8 +250,8 @@ def ask_user_choices(title: str, message: str, choices: List[Tuple[str, str]]) -
         ]
     )
     l = len(choices) * 2 - 1
-    sys.stdout.write(" %s %s" % (tty.bgmagenta, choicetxt))
-    sys.stdout.write(" ==> %s   %s" % (tty.bgred, tty.bgmagenta))
+    sys.stdout.write(f" {tty.bgmagenta} {choicetxt}")
+    sys.stdout.write(f" ==> {tty.bgred}   {tty.bgmagenta}")
     sys.stdout.write(" " * (69 - l))
     sys.stdout.write("\b" * (71 - l))
     sys.stdout.write(tty.normal)

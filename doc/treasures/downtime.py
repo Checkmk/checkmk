@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -26,7 +25,7 @@ import sys
 import textwrap
 import traceback
 import urllib.request
-from typing import List, Literal, NamedTuple, Optional
+from typing import Literal, NamedTuple
 
 VERBOSITY = {
     0: logging.WARNING,
@@ -53,7 +52,7 @@ def _set_downtime(
     api: ApiSettings,
     mode: DowntimeMode,
     host_or_group: str,
-    services: List[str],
+    services: list[str],
     start_time: str,
     end_time: str,
     duration=None,
@@ -273,7 +272,7 @@ def main():
         help="Remove a specific downtime using its id. This has priority over specified host name and services",
     )
 
-    def api_url(value: str) -> Optional[str]:
+    def api_url(value: str) -> str | None:
         """Check for validity of the supplied API URL."""
         if not value.endswith("/check_mk"):
             return None
@@ -311,7 +310,7 @@ def main():
         try:
             # We try to figure the password out by ourselves.
             args.secret = _read_secret(args.user)
-        except IOError:
+        except OSError:
             if args.verbosity > 0:
                 traceback.print_exception(*sys.exc_info(), file=sys.stderr)
                 print(file=sys.stderr)  # newline

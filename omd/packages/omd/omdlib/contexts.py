@@ -26,7 +26,7 @@ import abc
 import os
 import sys
 from pathlib import Path
-from typing import cast, Optional
+from typing import cast
 
 import omdlib
 import omdlib.utils
@@ -42,19 +42,19 @@ from cmk.utils.exceptions import MKTerminate
 class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
 
-    def __init__(self, sitename: Optional[str]) -> None:
+    def __init__(self, sitename: str | None) -> None:
         super().__init__()
         self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         return self._sitename
 
     @property
     @abc.abstractmethod
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         raise NotImplementedError()
 
     @property
@@ -128,7 +128,7 @@ class SiteContext(AbstractSiteContext):
         return "%s/tmp" % self.real_dir
 
     @property
-    def version(self) -> Optional[str]:
+    def version(self) -> str | None:
         """The version of a site is solely determined by the link ~SITE/version
         In case the version of a site can not be determined, it reports None."""
         version_link = self.dir + "/version"
@@ -138,7 +138,7 @@ class SiteContext(AbstractSiteContext):
             return None
 
     @property
-    def hook_dir(self) -> Optional[str]:
+    def hook_dir(self) -> str | None:
         if self.version is None:
             return None
         return "/omd/versions/%s/lib/omd/hooks/" % self.version

@@ -21,7 +21,7 @@ def command_open_ticket(cmdtag, spec, row):
         comment = "OPENTICKET:" + html.get_str_input("_sap_ticket_comment")
         broadcast = 0
         forced = 2
-        command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % (
+        command = "SEND_CUSTOM_{}_NOTIFICATION;{};{};{};{}".format(
             cmdtag,
             spec,
             broadcast + forced,

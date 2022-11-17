@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -41,22 +40,9 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import (
-    BinaryIO,
-    cast,
-    Dict,
-    Final,
-    IO,
-    Iterable,
-    List,
-    NamedTuple,
-    NoReturn,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn, Optional
 
 import psutil  # type: ignore[import]
 
@@ -132,8 +118,8 @@ from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.type_defs.result import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 
-Arguments = List[str]
-ConfigChangeCommands = List[Tuple[str, str]]
+Arguments = list[str]
+ConfigChangeCommands = list[tuple[str, str]]
 
 cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.omd")
@@ -187,8 +173,8 @@ class Log(io.StringIO):
         self.orig.flush()
 
 
-g_stdout_log: Optional[Log] = None
-g_stderr_log: Optional[Log] = None
+g_stdout_log: Log | None = None
+g_stderr_log: Log | None = None
 
 
 def start_logging(logfile: str) -> None:
@@ -247,7 +233,7 @@ def get_skel_permissions(skel_path: str, perms: Permissions, relpath: str) -> in
     try:
         return perms[relpath]
     except KeyError:
-        return get_file_permissions("%s/%s" % (skel_path, relpath))
+        return get_file_permissions(f"{skel_path}/{relpath}")
 
 
 def get_file_permissions(path: str) -> int:
@@ -257,7 +243,7 @@ def get_file_permissions(path: str) -> int:
         return 0
 
 
-def get_file_owner(path: str) -> Optional[str]:
+def get_file_owner(path: str) -> str | None:
     try:
         return pwd.getpwuid(os.stat(path).st_uid)[0]
     except Exception:
@@ -379,7 +365,7 @@ def try_chown(filename: str, user: str) -> None:
             gid = pwd.getpwnam(user).pw_gid
             os.chown(filename, uid, gid)
         except Exception as e:
-            sys.stderr.write("Cannot chown %s to %s: %s\n" % (filename, user, e))
+            sys.stderr.write(f"Cannot chown {filename} to {user}: {e}\n")
 
 
 # Walks all files in the skeleton dir to execute a function for each file
@@ -394,7 +380,7 @@ def walk_skel(
     root: str,
     conflict_mode: str,
     depth_first: bool,
-    exclude_if_in: Optional[str] = None,
+    exclude_if_in: str | None = None,
     relbase: str = ".",
 ) -> Iterable[str]:
     with chdir(root):
@@ -466,7 +452,7 @@ def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: Si
                     except MKTerminate:
                         raise
                     except Exception as e:
-                        sys.stderr.write("Error patching template file '%s': %s\n" % (dst, e))
+                        sys.stderr.write(f"Error patching template file '{dst}': {e}\n")
 
 
 def _is_unpatchable_file(path: str) -> bool:
@@ -479,13 +465,13 @@ def patch_template_file(  # pylint: disable=too-many-branches
     # Create patch from old instantiated skeleton file to new one
     content = Path(src).read_bytes()
     for site in [old_site, new_site]:
-        filename = Path("%s.skel.%s" % (dst, site.name))
+        filename = Path(f"{dst}.skel.{site.name}")
         filename.write_bytes(replace_tags(content, site.replacements))
         try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
-    old_orig_path = Path("%s.skel.%s" % (dst, old_site.name))
-    new_orig_path = Path("%s.skel.%s" % (dst, new_site.name))
+    old_orig_path = Path(f"{dst}.skel.{old_site.name}")
+    new_orig_path = Path(f"{dst}.skel.{new_site.name}")
     if old_orig_path.read_text() == new_orig_path.read_text():
         old_orig_path.unlink()
         new_orig_path.unlink()
@@ -515,7 +501,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
             ("install", "Install the default version of the file"),
             (
                 "brute",
-                "Simply replace /%s/ with /%s/ in that file" % (old_site.name, new_site.name),
+                f"Simply replace /{old_site.name}/ with /{new_site.name}/ in that file",
             ),
             ("shell", "Open a shell for looking around"),
             ("abort", "Stop here and abort!"),
@@ -540,17 +526,17 @@ def patch_template_file(  # pylint: disable=too-many-branches
             elif choice == "keep":
                 break
             elif choice == "edit":
-                os.system("%s '%s'" % (get_editor(), dst))  # nosec
+                os.system(f"{get_editor()} '{dst}'")  # nosec
             elif choice == "diff":
-                os.system("diff -u %s %s%s" % (old_orig_path, new_orig_path, pipe_pager()))  # nosec
+                os.system(f"diff -u {old_orig_path} {new_orig_path}{pipe_pager()}")  # nosec
             elif choice == "brute":
                 os.system(  # nosec
-                    "sed 's@/%s/@/%s/@g' %s.orig > %s" % (old_site.name, new_site.name, dst, dst)
+                    f"sed 's@/{old_site.name}/@/{new_site.name}/@g' {dst}.orig > {dst}"
                 )
                 changed = len(
                     [
                         l
-                        for l in os.popen("diff %s.orig %s" % (dst, dst)).readlines()  # nosec
+                        for l in os.popen(f"diff {dst}.orig {dst}").readlines()  # nosec
                         if l.startswith(">")
                     ]
                 )
@@ -561,12 +547,10 @@ def patch_template_file(  # pylint: disable=too-many-branches
                         "Did brute-force replace, changed %s%d%s lines:\n"
                         % (tty.bold, changed, tty.normal)
                     )
-                    os.system("diff -u %s.orig %s" % (dst, dst))  # nosec
+                    os.system(f"diff -u {dst}.orig {dst}")  # nosec
                     break
             elif choice == "you":
-                os.system(  # nosec
-                    "pwd ; diff -u %s %s.orig%s" % (old_orig_path, dst, pipe_pager())
-                )
+                os.system(f"pwd ; diff -u {old_orig_path} {dst}.orig{pipe_pager()}")  # nosec
             elif choice == "restore":
                 os.rename(dst + ".orig", dst)
                 sys.stdout.write("Restored your version.\n")
@@ -591,7 +575,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
 
                 sys.stdout.write("\n Starting BASH. Type CTRL-D to continue.\n\n")
                 thedir = "/".join(dst.split("/")[:-1])
-                os.system("su - %s -c 'cd %s ; bash -i'" % (new_site.name, thedir))  # nosec
+                os.system(f"su - {new_site.name} -c 'cd {thedir} ; bash -i'")  # nosec
 
     # remove unnecessary files
     try:
@@ -628,7 +612,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
     options = [
         ("diff", "Show differences between the new default and your version"),
         ("you", "Show your changes compared with the old default version"),
-        ("new", "Show what has changed from %s to %s" % (old_version, new_version)),
+        ("new", f"Show what has changed from {old_version} to {new_version}"),
     ]
     if reject_file.exists():  # missing if patch has --merge
         options.append(("missing", "Show which changes from the update have not been merged"))
@@ -661,15 +645,11 @@ def merge_update_file(  # pylint: disable=too-many-branches
         elif choice == "keep":
             break
         elif choice == "edit":
-            os.system("%s '%s'" % (editor, user_path))  # nosec
+            os.system(f"{editor} '{user_path}'")  # nosec
         elif choice == "diff":
-            os.system(  # nosec
-                "diff -u %s.orig %s-%s%s" % (user_path, user_path, new_version, pipe_pager())
-            )
+            os.system(f"diff -u {user_path}.orig {user_path}-{new_version}{pipe_pager()}")  # nosec
         elif choice == "you":
-            os.system(  # nosec
-                "diff -u %s-%s %s.orig%s" % (user_path, old_version, user_path, pipe_pager())
-            )
+            os.system(f"diff -u {user_path}-{old_version} {user_path}.orig{pipe_pager()}")  # nosec
         elif choice == "new":
             os.system(  # nosec
                 "diff -u %s-%s %s-%s%s"
@@ -703,7 +683,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
             break
         elif choice == "try again":
             Path(f"{user_path}.orig").rename(user_path)
-            os.system("%s '%s'" % (editor, user_path))  # nosec
+            os.system(f"{editor} '{user_path}'")  # nosec
             if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
                 sys.stdout.write(
                     "Successfully merged changes from %s -> %s into %s\n"
@@ -713,15 +693,15 @@ def merge_update_file(  # pylint: disable=too-many-branches
             sys.stdout.write(" Merge failed again.\n")
 
         else:  # install
-            Path("%s-%s" % (user_path, new_version)).rename(user_path)
+            Path(f"{user_path}-{new_version}").rename(user_path)
             user_path.chmod(permissions)
             sys.stdout.write("Installed default file of version %s.\n" % new_version)
             break
 
     # Clean up temporary files
     for p in [
-        "%s-%s" % (user_path, old_version),
-        "%s-%s" % (user_path, new_version),
+        f"{user_path}-{old_version}",
+        f"{user_path}-{new_version}",
         "%s.orig" % user_path,
         "%s.rej" % user_path,
     ]:
@@ -748,7 +728,7 @@ def _try_merge(
             except Exception:
                 # Do not ask the user in non-interactive mode.
                 if conflict_mode in ["abort", "install"]:
-                    bail_out("Skeleton file '%s' of version %s not readable." % (p, version))
+                    bail_out(f"Skeleton file '{p}' of version {version} not readable.")
                 elif conflict_mode == "keepold" or not user_confirms(
                     site,
                     conflict_mode,
@@ -768,11 +748,9 @@ def _try_merge(
                 ):
                     skel_content = b""
                     break
-        Path("%s-%s" % (user_path, version)).write_bytes(
-            replace_tags(skel_content, site.replacements)
-        )
+        Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements))
     version_patch = os.popen(  # nosec
-        "diff -u %s-%s %s-%s" % (user_path, old_version, user_path, new_version)
+        f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
 
     # First try to merge the changes in the version into the users' file
@@ -789,7 +767,7 @@ def _try_merge(
 
 
 # Compares two files and returns infos wether the file type or contants have changed """
-def file_status(site: SiteContext, source_path: str, target_path: str) -> Tuple[bool, bool, bool]:
+def file_status(site: SiteContext, source_path: str, target_path: str) -> tuple[bool, bool, bool]:
     source_type = filetype(source_path)
     target_type = filetype(target_path)
 
@@ -945,7 +923,7 @@ def update_file(  # pylint: disable=too-many-branches
             "keep",
             "Keep your %s" % user_type,
             "replace",
-            "Replace your %s with the new default %s" % (user_type, new_type),
+            f"Replace your {user_type} with the new default {new_type}",
         ):
             sys.stdout.write(StateMarkers.warn + " Keeping your   %s\n" % fn)
         else:
@@ -983,7 +961,7 @@ def update_file(  # pylint: disable=too-many-branches
         if user_confirms(
             site,
             conflict_mode,
-            "Changes in obsolete %s %s" % (old_type, relpath),
+            f"Changes in obsolete {old_type} {relpath}",
             "The %s %s has become obsolete in "
             "the new version, but you have changed its contents. "
             "Do you want to keep your %s or "
@@ -1091,8 +1069,7 @@ def update_file(  # pylint: disable=too-many-branches
             os.remove(user_path)
             os.symlink(os.readlink(new_path), user_path)
             sys.stdout.write(
-                StateMarkers.warn
-                + " Set link       %s to new target %s\n" % (fn, os.readlink(new_path))
+                StateMarkers.warn + f" Set link       {fn} to new target {os.readlink(new_path)}\n"
             )
 
     # E ---> FILE TYPE HAS CHANGED (NASTY)
@@ -1125,7 +1102,7 @@ def update_file(  # pylint: disable=too-many-branches
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
             sys.stdout.write(
                 StateMarkers.warn
-                + " Replaced your %s %s by new default %s.\n" % (user_type, relpath, new_type)
+                + f" Replaced your {user_type} {relpath} by new default {new_type}.\n"
             )
 
     # 10) The user has changed the file type, we just the content
@@ -1145,12 +1122,12 @@ def update_file(  # pylint: disable=too-many-branches
             "replace",
             "Replace it with the new %s" % new_type,
         ):
-            sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
+            sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
             sys.stdout.write(
                 StateMarkers.warn
-                + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn)
+                + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
             )
 
     # 11) This case should never happen, if I've not lost something
@@ -1170,12 +1147,12 @@ def update_file(  # pylint: disable=too-many-branches
             "replace",
             "Replace it with the new %s" % new_type,
         ):
-            sys.stdout.write(StateMarkers.warn + " Keeping your %s %s.\n" % (user_type, fn))
+            sys.stdout.write(StateMarkers.warn + f" Keeping your {user_type} {fn}.\n")
         else:
             create_skeleton_file(new_skel, site.dir, relpath, replacements)
             sys.stdout.write(
                 StateMarkers.warn
-                + " Delete your %s and created new default %s %s.\n" % (user_type, new_type, fn)
+                + f" Delete your {user_type} and created new default {new_type} {fn}.\n"
             )
 
     # Now the new file/link/directory is in place, deleted or whatever. The
@@ -1238,14 +1215,13 @@ def update_file(  # pylint: disable=too-many-branches
 
         if what == "keep":
             sys.stdout.write(
-                StateMarkers.warn + " Permissions    %04o %s (unchanged)\n" % (user_perm, fn)
+                StateMarkers.warn + f" Permissions    {user_perm:04o} {fn} (unchanged)\n"
             )
         elif what == "default":
             try:
                 os.chmod(user_path, new_perm)
                 sys.stdout.write(
-                    StateMarkers.good
-                    + " Permissions    %04o -> %04o %s\n" % (user_perm, new_perm, fn)
+                    StateMarkers.good + f" Permissions    {user_perm:04o} -> {new_perm:04o} {fn}\n"
                 )
             except Exception as e:
                 sys.stdout.write(
@@ -1255,7 +1231,7 @@ def update_file(  # pylint: disable=too-many-branches
                 )
 
 
-def filetype(p: str) -> Optional[str]:
+def filetype(p: str) -> str | None:
     # check for symlinks first. Might be dangling. In that
     # case os.path.exists checks the links target for existance
     # and reports it is non-existing.
@@ -1402,7 +1378,7 @@ def _error_from_config_choice(
     return OK(None)
 
 
-def config_set_all(site: SiteContext, ignored_hooks: Optional[list] = None) -> None:
+def config_set_all(site: SiteContext, ignored_hooks: list | None = None) -> None:
     if ignored_hooks is None:
         ignored_hooks = []
 
@@ -1459,13 +1435,13 @@ omd config change        - change multiple at once. Provide newline separated
 
 
 def config_show(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> None:
-    hook: Optional[ConfigHook] = {}
+    hook: ConfigHook | None = {}
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
-                sys.stdout.write("%s: %s\n" % (hook_name, site.conf[hook_name]))
+                sys.stdout.write(f"{hook_name}: {site.conf[hook_name]}\n")
     else:
         output = []
         for hook_name in args:
@@ -1483,7 +1459,7 @@ def config_configure(
     site: SiteContext, global_opts: "GlobalOptions", config_hooks: ConfigHooks
 ) -> list[str]:
     hook_names = sorted(config_hooks.keys())
-    current_hook_name: Optional[str] = ""
+    current_hook_name: str | None = ""
     menu_open = False
     current_menu = "Basic"
 
@@ -1492,7 +1468,7 @@ def config_configure(
 
     while True:
         # Rebuild hook information (values possible changed)
-        menu: Dict[str, List[Tuple[str, str]]] = {}
+        menu: dict[str, list[tuple[str, str]]] = {}
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
             if hook["active"] and not hook["deprecated"]:
@@ -1529,7 +1505,7 @@ def config_configure(
                 except MKTerminate:
                     raise
                 except Exception as e:
-                    bail_out("Error in hook %s: %s" % (current_hook_name, e))
+                    bail_out(f"Error in hook {current_hook_name}: {e}")
             else:
                 menu_open = False
 
@@ -1588,7 +1564,7 @@ def init_action(
 
     if len(args) > 0:
         # restrict to this daemon
-        daemon: Optional[str] = args[0]
+        daemon: str | None = args[0]
     else:
         daemon = None
 
@@ -1642,7 +1618,7 @@ def putenv(key: str, value: str) -> None:
     os.environ[key] = value
 
 
-def getenv(key: str, default: Optional[str] = None) -> Optional[str]:
+def getenv(key: str, default: str | None = None) -> str | None:
     if key not in os.environ:
         return default
     return os.environ[key]
@@ -1663,11 +1639,11 @@ def set_environment(site: SiteContext) -> None:
     putenv("OMD_ROOT", site.dir)
     putenv(
         "PATH",
-        "%s/local/bin:%s/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin" % (site.dir, site.dir),
+        f"{site.dir}/local/bin:{site.dir}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin",
     )
     putenv("USER", site.name)
 
-    putenv("LD_LIBRARY_PATH", "%s/local/lib:%s/lib" % (site.dir, site.dir))
+    putenv("LD_LIBRARY_PATH", f"{site.dir}/local/lib:{site.dir}/lib")
     putenv("HOME", site.dir)
 
     # allow user to define further environment variable in ~/etc/environment
@@ -1752,7 +1728,7 @@ def call_scripts(site: SiteContext, phase: str) -> None:
         for file in sorted(path.iterdir()):
             if file.name[0] == ".":
                 continue
-            sys.stdout.write('Executing %s script "%s"...' % (phase, file.name))
+            sys.stdout.write(f'Executing {phase} script "{file.name}"...')
             with subprocess.Popen(  # nosec
                 str(file),  # path-like args is not allowed when shell is true
                 shell=True,
@@ -1810,8 +1786,8 @@ def main_help(
     version_info: VersionInfo,
     site: AbstractSiteContext,
     global_opts: Optional["GlobalOptions"] = None,
-    args: Optional[Arguments] = None,
-    options: Optional[CommandOptions] = None,
+    args: Arguments | None = None,
+    options: CommandOptions | None = None,
 ) -> None:
     if args is None:
         args = []
@@ -2057,16 +2033,16 @@ def main_create(
 
     else:
         sys.stdout.write(
-            "Create new site %s in disabled state and with empty %s.\n" % (site.name, site.dir)
+            f"Create new site {site.name} in disabled state and with empty {site.dir}.\n"
         )
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
 def welcome_message(site: SiteContext, admin_password: str) -> None:
-    sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
+    sys.stdout.write(f"Created new site {site.name} with version {omdlib.__version__}.\n\n")
     sys.stdout.write(
-        "  The site can be started with %somd start %s%s.\n" % (tty.bold, site.name, tty.normal)
+        f"  The site can be started with {tty.bold}omd start {site.name}{tty.normal}.\n"
     )
     sys.stdout.write(
         "  The default web UI is available at %shttp://%s/%s/%s\n"
@@ -2218,7 +2194,7 @@ def finalize_site_as_user(
     version_info: VersionInfo,
     site: SiteContext,
     what: str,
-    ignored_hooks: Optional[List[str]] = None,
+    ignored_hooks: list[str] | None = None,
 ) -> None:
     # Mount and create contents of tmpfs. This must be done as normal
     # user. We also could do this at 'omd start', but this might confuse
@@ -2381,7 +2357,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     sitename_must_be_valid(new_site, reuse)
 
     if not old_site.is_stopped():
-        bail_out("Cannot %s site '%s' while it is running." % (action, old_site.name))
+        bail_out(f"Cannot {action} site '{old_site.name}' while it is running.")
 
     pids = find_processes_of_user(old_site.name)
     if pids:
@@ -2396,7 +2372,9 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
             remove_from_fstab(old_site)
 
     sys.stdout.write(
-        "%sing site %s to %s..." % (what == "mv" and "Mov" or "Copy", old_site.name, new_site.name)
+        "{}ing site {} to {}...".format(
+            what == "mv" and "Mov" or "Copy", old_site.name, new_site.name
+        )
     )
     sys.stdout.flush()
 
@@ -2423,7 +2401,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         if global_opts.verbose:
             addopts += " -v"
 
-        os.system("rsync -arx %s '%s/' '%s/'" % (addopts, old_site.dir, new_site.dir))  # nosec
+        os.system(f"rsync -arx {addopts} '{old_site.dir}/' '{new_site.dir}/'")  # nosec
 
         httpdlogdir = new_site.dir + "/var/log/apache"
         if not os.path.exists(httpdlogdir):
@@ -2591,9 +2569,9 @@ def print_diff(
 
     def print_status(color: str, f: str, status: str, long_out: str) -> None:
         if "bare" in options:
-            sys.stdout.write("%s %s\n" % (status, f))
+            sys.stdout.write(f"{status} {f}\n")
         elif not global_opts.verbose:
-            sys.stdout.write(color + " %s %s\n" % (long_out, f))
+            sys.stdout.write(color + f" {long_out} {f}\n")
         else:
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
@@ -2611,9 +2589,9 @@ def print_diff(
                 )
 
             elif status == "p":
-                sys.stdout.write("    %s %s %s\n" % (source_perm, arrow, target_perm))
+                sys.stdout.write(f"    {source_perm} {arrow} {target_perm}\n")
             elif "t" in status:
-                sys.stdout.write("    %s %s %s\n" % (source_type, arrow, target_type))
+                sys.stdout.write(f"    {source_type} {arrow} {target_type}\n")
 
     if not target_type:
         print_status(StateMarkers.good, fn, "d", "Deleted")
@@ -2950,9 +2928,7 @@ def main_umount(
                 )
                 continue
 
-            sys.stdout.write(
-                "%sUnmounting tmpfs of site %s%s..." % (tty.bold, site.name, tty.normal)
-            )
+            sys.stdout.write(f"{tty.bold}Unmounting tmpfs of site {site.name}{tty.normal}...")
             sys.stdout.flush()
 
             if not show_success(unmount_tmpfs(site, False, kill="kill" in options)):
@@ -3030,17 +3006,15 @@ def main_init_action(  # pylint: disable=too-many-branches
         if command == "status" and bare:
             sys.stdout.write("[%s]\n" % site.name)
         elif not parallel:
-            sys.stdout.write(
-                "%sDoing '%s' on site %s:%s\n" % (tty.bold, command, site.name, tty.normal)
-            )
+            sys.stdout.write(f"{tty.bold}Doing '{command}' on site {site.name}:{tty.normal}\n")
         else:
             parallel_output(site.name, "Invoking '%s'\n" % (command))
         sys.stdout.flush()
 
         # We need to open a subprocess, because each site must be started with the account of the
         # site user. And after setuid() we cannot return.
-        stdout: Union[int, IO[str]] = sys.stdout if not parallel else subprocess.PIPE
-        stderr: Union[int, IO[str]] = sys.stderr if not parallel else subprocess.STDOUT
+        stdout: int | IO[str] = sys.stdout if not parallel else subprocess.PIPE
+        stderr: int | IO[str] = sys.stderr if not parallel else subprocess.STDOUT
         bare_arg = ["--bare"] if bare else []
         p = subprocess.Popen(  # pylint:disable=consider-using-with
             [sys.argv[0], command] + bare_arg + [site.name] + args,
@@ -3069,7 +3043,7 @@ def main_init_action(  # pylint: disable=too-many-branches
     # the output line by line and prefix each line with the ID of the site.
     # The output of a single process must not block the output of the others,
     # so it seems we need to do some low level stuff here :-/.
-    site_buf: Dict[str, str] = {}
+    site_buf: dict[str, str] = {}
     while parallel and processes:
         for site_id, p in processes[:]:
             if p.stdout is None:
@@ -3082,7 +3056,7 @@ def main_init_action(  # pylint: disable=too-many-branches
                     if not b:
                         break
                     buf += b
-            except IOError as e:
+            except OSError as e:
                 if e.errno == errno.EAGAIN:
                     pass
                 else:
@@ -3171,7 +3145,7 @@ def main_su(
 
 
 def _try_backup_site_to_tarfile(  # type:ignore[no-untyped-def]
-    fh: Union[io.BufferedWriter, BinaryIO],
+    fh: io.BufferedWriter | BinaryIO,
     tar_mode: str,
     options: CommandOptions,
     site: SiteContext,
@@ -3182,7 +3156,7 @@ def _try_backup_site_to_tarfile(  # type:ignore[no-untyped-def]
 
     try:
         omdlib.backup.backup_site_to_tarfile(site, fh, tar_mode, options, global_opts.verbose)
-    except IOError as e:
+    except OSError as e:
         bail_out("Failed to perform backup: %s" % e)
 
 
@@ -3218,7 +3192,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     global_opts: "GlobalOptions",
     version_info: VersionInfo,
     source_descr: str,
-    new_site_name: Optional[str],
+    new_site_name: str | None,
 ) -> None:
     try:
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
@@ -3243,7 +3217,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     site = SiteContext(new_sitename)
 
     if is_root():
-        sys.stdout.write("Restoring site %s from %s...\n" % (site.name, source_descr))
+        sys.stdout.write(f"Restoring site {site.name} from {source_descr}...\n")
         sys.stdout.flush()
 
         prepare_restore_as_root(version_info, site, options)
@@ -3276,7 +3250,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
                 if global_opts.verbose:
                     sys.stdout.write(
-                        "  Rewriting link target from %s to %s\n" % (tarinfo.linkname, new_linkname)
+                        f"  Rewriting link target from {tarinfo.linkname} to {new_linkname}\n"
                     )
                 tarinfo.linkname = new_linkname
 
@@ -3491,7 +3465,7 @@ def kill_site_user_processes(
         bail_out("Failed to kill site processes: %s" % ", ".join(map(str, pids)))
 
 
-def get_current_and_parent_pids() -> List[int]:
+def get_current_and_parent_pids() -> list[int]:
     """Return list of PIDs of the current process and parent process tree till pid 0"""
     pids = []
     process = psutil.Process()
@@ -3501,9 +3475,9 @@ def get_current_and_parent_pids() -> List[int]:
     return pids
 
 
-def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) -> List[int]:
+def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) -> list[int]:
     """Return list of PIDs of all running site user processes (that are not excluded)"""
-    exclude: List[int] = []
+    exclude: list[int] = []
     if exclude_current_and_parents:
         exclude = get_current_and_parent_pids()
     with subprocess.Popen(
@@ -3640,16 +3614,16 @@ class PackageManager(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def find_packages_of_path(self, path: str) -> List[str]:
+    def find_packages_of_path(self, path: str) -> list[str]:
         raise NotImplementedError()
 
-    def _execute_uninstall(self, cmd: List[str]) -> None:
+    def _execute_uninstall(self, cmd: list[str]) -> None:
         p = self._execute(cmd)
         output = p.communicate()[0]
         if p.wait() != 0:
             bail_out("Failed to uninstall package:\n%s" % output)
 
-    def _execute(self, cmd: List[str]) -> subprocess.Popen:
+    def _execute(self, cmd: list[str]) -> subprocess.Popen:
         logger.log(VERBOSE, "Executing: %s", subprocess.list2cmdline(cmd))
 
         return subprocess.Popen(
@@ -3667,7 +3641,7 @@ class PackageManagerDEB(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
-    def find_packages_of_path(self, path: str) -> List[str]:
+    def find_packages_of_path(self, path: str) -> list[str]:
         real_path = os.path.realpath(path)
 
         p = self._execute(["dpkg", "-S", real_path])
@@ -3686,7 +3660,7 @@ class PackageManagerRPM(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["rpm", "-e", package_name])
 
-    def find_packages_of_path(self, path: str) -> List[str]:
+    def find_packages_of_path(self, path: str) -> list[str]:
         real_path = os.path.realpath(path)
 
         p = self._execute(["rpm", "-qf", real_path])
@@ -3703,7 +3677,7 @@ class PackageManagerRPM(PackageManager):
 
 class Option(NamedTuple):
     long_opt: str
-    short_opt: Optional[str]
+    short_opt: str | None
     needs_arg: bool
     description: str
 
@@ -3740,7 +3714,7 @@ class Command(NamedTuple):
     confirm: bool
     args_text: str
     handler: Callable
-    options: List[Option]
+    options: list[Option]
     description: str
     confirm_text: str
 
@@ -4279,7 +4253,7 @@ class GlobalOptions(NamedTuple):
 
 def handle_global_option(
     global_opts: GlobalOptions, main_args: Arguments, opt: str, orig: str
-) -> Tuple[GlobalOptions, Arguments]:
+) -> tuple[GlobalOptions, Arguments]:
     verbose = global_opts.verbose
     force = global_opts.force
     interactive = global_opts.interactive
@@ -4314,7 +4288,7 @@ def handle_global_option(
     return new_global_opts, main_args
 
 
-def _opt_arg(main_args: Arguments, opt: str) -> Tuple[str, Arguments]:
+def _opt_arg(main_args: Arguments, opt: str) -> tuple[str, Arguments]:
     if len(main_args) < 1:
         bail_out("Option %s needs an argument." % opt)
     arg = main_args[0]
@@ -4323,8 +4297,8 @@ def _opt_arg(main_args: Arguments, opt: str) -> Tuple[str, Arguments]:
 
 
 def _parse_command_options(  # pylint: disable=too-many-branches
-    args: Arguments, options: List[Option]
-) -> Tuple[Arguments, CommandOptions]:
+    args: Arguments, options: list[Option]
+) -> tuple[Arguments, CommandOptions]:
 
     # Give a short overview over the command specific options
     # when the user specifies --help:
@@ -4334,7 +4308,7 @@ def _parse_command_options(  # pylint: disable=too-many-branches
         else:
             sys.stdout.write("No options for this command\n")
         for option in options:
-            args_text = "%s--%s" % (
+            args_text = "{}--{}".format(
                 "-%s," % option.short_opt if option.short_opt else "",
                 option.long_opt,
             )
@@ -4350,7 +4324,7 @@ def _parse_command_options(  # pylint: disable=too-many-branches
         opt = args[0]
         args = args[1:]
 
-        found_options: List[Option] = []
+        found_options: list[Option] = []
         if opt.startswith("--"):
             # Handle --foo=bar
             if "=" in opt:

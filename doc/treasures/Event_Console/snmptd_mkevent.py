@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -14,9 +13,9 @@
 # authCommunity execute public
 # traphandle default /path/to/this/script
 
-import time
-import sys
 import re
+import sys
+import time
 
 # Define the Hostname patterns here:
 hostname_patterns = ['SMI::enterprises.2349.2.2.2.5 = "(.*)"']
@@ -42,8 +41,8 @@ ip = data[1]
 if match_host:
     host = match_host.strip()
 
-#Write to mkevent Socket
+# Write to mkevent Socket
 out = open(deamon_path, "w")
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
-out.write("<5>%s %s trap: %s\n" % (timestamp, host, msg))
+out.write("<5>{} {} trap: {}\n".format(timestamp, host, msg))
 out.close()

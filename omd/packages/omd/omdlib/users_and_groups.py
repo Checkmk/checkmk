@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -28,7 +27,7 @@ import os
 import pwd
 import shlex
 import subprocess
-from typing import List, Optional, TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 import psutil  # type: ignore[import]
 
@@ -52,7 +51,7 @@ from cmk.utils.exceptions import MKTerminate
 #   '----------------------------------------------------------------------'
 
 
-def find_processes_of_user(username: str) -> List[str]:
+def find_processes_of_user(username: str) -> list[str]:
     try:
         completed_process = subprocess.run(
             ["pgrep", "-u", username],
@@ -79,13 +78,11 @@ def groupdel(groupname: str) -> None:
             check=False,
         )
     except OSError as e:
-        raise MKTerminate("\n" + tty.error + ": Failed to delete group '%s': %s" % (groupname, e))
+        raise MKTerminate("\n" + tty.error + f": Failed to delete group '{groupname}': {e}")
 
     if completed_process.returncode:
         raise MKTerminate(
-            "\n"
-            + tty.error
-            + ": Failed to delete group '%s': %s" % (groupname, completed_process.stderr)
+            "\n" + tty.error + f": Failed to delete group '{groupname}': {completed_process.stderr}"
         )
 
 
@@ -93,8 +90,8 @@ def groupdel(groupname: str) -> None:
 def useradd(
     version_info: "VersionInfo",
     site: "SiteContext",
-    uid: Optional[str] = None,
-    gid: Optional[str] = None,
+    uid: str | None = None,
+    gid: str | None = None,
 ) -> None:
     # Create user for running site 'name'
     _groupadd(site.name, gid)
@@ -102,7 +99,7 @@ def useradd(
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
 
-    cmd = "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash" % (
+    cmd = "useradd {} -r -d '{}' -c 'OMD site {}' -g {} -G omd {} -s /bin/bash".format(
         useradd_options,
         site.dir,
         site.name,
@@ -124,7 +121,7 @@ def useradd(
 
 
 # TODO: refactor gid to int
-def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
+def _groupadd(groupname: str, gid: str | None = None) -> None:
     cmd = ["groupadd"]
     if gid is not None:
         cmd += ["-g", "%d" % int(gid)]
@@ -151,13 +148,11 @@ def userdel(name: str) -> None:
                 check=False,
             )
         except OSError as e:
-            raise MKTerminate("\n" + tty.error + ": Failed to delete user '%s': %s" % (name, e))
+            raise MKTerminate("\n" + tty.error + f": Failed to delete user '{name}': {e}")
 
         if completed_process.returncode:
             raise MKTerminate(
-                "\n"
-                + tty.error
-                + ": Failed to delete user '%s': %s" % (name, completed_process.stderr)
+                "\n" + tty.error + f": Failed to delete user '{name}': {completed_process.stderr}"
             )
 
     # On some OSes (e.g. debian) the group is automatically removed if
@@ -166,7 +161,7 @@ def userdel(name: str) -> None:
         groupdel(name)
 
 
-def user_id(name: str) -> Union[bool, int]:
+def user_id(name: str) -> bool | int:
     try:
         return pwd.getpwnam(name).pw_uid
     except Exception:
@@ -208,24 +203,22 @@ def user_verify(
 
     user = _user_by_id(user_id(name))
     if user.pw_dir != site.dir:
-        raise MKTerminate(
-            tty.error + ": Wrong home directory for user %s, must be %s" % (name, site.dir)
-        )
+        raise MKTerminate(tty.error + f": Wrong home directory for user {name}, must be {site.dir}")
 
     if not os.path.exists(site.dir):
         raise MKTerminate(
-            tty.error + ": home directory for user %s (%s) does not exist" % (name, site.dir)
+            tty.error + f": home directory for user {name} ({site.dir}) does not exist"
         )
 
     if not allow_populated and os.path.exists(site.dir + "/version"):
         raise MKTerminate(
-            tty.error + ": home directory for user %s (%s) must be empty" % (name, site.dir)
+            tty.error + f": home directory for user {name} ({site.dir}) must be empty"
         )
 
     if not _file_owner_verify(site.dir, user.pw_uid, user.pw_gid):
         raise MKTerminate(
             tty.error
-            + ": home directory (%s) is not owned by user %s and group %s" % (site.dir, name, name)
+            + f": home directory ({site.dir}) is not owned by user {name} and group {name}"
         )
 
     group = _group_by_id(user.pw_gid)
@@ -234,8 +227,7 @@ def user_verify(
 
     if not _user_has_group(version_info.APACHE_USER, name):
         raise MKTerminate(
-            tty.error
-            + ": apache user %s must be member of group %s" % (version_info.APACHE_USER, name)
+            tty.error + f": apache user {version_info.APACHE_USER} must be member of group {name}"
         )
 
     if not _user_has_group(name, "omd"):
@@ -293,7 +285,7 @@ def switch_to_site_user(site: "SiteContext") -> None:
     os.setuid(uid)
 
 
-def _groups_of(username: str) -> List[int]:
+def _groups_of(username: str) -> list[int]:
     # Note: Do NOT use grp.getgrall to fetch all availabile groups
     # Certain setups might have ldap group authorization and may start excessive queries
     return list(map(int, subprocess.check_output(["id", "-G", username]).split()))

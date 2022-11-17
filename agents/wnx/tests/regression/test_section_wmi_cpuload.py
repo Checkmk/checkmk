@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
-from typing import Any, AnyStr, Dict, Final, Sequence
+from collections.abc import Sequence
+from typing import Any, AnyStr, Final
 
 import pytest
 
@@ -19,7 +19,7 @@ class Globals:
     alone = True
 
 
-EXPECTED_SYSTEM_PERF_HEADER: Final[Dict[str, str]] = {
+EXPECTED_SYSTEM_PERF_HEADER: Final[dict[str, str]] = {
     "use_wmi": (
         r"AlignmentFixupsPersec,Caption,ContextSwitchesPersec,Description,"
         r"ExceptionDispatchesPersec,FileControlBytesPersec,"
@@ -36,7 +36,7 @@ EXPECTED_SYSTEM_PERF_HEADER: Final[Dict[str, str]] = {
     ),
 }
 
-EXPECTED_SYSTEM_PERF_DATA: Final[Dict[str, str]] = {
+EXPECTED_SYSTEM_PERF_DATA: Final[dict[str, str]] = {
     "use_wmi": (
         r"\d+,,\d+,,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,,\d+,"
         r"\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\d+,\b(?:OK|Timeout)\b"
@@ -44,7 +44,7 @@ EXPECTED_SYSTEM_PERF_DATA: Final[Dict[str, str]] = {
     "use_perf": r",\d+,\d+,\d+,OK".replace(",", "\\|"),
 }
 
-EXPECTED_COMPUTER_SYSTEM_HEADER: Final[Dict[str, str]] = {
+EXPECTED_COMPUTER_SYSTEM_HEADER: Final[dict[str, str]] = {
     "use_wmi": (
         r"AdminPasswordStatus,AutomaticManagedPagefile,"
         r"AutomaticResetBootOption,AutomaticResetCapability,BootOptionOnLimit,"
@@ -68,7 +68,7 @@ EXPECTED_COMPUTER_SYSTEM_HEADER: Final[Dict[str, str]] = {
     "use_perf": r"Name,NumberOfLogicalProcessors,NumberOfProcessors,WMIStatus".replace(",", "\\|"),
 }
 
-EXPECTED_COMPUTER_SYSTEM_DATA: Final[Dict[str, str]] = {
+EXPECTED_COMPUTER_SYSTEM_DATA: Final[dict[str, str]] = {
     "use_wmi": (
         r"\d+,\d+,\d+,\d+,\d*,\d*,\d+,[^,]*,[^,]+,[\w-]+,\d+,[^,]*,\w+,\d+,\d+,"
         r"[^,]+,[\w-]+,[^,]+,\d+,\d+,\d+,\d+,\d+,,,\d+,,[^,]+(, [^,]+)?,[^,]+,"
@@ -87,7 +87,7 @@ def testfile_engine() -> str:
 @pytest.fixture(name="config_with_cpuload_method", params=["use_wmi", "use_perf"])
 def change_config_cpuload_method(  # type:ignore[no-untyped-def]
     request, make_yaml_config
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     make_yaml_config["global"]["cpuload_method"] = request.param
     return make_yaml_config
 
@@ -95,7 +95,7 @@ def change_config_cpuload_method(  # type:ignore[no-untyped-def]
 @pytest.fixture(name="testconfig", params=["alone", "with_systemtime"])
 def fixture_testconfig(  # type:ignore[no-untyped-def]
     request, config_with_cpuload_method
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     Globals.alone = request.param == "alone"
     config_with_cpuload_method["global"]["sections"] = (
         Globals.section if Globals.alone else [Globals.section, "systemtime"]

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -16,7 +15,8 @@ def usage():
     print("  It scans for *.mk files in the current folder and creates a respective WATO folder")
     print("  for each file found. The content of the file is splitted into a hosts.mk and rules.mk")
     print(
-        "  As an alternative, you can configure where to put the content of the source *.mk files")
+        "  As an alternative, you can configure where to put the content of the source *.mk files"
+    )
     print("  (have a look at the config section within the script)")
     print(
         "  After the conversion is finished, you can see the unconverted data in the file unconverted.info"
@@ -62,7 +62,7 @@ file_section_to_folder = {
     # Example: sourcefile: { "section": "destination_folder" }
     # "accesspoints.mk": { "logwatch_patterns": "/",  # logwatch patterns in accesspoints.mk are stored in the main folder
     #                      "hosts.mk":          "AP", # hosts.mk is stored in the folder AP
-    #"*": {"ALL": "MIGRATION"} # Put everything (hosts/rules) into MIGRATION folder
+    # "*": {"ALL": "MIGRATION"} # Put everything (hosts/rules) into MIGRATION folder
 }
 
 #   .--Globals-------------------------------------------------------------.
@@ -81,7 +81,7 @@ available_tags = {}
 all_file_vars = {}
 
 # unknown host tags -> will be converted to tag group with checkbox
-new_host_tags = set([])
+new_host_tags = set()
 
 # combined information of all config files
 all_ipaddresses = {}
@@ -195,7 +195,7 @@ def get_hosts_mk(file_vars):
     for entry in file_vars["all_hosts"]:
         analyze_tags(entry)
         host_dict[entry.split("|")[0]] = None
-        all_hosts_info.append("\"%s\"," % (entry + "|wato|/\" + FOLDER_PATH + \"/"))
+        all_hosts_info.append('"%s",' % (entry + '|wato|/" + FOLDER_PATH + "/'))
 
     # Parents
     parent_list = []
@@ -223,23 +223,22 @@ def get_hosts_mk(file_vars):
                 # ignore, these are not shown in WATO
                 continue
 
-
-#   Here you can add some special cases, create extra tags for found tags, etc.
-#            found_match = False
-#            for entry in [ "snmp" ]:
-#                if tag == entry:
-#                    add_wato_parameter(hostname, "tag_agent", "snmp-tcp")
-#                    add_wato_parameter(hostname, "tag_%s_snmp" % taggroup_prefix, entry)
-#                    new_host_tags.add(entry)
-#                    found_match = True
-#
-#            if found_match:
-#                continue
+            #   Here you can add some special cases, create extra tags for found tags, etc.
+            #            found_match = False
+            #            for entry in [ "snmp" ]:
+            #                if tag == entry:
+            #                    add_wato_parameter(hostname, "tag_agent", "snmp-tcp")
+            #                    add_wato_parameter(hostname, "tag_%s_snmp" % taggroup_prefix, entry)
+            #                    new_host_tags.add(entry)
+            #                    found_match = True
+            #
+            #            if found_match:
+            #                continue
 
             if tag in map_tag_to_taggroup:
                 add_wato_parameter(hostname, map_tag_to_taggroup[tag], tag)
             else:
-                add_wato_parameter(hostname, "tag_%s_%s" % (taggroup_prefix, tag), tag)
+                add_wato_parameter(hostname, "tag_{}_{}".format(taggroup_prefix, tag), tag)
                 new_host_tags.add(tag)
 
     content = hosts_mk_template % {
@@ -247,7 +246,7 @@ def get_hosts_mk(file_vars):
         "ip_address_info": pprint.pformat(ip_dict),
         "alias_info": pprint.pformat(file_vars["extra_host_conf"].get("alias", [])),
         "parent_info": pprint.pformat(parent_list),
-        "host_attributes_info": pprint.pformat(wato_config).replace("\"", "\\\"")
+        "host_attributes_info": pprint.pformat(wato_config).replace('"', '\\"'),
     }
 
     for what in ["all_hosts", "extra_host_conf"]:
@@ -279,7 +278,7 @@ def create_wato_folder(filename, file_vars):
                 tags = []
             elif len(entry) == 3:
                 tags, hosts, values = entry
-            content += "  ( {'services': %r}, %r, %s),\n" % (values, tags, hosts)
+            content += "  ( {{'services': {!r}}}, {!r}, {}),\n".format(values, tags, hosts)
         content += "] + inventory_services_rules"
 
         add_to_folder(content, "rules.mk", get_target_folder(filename, "inventory_services"))
@@ -307,7 +306,7 @@ def create_wato_folder(filename, file_vars):
                 tags = []
             elif len(entry) == 3:
                 values, tags, hosts = entry
-            content += "  ( %r, %r, %r),\n" % (values, tags, hosts)
+            content += "  ( {!r}, {!r}, {!r}),\n".format(values, tags, hosts)
         content += "] + fileinfo_groups"
 
         add_to_folder(content, "rules.mk", get_target_folder(filename, "fileinfo_groups"))
@@ -328,11 +327,14 @@ def create_wato_folder(filename, file_vars):
                 hosts, name, match, user = rest
             else:
                 global partial_unconverted_data
-                partial_unconverted_data += "%s: Unable to convert process rule %r" % (filename,
-                                                                                       entry)
+                partial_unconverted_data += "{}: Unable to convert process rule {!r}".format(
+                    filename, entry
+                )
 
-            content += "( {'default_params': {'levels': %r}, 'descr': %r, 'match': %r, 'user': %r}, %r, %r),\n" % \
-                    (levels, name, match, user != "$ANY_USER$" and user or None, tags, hosts)
+            content += (
+                "( {'default_params': {'levels': %r}, 'descr': %r, 'match': %r, 'user': %r}, %r, %r),\n"
+                % (levels, name, match, user != "$ANY_USER$" and user or None, tags, hosts)
+            )
 
         content += "] + inventory_processes_rules"
         add_to_folder(content, "rules.mk", get_target_folder(filename, "inventory_processes"))
@@ -360,10 +362,11 @@ def create_wato_folder(filename, file_vars):
 
                 pattern_info = []
                 for value in values:
-                    pattern_info.append("(%r, %r, \"(auto generated)\")" % (state, value[3]))
+                    pattern_info.append('({!r}, {!r}, "(auto generated)")'.format(state, value[3]))
 
-                content += "( [%s], %s, %s, [\"%s\"]),\n" % (", ".join(pattern_info), tags, hosts,
-                                                             logfile)
+                content += '( [{}], {}, {}, ["{}"]),\n'.format(
+                    ", ".join(pattern_info), tags, hosts, logfile
+                )
 
         content += "] + logwatch_rules"
 
@@ -372,12 +375,11 @@ def create_wato_folder(filename, file_vars):
         add_to_folder(content, "rules.mk", get_target_folder(filename, "logwatch_patterns"))
 
     # Log unconverted
-    unconverted_data += "##########################\n"\
-                   "## Unconverted data of file %s\n" % filename
+    unconverted_data += "##########################\n" "## Unconverted data of file %s\n" % filename
     for key, value in file_vars.items():
         if value == [] or value == {} or key in ["ALL_HOSTS", "ALL_SERVICES", "ANY_USER"]:
             continue
-        unconverted_data += "Parameter: %s\nValue:\n%s\n\n\n" % (key, pprint.pformat(value))
+        unconverted_data += "Parameter: {}\nValue:\n{}\n\n\n".format(key, pprint.pformat(value))
 
 
 #   .--Main----------------------------------------------------------------.
@@ -400,9 +402,7 @@ for filename in os.listdir("."):
         print("Process file: %s" % filename)
         file_vars = {
             "all_hosts": [],  # converted
-            "extra_host_conf": {
-                "alias": []
-            },  # converted
+            "extra_host_conf": {"alias": []},  # converted
             "parents": [],  # converted
             "ignored_services": [],  # converted
             "fileinfo_groups": [],  # converted
@@ -425,7 +425,7 @@ for filename in os.listdir("."):
         exec(open(filename).read(), globals(), file_vars)
         all_file_vars[filename] = file_vars
     except Exception as e:
-        print("Error parsing file %s: %s" % (filename, e))
+        print("Error parsing file {}: {}".format(filename, e))
 print("")
 
 # Pre-process files, deterime global IP addresses and parent relationships
@@ -437,8 +437,9 @@ for filename, file_vars in all_file_vars.items():
     for entry in file_vars.get("parents", []):
         if len(entry) == 3:
             parents, tags, hosts = entry
-            partial_unconverted_data += "%s: Unable to convert parent configuration: %s" % (
-                filename, pprint.pformat(entry))
+            partial_unconverted_data += "{}: Unable to convert parent configuration: {}".format(
+                filename, pprint.pformat(entry)
+            )
         elif len(entry) == 2:
             parents, hosts = entry
             parent_tokens = parents.split(",")
@@ -463,9 +464,13 @@ print("")
 print("hosttags.mk")
 print("###########")
 
-print("Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)" %
-      os.path.expanduser("~"))
-tag_template = "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
+print(
+    "Creating hosttags.mk in %s (inspect and copy this to ~/etc/check_mk/multisite.d/wato)"
+    % os.path.expanduser("~")
+)
+tag_template = (
+    "('%(taggroup_prefix)s_%(tag)s', u'%(tag)s', [('%(tag)s', u'%(tag)s (auto generated)', [])]),"
+)
 extra_host_tags = []
 for tag in new_host_tags:
     extra_host_tags.append(tag_template % {"tag": tag, "taggroup_prefix": taggroup_prefix})
@@ -474,19 +479,19 @@ hosttags_content = """# Created by converter script
 # encoding: utf-8
 
 wato_host_tags += \
-%(wato_host_tags)s
+{wato_host_tags}
 
 wato_aux_tags += \
-%(wato_aux_tags)s
+{wato_aux_tags}
 
 wato_host_tags += [\n\
-%(extra_host_tags)s
+{extra_host_tags}
 ]
-""" % {
-    "wato_host_tags": pprint.pformat(host_tags_info["wato_host_tags"]),
-    "wato_aux_tags": pprint.pformat(host_tags_info["wato_aux_tags"]),
-    "extra_host_tags": "\n".join(extra_host_tags)
-}
+""".format(
+    wato_host_tags=pprint.pformat(host_tags_info["wato_host_tags"]),
+    wato_aux_tags=pprint.pformat(host_tags_info["wato_aux_tags"]),
+    extra_host_tags="\n".join(extra_host_tags),
+)
 open(os.path.expanduser("~/hosttags.mk"), "w").write(hosttags_content)
 print("")
 
@@ -494,24 +499,30 @@ print("")
 print("Writing configuration files")
 print("###########################")
 for dirname, content in result_files.items():
-    filepath = "%s/%s/%s" % (confd_folder, wato_folder, dirname)
+    filepath = "{}/{}/{}".format(confd_folder, wato_folder, dirname)
     if not os.path.exists(filepath):
         os.makedirs(filepath)
     for filename, text in content.items():
-        print("Writing %s... %s" % (filepath, filename))
-        open("%s/%s" % (filepath, filename), "w").write(text)
+        print("Writing {}... {}".format(filepath, filename))
+        open("{}/{}".format(filepath, filename), "w").write(text)
     print("")
 
 if unconverted_data or partial_unconverted_data:
-    print("""##################################################
+    print(
+        """##################################################
 # Unconverted data remains (see unconverted.info)#
-##################################################""")
+##################################################"""
+    )
 
     # Write all unconverted data into the file unconverted.info
-    open("unconverted.info", "w").write(unconverted_data + """
+    open("unconverted.info", "w").write(
+        unconverted_data
+        + """
     #############################
     #Partially unconverted data:#
     #############################
 
     %s
-    """ % partial_unconverted_data)
+    """
+        % partial_unconverted_data
+    )

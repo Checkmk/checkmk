@@ -4588,6 +4588,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                                     "Automatically remove hosts whose Check_MK service has been in the state "
                                     "CRITICAL for longer than the configured time period."
                                 ),
+                                display=("days", "hours", "minutes"),
                             ),
                         ),
                     ],

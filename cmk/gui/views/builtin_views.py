@@ -2393,6 +2393,7 @@ builtin_views.update(
                 "service_staleness": {"is_service_staleness": "1"},
                 "service_scheduled_downtime_depth": {"is_service_scheduled_downtime_depth": "0"},
                 "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
+                "hoststate": {"hst0": "on", "hst1": "on", "hst2": "on", "hstp": "on"},
             },
             "link_from": {},
             "add_context_to_title": True,

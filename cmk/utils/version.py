@@ -712,7 +712,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     (2, 2, 0): max(
         Version("2.1.0p11"),  # ?
         Version("2.1.0p15"),  # migration for MKPs (Werk #14636)
-        Version("2.1.0p17"),  # added severity_new_host_label to sample config
+        Version("2.1.0p17"),  # added severity_new_host_label to sample config and werk 14938
     ),
 }
 

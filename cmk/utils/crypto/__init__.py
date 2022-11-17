@@ -9,6 +9,7 @@ our crypto dependencies and python's built-in crypto utilities (like hashlib).
 """
 
 
+import secrets
 from typing import AnyStr, Final, Generic
 
 from cmk.utils.type_defs import assert_never
@@ -32,3 +33,17 @@ class Password(Generic[AnyStr]):
         if nul in password:
             raise ValueError(f"Invalid password: {password!r}")
         self.raw: Final[AnyStr] = password
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Password):
+            return NotImplemented
+        return const_time_compare(self.raw, other.raw)
+
+
+def const_time_compare(a: AnyStr, b: AnyStr) -> bool:
+    def as_bytes(v: AnyStr) -> bytes:
+        if isinstance(v, str):
+            return v.encode("utf-8")
+        return v
+
+    return secrets.compare_digest(as_bytes(a), as_bytes(b))

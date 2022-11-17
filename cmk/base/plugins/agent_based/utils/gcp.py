@@ -344,3 +344,38 @@ def check_summary(asset_type: AssetType, descriptor: str, section: AssetSection)
         summary=f"{n} {descriptor}{appendix}",
         details=f"Found {n} {descriptor.lower() if not descriptor.isupper() else descriptor}{appendix}",
     )
+
+
+def _cascading_dropdown_level_extractor(
+    params: Mapping[str, Any], metric_name: str
+) -> tuple[float, float] | None:
+    base_metric_name = "_".join(metric_name.split("_")[:-1])
+    (param, levels) = params[base_metric_name]
+    if f"{base_metric_name}_{param}" == metric_name:
+        return levels
+    return None
+
+
+def get_percentile_metric_specs(
+    gcp_metric: str,
+    check_metric_prefix: str,
+    label_prefix: str,
+    render_func: Callable,
+    scale: float = 1.0,
+) -> Mapping[str, MetricSpec]:
+    def _get_spec(gcp_aligner_map: GCPAlignerMap) -> MetricSpec:
+        return MetricSpec(
+            gcp_metric,
+            f"{label_prefix} ({gcp_aligner_map.percentile}th percentile)",
+            render_func,
+            scale=scale,
+            filter_by=Filter(
+                key=AggregationKey(key="per_series_aligner"), value=gcp_aligner_map.gcp_aligner
+            ),
+            level_extractor=_cascading_dropdown_level_extractor,
+        )
+
+    return {
+        f"{check_metric_prefix}_{gcp_aligner_map.percentile}": _get_spec(gcp_aligner_map)
+        for gcp_aligner_map in PERCENTILE_MAPPING
+    }

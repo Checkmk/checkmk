@@ -25,23 +25,6 @@ export const browser = {
     },
 };
 
-// simple implementation of function default arguments when
-// using objects as function parameters. Example:
-// function xxx(args) {
-//     args = merge_args({
-//         'arg2': 'default_val',
-//     });
-// }
-// xxx({
-//   'arg1': 'val1',
-//   'arg3': 'val3',
-// })
-export function merge_args(defaults, args = {}) {
-    for (var name in args) defaults[name] = args[name];
-
-    return defaults;
-}
-
 export function prevent_default_events(event) {
     event.preventDefault();
     event.stopPropagation();

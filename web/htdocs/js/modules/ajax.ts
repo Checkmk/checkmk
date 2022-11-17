@@ -2,8 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import {merge_args} from "utils";
-
 declare global {
     var global_csrf_token: string;
 }
@@ -42,21 +40,22 @@ export function post_url(
 }
 
 export function call_ajax(url, optional_args?) {
-    var args = merge_args(
-        {
-            add_ajax_id: true,
-            plain_error: false,
-            response_handler: null,
-            error_handler: null,
-            handler_data: null,
-            method: "GET",
-            post_data: null,
-            sync: false,
-            for_license_usage: false,
-            authorization: null,
-        },
-        optional_args
-    );
+    const default_args = {
+        add_ajax_id: true,
+        plain_error: false,
+        response_handler: null,
+        error_handler: null,
+        handler_data: null,
+        method: "GET",
+        post_data: null,
+        sync: false,
+        for_license_usage: false,
+        authorization: null,
+    };
+    var args = {
+        ...default_args,
+        ...optional_args,
+    };
 
     var AJAX = window.XMLHttpRequest
         ? new window.XMLHttpRequest()

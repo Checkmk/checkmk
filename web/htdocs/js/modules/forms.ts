@@ -268,37 +268,39 @@ export function textinput_enter_submit(e, submit) {
 
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(optional_args, confirm_handler) {
-    let args = utils.merge_args(
-        {
-            // https://sweetalert2.github.io/#configuration
-            target: "#page_menu_popups",
-            position: "top-start",
-            grow: "row",
-            allowOutsideClick: false,
-            backdrop: false,
-            showClass: {
-                popup: "",
-                backdrop: "",
-            },
-            hideClass: {
-                popup: "",
-                backdrop: "",
-            },
-            buttonsStyling: false,
-            showCancelButton: true,
-            confirmButtonText: "Yes",
-            cancelButtonText: "No",
-            customClass: {
-                container: "confirm_container",
-                popup: "confirm_popup",
-                content: "confirm_content",
-                htmlContainer: "confirm_content",
-                actions: "confirm_actions",
-                confirmButton: "hot",
-            },
+    const default_args = {
+        // https://sweetalert2.github.io/#configuration
+        target: "#page_menu_popups",
+        position: "top-start",
+        grow: "row",
+        allowOutsideClick: false,
+        backdrop: false,
+        showClass: {
+            popup: "",
+            backdrop: "",
         },
-        optional_args
-    );
+        hideClass: {
+            popup: "",
+            backdrop: "",
+        },
+        buttonsStyling: false,
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        customClass: {
+            container: "confirm_container",
+            popup: "confirm_popup",
+            content: "confirm_content",
+            htmlContainer: "confirm_content",
+            actions: "confirm_actions",
+            confirmButton: "hot",
+        },
+    };
+
+    let args = {
+        ...default_args,
+        ...optional_args,
+    };
 
     Swal.fire(args).then(result => {
         if (confirm_handler && result.value) {

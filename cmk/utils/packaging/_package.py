@@ -9,10 +9,14 @@ import ast
 import pprint
 import tarfile
 from io import BytesIO
+from logging import Logger
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
 from cmk.utils import version as cmk_version
+
+from ._type_defs import PackageException
 
 
 class PackageInfo(BaseModel):
@@ -56,12 +60,21 @@ def package_info_template(pacname: str) -> PackageInfo:
     )
 
 
-def get_optional_package_info(file_content: bytes) -> PackageInfo | None:
+def extract_package_info(file_content: bytes) -> PackageInfo:
     with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:
             if (extracted_file := tar.extractfile("info")) is None:
-                return None
+                raise PackageException("'info' is not a regular file")
             raw_info = extracted_file.read()
         except KeyError:
-            return None
+            raise PackageException("'info' not contained in MKP")
     return PackageInfo.parse_python_string(raw_info.decode())
+
+
+def extract_package_info_optionally(pkg_path: Path, logger: Logger) -> PackageInfo | None:
+    try:
+        return extract_package_info(pkg_path.read_bytes())
+    except Exception:
+        # Do not make broken files / packages fail the whole mechanism
+        logger.error("[%s]: Failed to read package info", pkg_path, exc_info=True)
+    return None

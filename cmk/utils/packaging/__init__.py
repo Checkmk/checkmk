@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import os
 import shutil
@@ -31,13 +30,13 @@ from cmk.utils.version import parse_check_mk_version
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from ._package import get_optional_package_info, package_info_template, PackageInfo
-
-
-# TODO: Subclass MKGeneralException()?
-class PackageException(MKException):
-    pass
-
+from ._package import (
+    extract_package_info,
+    extract_package_info_optionally,
+    package_info_template,
+    PackageInfo,
+)
+from ._type_defs import PackageException
 
 logger = logging.getLogger("cmk.utils.packaging")
 
@@ -268,13 +267,18 @@ def uninstall(package: PackageInfo, post_package_change_actions: bool = True) ->
 
 
 class PackageStore:
+    """Manage packages that are stored on the site
+
+    This should become the single source of truth regarding package contents.
+    """
+
     def __init__(self) -> None:
         self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
         self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
 
     def store(self, file_content: bytes) -> PackageInfo:
 
-        package = _get_package_info_from_package(file_content)
+        package = extract_package_info(file_content)
 
         base_name = format_file_name(name=package.name, version=package.version)
         local_package_path = self.local_packages / base_name
@@ -450,7 +454,7 @@ def _install(  # pylint: disable=too-many-branches
     allow_outdated: bool,
     post_package_change_actions: bool,
 ) -> PackageInfo:
-    package = _get_package_info_from_package(mkp)
+    package = extract_package_info(mkp)
 
     pacname = package.name
     old_package = read_package_info(pacname)
@@ -618,12 +622,6 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
     ec.save_rule_packs(rule_packs)
 
 
-def _get_package_info_from_package(file_content: bytes) -> PackageInfo:
-    if (package := get_optional_package_info(file_content)) is None:
-        raise PackageException("Failed to open package info file")
-    return package
-
-
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
     packages: Packages = {}
@@ -737,17 +735,11 @@ def get_enabled_package_infos() -> Mapping[str, PackageInfo]:
 
 
 def _get_package_infos(paths: Iterable[Path]) -> Mapping[str, PackageInfo]:
-    optional = {}
-    for pkg_path in paths:
-        try:
-            package_info = _get_package_info_from_package(pkg_path.read_bytes())
-        except Exception:
-            # Do not make broken files / packages fail the whole mechanism
-            logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
-            continue
-        optional[pkg_path.name] = package_info
-
-    return optional
+    return {
+        pkg_path.name: package_info
+        for pkg_path in paths
+        if (package_info := extract_package_info_optionally(pkg_path, logger)) is not None
+    }
 
 
 def _get_enabled_package_paths():
@@ -941,17 +933,8 @@ def _sort_enabled_packages_for_installation(
 ) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
     packages_by_name: dict[str, dict[str, Path]] = {}
     for pkg_path in _get_enabled_package_paths():
-        try:
-            package_info = _get_package_info_from_package(pkg_path.read_bytes())
-        except Exception:
-            # Do not make broken files / packages fail the whole mechanism
-            log.error(
-                "[%s]: Skipping (failed to read package info)",
-                pkg_path.name,
-                exc_info=True,
-            )
+        if (package_info := extract_package_info_optionally(pkg_path, logger)) is None:
             continue
-
         packages_by_name.setdefault(package_info.name, {})[package_info.version] = pkg_path
 
     return _sort_by_name_then_newest_version(packages_by_name)

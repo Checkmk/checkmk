@@ -97,6 +97,9 @@ class CMKVersion:
     def is_raw_edition(self) -> bool:
         return self.edition_short == CMKVersion.CRE
 
+    def is_plus_edition(self) -> bool:
+        return self.edition_short == CMKVersion.CPE
+
     def version_directory(self) -> str:
         return self.omd_version()
 

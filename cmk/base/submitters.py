@@ -11,7 +11,7 @@ import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import Final, IO, Literal, NamedTuple, Optional
+from typing import Final, IO, Literal, NamedTuple, Union
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -21,7 +21,7 @@ from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
 
-_CacheInfo = Optional[tuple[int, int]]
+_CacheInfo = Union[tuple[int, int] | None]
 
 
 def _sanitize_perftext(

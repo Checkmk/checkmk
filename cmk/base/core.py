@@ -9,7 +9,7 @@ import os
 import subprocess
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Literal, Optional
+from typing import Literal, Union
 
 # suppress "Cannot find module" error from mypy
 import livestatus
@@ -40,7 +40,7 @@ from cmk.base.core_config import MonitoringCore
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-_LockingMode = Optional[Literal["abort", "wait"]]
+_LockingMode = Union[Literal["abort", "wait"], None]
 
 
 class CoreAction(enum.Enum):

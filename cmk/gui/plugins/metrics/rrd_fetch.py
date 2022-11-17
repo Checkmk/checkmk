@@ -7,7 +7,7 @@
 import collections
 import time
 from collections.abc import Callable, Iterator, Sequence
-from typing import Any, Optional
+from typing import Any
 
 import livestatus
 from livestatus import LivestatusRow, SiteId
@@ -165,9 +165,9 @@ def get_needed_sources(
 
 
 NeededRRDData = set[
-    tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
+    tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
 ]
-MetricProperties = tuple[str, Optional[GraphConsoldiationFunction], float]
+MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 
 def group_needed_rrd_data_by_service(

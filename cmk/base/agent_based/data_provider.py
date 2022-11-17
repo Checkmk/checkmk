@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Any, Final, NamedTuple, Optional
+from typing import Any, Final, NamedTuple, Union
 
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
@@ -32,7 +32,7 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
-CacheInfo = Optional[tuple[int, int]]
+CacheInfo = Union[tuple[int, int] | None]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 

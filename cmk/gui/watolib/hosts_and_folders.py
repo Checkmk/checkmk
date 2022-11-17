@@ -18,7 +18,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, NamedTuple, Optional, TypedDict
+from typing import Any, Final, NamedTuple, TypedDict
 
 import psutil  # type: ignore[import]
 
@@ -2787,7 +2787,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return mapping
 
 
-class WATOFoldersOnDemand(Mapping[PathWithoutSlash, Optional[CREFolder]]):
+class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder | None]):
     def __init__(self, values: dict[PathWithoutSlash, CREFolder | None]) -> None:
         self._raw_dict: dict[PathWithoutSlash, CREFolder | None] = values
 

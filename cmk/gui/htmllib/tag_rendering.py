@@ -6,16 +6,16 @@
 
 import re
 from collections.abc import Iterator
-from typing import cast, Optional, Union
+from typing import cast
 
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 
 HTMLTagName = str
-HTMLTagValue = Optional[str]
-HTMLContent = Union[None, int, HTML, str]
-HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, list[str]]
+HTMLTagValue = str | None
+HTMLContent = int | HTML | str | None
+HTMLTagAttributeValue = CSSSpec | HTMLTagValue | list[str] | None
 HTMLTagAttributes = dict[str, HTMLTagAttributeValue]
 
 __all__ = [

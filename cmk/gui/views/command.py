@@ -7,7 +7,7 @@ import abc
 import re
 import time
 from collections.abc import Callable, Sequence
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Union
 
 from livestatus import SiteId
 
@@ -21,7 +21,7 @@ from cmk.gui.type_defs import Row, Rows
 CommandSpecWithoutSite = str
 CommandSpecWithSite = tuple[str | None, CommandSpecWithoutSite]
 CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
-CommandActionResult = Optional[tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str]]
+CommandActionResult = Union[tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None]
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
 

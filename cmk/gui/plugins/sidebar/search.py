@@ -10,7 +10,7 @@ import traceback
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Optional
+from typing import Union
 
 import livestatus
 
@@ -77,7 +77,7 @@ LivestatusTable = str
 LivestatusColumn = str
 LivestatusFilterHeaders = str
 UsedFilters = dict[str, list[str]]
-Matches = Optional[tuple[str, HTTPVariables]]
+Matches = Union[tuple[str, HTTPVariables] | None]
 
 
 @dataclass

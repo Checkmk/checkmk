@@ -12,7 +12,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Optional, overload, TypedDict, TypeVar, Union
+from typing import Any, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -62,8 +62,8 @@ Atom = TypeVar("Atom")
 TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 
-ScalarDefinition = Union[str, tuple[str, Union[str, LazyString]]]
-HorizontalRule = tuple[float, str, str, Union[str, LazyString]]
+ScalarDefinition = Union[str, tuple[str, str | LazyString]]
+HorizontalRule = tuple[float, str, str, str | LazyString]
 
 
 class _CurveMandatory(TypedDict):
@@ -94,8 +94,8 @@ class GraphDataRange(_GraphDataRangeMandatory, total=False):
     vertical_range: tuple[float, float]
 
 
-GraphRangeSpec = tuple[Union[int, str], Union[int, str]]
-GraphRange = tuple[Optional[float], Optional[float]]
+GraphRangeSpec = tuple[int | str, int | str]
+GraphRange = tuple[float | None, float | None]
 
 SizeEx = int
 
@@ -136,7 +136,7 @@ class GraphMetric(_GraphMetricMandatory, total=False):
     color: str
 
 
-RRDDataKey = tuple[SiteId, HostName, ServiceName, str, Optional[GraphConsoldiationFunction], float]
+RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
 RRDData = dict[RRDDataKey, TimeSeries]
 
 

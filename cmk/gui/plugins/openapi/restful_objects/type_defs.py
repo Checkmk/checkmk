@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, Optional, TypedDict, Union
+from typing import Any, Literal, TypedDict, Union
 
 from marshmallow import fields, Schema
 
@@ -266,7 +266,7 @@ def translate_to_openapi_keys(
     return raw_values
 
 
-ValidatorType = Callable[[Any], Optional[dict[str, list[str]]]]
+ValidatorType = Callable[[Any], dict[str, list[str]] | None]
 
 MarshmallowFieldParams = Mapping[str, fields.Field]
 

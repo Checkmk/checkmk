@@ -5,7 +5,7 @@
 """Default configuration settings for the Check_MK GUI"""
 
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from livestatus import SiteConfigurations
 
@@ -13,7 +13,7 @@ from cmk.utils.type_defs import TagConfigSpec
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
 
-CustomLinkSpec = tuple[str, bool, list[tuple[str, str, Optional[str], str]]]
+CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
 
 # Links for everyone
 custom_links_guest: list[CustomLinkSpec] = [

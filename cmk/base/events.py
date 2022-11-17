@@ -13,7 +13,7 @@ import socket
 import sys
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import quote, urlencode
 
 import livestatus
@@ -31,7 +31,7 @@ ContactList = list  # TODO Improve this
 
 # We actually want to use Matcher for all our matchers, but mypy is too dumb to
 # use that for function types, see https://github.com/python/mypy/issues/1641.
-Matcher = Callable[[EventRule, EventContext], Optional[str]]
+Matcher = Callable[[EventRule, EventContext], str | None]
 
 logger = logging.getLogger("cmk.base.events")
 

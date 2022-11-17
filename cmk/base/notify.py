@@ -27,7 +27,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, cast, Literal, Optional, overload, Union
+from typing import Any, cast, Literal, overload, Union
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -100,7 +100,7 @@ ConfigContacts = dict[ContactName, Contact]
 ContactNames = frozenset[ContactName]  # Must be hasable
 
 NotificationKey = tuple[ContactNames, NotificationPluginNameStr]
-NotificationValue = tuple[bool, NotifyPluginParams, Optional[NotifyBulkParameters]]
+NotificationValue = tuple[bool, NotifyPluginParams, NotifyBulkParameters | None]
 Notifications = dict[NotificationKey, NotificationValue]
 
 #   .--Configuration-------------------------------------------------------.

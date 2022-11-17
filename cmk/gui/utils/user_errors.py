@@ -10,13 +10,12 @@ page.
 """
 
 from collections.abc import Iterator, Mapping
-from typing import Optional
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 
 
-class UserErrors(Mapping[Optional[str], str]):
+class UserErrors(Mapping[str | None, str]):
     def __init__(self) -> None:
         self._errors: dict[str | None, str] = {}
 

@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, cast, Final, Literal, NamedTuple, Optional, Protocol, TypedDict, Union
+from typing import Any, cast, Final, Literal, NamedTuple, Protocol, TypedDict, Union
 
 from typing_extensions import assert_never
 
@@ -213,22 +213,22 @@ class SpecialAgentConfiguration(Protocol):
     stdin: str | None
 
 
-SpecialAgentInfoFunctionResult = Union[
-    str, Sequence[Union[str, int, float, tuple[str, str, str]]], SpecialAgentConfiguration
-]
+SpecialAgentInfoFunctionResult = (
+    str | Sequence[Union[str, int, float, tuple[str, str, str]]] | SpecialAgentConfiguration
+)
 SpecialAgentInfoFunction = Callable[
-    [Mapping[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult
+    [Mapping[str, Any], str, str | None], SpecialAgentInfoFunctionResult
 ]
-HostCheckCommand = Union[None, str, tuple[str, Union[int, str]]]
+HostCheckCommand = Union[None, str, tuple[str, int | str]]
 PingLevels = dict[str, Union[int, tuple[float, float]]]
 
 # TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
 ObjectAttributes = dict[str, Any]
 
 GroupDefinitions = dict[str, str]
-RecurringDowntime = dict[str, Union[int, str]]  # TODO(sk): TypedDict here
+RecurringDowntime = dict[str, int | str]  # TODO(sk): TypedDict here
 CheckInfo = dict  # TODO: improve this type
-ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
+ManagementCredentials = SNMPCredentials | IPMICredentials
 
 
 class _NestedExitSpec(ExitSpec, total=False):
@@ -2963,7 +2963,7 @@ class HostConfig:
         if credentials is None:
             return {}
         # The cast is required because host_config.management_credentials
-        # has type `Union[None, str, Tuple[str, ...], Dict[str, str]]`
+        # has type `None | str | tuple[str, ...] | dict[str, str]]`
         return cast(IPMICredentials, credentials)
 
     @property
@@ -3512,7 +3512,7 @@ class ConfigCache:
             return 10
         return bulk_sizes[0]
 
-    def _snmp_character_encoding(self, hostname: HostName) -> Optional[str]:
+    def _snmp_character_encoding(self, hostname: HostName) -> str | None:
         entries = self.host_extra_conf(hostname, snmp_character_encodings)
         if not entries:
             return None

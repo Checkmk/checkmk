@@ -11,7 +11,7 @@ import pprint
 import re
 from collections.abc import Callable, Container, Mapping
 from enum import auto, Enum
-from typing import Any, cast, Final, Optional
+from typing import Any, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -171,7 +171,7 @@ class RuleConditions:
             if isinstance(tag_spec, dict) and is_not:
                 tag_id = cast(TagConditionNE, tag_spec)["$ne"]
             else:
-                tag_id = cast(Optional[TagID], tag_spec)
+                tag_id = cast(TagID | None, tag_spec)
 
             tag_list.append(("!%s" % tag_id) if is_not else tag_id)
         return tag_list

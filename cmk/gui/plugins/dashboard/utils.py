@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from functools import partial
 from itertools import chain
-from typing import Any, cast, Generic, Literal, Optional, TypedDict, TypeVar, Union
+from typing import Any, cast, Generic, Literal, TypedDict, TypeVar, Union
 
 from livestatus import LivestatusResponse, SiteId
 
@@ -158,7 +158,7 @@ class ABCGraphDashletConfig(DashletConfig):
 DashletTypeName = str
 DashletId = int
 DashletRefreshInterval = Union[bool, int]
-DashletRefreshAction = Optional[str]
+DashletRefreshAction = str | None
 DashletSize = tuple[int, int]
 DashletPosition = tuple[int, int]
 DashletInputFunc = Callable[[DashletConfig], None]

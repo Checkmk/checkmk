@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from functools import partial
 from itertools import zip_longest
-from typing import Literal, Optional, TypedDict, Union
+from typing import Literal, TypedDict
 
 import cmk.utils.render
 from cmk.utils.prediction import TimeSeries, TimeSeriesValue
@@ -32,7 +32,7 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.type_defs import CombinedGraphSpec, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
-Label = tuple[float, Optional[str], int]
+Label = tuple[float, str | None, int]
 
 
 class _LayoutedCurveMandatory(TypedDict):
@@ -52,7 +52,7 @@ class LayoutedCurveArea(_LayoutedCurveMandatory):
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
 
 
-LayoutedCurve = Union[LayoutedCurveLine, LayoutedCurveArea]
+LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
 
 
 class VerticalAxis(TypedDict):

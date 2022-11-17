@@ -13,11 +13,11 @@ endpoint.
 """
 
 from collections.abc import Collection, Mapping
-from typing import Literal, Union
+from typing import Literal
 
-AutocompleterParams = Mapping[str, Union[str, int, float, bool, Collection[str]]]
+AutocompleterParams = Mapping[str, str | int | float | bool | Collection[str]]
 AutocompleterConfigJson = Mapping[
-    str, Union[str, int, float, bool, Collection[str], AutocompleterParams]
+    str, str | int | float | bool | Collection[str] | AutocompleterParams
 ]
 DynamicParamsCallbackName = Literal[
     # see dynamicParamsCallbacks object in web/htdocs/js/modules/valuespecs.js

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional as _Optional
-
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -45,10 +43,10 @@ def IPMIParameters() -> Dictionary:
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-    title: _Optional[str] = None,
-    help: _Optional[ValueSpecHelp] = None,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
     only_v3: bool = False,
-    default_value: _Optional[str] = "public",
+    default_value: str | None = "public",
     allow_none: bool = False,
     for_ec: bool = False,
 ) -> Alternative:

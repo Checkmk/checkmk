@@ -8,7 +8,7 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 import livestatus
 
@@ -46,7 +46,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
 
-RenderOutput = Union[HTML, str]
+RenderOutput = HTML | str
 
 #   .--HTML-Graphs---------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |

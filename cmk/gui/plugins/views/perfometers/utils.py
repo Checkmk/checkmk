@@ -12,7 +12,7 @@
 
 import math
 from collections.abc import Callable
-from typing import Literal, Optional
+from typing import Literal, Union
 
 import cmk.gui.metrics as metrics
 from cmk.gui.exceptions import MKGeneralException
@@ -34,7 +34,7 @@ PerfometerData = list[tuple[float, str]]
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-LegacyPerfometerResult = Optional[tuple[str, HTML]]
+LegacyPerfometerResult = Union[tuple[str, HTML] | None]
 
 # "Registry" for old perfometers. There are still some left. See:
 # cmk/gui/plugins/views/perfometers/check_mk.py

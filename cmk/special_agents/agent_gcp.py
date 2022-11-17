@@ -651,6 +651,18 @@ RUN = Service(
         Metric(
             name="run.googleapis.com/container/memory/utilizations",
             aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/container/memory/utilizations",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/container/memory/utilizations",
+            aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
             ),
         ),
@@ -672,6 +684,18 @@ RUN = Service(
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_RATE,
                 group_by_fields=["metric.response_code_class"],
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/container/cpu/utilizations",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/container/cpu/utilizations",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
             ),
         ),
         Metric(

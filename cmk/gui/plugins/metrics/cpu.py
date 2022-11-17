@@ -226,6 +226,25 @@ metric_info["memory_util"] = {
     "color": "26/a",
 }
 
+metric_info["memory_util_50"] = {
+    "title": _l("Memory utilization (50th percentile)"),
+    "unit": "%",
+    "color": "26/a",
+}
+
+metric_info["memory_util_95"] = {
+    "title": _l("Memory utilization (95th percentile)"),
+    "unit": "%",
+    "color": "22/a",
+}
+
+metric_info["memory_util_99"] = {
+    "title": _l("Memory utilization (99th percentile)"),
+    "unit": "%",
+    "color": "22/a",
+}
+
+
 metric_info["generic_util"] = {
     "title": _l("Utilization"),
     "unit": "%",
@@ -274,11 +293,24 @@ metric_info["util5"] = {
     "color": "#80f040",
 }
 
-metric_info["util15"] = {
-    "title": _l("CPU utilization last 15 minutes"),
+metric_info["util_50"] = {
+    "title": _l("CPU utilization (50th percentile)"),
     "unit": "%",
-    "color": "#9a52bf",
+    "color": "#50ff20",
 }
+
+metric_info["util_95"] = {
+    "title": _l("CPU utilization (95th percentile)"),
+    "unit": "%",
+    "color": "#600020",
+}
+
+metric_info["util_99"] = {
+    "title": _l("CPU utilization (99th percentile)"),
+    "unit": "%",
+    "color": "#60f020",
+}
+
 
 metric_info["cpu_entitlement"] = {
     "title": _l("Entitlement"),
@@ -781,6 +813,15 @@ graph_info["cpu_utilization_8"] = {
     "range": (0, 100),
 }
 
+graph_info["cpu_utilization_percentile"] = {
+    "title": _l("CPU utilization"),
+    "metrics": [
+        ("util_50", "line"),
+        ("util_95", "line"),
+        ("util_99", "line"),
+    ],
+}
+
 graph_info["util_fallback"] = {
     "title": _l("CPU utilization"),
     "metrics": [
@@ -847,5 +888,14 @@ graph_info["threadpool"] = {
     "metrics": [
         ("threads_busy", "stack"),
         ("threads_idle", "stack"),
+    ],
+}
+
+graph_info["memory_utilization_percentile"] = {
+    "title": _l("Memory utilization"),
+    "metrics": [
+        ("memory_util_50", "line"),
+        ("memory_util_95", "line"),
+        ("memory_util_99", "line"),
     ],
 }

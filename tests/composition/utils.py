@@ -3,14 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import glob
 import os
+import socketserver
 import subprocess
 import time
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from multiprocessing import Process
 from pathlib import Path
 
 from tests.testlib.site import Site
+from tests.testlib.utils import is_containerized
 
 from tests.composition.constants import TEST_HOST_1
 
@@ -73,14 +77,22 @@ def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
     return proc
 
 
-def install_package(package_path: Path) -> subprocess.CompletedProcess:
+def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
-    if package_type == "linux_deb":
-        return execute(["sudo", "dpkg", "-i", package_path.as_posix()])
-    if package_type == "linux_rpm":
-        return execute(
-            ["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()]
-        )
+    installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
+    try:
+        if package_type == "linux_deb":
+            execute(["sudo", "dpkg", "-i", package_path.as_posix()]).check_returncode()
+            return installed_ctl_path
+        if package_type == "linux_rpm":
+            execute(
+                ["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()]
+            ).check_returncode()
+            return installed_ctl_path
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Error while installing cmk agent:\nstderr:\n{e.stderr}" f"\nstdout:\n{e.stdout}"
+        ) from e
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
     )
@@ -121,3 +133,72 @@ def get_cre_agent_path(site: Site) -> Path:
             f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
         )
     return Path(agent_results[0])
+
+
+@contextlib.contextmanager
+def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
+    _clear_controller_connections(ctl_path)
+    yield
+    _clear_controller_connections(ctl_path)
+
+
+def _clear_controller_connections(ctl_path: Path) -> None:
+    execute(["sudo", ctl_path.as_posix(), "delete-all"]).check_returncode()
+
+
+@contextlib.contextmanager
+def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+    """
+    Manually take over systemds job if we are in a container (where we have no systemd). If this
+    becomes too tedious to maintain, we should switch to running the tests using this
+    functionality in a VM."""
+    if not is_containerized():
+        yield
+        return
+
+    if is_containerized():
+        with _provide_agent_unix_socket(), _run_controller_daemon(ctl_path):
+            yield
+
+
+@contextlib.contextmanager
+def _provide_agent_unix_socket() -> Iterator[None]:
+    socket_address = Path("/run/check-mk-agent.socket")
+    socket_address.unlink(missing_ok=True)
+    proc = Process(
+        target=socketserver.UnixStreamServer(
+            server_address=str(socket_address),
+            RequestHandlerClass=_CMKAgentSocketHandler,
+        ).serve_forever
+    )
+    proc.start()
+    socket_address.chmod(0o777)
+    yield None
+    proc.kill()
+    socket_address.unlink(missing_ok=True)
+
+
+@contextlib.contextmanager
+def _run_controller_daemon(ctl_path: Path) -> Iterator[None]:
+    with subprocess.Popen(
+        [
+            "sudo",
+            ctl_path.as_posix(),
+            "daemon",
+        ]
+    ) as ctl_daemon_proc:
+        yield
+        ctl_daemon_proc.kill()
+
+
+class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
+    def handle(self) -> None:
+        self.request.sendall(
+            subprocess.run(
+                ["sudo", "check_mk_agent"],
+                input=self.request.recv(1024),
+                capture_output=True,
+                close_fds=True,
+                check=True,
+            ).stdout
+        )

@@ -24,3 +24,9 @@ pytestmark = pytest.mark.skipif(
 def test_agent_controller_installed(agent_ctl: Path) -> None:
     res = execute([agent_ctl.as_posix(), "--help"])
     assert "Checkmk agent controller.\n\nUsage:" in res.stdout
+
+
+def test_dump(agent_ctl: Path) -> None:
+    res = execute(["sudo", agent_ctl.as_posix(), "dump"])
+    res.check_returncode()
+    assert res.stdout.startswith("<<<check_mk>>>")

@@ -304,6 +304,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
                 stale=[
                     ("view_name", "uncheckedsvc"),
+                    ("hst0", "on"),
                 ],
             )
 

@@ -2065,6 +2065,7 @@ builtin_views.update(
             ),
             "group_painters": [("host", "host")],
             "hard_filters": [
+                "hoststate",
                 "service_staleness",
                 "service_scheduled_downtime_depth",
                 "host_scheduled_downtime_depth",
@@ -2073,6 +2074,10 @@ builtin_views.update(
                 ("is_service_staleness", "1"),
                 ("is_service_scheduled_downtime_depth", "0"),
                 ("is_host_scheduled_downtime_depth", "0"),
+                ("hst0", "on"),
+                ("hst1", "on"),
+                ("hst2", "on"),
+                ("hstp", "on"),
             ],
             "hidden": False,
             "hide_filters": [],

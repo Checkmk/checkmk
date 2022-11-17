@@ -1,0 +1,21 @@
+Title: Fix link of stale services in tactical overview
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1668697611
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+With werk #14759 we adjusted the calculation of stale services in the tactical
+overview.
+
+This werk now adjusts the link for this section to show the correct amount of
+services in the view "Stale services".
+
+Note:
+This adds a new filter to the builtin view "Stale services" ("uncheckedsvc").
+If you have customized the view before, please add the filter "Host states"
+with checked "UP", "DOWN", "UNREACH" and "PEND" option to your custimzed view
+or create a new clone of the builtin view and customize it as before.

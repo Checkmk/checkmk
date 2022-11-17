@@ -7,17 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import is_containerized
-
-from tests.composition.utils import execute
+from tests.composition.utils import execute, should_skip_because_uncontainerized
 
 # Skip all agent controller tests if we are not in a container to avoid messing up your machine
 pytestmark = pytest.mark.skipif(
-    not is_containerized(),
-    reason=(
-        "tests will install an actual agent on the machine where they are running and we want to avoid"
-        " messing up your local environment"
-    ),
+    should_skip_because_uncontainerized(),
+    reason=("tests might mess up your local environment, eg. by installing an actual agent"),
 )
 
 

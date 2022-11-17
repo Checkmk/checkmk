@@ -202,3 +202,7 @@ class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
                 check=True,
             ).stdout
         )
+
+
+def should_skip_because_uncontainerized() -> bool:
+    return not (is_containerized() or os.environ.get("OVERRIDE_UNCONTAINERIZED_SKIP"))

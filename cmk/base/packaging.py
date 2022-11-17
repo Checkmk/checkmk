@@ -18,13 +18,13 @@ import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     get_config_parts,
+    get_installed_package_info,
     get_package_parts,
     package_dir,
     PACKAGE_EXTENSION,
     package_info_template,
     PackageException,
     PackageInfo,
-    read_package_info,
     unpackaged_files,
     unpackaged_files_in_dir,
     write_package_info,
@@ -109,8 +109,7 @@ def package_list(args: list[str]) -> None:
         if logger.isEnabledFor(VERBOSE):
             table = []
             for pacname in packaging.installed_names():
-                package = read_package_info(pacname)
-                if package is None:
+                if (package := get_installed_package_info(pacname)) is None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
                     table.append(
@@ -148,8 +147,7 @@ def show_package(  # pylint: disable=too-many-branches
                     raise PackageException('Failed to extract "info"')
                 package = PackageInfo.parse_python_string(info.read().decode())
         else:
-            this_package = read_package_info(name)
-            if not this_package:
+            if (this_package := get_installed_package_info(name)) is None:
                 raise PackageException("No such package %s." % name)
 
             package = this_package
@@ -192,7 +190,7 @@ def package_create(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P create NAME")
 
     pacname = args[0]
-    if read_package_info(pacname):
+    if get_installed_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
@@ -269,8 +267,7 @@ def package_pack(args: list[str]) -> None:
             )
 
     pacname = args[0]
-    package = read_package_info(pacname)
-    if not package:
+    if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = packaging.format_file_name(name=pacname, version=package.version)
 
@@ -283,8 +280,8 @@ def package_remove(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P remove NAME")
     pacname = args[0]
-    package = read_package_info(pacname)
-    if not package:
+
+    if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("No such package %s." % pacname)
 
     logger.log(VERBOSE, "Uninstalling package %s...", pacname)
@@ -317,8 +314,7 @@ def package_disable(args: list[str]) -> None:
 def package_enable(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P enable NAME")
-    package = read_package_info(args[0])
-    if not package:
+    if (package := get_installed_package_info(args[0])) is None:
         raise PackageException("No such package %s." % args[0])
     packaging.install_optional_package(
         packaging.format_file_name(name=package.name, version=package.version)

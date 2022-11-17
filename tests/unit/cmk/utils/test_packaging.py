@@ -5,6 +5,7 @@
 
 import ast
 import json
+import logging
 import shutil
 import tarfile
 from collections.abc import Callable, Iterable, Mapping
@@ -21,7 +22,9 @@ from cmk.utils.i18n import _
 
 
 def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:
-    package_info = packaging.read_package_info(pacname)
+    package_info = packaging.read_package_info_optionally(
+        packaging.package_dir() / pacname, logging.getLogger()
+    )
     assert package_info is not None
     return package_info
 
@@ -190,7 +193,7 @@ def test_get_package_parts() -> None:
     )
 
 
-def _create_simple_test_package(pacname):
+def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.PackageInfo:
     _create_test_file(pacname)
     package_info = packaging.package_info_template(pacname)
 
@@ -199,7 +202,7 @@ def _create_simple_test_package(pacname):
     }
 
     packaging.create(package_info)
-    return packaging.read_package_info(pacname)
+    return _read_package_info(pacname)
 
 
 def _create_test_file(name):
@@ -229,7 +232,10 @@ def test_read_package_info() -> None:
 
 
 def test_read_package_info_not_existing() -> None:
-    assert packaging.read_package_info("aaa") is None
+    assert (
+        packaging.read_package_info_optionally(packaging.package_dir() / "aaa", logging.getLogger())
+        is None
+    )
 
 
 def test_edit_not_existing() -> None:
@@ -260,7 +266,10 @@ def test_edit_rename() -> None:
     packaging.edit("aaa", new_package_info)
 
     assert _read_package_info("bbb").name == "bbb"
-    assert packaging.read_package_info("aaa") is None
+    assert (
+        packaging.read_package_info_optionally(packaging.package_dir() / "aaa", logging.getLogger())
+        is None
+    )
 
 
 def test_edit_rename_conflict() -> None:

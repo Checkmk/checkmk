@@ -60,6 +60,14 @@ def package_info_template(pacname: str) -> PackageInfo:
     )
 
 
+def read_package_info_optionally(pkg_info_path: Path, logger: Logger) -> PackageInfo | None:
+    try:
+        return PackageInfo.parse_python_string(pkg_info_path.read_text())
+    except Exception:
+        logger.error("[%s]: Failed to read package info", pkg_info_path, exc_info=True)
+    return None
+
+
 def extract_package_info(file_content: bytes) -> PackageInfo:
     with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:

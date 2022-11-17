@@ -35,6 +35,7 @@ from ._package import (
     extract_package_info_optionally,
     package_info_template,
     PackageInfo,
+    read_package_info_optionally,
 )
 from ._type_defs import PackageException
 
@@ -106,6 +107,14 @@ def package_dir() -> Path:
     return cmk.utils.paths.omd_root / "var/check_mk/packages"
 
 
+def get_installed_package_info(
+    package_name: PackageName, log: logging.Logger | None = None
+) -> PackageInfo | None:
+    return read_package_info_optionally(
+        package_dir() / package_name, logger if log is None else log
+    )
+
+
 def get_config_parts() -> list[PackagePart]:
     return [
         PackagePart("ec_rule_packs", _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())),
@@ -173,12 +182,9 @@ def format_file_name(*, name: str, version: str) -> str:
 
 
 def release(pacname: PackageName) -> None:
-    if not pacname or not _package_exists(pacname):
-        raise PackageException("Package %s not installed or corrupt." % pacname)
+    if (package := get_installed_package_info(pacname)) is None:
+        raise PackageException(f"Package {pacname} not installed or corrupt.")
 
-    package = read_package_info(pacname)
-    if package is None:
-        raise PackageException("Package %s not installed or corrupt." % pacname)
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + get_config_parts():
         if not (filenames := package.files.get(part.ident, [])):
@@ -456,19 +462,16 @@ def _install(  # pylint: disable=too-many-branches
 ) -> PackageInfo:
     package = extract_package_info(mkp)
 
-    pacname = package.name
-    old_package = read_package_info(pacname)
-
-    if old_package:
+    if old_package := get_installed_package_info(package.name):
         logger.log(
             VERBOSE,
             "Updating %s from version %s to %s.",
-            pacname,
+            package.name,
             old_package.version,
             package.version,
         )
     else:
-        logger.log(VERBOSE, "Installing %s version %s.", pacname, package.version)
+        logger.log(VERBOSE, "Installing %s version %s.", package.name, package.version)
 
     _raise_for_installability(package, old_package, cmk_version.__version__, allow_outdated)
 
@@ -624,11 +627,11 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
-    packages: Packages = {}
-    for package_name in installed_names():
-        package_info = read_package_info(package_name)
-        if package_info is not None:
-            packages[package_name] = package_info
+    packages = {
+        package_name: package_info
+        for package_name in installed_names()
+        if (package_info := get_installed_package_info(package_name)) is not None
+    }
 
     for part in get_package_parts():
         _validate_package_files_part(
@@ -714,7 +717,7 @@ def get_unpackaged_files() -> dict[str, list[str]]:
 
 
 def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
-    return {name: read_package_info(name) for name in installed_names()}
+    return {name: get_installed_package_info(name) for name in installed_names()}
 
 
 def get_optional_package_infos() -> Mapping[str, tuple[PackageInfo, bool]]:
@@ -774,25 +777,6 @@ def package_part_info() -> PackagePartInfo:
     return part_info
 
 
-def read_package_info(pacname: PackageName) -> PackageInfo | None:
-    pkg_info_path = package_dir() / pacname
-    try:
-        package = PackageInfo.parse_python_string(pkg_info_path.read_text())
-        package.name = pacname  # do not trust package content
-        return package
-    except OSError:
-        return None
-    except Exception as e:
-        logger.log(
-            VERBOSE,
-            "Ignoring invalid package file '%s'. Please remove it from %s! Error: %s",
-            pkg_info_path,
-            package_dir(),
-            e,
-        )
-        return None
-
-
 def package_num_files(package: PackageInfo) -> int:
     return sum(len(fl) for fl in package.files.values())
 
@@ -834,9 +818,8 @@ def unpackaged_files_in_dir(part: PartName, directory: str) -> list[str]:
 
 def _packaged_files_in_dir(part: PartName) -> list[str]:
     result: list[str] = []
-    for pacname in installed_names():
-        package = read_package_info(pacname)
-        if package:
+    for package_name in installed_names():
+        if (package := get_installed_package_info(package_name)) is not None:
             result += package.files.get(part, [])
     return result
 
@@ -888,9 +871,7 @@ def _deinstall_inapplicable_active_packages(
     log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
     for package_name in sorted(installed_names()):
-        package_info = read_package_info(package_name)
-        if package_info is None:
-            log.log(VERBOSE, "[%s]: Skipping (failed to read package info)", package_name)
+        if (package_info := get_installed_package_info(package_name, log)) is None:
             continue  # leave broken/corrupt packages alone.
 
         try:
@@ -1008,9 +989,7 @@ def disable_outdated() -> None:
     """
     for package_name in installed_names():
         logger.log(VERBOSE, "[%s]: Is it outdated?", package_name)
-        package_info = read_package_info(package_name)
-        if package_info is None:
-            logger.log(VERBOSE, "[%s]: Failed to read package info, skipping", package_name)
+        if (package_info := get_installed_package_info(package_name)) is None:
             continue
 
         try:

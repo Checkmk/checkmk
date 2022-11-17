@@ -215,7 +215,7 @@ def test_is_ipv4_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_ipv4_host == result
+    assert config_cache.is_ipv4_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -235,7 +235,7 @@ def test_is_ipv6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_ipv6_host == result
+    assert config_cache.is_ipv6_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -255,7 +255,7 @@ def test_is_ipv4v6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_ipv4v6_host == result
+    assert config_cache.is_ipv4v6_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -317,7 +317,7 @@ def test_is_no_ip_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_no_ip_host == result
+    assert config_cache.is_no_ip_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -361,7 +361,7 @@ def test_is_ipv6_primary_host(
     ts.add_host(hostname, tags)
     ts.set_ruleset("primary_address_family", ruleset)
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).is_ipv6_primary == result
+    assert config_cache.is_ipv6_primary(hostname) == result
 
 
 @pytest.mark.parametrize(

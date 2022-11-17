@@ -156,7 +156,7 @@ def _get_host_check_command(
     explicit_command = host_config.explicit_check_command
     if explicit_command is not None:
         return explicit_command
-    if host_config.is_no_ip_host:
+    if ConfigCache.is_no_ip_host(host_config.hostname):
         return "ok"
     return default_host_check_command
 
@@ -248,7 +248,7 @@ def check_icmp_arguments_of(
         return ""
 
     if family is None:
-        family = 6 if host_config.is_ipv6_primary else 4
+        family = 6 if config_cache.is_ipv6_primary(hostname) else 4
 
     args = []
 
@@ -809,7 +809,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     # Now lookup configured IP addresses
     v4address: str | None = None
-    if host_config.is_ipv4_host:
+    if ConfigCache.is_ipv4_host(hostname):
         v4address = ip_address_of(hostname, host_config, socket.AF_INET)
 
     if v4address is None:
@@ -817,13 +817,13 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     attrs["_ADDRESS_4"] = v4address
 
     v6address: str | None = None
-    if host_config.is_ipv6_host:
+    if ConfigCache.is_ipv6_host(hostname):
         v6address = ip_address_of(hostname, host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
 
-    ipv6_primary = host_config.is_ipv6_primary
+    ipv6_primary = config_cache.is_ipv6_primary(hostname)
     if ipv6_primary:
         attrs["address"] = attrs["_ADDRESS_6"]
         attrs["_ADDRESS_FAMILY"] = "6"
@@ -860,7 +860,7 @@ def _get_tag_attributes(
 
 def get_cluster_attributes(
     config_cache: ConfigCache,
-    host_config: HostConfig,
+    hostname: HostName,
     nodes: Sequence[HostName],
 ) -> dict:
     sorted_nodes = sorted(nodes)
@@ -869,7 +869,7 @@ def get_cluster_attributes(
         "_NODENAMES": " ".join(sorted_nodes),
     }
     node_ips_4 = []
-    if host_config.is_ipv4_host:
+    if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
@@ -880,7 +880,7 @@ def get_cluster_attributes(
                 node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
     node_ips_6 = []
-    if host_config.is_ipv6_host:
+    if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
@@ -890,7 +890,7 @@ def get_cluster_attributes(
             else:
                 node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
-    node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
+    node_ips = node_ips_6 if config_cache.is_ipv6_primary(hostname) else node_ips_4
 
     for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
         attrs["_NODEIPS%s" % suffix] = " ".join(val)
@@ -907,7 +907,7 @@ def get_cluster_nodes_for_config(
     if nodes is None:
         return []
 
-    _verify_cluster_address_family(host_name, nodes, config_cache, host_config)
+    _verify_cluster_address_family(host_name, nodes, config_cache)
     _verify_cluster_datasource(host_name, nodes, config_cache, host_config)
     nodes = nodes[:]
     for node in nodes:
@@ -924,9 +924,8 @@ def _verify_cluster_address_family(
     host_name: HostName,
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
-    host_config: HostConfig,
 ) -> None:
-    cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
+    cluster_host_family = "IPv6" if config_cache.is_ipv6_primary(host_name) else "IPv4"
     address_families = [
         f"{host_name}: {cluster_host_family}",
     ]
@@ -934,8 +933,7 @@ def _verify_cluster_address_family(
     address_family = cluster_host_family
     mixed = False
     for nodename in nodes:
-        node_config = config_cache.get_host_config(nodename)
-        family = "IPv6" if node_config.is_ipv6_primary else "IPv4"
+        family = "IPv6" if config_cache.is_ipv6_primary(nodename) else "IPv4"
         address_families.append(f"{nodename}: {family}")
         if address_family is None:
             address_family = family
@@ -1058,7 +1056,7 @@ def translate_ds_program_source_cmdline(
             attrs.update(
                 get_cluster_attributes(
                     config_cache,
-                    host_config,
+                    host_name,
                     parents_list,
                 )
             )

@@ -204,7 +204,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     if config_cache.is_cluster(hostname):
         nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname, host_config)
-        attrs.update(core_config.get_cluster_attributes(config_cache, host_config, nodes))
+        attrs.update(core_config.get_cluster_attributes(config_cache, hostname, nodes))
 
     #   _
     #  / |
@@ -217,7 +217,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         "use": (
             config.cluster_template if config_cache.is_cluster(hostname) else config.host_template
         ),
-        "address": ip if ip else ip_lookup.fallback_ip_for(host_config.default_address_family),
+        "address": (
+            ip if ip else ip_lookup.fallback_ip_for(config_cache.default_address_family(hostname))
+        ),
         "alias": attrs["alias"],
     }
 
@@ -629,13 +631,13 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             config_cache,
             hostname,
             host_attrs["address"],
-            host_config.is_ipv6_primary and 6 or 4,
+            config_cache.is_ipv6_primary(hostname) and 6 or 4,
             "PING",
             host_attrs.get("_NODEIPS"),
         )
 
-    if host_config.is_ipv4v6_host:
-        if host_config.is_ipv6_primary:
+    if ConfigCache.is_ipv4v6_host(hostname):
+        if config_cache.is_ipv6_primary(hostname):
             _add_ping_service(
                 cfg,
                 config_cache,
@@ -1252,18 +1254,18 @@ if '-d' in sys.argv:
 
         for node in nodes:
             node_config = config_cache.get_host_config(node)
-            if node_config.is_ipv4_host:
+            if ConfigCache.is_ipv4_host(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     node_config, family=socket.AF_INET
                 )
 
-            if node_config.is_ipv6_host:
+            if ConfigCache.is_ipv6_host(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
                     node_config, family=socket.AF_INET6
                 )
 
         try:
-            if host_config.is_ipv4_host:
+            if ConfigCache.is_ipv4_host(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
                     host_config, family=socket.AF_INET
                 )
@@ -1271,19 +1273,19 @@ if '-d' in sys.argv:
             pass
 
         try:
-            if host_config.is_ipv6_host:
+            if ConfigCache.is_ipv6_host(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
                     host_config, family=socket.AF_INET6
                 )
         except Exception:
             pass
     else:
-        if host_config.is_ipv4_host:
+        if ConfigCache.is_ipv4_host(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
                 host_config, family=socket.AF_INET
             )
 
-        if host_config.is_ipv6_host:
+        if ConfigCache.is_ipv6_host(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
                 host_config, family=socket.AF_INET6
             )

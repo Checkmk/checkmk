@@ -570,7 +570,7 @@ class _Builder:
             return (
                 source,
                 TCPFetcher(
-                    family=self.host_config.default_address_family,
+                    family=self.config_cache.default_address_family(self.host_name),
                     address=(source.ipaddress, self.host_config.agent_port),
                     host_name=source.hostname,
                     timeout=self.host_config.tcp_connect_timeout,

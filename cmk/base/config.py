@@ -2445,38 +2445,15 @@ class HostConfig:
             self.computed_datasources.is_all_special_agents_host
         )
 
-        # IP addresses
-        # Whether or not the given host is configured not to be monitored via IP
-        self.is_no_ip_host: Final = self.tag_groups["address_family"] == "no-ip"
-        self.is_ipv6_host: Final = "ip-v6" in self.tag_groups
-        # Whether or not the given host is configured to be monitored via IPv4.
-        # This is the case when it is set to be explicit IPv4 or implicit (when
-        # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host: Final = "ip-v4" in self.tag_groups or (
-            not self.is_ipv6_host and not self.is_no_ip_host
-        )
-
-        self.is_ipv4v6_host: Final = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
-
-        # Whether or not the given host is configured to be monitored primarily via IPv6
-        self.is_ipv6_primary: Final = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
-            self.is_ipv4v6_host
-            and self._config_cache._primary_ip_address_family_of(self.hostname) == "ipv6"
-        )
-
-    @property
-    def default_address_family(self) -> socket.AddressFamily:
-        return socket.AF_INET6 if self.is_ipv6_primary else socket.AF_INET
-
     def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             hostname=self.hostname,
-            is_ipv4_host=self.is_ipv4_host,
-            is_ipv6_host=self.is_ipv6_host,
-            is_no_ip_host=self.is_no_ip_host,
+            is_ipv4_host=ConfigCache.is_ipv4_host(self.hostname),
+            is_ipv6_host=ConfigCache.is_ipv6_host(self.hostname),
+            is_no_ip_host=ConfigCache.is_no_ip_host(self.hostname),
             is_snmp_host=self.is_snmp_host,
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
-            default_address_family=self.default_address_family,
+            default_address_family=self._config_cache.default_address_family(self.hostname),
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
         )
@@ -2537,7 +2514,7 @@ class HostConfig:
 
     def snmp_config(self, ip_address: HostAddress | None) -> SNMPHostConfig:
         return SNMPHostConfig(
-            is_ipv6_primary=self.is_ipv6_primary,
+            is_ipv6_primary=self._config_cache.is_ipv6_primary(self.hostname),
             hostname=self.hostname,
             ipaddress=ip_address,
             credentials=self._config_cache._snmp_credentials(self.hostname),
@@ -2944,7 +2921,7 @@ class HostConfig:
         if mgmt_host_address:
             return mgmt_host_address
 
-        if self.is_ipv6_primary:
+        if self._config_cache.is_ipv6_primary(self.hostname):
             return ipv6addresses.get(self.hostname)
 
         return ipaddresses.get(self.hostname)
@@ -2999,7 +2976,7 @@ class HostConfig:
             raise MKGeneralException("Management board address is not configured")
 
         return SNMPHostConfig(
-            is_ipv6_primary=self.is_ipv6_primary,
+            is_ipv6_primary=self._config_cache.is_ipv6_primary(self.hostname),
             hostname=self.hostname,
             ipaddress=address,
             credentials=cast(SNMPCredentials, self.management_credentials),
@@ -3064,7 +3041,7 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
             host_name=mgmt_address or host_config.hostname,
-            family=host_config.default_address_family,
+            family=config_cache.default_address_family(host_config.hostname),
             configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
             is_snmp_usewalk_host=(
@@ -3085,9 +3062,10 @@ def lookup_ip_address(
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
-    if family is None:
-        family = host_config.default_address_family
+    config_cache = get_config_cache()
     host_name = host_config.hostname
+    if family is None:
+        family = config_cache.default_address_family(host_name)
     config_cache = get_config_cache()
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
@@ -3102,7 +3080,7 @@ def lookup_ip_address(
         ),
         override_dns=fake_dns,
         is_dyndns_host=host_config.is_dyndns_host,
-        is_no_ip_host=host_config.is_no_ip_host,
+        is_no_ip_host=config_cache.is_no_ip_host(host_name),
         force_file_cache_renewal=not use_dns_cache,
     )
 
@@ -3553,6 +3531,44 @@ class ConfigCache:
 
     def check_mk_check_interval(self, hostname: HostName) -> int:
         return self.extra_attributes_of_service(hostname, "Check_MK")["check_interval"]
+
+    @staticmethod
+    def is_no_ip_host(hostname: HostName) -> bool:
+        tag_groups = ConfigCache.tags_of_host(hostname)
+        return tag_groups["address_family"] == "no-ip"
+
+    @staticmethod
+    def is_ipv6_host(hostname: HostName) -> bool:
+        # Whether or not the given host is configured not to be monitored via IP
+        tag_groups = ConfigCache.tags_of_host(hostname)
+        return "ip-v6" in tag_groups
+
+    @staticmethod
+    def is_ipv4_host(hostname: HostName) -> bool:
+        # Whether or not the given host is configured to be monitored via IPv4.
+        # This is the case when it is set to be explicit IPv4 or implicit (when
+        # host is not an IPv6 host and not a "No IP" host)
+        tag_groups = ConfigCache.tags_of_host(hostname)
+        return "ip-v4" in tag_groups or (
+            not ConfigCache.is_ipv6_host(hostname) and not ConfigCache.is_no_ip_host(hostname)
+        )
+
+    @staticmethod
+    def is_ipv4v6_host(hostname: HostName) -> bool:
+        tag_groups = ConfigCache.tags_of_host(hostname)
+        return "ip-v6" in tag_groups and "ip-v4" in tag_groups
+
+    def is_ipv6_primary(self, hostname: HostName) -> bool:
+        # Whether or not the given host is configured to be monitored primarily via IPv6
+        return (
+            not ConfigCache.is_ipv4v6_host(hostname) and ConfigCache.is_ipv6_host(hostname)
+        ) or (
+            ConfigCache.is_ipv4v6_host(hostname)
+            and self._primary_ip_address_family_of(hostname) == "ipv6"
+        )
+
+    def default_address_family(self, hostname: HostName) -> socket.AddressFamily:
+        return socket.AF_INET6 if self.is_ipv6_primary(hostname) else socket.AF_INET
 
     def _primary_ip_address_family_of(self, hostname: HostName) -> str:
         rules = self.host_extra_conf(hostname, primary_address_family)
@@ -4360,5 +4376,5 @@ class CEEHostConfig(HostConfig):
                 defaults=default,
                 rulesets=self._config_cache.matched_agent_config_entries(self.hostname),
             ),
-            "is_ipv6_primary": self.is_ipv6_primary,
+            "is_ipv6_primary": self._config_cache.is_ipv6_primary(self.hostname),
         }

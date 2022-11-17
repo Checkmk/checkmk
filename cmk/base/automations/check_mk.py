@@ -1301,10 +1301,7 @@ class AutomationDiagHost(Automation):
         try:
             if test == "ping":
                 return automation_results.DiagHostResult(
-                    *self._execute_ping(
-                        host_config,
-                        ipaddress,
-                    )
+                    *self._execute_ping(config_cache, hostname, ipaddress)
                 )
 
             if test == "agent":
@@ -1321,10 +1318,7 @@ class AutomationDiagHost(Automation):
 
             if test == "traceroute":
                 return automation_results.DiagHostResult(
-                    *self._execute_traceroute(
-                        host_config,
-                        ipaddress,
-                    )
+                    *self._execute_traceroute(config_cache, hostname, ipaddress)
                 )
 
             if test.startswith("snmp"):
@@ -1363,8 +1357,10 @@ class AutomationDiagHost(Automation):
                 str(e),
             )
 
-    def _execute_ping(self, host_config: HostConfig, ipaddress: str) -> tuple[int, str]:
-        base_cmd = "ping6" if host_config.is_ipv6_primary else "ping"
+    def _execute_ping(
+        self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
+    ) -> tuple[int, str]:
+        base_cmd = "ping6" if config_cache.is_ipv6_primary(hostname) else "ping"
         completed_process = subprocess.run(
             [base_cmd, "-A", "-i", "0.2", "-c", "2", "-W", "5", ipaddress],
             stdout=subprocess.PIPE,
@@ -1439,8 +1435,10 @@ class AutomationDiagHost(Automation):
 
         return state, output
 
-    def _execute_traceroute(self, host_config: HostConfig, ipaddress: str) -> tuple[int, str]:
-        family_flag = "-6" if host_config.is_ipv6_primary else "-4"
+    def _execute_traceroute(
+        self, config_cache: ConfigCache, hostname: HostName, ipaddress: str
+    ) -> tuple[int, str]:
+        family_flag = "-6" if config_cache.is_ipv6_primary(hostname) else "-4"
         try:
             completed_process = subprocess.run(
                 ["traceroute", family_flag, "-n", ipaddress],

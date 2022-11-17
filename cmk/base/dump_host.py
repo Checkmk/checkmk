@@ -111,24 +111,24 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        hostname, host_config, family=host_config.default_address_family
+        hostname, host_config, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
-    if not host_config.is_ipv4v6_host:
+    if not config.ConfigCache.is_ipv4v6_host(hostname):
         addresses = ipaddress
     else:
         try:
             secondary = _ip_address_for_dump_host(
                 hostname,
                 host_config,
-                family=socket.AF_INET if host_config.is_ipv6_primary else socket.AF_INET6,
+                family=config_cache.default_address_family(hostname),
             )
         except Exception:
             secondary = "X.X.X.X"
 
         addresses = f"{ipaddress}, {secondary}"
-        if host_config.is_ipv6_primary:
+        if config_cache.is_ipv6_primary(hostname):
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"

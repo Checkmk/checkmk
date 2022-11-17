@@ -7,6 +7,7 @@ import datetime
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 import pytest
 from google.cloud import monitoring_v3
@@ -158,3 +159,9 @@ class Plugin:
             for metric, percentiles in self.percentile_metrics
             for percentile in percentiles
         }
+
+    def default_params(self) -> Mapping[str, Any]:
+        params: dict[str, Any] = {metric: None for metric in self.metrics}
+        for metric, percentiles in self.percentile_metrics:
+            params[metric] = (percentiles[-1], None)
+        return params

@@ -6,7 +6,6 @@ Class: security
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.6.0p31
 Date: 1661512775
 
 Prior to this Werk it was possible to inject livestatus commands in Checkmk's livestatus wrapper and python API.

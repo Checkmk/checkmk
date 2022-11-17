@@ -58,6 +58,79 @@ metric_info["faas_execution_times_99"] = {
     "color": "16/a",
 }
 
+metric_info["faas_execution_times_2xx_50"] = {
+    "title": _l("Request latency with return code class 2xx (success) (50th percentile)"),
+    "unit": "s",
+    "color": "12/a",
+}
+
+metric_info["faas_execution_times_2xx_95"] = {
+    "title": _l("Request latency with return code class 2xx (success) (95th percentile)"),
+    "unit": "s",
+    "color": "14/a",
+}
+
+metric_info["faas_execution_times_2xx_99"] = {
+    "title": _l("Request latency with return code class 2xx (success) (99th percentile)"),
+    "unit": "s",
+    "color": "16/a",
+}
+
+metric_info["faas_execution_times_3xx_50"] = {
+    "title": _l("Request latency with return code class 3xx (redirection) (50th percentile)"),
+    "unit": "s",
+    "color": "12/a",
+}
+
+metric_info["faas_execution_times_3xx_95"] = {
+    "title": _l("Request latency with return code class 3xx (redirection) (95th percentile)"),
+    "unit": "s",
+    "color": "14/a",
+}
+
+metric_info["faas_execution_times_3xx_99"] = {
+    "title": _l("Request latency with return code class 3xx (redirection) (99th percentile)"),
+    "unit": "s",
+    "color": "16/a",
+}
+
+metric_info["faas_execution_times_4xx_50"] = {
+    "title": _l("Request latency with return code class 4xx (client error) (50th percentile)"),
+    "unit": "s",
+    "color": "12/a",
+}
+
+metric_info["faas_execution_times_4xx_95"] = {
+    "title": _l("Request latency with return code class 4xx (client error) (95th percentile)"),
+    "unit": "s",
+    "color": "14/a",
+}
+
+metric_info["faas_execution_times_4xx_99"] = {
+    "title": _l("Request latency with return code class 4xx (client error) (99th percentile)"),
+    "unit": "s",
+    "color": "16/a",
+}
+
+
+metric_info["faas_execution_times_5xx_50"] = {
+    "title": _l("Request latency with return code class 5xx (server error) (50th percentile)"),
+    "unit": "s",
+    "color": "12/a",
+}
+
+metric_info["faas_execution_times_5xx_95"] = {
+    "title": _l("Request latency with return code class 5xx (server error) (95th percentile)"),
+    "unit": "s",
+    "color": "14/a",
+}
+
+metric_info["faas_execution_times_5xx_99"] = {
+    "title": _l("Request latency with return code class 5xx (server error) (99th percentile)"),
+    "unit": "s",
+    "color": "16/a",
+}
+
 
 metric_info["faas_memory_size_absolute_50"] = {
     "title": _l("Memory Size (50th percentile)"),
@@ -91,6 +164,40 @@ graph_info["faas_execution_times"] = {
         ("faas_execution_times_99", "line"),
     ],
 }
+
+graph_info["faas_execution_times_2xx"] = {
+    "title": _l("Request latencies with return code class 2xx (success)"),
+    "metrics": [
+        ("faas_execution_times_2xx_50", "line"),
+        ("faas_execution_times_2xx_95", "line"),
+        ("faas_execution_times_2xx_99", "line"),
+    ],
+}
+graph_info["faas_execution_times_3xx"] = {
+    "title": _l("Request latencies with return code class 3xx (redirection)"),
+    "metrics": [
+        ("faas_execution_times_3xx_50", "line"),
+        ("faas_execution_times_3xx_95", "line"),
+        ("faas_execution_times_3xx_99", "line"),
+    ],
+}
+graph_info["faas_execution_times_4xx"] = {
+    "title": _l("Request latencies with return code class 4xx (client error)"),
+    "metrics": [
+        ("faas_execution_times_4xx_50", "line"),
+        ("faas_execution_times_4xx_95", "line"),
+        ("faas_execution_times_4xx_99", "line"),
+    ],
+}
+graph_info["faas_execution_times_5xx"] = {
+    "title": _l("Request latencies with return code class 5xx (server error)"),
+    "metrics": [
+        ("faas_execution_times_5xx_50", "line"),
+        ("faas_execution_times_5xx_95", "line"),
+        ("faas_execution_times_5xx_99", "line"),
+    ],
+}
+
 
 graph_info["faas_memory_size_absolute"] = {
     "title": _l("Memory Size"),

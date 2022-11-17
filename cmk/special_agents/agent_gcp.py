@@ -719,7 +719,22 @@ RUN = Service(
         Metric(
             name="run.googleapis.com/request_latencies",
             aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+                group_by_fields=["metric.response_code_class"],
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/request_latencies",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
+                group_by_fields=["metric.response_code_class"],
+            ),
+        ),
+        Metric(
+            name="run.googleapis.com/request_latencies",
+            aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
+                group_by_fields=["metric.response_code_class"],
             ),
         ),
     ],

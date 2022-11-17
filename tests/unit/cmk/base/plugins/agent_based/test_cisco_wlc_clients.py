@@ -6,8 +6,13 @@
 
 import pytest
 
+from tests.testlib.snmp import get_parsed_snmp_section, snmp_is_detected
+
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
+import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,
@@ -186,3 +191,40 @@ def test_parse_cisco_wlc_9800_clients() -> None:
             "internal": ClientsTotal(total=5),
         },
     )
+
+
+DATA = """
+.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.9.1.2861
+.1.3.6.1.4.1.9.9.512.1.1.1.1.4.1 WLAN
+.1.3.6.1.4.1.9.9.512.1.1.1.1.4.10 PHONES
+.1.3.6.1.4.1.9.9.512.1.1.1.1.4.999 GuestLAN
+.1.3.6.1.4.1.14179.2.1.1.1.38.1 13
+.1.3.6.1.4.1.14179.2.1.1.1.38.10 0
+.1.3.6.1.4.1.14179.2.1.1.1.38.999 17
+"""
+
+
+@pytest.mark.usefixtures("fix_register")
+def test_cisco_wlc_client_with_snmp_walk() -> None:
+    plugin = agent_based_register.get_check_plugin(CheckPluginName("wlc_clients"))
+    assert plugin
+
+    # test detect
+    assert snmp_is_detected(SectionName("cisco_wlc_9800_clients"), DATA)
+
+    # parse
+    parsed = get_parsed_snmp_section(SectionName("cisco_wlc_9800_clients"), DATA)
+
+    # test discovery
+    assert list(plugin.discovery_function(parsed)) == [
+        Service(item="Summary"),
+        Service(item="WLAN"),
+        Service(item="PHONES"),
+        Service(item="GuestLAN"),
+    ]
+
+    # test check
+    assert list(plugin.check_function("WLAN", {}, parsed)) == [
+        Result(state=State.OK, summary="Connections: 13"),
+        Metric("connections", 13.0),
+    ]

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Abstract classes and types."""
 
+from pathlib import Path
+
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -50,12 +52,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
         try:
             lines = host_cache[self.config.hostname]
         except KeyError:
-            path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
-            console.vverbose(f"  Loading {oid} from {path}\n")
-            try:
-                lines = StoredWalkSNMPBackend.read_walk_data(path)
-            except OSError:
-                raise MKSNMPError("No snmpwalk file %s" % path)
+            console.vverbose(f"  Loading {oid}")
+            lines = self.read_walk_data()
             host_cache[self.config.hostname] = lines
 
         begin = 0
@@ -86,9 +84,10 @@ class StoredWalkSNMPBackend(SNMPBackend):
         return rowinfo
 
     @staticmethod
-    def read_walk_data(path: str):  # type:ignore[no-untyped-def]
+    def read_walk_from_path(path: Path) -> list[str]:
+        console.vverbose(f"  Opening {path}\n")
         lines = []
-        with open(path) as f:
+        with path.open() as f:
             # Sometimes there are newlines in the data of snmpwalks.
             # Append the data to the last OID rather than throwing it away/skipping it.
             for line in f.readlines():
@@ -97,6 +96,13 @@ class StoredWalkSNMPBackend(SNMPBackend):
                 elif lines:
                     lines[-1] += line
         return lines
+
+    def read_walk_data(self):  # type:ignore[no-untyped-def]
+        path = Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
+        try:
+            return self.read_walk_from_path(path)
+        except OSError:
+            raise MKSNMPError("No snmpwalk file %s" % path)
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:

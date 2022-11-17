@@ -1,0 +1,16 @@
+Title: Add path truststore-path to environment
+Class: fix
+Compatible: compat
+Component: core
+Date: 1668679716
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+OpenSSL uses the openssldir option at compile-time for the default config paths.
+Since every site has its own configuration the openssldir cannot be set to the correct location.
+
+In order to have use the same truststore as the site when using openssl from the commandline the <tt>SSL_CERT_FILE</tt> variable is now set to <tt>var/ssl/ca-certificates.crt</tt> for the site user.
+So if not specified otherwise the <tt>openssl</tt> command, run as site user, uses the same truststore as Checkmk.

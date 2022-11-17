@@ -5,15 +5,14 @@
 
 from typing import Any
 
+import pytest
+
 import cmk.utils.version as cmk_version
 
 import cmk.gui.permissions
 import cmk.gui.views
-
-if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
-
-from cmk.gui.plugins.views.icons.utils import get_multisite_icons
+from cmk.gui.plugins.views.icons import utils
+from cmk.gui.plugins.views.icons.utils import get_multisite_icons, Icon
 
 
 def test_builtin_icons_and_actions() -> None:
@@ -66,7 +65,7 @@ def test_builtin_icons_and_actions() -> None:
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
-def test_legacy_icon_plugin(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
     icon: dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -87,7 +86,7 @@ def test_legacy_icon_plugin(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert registered_icon.sort_index() == 10
 
 
-def test_legacy_icon_plugin_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     icon = {
         "columns": ["column"],
         "host_columns": ["hcol"],
@@ -100,3 +99,28 @@ def test_legacy_icon_plugin_defaults(monkeypatch) -> None:  # type:ignore[no-unt
     registered_icon = get_multisite_icons()["legacy"]
     assert registered_icon.toplevel() is False
     assert registered_icon.sort_index() == 30
+
+
+def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
+    class TestIcon(Icon):
+        @classmethod
+        def ident(cls):
+            return "test_icon"
+
+        @classmethod
+        def title(cls) -> str:
+            return "Test icon"
+
+        def default_sort_index(self):
+            return 50
+
+        def host_columns(self):
+            return []
+
+        def render(self, what, row, tags, custom_vars):
+            return "agents", "Title", "url"
+
+    monkeypatch.setattr(utils, "icon_and_action_registry", registry := utils.IconRegistry())
+    registry.register(TestIcon)
+
+    assert "test_icon" in utils.icon_and_action_registry

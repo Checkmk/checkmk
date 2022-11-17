@@ -1,0 +1,18 @@
+Title: Fix broken configs created by WebAPI
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1668700683
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+A wrong data format resulting from using the WebAPI to edit or create hosts led to failing <i>Check_MK</i> services for SNMP hosts.
+The shown message was
+<i>"Please check your SNMP configuration.
+Possible reason might be: Wrong credentials, wrong SNMP version, Firewall rules, etc."</i>.
+
+This reverts the change introduced in Werk 13962 (released in 2.1.0p16 and 2.0.0p30) that forced users to post data in the Python format when creating or editing host using the WebAPI.
+
+We implement a fix for the underlying problem that does not need existing scripts to be changed and fixes existing problems during update.

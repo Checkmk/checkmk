@@ -2854,21 +2854,36 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             subfolder._add_all_sites_to_set(site_ids)
 
     def _rewrite_hosts_file(self):
+        self._load_hosts_on_demand()
+
+        for host in self._hosts.values():
+            self._remove_unused_attributes(host)
+            self._correct_snmp_types(host)
+
+        self.save_hosts()
+
+    @staticmethod
+    def _remove_unused_attributes(host):
         UNUSED_ATTRIBUTES = [
             "snmp_v3_credentials",  # added by host diagnose page
             "hostname",  # added by host diagnose page
         ]
 
-        self._load_hosts_on_demand()
+        for attribute in UNUSED_ATTRIBUTES:
+            logger.debug("Rewriting %s", host.name())
+            if host.attribute(attribute, None):
+                logger.debug("Removing attribute: %s", attribute)
+                host.remove_attribute(attribute)
 
-        for host in self._hosts.values():
-            for attribute in UNUSED_ATTRIBUTES:
-                logger.debug("Rewriting %s", host.name())
-                if host.attribute(attribute, None):
-                    logger.debug("Removing attribute: %s", attribute)
-                    host.remove_attribute(attribute)
+    @staticmethod
+    def _correct_snmp_types(host):
+        """For a while, the Web Api would write lists instead of tuples into the hosts.mk files"""
+        snmp_keys = ["snmp_community", "explicit_snmp_communities"]
 
-        self.save_hosts()
+        for key in snmp_keys:
+            if value := host.attribute(key, None):
+                if isinstance(value, list):
+                    host.set_attribute(key, tuple(value))
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |

@@ -292,6 +292,12 @@ def _list_user_icons_and_actions():
     return sorted(choices, key=lambda x: x[1])
 
 
+def _convert_webapi_snmp_credentials_input(value: Union[list, tuple, str]) -> Union[tuple, str]:
+    if isinstance(value, list):
+        return tuple(value)
+    return value
+
+
 def SNMPCredentials(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
@@ -299,7 +305,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     default_value: _Optional[str] = "public",
     allow_none: bool = False,
     for_ec: bool = False,
-) -> Alternative:
+) -> ValueSpec:
     def alternative_match(x):
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
@@ -345,13 +351,15 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     else:
         title = title if title is not None else _("SNMP credentials")
 
-    return Alternative(
+    alternative = Alternative(
         title=title,
         help=help,
         default_value=default_value,
         match=match,
         elements=elements,
     )
+
+    return Transform(alternative, forth=_convert_webapi_snmp_credentials_input)
 
 
 def _snmp_no_credentials_element() -> ValueSpec:

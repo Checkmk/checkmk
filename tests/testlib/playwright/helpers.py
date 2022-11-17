@@ -242,11 +242,11 @@ class PPage(LocatorHelper):
     def expect_success_state(self) -> None:
         expect(
             self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
-        ).to_be_visible()
+        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
 
         expect(
             self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
-        ).to_be_visible()
+        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
 
         # assert no further changes are pending
         expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible(

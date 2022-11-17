@@ -253,7 +253,6 @@ CEE_UNUSED_PACKAGES = [
     "click",
     "defusedxml",
     "docutils",
-    "feedparser",
     "grpcio",
     "gunicorn",
     "idna",

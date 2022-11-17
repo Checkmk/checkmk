@@ -22,8 +22,8 @@ from cmk.base.agent_based.inventory._inventory import (
     _inventorize_real_host,
     _parse_inventory_plugin_item,
     InventoryTrees,
+    ItemsOfInventoryPlugin,
 )
-from cmk.base.agent_based.inventory._tree_aggregator import ItemsOfInventoryPlugin
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 

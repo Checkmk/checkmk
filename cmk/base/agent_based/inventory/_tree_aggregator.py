@@ -87,37 +87,34 @@ class RealHostTreeUpdater:
         now: int,
         items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     ) -> None:
-        for items_of_inventory_plugin in items_of_inventory_plugins:
-            for item in items_of_inventory_plugin.items:
-                if isinstance(item, Attributes):
-                    node_type = ATTRIBUTES_KEY
-                elif isinstance(item, TableRow):
-                    node_type = TABLE_KEY
-                else:
-                    continue
+        def _get_node_type(item: Attributes | TableRow) -> str:
+            if isinstance(item, Attributes):
+                return ATTRIBUTES_KEY
+            if isinstance(item, TableRow):
+                return TABLE_KEY
+            raise NotImplementedError()
 
-                retention_key = (tuple(item.path), node_type)
+        raw_cache_info_by_retention_key = {
+            (tuple(item.path), _get_node_type(item)): items_of_inventory_plugin.raw_cache_info
+            for items_of_inventory_plugin in items_of_inventory_plugins
+            for item in items_of_inventory_plugin.items
+        }
 
-                if (from_config := self._from_config.get(retention_key)) is None:
-                    continue
+        for retention_key, from_config in self._from_config.items():
+            if (raw_cache_info := raw_cache_info_by_retention_key.get(retention_key)) is None:
+                raw_cache_info = (now, 0)
 
-                self._retention_infos.setdefault(
-                    retention_key,
-                    RetentionInfo(
-                        make_filter_from_choice(from_config.choices),
-                        RetentionIntervals(
-                            cached_at=items_of_inventory_plugin.raw_cache_info[0],
-                            cache_interval=items_of_inventory_plugin.raw_cache_info[1],
-                            retention_interval=from_config.interval,
-                        )
-                        if items_of_inventory_plugin.raw_cache_info
-                        else RetentionIntervals(
-                            cached_at=now,
-                            cache_interval=0,
-                            retention_interval=from_config.interval,
-                        ),
+            self._retention_infos.setdefault(
+                retention_key,
+                RetentionInfo(
+                    make_filter_from_choice(from_config.choices),
+                    RetentionIntervals(
+                        cached_at=raw_cache_info[0],
+                        cache_interval=raw_cache_info[1],
+                        retention_interval=from_config.interval,
                     ),
-                )
+                ),
+            )
 
     def may_update(
         self,

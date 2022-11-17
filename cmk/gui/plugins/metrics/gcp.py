@@ -36,9 +36,36 @@ metric_info["faas_active_instance_count"] = {
 
 metric_info["faas_execution_count"] = {
     "title": _l("Number of requests"),
-    "unit": "count",
+    "unit": "1/s",
     "color": "11/a",
 }
+
+metric_info["faas_execution_count_2xx"] = {
+    "title": _l("Number of requests with return code class 2xx (success)"),
+    "unit": "1/s",
+    "color": "12/a",
+}
+
+metric_info["faas_execution_count_3xx"] = {
+    "title": _l("Number of requests with return code class 3xx (redirection)"),
+    "unit": "1/s",
+    "color": "13/a",
+}
+
+
+metric_info["faas_execution_count_4xx"] = {
+    "title": _l("Number of requests with return code class 4xx (client error)"),
+    "unit": "1/s",
+    "color": "14/a",
+}
+
+
+metric_info["faas_execution_count_5xx"] = {
+    "title": _l("Number of requests with return code class 5xx (server error)"),
+    "unit": "1/s",
+    "color": "15/a",
+}
+
 
 metric_info["faas_execution_times_50"] = {
     "title": _l("Request latency (50th percentile)"),

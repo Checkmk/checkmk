@@ -189,7 +189,7 @@ class MetricSpec:
     label: str
     render_func: Callable
     scale: float = 1.0
-    filter_by: Filter | None = None
+    filter_by: Sequence[Filter] | None = None
     level_extractor: LEVEL_EXTRACTOR_TYPE | None = None
 
 
@@ -218,7 +218,9 @@ def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
         filter_by = spec.filter_by
 
         def filter_func(r: GCPResult) -> bool:
-            return r.metric_type == spec.metric_type and _filter_by_value(r, filter_by)
+            return r.metric_type == spec.metric_type and all(
+                _filter_by_value(r, fil) for fil in filter_by
+            )
 
     else:
 
@@ -248,7 +250,7 @@ def get_boolean_value(results: Sequence[GCPResult], spec: MetricSpec) -> bool | 
         type_match = r.metric_type == spec.metric_type
         if spec.filter_by is None:
             return type_match
-        return type_match and _filter_by_value(r, spec.filter_by)
+        return type_match and all(_filter_by_value(r, fil) for fil in spec.filter_by)
 
     ret_vals = [int(r.points[-1]["value"]["int64_value"]) for r in results if filter_func(r)]
     if len(ret_vals) > 1:
@@ -362,16 +364,21 @@ def get_percentile_metric_specs(
     label_prefix: str,
     render_func: Callable,
     scale: float = 1.0,
+    additional_filter_by: Sequence[Filter] | None = None,
 ) -> Mapping[str, MetricSpec]:
     def _get_spec(gcp_aligner_map: GCPAlignerMap) -> MetricSpec:
+        filters = [
+            Filter(key=AggregationKey(key="per_series_aligner"), value=gcp_aligner_map.gcp_aligner)
+        ]
+        if additional_filter_by:
+            filters.extend(additional_filter_by)
+
         return MetricSpec(
             gcp_metric,
             f"{label_prefix} ({gcp_aligner_map.percentile}th percentile)",
             render_func,
             scale=scale,
-            filter_by=Filter(
-                key=AggregationKey(key="per_series_aligner"), value=gcp_aligner_map.gcp_aligner
-            ),
+            filter_by=filters,
             level_extractor=_cascading_dropdown_level_extractor,
         )
 

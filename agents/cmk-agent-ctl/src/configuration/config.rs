@@ -582,7 +582,7 @@ pub enum ConnectionType {
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
-        Some(fs::metadata(&path)?.modified()?)
+        Some(fs::metadata(path)?.modified()?)
     } else {
         None
     })

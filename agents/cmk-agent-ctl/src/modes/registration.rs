@@ -975,7 +975,10 @@ mod tests {
 
             assert_eq!(
                 registry.imported_pull_connections().count(),
-                if keep_vanished_connections { 1 } else { 0 }
+                match keep_vanished_connections {
+                    true => 1,
+                    false => 0,
+                },
             );
         }
 

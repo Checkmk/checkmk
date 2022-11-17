@@ -24,7 +24,7 @@ def test_uuid_check_client_certificate(site: Site) -> None:
     agent_receiver_response = requests.get(
         f"https://{site.http_address}:{agent_receiver_port}/{site.id}/agent-receiver/registration_status/{uuid_}",
         headers={"verified-uuid": str(uuid_)},
-        verify=False,
+        verify=False,  # nosec
     )
     assert agent_receiver_response.status_code == HTTPStatus.BAD_REQUEST
     assert (

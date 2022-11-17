@@ -97,6 +97,11 @@ labels with other special characters.
 """
 
 
+class ClientModel(BaseModel):
+    class Config:
+        orm_mode = True
+
+
 class Label(BaseModel):
     name: LabelName
     value: LabelValue
@@ -733,6 +738,120 @@ class Job(BaseModel):
     metadata: MetaData[str]
     status: JobStatus
     pod_uids: Sequence[PodUID]
+
+
+class StorageRequirement(BaseModel):
+    storage: float
+
+    _parse_storage = validator("storage", pre=True, allow_reuse=True)(parse_resource_value)
+
+    class Config:
+        allow_extra = False
+
+
+class StorageResourceRequirements(ClientModel):
+    limits: StorageRequirement | None
+    requests: StorageRequirement | None
+
+
+class PersistentVolumeMode(enum.Enum):
+    """PersistentVolumeMode describes how a volume is intended to be consumed
+
+    Block:
+        means the volume will not be formatted with a filesystem and will remain
+        a raw block device.
+    Filesystem:
+        means the volume will be or is formatted with a filesystem
+    """
+
+    BLOCK = "Block"
+    FILESYSTEM = "Filesystem"
+
+
+class AccessMode(enum.Enum):
+    """
+
+    Context:
+        providers will have different capabilities and each PV's access modes are set to the
+        specific modes supported by the particular volume.
+        Each PV gets its own set of access modes describing that specific PV's capabilities
+
+    Modes:
+        ReadWriteOnce (RWO):
+            * volume can be mounted as read-write by a single node
+            * can still allow multiple pods to access the volume when the pods are running on same
+            node
+
+        ReadOnlyMany (ROX):
+            * volume can be mounted as read-only by many nodes
+
+        ReadWriteMany (RWX):
+            * volume can be mounted as read-write by many nodes
+
+        ReadWriteOncePod (RWOP):
+            * volume can be mounted as read-write by a single pod
+            * use of this mode ensures that only one pod across the whole cluster can read that PVC
+            or write to it
+            * only supported for CSI volumes and Kubernetes version 1.22+
+
+    """
+
+    READ_WRITE_ONCE = "ReadWriteOnce"
+    READ_ONLY_MANY = "ReadOnlyMany"
+    READ_WRITE_MANY = "ReadWriteMany"
+    READ_WRITE_ONCE_POD = "ReadWriteOncePod"
+
+
+class PersistentVolumeClaimSpec(ClientModel):
+    """
+    access_modes:
+        contains the desired access modes the volume should have
+
+    resources:
+        minimum resources the volume should have
+
+    storage_class_name:
+        name of the StorageClass required by the claim
+
+    volume_name:
+        VolumeName is the binding reference to the PersistentVolume backing this claim
+        (pv.metadata.name)
+
+    """
+
+    access_modes: Sequence[AccessMode] | None
+    resources: StorageResourceRequirements | None
+    storage_class_name: str | None
+    volume_mode: PersistentVolumeMode | None
+
+
+class PersistentVolumeClaimPhase(enum.Enum):
+    """
+    pending:
+        PVCs that are not yet bound
+    bound:
+        for PVCs that are bound
+    lost:
+        for PVCs that lost their underlying PV. The claim was bound to a PV and this volume
+        does not exist any longer and all data on it was lost
+    """
+
+    CLAIM_PENDING = "Pending"
+    CLAIM_BOUND = "Bound"
+    CLAIM_LOST = "Lost"
+
+
+# TODO: bring consistency to models CMK-11887
+class PersistentVolumeClaimStatus(ClientModel):
+    phase: PersistentVolumeClaimPhase | None
+    access_modes: Sequence[AccessMode] | None
+    capacity: StorageRequirement | None
+
+
+class PersistentVolumeClaim(BaseModel):
+    metadata: MetaData[str]
+    spec: PersistentVolumeClaimSpec
+    status: PersistentVolumeClaimStatus
 
 
 class ClusterDetails(BaseModel):

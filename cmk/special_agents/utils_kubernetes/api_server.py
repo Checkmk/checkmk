@@ -26,6 +26,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     namespace_from_client,
     node_from_client,
     parse_object_to_owners,
+    persistent_volume_claim_from_client,
     pod_from_client,
     resource_quota_from_client,
     statefulset_from_client,
@@ -72,6 +73,11 @@ class CoreAPI:
 
     def query_raw_namespaces(self):
         return self.connection.list_namespace(_request_timeout=self.timeout).items
+
+    def query_persistent_volume_claims(self):
+        return self.connection.list_persistent_volume_claim_for_all_namespaces(
+            _request_timeout=self.timeout
+        ).items
 
 
 class AppsAPI:
@@ -303,6 +309,7 @@ class APIData:
     namespaces: Sequence[api.Namespace]
     nodes: Sequence[api.Node]
     pods: Sequence[api.Pod]
+    persistent_volume_claims: Sequence[api.PersistentVolumeClaim]
     resource_quotas: Sequence[api.ResourceQuota]
     cluster_details: api.ClusterDetails
 
@@ -318,6 +325,7 @@ class UnparsedAPIData(Generic[StatefulSets]):
     raw_nodes: Sequence[client.V1Node]
     raw_namespaces: Sequence[client.V1Namespace]
     raw_resource_quotas: Sequence[client.V1ResourceQuota]
+    raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim]
     raw_deployments: Sequence[client.V1Deployment]
     raw_daemonsets: Sequence[client.V1DaemonSet]
     raw_replica_sets: Sequence[client.V1ReplicaSet]
@@ -340,6 +348,7 @@ def query_raw_api_data_v1(
         raw_nodes=raw_nodes,
         raw_namespaces=core_api.query_raw_namespaces(),
         raw_resource_quotas=core_api.query_raw_resource_quotas(),
+        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
         raw_deployments=external_api.query_raw_deployments(),
         raw_daemonsets=external_api.query_raw_daemon_sets(),
         raw_statefulsets=external_api.query_raw_statefulsets(),
@@ -366,6 +375,7 @@ def query_raw_api_data_v2(
         raw_nodes=raw_nodes,
         raw_namespaces=core_api.query_raw_namespaces(),
         raw_resource_quotas=core_api.query_raw_resource_quotas(),
+        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
         raw_deployments=external_api.query_raw_deployments(),
         raw_daemonsets=external_api.query_raw_daemon_sets(),
         raw_statefulsets=raw_api.query_raw_statefulsets(),
@@ -400,6 +410,7 @@ def parse_api_data(
     raw_deployments: Sequence[client.V1Deployment],
     raw_daemonsets: Sequence[client.V1DaemonSet],
     raw_statefulsets: StatefulSets,
+    raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
@@ -454,6 +465,9 @@ def parse_api_data(
         for raw_node in raw_nodes
     ]
     pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
+    persistent_volume_claims = [
+        persistent_volume_claim_from_client(pvc) for pvc in raw_persistent_volume_claims
+    ]
     resource_quotas: Sequence[api.ResourceQuota] = [
         api_resource_quota
         for api_resource_quota in [
@@ -472,6 +486,7 @@ def parse_api_data(
         namespaces=namespaces,
         nodes=nodes,
         pods=pods,
+        persistent_volume_claims=persistent_volume_claims,
         resource_quotas=resource_quotas,
         cluster_details=cluster_details,
     )
@@ -516,6 +531,7 @@ def create_api_data_v1(
         raw_api_data.raw_deployments,
         raw_api_data.raw_daemonsets,
         raw_api_data.raw_statefulsets,
+        raw_api_data.raw_persistent_volume_claims,
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,
@@ -565,6 +581,7 @@ def create_api_data_v2(
         raw_api_data.raw_deployments,
         raw_api_data.raw_daemonsets,
         raw_api_data.raw_statefulsets,
+        raw_api_data.raw_persistent_volume_claims,
         raw_api_data.node_to_kubelet_health,
         raw_api_data.api_health,
         controller_to_pods,

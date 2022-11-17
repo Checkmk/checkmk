@@ -2,6 +2,17 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Module to help generate pydantic based Kubernetes models
+
+Notice (for pydantic_factories):
+    For models which make use of validator such as api.StorageRequirement, the build function will
+    first generate the field value before passing it through the validator function. This will in
+    some cases raise an error.
+
+    You should make use of the factory_use_construct option to bypass the validator function. This
+    option is tied to the model so won't be applied to nested models. See how APIDataFactory
+    resolves this with persistent_volume_claims.
+"""
 import itertools
 from collections.abc import Iterator, Sequence
 
@@ -167,6 +178,39 @@ class IdentifiableSampleFactory(ModelFactory):
     __model__ = common.IdentifiableSample
 
 
+# PersistentVolumeClaim related Factories
+
+
+class StorageRequirementFactory(ModelFactory):
+    __model__ = api.StorageRequirement
+
+
+class StorageResourceRequirementsFactory(ModelFactory):
+    __model__ = api.StorageResourceRequirements
+
+    limits = Use(StorageRequirementFactory.build, factory_use_construct=True)
+    requests = Use(StorageRequirementFactory.build, factory_use_construct=True)
+
+
+class PersistentVolumeSpecFactory(ModelFactory):
+    __model__ = api.PersistentVolumeClaimSpec
+
+    resources = StorageResourceRequirementsFactory.build
+
+
+class PersistentVolumeClaimStatusFactory(ModelFactory):
+    __model__ = api.PersistentVolumeClaimStatus
+
+    capacity = Use(StorageRequirementFactory.build, factory_use_construct=True)
+
+
+class PersistentVolumeClaimFactory(ModelFactory):
+    __model__ = api.PersistentVolumeClaim
+
+    spec = PersistentVolumeSpecFactory.build
+    status = PersistentVolumeClaimStatusFactory.build
+
+
 # Node related Factories
 
 
@@ -250,6 +294,8 @@ class SampleFactory(ModelFactory):
 
 class APIDataFactory(ModelFactory):
     __model__ = APIData
+
+    persistent_volume_claims = Use(PersistentVolumeClaimFactory.batch, size=2)
 
 
 class ClusterDetailsFactory(ModelFactory):

@@ -1065,7 +1065,7 @@ def reclassify_times_by_annotation(history_entry, annotation, new_config):
 
 
 def reclassify_config_by_annotation(history_entry, annotation, new_entry, new_config):
-    if new_config.downtime:
+    if new_config.downtime is not None:
         new_entry["in_downtime"] = 1 if annotation['downtime'] else 0
         # If the annotation removes a downtime from the services, but
         # the actual reason for the service being in downtime is a host

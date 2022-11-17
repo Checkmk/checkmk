@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import Tuple as TupleType
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
@@ -25,7 +24,7 @@ def _item_spec_jvm_memory() -> TextInput:
 
 def _get_memory_level_elements(  # type:ignore[no-untyped-def]
     mem_type,
-) -> Iterable[TupleType[str, Tuple]]:
+) -> Iterable[tuple[str, Tuple]]:
     return [
         (
             "perc_%s" % mem_type,

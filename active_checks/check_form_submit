@@ -22,7 +22,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -168,7 +168,7 @@ def open_url(  # type:ignore[no-untyped-def]
     *,
     client: urllib.request.OpenerDirector,
     url: str,
-    timeout: Optional[int],
+    timeout: int | None,
     debug_enabled: bool,
     method: str = "GET",
     data=None,
@@ -357,7 +357,7 @@ def raise_host_state(
 
 def check_host_states(  # type:ignore[no-untyped-def]
     states,
-    levels: Optional[tuple[int, int]],
+    levels: tuple[int, int] | None,
 ) -> tuple[int, str]:
     failed = []
     success = []
@@ -395,7 +395,7 @@ def _decode_query_params(encoded_params: str) -> Mapping[str, str]:
     return dict(parts.split("=", 1) for parts in encoded_params.split("&"))
 
 
-def main(argv: Optional[Sequence[str]] = None) -> tuple[int, str]:
+def main(argv: Sequence[str] | None = None) -> tuple[int, str]:
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
     multiple = len(args.hosts) > 1
 

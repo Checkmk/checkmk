@@ -7,8 +7,6 @@
 import time
 from collections.abc import Collection
 from typing import Any
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
 
 import cmk.utils.defines as defines
 import cmk.utils.version as cmk_version
@@ -67,7 +65,7 @@ from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
-TimeperiodUsage = _Tuple[str, str]
+TimeperiodUsage = tuple[str, str]
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
@@ -236,7 +234,7 @@ class ModeTimeperiods(WatoMode):
         return used_in
 
     def _find_usages_in_notification_rule(
-        self, tpname: str, index: int, rule: EventRule, user_id: _Optional[UserId] = None
+        self, tpname: str, index: int, rule: EventRule, user_id: UserId | None = None
     ) -> list[TimeperiodUsage]:
         used_in: list[TimeperiodUsage] = []
         if self._used_in_tp_condition(rule, tpname) or self._used_in_bulking(rule, tpname):
@@ -380,7 +378,7 @@ class ModeTimeperiodImportICal(WatoMode):
         return ["timeperiods"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTimeperiods
 
     def title(self) -> str:
@@ -696,7 +694,7 @@ class ModeEditTimeperiod(WatoMode):
         return ["timeperiods"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTimeperiods
 
     def _from_vars(self):

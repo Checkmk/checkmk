@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Tuple as _Tuple
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import url_prefix
@@ -1346,7 +1345,7 @@ $LONGSERVICEOUTPUT$
             ],
         )
 
-    def _get_state_choices(self, issue_type: str) -> list[_Tuple[str, str]]:
+    def _get_state_choices(self, issue_type: str) -> list[tuple[str, str]]:
         if issue_type == "incident":
             return [
                 ("none", _("Don't change state")),

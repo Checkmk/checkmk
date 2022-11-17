@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import ast
 import glob
@@ -17,7 +18,7 @@ import urllib.parse
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 import pytest
 
@@ -1049,7 +1050,7 @@ class Site:
         return secret
 
     def activate_changes_and_wait_for_core_reload(
-        self, allow_foreign_changes: bool = False, remote_site: Optional["Site"] = None
+        self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
         self.ensure_running()
         site = remote_site or self

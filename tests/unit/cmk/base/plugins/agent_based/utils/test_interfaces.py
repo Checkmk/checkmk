@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Union
+from typing import Any
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.utils import interfaces
 
-CheckResults = Sequence[Union[Result, Metric, IgnoreResults]]
+CheckResults = Sequence[Result | Metric | IgnoreResults]
 
 
 def _create_interfaces_with_counters(

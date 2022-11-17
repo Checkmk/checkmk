@@ -7,7 +7,7 @@ import json
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from cmk.utils.type_defs import UserId
 
@@ -21,7 +21,7 @@ from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir
 
-LogMessage = Union[str, HTML, LazyString]
+LogMessage = str | HTML | LazyString
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):

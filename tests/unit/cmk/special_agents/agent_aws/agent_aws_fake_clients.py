@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 import random
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -39,7 +41,7 @@ class List(Entity):
         self,
         key: str,
         elements: Iterable[Entity],
-        from_choice: Optional["Choice"] = None,
+        from_choice: Choice | None = None,
     ) -> None:
         super().__init__(key)
         self._elements = elements

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Sequence
-from typing import Tuple, Type
 
 import urllib3 as _urllib3
 

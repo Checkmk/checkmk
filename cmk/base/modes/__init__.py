@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import textwrap
 from collections.abc import Callable
-from typing import Dict, List, Optional, Set, Tuple, Union
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -189,7 +190,7 @@ class Modes:
                 texts.append("%s" % text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def _get_general_option(self, opt: str) -> "Optional[Option]":
+    def _get_general_option(self, opt: str) -> Option | None:
         opt_name = self._strip_dashes(opt)
         for option in self._general_options:
             if opt_name in [option.long_option, option.short_option]:

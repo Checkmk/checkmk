@@ -23,6 +23,8 @@
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
 
+from __future__ import annotations
+
 import abc
 import errno
 import fcntl
@@ -42,7 +44,7 @@ import time
 import traceback
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn, Optional
+from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn
 
 import psutil  # type: ignore[import]
 
@@ -1785,7 +1787,7 @@ def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
 def main_help(
     version_info: VersionInfo,
     site: AbstractSiteContext,
-    global_opts: Optional["GlobalOptions"] = None,
+    global_opts: GlobalOptions | None = None,
     args: Arguments | None = None,
     options: CommandOptions | None = None,
 ) -> None:
@@ -3600,7 +3602,7 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
 
 class PackageManager(abc.ABC):
     @classmethod
-    def factory(cls, version_info: VersionInfo) -> Optional["PackageManager"]:
+    def factory(cls, version_info: VersionInfo) -> PackageManager | None:
         if os.path.exists("/etc/cma"):
             return None
 

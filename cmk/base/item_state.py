@@ -17,8 +17,9 @@ Note: The item state is kept in tmpfs and not reboot-persistant.
 Do not store long-time things here. Also do not store complex
 structures like log files or stuff.
 """
+from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any
 
 from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.api.agent_based.value_store import get_value_store
@@ -28,12 +29,12 @@ SKIP = None
 RAISE = False
 ZERO = 0.0
 
-g_last_counter_wrap: "Optional[GetRateError]" = None
+g_last_counter_wrap: GetRateError | None = None
 g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 # e.g. do not suppress this check on check_mk -nv
 
 _UserKey = str
-_OnWrap = Union[None, bool, float]
+_OnWrap = bool | float | None
 
 
 def _stringify(user_key: object) -> _UserKey:

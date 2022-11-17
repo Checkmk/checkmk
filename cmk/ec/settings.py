@@ -11,7 +11,7 @@
 import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from pathlib import Path
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 
 class AnnotatedPath(NamedTuple):
@@ -201,7 +201,7 @@ class ECArgumentParser(ArgumentParser):
 
 
 # a communication endpoint, e.g. for syslog or SNMP
-EndPoint = Union[PortNumber, FileDescriptor]
+EndPoint = PortNumber | FileDescriptor
 
 
 def _endpoint(

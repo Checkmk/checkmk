@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 import errno
 import json
@@ -19,7 +21,7 @@ import uuid
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 import requests
 
@@ -141,7 +143,7 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
         self.tarfile_created = False
 
-    def _get_fixed_elements(self) -> "List[ABCDiagnosticsElement]":
+    def _get_fixed_elements(self) -> list[ABCDiagnosticsElement]:
         return [
             GeneralDiagnosticsElement(),
             PerfDataDiagnosticsElement(),
@@ -152,7 +154,7 @@ class DiagnosticsDump:
 
     def _get_optional_elements(
         self, parameters: DiagnosticsOptionalParameters | None
-    ) -> "List[ABCDiagnosticsElement]":
+    ) -> list[ABCDiagnosticsElement]:
         if parameters is None:
             return []
 

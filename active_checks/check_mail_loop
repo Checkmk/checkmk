@@ -14,7 +14,6 @@ import re
 import smtplib
 import time
 from contextlib import suppress
-from typing import Dict, Tuple
 
 from cmk.utils.mailbox import (
     active_check_main,
@@ -26,8 +25,8 @@ from cmk.utils.mailbox import (
     SendMailError,
 )
 
-MailID = Tuple[int, int]
-MailDict = Dict[str, MailID]
+MailID = tuple[int, int]
+MailDict = dict[str, MailID]
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
@@ -134,7 +133,7 @@ def save_expected_mails(expected_mails: MailDict, status_path: str) -> None:
         file.write("\n")
 
 
-def _send_mail(args: Args) -> Tuple[str, MailID]:
+def _send_mail(args: Args) -> tuple[str, MailID]:
     """Send an email with provided content using SMTP and provided credentials"""
     now = int(time.time())
     key = random.randint(1, 1000)
@@ -155,7 +154,7 @@ def _send_mail(args: Args) -> Tuple[str, MailID]:
         return "%d-%d" % (now, key), (now, key)
 
 
-def send_mail(args: Args) -> Tuple[str, MailID]:
+def send_mail(args: Args) -> tuple[str, MailID]:
     """Send an email with provided content using SMTP and provided credentials.
     This function just manages exceptions for _send_mail()"""
     try:
@@ -187,7 +186,7 @@ def fetch_mail_timestamps(
     mails: MailMessages,
     expected_mails: MailDict,
     now: int = int(time.time()),
-) -> Tuple[MailDict, MailDict]:
+) -> tuple[MailDict, MailDict]:
     """Fetch mails and return tuples of dicts containing timestamps of mails which have been
     not expected (anymore) and expected"""
     if not expected_mails:
@@ -214,7 +213,7 @@ def fetch_mail_timestamps(
                 # use current time as fallback where no Received header could be found
                 rx_ts = now
 
-            ts_key = "%s-%s" % (ts, key)
+            ts_key = f"{ts}-{key}"
             if ts_key not in expected_mails:
                 # Delete any "Check_MK-Mail-Loop" messages older than 24 hours, even if
                 # they are not in our list
@@ -257,7 +256,7 @@ def check_mails(  # pylint: disable=too-many-branches
                 state = max(state, 1)
 
             if state:
-                output.append(" (warn/crit at %s/%s)" % (warning, critical))
+                output.append(f" (warn/crit at {warning}/{critical})")
 
             del expected_mails[ident]  # remove message from expect list
             # FIXME: Also remove older mails which have not yet been seen?
@@ -301,7 +300,7 @@ def check_mails(  # pylint: disable=too-many-branches
 
 def check_mail_roundtrip(args: Args) -> CheckResult:
     # TODO: maybe we should use cmk.utils.paths.tmp_dir?
-    status_path = "%s/check_mail_loop%s.status" % (
+    status_path = "{}/check_mail_loop{}.status".format(
         args.status_dir,
         (".%s" % args.status_suffix) if args.status_suffix else "",
     )
@@ -332,11 +331,11 @@ def check_mail_roundtrip(args: Args) -> CheckResult:
             # Do not delete all messages in the inbox. Only the ones which were
             # processed before! In the meantime new ones might have come in.
             mailbox.delete_mails(
-                set(
+                {
                     elem[0]
                     for maillist in (obsolete_mails, fetched_mails)
                     for elem in maillist.values()
-                )
+                }
             )
 
     return state, output, perfdata

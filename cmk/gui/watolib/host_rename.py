@@ -5,7 +5,6 @@
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Tuple as _Tuple
 
 from livestatus import SiteId
 
@@ -201,7 +200,7 @@ def _rename_host_in_bi(oldname, newname):
 
 
 def _rename_hosts_in_check_mk(
-    renamings: list[_Tuple[CREFolder, HostName, HostName]]
+    renamings: list[tuple[CREFolder, HostName, HostName]]
 ) -> dict[str, int]:
     action_counts: dict[str, int] = {}
     for site_id, name_pairs in _group_renamings_by_site(renamings).items():
@@ -342,7 +341,7 @@ def _merge_action_counts(action_counts, new_counts):
 
 
 def _group_renamings_by_site(renamings):
-    renamings_per_site: dict[SiteId, list[_Tuple[HostName, HostName]]] = {}
+    renamings_per_site: dict[SiteId, list[tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:
         host = folder.host(newname)  # already renamed here!
         site_id = host.site_id()
@@ -352,6 +351,6 @@ def _group_renamings_by_site(renamings):
 
 def _rename_host_in_uuid_link_manager(
     uuid_link_manager: UUIDLinkManager,
-    successful_renamings: Sequence[_Tuple[HostName, HostName]],
-) -> Sequence[_Tuple[HostName, HostName]]:
+    successful_renamings: Sequence[tuple[HostName, HostName]],
+) -> Sequence[tuple[HostName, HostName]]:
     return uuid_link_manager.rename(successful_renamings)

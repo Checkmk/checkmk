@@ -14,6 +14,8 @@ SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
+from __future__ import annotations
+
 import ast
 import errno
 import hashlib
@@ -30,7 +32,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, NamedTuple
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -978,7 +980,7 @@ class SnapshotManager:
         work_dir: str,
         site_snapshot_settings: dict[SiteId, SnapshotSettings],
         edition: cmk_version.Edition,
-    ) -> "SnapshotManager":
+    ) -> SnapshotManager:
         if edition is cmk_version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
@@ -1002,7 +1004,7 @@ class SnapshotManager:
         self,
         activation_work_dir: str,
         site_snapshot_settings: dict[SiteId, SnapshotSettings],
-        data_collector: "ABCSnapshotDataCollector",
+        data_collector: ABCSnapshotDataCollector,
         reuse_identical_snapshots: bool,
         generate_in_subprocess: bool,
     ) -> None:
@@ -1399,7 +1401,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         except Exception:
             return 1
 
-    def _get_queued_jobs(self) -> "List[ActivateChangesSite]":
+    def _get_queued_jobs(self) -> list[ActivateChangesSite]:
         queued_jobs: list[ActivateChangesSite] = []
 
         file_filter_func = None
@@ -1731,7 +1733,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _get_config_sync_state(
         self, replication_paths: list[ReplicationPath]
-    ) -> "Tuple[Dict[str, ConfigSyncFileInfo], int]":
+    ) -> tuple[dict[str, ConfigSyncFileInfo], int]:
         """Get the config file states from the remote sites
 
         Calls the automation call "get-config-sync-state" on the remote site,
@@ -2191,8 +2193,8 @@ def _get_replication_components(site_config: SiteConfiguration) -> list[Replicat
 def get_file_names_to_sync(
     site_id: SiteId,
     site_logger: logging.Logger,
-    central_file_infos: "Dict[str, ConfigSyncFileInfo]",
-    remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
+    central_file_infos: dict[str, ConfigSyncFileInfo],
+    remote_file_infos: dict[str, ConfigSyncFileInfo],
     file_filter_func: Callable[[str], bool] | None,
 ) -> tuple[list[str], list[str], list[str]]:
     """Compare the response with the site_config directory of the site
@@ -2340,10 +2342,10 @@ class ConfigSyncFileInfo(NamedTuple):
 # Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
 # Using some simpler data structure for transport now to reduce the pain.
 # GetConfigSyncStateResponse = NamedTuple("GetConfigSyncStateResponse", [
-#    ("file_infos", Dict[str, ConfigSyncFileInfo]),
+#    ("file_infos", dict[str, ConfigSyncFileInfo]),
 #    ("config_generation", int),
 # ])
-GetConfigSyncStateResponse = tuple[dict[str, tuple[int, int, Optional[str], Optional[str]]], int]
+GetConfigSyncStateResponse = tuple[dict[str, tuple[int, int, str | None, str | None]], int]
 
 
 @automation_command_registry.register

@@ -15,10 +15,11 @@ import sys
 import termios
 import time
 import tty
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, NoReturn, Optional, Sequence, Set, Tuple, Union
+from typing import NoReturn
 
-Werk = Dict[str, str]
+Werk = dict[str, str]
 
 RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
 
@@ -239,7 +240,7 @@ def try_migrate_werk_ids():
             sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 
-def get_tty_size() -> Tuple[int, int]:
+def get_tty_size() -> tuple[int, int]:
     try:
         ws = bytearray(8)
         fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
@@ -272,7 +273,7 @@ def goto_werksdir() -> None:
         sys.exit(1)
 
 
-g_last_werk: Optional[int] = None
+g_last_werk: int | None = None
 
 
 def get_last_werk() -> int:
@@ -301,7 +302,7 @@ def load_config() -> None:
     }
 
 
-g_werks: Dict[int, Werk] = {}
+g_werks: dict[int, Werk] = {}
 
 
 def load_werks() -> None:
@@ -337,12 +338,12 @@ def load_current_version() -> str:
     bail_out("Failed to read VERSION from defines.make")
 
 
-g_modified: Set[int] = set()
+g_modified: set[int] = set()
 
 
 def check_modified() -> None:
     global g_modified
-    g_modified = set([])
+    g_modified = set()
     for line in os.popen("git status --porcelain"):
         if line[0] in "AM" and ".werks/" in line:
             try:
@@ -390,7 +391,7 @@ def load_werk(werkid: int) -> Werk:
 def validate_werk(werk: Werk) -> None:
     for key, choices in valid_choices.items():
         if werk[key] not in choices:
-            raise ValueError("Invalid value %r for '%s'" % (werk[key], key))
+            raise ValueError(f"Invalid value {werk[key]!r} for '{key}'")
 
 
 def save_werk(werk: Werk) -> None:
@@ -398,7 +399,7 @@ def save_werk(werk: Werk) -> None:
         f.write("Title: %s\n" % werk["title"])
         for key, val in sorted(werk.items()):
             if key not in ["title", "description", "id"]:
-                f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
+                f.write(f"{key[0].upper()}{key[1:]}: {val}\n")
         f.write("\n")
         f.write(werk["description"])
         f.write("\n")
@@ -417,23 +418,23 @@ def git_add(werk: Werk) -> None:
     os.system("git add %s" % werk["id"])  # nosec
 
 
-def git_commit(werk: Werk, custom_files: List[str]) -> None:
+def git_commit(werk: Werk, custom_files: list[str]) -> None:
     title = werk["title"]
     for classid, _classname, prefix in classes:
         if werk["class"] == classid:
             if prefix:
-                title = "%s %s" % (prefix, title)
+                title = f"{prefix} {title}"
 
-    title = "%s %s" % (werk["id"].rjust(5, "0"), title)
+    title = "{} {}".format(werk["id"].rjust(5, "0"), title)
 
     if custom_files:
         files_to_commit = custom_files
         default_files = [".werks"]
         for entry in default_files:
-            files_to_commit.append("%s/%s" % (git_top_level(), entry))
+            files_to_commit.append(f"{git_top_level()}/{entry}")
 
         os.chdir(g_base_dir)
-        cmd = "git commit %s -m %s" % (
+        cmd = "git commit {} -m {}".format(
             " ".join(files_to_commit),
             quote_shell_string(title + "\n\n" + werk["description"]),
         )
@@ -446,7 +447,7 @@ def git_commit(werk: Werk, custom_files: List[str]) -> None:
         else:
             dash_a = "-a"
 
-        cmd = "git commit %s -m %s" % (
+        cmd = "git commit {} -m {}".format(
             dash_a,
             quote_shell_string(title + "\n\n" + werk["description"]),
         )
@@ -482,15 +483,15 @@ def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk[
         "description"
     ] += """
-%s: %s
-%s""" % (
+{}: {}
+{}""".format(
         time.strftime("%F %T"),
         title,
         comment,
     )
 
 
-def num_color(n: int, colors: List[int], inverse: bool) -> str:
+def num_color(n: int, colors: list[int], inverse: bool) -> str:
     if inverse:
         b = 40
     else:
@@ -528,7 +529,7 @@ def list_werk(werk: Werk) -> None:
     )
 
 
-def format_werk_id(werk_id: Union[int, str]) -> str:
+def format_werk_id(werk_id: int | str) -> str:
     return tty_bgwhite + tty_blue + ("#%05d" % int(werk_id)) + tty_normal
 
 
@@ -554,7 +555,7 @@ def show_werk(werk: Werk) -> None:
 def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
-    filters: Dict[str, List] = {}
+    filters: dict[str, list] = {}
 
     for a in args.filter:
 
@@ -611,7 +612,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
-def output_csv(werks: List[Werk]) -> None:
+def output_csv(werks: list[Werk]) -> None:
     def line(*l):
         sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
 
@@ -622,7 +623,7 @@ def output_csv(werks: List[Werk]) -> None:
         elif isinstance(entry, str):  # TODO: Hmmm...
             name, alias = entry, entry
         else:
-            bail_out("invalid component %r" % (entry,))
+            bail_out(f"invalid component {entry!r}")
 
         line("", "", "", "", "")
 
@@ -708,7 +709,7 @@ def getch() -> str:
 
 
 def input_choice(
-    what: str, choices: Union[List[str], List[Tuple[str, str]], List[Tuple[str, str, str]]]
+    what: str, choices: list[str] | list[tuple[str, str]] | list[tuple[str, str, str]]
 ) -> str:
     next_index = 0
     ctc = {}
@@ -730,25 +731,25 @@ def input_choice(
 
         if not added:
             ctc["%s" % next_index] = choice
-            texts.append("%s:%s" % ("%s%d%s" % (tty_bold, next_index, tty_normal), choice))
+            texts.append("{}:{}".format("%s%d%s" % (tty_bold, next_index, tty_normal), choice))
             next_index += 1
 
     while True:
-        sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))
+        sys.stdout.write("{} ({}): ".format(what, ", ".join(texts)))
         sys.stdout.flush()
         c = getch()
         if c in ctc:
-            sys.stdout.write(" %s%s%s\n" % (tty_bold, ctc[c], tty_normal))
+            sys.stdout.write(f" {tty_bold}{ctc[c]}{tty_normal}\n")
             return ctc[c]
 
         sys.stdout.write("\n")
 
 
-def get_edition_components(edition: str) -> List[Tuple[str, str]]:
+def get_edition_components(edition: str) -> list[tuple[str, str]]:
     return components + edition_components.get(edition, [])
 
 
-def all_components() -> List[Tuple[str, str]]:
+def all_components() -> list[tuple[str, str]]:
     c = components
     for ed_components in edition_components.values():
         c += ed_components
@@ -800,7 +801,7 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk["id"]))
 
 
-def get_werk_arg(arg: Optional[Union[str, int]]) -> int:
+def get_werk_arg(arg: str | int | None) -> int:
     wid = get_last_werk() if arg is None else int(arg)
 
     werk = g_werks.get(wid)
@@ -840,7 +841,7 @@ def main_delete(args: argparse.Namespace) -> None:
             )
 
 
-def grep(line: str, kw: str, n: int) -> Optional[str]:
+def grep(line: str, kw: str, n: int) -> str | None:
     lc = kw.lower()
     i = line.lower().find(lc)
     if i == -1:
@@ -854,7 +855,7 @@ def main_grep(args: argparse.Namespace) -> None:
         one_kw_didnt_match = False
         title = werk["title"]
         lines = werk["description"].split("\n")
-        bodylines = set([])
+        bodylines = set()
 
         # *all* of the keywords must match in order for the
         # werk to be displayed
@@ -904,7 +905,7 @@ def main_edit(args: argparse.Namespace) -> None:
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid: int, custom_files: Optional[List[str]] = None, commit: bool = True) -> None:
+def edit_werk(werkid: int, custom_files: list[str] | None = None, commit: bool = True) -> None:
     if custom_files is None:
         custom_files = []
     if not os.path.exists(str(werkid)):
@@ -918,7 +919,7 @@ def edit_werk(werkid: int, custom_files: Optional[List[str]] = None, commit: boo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if os.system("bash -c '%s +11 %s'" % (editor, werkid)) == 0:  # nosec
+    if os.system(f"bash -c '{editor} +11 {werkid}'") == 0:  # nosec
         load_werks()
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
@@ -964,7 +965,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
         assert g_current_version
         change_werk_version(werk_id, g_current_version)
         sys.stdout.write(
-            "Changed version of werk %s to %s.\n" % (format_werk_id(werk_id), g_current_version)
+            f"Changed version of werk {format_werk_id(werk_id)} to {g_current_version}.\n"
         )
 
     if pick.returncode:
@@ -985,7 +986,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
             subprocess.run(["git", "status"], check=True)
 
 
-def get_werk_ids() -> List[int]:
+def get_werk_ids() -> list[int]:
     try:
         return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())
     except Exception:
@@ -1000,7 +1001,7 @@ def invalidate_my_werkid(wid: int) -> None:
         sys.stdout.write(f"\n{tty_red}This was your last reserved ID.{tty_normal}\n\n")
 
 
-def store_werk_ids(l: List[int]) -> None:
+def store_werk_ids(l: list[int]) -> None:
     with open(RESERVED_IDS_FILE_PATH, "w") as f:
         f.write(repr(l) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
@@ -1026,7 +1027,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     try:
         with open("first_free") as f:
             first_free = int(f.read().strip())
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         first_free = 0
 
     new_first_free = first_free + args.count
@@ -1075,22 +1076,22 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 #
 
 # default config
-editions: List[Tuple[str, str]] = []
-components: List[Tuple[str, str]] = []
-edition_components: Dict[str, List[Tuple[str, str]]] = {}
-classes: List[Tuple[str, str, str]] = []
-levels: List[Tuple[str, str]] = []
-compatible: List[Tuple[str, str]] = []
-knowledge: List[Tuple[str, str]] = []
-valid_choices: Dict[str, Set[str]]
+editions: list[tuple[str, str]] = []
+components: list[tuple[str, str]] = []
+edition_components: dict[str, list[tuple[str, str]]] = {}
+classes: list[tuple[str, str, str]] = []
+levels: list[tuple[str, str]] = []
+compatible: list[tuple[str, str]] = []
+knowledge: list[tuple[str, str]] = []
+valid_choices: dict[str, set[str]]
 online_url = ""
 current_version = None
 
-versions: Set[str] = set([])
+versions: set[str] = set()
 g_current_version = None
 
 
-def main(argv: Optional[Sequence[str]] = None) -> None:
+def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
     try_migrate_werk_ids()
     load_config()

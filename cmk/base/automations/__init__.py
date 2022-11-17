@@ -8,7 +8,7 @@ import os
 import signal
 from contextlib import redirect_stdout
 from types import FrameType
-from typing import Any, Dict, List, NoReturn, Optional
+from typing import Any, NoReturn
 
 import cmk.utils.debug
 import cmk.utils.log as log

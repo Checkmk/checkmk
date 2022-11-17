@@ -9,7 +9,6 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from datetime import datetime
 from typing import Any, NamedTuple, overload
-from typing import Tuple as _Tuple
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import EventRule
@@ -1188,7 +1187,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = []
+            contact_headers: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = []
             section_contacts = []
             section_override: list[DictionaryEntry] = []
         else:
@@ -1422,7 +1421,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             ),
         ]
 
-        headers_part1: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = [
+        headers_part1: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = [
             (
                 _("Rule Properties"),
                 ["description", "comment", "disabled", "docu_url", "allow_disable"],
@@ -1430,7 +1429,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
         ]
 
-        headers_part2: list[_Tuple[str, list[str]] | _Tuple[str, str, list[str]]] = [
+        headers_part2: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = [
             (
                 _("Conditions"),
                 [

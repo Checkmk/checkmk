@@ -6,7 +6,6 @@
 import json
 import os
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
@@ -25,14 +24,14 @@ class Host:
         self._hostname = target_path.name if target_path else None
         self._host_type = self._get_host_type(target_path)
 
-    def _get_target_path(self) -> Optional[Path]:
+    def _get_target_path(self) -> Path | None:
         try:
             return Path(os.readlink(self.source_path))
         except (FileNotFoundError, OSError):
             return None
 
     @staticmethod
-    def _get_host_type(target_path: Optional[Path]) -> Optional[HostTypeEnum]:
+    def _get_host_type(target_path: Path | None) -> HostTypeEnum | None:
         if not target_path:
             return None
 
@@ -47,15 +46,15 @@ class Host:
         return self._registered
 
     @property
-    def hostname(self) -> Optional[str]:
+    def hostname(self) -> str | None:
         return self._hostname
 
     @property
-    def host_type(self) -> Optional[HostTypeEnum]:
+    def host_type(self) -> HostTypeEnum | None:
         return self._host_type
 
 
-def read_rejection_notice_from_file(path: Path) -> Optional[str]:
+def read_rejection_notice_from_file(path: Path) -> str | None:
     try:
         registration_request = json.loads(path.read_text())
     except FileNotFoundError:
@@ -71,7 +70,7 @@ def update_file_access_time(path: Path) -> None:
         pass
 
 
-def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
+def get_registration_status_from_file(uuid: UUID) -> RegistrationData | None:
     for status in RegistrationStatusEnum:
         path = r4r_dir() / status.name / f"{uuid}.json"
         if path.exists():

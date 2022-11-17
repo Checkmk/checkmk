@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -518,8 +515,8 @@ rulespec_registry.register(
 
 
 def _vs_packet_levels(
-    title: _Optional[str] = None,
-    percent_levels: _Tuple[float, float] = (0.0, 0.0),
+    title: str | None = None,
+    percent_levels: tuple[float, float] = (0.0, 0.0),
     percent_detail: str = "",
     abs_detail: str = "",
 ) -> CascadingDropdown:
@@ -574,7 +571,7 @@ PERC_PKG_LEVELS = (10.0, 20.0)
 def _vs_alternative_levels(  # pylint: disable=redefined-builtin
     title: str,
     help: str,
-    percent_levels: _Tuple[float, float] = (0.0, 0.0),
+    percent_levels: tuple[float, float] = (0.0, 0.0),
     percent_detail: str = "",
     abs_detail: str = "",
 ) -> Alternative:

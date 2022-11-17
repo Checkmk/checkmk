@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
-
 from cmk.base.plugins.agent_based.utils.kube import (
     DisplayableStrategy,
     OnDelete,
@@ -35,4 +33,4 @@ def test_strategy_is_displayable() -> None:
     behaviour or you have reworked strategy_text to handle the new strategy,
     then you may add it here.
     """
-    assert DisplayableStrategy == Union[RollingUpdate, Recreate, OnDelete, StatefulSetRollingUpdate]
+    assert DisplayableStrategy == RollingUpdate | Recreate | OnDelete | StatefulSetRollingUpdate

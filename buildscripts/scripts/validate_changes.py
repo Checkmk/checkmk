@@ -20,10 +20,11 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Callable, Mapping, Sequence
 from distutils.util import strtobool
 from functools import reduce
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, TypedDict
 
 import yaml
 
@@ -118,7 +119,7 @@ def to_stage_info(raw_stage: Mapping[Any, Any]) -> StageInfo:
     )
 
 
-def load_file(filename: Path) -> Tuple[Sequence[Vars], Stages]:
+def load_file(filename: Path) -> tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
@@ -191,7 +192,7 @@ def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo
 
 def run_shell_command(cmd: str, replace_newlines: bool) -> str:
     """Run a command and return preprocessed stdout"""
-    stdout_str = subprocess.check_output(["sh", "-c", cmd], universal_newlines=True).strip()
+    stdout_str = subprocess.check_output(["sh", "-c", cmd], text=True).strip()
     return stdout_str.replace("\n", " ") if replace_newlines else stdout_str
 
 
@@ -210,7 +211,7 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]
     ... })
     {'FIRST': 'first', 'SECOND': 'second', 'VOLATILE': 'overwritten', 'FOO': 'foo first', 'BAR': 'bar foo first'}
     """
-    result: Dict[str, str] = dict(env_vars)
+    result: dict[str, str] = dict(env_vars)
     for e in raw_vars:
         if e["NAME"] in result:
             LOG.info("Trying to set existing variable %r", e["NAME"])
@@ -231,7 +232,7 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]
     return result
 
 
-def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> Tuple[Vars, Stages]:
+def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> tuple[Vars, Stages]:
     """Return a list of stages loaded from provided YAML file with variables applied"""
     raw_vars, raw_stages = load_file(stages_file)
     finalized_vars = evaluate_vars(raw_vars, env_vars)
@@ -251,7 +252,7 @@ def compile_stage_info(stages_file: Path, env_vars: Vars, no_skip: bool) -> Tupl
 async def run_cmd(
     cmd: str,
     env: Mapping[str, str],
-    cwd: Optional[str],
+    cwd: str | None,
     check: bool,
     stdout_fn: Callable[[str], None],
     stderr_fn: Callable[[str], None],
@@ -316,7 +317,7 @@ async def run_locally(
         for key, value in stage.items():
             LOG.debug("%s: %s", key, value)
 
-        output: List[str] = []
+        output: list[str] = []
 
         t_before = time.time()
         cmd_successful = await run_cmd(

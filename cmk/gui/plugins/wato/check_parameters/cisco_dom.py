@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as _Tuple
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -24,7 +22,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
+def _vs_cisco_dom(which_levels: str) -> tuple[str, Alternative]:
     def _button_text_warn(which_levels: str) -> str:
         if which_levels == "upper":
             text = _("Warning at")

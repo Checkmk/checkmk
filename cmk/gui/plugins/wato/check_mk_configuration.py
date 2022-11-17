@@ -7,7 +7,6 @@ import logging
 import re
 from collections.abc import Mapping
 from typing import Any, Literal
-from typing import Tuple as _Tuple
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
@@ -4140,7 +4139,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
     )
 
 
-def _get_periodic_discovery_dflt_service_filter_lists() -> list[_Tuple[str, ValueSpec]]:
+def _get_periodic_discovery_dflt_service_filter_lists() -> list[tuple[str, ValueSpec]]:
     return [
         (
             "service_whitelist",
@@ -4229,11 +4228,11 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_preferred_node(help_: str) -> _Tuple[str, ConfigHostname]:
+def _valuespec_preferred_node(help_: str) -> tuple[str, ConfigHostname]:
     return ("primary_node", ConfigHostname(title=_("Preferred node"), help=help_))
 
 
-def _valuespec_metrics_node() -> _Tuple[str, ConfigHostname]:
+def _valuespec_metrics_node() -> tuple[str, ConfigHostname]:
     return (
         "metrics_node",
         ConfigHostname(

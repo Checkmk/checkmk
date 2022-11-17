@@ -14,9 +14,7 @@ import re
 from collections.abc import Collection, Generator, Iterable, Iterator
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, Optional, overload
-from typing import Tuple as _Tuple
-from typing import Union
+from typing import Any, cast, overload
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.regex import escape_regex_chars
@@ -135,7 +133,7 @@ else:
 
 def _group_rulesets(
     rulesets: Iterable[Ruleset],
-) -> list[_Tuple[str, list[_Tuple[str, list[Ruleset]]]]]:
+) -> list[tuple[str, list[tuple[str, list[Ruleset]]]]]:
     """Groups the rulesets in 3 layers (main group, sub group, rulesets)."""
     grouped_dict: dict[str, dict[str, list[Ruleset]]] = {}
     for ruleset in rulesets:
@@ -499,7 +497,7 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
         ("Deprecated rules", "warning", "ruleset_deprecated"),
     ]:
 
-        uri_params: list[_Tuple[str, None | int | str]] = [
+        uri_params: list[tuple[str, None | int | str]] = [
             ("mode", "rule_search"),
             ("search_p_%s" % search_term, DropdownChoice.option_id(True)),
             ("search_p_%s_USE" % search_term, "on"),
@@ -1067,7 +1065,7 @@ class ModeEditRuleset(WatoMode):
         html.close_div()
 
     def _rule_listing(self, ruleset: Ruleset) -> None:
-        rules: list[_Tuple[CREFolder, int, Rule]] = ruleset.get_rules()
+        rules: list[tuple[CREFolder, int, Rule]] = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
             return
@@ -1199,7 +1197,7 @@ class ModeEditRuleset(WatoMode):
         match_state,
         rule: Rule,
         service_labels: Labels,
-    ) -> _Tuple[str, str]:
+    ) -> tuple[str, str]:
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]
@@ -1381,12 +1379,12 @@ class ModeEditRuleset(WatoMode):
 
 
 def _get_groups(
-    rules: list[_Tuple[CREFolder, int, Rule]],
+    rules: list[tuple[CREFolder, int, Rule]],
     current_folder: CREFolder,
-) -> Generator[_Tuple[CREFolder, Iterator[_Tuple[CREFolder, int, Rule]]], None, None]:
+) -> Generator[tuple[CREFolder, Iterator[tuple[CREFolder, int, Rule]]], None, None]:
     """Get ruleset groups in correct sort order. Sort by title_path() to honor
     renamed folders"""
-    sorted_rules: list[_Tuple[CREFolder, int, Rule]] = sorted(
+    sorted_rules: list[tuple[CREFolder, int, Rule]] = sorted(
         rules,
         key=lambda x: (x[0].title_path(), len(rules) - x[1]),
         reverse=True,
@@ -2122,7 +2120,7 @@ class VSExplicitConditions(Transform):
             from_valuespec=self._from_valuespec,
         )
 
-    def _condition_elements(self) -> Iterable[_Tuple[str, ValueSpec]]:
+    def _condition_elements(self) -> Iterable[tuple[str, ValueSpec]]:
         elements = [
             ("folder_path", self._vs_folder()),
             ("host_tags", self._vs_host_tag_condition()),
@@ -2160,11 +2158,11 @@ class VSExplicitConditions(Transform):
 
         return explicit
 
-    def _service_elements(self) -> Iterable[_Tuple[str, ValueSpec]]:
+    def _service_elements(self) -> Iterable[tuple[str, ValueSpec]]:
         if not self._rulespec.item_type:
             return []
 
-        elements: list[_Tuple[str, ValueSpec]] = [
+        elements: list[tuple[str, ValueSpec]] = [
             ("explicit_services", self._vs_explicit_services())
         ]
 
@@ -2217,7 +2215,7 @@ class VSExplicitConditions(Transform):
         )
 
     def _condition_list_from_valuespec(
-        self, conditions: _Tuple[list[str], bool] | None, is_service: bool
+        self, conditions: tuple[list[str], bool] | None, is_service: bool
     ) -> HostOrServiceConditions | None:
         if conditions is None:
             return None
@@ -2439,7 +2437,7 @@ class RuleConditionRenderer:
                 yield self._single_tag_condition(
                     taggroup_id,
                     cast(
-                        Union[Optional[TagID], TagConditionNE],
+                        TagID | None | TagConditionNE,
                         tag_spec,
                     ),
                 )

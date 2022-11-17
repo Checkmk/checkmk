@@ -5,11 +5,12 @@
 
 """Display a table view"""
 
+from __future__ import annotations
+
 import functools
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any, List
-from typing import Tuple as _Tuple
+from typing import Any
 
 import livestatus
 from livestatus import SiteId
@@ -269,7 +270,7 @@ def get_row_count(view: View) -> int:
 
 def _get_view_rows(
     view: View, all_active_filters: list[Filter], only_count: bool = False
-) -> _Tuple[int, Rows]:
+) -> tuple[int, Rows]:
     with CPUTracker() as fetch_rows_tracker:
         rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
 
@@ -294,7 +295,7 @@ def _get_view_rows(
 
 def _fetch_view_rows(
     view: View, all_active_filters: list[Filter], only_count: bool
-) -> _Tuple[Rows, int]:
+) -> tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
     Besides gathering the information from livestatus it also joins the rows with other information.
@@ -320,7 +321,7 @@ def _fetch_view_rows(
         # We test for limit here and not inside view.row_limit, because view.row_limit is used
         # for rendering limits.
         query_row_limit = None if view.datasource.ignore_limit else view.row_limit
-        row_data: Rows | _Tuple[Rows, int] = view.datasource.table.query(
+        row_data: Rows | tuple[Rows, int] = view.datasource.table.query(
             view.datasource,
             view.row_cells,
             columns,
@@ -385,7 +386,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
-def _get_all_active_filters(view: View) -> "List[Filter]":
+def _get_all_active_filters(view: View) -> list[Filter]:
     # Always allow the users to specify all allowed filters using the URL
     use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
 
@@ -500,7 +501,7 @@ def _get_needed_join_columns(
     return list(join_columns)
 
 
-def _is_inventory_data_needed(view: View, all_active_filters: "List[Filter]") -> bool:
+def _is_inventory_data_needed(view: View, all_active_filters: list[Filter]) -> bool:
 
     group_cells: list[Cell] = view.group_cells
     cells: list[Cell] = view.row_cells
@@ -575,7 +576,7 @@ def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:
     return columns
 
 
-JoinMasterKey = _Tuple[SiteId, str]
+JoinMasterKey = tuple[SiteId, str]
 JoinSlaveKey = str
 
 

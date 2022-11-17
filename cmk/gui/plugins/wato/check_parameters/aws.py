@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable
-from typing import Tuple as TupleType
 
 from cmk.utils.aws_constants import (
     AWSEC2InstFamilies,
@@ -141,7 +140,7 @@ def _vs_cpu_credits_balance():
 def _vs_elements_http_errors(
     http_err_codes: Iterable[str],
     title_add: Callable[[str], str] = lambda http_err_code: "",
-) -> Iterable[TupleType[str, Tuple]]:
+) -> Iterable[tuple[str, Tuple]]:
     return [
         (
             "levels_http_%s_perc" % http_err_code,

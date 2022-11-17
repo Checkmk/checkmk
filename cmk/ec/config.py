@@ -61,7 +61,7 @@ class ScriptAction(TypedDict):
     action: tuple[Literal["script"], ScriptActionConfig]
 
 
-Action = Union[EMailAction, ScriptAction]
+Action = EMailAction | ScriptAction
 
 ################################################################################
 
@@ -138,11 +138,7 @@ StatePatterns = TypedDict(
 )
 
 State = Union[
-    Literal[-1],
-    Literal[0],
-    Literal[1],
-    Literal[2],
-    Literal[3],
+    Literal[-1, 0, 1, 2, 3],
     tuple[Literal["text_pattern"], StatePatterns],
 ]
 
@@ -265,23 +261,23 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
 
 ECRulePack = ECRulePackSpec | MkpRulePackProxy
 
-AuthenticationProtocol = Union[
-    Literal["md5"],
-    Literal["sha"],
-    Literal["SHA-224"],
-    Literal["SHA-256"],
-    Literal["SHA-384"],
-    Literal["SHA-512"],
+AuthenticationProtocol = Literal[
+    "md5",
+    "sha",
+    "SHA-224",
+    "SHA-256",
+    "SHA-384",
+    "SHA-512",
 ]
 
-PrivacyProtocol = Union[
-    Literal["DES"],
-    Literal["AES"],
-    Literal["3DES-EDE"],
-    Literal["AES-192"],
-    Literal["AES-256"],
-    Literal["AES-192-Blumenthal"],
-    Literal["AES-256-Blumenthal"],
+PrivacyProtocol = Literal[
+    "DES",
+    "AES",
+    "3DES-EDE",
+    "AES-192",
+    "AES-256",
+    "AES-192-Blumenthal",
+    "AES-256-Blumenthal",
 ]
 
 SNMPV1V2Credentials = str
@@ -290,12 +286,12 @@ SNMPV3AuthNoPrivCredentials = tuple[Literal["authNoPriv"], AuthenticationProtoco
 SNMPV3AuthPrivCredentials = tuple[
     Literal["authPriv"], AuthenticationProtocol, str, str, PrivacyProtocol, str
 ]
-SNMPCredentials = Union[
-    SNMPV1V2Credentials,
-    SNMPV3NoAuthNoPrivCredentials,
-    SNMPV3AuthNoPrivCredentials,
-    SNMPV3AuthPrivCredentials,
-]
+SNMPCredentials = (
+    SNMPV1V2Credentials
+    | SNMPV3NoAuthNoPrivCredentials
+    | SNMPV3AuthNoPrivCredentials
+    | SNMPV3AuthPrivCredentials
+)
 
 
 class SNMPCredentialBase(TypedDict):

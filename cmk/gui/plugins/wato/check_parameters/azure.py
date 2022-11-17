@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as TupleType
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -365,8 +363,8 @@ rulespec_registry.register(
 
 def _azure_vms_summary_levels(
     title: str,
-    lower: TupleType[int, int] | None = None,
-    upper: TupleType[int, int] | None = None,
+    lower: tuple[int, int] | None = None,
+    upper: tuple[int, int] | None = None,
 ) -> Dictionary:
     return Dictionary(
         title=title,

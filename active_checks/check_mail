@@ -14,7 +14,6 @@ import re
 import socket
 import time
 from pathlib import Path
-from typing import List, Tuple, Union
 
 from cmk.utils.mailbox import (
     active_check_main,
@@ -106,12 +105,12 @@ def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
     return time.strftime("%b %d %H:%M:%S", localtime)
 
 
-def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str], List[int]]:
+def prepare_messages_for_ec(args: Args, mails: MailMessages) -> tuple[list[str], list[int]]:
     # create syslog message from each mail
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
     # <facility+priority> timestamp hostname application: message
-    messages: List[str] = []
-    forwarded: List[int] = []
+    messages: list[str] = []
+    forwarded: list[int] = []
     cur_time = syslog_time()
     priority = 5  # OK
 
@@ -153,19 +152,19 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str],
 
         # Construct the final syslog message
         log = "<%d>%s" % ((int(args.forward_facility) << 3) + priority, cur_time)
-        log += " %s %s: %s" % (args.forward_host or args.fetch_server, application, log_line)
+        log += f" {args.forward_host or args.fetch_server} {application}: {log_line}"
         messages.append(log)
         forwarded.append(index)
     return messages, forwarded
 
 
-def forward_to_ec(args: Args, messages: List[str]) -> CheckResult:
+def forward_to_ec(args: Args, messages: list[str]) -> CheckResult:
     # send lines to event console
     # a) local in same omd site
     # b) local pipe
     # c) remote via udp
     # d) remote via tcp
-    def evaluate_forward_method(description: str) -> Union[str, Tuple[str, str, str]]:
+    def evaluate_forward_method(description: str) -> str | tuple[str, str, str]:
         if not description:
             return "%s/tmp/run/mkeventd/eventsocket" % os.getenv("OMD_ROOT", "")
         if description == "spool:":

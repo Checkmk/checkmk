@@ -23,13 +23,12 @@
 # Boston, MA 02110-1301 USA.
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from cmk.utils.type_defs import result
 
 Config = dict[str, str]
 Replacements = dict[str, str]
-CommandOptions = dict[str, Optional[str]]
+CommandOptions = dict[str, str | None]
 
 
 class ConfigChoiceHasError(ABC):

@@ -7,7 +7,6 @@ parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
 from collections.abc import Collection, Iterator
-from typing import Tuple as _Tuple
 
 from cmk.utils.type_defs import Item
 
@@ -355,7 +354,7 @@ class ModeObjectParameters(WatoMode):
 
     def _get_custom_check_origin_rule(
         self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult
-    ) -> _Tuple[CREFolder, int, Rule] | None:
+    ) -> tuple[CREFolder, int, Rule] | None:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(

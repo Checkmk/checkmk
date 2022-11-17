@@ -18,16 +18,16 @@ which can be used like this (Dockerfile example):
   docker build --build-arg "IMAGE_DEBIAN_DEFAULT=$(./resolve.sh IMAGE_DEBIAN_DEFAULT)" -t debian_example example
 """
 
-from typing import List, Dict, Optional
-import os
-import sys
 import json
-import yaml
-import docker
+import logging
+import os
 import shlex
 import subprocess
-import logging
+import sys
 from pathlib import Path
+
+import docker
+import yaml
 
 LOG = logging.getLogger("register-dia")
 REGISTRY = "artifacts.lan.tribe29.com:4000"
@@ -55,32 +55,38 @@ def cmd_result(cmd, cwd=None):
     return [
         line
         for line in subprocess.check_output(
-            shlex.split(cmd), cwd=cwd, universal_newlines=True).split("\n")
+            shlex.split(cmd), cwd=cwd, universal_newlines=True
+        ).split("\n")
         if line.strip()
     ]
 
 
 def commit_id(directory) -> str:
-    return cmd_result(f'git rev-parse --short HEAD', cwd=directory)[0]
+    return cmd_result("git rev-parse --short HEAD", cwd=directory)[0]
 
 
 def cmk_branch(directory) -> str:
     return min(
         ("master", "2.0.0", "1.6.0", "1.5.0"),
-        key=lambda b: int(cmd_result(
-            f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[0]))
+        key=lambda b: int(
+            cmd_result(f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[
+                0
+            ]
+        ),
+    )
 
 
 def git_info():
     cwd = os.path.dirname(__file__)
     a, b = cmk_branch(directory=cwd), commit_id(directory=cwd)
-    return [a,b]
+    return [a, b]
 
 
 def main():
     logging.basicConfig(
         level=logging.DEBUG if "-v" in sys.argv else logging.WARNING,
-        format="%(name)s %(levelname)s: %(message)s")
+        format="%(name)s %(levelname)s: %(message)s",
+    )
 
     alias_name, source_name = sys.argv[1], sys.argv[2]
     alias_file_name = os.path.join(os.path.dirname(__file__), "docker_image_aliases.txt")
@@ -93,19 +99,21 @@ def main():
 
     _source_registry, source_base_name, source_tags = split_source_name(source_name)
 
-    name_in_registry = (f"{REGISTRY}/{source_base_name}:"
-                        f"{'-'.join(source_tags + ['image-alias'] + git_info())}")
+    name_in_registry = (
+        f"{REGISTRY}/{source_base_name}:" f"{'-'.join(source_tags + ['image-alias'] + git_info())}"
+    )
 
     LOG.info("tag image as %s", name_in_registry)
     result = image.tag(name_in_registry)
     assert result
 
     print(f"push image as {name_in_registry}")
-    push_response = tuple(map(
-        json.loads,
-        filter(
-            lambda x: x.strip(),
-            client.images.push(name_in_registry).split("\n"))))
+    push_response = tuple(
+        map(
+            json.loads,
+            filter(lambda x: x.strip(), client.images.push(name_in_registry).split("\n")),
+        )
+    )
 
     LOG.debug(push_response)
 
@@ -126,11 +134,11 @@ def main():
 
     print(f"create new alias at {alias_dir.absolute()}")
     with open(alias_dir / "Dockerfile", "w") as dockerfile:
-        print(f'FROM {remote_image_name}', file=dockerfile)
+        print(f"FROM {remote_image_name}", file=dockerfile)
 
     with open(alias_dir / "meta.yml", "w") as metafile:
         yaml.dump({"source": source_name, "tag": name_in_registry}, stream=metafile)
 
+
 if __name__ == "__main__":
     main()
-

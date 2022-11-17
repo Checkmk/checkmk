@@ -9,7 +9,6 @@ import shutil
 import tempfile
 from pathlib import Path
 from subprocess import PIPE, Popen
-from typing import List, Optional
 
 import pytest
 
@@ -64,7 +63,7 @@ def fixture_python_subdir():
     shutil.rmtree(tmpdir)
 
 
-def run_proc(command: List[str], *, cwd: Optional[Path] = None):  # type:ignore[no-untyped-def]
+def run_proc(command: list[str], *, cwd: Path | None = None) -> None:
     with Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd) as process:
         pipe, err = process.communicate()
         ret = process.wait()

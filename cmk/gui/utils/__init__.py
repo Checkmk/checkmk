@@ -13,7 +13,7 @@ import os
 import urllib.parse
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.regex

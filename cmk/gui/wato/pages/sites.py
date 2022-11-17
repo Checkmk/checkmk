@@ -13,7 +13,6 @@ import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, overload
-from typing import Tuple as _Tuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 
@@ -987,7 +986,7 @@ class ReplicationStatusFetcher:
         self._logger = logger.getChild("replication-status")
 
     def fetch(
-        self, sites: Collection[_Tuple[SiteId, SiteConfiguration]]
+        self, sites: Collection[tuple[SiteId, SiteConfiguration]]
     ) -> Mapping[SiteId, ReplicationStatus]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
         results_by_site: dict[SiteId, ReplicationStatus] = {}

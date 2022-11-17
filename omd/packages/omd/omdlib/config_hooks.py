@@ -41,7 +41,7 @@ from collections.abc import Iterable
 from ipaddress import ip_network
 from pathlib import Path
 from re import Pattern
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 from omdlib.type_defs import ConfigChoiceHasError
 
@@ -55,8 +55,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger("cmk.omd")
 
 ConfigHookChoiceItem = tuple[str, str]
-ConfigHookChoices = Union[None, Pattern, list[ConfigHookChoiceItem], ConfigChoiceHasError]
-ConfigHook = dict[str, Union[str, bool, ConfigHookChoices]]
+ConfigHookChoices = Pattern | list[ConfigHookChoiceItem] | ConfigChoiceHasError | None
+ConfigHook = dict[str, str | bool | ConfigHookChoices]
 ConfigHooks = dict[str, ConfigHook]
 ConfigHookResult = tuple[int, str]
 

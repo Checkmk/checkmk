@@ -7,7 +7,6 @@ import ast
 import json
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 import cmk.utils.version as cmk_version
 
@@ -40,7 +39,7 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         return _("Access to the Checkmk Appliance Web Configuration")
 
     @classmethod
-    def allowed_roles(cls) -> List[str]:
+    def allowed_roles(cls) -> list[str]:
         return ["admin"]
 
     def show(self) -> None:
@@ -61,19 +60,19 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
             url = base_url + module["page"]
             self._iconlink(module["title"], url, module["icon"])
 
-    def _load_nav_modules(self) -> List[Dict[str, str]]:
+    def _load_nav_modules(self) -> list[dict[str, str]]:
         """Since CMA 1.5.6 the navigation items are stored in a JSON file"""
         if nav_modules_path().exists():
             return self._load_nav_modules_from_json()
         return self._load_nav_modules_from_old_firmware()
 
-    def _load_nav_modules_from_json(self) -> List[Dict[str, str]]:
+    def _load_nav_modules_from_json(self) -> list[dict[str, str]]:
         modules = []
         for file_path in sorted(nav_modules_path().glob("*.json")):
             modules += json.loads(file_path.read_text())
         return modules
 
-    def _load_nav_modules_from_old_firmware(self) -> List[Dict[str, str]]:
+    def _load_nav_modules_from_old_firmware(self) -> list[dict[str, str]]:
         """Keep this for compatibility with older Appliance versions
 
         The cma_nav-Module was a Python 2.7 module that is globally deployed by the CMA firmware.
@@ -87,8 +86,7 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         # have to deal with existing firmwares. Use some py27 wrapper to produce the needed output.
         completed_process = subprocess.run(
             ["/usr/bin/python2.7"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             encoding="utf-8",
             shell=False,
             close_fds=True,

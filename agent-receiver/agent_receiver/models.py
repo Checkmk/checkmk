@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple, Optional
+from typing import NamedTuple
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -70,7 +71,7 @@ class RegistrationStatusEnum(Enum):
 
 class RegistrationData(NamedTuple):
     status: RegistrationStatusEnum
-    message: Optional[str]
+    message: str | None
 
 
 class HostTypeEnum(Enum):
@@ -79,7 +80,7 @@ class HostTypeEnum(Enum):
 
 
 class RegistrationStatus(BaseModel):
-    hostname: Optional[str] = None
-    status: Optional[RegistrationStatusEnum] = None
-    type: Optional[HostTypeEnum] = None
-    message: Optional[str] = None
+    hostname: str | None = None
+    status: RegistrationStatusEnum | None = None
+    type: HostTypeEnum | None = None
+    message: str | None = None

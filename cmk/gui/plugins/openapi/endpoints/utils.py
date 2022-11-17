@@ -6,7 +6,7 @@ import contextlib
 import http.client
 import json
 from collections.abc import Sequence
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
@@ -70,7 +70,7 @@ def serialize_group_list(
 
 
 def serialize_group(name: GroupName) -> Any:
-    def _serializer(group: Dict[str, str]) -> Any:
+    def _serializer(group: dict[str, str]) -> Any:
         ident = group["id"]
         extensions = {}
         if "customer" in group:

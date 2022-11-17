@@ -6,7 +6,6 @@
 import socket
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -24,7 +23,7 @@ def autouse_fix_ip_lookup(fixup_ip_lookup):
     pass
 
 
-_PatchMapping = Mapping[ip_lookup.IPLookupCacheId, Optional[str]]
+_PatchMapping = Mapping[ip_lookup.IPLookupCacheId, str | None]
 
 
 def patch_config_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:

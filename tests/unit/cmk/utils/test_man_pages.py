@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -16,7 +15,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 import cmk.utils.man_pages as man_pages
 from cmk.utils.type_defs import CheckPluginName
 
-ManPages = Mapping[str, Optional[man_pages.ManPage]]
+ManPages = Mapping[str, man_pages.ManPage | None]
 
 
 @pytest.fixture(autouse=True)

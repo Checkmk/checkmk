@@ -7,7 +7,7 @@
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import Dict, NamedTuple
+from typing import NamedTuple
 
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName

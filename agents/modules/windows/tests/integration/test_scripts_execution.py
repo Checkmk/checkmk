@@ -7,12 +7,11 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Tuple
 
 import pytest
 
 
-def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
+def run_script(work_python: Path, *, script: Path) -> tuple[int, str, str]:
     """Returns exit code, stdout and stderr"""
 
     exe = work_python / ".venv" / "Scripts" / "python.exe"

@@ -8,7 +8,6 @@ import abc
 import re
 from collections.abc import Callable
 from typing import Any, Literal
-from typing import Tuple as _Tuple
 
 import cmk.utils.plugin_registry
 
@@ -143,9 +142,9 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[type[RulespecBase
         else:
             raise TypeError('Got invalid type "%s"' % instance.__name__)
 
-    def get_group_choices(self) -> list[_Tuple[str, str]]:
+    def get_group_choices(self) -> list[tuple[str, str]]:
         """Returns all available ruleset groups to be used in dropdown choices"""
-        choices: list[_Tuple[str, str]] = []
+        choices: list[tuple[str, str]] = []
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
@@ -178,7 +177,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[type[RulespecBase
         checks and except all server monitoring rulesets. Usually, the needed context for service
         monitoring rulesets is not given when the host rulesets are requested."""
         names: list[str] = []
-        hidden_groups: _Tuple[str, ...] = ("static", "activechecks")
+        hidden_groups: tuple[str, ...] = ("static", "activechecks")
         if for_host:
             hidden_groups = hidden_groups + ("monconf",)
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
@@ -248,7 +247,7 @@ def _get_legacy_rulespec_group_class(group_name, group_title, help_text):
     )
 
 
-def _validate_function_args(arg_infos: list[_Tuple[Any, bool, bool]], hint: str) -> None:
+def _validate_function_args(arg_infos: list[tuple[Any, bool, bool]], hint: str) -> None:
     for idx, (arg, is_callable, none_allowed) in enumerate(arg_infos):
         if not none_allowed and arg is None:
             raise MKGeneralException(_("Invalid None argument at for %s idx %d") % (hint, idx))
@@ -286,7 +285,7 @@ class Rulespec(abc.ABC):
     ) -> None:
         super().__init__()
 
-        arg_infos: list[_Tuple[Any, bool, bool]] = [
+        arg_infos: list[tuple[Any, bool, bool]] = [
             # (arg, is_callable, none_allowed)
             (name, False, False),
             (group, True, False),  # A class -> callable

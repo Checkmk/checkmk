@@ -5,8 +5,6 @@
 """Rulesets"""
 from __future__ import annotations
 
-from typing import List, Union
-
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
     RULESET_NAME,

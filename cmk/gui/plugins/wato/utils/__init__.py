@@ -12,11 +12,8 @@ import re
 import subprocess
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
-from contextlib import nullcontext
-from typing import Any, cast, ContextManager, Dict, List, Literal
-from typing import Optional as _Optional
-from typing import Tuple as _Tuple
-from typing import Type, Union
+from contextlib import AbstractContextManager, nullcontext
+from typing import Any, cast, Literal
 
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
@@ -380,8 +377,8 @@ def passwordstore_choices() -> Choices:
 
 
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: _Optional[str] = None,
-    help: _Optional[ValueSpecHelp] = None,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
     allow_empty: bool = True,
     size: int = 25,
 ) -> CascadingDropdown:
@@ -418,8 +415,8 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 
 
 def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: _Optional[str] = None,
-    help: _Optional[ValueSpecHelp] = None,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
     allow_empty: bool = True,
     size: int = 25,
 ) -> Migrate:
@@ -435,8 +432,8 @@ def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 
 
 def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
-    title: _Optional[str] = None,
-    help: _Optional[ValueSpecHelp] = None,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
     allow_empty: bool = True,
     size: int = 25,
 ) -> MigrateNotUpdated:
@@ -734,7 +731,7 @@ class RulespecGroupCheckParametersDiscovery(RulespecSubGroup):
 # The following function looks like a value spec and in fact
 # can be used like one (but take no parameters)
 def PredictiveLevels(
-    default_difference: _Tuple[float, float] = (2.0, 4.0), unit: str = ""
+    default_difference: tuple[float, float] = (2.0, 4.0), unit: str = ""
 ) -> Dictionary:
     dif = default_difference
     unitname = unit
@@ -934,14 +931,14 @@ def PredictiveLevels(
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
 def Levels(
-    help: _Optional[str] = None,  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_difference: _Tuple[float, float] = (0.0, 0.0),
-    default_value: _Optional[_Tuple[float, float]] = None,
-    title: _Optional[str] = None,
+    help: str | None = None,  # pylint: disable=redefined-builtin
+    default_levels: tuple[float, float] = (0.0, 0.0),
+    default_difference: tuple[float, float] = (0.0, 0.0),
+    default_value: tuple[float, float] | None = None,
+    title: str | None = None,
     unit: str = "",
 ) -> Alternative:
-    def match_levels_alternative(v: dict[Any, Any] | _Tuple[Any, Any]) -> int:
+    def match_levels_alternative(v: dict[Any, Any] | tuple[Any, Any]) -> int:
         if isinstance(v, dict):
             return 2
         if isinstance(v, tuple) and v != (None, None):
@@ -1398,7 +1395,7 @@ def _get_service_event_choices(
     return choices + add_choices
 
 
-def sort_sites(sites: SiteConfigurations) -> list[_Tuple[SiteId, SiteConfiguration]]:
+def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguration]]:
     """Sort given sites argument by local, followed by remote sites"""
     return sorted(
         sites.items(),
@@ -1525,7 +1522,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
             # This does not apply in "host_search" mode.
-            inherited_from: _Optional[HTML] = None
+            inherited_from: HTML | None = None
             inherited_value = None
             has_inherited = False
             container = None
@@ -2096,7 +2093,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
         make_foldable = len(all_topics) > 1
 
         for topic_id, topic_title in all_topics:
-            container: ContextManager[bool] = (
+            container: AbstractContextManager[bool] = (
                 foldable_container(
                     treename="topic",
                     id_=varprefix + topic_title,
@@ -2144,7 +2141,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
                 html.close_table()
 
     def _current_tag_setting(
-        self, choices: Sequence[tuple[_Optional[str], str]], tag_specs: Sequence[str]
+        self, choices: Sequence[tuple[str | None, str]], tag_specs: Sequence[str]
     ) -> tuple[Any, str]:
         """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""
         default_tag = None
@@ -2378,7 +2375,7 @@ def get_search_expression() -> None | str:
 
 
 def get_hostnames_from_checkboxes(
-    filterfunc: _Optional[Callable] = None, deflt: bool = False
+    filterfunc: Callable | None = None, deflt: bool = False
 ) -> list[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""

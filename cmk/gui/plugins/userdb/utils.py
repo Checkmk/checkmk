@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 import os
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any, List, Literal, Optional, Tuple, Union
+from typing import Any, Literal, Union
 
 from livestatus import SiteId
 
@@ -34,7 +36,7 @@ RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
-CheckCredentialsResult = Union[UserId, None, Literal[False]]
+CheckCredentialsResult = UserId | None | Literal[False]
 
 
 def load_cached_profile(user_id: UserId) -> UserSpec | None:
@@ -158,7 +160,7 @@ def validate_start_url(value: str, varprefix: str) -> None:
 
 
 @request_memoize(maxsize=None)
-def get_connection(connection_id: str | None) -> "Optional[UserConnector]":
+def get_connection(connection_id: str | None) -> UserConnector | None:
     """Returns the connection object of the requested connection id
 
     This function maintains a cache that for a single connection_id only one object per request is
@@ -171,7 +173,7 @@ def clear_user_connection_cache() -> None:
     get_connection.cache_clear()  # type: ignore[attr-defined]
 
 
-def active_connections() -> "List[Tuple[str, UserConnector]]":
+def active_connections() -> list[tuple[str, UserConnector]]:
     enabled_configs = [cfg for cfg in _get_connection_configs() if not cfg["disabled"]]  #
     return [
         (connection_id, connection)  #
@@ -191,11 +193,11 @@ def connection_choices() -> list[tuple[str, str]]:
     )
 
 
-def _all_connections() -> "List[Tuple[str, UserConnector]]":
+def _all_connections() -> list[tuple[str, UserConnector]]:
     return _get_connections_for(_get_connection_configs())
 
 
-def _get_connections_for(configs: list[dict[str, Any]]) -> "List[Tuple[str, UserConnector]]":
+def _get_connections_for(configs: list[dict[str, Any]]) -> list[tuple[str, UserConnector]]:
     return [(cfg["id"], user_connector_registry[cfg["type"]](cfg)) for cfg in configs]
 
 

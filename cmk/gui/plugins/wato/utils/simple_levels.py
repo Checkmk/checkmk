@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from functools import partial
 from typing import Protocol
-from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Alternative, FixedValue, Float, Tuple
@@ -25,7 +24,7 @@ class _Spec(Protocol):
 
 def _FixedLevels(
     value_spec: _Spec,
-    default_value: _Tuple[float, float],
+    default_value: tuple[float, float],
 ) -> Tuple:
     return Tuple(
         title=_("Fixed Levels"),
@@ -45,8 +44,8 @@ def _FixedLevels(
 def SimpleLevels(
     spec: _Spec = Float,
     help: str | None = None,  # pylint: disable=redefined-builtin
-    default_levels: _Tuple[float, float] = (0.0, 0.0),
-    default_value: _Tuple[float, float] | None = None,
+    default_levels: tuple[float, float] = (0.0, 0.0),
+    default_value: tuple[float, float] | None = None,
     title: str | None = None,
     unit: str | None = None,
 ) -> Alternative:
@@ -57,7 +56,7 @@ def SimpleLevels(
         :func: cmk.gui.plugins.wato.utils.Levels
     """
 
-    def match_levels_alternative(v: _Tuple[float, float] | None) -> int:
+    def match_levels_alternative(v: tuple[float, float] | None) -> int:
         if v is None:
             return 0
         return 1

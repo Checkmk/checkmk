@@ -7,10 +7,7 @@
 import copy
 import json
 from collections.abc import Collection
-from typing import Any
-from typing import Optional as _Optional
-from typing import overload
-from typing import Tuple as _Tuple
+from typing import Any, overload
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
@@ -178,7 +175,7 @@ class ABCBIMode(WatoMode):
         # Most modes need a pack as context
         self._bi_pack = self._get_pack_from_request()
 
-    def _get_pack_from_request(self) -> _Optional[BIAggregationPack]:
+    def _get_pack_from_request(self) -> BIAggregationPack | None:
         if request.has_var("pack"):
             pack_id = request.get_str_input_mandatory("pack")
             try:
@@ -284,7 +281,7 @@ class ABCBIMode(WatoMode):
 @mode_registry.register
 class ModeBIEditPack(ABCBIMode):
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     @classmethod
@@ -614,7 +611,7 @@ class ModeBIRules(ABCBIMode):
         self._view_type = request.var("view", "list")
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     def _breadcrumb_url(self) -> str:
@@ -642,7 +639,7 @@ class ModeBIRules(ABCBIMode):
 
         if self._view_type == "list":
             unused_rules_title = _("Show only unused rules")
-            unused_rules_emblem: _Optional[str] = "warning"
+            unused_rules_emblem: str | None = "warning"
             unused_rules_url = self.url_to_pack([("mode", "bi_rules")], self.bi_pack)
         else:
             unused_rules_title = _("Show all rules")
@@ -1077,7 +1074,7 @@ class ModeBIEditRule(ABCBIMode):
         return self._rule_id
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIRules
 
     def title(self) -> str:
@@ -1193,7 +1190,7 @@ class ModeBIEditRule(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     def _may_use_rules_from_packs(self, bi_rule: BIRule) -> None:
-        rules_without_permissions: dict[_Tuple[str, str], Any] = {}
+        rules_without_permissions: dict[tuple[str, str], Any] = {}
         for bi_node in bi_rule.get_nodes():
             if bi_node.action.kind() != "call_a_rule":
                 continue
@@ -1226,7 +1223,7 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: _Optional[str]):  # type:ignore[no-untyped-def]
+    def valuespec(cls, rule_id: str | None):  # type:ignore[no-untyped-def]
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1518,12 +1515,12 @@ class NodeVisualizationLayoutStyle(ValueSpec[dict[str, Any]]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         *,
-        type: _Optional[str] = "hierarchy",
+        type: str | None = "hierarchy",
         # ValueSpec
-        title: _Optional[str] = None,
-        help: _Optional[ValueSpecHelp] = None,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[dict[str, Any]] = DEF_VALUE,
-        validate: _Optional[ValueSpecValidateFunc[dict[str, Any]]] = None,
+        validate: ValueSpecValidateFunc[dict[str, Any]] | None = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._style_type = type
@@ -1619,7 +1616,7 @@ class BIModeEditAggregation(ABCBIMode):
                 raise MKUserError("id", _("This aggregation does not exist."))
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     def title(self) -> str:
@@ -1708,7 +1705,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: _Optional[str]):  # type:ignore[no-untyped-def]
+    def get_vs_aggregation(cls, aggregation_id: str | None):  # type:ignore[no-untyped-def]
         if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
@@ -1907,7 +1904,7 @@ class BIModeAggregations(ABCBIMode):
         return ["bi_rules"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     # pylint does not understand this overloading
@@ -2239,7 +2236,7 @@ class ModeBIRuleTree(ABCBIMode):
         return ["bi_rules"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
     def __init__(self) -> None:

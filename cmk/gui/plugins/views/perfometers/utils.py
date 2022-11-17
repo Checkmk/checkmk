@@ -12,7 +12,6 @@
 
 import math
 from collections.abc import Callable
-from typing import Dict as _Dict
 from typing import Literal, Optional
 
 import cmk.gui.metrics as metrics
@@ -39,7 +38,7 @@ LegacyPerfometerResult = Optional[tuple[str, HTML]]
 
 # "Registry" for old perfometers. There are still some left. See:
 # cmk/gui/plugins/views/perfometers/check_mk.py
-perfometers: _Dict[str, Callable[[Row, str, Perfdata], LegacyPerfometerResult]] = {}
+perfometers: dict[str, Callable[[Row, str, Perfdata], LegacyPerfometerResult]] = {}
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |

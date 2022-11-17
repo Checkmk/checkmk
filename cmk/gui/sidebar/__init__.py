@@ -4,13 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Status sidebar rendering"""
 
+from __future__ import annotations
+
 import copy
 import json
 import textwrap
 import traceback
 from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from typing import Any
 
 from livestatus import SiteId
 
@@ -181,11 +183,11 @@ class UserSidebarConfig:
     def folded(self, value: bool) -> None:
         self._config["fold"] = value
 
-    def add_snapin(self, snapin: "UserSidebarSnapin") -> None:
+    def add_snapin(self, snapin: UserSidebarSnapin) -> None:
         self.snapins.append(snapin)
 
     def move_snapin_before(
-        self, snapin: "UserSidebarSnapin", other: "Optional[UserSidebarSnapin]"
+        self, snapin: UserSidebarSnapin, other: UserSidebarSnapin | None
     ) -> None:
         """Move the given snapin before the other given snapin.
         The other may be None. In this case the snapin is moved to the end.
@@ -198,18 +200,18 @@ class UserSidebarConfig:
         else:
             self.snapins.append(snapin)
 
-    def remove_snapin(self, snapin: "UserSidebarSnapin") -> None:
+    def remove_snapin(self, snapin: UserSidebarSnapin) -> None:
         """Remove the given snapin from the users sidebar"""
         self.snapins.remove(snapin)
 
-    def get_snapin(self, snapin_id: str) -> "UserSidebarSnapin":
+    def get_snapin(self, snapin_id: str) -> UserSidebarSnapin:
         for snapin in self.snapins:
             if snapin.snapin_type.type_name() == snapin_id:
                 return snapin
         raise KeyError("Snapin %r does not exist" % snapin_id)
 
     @property
-    def snapins(self) -> "List[UserSidebarSnapin]":
+    def snapins(self) -> list[UserSidebarSnapin]:
         return self._config["snapins"]
 
     def _initial_config(self) -> dict[str, bool | list[dict[str, Any]]]:
@@ -288,13 +290,13 @@ class UserSidebarSnapin:
     """An instance of a snapin that is configured in the users sidebar"""
 
     @staticmethod
-    def from_config(cfg: dict[str, Any]) -> "UserSidebarSnapin":
+    def from_config(cfg: dict[str, Any]) -> UserSidebarSnapin:
         """Construct a UserSidebarSnapin object from the persisted data structure"""
         snapin_class = snapin_registry[cfg["snapin_type_id"]]
         return UserSidebarSnapin(snapin_class, SnapinVisibility(cfg["visibility"]))
 
     @staticmethod
-    def from_snapin_type_id(snapin_type_id: str) -> "UserSidebarSnapin":
+    def from_snapin_type_id(snapin_type_id: str) -> UserSidebarSnapin:
         return UserSidebarSnapin(snapin_registry[snapin_type_id])
 
     def __init__(
@@ -323,7 +325,7 @@ class UserSidebarSnapin:
 
 
 class SidebarRenderer:
-    def show(self, title: str | None = None, content: Optional["HTML"] = None) -> None:
+    def show(self, title: str | None = None, content: HTML | None = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideally we should
         # split this up. Possible solutions might be:
@@ -560,7 +562,7 @@ class SidebarRenderer:
             html.write_text(styles)
             html.close_style()
 
-    def _show_page_content(self, content: Optional["HTML"]):  # type:ignore[no-untyped-def]
+    def _show_page_content(self, content: HTML | None) -> None:
         html.open_div(id_="content_area")
         if content is not None:
             html.write_html(content)

@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple
+from typing import Any, Literal
 
 from cmk.utils.paths import omd_root, var_dir
 from cmk.utils.render import fmt_bytes
@@ -25,17 +25,17 @@ plugin_dir = omd_root / "share/diskspace"
 plugin_dir_local = omd_root / "local/share/diskspace"
 
 # Configuration variables
-min_free_bytes: Optional[int] = None
-max_file_age: Optional[int] = None
-min_file_age: Optional[int] = None
-cleanup_abandoned_host_files: Optional[int] = None
+min_free_bytes: int | None = None
+max_file_age: int | None = None
+min_file_age: int | None = None
+cleanup_abandoned_host_files: int | None = None
 
 # Initial configuration
-default_config: Dict[str, int] = {
+default_config: dict[str, int] = {
     "cleanup_abandoned_host_files": 2592000,
 }
 
-plugins: Dict[str, Dict[str, Any]] = {}
+plugins: dict[str, dict[str, Any]] = {}
 
 
 def _error(message: str) -> None:
@@ -61,7 +61,7 @@ def _read_config() -> None:
 
     try:
         exec(config_file.read_text(), globals(), globals())
-    except IOError:
+    except OSError:
         pass  # ignore non existant config
     except Exception as e:
         _terminate("Invalid configuration: %s" % e)
@@ -93,7 +93,7 @@ def _print_config() -> None:
 
 def _resolve_paths() -> None:
     for plugin in plugins.values():
-        resolved: List[str] = []
+        resolved: list[str] = []
         for path in plugin.get("cleanup_paths", []):
             # Make relative paths absolute ones
             if path[0] != "/":
@@ -111,11 +111,11 @@ def _resolve_paths() -> None:
 
 def _load_plugins() -> None:
     try:
-        local_plugins: List[str] = list(p.name for p in plugin_dir_local.iterdir())
+        local_plugins: list[str] = list(p.name for p in plugin_dir_local.iterdir())
     except OSError:
         local_plugins = []  # this is optional
 
-    plugin_files: List[str] = [p.name for p in plugin_dir.iterdir() if p.name not in local_plugins]
+    plugin_files: list[str] = [p.name for p in plugin_dir.iterdir() if p.name not in local_plugins]
 
     for base_dir, file_list in [(plugin_dir, plugin_files), (plugin_dir_local, local_plugins)]:
         for file_name in file_list:
@@ -133,7 +133,7 @@ def _load_plugins() -> None:
                     plugins[file_name],
                 )
             except Exception as e:
-                _error('Exception while loading plugin "%s": %s' % (path, e))
+                _error(f'Exception while loading plugin "{path}": {e}')
 
     # Now transform all path patterns to absolute paths for really existing files
     _resolve_paths()
@@ -143,7 +143,7 @@ def _collect_file_infos() -> None:
     for plugin in plugins.values():
         for path in plugin.get("cleanup_paths", []):
             result: os.stat_result = os.stat(path)
-            file_infos_value: Tuple[int, float] = (result.st_size, result.st_mtime)
+            file_infos_value: tuple[int, float] = (result.st_size, result.st_mtime)
             plugin.setdefault("file_infos", {})
             plugin["file_infos"][path] = file_infos_value
 
@@ -172,19 +172,19 @@ def _above_threshold(bytes_free: int) -> bool:
 
 def _delete_file(path: str, reason: str) -> bool:
     try:
-        _log("Deleting file (%s): %s" % (reason, path))
+        _log(f"Deleting file ({reason}): {path}")
         os.unlink(path)
 
         # Also delete any .info files which are connected to the rrd file
         if path.endswith(".rrd"):
             path = "%sinfo" % path[:-3]
             if os.path.exists(path):
-                _log("Deleting file (%s): %s" % (reason, path))
+                _log(f"Deleting file ({reason}): {path}")
                 os.unlink(path)
 
         return True
     except Exception as e:
-        _error("Error while deleting %s: %s" % (path, e))
+        _error(f"Error while deleting {path}: {e}")
     return False
 
 
@@ -194,17 +194,17 @@ def _delete_files_and_base_directory(path: str, reason: str) -> bool:
     (not recursing into sub directories. Failing instead)
     """
     try:
-        _log("Deleting directory and files (%s): %s" % (reason, path))
+        _log(f"Deleting directory and files ({reason}): {path}")
         for file_name in os.listdir(path):
             os.unlink(path + "/" + file_name)
         os.rmdir(path)
         return True
     except Exception as e:
-        _error("Error while deleting %s: %s" % (path, e))
+        _error(f"Error while deleting {path}: {e}")
     return False
 
 
-def _oldest_candidate(file_infos: Dict) -> Optional[str]:
+def _oldest_candidate(file_infos: dict) -> str | None:
     assert min_file_age is not None
     if file_infos:
         # Sort by modification time
@@ -216,15 +216,15 @@ def _oldest_candidate(file_infos: Dict) -> Optional[str]:
 
 
 def _cleanup_host_directory_for_local_hosts(
-    cleanup_hosts: Set[HostName], base_path: str
-) -> List[HostName]:
+    cleanup_hosts: set[HostName], base_path: str
+) -> list[HostName]:
     """
     First find all directories not related to a known host.
     """
     if not os.path.isdir(base_path):
         return []
 
-    unrelated_dirs: List[str] = []
+    unrelated_dirs: list[str] = []
     for host_dir in os.listdir(base_path):
         if host_dir not in cleanup_hosts:
             unrelated_dirs.append(host_dir)
@@ -234,7 +234,7 @@ def _cleanup_host_directory_for_local_hosts(
     return cleaned_up_hosts
 
 
-def _cleanup_host_directory_for_remote_hosts(cleaned_up_remote_hosts: Set, base_path: str) -> List:
+def _cleanup_host_directory_for_remote_hosts(cleaned_up_remote_hosts: set, base_path: str) -> list:
     """
     Find all directories existing on the local site and return a list of all
     matching hosts that are known on remote sites
@@ -252,7 +252,7 @@ def _cleanup_host_directory_for_remote_hosts(cleaned_up_remote_hosts: Set, base_
     return cleaned_up_hosts
 
 
-def _check_threshold_and_delete(unrelated_dirs: List[str], base_path: str) -> List:
+def _check_threshold_and_delete(unrelated_dirs: list[str], base_path: str) -> list:
     """
     Find the latest modified file for each directory. When the latest
     modified file is older than the threshold, delete all files including
@@ -261,7 +261,7 @@ def _check_threshold_and_delete(unrelated_dirs: List[str], base_path: str) -> Li
     assert cleanup_abandoned_host_files is not None
     cleaned_up_hosts = []
     for unrelated_dir in unrelated_dirs:
-        path = "%s/%s" % (base_path, unrelated_dir)
+        path = f"{base_path}/{unrelated_dir}"
         mtime: float = _newest_modification_time_in_dir(path)
         if mtime < time.time() - cleanup_abandoned_host_files:
             _delete_files_and_base_directory(path, "abandoned host")
@@ -273,11 +273,11 @@ def _check_threshold_and_delete(unrelated_dirs: List[str], base_path: str) -> Li
 
 
 def _do_automation_call(
-    hosts_to_cleanup: Set,
+    hosts_to_cleanup: set,
     automation_call: Literal["delete-hosts", "delete-hosts-known-remote"],
 ) -> None:
     """Call automation command"""
-    command: List[str] = ["check_mk", "--automation", automation_call] + list(hosts_to_cleanup)
+    command: list[str] = ["check_mk", "--automation", automation_call] + list(hosts_to_cleanup)
     _verbose('Calling "%s"' % " ".join(command))
     with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
         if p.wait() != 0:
@@ -296,14 +296,14 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
-def _get_configured_hosts() -> Tuple[Set, Set, bool]:
+def _get_configured_hosts() -> tuple[set, set, bool]:
     """
     Get local known hosts for all kind of sites (central and remote).
     For central sites, get also all known hosts, even the ones that are
     assigned to remote sites.
     """
-    local_site_hosts: Set = set([])
-    all_hosts: Set = set([])
+    local_site_hosts: set = set()
+    all_hosts: set = set()
     is_wato_remote_site = True
 
     file_vars: dict = {}
@@ -359,13 +359,13 @@ def _do_cleanup_abandoned_host_files() -> None:
 
     # Base directories where each host has a sub-directory below with
     # host related files inside
-    path_patterns: List[str] = [
+    path_patterns: list[str] = [
         "%s/inventory_archive" % var_dir,
         "%s/rrd" % var_dir,
         "%s/var/pnp4nagios/perfdata" % omd_root,
     ]
 
-    cleaned_up_local_hosts: Set = set([])
+    cleaned_up_local_hosts: set = set()
     for base_path in path_patterns:
         cleaned_up_local_hosts.update(
             _cleanup_host_directory_for_local_hosts(
@@ -383,7 +383,7 @@ def _do_cleanup_abandoned_host_files() -> None:
     # but are only known on remote sites
     if all_hosts:
         remote_site_hosts = all_hosts - local_site_hosts
-        cleaned_up_remote_hosts: Set = set([])
+        cleaned_up_remote_hosts: set = set()
         for base_path in path_patterns:
             cleaned_up_remote_hosts.update(
                 _cleanup_host_directory_for_remote_hosts(

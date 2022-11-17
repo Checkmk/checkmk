@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Coroutine, Optional
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from agent_receiver.log import configure_logger
 from agent_receiver.site_context import log_path, site_name
@@ -15,7 +16,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 class _UUIDValidationRoute(APIRoute):
     @staticmethod
-    def _mismatch_header_vs_url_uuid_response(request: Request) -> Optional[JSONResponse]:
+    def _mismatch_header_vs_url_uuid_response(request: Request) -> JSONResponse | None:
         return (
             None
             if (header_uuid := request.headers.get("verified-uuid", "header missing"))

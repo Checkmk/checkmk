@@ -713,7 +713,7 @@ class StatefulSetRollingUpdate(BaseModel):
     partition: int
 
 
-DisplayableStrategy = Union[OnDelete, Recreate, RollingUpdate, StatefulSetRollingUpdate]
+DisplayableStrategy = OnDelete | Recreate | RollingUpdate | StatefulSetRollingUpdate
 
 
 class UpdateStrategy(Section):

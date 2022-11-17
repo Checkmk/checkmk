@@ -40,8 +40,6 @@ from collections.abc import Callable, Iterator, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import IO, Literal
-from typing import Tuple as _Tuple
-from typing import Union
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -147,7 +145,7 @@ class MKLDAPException(MKGeneralException):
 
 
 DistinguishedName = str
-GroupMemberships = dict[DistinguishedName, dict[str, Union[str, list[str]]]]
+GroupMemberships = dict[DistinguishedName, dict[str, str | list[str]]]
 
 # .
 #   .--UserConnector-------------------------------------------------------.
@@ -497,7 +495,7 @@ class LDAPUserConnector(UserConnector):
     def active_plugins(self):
         return self._config["active_plugins"]
 
-    def active_sync_plugins(self) -> Iterator[_Tuple[str, dict, LDAPAttributePlugin]]:
+    def active_sync_plugins(self) -> Iterator[tuple[str, dict, LDAPAttributePlugin]]:
         for key, params in self._config["active_plugins"].items():
             try:
                 plugin = ldap_attribute_plugin_registry[key]()

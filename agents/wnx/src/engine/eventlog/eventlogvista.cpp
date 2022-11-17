@@ -260,7 +260,7 @@ void EvtHandleDeleter::operator()(EVT_HANDLE h) const noexcept {
 
 bool IsEvtApiAvailable() noexcept { return win::g_evt.ready(); }
 
-class EventLogRecordVista : public EventLogRecordBase {
+class EventLogRecordVista final : public EventLogRecordBase {
     enum class WinEventLevel {
         Audit = 0,
         Critical = 1,

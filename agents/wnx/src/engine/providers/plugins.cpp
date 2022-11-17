@@ -8,8 +8,12 @@
 #include "providers/plugins.h"
 
 #include <filesystem>
+#include <iostream>
+#include <numeric>
+#include <ranges>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "cfg.h"
 #include "cma_core.h"
@@ -18,6 +22,7 @@
 #include "service_processor.h"
 
 using namespace std::literals;
+namespace vs = std::views;
 
 namespace cma::provider {
 
@@ -44,14 +49,11 @@ static bool IsPluginRequiredType(const PluginEntry &plugin,
 
 // returns 0 on lack plugin entries
 int FindMaxTimeout(const PluginMap &pm, PluginMode need_type) {
-    int timeout = 0;
-    for (const auto &[path, plugin] : pm) {
-        if (IsPluginRequiredType(plugin, need_type)) {
-            timeout = std::max(timeout, plugin.timeout());
-        }
-    }
-
-    return timeout;
+    auto x = pm | vs::values | vs::filter([need_type](const auto &v) {
+                 return IsPluginRequiredType(v, need_type);
+             }) |
+             vs::transform([](const auto &p) noexcept { return p.timeout(); });
+    return x.empty() ? 0 : *std::ranges::max_element(x);
 }
 
 // Scans for sync plugins max timeout and set this max

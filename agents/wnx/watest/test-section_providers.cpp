@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 namespace cma::provider {
 static const std::string section_name{section::kUseEmbeddedName};
 
-class Empty : public Synchronous {
+class Empty final: public Synchronous {
 public:
     Empty() : Synchronous("empty") {}
     std::string makeBody() override { return "****"; }

@@ -188,7 +188,7 @@ private:
 
 // Implements main logic related to interaction: "Agent <-> Plugins"
 // non movable, non copyable
-class ServiceProcessor : public wtools::BaseServiceProcessor {
+class ServiceProcessor final : public wtools::BaseServiceProcessor {
 public:
     struct ControllerParam {
         uint16_t port;

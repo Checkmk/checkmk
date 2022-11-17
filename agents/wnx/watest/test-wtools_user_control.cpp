@@ -11,55 +11,6 @@
 
 namespace wtools::uc {  // to become friendly for cma::cfg classes
 
-// List of all domains!!!
-// This is #REFERENCE
-NTSTATUS PrintDomainName() {
-    LSA_HANDLE policy;
-
-    static LSA_OBJECT_ATTRIBUTES oa = {sizeof oa};
-
-    auto status =
-        LsaOpenPolicy(nullptr, &oa, POLICY_VIEW_LOCAL_INFORMATION, &policy);
-
-    if (!LSA_SUCCESS(status)) return status;
-    ON_OUT_OF_SCOPE(LsaClose(policy));
-
-    // I do not know why we use union
-    union {
-        PPOLICY_DNS_DOMAIN_INFO ppddi;
-        PPOLICY_ACCOUNT_DOMAIN_INFO ppadi;
-    };
-
-    status = ::LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
-                                         reinterpret_cast<void **>(&ppddi));
-
-    if (!LSA_SUCCESS(status)) {
-        return status;
-    }
-
-    if (ppddi->Sid) {
-        XLOG::l("DnsDomainName: '{}'",
-                wtools::ToUtf8(ppddi->DnsDomainName.Buffer));
-    } else {
-        XLOG::l("'{}': not domain controller !!",
-                wtools::ToUtf8(ppddi->Name.Buffer));
-        status = -1;
-    }
-
-    LsaFreeMemory(ppddi);
-    if (0 <= status) {
-        return status;
-    }
-
-    if (LSA_SUCCESS(status = ::LsaQueryInformationPolicy(
-                        policy, PolicyAccountDomainInformation,
-                        reinterpret_cast<void **>(&ppadi)))) {
-        XLOG::l("DomainName: '{}'", wtools::ToUtf8(ppadi->DomainName.Buffer));
-        LsaFreeMemory(ppadi);
-    }
-
-    return status;
-}
 
 TEST(WtoolsUserControl, Base) {
     LdapControl lc;

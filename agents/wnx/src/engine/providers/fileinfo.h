@@ -15,7 +15,7 @@
 #include "section_header.h"
 
 namespace cma::provider {
-class FileInfo : public Asynchronous {
+class FileInfo final : public Asynchronous {
 public:
     static constexpr std::string_view kMissing = "missing";
     static constexpr std::string_view kStatFailed = "stat failed";

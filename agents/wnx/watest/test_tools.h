@@ -302,7 +302,7 @@ const std::vector<EventRecordData> &SimpleLogData();
 }  // namespace tst
 
 namespace cma::evl {
-class EventLogRecordDebug : public EventLogRecordBase {
+class EventLogRecordDebug final: public EventLogRecordBase {
 public:
     EventLogRecordDebug(uint64_t record_id, const tst::EventRecordData &data)
         : record_id_{record_id}
@@ -341,7 +341,7 @@ private:
     Level event_level_;
 };
 
-class EventLogDebug : public EventLogBase {
+class EventLogDebug final : public EventLogBase {
 public:
     explicit EventLogDebug(const std::vector<tst::EventRecordData> &data)
         : data_(data) {}

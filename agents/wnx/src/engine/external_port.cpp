@@ -277,8 +277,8 @@ void ExternalPort::timedWaitForSession() {
 }
 #define TEST_RESTART_OVERLOAD  // should be defined in production
 
-//#define TEST_OVERLOAD_MEMORY
-// internal testing code
+// #define TEST_OVERLOAD_MEMORY
+//  internal testing code
 #if defined(TEST_OVERLOAD_MEMORY)
 // a bit complicated method to eat memory in release target
 static std::vector<std::unique_ptr<char>> bad_vector;
@@ -529,13 +529,10 @@ void ExternalPort::shutdownIo() {
     XLOG::l.i("Shutting down IO...");
     stopExecution();
 
-    bool should_wait = false;
-    {
-        std::lock_guard lk(io_thread_lock_);
-        should_wait = io_thread_.joinable();  // normal execution
-        io_started_ = false;
-    }
-
+    std::unique_lock lk(io_thread_lock_);
+    const auto should_wait = io_thread_.joinable();
+    io_started_ = false;
+    lk.unlock();
     if (should_wait) {
         io_thread_.join();
     }

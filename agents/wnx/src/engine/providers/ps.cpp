@@ -264,9 +264,10 @@ unsigned long long CalculateUptime(IWbemClassObject *wbem_object) {
 // idiotic functions required for idiotic method we are using in legacy software
 int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
                          const std::wstring &name) {
-    VARIANT value{0};
-    auto hres = wbem_object->Get(name.c_str(), 0, &value, nullptr, nullptr);
-    if (SUCCEEDED(hres)) {
+    VARIANT value = {};
+    const auto res =
+        wbem_object->Get(name.c_str(), 0, &value, nullptr, nullptr);
+    if (SUCCEEDED(res)) {
         ON_OUT_OF_SCOPE(::VariantClear(&value));
         return static_cast<int64_t>(
             wtools::WmiGetUint32(value));  // read 32bit unsigned and convert
@@ -274,7 +275,7 @@ int64_t GetUint32AsInt64(IWbemClassObject *wbem_object,
     }
 
     XLOG::l.e("Fail to get '{}' {:#X}", wtools::ToUtf8(name),
-              static_cast<unsigned int>(hres));
+              static_cast<unsigned int>(res));
     return 0;
 }
 

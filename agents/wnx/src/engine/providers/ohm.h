@@ -30,7 +30,7 @@ constexpr std::wstring_view kResetCommand =
     LR"(-command "Get-WmiObject -query \"Select * From __Namespace Where Name='OpenHardwareMonitor'\" -Namespace \"root\" | Remove-WmiObject")";
 }  // namespace ohm
 
-class OhmProvider : public WmiBase {
+class OhmProvider final : public WmiBase {
 public:
     OhmProvider(std::string_view name, char separator)
         : WmiBase(name, separator) {}

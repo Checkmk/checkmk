@@ -124,7 +124,7 @@ std::wstring MakePath(const AppSettings &settings) {
 }
 
 STARTUPINFO MakeStartupInfo(const AppSettings &settings) {
-    STARTUPINFO si = {0};
+    STARTUPINFO si = {};
     si.cb = sizeof si;
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = settings.show_window ? SW_SHOW : SW_HIDE;
@@ -325,7 +325,7 @@ CleanupInteractive MakeCleanupInteractive(AppSettings &settings,
 }
 
 PROFILEINFOW MakeProfile(std::wstring_view user_name) {
-    PROFILEINFO profile = {0};
+    PROFILEINFO profile = {};
     profile.dwSize = sizeof profile;
     profile.lpUserName = const_cast<wchar_t *>(user_name.data());
     profile.dwFlags = PI_NOUI;
@@ -709,7 +709,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
     if (!GetUserHandle(settings, profile_loaded, profile, command_pipe))
         return false;
 
-    PROCESS_INFORMATION pi = {nullptr};
+    PROCESS_INFORMATION pi = {};
     auto si = MakeStartupInfo(settings);
     auto path = MakePath(settings);
     auto starting_dir = settings.working_dir;

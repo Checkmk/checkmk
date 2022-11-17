@@ -20,7 +20,6 @@
 #include "eventlog/eventlogvista.h"
 #include "logger.h"
 #include "providers/logwatch_event_details.h"
-#include "tools/_raii.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 

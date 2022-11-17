@@ -51,7 +51,7 @@ std::string GetFabricYmlContent() {
     return fabric_yaml_content;
 }
 
-class TestEnvironment : public ::testing::Environment {
+class TestEnvironment final : public ::testing::Environment {
 public:
     static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
 

@@ -109,13 +109,13 @@ auto ToTm(const std::string &in) {
 
 bool IsAccountExist(const std::string &account) {
     SID_NAME_USE snu;
-    SID sid{0};
+    SID sid = {};
     auto sz = static_cast<DWORD>(sizeof sid);
-    DWORD rd_size{0};
+    DWORD rd_size = {};
     char *rd{nullptr};
-    auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
-                                     &rd_size, &snu);
-    return succ || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
+    auto success = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,
+                                        &rd_size, &snu);
+    return success || ::GetLastError() != ERROR_INSUFFICIENT_BUFFER;
 }
 
 }  // namespace

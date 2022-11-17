@@ -897,11 +897,11 @@ TEST(LogWatchEventTest, TestNotSendAll) {
     LogWatchEvent lwe;
     lwe.loadConfig();
     lwe.updateSectionStatus();
-    auto result = lwe.generateContent();
+    lwe.generateContent();
     XLOG::l(XLOG::kEvent)("EventLog <GTEST>");
     lwe.loadConfig();
     lwe.updateSectionStatus();
-    result = lwe.generateContent();
+    const auto result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog <GTEST>") != std::string::npos);
@@ -931,9 +931,9 @@ TEST(LogWatchEventTest, TestNotSendAllVista) {
     XLOG::l(XLOG::kEvent)("EventLog Vista <GTEST>");
     LogWatchEvent lwe;
     lwe.loadConfig();
-    auto result = lwe.generateContent();
+    lwe.generateContent();
     XLOG::l(XLOG::kEvent)("EventLog Vista <GTEST>");
-    result = lwe.generateContent();
+    const auto result = lwe.generateContent();
     EXPECT_TRUE(!result.empty());
     EXPECT_TRUE(result.size() < 100000);
     EXPECT_TRUE(result.find("EventLog Vista <GTEST>") != std::string::npos);

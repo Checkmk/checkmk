@@ -88,7 +88,7 @@ enum class EvlType { classic, vista };
 
 using LogWatchEntryVector = std::vector<LogWatchEntry>;
 
-class LogWatchEvent : public Asynchronous {
+class LogWatchEvent final : public Asynchronous {
 public:
     LogWatchEvent() : Asynchronous(cma::section::kLogWatchEventName) {}
 

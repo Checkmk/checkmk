@@ -19,7 +19,7 @@ bool CheckIniFile(const std::filesystem::path &ini_file_path);
 
 // Engine to parse ini and generate YAML
 // implementation in the lwa folder
-class Parser {
+class Parser final {
 public:
     Parser() = default;
     virtual ~Parser();

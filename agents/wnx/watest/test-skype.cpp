@@ -65,8 +65,8 @@ TEST(SectionProviderSkype, SimulatedIntegration) {
     auto hdr1 = tools::SplitString(table[1], ",");
     ASSERT_EQ(hdr1.size(), 3);
     EXPECT_EQ(hdr1[0], "sampletime");
-    EXPECT_TRUE(std::atoll(hdr1[1].c_str()) > 0);
-    EXPECT_TRUE(std::atoll(hdr1[2].c_str()) > 0);
+    EXPECT_TRUE(std::stoll(hdr1[1].c_str()) > 0);
+    EXPECT_TRUE(std::stoll(hdr1[2].c_str()) > 0);
     EXPECT_EQ(table[2],
               fmt::format("[{}]", wtools::ToUtf8((*skype_counters)[0])));
     EXPECT_EQ(table[5],

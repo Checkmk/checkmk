@@ -20,8 +20,6 @@
 
 #include <netfw.h>
 
-#include <functional>
-
 namespace cma::fw {
 
 constexpr std::wstring_view kRuleGroup = L"Checkmk Agent";

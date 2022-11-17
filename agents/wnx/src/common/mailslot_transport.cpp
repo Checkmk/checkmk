@@ -248,7 +248,7 @@ int Slot::Get(void *data, unsigned int max_len) {
 }
 
 OVERLAPPED Slot::CreateOverlapped() noexcept {
-    OVERLAPPED ov = {0};
+    OVERLAPPED ov = {};
     ov.Offset = 0;
     ov.OffsetHigh = 0;
     ov.hEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);

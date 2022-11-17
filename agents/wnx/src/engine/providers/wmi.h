@@ -114,7 +114,7 @@ private:
     SubSection::Mode subsection_mode_{SubSection::Mode::standard};
 };
 
-class Wmi : public WmiBase {
+class Wmi final : public WmiBase {
 public:
     Wmi(std::string_view name, char separator)
         : WmiBase(name, separator, SubSection::Mode::standard) {}

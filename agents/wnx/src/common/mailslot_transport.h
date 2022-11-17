@@ -19,7 +19,6 @@
 
 #include <atomic>
 #include <cstdint>
-#include <filesystem>
 #include <mutex>
 #include <optional>
 #include <string>

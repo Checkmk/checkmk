@@ -29,12 +29,12 @@ inline void ClosePi(PROCESS_INFORMATION &pi) noexcept {
 
 inline bool RunCommandAndWait(const std::wstring &command,
                               const std::wstring_view work_dir) {
-    STARTUPINFOW si{0};
+    STARTUPINFOW si = {};
     ::memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
-    PROCESS_INFORMATION pi{nullptr};
+    PROCESS_INFORMATION pi = {};
     ::memset(&pi, 0, sizeof pi);
     // CREATE_NEW_CONSOLE
 
@@ -64,12 +64,12 @@ inline bool RunCommandAndWait(const std::wstring &command) {
 }
 
 inline bool RunDetachedCommand(const std::string &command) {
-    STARTUPINFOA si{0};
+    STARTUPINFOA si = {};
     memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
-    PROCESS_INFORMATION pi{nullptr};
+    PROCESS_INFORMATION pi = {};
     memset(&pi, 0, sizeof pi);
 
     if (std::string c{command};
@@ -100,7 +100,7 @@ inline uint32_t RunStdCommand(
     DWORD creation_flags,       // never checked this
     DWORD start_flags) {
     // windows "boiler plate"
-    STARTUPINFOW si{0};
+    STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
     si.dwFlags = start_flags;
@@ -110,7 +110,7 @@ inline uint32_t RunStdCommand(
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
     }
 
-    PROCESS_INFORMATION pi{nullptr};
+    PROCESS_INFORMATION pi = {};
     memset(&pi, 0, sizeof pi);
 
     if (std::wstring c{command};
@@ -147,7 +147,7 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     DWORD creation_flags,         // never checked this
     DWORD start_flags) noexcept {
     // windows "boiler plate"
-    STARTUPINFOW si{0};
+    STARTUPINFOW si = {};
     memset(&si, 0, sizeof si);
     si.cb = sizeof STARTUPINFO;
     si.dwFlags = start_flags;
@@ -156,7 +156,7 @@ inline std::tuple<DWORD, HANDLE, HANDLE> RunStdCommandAsJob(
     if (inherit_handle != 0) {
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
     }
-    PROCESS_INFORMATION pi{nullptr};
+    PROCESS_INFORMATION pi = {};
     memset(&pi, 0, sizeof pi);
     // -end-
 

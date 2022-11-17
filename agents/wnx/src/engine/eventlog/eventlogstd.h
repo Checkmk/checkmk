@@ -15,15 +15,11 @@ public:
     explicit MessageResolver(const std::wstring &log_name) : _name(log_name) {}
     MessageResolver(const MessageResolver &) = delete;
     MessageResolver &operator=(const MessageResolver &) = delete;
-    ~MessageResolver() {
-        for (auto &c : _cache) {
-            if (c.second != nullptr) {
-                FreeLibrary(c.second);
-            }
-        }
-    }
+    MessageResolver(MessageResolver &&) = delete;
+    MessageResolver &operator=(MessageResolver &&) = delete;
+    ~MessageResolver();
 
-    std::wstring resolve(DWORD eventID, LPCWSTR source,
+    std::wstring resolve(DWORD event_id, LPCWSTR source,
                          LPCWSTR *parameters) const;
 
 private:
@@ -35,7 +31,7 @@ private:
     mutable std::map<std::wstring, HMODULE> _cache;
 };
 
-class EventLog : public EventLogBase {
+class EventLog final : public EventLogBase {
     static constexpr size_t INIT_BUFFER_SIZE = 64U * 1024U;
 
 public:

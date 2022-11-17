@@ -290,8 +290,8 @@ private:
     HANDLE read_{nullptr};
     HANDLE write_{nullptr};
     bool sa_initialized_{false};
-    SECURITY_DESCRIPTOR sd_ = {0};
-    SECURITY_ATTRIBUTES sa_;
+    SECURITY_DESCRIPTOR sd_ = {};
+    SECURITY_ATTRIBUTES sa_ = {};
 };
 
 // scans all processes in system and calls op
@@ -424,7 +424,7 @@ private:
 #endif
 };
 
-class ServiceController {
+class ServiceController final {
     static std::mutex s_lock_;
     static ServiceController *s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill
@@ -537,7 +537,7 @@ private:
 
     std::unique_ptr<wchar_t[]> name_;
 
-    SERVICE_STATUS status_{0};
+    SERVICE_STATUS status_ = {};
     SERVICE_STATUS_HANDLE status_handle_{nullptr};
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ServiceControllerTest;
@@ -923,7 +923,7 @@ std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
                            char separator);
 
 // the class is thread safe
-class WmiWrapper {
+class WmiWrapper final {
 public:
     WmiWrapper() = default;
     WmiWrapper(const WmiWrapper &) = delete;
@@ -997,7 +997,7 @@ constexpr size_t kMaxMemoryAllowed = 200'000'000;
 bool IsAgentHealthy() noexcept;
 }  // namespace monitor
 
-class ACLInfo {
+class ACLInfo final {
 public:
     struct AceList {
         ACE_HEADER *ace;

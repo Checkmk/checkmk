@@ -17,7 +17,7 @@
 
 namespace cma::provider {
 
-class SpoolProvider : public Asynchronous {
+class SpoolProvider final : public Asynchronous {
 public:
     SpoolProvider() : Asynchronous(section::kSpool) {}
 

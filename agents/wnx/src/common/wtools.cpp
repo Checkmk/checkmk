@@ -6,7 +6,6 @@
 #include <WinSock2.h>
 
 #include <Psapi.h>
-#include <WS2tcpip.h>
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -1294,7 +1293,7 @@ void InitWindowsCom() {
     auto hres = ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
     constexpr auto version_requested = MAKEWORD(2, 2);
-    WSADATA wsa_data{0};
+    WSADATA wsa_data = {};
     const int err = ::WSAStartup(version_requested, &wsa_data);
     if (err != 0) {
         // Tell the user that we could not find a usable Winsock DLL.
@@ -1338,7 +1337,7 @@ bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name) {
         return false;
     }
 
-    VARIANT value{0};
+    VARIANT value = {};
     const HRESULT res = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         return false;
@@ -1393,11 +1392,8 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
                                  std::wstring_view separator) {
     std::wstring result;
     for (const auto &name : names) {
-        VARIANT value;
-        memset(&value, 0,
-               sizeof value);  // prevents potential usage
-                               // of the non-initialized data
-                               // when converting I4 to UI4
+        VARIANT value = {};
+        memset(&value, 0, sizeof value);
         // Get the value of the Name property
         auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
@@ -1425,7 +1421,7 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
 
 std::wstring WmiStringFromObject(IWbemClassObject *object,
                                  const std::wstring &name) {
-    VARIANT value{0};
+    VARIANT value = {};
     if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return {};
     }
@@ -1436,7 +1432,7 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
 
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
                                             const std::wstring &name) {
-    VARIANT value{0};
+    VARIANT value = {};
     if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return {};
     }
@@ -1450,7 +1446,7 @@ std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
 
 uint64_t WmiUint64FromObject(IWbemClassObject *object,
                              const std::wstring &name) {
-    VARIANT value{0};
+    VARIANT value = {};
     if (FAILED(object->Get(name.c_str(), 0, &value, nullptr, nullptr))) {
         return 0;
     }
@@ -2028,7 +2024,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
 
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
 
-    PROCESSENTRY32 entry32 = {0};
+    PROCESSENTRY32 entry32 = {};
     entry32.dwSize = sizeof entry32;
     auto result = Process32First(snapshot, &entry32);
     while (result != 0) {
@@ -2122,7 +2118,7 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
 
     auto current_process_id = ::GetCurrentProcessId();
     // scan...
-    PROCESSENTRY32 entry32 = {0};
+    PROCESSENTRY32 entry32 = {};
     entry32.dwSize = sizeof entry32;
     auto result = ::Process32First(snapshot, &entry32);
     while (result != FALSE) {
@@ -2223,7 +2219,7 @@ fs::path GetCurrentExePath() {
 namespace {
 std::optional<PROCESS_MEMORY_COUNTERS_EX> GetProcessMemoryCounters(
     HANDLE process) {
-    PROCESS_MEMORY_COUNTERS_EX counters = {0};
+    PROCESS_MEMORY_COUNTERS_EX counters = {};
     counters.cb = sizeof counters;
     if (::GetProcessMemoryInfo(process,
                                static_cast<PROCESS_MEMORY_COUNTERS *>(

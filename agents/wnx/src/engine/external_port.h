@@ -157,7 +157,7 @@ inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
     return SocketInfo::empty();
 }
 
-class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
+class ExternalPort final : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
     explicit ExternalPort(wtools::BaseServiceProcessor * /* owner*/) {}

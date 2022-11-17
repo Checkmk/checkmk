@@ -57,7 +57,7 @@ TEST(LogInternalTest, Mods2DirectionsCheck) {
     EXPECT_EQ(Mods2Directions(lp, Mods::kEvent),
               mark | xlog::Directions::kEventPrint);
 
-    constexpr int all_mark = 0xFFFF'FFFF;
+    constexpr uint32_t all_mark = 0xFFFF'FFFF;
     lp.directions_ = all_mark;
 
     EXPECT_EQ(Mods2Directions(lp, Mods::kNoFile),

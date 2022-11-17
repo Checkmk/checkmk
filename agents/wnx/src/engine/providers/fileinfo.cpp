@@ -37,7 +37,7 @@ std::optional<std::chrono::system_clock::duration> GetFileTimeSinceEpoch(
 /// Get the OS filename preserving the filename case. This is Windows FS.
 // on error returns same name
 fs::path ReadBaseNameWithCase(const fs::path &file_path) {
-    WIN32_FIND_DATAW file_data{0};
+    WIN32_FIND_DATAW file_data = {};
     auto *handle = ::FindFirstFileW(file_path.wstring().c_str(), &file_data);
     if (wtools::IsInvalidHandle(handle)) {
         XLOG::t.w("Unexpected status [{}] when reading file '{}'",
@@ -234,12 +234,12 @@ void ProcessDirsAndFilesTables(PathVector &dirs, PathVector &files,
     }
 
     // remove non-dirs entry from dirs table
-    auto last_pos =
-        std::remove_if(dirs.begin(), dirs.end(), [](const auto &path) {
+    const auto [first, last] =
+        std::ranges::remove_if(dirs, [](const auto &path) {
             std::error_code ec;
             auto is_dir = fs::is_directory(path, ec);
             if (!ec) {
-                return !is_dir;  // remove all what is not dir
+                return !is_dir;
             }
 
             if (ec.value() != 2) {
@@ -250,7 +250,7 @@ void ProcessDirsAndFilesTables(PathVector &dirs, PathVector &files,
             return true;  // remove trash with error too
         });
 
-    dirs.erase(last_pos, dirs.end());
+    dirs.erase(first, last);
 }
 
 void AddVectorWithMove(PathVector &files, PathVector &found_files) {

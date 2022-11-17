@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 namespace rs = std::ranges;
 
 namespace cma::provider {
-class Empty : public Synchronous {
+class Empty final: public Synchronous {
 public:
     Empty() : Synchronous("empty") {}
     std::string makeBody() override { return "****"; }

@@ -894,13 +894,13 @@ bool TheMiniProcess::start(const std::wstring &exe_name) {
 
     if (wtools::IsInvalidHandle(process_handle_)) {
         auto *null_handle = CreateDevNull();
-        STARTUPINFO si{0};
+        STARTUPINFO si = {};
         si.cb = sizeof(STARTUPINFO);
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = si.hStdError = null_handle;
         ON_OUT_OF_SCOPE(CloseHandle(null_handle));
 
-        PROCESS_INFORMATION pi{nullptr};
+        PROCESS_INFORMATION pi = {};
         if (::CreateProcess(exe_name.c_str(), nullptr, nullptr, nullptr, TRUE,
                             0, nullptr, nullptr, &si, &pi) == FALSE) {
             XLOG::l("Failed to run {}", wtools::ToUtf8(exe_name));

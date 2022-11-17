@@ -276,7 +276,7 @@ auto ReplyFunc(const std::string &ip) -> std::vector<uint8_t> {
     const auto data = reinterpret_cast<const uint8_t *>(ip.data());
     std::vector v(data, data + ip.size());
     return v;
-};
+}
 }  // namespace
 
 TEST(OnlyFromTest, Config) {

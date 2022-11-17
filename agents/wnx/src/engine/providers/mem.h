@@ -16,7 +16,7 @@
 
 namespace cma::provider {
 
-class Mem : public Synchronous {
+class Mem final : public Synchronous {
 public:
     Mem() : Synchronous(cma::section::kMemName) {}
     Mem(const std::string &name, char separator)

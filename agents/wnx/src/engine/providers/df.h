@@ -18,7 +18,7 @@ namespace cma::provider {
 constexpr char kDfSeparator = section::kTabSeparator;
 constexpr auto kDfSeparatorString = section::kTabSeparatorString;
 
-class Df : public Asynchronous {
+class Df final : public Asynchronous {
 public:
     Df() : Asynchronous(section::kDfName, '\t') {}
 

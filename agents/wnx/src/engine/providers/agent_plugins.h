@@ -16,7 +16,7 @@
 
 namespace cma::provider {
 
-class AgentPlugins : public Asynchronous {
+class AgentPlugins final : public Asynchronous {
 public:
     static constexpr char kSepChar = '\0';
     AgentPlugins(std::string_view name, char separator)

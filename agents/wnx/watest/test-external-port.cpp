@@ -114,9 +114,9 @@ public:
 namespace {
 ExternalPort::IoParam makeIoParam(std::optional<uint32_t> pid) {
     return {
-        .port{tst::TestPort()},
-        .local_only{LocalOnly::yes},
-        .pid{pid},
+        .port = tst::TestPort(),
+        .local_only = LocalOnly::yes,
+        .pid = pid,
     };
 }
 }  // namespace

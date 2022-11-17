@@ -66,7 +66,7 @@ protected:
 #endif
 };
 
-class LocalProvider : public PluginsProvider {
+class LocalProvider final : public PluginsProvider {
 public:
     LocalProvider() : PluginsProvider(section::kLocal, '\0') {
         local_ = true;

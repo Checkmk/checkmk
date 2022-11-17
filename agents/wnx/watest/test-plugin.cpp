@@ -1761,10 +1761,10 @@ TestDateTime StringToTime(const std::string &text) {
         return tdt;
     }
 
-    tdt.hour = std::atoi(table[0].c_str());
-    tdt.min = std::atoi(table[1].c_str());
-    tdt.sec = std::atoi(sec_table[0].c_str());
-    tdt.msec = std::atoi(sec_table[1].c_str());
+    tdt.hour = std::stoi(table[0].c_str());
+    tdt.min = std::stoi(table[1].c_str());
+    tdt.sec = std::stoi(sec_table[0].c_str());
+    tdt.msec = std::stoi(sec_table[1].c_str());
 
     return tdt;
 }

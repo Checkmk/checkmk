@@ -14,8 +14,6 @@
 #include <chrono>
 #include <cstdint>
 #include <mutex>
-#include <string>
-#include <string_view>
 
 #include "tools/_raii.h"
 

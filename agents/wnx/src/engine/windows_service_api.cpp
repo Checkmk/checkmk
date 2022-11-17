@@ -18,7 +18,6 @@
 #include "cvt.h"
 #include "external_port.h"  // windows api abstracted
 #include "firewall.h"
-#include "fmt/color.h"
 #include "install_api.h"  // install
 #include "modules.h"
 #include "realtime.h"
@@ -1158,7 +1157,7 @@ bool IsServiceProcess() {
         return false;  // may happen when not enough user rights
     }
 
-    USEROBJECTFLAGS uof = {0};
+    USEROBJECTFLAGS uof = {};
     auto success = ::GetUserObjectInformation(win_station, UOI_FLAGS, &uof,
                                               sizeof(USEROBJECTFLAGS), nullptr);
     // service should be NON-VISIBLE

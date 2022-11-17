@@ -96,7 +96,7 @@ IEnumVARIANT *Policy::getEnum() const {
     ON_OUT_OF_SCOPE(enumerator->Release());
 
     IEnumVARIANT *variant = nullptr;
-    auto hr =
+    const auto hr =
         enumerator->QueryInterface(__uuidof(IEnumVARIANT), (void **)&variant);
 
     return SUCCEEDED(hr) ? variant : nullptr;
@@ -131,18 +131,18 @@ INetFwRule *ScanAllRules(
 
     XLOG::t.i("Firewall Rules count is [{}]", rule_count);
 
-    auto policies = policy.getEnum();
+    const auto policies = policy.getEnum();
     if (policies == nullptr) {
         return nullptr;
     }
     ON_OUT_OF_SCOPE(policies->Release());
 
-    ULONG cFetched = 0;
-    VARIANT var{0};
+    ULONG fetched = 0;
+    VARIANT var{};
     ::VariantClear(&var);
 
     while (true) {
-        auto hr = policies->Next(1, &var, &cFetched);
+        auto hr = policies->Next(1, &var, &fetched);
         ON_OUT_OF_SCOPE(::VariantClear(&var););
 
         if (S_FALSE == hr || !SUCCEEDED(hr)) {
@@ -156,7 +156,7 @@ INetFwRule *ScanAllRules(
 
         INetFwRule *rule = nullptr;
 
-        auto dispatch = V_DISPATCH(&var);
+        const auto dispatch = V_DISPATCH(&var);
         hr = dispatch->QueryInterface(__uuidof(INetFwRule),
                                       reinterpret_cast<void **>(&rule));
         if (!SUCCEEDED(hr) || rule == nullptr) {
@@ -164,7 +164,7 @@ INetFwRule *ScanAllRules(
         }
 
         // processing itself
-        auto rule_candidate = processor(rule);
+        const auto rule_candidate = processor(rule);
 
         // post processing
         if (rule != rule_candidate) {
@@ -185,7 +185,7 @@ std::string ToUtf8(const BSTR &bstr) {
         return {"nullptr"};
     }
     return wtools::ToUtf8(bstr);
-};
+}
 
 void DumpBaseInfo(INetFwRule *fw_rule) {
     BSTR bstr_val{nullptr};
@@ -305,8 +305,8 @@ void DumpAddresses(INetFwRule *fw_rule) {
 void DumpProfileBitmask(INetFwRule *fw_rule) {
     long profile_bitmask = 0;
     struct ProfileMapElement {
-        NET_FW_PROFILE_TYPE2 Id;
-        LPCWSTR Name;
+        NET_FW_PROFILE_TYPE2 id_;
+        LPCWSTR name_;
     };
 
     constexpr std::array profile_map = {
@@ -318,9 +318,9 @@ void DumpProfileBitmask(INetFwRule *fw_rule) {
         // The returned bitmask can have more than 1 bit set if multiple
         // profiles
         //   are active or current at the same time
-        for (const auto &p : profile_map) {
-            if (profile_bitmask & p.Id) {
-                XLOG::l.i("Profile:  '{}'", wtools::ToUtf8(p.Name));
+        for (const auto &[id, name] : profile_map) {
+            if (profile_bitmask & id) {
+                XLOG::l.i("Profile:  '{}'", wtools::ToUtf8(name));
             }
         }
     }
@@ -386,7 +386,7 @@ void DumpOther(INetFwRule *fw_rule) {
 // ABSOLUTE INTERNAL
 // FROM MSDN
 // MAY HAVE MEMORY LEAKS!!!!
-INetFwRule *DumpFWRulesInCollection(INetFwRule *fw_rule) {
+INetFwRule *DumpFirewallRulesInCollection(INetFwRule *fw_rule) {
     XLOG::l.i("---------------------------------------------\n");
 
     DumpBaseInfo(fw_rule);
@@ -452,16 +452,16 @@ std::optional<std::wstring> GetRuleAppName(INetFwRule *fw_rule) {
 
 bool CreateInboundRule(std::wstring_view rule_name,
                        std::wstring_view raw_app_name, int port) {
-    auto app_name = wtools::ToCanonical(raw_app_name);
+    const auto app_name = wtools::ToCanonical(raw_app_name);
 
-    Policy policy;
+    const Policy policy;
 
     auto *rules = policy.getRules();
     if (rules == nullptr) {
         return false;
     }
 
-    auto bit_mask = CorrectFirewallBitMask();
+    const auto bit_mask = CorrectFirewallBitMask();
 
     auto *rule = CreateRule();
 
@@ -632,19 +632,19 @@ int CountRules(std::wstring_view rule_name, std::wstring_view raw_app_name) {
     return count;
 }
 
-INetFwRule *FindRule(std::wstring_view name) {
-    return ScanAllRules([name](INetFwRule *fw_rule) -> INetFwRule * {
+INetFwRule *FindRule(std::wstring_view rule_name) {
+    return ScanAllRules([rule_name](INetFwRule *fw_rule) -> INetFwRule * {
         if (fw_rule == nullptr) {
             return nullptr;
         }
 
-        BSTR rule_name = nullptr;
-        if (fw_rule->get_Name(&rule_name) != 0) {
+        BSTR name = nullptr;
+        if (fw_rule->get_Name(&name) != 0) {
             return nullptr;
         }
 
-        ON_OUT_OF_SCOPE(::SysFreeString(rule_name));
-        return wcscmp(name.data(), rule_name) == 0 ? fw_rule : nullptr;
+        ON_OUT_OF_SCOPE(::SysFreeString(name));
+        return wcscmp(rule_name.data(), name) == 0 ? fw_rule : nullptr;
     });
 }
 

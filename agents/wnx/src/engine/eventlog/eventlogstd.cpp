@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <map>
+#include <ranges>
 #include <string>
 
 #include "common/wtools.h"
@@ -55,6 +56,16 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
     return result;
 }
 
+namespace vs = std::views;
+
+MessageResolver::~MessageResolver() {
+    for (const auto h :
+         _cache | vs::values |
+             vs::filter([](const auto &h) noexcept { return h != nullptr; })) {
+        FreeLibrary(h);
+    }
+}
+
 std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
                                          LPCWSTR *parameters) const {
     HMODULE dll = nullptr;
@@ -83,22 +94,23 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
         flags |= FORMAT_MESSAGE_FROM_HMODULE;
     }
 
-    DWORD len = ::FormatMessageW(
+    const DWORD len = ::FormatMessageW(
         flags, dll, event_id,
         0,  // accept any language
-        result.data(), static_cast<DWORD>(result.size()), (char **)parameters);
+        result.data(), static_cast<DWORD>(result.size()),
+        reinterpret_cast<char **>(const_cast<LPWSTR *>(parameters)));
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);
     return result;
 }
 
-std::wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
+std::wstring MessageResolver::resolve(DWORD event_id, LPCWSTR source,
                                       LPCWSTR *parameters) const {
     std::wstring result;
     auto sources = getMessageFiles(source);
     for (const auto &dllpath : sources) {
-        result = resolveInt(eventID, dllpath.c_str(), parameters);
+        result = resolveInt(event_id, dllpath.c_str(), parameters);
         if (!result.empty()) {
             break;
         }
@@ -119,7 +131,7 @@ std::wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
     return result;
 }
 
-class EventLogRecord : public EventLogRecordBase {
+class EventLogRecord final : public EventLogRecordBase {
 public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}

@@ -23,7 +23,7 @@ namespace cma::provider {
 /// On error returns empty string
 std::string AddressToCheckMkString(std::string_view entry);
 
-class CheckMk : public Synchronous {
+class CheckMk final : public Synchronous {
 public:
     explicit CheckMk() : Synchronous(section::kCheckMk) {}
     CheckMk(const std::string &name, char separator)

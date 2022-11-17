@@ -58,10 +58,10 @@ private:
     char data_[max_length];
 };
 
-void StartTestServer(asio::io_context *IoContext, int Port) {
+void StartTestServer(asio::io_context *io_context, uint16_t port) {
     try {
-        UdpServer s(*IoContext, Port);
-        IoContext->run();
+        UdpServer s(*io_context, port);
+        io_context->run();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }
@@ -131,7 +131,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::atoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp.c_str());
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
     }
@@ -150,7 +150,7 @@ TEST(RealtimeTest, PackData) {
         auto char_data = reinterpret_cast<char *>(data);
         std::string_view ts(char_data + kHeaderSize, kTimeStampSize);
         std::string timestamp(ts);
-        auto timestamp_mid = std::atoll(timestamp.c_str());
+        auto timestamp_mid = std::stoll(timestamp.c_str());
         EXPECT_TRUE(tstamp1 <= timestamp_mid);
         EXPECT_TRUE(tstamp2 >= timestamp_mid);
 
@@ -199,7 +199,7 @@ TEST(RealtimeTest, Base_Long) {
         Device dev;
         asio::io_context context;
         TestTable.clear();
-        std::thread first(StartTestServer, &context, 555);
+        std::thread first(StartTestServer, &context, 555U);
         auto ret = dev.start();
 
         EXPECT_TRUE(dev.started());
@@ -230,7 +230,7 @@ TEST(RealtimeTest, Base_Long) {
         Device dev;
         asio::io_context context;
         TestTable.clear();
-        std::thread first(StartTestServer, &context, 555);
+        std::thread first(StartTestServer, &context, 555U);
         auto ret = dev.start();
 
         EXPECT_TRUE(dev.started());

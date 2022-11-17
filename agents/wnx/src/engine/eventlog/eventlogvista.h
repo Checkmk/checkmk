@@ -26,7 +26,7 @@ constexpr int EVENT_BLOCK_SIZE = 16;
 
 bool IsEvtApiAvailable() noexcept;
 
-class EventLogVista : public EventLogBase {
+class EventLogVista final : public EventLogBase {
 public:
     explicit EventLogVista(const std::wstring &path);
     EventLogVista(const EventLogVista &) = delete;

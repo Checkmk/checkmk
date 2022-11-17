@@ -20,6 +20,7 @@
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_process.h"
+namespace fs = std::filesystem;
 
 namespace cma::tools::zip {
 // usually this pointer comes from Windows API
@@ -57,10 +58,10 @@ static void InitVariantFolderIetms(VARIANT &var, FolderItems *fi) {
 }
 
 static HRESULT UnzipExec(Folder *to, FolderItems *fi) {
-    VARIANT options{0};
+    VARIANT options = {};
     InitVariantZipOptions(options);
 
-    VARIANT items{0};
+    VARIANT items = {};
     InitVariantFolderIetms(items, fi);
 
     return to->CopyHere(items, options);
@@ -68,10 +69,10 @@ static HRESULT UnzipExec(Folder *to, FolderItems *fi) {
 
 static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
                                              const wtools::Bstr &bstr) {
-    VARIANT variantDir{0};
-    InitVariant(variantDir, bstr.bstr());
+    VARIANT variant_dir = {};
+    InitVariant(variant_dir, bstr.bstr());
     Folder *folder = nullptr;
-    auto result = dispatch->NameSpace(variantDir, &folder);
+    auto result = dispatch->NameSpace(variant_dir, &folder);
 
     if (!SUCCEEDED(result)) {
         XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", result);
@@ -83,7 +84,6 @@ static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
 
 static bool CheckTheParameters(std::filesystem::path file,
                                std::filesystem::path dir) {
-    namespace fs = std::filesystem;
     if (!fs::exists(file) || !fs::is_regular_file(file)) {
         XLOG::l("File '{}' is absent or not suitable", file);
         return false;

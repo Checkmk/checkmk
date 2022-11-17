@@ -83,7 +83,7 @@ private:
     std::unordered_map<std::string, Line> cache_;
 };
 
-class MrpeProvider : public Asynchronous {
+class MrpeProvider final : public Asynchronous {
 public:
     MrpeProvider() : Asynchronous(cma::section::kMrpe) {}
 

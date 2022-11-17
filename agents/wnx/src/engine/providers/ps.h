@@ -22,7 +22,7 @@ constexpr std::wstring_view kSepString = L",";
 
 time_t ConvertWmiTimeToHumanTime(const std::string &creation_date);
 
-class Ps : public Asynchronous {
+class Ps final : public Asynchronous {
 public:
     Ps() : Asynchronous(cma::section::kPsName, '\t') {}
 

@@ -1038,6 +1038,10 @@ msgstr "500.0+ミリ秒"
 msgid "500.000 Services"
 msgstr "500.000サービス"
 
+#, fuzzy
+msgid "50th percentile"
+msgstr "パーセンタイル"
+
 msgid "6 months"
 msgstr "6ヶ月"
 
@@ -1070,6 +1074,14 @@ msgstr "86% - 1.5 標準偏差"
 
 msgid "95% - Two standard deviations"
 msgstr "95% - 2つの標準偏差"
+
+#, fuzzy
+msgid "95th percentile"
+msgstr "パーセンタイル"
+
+#, fuzzy
+msgid "99th percentile"
+msgstr "パーセンタイル"
 
 msgid "99th percentile request latency"
 msgstr "99%リクエストレイテンシー"
@@ -1777,8 +1789,20 @@ msgstr "A"
 msgid "A BI pack with this ID already exists."
 msgstr "このIDのBIパックはすでに存在します。"
 
+msgid ""
+"A Deployment enters various states during its lifecycle. Depending on this a "
+"Deployment may present different conditions. You can set a time for how long "
+"a condition is allowed to be in a certain state before the check alerts."
+msgstr ""
+
 msgid "A Multisite view"
 msgstr "マルチサイトビュー"
+
+msgid ""
+"A Pod's status depends on an array of conditions through which the Pod has "
+"or has not yet passed. You can set a time for how long a condition is "
+"allowed to be in a failed state before the check alerts."
+msgstr ""
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -10082,6 +10106,15 @@ msgid ""
 "disappear frequently."
 msgstr ""
 
+#, python-format
+msgid ""
+"Configure the grouping of indices. Elasticsearch can for example be "
+"configured to automatically add a timestamp to index names, see <a href=%s "
+"target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
+"can eg. be configured to accumulate all indices which only differ in the "
+"trailing timestamp into a single service."
+msgstr ""
+
 msgid ""
 "Configure the hosts for this notification. Without prefix, only exact, case "
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
@@ -13965,6 +13998,10 @@ msgstr "ディスカバリーモード"
 msgid "Discovery of Datadog monitors"
 msgstr "Datadogモニターの検出"
 
+#, fuzzy
+msgid "Discovery of Elasticsearch indices"
+msgstr "Elasticsearchインデックス"
+
 msgid "Discovery of empty DHCP pools"
 msgstr "空のDHCPプールの検出"
 
@@ -14694,6 +14731,10 @@ msgstr "完全にゼロのメトリックをグラフ化しないでください
 
 msgid "Do not group"
 msgstr "グループ化しないでください"
+
+#, fuzzy
+msgid "Do not group indices"
+msgstr "インターフェイスをグループ化しないでください"
 
 msgid "Do not group interfaces"
 msgstr "インターフェイスをグループ化しないでください"
@@ -19131,31 +19172,35 @@ msgid "GCP status product selection"
 msgstr "連絡先の選択"
 
 #, fuzzy
-msgid "GCP/Cloud Run Cpu"
+msgid "GCP/Cloud Run CPU utilization"
 msgstr "GCP/Cloud Runネットワーク"
 
 #, fuzzy
-msgid "GCP/Cloud Run Memory"
-msgstr "GCP/Cloud Runネットワーク"
-
-msgid "GCP/Cloud Run Network"
+msgid "GCP/Cloud Run memory utilization"
 msgstr "GCP/Cloud Runネットワーク"
 
 #, fuzzy
-msgid "GCP/Cloud Run Requests"
+msgid "GCP/Cloud Run network"
 msgstr "GCP/Cloud Runネットワーク"
 
-msgid "GCP/Cloud SQL CPU"
-msgstr ""
+#, fuzzy
+msgid "GCP/Cloud Run requests"
+msgstr "GCP/Cloud Runネットワーク"
 
-msgid "GCP/Cloud SQL Network"
+#, fuzzy
+msgid "GCP/Cloud SQL CPU utilization"
 msgstr "GCP/Cloud SQLネットワーク"
 
 msgid "GCP/Cloud SQL disk"
 msgstr "GCP/Cloud SQLディスク"
 
-msgid "GCP/Cloud SQL memory"
+#, fuzzy
+msgid "GCP/Cloud SQL memory utilization"
 msgstr "GCP/Cloud SQL メモリー"
+
+#, fuzzy
+msgid "GCP/Cloud SQL network"
+msgstr "GCP/Cloud SQLネットワーク"
 
 #, fuzzy
 msgid "GCP/Cloud SQL replication lag"
@@ -19176,8 +19221,9 @@ msgstr "インスタンスの自動検出"
 msgid "GCP/Function network"
 msgstr "GCP/機能ネットワーク"
 
-msgid "GCP/GCE CPU"
-msgstr ""
+#, fuzzy
+msgid "GCP/GCE CPU utilization"
+msgstr "CPU使用率"
 
 msgid "GCP/GCE disk IO"
 msgstr "GCP/GCEのディスクIO"
@@ -19186,17 +19232,20 @@ msgstr "GCP/GCEのディスクIO"
 msgid "GCP/GCE storage IO"
 msgstr "GCP/GCEのディスクIO"
 
-msgid "GCP/GCS Network"
+#, fuzzy
+msgid "GCP/GCS network"
 msgstr "GCP/GCSネットワーク"
 
-msgid "GCP/GCS Objects"
+#, fuzzy
+msgid "GCP/GCS objects"
 msgstr "GCP/GCS オブジェクト"
 
-msgid "GCP/GCS Requests"
+#, fuzzy
+msgid "GCP/GCS requests"
 msgstr "GCP/GCS リクエスト"
 
 #, fuzzy
-msgid "GCP/HTTP(S) load balancer Latencies"
+msgid "GCP/HTTP(S) load balancer latencies"
 msgstr "ロードバランサーのレイテンシー"
 
 #, fuzzy
@@ -19204,16 +19253,16 @@ msgid "GCP/HTTP(S) load balancer requests"
 msgstr "GCP/Cloud Runリクエスト"
 
 #, fuzzy
-msgid "GCP/Memorystore redis CPU"
-msgstr "メモリストア Redis"
+msgid "GCP/Redis CPU utilization"
+msgstr "CPU使用率"
 
 #, fuzzy
-msgid "GCP/Memorystore redis clients connected"
+msgid "GCP/Redis clients connected"
 msgstr "接続されたクライアント"
 
 #, fuzzy
-msgid "GCP/Memorystore redis memory"
-msgstr "接続されたクライアント"
+msgid "GCP/Redis memory utilization"
+msgstr "メモリ使用率"
 
 #, fuzzy
 msgid "GCP/Redis replication lag"
@@ -19638,6 +19687,31 @@ msgid ""
 "created for each subgroup."
 msgstr ""
 
+#, fuzzy
+msgid "Group indices"
+msgstr "グループ名"
+
+msgid ""
+"Group indices according to the following regular expressions. For each "
+"regular expression, Checkmk traverses through the list of indices reported "
+"by the Elasticsearch special agent. If an index matches, it is added to a "
+"group. The group name is determined by the part of the index name which "
+"matches the regular expression. For example, suppose you have the following "
+"five indices:<ul><li>my-index-2022.10</li><li>my-index-2022.11</li><li>my-"
+"other-index-2021-01-01</li><li>my-other-index-2021-01-02</li><li>undated-"
+"index</li></ul>Using the regular expression <tt>([a-z]|-)+[a-z]</tt>, you "
+"would configure the following groups:<ul><li>my-index (contains my-"
+"index-2022.10, my-index-2022.11)</li><li>my-other-index (contains my-other-"
+"index-2021-01-01, my-other-index-2021-01-02)</li><li>undated-index (contains "
+"undated-index, so effectively ungrouped)</li></ul>The same grouping could be "
+"achieved using the two regular expressions <tt>my-index</tt> and <tt>my-"
+"other-index</tt>, however, such a list can be cumbersome to maintain in case "
+"of a large number of indices. Note that indices which do not match any of "
+"the configured regular expressions will be discovered as single services. "
+"Conversely, any index that is part of at least one group will not be "
+"discovered as a single service."
+msgstr ""
+
 msgid "Group interface presence"
 msgstr "グループインターフェイスの存在"
 
@@ -19670,6 +19744,10 @@ msgstr ""
 
 msgid "Grouping expression"
 msgstr "グルーピング表現"
+
+#, fuzzy
+msgid "Grouping of indices"
+msgstr "テーブルビューでのサービスのグループ化"
 
 msgid "Grouping of services in table views"
 msgstr "テーブルビューでのサービスのグループ化"
@@ -23699,6 +23777,11 @@ msgstr ""
 "リーンアップ</i>アクションを使用する必要があります。"
 
 msgid ""
+"In case you want to disable this instance, not acquire data from ntopng and "
+"disable all ntopng integration views, let this checkbox unchecked."
+msgstr ""
+
+msgid ""
 "In case you want to either map a state determined by a check to another "
 "state or want to rewrite the status detail of a check result, you can use "
 "this rule."
@@ -26126,6 +26209,10 @@ msgstr "エラー率のレベル"
 
 msgid "Levels for established connections"
 msgstr "確立された接続のレベル"
+
+#, fuzzy
+msgid "Levels for execution time"
+msgstr "チェックポイント時間のレベル"
 
 msgid "Levels for failed capacity in percent"
 msgstr "失敗した容量のレベル(パーセント)"
@@ -29039,9 +29126,6 @@ msgstr "使用メモリ %"
 msgid "Memory used by caches"
 msgstr "キャッシュによって使用されるメモリ"
 
-msgid "Memory utilitzation"
-msgstr "メモリ使用率"
-
 #, fuzzy
 msgid "Memory utilization"
 msgstr "メモリ使用率"
@@ -29855,6 +29939,12 @@ msgstr "MTreeの状態が '%s'の場合の状態の監視"
 msgid "Monitoring state if VM state is %s"
 msgstr "VMの状態が %s の場合の監視状態"
 
+#, fuzzy
+msgid ""
+"Monitoring state if a container terminates unsuccessfully (non-zero exit "
+"code)"
+msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
+
 #, fuzzy, python-format
 msgid "Monitoring state if a monitored %s is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
@@ -29879,6 +29969,9 @@ msgstr "サービスが非アクティブ場合、状態を監視する"
 
 msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
+
+msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
+msgstr ""
 
 #, fuzzy
 msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
@@ -33805,6 +33898,10 @@ msgstr "このサービスのパラメーター"
 #, fuzzy
 msgid "Parameters for the replication lag"
 msgstr "このサービスのパラメーター"
+
+#, fuzzy
+msgid "Parameters for the requests"
+msgstr "バケットリクエストのパラメーター"
 
 msgid "Parameters for this host"
 msgstr "このホストのパラメーター"
@@ -43730,9 +43827,6 @@ msgstr "dmidecodeを介したインベントリのシステム情報(Windows)"
 msgid "System MIBs"
 msgstr "システムMIB"
 
-msgid "System Memory utilitzation"
-msgstr "システムメモリ使用率"
-
 msgid "System Number"
 msgstr "システム番号"
 
@@ -43744,6 +43838,10 @@ msgstr "システム統計"
 
 msgid "System global targets"
 msgstr "システムグローバルターゲット"
+
+#, fuzzy
+msgid "System memory utilization"
+msgstr "システムメモリ使用率"
 
 msgid "System messages"
 msgstr "システムメッセージ"
@@ -47182,6 +47280,15 @@ msgstr ""
 "レシートを使用して、レシートAPIを定期的にポーリングし、通知のステータスを取得"
 "できます。詳細については、<a href=\"https://pushover.net/api#receipt\" "
 "target=\"_blank\">プッシュオーバーの受信とコールバック</a>をご覧ください。"
+
+msgid ""
+"The received data from ntopng depends on the rights of the corresponding "
+"ntopng user. Therefore the mapping mechanism of the current Checkmk user to "
+"his corresponding ntopng user can be set here. If your Checkmk username "
+"equals your ntopng username, choose the first option. In case your ntopng "
+"username does not equal your Checkmk username, you can define your ntopng "
+"username as 'ntopng Username' in your user settings under 'Identity'."
+msgstr ""
 
 msgid ""
 "The renaming of hosts is a complex operation since a host's name is being "
@@ -51051,6 +51158,16 @@ msgstr ""
 "プロイするためのものです。"
 
 msgid ""
+"This ruleset is relevant for Kubernetes replicas. You can set a maximum "
+"allowed duration during which replicas may be in a not ready or not up-to-"
+"date state. For DaemonSets, you may additionally specify the duration for "
+"which there may be a positive number of misscheduled replicas. Keep in mind "
+"that replicas may temporarily be in these states during the process of an "
+"update. Therefore, it is recommended to always have a grace period "
+"configured."
+msgstr ""
+
+msgid ""
 "This ruleset is similar to 'Disabled services', but selects checks to be "
 "disabled by their <b>type</b>. This allows you to disable certain technical "
 "implementations such as filesystem checks via SNMP on hosts that also have "
@@ -54877,6 +54994,10 @@ msgid "Use the multipath alias as service name, if one is set"
 msgstr "マルチパスエイリアスが設定されている場合は、サービス名として使用します"
 
 msgid "Use the name specified in the ESX system"
+msgstr "ESXシステムで指定された名前を使用します"
+
+#, fuzzy
+msgid "Use the ntopng username as configured in the User settings"
 msgstr "ESXシステムで指定された名前を使用します"
 
 msgid ""
@@ -61745,6 +61866,19 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, fuzzy
+#~| msgid "Memorystore Redis"
+#~ msgid "GCP/Memorystore redis CPU"
+#~ msgstr "メモリストア Redis"
+
+#, fuzzy
+#~| msgid "Clients connected"
+#~ msgid "GCP/Memorystore redis memory"
+#~ msgstr "接続されたクライアント"
+
+#~ msgid "Memory utilitzation"
+#~ msgstr "メモリ使用率"
+
 #, python-format
 #~ msgid ""
 #~ "<b>Note</b>: On the agent side, TLS is currently only supported on "
@@ -63742,12 +63876,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "User Interface"
 #~ msgstr "ユーザーインターフェース"
-
-#, fuzzy
-#~| msgid "Monitoring state if a monitored service is not found at all."
-#~ msgid ""
-#~ "Monitoring state if a container terminates unsuccessfully (exit code 1)."
-#~ msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
 #, fuzzy
 #~| msgid "# Containers"

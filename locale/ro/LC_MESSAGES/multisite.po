@@ -1067,6 +1067,10 @@ msgid "500.000 Services"
 msgstr "servicii"
 
 #, fuzzy
+msgid "50th percentile"
+msgstr "trei nivele"
+
+#, fuzzy
 msgid "6 months"
 msgstr "2 ore"
 
@@ -1101,6 +1105,14 @@ msgstr ""
 
 msgid "95% - Two standard deviations"
 msgstr ""
+
+#, fuzzy
+msgid "95th percentile"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "99th percentile"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "99th percentile request latency"
@@ -1622,9 +1634,21 @@ msgstr ""
 msgid "A BI pack with this ID already exists."
 msgstr "O regulă cu acest ID există deja."
 
+msgid ""
+"A Deployment enters various states during its lifecycle. Depending on this a "
+"Deployment may present different conditions. You can set a time for how long "
+"a condition is allowed to be in a certain state before the check alerts."
+msgstr ""
+
 # TODO
 msgid "A Multisite view"
 msgstr "Un Multisite view"
+
+msgid ""
+"A Pod's status depends on an array of conditions through which the Pod has "
+"or has not yet passed. You can set a time for how long a condition is "
+"allowed to be in a failed state before the check alerts."
+msgstr ""
 
 msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
@@ -9948,6 +9972,15 @@ msgid ""
 "disappear frequently."
 msgstr ""
 
+#, python-format
+msgid ""
+"Configure the grouping of indices. Elasticsearch can for example be "
+"configured to automatically add a timestamp to index names, see <a href=%s "
+"target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
+"can eg. be configured to accumulate all indices which only differ in the "
+"trailing timestamp into a single service."
+msgstr ""
+
 msgid ""
 "Configure the hosts for this notification. Without prefix, only exact, case "
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
@@ -14068,6 +14101,10 @@ msgstr "Inventariere in masa"
 msgid "Discovery of Datadog monitors"
 msgstr ""
 
+#, fuzzy
+msgid "Discovery of Elasticsearch indices"
+msgstr "Cautare rapida"
+
 msgid "Discovery of empty DHCP pools"
 msgstr ""
 
@@ -14830,6 +14867,10 @@ msgstr ""
 
 msgid "Do not group"
 msgstr ""
+
+#, fuzzy
+msgid "Do not group indices"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Do not group interfaces"
@@ -19353,26 +19394,23 @@ msgid "GCP status product selection"
 msgstr ""
 
 #, fuzzy
-msgid "GCP/Cloud Run Cpu"
+msgid "GCP/Cloud Run CPU utilization"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "GCP/Cloud Run Memory"
+msgid "GCP/Cloud Run memory utilization"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "GCP/Cloud Run Network"
+msgid "GCP/Cloud Run network"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "GCP/Cloud Run Requests"
+msgid "GCP/Cloud Run requests"
 msgstr "Adresă"
 
-msgid "GCP/Cloud SQL CPU"
-msgstr ""
-
 #, fuzzy
-msgid "GCP/Cloud SQL Network"
+msgid "GCP/Cloud SQL CPU utilization"
 msgstr "Adresă"
 
 #, fuzzy
@@ -19380,7 +19418,11 @@ msgid "GCP/Cloud SQL disk"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "GCP/Cloud SQL memory"
+msgid "GCP/Cloud SQL memory utilization"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud SQL network"
 msgstr "Adresă"
 
 #, fuzzy
@@ -19407,8 +19449,9 @@ msgstr "Adaugă instanță NGINX"
 msgid "GCP/Function network"
 msgstr "Conexiune Noua"
 
-msgid "GCP/GCE CPU"
-msgstr ""
+#, fuzzy
+msgid "GCP/GCE CPU utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "GCP/GCE disk IO"
@@ -19419,34 +19462,36 @@ msgid "GCP/GCE storage IO"
 msgstr "Adresă"
 
 #, fuzzy
-msgid "GCP/GCS Network"
+msgid "GCP/GCS network"
 msgstr "Adresă"
 
-msgid "GCP/GCS Objects"
-msgstr ""
-
 #, fuzzy
-msgid "GCP/GCS Requests"
+msgid "GCP/GCS objects"
 msgstr "cereri"
 
-msgid "GCP/HTTP(S) load balancer Latencies"
-msgstr ""
+#, fuzzy
+msgid "GCP/GCS requests"
+msgstr "cereri"
+
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer latencies"
+msgstr "cereri"
 
 #, fuzzy
 msgid "GCP/HTTP(S) load balancer requests"
 msgstr "cereri"
 
 #, fuzzy
-msgid "GCP/Memorystore redis CPU"
-msgstr "cereri"
+msgid "GCP/Redis CPU utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
-msgid "GCP/Memorystore redis clients connected"
+msgid "GCP/Redis clients connected"
 msgstr "Conexiune Noua"
 
 #, fuzzy
-msgid "GCP/Memorystore redis memory"
-msgstr "Conexiune Noua"
+msgid "GCP/Redis memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "GCP/Redis replication lag"
@@ -19886,6 +19931,31 @@ msgid ""
 "created for each subgroup."
 msgstr ""
 
+#, fuzzy
+msgid "Group indices"
+msgstr "Numele Elementului"
+
+msgid ""
+"Group indices according to the following regular expressions. For each "
+"regular expression, Checkmk traverses through the list of indices reported "
+"by the Elasticsearch special agent. If an index matches, it is added to a "
+"group. The group name is determined by the part of the index name which "
+"matches the regular expression. For example, suppose you have the following "
+"five indices:<ul><li>my-index-2022.10</li><li>my-index-2022.11</li><li>my-"
+"other-index-2021-01-01</li><li>my-other-index-2021-01-02</li><li>undated-"
+"index</li></ul>Using the regular expression <tt>([a-z]|-)+[a-z]</tt>, you "
+"would configure the following groups:<ul><li>my-index (contains my-"
+"index-2022.10, my-index-2022.11)</li><li>my-other-index (contains my-other-"
+"index-2021-01-01, my-other-index-2021-01-02)</li><li>undated-index (contains "
+"undated-index, so effectively ungrouped)</li></ul>The same grouping could be "
+"achieved using the two regular expressions <tt>my-index</tt> and <tt>my-"
+"other-index</tt>, however, such a list can be cumbersome to maintain in case "
+"of a large number of indices. Note that indices which do not match any of "
+"the configured regular expressions will be discovered as single services. "
+"Conversely, any index that is part of at least one group will not be "
+"discovered as a single service."
+msgstr ""
+
 msgid "Group interface presence"
 msgstr ""
 
@@ -19921,6 +19991,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Grouping expression"
+msgstr "sesiuni"
+
+#, fuzzy
+msgid "Grouping of indices"
 msgstr "sesiuni"
 
 msgid "Grouping of services in table views"
@@ -23443,6 +23517,11 @@ msgid ""
 msgstr ""
 
 msgid ""
+"In case you want to disable this instance, not acquire data from ntopng and "
+"disable all ntopng integration views, let this checkbox unchecked."
+msgstr ""
+
+msgid ""
 "In case you want to either map a state determined by a check to another "
 "state or want to rewrite the status detail of a check result, you can use "
 "this rule."
@@ -25918,6 +25997,10 @@ msgstr ""
 #, fuzzy
 msgid "Levels for established connections"
 msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Levels for execution time"
+msgstr "Verificări active"
 
 #, fuzzy
 msgid "Levels for failed capacity in percent"
@@ -29076,10 +29159,6 @@ msgid "Memory used by caches"
 msgstr ""
 
 #, fuzzy
-msgid "Memory utilitzation"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "Memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -29958,6 +30037,11 @@ msgstr ""
 msgid "Monitoring state if VM state is %s"
 msgstr ""
 
+msgid ""
+"Monitoring state if a container terminates unsuccessfully (non-zero exit "
+"code)"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Monitoring state if a monitored %s is not found at all."
 msgstr " pe siteul de monitorizare: "
@@ -29985,6 +30069,9 @@ msgid "Monitoring state if service is inactive"
 msgstr " pe siteul de monitorizare: "
 
 msgid "Monitoring state if task is not enabled"
+msgstr ""
+
+msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
 msgstr ""
 
 #, fuzzy
@@ -34081,6 +34168,10 @@ msgstr "trei nivele"
 
 #, fuzzy
 msgid "Parameters for the replication lag"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Parameters for the requests"
 msgstr "trei nivele"
 
 msgid "Parameters for this host"
@@ -44226,10 +44317,6 @@ msgstr ""
 msgid "System MIBs"
 msgstr ""
 
-#, fuzzy
-msgid "System Memory utilitzation"
-msgstr "Dezactiveaza Notificarile"
-
 msgid "System Number"
 msgstr ""
 
@@ -44242,6 +44329,10 @@ msgstr ""
 
 msgid "System global targets"
 msgstr ""
+
+#, fuzzy
+msgid "System memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "System messages"
@@ -47266,6 +47357,15 @@ msgid ""
 "The receipt can be used to periodically poll receipts API to get the status "
 "of the notification. See <a href=\"https://pushover.net/api#receipt\" target="
 "\"_blank\">Pushover receipts and callbacks</a> for more information."
+msgstr ""
+
+msgid ""
+"The received data from ntopng depends on the rights of the corresponding "
+"ntopng user. Therefore the mapping mechanism of the current Checkmk user to "
+"his corresponding ntopng user can be set here. If your Checkmk username "
+"equals your ntopng username, choose the first option. In case your ntopng "
+"username does not equal your Checkmk username, you can define your ntopng "
+"username as 'ntopng Username' in your user settings under 'Identity'."
 msgstr ""
 
 msgid ""
@@ -50400,6 +50500,16 @@ msgstr ""
 
 msgid ""
 "This ruleset is for deploying two plugins for monitoring Unitrends software."
+msgstr ""
+
+msgid ""
+"This ruleset is relevant for Kubernetes replicas. You can set a maximum "
+"allowed duration during which replicas may be in a not ready or not up-to-"
+"date state. For DaemonSets, you may additionally specify the duration for "
+"which there may be a positive number of misscheduled replicas. Keep in mind "
+"that replicas may temporarily be in these states during the process of an "
+"update. Therefore, it is recommended to always have a grace period "
+"configured."
 msgstr ""
 
 msgid ""
@@ -54245,6 +54355,9 @@ msgid "Use the multipath alias as service name, if one is set"
 msgstr ""
 
 msgid "Use the name specified in the ESX system"
+msgstr ""
+
+msgid "Use the ntopng username as configured in the User settings"
 msgstr ""
 
 msgid ""
@@ -60622,6 +60735,18 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "GCP/Memorystore redis CPU"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid "GCP/Memorystore redis memory"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
+#~ msgid "Memory utilitzation"
+#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Allow non-TLS connections"

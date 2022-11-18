@@ -94,14 +94,15 @@ size2 = SizeBasic(
         ),
     ],
 )
-def test_network_fs_mounts_discovery(  # type:ignore[no-untyped-def]
+def test_network_fs_mounts_discovery(
     string_table: StringTable,
     discovery_result: DiscoveryResult,
-):
+) -> None:
     section = network_fs_mounts.parse_network_fs_mounts(string_table)
     assert list(network_fs_mounts.discover_network_fs_mounts(section)) == discovery_result
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "string_table, item, check_result",
     [
@@ -195,12 +196,11 @@ def test_network_fs_mounts_discovery(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_network_fs_mounts_check(  # type:ignore[no-untyped-def]
+def test_network_fs_mounts_check(
     string_table: StringTable,
     item: str,
     check_result: CheckResult,
-    value_store_patch,
-):
+) -> None:
     section = network_fs_mounts.parse_network_fs_mounts(string_table)
     with on_time(*NOW_SIMULATED):
         actual_check_results = list(
@@ -222,6 +222,7 @@ def test_network_fs_mounts_check(  # type:ignore[no-untyped-def]
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "string_table, item, check_result",
     [
@@ -243,12 +244,11 @@ def test_network_fs_mounts_check(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_nfsmount_v2_check(  # type:ignore[no-untyped-def]
+def test_nfsmount_v2_check(
     string_table: StringTable,
     item: str,
     check_result: CheckResult,
-    value_store_patch,
-):
+) -> None:
     section = network_fs_mounts.parse_nfsmounts_v2(string_table)
     with on_time(*NOW_SIMULATED):
         assert (

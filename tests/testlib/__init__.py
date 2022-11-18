@@ -11,7 +11,7 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -292,7 +292,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-def wait_until_liveproxyd_ready(site: Site, site_ids: Sequence[str]) -> None:
+def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
     def _config_available() -> bool:
         return site.file_exists("etc/check_mk/liveproxyd.mk")
 

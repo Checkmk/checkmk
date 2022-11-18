@@ -75,7 +75,7 @@ DEVICE_DATA_OTHER = parse_mobileiron(
         ("290101", -218559734),
     ],
 )
-def test_try_calculation_age(string, expected_results) -> None:  # type:ignore[no-untyped-def]
+def test_try_calculation_age(string: str, expected_results: int) -> None:
     with on_time(1643360266, "UTC"):
         assert _try_calculation_age(string) == expected_results
 

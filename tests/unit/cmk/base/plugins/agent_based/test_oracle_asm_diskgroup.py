@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import on_time
 
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as asm
+from cmk.base.api.agent_based.checking_classes import CheckResult
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     Metric,
@@ -238,7 +242,7 @@ def value_store_fixture(monkeypatch):
         ),
     ],
 )
-def test_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse(string_table: StringTable, expected: asm.Section) -> None:
     parsed_section = asm.parse_oracle_asm_diskgroup(string_table)
     assert parsed_section == expected
 
@@ -268,11 +272,12 @@ def test_parse(string_table, expected) -> None:  # type:ignore[no-untyped-def]
         (SECTION_OLD_DISMOUNTED, [Service(item=ITEM)]),
     ],
 )
-def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
+def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
     yielded_services = list(asm.discovery_oracle_asm_diskgroup(section))
     assert yielded_services == expected
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "section, params, expected",
     [
@@ -445,11 +450,12 @@ def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check(value_store_patch, section, params, expected) -> None:  # type:ignore[no-untyped-def]
+def test_check(section: asm.Section, params: Mapping[str, object], expected: CheckResult) -> None:
     with on_time(*NOW_SIMULATED):
         assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "section, params, expected",
     [
@@ -493,8 +499,8 @@ def test_check(value_store_patch, section, params, expected) -> None:  # type:ig
         ),
     ],
 )
-def test_cluster(  # type:ignore[no-untyped-def]
-    value_store_patch, section, params, expected
+def test_cluster(
+    section: Mapping[str, asm.Section], params: Mapping[str, object], expected: CheckResult
 ) -> None:
     with on_time(*NOW_SIMULATED):
         yielded_results = list(asm.cluster_check_oracle_asm_diskgroup(ITEM, params, section))

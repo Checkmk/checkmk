@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Mapping, Sequence
 from copy import copy
 
 import pytest
 
 from tests.testlib import on_time
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import job
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
@@ -134,7 +136,7 @@ def _modify_start_time(
         ("35:30:2.12", 35 * 60**2 + 30 * 60 + 2.12),
     ],
 )
-def test_job_parse_real_time(timestr, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
     assert job._job_parse_real_time(timestr) == expected_result
 
 
@@ -256,7 +258,7 @@ def test_job_parse_real_time(timestr, expected_result) -> None:  # type:ignore[n
         ),
     ],
 )
-def test_parse(string_table, expected_parsed_data) -> None:  # type:ignore[no-untyped-def]
+def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> None:
     assert job.parse_job(string_table) == expected_parsed_data
 
 
@@ -531,6 +533,11 @@ def test_process_job_stats(
         ),
     ],
 )
-def test_check_job(item, params, section, expected_results) -> None:  # type:ignore[no-untyped-def]
+def test_check_job(
+    item: str,
+    params: Mapping[str, object],
+    section: job.Section,
+    expected_results: Sequence[Result | Metric],
+) -> None:
     with on_time(*TIME):
         assert list(job.check_job(item, params, section)) == expected_results

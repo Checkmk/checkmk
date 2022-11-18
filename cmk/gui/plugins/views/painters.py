@@ -26,8 +26,8 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.painter_options import paint_age, painter_option_registry, PainterOption
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
+from cmk.gui.painter_options import paint_age, PainterOption, ViewPainterOptionRegistry
+from cmk.gui.painters.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painters.v0.helpers import (
     get_label_sources,
     get_tag_groups,
@@ -66,6 +66,210 @@ from cmk.gui.view_utils import (
 )
 from cmk.gui.visual_link import render_link_to_view
 
+
+def register(
+    painter_option_registry: ViewPainterOptionRegistry, painter_registry: PainterRegistry
+) -> None:
+    painter_option_registry.register(PainterOptionTimestampFormat)
+    painter_option_registry.register(PainterOptionTimestampDate)
+    painter_option_registry.register(PainterOptionMatrixOmitUniform)
+    painter_registry.register(PainterSiteIcon)
+    painter_registry.register(PainterSitenamePlain)
+    painter_registry.register(PainterSitealias)
+    painter_registry.register(PainterServiceState)
+    painter_registry.register(PainterSvcPluginOutput)
+    painter_registry.register(PainterSvcLongPluginOutput)
+    painter_registry.register(PainterSvcPerfData)
+    painter_registry.register(PainterSvcMetrics)
+    painter_registry.register(PainterSvcPerfVal01)
+    painter_registry.register(PainterSvcPerfVal02)
+    painter_registry.register(PainterSvcPerfVal03)
+    painter_registry.register(PainterSvcPerfVal04)
+    painter_registry.register(PainterSvcPerfVal05)
+    painter_registry.register(PainterSvcPerfVal06)
+    painter_registry.register(PainterSvcPerfVal07)
+    painter_registry.register(PainterSvcPerfVal08)
+    painter_registry.register(PainterSvcPerfVal09)
+    painter_registry.register(PainterSvcPerfVal10)
+    painter_registry.register(PainterSvcCheckCommand)
+    painter_registry.register(PainterSvcCheckCommandExpanded)
+    painter_registry.register(PainterSvcContacts)
+    painter_registry.register(PainterSvcContactGroups)
+    painter_registry.register(PainterServiceDescription)
+    painter_registry.register(PainterServiceDisplayName)
+    painter_registry.register(PainterSvcStateAge)
+    painter_registry.register(PainterSvcCheckAge)
+    painter_registry.register(PainterSvcCheckCacheInfo)
+    painter_registry.register(PainterSvcNextCheck)
+    painter_registry.register(PainterSvcLastTimeOk)
+    painter_registry.register(PainterSvcNextNotification)
+    painter_registry.register(PainterSvcNotificationPostponementReason)
+    painter_registry.register(PainterSvcLastNotification)
+    painter_registry.register(PainterSvcNotificationNumber)
+    painter_registry.register(PainterSvcCheckLatency)
+    painter_registry.register(PainterSvcCheckDuration)
+    painter_registry.register(PainterSvcAttempt)
+    painter_registry.register(PainterSvcNormalInterval)
+    painter_registry.register(PainterSvcRetryInterval)
+    painter_registry.register(PainterSvcCheckInterval)
+    painter_registry.register(PainterSvcCheckType)
+    painter_registry.register(PainterSvcInDowntime)
+    painter_registry.register(PainterSvcInNotifper)
+    painter_registry.register(PainterSvcNotifper)
+    painter_registry.register(PainterSvcCheckPeriod)
+    painter_registry.register(PainterSvcFlapping)
+    painter_registry.register(PainterSvcNotificationsEnabled)
+    painter_registry.register(PainterSvcIsActive)
+    painter_registry.register(PainterSvcGroupMemberlist)
+    painter_registry.register(PainterCheckManpage)
+    painter_registry.register(PainterSvcComments)
+    painter_registry.register(PainterSvcAcknowledged)
+    painter_registry.register(PainterSvcCustomNotes)
+    painter_registry.register(PainterSvcStaleness)
+    painter_registry.register(PainterSvcIsStale)
+    painter_registry.register(PainterSvcServicelevel)
+    painter_registry.register(PainterServiceCustomVariables)
+    painter_registry.register(PainterServiceCustomVariable)
+    painter_registry.register(PainterHostCustomVariable)
+    painter_registry.register(PainterHostState)
+    painter_registry.register(PainterHostStateOnechar)
+    painter_registry.register(PainterHostPluginOutput)
+    painter_registry.register(PainterHostPerfData)
+    painter_registry.register(PainterHostCheckCommand)
+    painter_registry.register(PainterHostCheckCommandExpanded)
+    painter_registry.register(PainterHostStateAge)
+    painter_registry.register(PainterHostCheckAge)
+    painter_registry.register(PainterHostNextCheck)
+    painter_registry.register(PainterHostNextNotification)
+    painter_registry.register(PainterHostNotificationPostponementReason)
+    painter_registry.register(PainterHostLastNotification)
+    painter_registry.register(PainterHostCheckLatency)
+    painter_registry.register(PainterHostCheckDuration)
+    painter_registry.register(PainterHostAttempt)
+    painter_registry.register(PainterHostNormalInterval)
+    painter_registry.register(PainterHostRetryInterval)
+    painter_registry.register(PainterHostCheckInterval)
+    painter_registry.register(PainterHostCheckType)
+    painter_registry.register(PainterHostInNotifper)
+    painter_registry.register(PainterHostNotifper)
+    painter_registry.register(PainterHostNotificationNumber)
+    painter_registry.register(PainterHostFlapping)
+    painter_registry.register(PainterHostIsActive)
+    painter_registry.register(PainterHostNotificationsEnabled)
+    painter_registry.register(PainterHostBlack)
+    painter_registry.register(PainterHostWithState)
+    painter_registry.register(PainterHost)
+    painter_registry.register(PainterAlias)
+    painter_registry.register(PainterHostAddress)
+    painter_registry.register(PainterHostIpv4Address)
+    painter_registry.register(PainterHostIpv6Address)
+    painter_registry.register(PainterHostAddresses)
+    painter_registry.register(PainterHostAddressesAdditional)
+    painter_registry.register(PainterHostAddressFamily)
+    painter_registry.register(PainterHostAddressFamilies)
+    painter_registry.register(PainterNumServices)
+    painter_registry.register(PainterNumServicesOk)
+    painter_registry.register(PainterNumProblems)
+    painter_registry.register(PainterNumServicesWarn)
+    painter_registry.register(PainterNumServicesCrit)
+    painter_registry.register(PainterNumServicesUnknown)
+    painter_registry.register(PainterNumServicesPending)
+    painter_registry.register(PainterHostServices)
+    painter_registry.register(PainterHostParents)
+    painter_registry.register(PainterHostChilds)
+    painter_registry.register(PainterHostGroupMemberlist)
+    painter_registry.register(PainterHostContacts)
+    painter_registry.register(PainterHostContactGroups)
+    painter_registry.register(PainterHostCustomNotes)
+    painter_registry.register(PainterHostComments)
+    painter_registry.register(PainterHostInDowntime)
+    painter_registry.register(PainterHostAcknowledged)
+    painter_registry.register(PainterHostStaleness)
+    painter_registry.register(PainterHostIsStale)
+    painter_registry.register(PainterHostServicelevel)
+    painter_registry.register(PainterHostCustomVariables)
+    painter_registry.register(PainterServiceDiscoveryState)
+    painter_registry.register(PainterServiceDiscoveryCheck)
+    painter_registry.register(PainterServiceDiscoveryService)
+    painter_registry.register(PainterHostgroupHosts)
+    painter_registry.register(PainterHgNumServices)
+    painter_registry.register(PainterHgNumServicesOk)
+    painter_registry.register(PainterHgNumServicesWarn)
+    painter_registry.register(PainterHgNumServicesCrit)
+    painter_registry.register(PainterHgNumServicesUnknown)
+    painter_registry.register(PainterHgNumServicesPending)
+    painter_registry.register(PainterHgNumHostsUp)
+    painter_registry.register(PainterHgNumHostsDown)
+    painter_registry.register(PainterHgNumHostsUnreach)
+    painter_registry.register(PainterHgNumHostsPending)
+    painter_registry.register(PainterHgName)
+    painter_registry.register(PainterHgAlias)
+    painter_registry.register(PainterSgServices)
+    painter_registry.register(PainterSgNumServices)
+    painter_registry.register(PainterSgNumServicesOk)
+    painter_registry.register(PainterSgNumServicesWarn)
+    painter_registry.register(PainterSgNumServicesCrit)
+    painter_registry.register(PainterSgNumServicesUnknown)
+    painter_registry.register(PainterSgNumServicesPending)
+    painter_registry.register(PainterSgName)
+    painter_registry.register(PainterSgAlias)
+    painter_registry.register(PainterCommentId)
+    painter_registry.register(PainterCommentAuthor)
+    painter_registry.register(PainterCommentComment)
+    painter_registry.register(PainterCommentWhat)
+    painter_registry.register(PainterCommentTime)
+    painter_registry.register(PainterCommentExpires)
+    painter_registry.register(PainterCommentEntryType)
+    painter_registry.register(PainterDowntimeId)
+    painter_registry.register(PainterDowntimeAuthor)
+    painter_registry.register(PainterDowntimeComment)
+    painter_registry.register(PainterDowntimeFixed)
+    painter_registry.register(PainterDowntimeOrigin)
+    painter_registry.register(PainterDowntimeWhat)
+    painter_registry.register(PainterDowntimeType)
+    painter_registry.register(PainterDowntimeEntryTime)
+    painter_registry.register(PainterDowntimeStartTime)
+    painter_registry.register(PainterDowntimeEndTime)
+    painter_registry.register(PainterDowntimeDuration)
+    painter_registry.register(PainterLogDetailsHistory)
+    painter_registry.register(PainterLogMessage)
+    painter_registry.register(PainterLogPluginOutput)
+    painter_registry.register(PainterLogWhat)
+    painter_registry.register(PainterLogAttempt)
+    painter_registry.register(PainterLogStateType)
+    painter_registry.register(PainterLogStateInfo)
+    painter_registry.register(PainterLogType)
+    painter_registry.register(PainterLogContactName)
+    painter_registry.register(PainterLogCommand)
+    painter_registry.register(PainterLogIcon)
+    painter_registry.register(PainterLogOptions)
+    painter_registry.register(PainterLogComment)
+    painter_registry.register(PainterLogTime)
+    painter_registry.register(PainterLogLineno)
+    painter_registry.register(PainterLogDate)
+    painter_registry.register(PainterLogState)
+    painter_registry.register(PainterAlertStatsOk)
+    painter_registry.register(PainterAlertStatsWarn)
+    painter_registry.register(PainterAlertStatsCrit)
+    painter_registry.register(PainterAlertStatsUnknown)
+    painter_registry.register(PainterAlertStatsProblem)
+    painter_registry.register(PainterHostTags)
+    painter_registry.register(PainterHostTagsWithTitles)
+    painter_registry.register(PainterServiceTags)
+    painter_registry.register(PainterServiceTagsWithTitles)
+    painter_registry.register(PainterHostLabels)
+    painter_registry.register(PainterServiceLabels)
+    painter_registry.register(PainterHostDockerNode)
+    painter_registry.register(PainterHostSpecificMetric)
+    painter_registry.register(PainterServiceSpecificMetric)
+    painter_registry.register(PainterHostKubernetesCluster)
+    painter_registry.register(PainterHostKubernetesNamespace)
+    painter_registry.register(PainterHostKubernetesDeployment)
+    painter_registry.register(PainterHostKubernetesDaemonset)
+    painter_registry.register(PainterHostKubernetesStatefulset)
+    painter_registry.register(PainterHostKubernetesNode)
+
+
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
 #   |                  |  _ \ __ _(_)_ __ | |_ ___ _ __                    |
@@ -86,7 +290,6 @@ from cmk.gui.visual_link import render_link_to_view
 #   '----------------------------------------------------------------------'
 
 
-@painter_option_registry.register
 class PainterOptionTimestampFormat(PainterOption):
     @property
     def ident(self) -> str:
@@ -108,7 +311,6 @@ class PainterOptionTimestampFormat(PainterOption):
         )
 
 
-@painter_option_registry.register
 class PainterOptionTimestampDate(PainterOption):
     @property
     def ident(self) -> str:
@@ -119,7 +321,6 @@ class PainterOptionTimestampDate(PainterOption):
         return DateFormat()
 
 
-@painter_option_registry.register
 class PainterOptionMatrixOmitUniform(PainterOption):
     @property
     def ident(self) -> str:
@@ -191,7 +392,6 @@ def _paint_day(timestamp: Timestamp) -> CellSpec:
 #   '----------------------------------------------------------------------'
 
 
-@painter_registry.register
 class PainterSiteIcon(Painter):
     @property
     def ident(self) -> str:
@@ -219,7 +419,6 @@ class PainterSiteIcon(Painter):
         return None, ""
 
 
-@painter_registry.register
 class PainterSitenamePlain(Painter):
     @property
     def ident(self) -> str:
@@ -243,7 +442,6 @@ class PainterSitenamePlain(Painter):
         return (None, row["site"])
 
 
-@painter_registry.register
 class PainterSitealias(Painter):
     @property
     def ident(self) -> str:
@@ -313,7 +511,6 @@ def _paint_host_state_short(row: Row, short: bool = False) -> CellSpec:
     )
 
 
-@painter_registry.register
 class PainterServiceState(Painter):
     @property
     def ident(self) -> str:
@@ -340,7 +537,6 @@ class PainterServiceState(Painter):
         return _paint_service_state_short(row)
 
 
-@painter_registry.register
 class PainterSvcPluginOutput(Painter):
     @property
     def ident(self) -> str:
@@ -364,7 +560,6 @@ class PainterSvcPluginOutput(Painter):
         return paint_stalified(row, format_plugin_output(row["service_plugin_output"], row))
 
 
-@painter_registry.register
 class PainterSvcLongPluginOutput(Painter):
     @property
     def ident(self) -> str:
@@ -415,7 +610,6 @@ class PainterSvcLongPluginOutput(Painter):
         return paint_stalified(row, content)
 
 
-@painter_registry.register
 class PainterSvcPerfData(Painter):
     @property
     def ident(self) -> str:
@@ -435,7 +629,6 @@ class PainterSvcPerfData(Painter):
         return paint_stalified(row, row["service_perf_data"])
 
 
-@painter_registry.register
 class PainterSvcMetrics(Painter):
     @property
     def ident(self) -> str:
@@ -523,57 +716,46 @@ class PainterSvcPerfVal(Painter):
         return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1))
 
 
-@painter_registry.register
 class PainterSvcPerfVal01(PainterSvcPerfVal):
     _num = 1
 
 
-@painter_registry.register
 class PainterSvcPerfVal02(PainterSvcPerfVal):
     _num = 2
 
 
-@painter_registry.register
 class PainterSvcPerfVal03(PainterSvcPerfVal):
     _num = 3
 
 
-@painter_registry.register
 class PainterSvcPerfVal04(PainterSvcPerfVal):
     _num = 4
 
 
-@painter_registry.register
 class PainterSvcPerfVal05(PainterSvcPerfVal):
     _num = 5
 
 
-@painter_registry.register
 class PainterSvcPerfVal06(PainterSvcPerfVal):
     _num = 6
 
 
-@painter_registry.register
 class PainterSvcPerfVal07(PainterSvcPerfVal):
     _num = 7
 
 
-@painter_registry.register
 class PainterSvcPerfVal08(PainterSvcPerfVal):
     _num = 8
 
 
-@painter_registry.register
 class PainterSvcPerfVal09(PainterSvcPerfVal):
     _num = 9
 
 
-@painter_registry.register
 class PainterSvcPerfVal10(PainterSvcPerfVal):
     _num = 10
 
 
-@painter_registry.register
 class PainterSvcCheckCommand(Painter):
     @property
     def ident(self) -> str:
@@ -593,7 +775,6 @@ class PainterSvcCheckCommand(Painter):
         return (None, row["service_check_command"])
 
 
-@painter_registry.register
 class PainterSvcCheckCommandExpanded(Painter):
     @property
     def ident(self) -> str:
@@ -613,7 +794,6 @@ class PainterSvcCheckCommandExpanded(Painter):
         return (None, row["service_check_command_expanded"])
 
 
-@painter_registry.register
 class PainterSvcContacts(Painter):
     @property
     def ident(self) -> str:
@@ -633,7 +813,6 @@ class PainterSvcContacts(Painter):
         return (None, ", ".join(row["service_contacts"]))
 
 
-@painter_registry.register
 class PainterSvcContactGroups(Painter):
     @property
     def ident(self) -> str:
@@ -653,7 +832,6 @@ class PainterSvcContactGroups(Painter):
         return (None, ", ".join(row["service_contact_groups"]))
 
 
-@painter_registry.register
 class PainterServiceDescription(Painter):
     @property
     def ident(self) -> str:
@@ -677,7 +855,6 @@ class PainterServiceDescription(Painter):
         return (None, row["service_description"])
 
 
-@painter_registry.register
 class PainterServiceDisplayName(Painter):
     @property
     def ident(self) -> str:
@@ -701,7 +878,6 @@ class PainterServiceDisplayName(Painter):
         return (None, row["service_display_name"])
 
 
-@painter_registry.register
 class PainterSvcStateAge(Painter):
     @property
     def ident(self) -> str:
@@ -745,7 +921,6 @@ def _paint_checked(what: str, row: Row) -> CellSpec:
     return css, td
 
 
-@painter_registry.register
 class PainterSvcCheckAge(Painter):
     @property
     def ident(self) -> str:
@@ -769,7 +944,6 @@ class PainterSvcCheckAge(Painter):
         return _paint_checked("service", row)
 
 
-@painter_registry.register
 class PainterSvcCheckCacheInfo(Painter):
     @property
     def ident(self) -> str:
@@ -795,7 +969,6 @@ class PainterSvcCheckCacheInfo(Painter):
         return "", render_cache_info("service", row)
 
 
-@painter_registry.register
 class PainterSvcNextCheck(Painter):
     @property
     def ident(self) -> str:
@@ -815,7 +988,6 @@ class PainterSvcNextCheck(Painter):
         return _paint_future_time(row["service_next_check"])
 
 
-@painter_registry.register
 class PainterSvcLastTimeOk(Painter):
     @property
     def ident(self) -> str:
@@ -835,7 +1007,6 @@ class PainterSvcLastTimeOk(Painter):
         return paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10)
 
 
-@painter_registry.register
 class PainterSvcNextNotification(Painter):
     @property
     def ident(self) -> str:
@@ -888,7 +1059,6 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
     )
 
 
-@painter_registry.register
 class PainterSvcNotificationPostponementReason(Painter):
     @property
     def ident(self) -> str:
@@ -908,7 +1078,6 @@ class PainterSvcNotificationPostponementReason(Painter):
         return _paint_notification_postponement_reason("service", row)
 
 
-@painter_registry.register
 class PainterSvcLastNotification(Painter):
     @property
     def ident(self) -> str:
@@ -932,7 +1101,6 @@ class PainterSvcLastNotification(Painter):
         return paint_age(row["service_last_notification"], row["service_last_notification"], 0)
 
 
-@painter_registry.register
 class PainterSvcNotificationNumber(Painter):
     @property
     def ident(self) -> str:
@@ -954,7 +1122,6 @@ class PainterSvcNotificationNumber(Painter):
         return ("", "1" if current == "0" else current)
 
 
-@painter_registry.register
 class PainterSvcCheckLatency(Painter):
     @property
     def ident(self) -> str:
@@ -974,7 +1141,6 @@ class PainterSvcCheckLatency(Painter):
         return ("", approx_age(row["service_latency"]))
 
 
-@painter_registry.register
 class PainterSvcCheckDuration(Painter):
     @property
     def ident(self) -> str:
@@ -994,7 +1160,6 @@ class PainterSvcCheckDuration(Painter):
         return ("", approx_age(row["service_execution_time"]))
 
 
-@painter_registry.register
 class PainterSvcAttempt(Painter):
     @property
     def ident(self) -> str:
@@ -1014,7 +1179,6 @@ class PainterSvcAttempt(Painter):
         return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
 
 
-@painter_registry.register
 class PainterSvcNormalInterval(Painter):
     @property
     def ident(self) -> str:
@@ -1034,7 +1198,6 @@ class PainterSvcNormalInterval(Painter):
         return ("number", approx_age(row["service_check_interval"] * 60.0))
 
 
-@painter_registry.register
 class PainterSvcRetryInterval(Painter):
     @property
     def ident(self) -> str:
@@ -1054,7 +1217,6 @@ class PainterSvcRetryInterval(Painter):
         return ("number", approx_age(row["service_retry_interval"] * 60.0))
 
 
-@painter_registry.register
 class PainterSvcCheckInterval(Painter):
     @property
     def ident(self) -> str:
@@ -1081,7 +1243,6 @@ class PainterSvcCheckInterval(Painter):
         )
 
 
-@painter_registry.register
 class PainterSvcCheckType(Painter):
     @property
     def ident(self) -> str:
@@ -1101,7 +1262,6 @@ class PainterSvcCheckType(Painter):
         return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
 
 
-@painter_registry.register
 class PainterSvcInDowntime(Painter):
     @property
     def ident(self) -> str:
@@ -1121,7 +1281,6 @@ class PainterSvcInDowntime(Painter):
         return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
 
 
-@painter_registry.register
 class PainterSvcInNotifper(Painter):
     @property
     def ident(self) -> str:
@@ -1141,7 +1300,6 @@ class PainterSvcInNotifper(Painter):
         return paint_nagiosflag(row, "service_in_notification_period", False)
 
 
-@painter_registry.register
 class PainterSvcNotifper(Painter):
     @property
     def ident(self) -> str:
@@ -1161,7 +1319,6 @@ class PainterSvcNotifper(Painter):
         return (None, row["service_notification_period"])
 
 
-@painter_registry.register
 class PainterSvcCheckPeriod(Painter):
     @property
     def ident(self) -> str:
@@ -1181,7 +1338,6 @@ class PainterSvcCheckPeriod(Painter):
         return (None, row["service_check_period"])
 
 
-@painter_registry.register
 class PainterSvcFlapping(Painter):
     @property
     def ident(self) -> str:
@@ -1201,7 +1357,6 @@ class PainterSvcFlapping(Painter):
         return paint_nagiosflag(row, "service_is_flapping", True)
 
 
-@painter_registry.register
 class PainterSvcNotificationsEnabled(Painter):
     @property
     def ident(self) -> str:
@@ -1221,7 +1376,6 @@ class PainterSvcNotificationsEnabled(Painter):
         return paint_nagiosflag(row, "service_notifications_enabled", False)
 
 
-@painter_registry.register
 class PainterSvcIsActive(Painter):
     @property
     def ident(self) -> str:
@@ -1241,7 +1395,6 @@ class PainterSvcIsActive(Painter):
         return paint_nagiosflag(row, "service_active_checks_enabled", False)
 
 
-@painter_registry.register
 class PainterSvcGroupMemberlist(Painter):
     @property
     def ident(self) -> str:
@@ -1265,7 +1418,6 @@ class PainterSvcGroupMemberlist(Painter):
         return "", HTML(", ").join(links)
 
 
-@painter_registry.register
 class PainterCheckManpage(Painter):
     @property
     def ident(self) -> str:
@@ -1325,7 +1477,6 @@ def _paint_comments(prefix: str, row: Row) -> CellSpec:
     return "", text
 
 
-@painter_registry.register
 class PainterSvcComments(Painter):
     @property
     def ident(self) -> str:
@@ -1345,7 +1496,6 @@ class PainterSvcComments(Painter):
         return _paint_comments("service_", row)
 
 
-@painter_registry.register
 class PainterSvcAcknowledged(Painter):
     @property
     def ident(self) -> str:
@@ -1410,7 +1560,6 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     return "", "<hr>".join(contents)
 
 
-@painter_registry.register
 class PainterSvcCustomNotes(Painter):
     @property
     def ident(self) -> str:
@@ -1430,7 +1579,6 @@ class PainterSvcCustomNotes(Painter):
         return _paint_custom_notes("service", row)
 
 
-@painter_registry.register
 class PainterSvcStaleness(Painter):
     @property
     def ident(self) -> str:
@@ -1456,7 +1604,6 @@ def _paint_is_stale(row: Row) -> CellSpec:
     return "goodflag", _("no")
 
 
-@painter_registry.register
 class PainterSvcIsStale(Painter):
     @property
     def ident(self) -> str:
@@ -1480,7 +1627,6 @@ class PainterSvcIsStale(Painter):
         return _paint_is_stale(row)
 
 
-@painter_registry.register
 class PainterSvcServicelevel(Painter):
     @property
     def ident(self) -> str:
@@ -1518,7 +1664,6 @@ def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> Ce
     return "", HTMLWriter.render_table(HTML().join(rows))
 
 
-@painter_registry.register
 class PainterServiceCustomVariables(Painter):
     @property
     def ident(self) -> str:
@@ -1597,7 +1742,6 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         return _paint_custom_var(self._object_type, params["ident"].upper(), row)
 
 
-@painter_registry.register
 class PainterServiceCustomVariable(ABCPainterCustomVariable):
     @property
     def ident(self) -> str:
@@ -1622,7 +1766,6 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
         return sorted(choices, key=lambda x: x[1])
 
 
-@painter_registry.register
 class PainterHostCustomVariable(ABCPainterCustomVariable):
     @property
     def ident(self) -> str:
@@ -1673,7 +1816,6 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
 #   '----------------------------------------------------------------------'
 
 
-@painter_registry.register
 class PainterHostState(Painter):
     @property
     def ident(self) -> str:
@@ -1700,7 +1842,6 @@ class PainterHostState(Painter):
         return _paint_host_state_short(row)
 
 
-@painter_registry.register
 class PainterHostStateOnechar(Painter):
     @property
     def ident(self) -> str:
@@ -1724,7 +1865,6 @@ class PainterHostStateOnechar(Painter):
         return _paint_host_state_short(row, short=True)
 
 
-@painter_registry.register
 class PainterHostPluginOutput(Painter):
     @property
     def ident(self) -> str:
@@ -1744,7 +1884,6 @@ class PainterHostPluginOutput(Painter):
         return (None, format_plugin_output(row["host_plugin_output"], row))
 
 
-@painter_registry.register
 class PainterHostPerfData(Painter):
     @property
     def ident(self) -> str:
@@ -1764,7 +1903,6 @@ class PainterHostPerfData(Painter):
         return (None, row["host_perf_data"])
 
 
-@painter_registry.register
 class PainterHostCheckCommand(Painter):
     @property
     def ident(self) -> str:
@@ -1784,7 +1922,6 @@ class PainterHostCheckCommand(Painter):
         return (None, row["host_check_command"])
 
 
-@painter_registry.register
 class PainterHostCheckCommandExpanded(Painter):
     @property
     def ident(self) -> str:
@@ -1804,7 +1941,6 @@ class PainterHostCheckCommandExpanded(Painter):
         return (None, row["host_check_command_expanded"])
 
 
-@painter_registry.register
 class PainterHostStateAge(Painter):
     @property
     def ident(self) -> str:
@@ -1828,7 +1964,6 @@ class PainterHostStateAge(Painter):
         return paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
 
 
-@painter_registry.register
 class PainterHostCheckAge(Painter):
     @property
     def ident(self) -> str:
@@ -1852,7 +1987,6 @@ class PainterHostCheckAge(Painter):
         return _paint_checked("host", row)
 
 
-@painter_registry.register
 class PainterHostNextCheck(Painter):
     @property
     def ident(self) -> str:
@@ -1872,7 +2006,6 @@ class PainterHostNextCheck(Painter):
         return _paint_future_time(row["host_next_check"])
 
 
-@painter_registry.register
 class PainterHostNextNotification(Painter):
     @property
     def ident(self) -> str:
@@ -1892,7 +2025,6 @@ class PainterHostNextNotification(Painter):
         return _paint_future_time(row["host_next_notification"])
 
 
-@painter_registry.register
 class PainterHostNotificationPostponementReason(Painter):
     @property
     def ident(self) -> str:
@@ -1912,7 +2044,6 @@ class PainterHostNotificationPostponementReason(Painter):
         return _paint_notification_postponement_reason("host", row)
 
 
-@painter_registry.register
 class PainterHostLastNotification(Painter):
     @property
     def ident(self) -> str:
@@ -1936,7 +2067,6 @@ class PainterHostLastNotification(Painter):
         return paint_age(row["host_last_notification"], row["host_last_notification"], 0)
 
 
-@painter_registry.register
 class PainterHostCheckLatency(Painter):
     @property
     def ident(self) -> str:
@@ -1956,7 +2086,6 @@ class PainterHostCheckLatency(Painter):
         return ("", approx_age(row["host_latency"]))
 
 
-@painter_registry.register
 class PainterHostCheckDuration(Painter):
     @property
     def ident(self) -> str:
@@ -1976,7 +2105,6 @@ class PainterHostCheckDuration(Painter):
         return ("", approx_age(row["host_execution_time"]))
 
 
-@painter_registry.register
 class PainterHostAttempt(Painter):
     @property
     def ident(self) -> str:
@@ -1996,7 +2124,6 @@ class PainterHostAttempt(Painter):
         return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
 
 
-@painter_registry.register
 class PainterHostNormalInterval(Painter):
     @property
     def ident(self) -> str:
@@ -2016,7 +2143,6 @@ class PainterHostNormalInterval(Painter):
         return (None, approx_age(row["host_check_interval"] * 60.0))
 
 
-@painter_registry.register
 class PainterHostRetryInterval(Painter):
     @property
     def ident(self) -> str:
@@ -2036,7 +2162,6 @@ class PainterHostRetryInterval(Painter):
         return (None, approx_age(row["host_retry_interval"] * 60.0))
 
 
-@painter_registry.register
 class PainterHostCheckInterval(Painter):
     @property
     def ident(self) -> str:
@@ -2063,7 +2188,6 @@ class PainterHostCheckInterval(Painter):
         )
 
 
-@painter_registry.register
 class PainterHostCheckType(Painter):
     @property
     def ident(self) -> str:
@@ -2083,7 +2207,6 @@ class PainterHostCheckType(Painter):
         return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
 
 
-@painter_registry.register
 class PainterHostInNotifper(Painter):
     @property
     def ident(self) -> str:
@@ -2103,7 +2226,6 @@ class PainterHostInNotifper(Painter):
         return paint_nagiosflag(row, "host_in_notification_period", False)
 
 
-@painter_registry.register
 class PainterHostNotifper(Painter):
     @property
     def ident(self) -> str:
@@ -2123,7 +2245,6 @@ class PainterHostNotifper(Painter):
         return (None, row["host_notification_period"])
 
 
-@painter_registry.register
 class PainterHostNotificationNumber(Painter):
     @property
     def ident(self) -> str:
@@ -2143,7 +2264,6 @@ class PainterHostNotificationNumber(Painter):
         return ("", str(row["host_current_notification_number"]))
 
 
-@painter_registry.register
 class PainterHostFlapping(Painter):
     @property
     def ident(self) -> str:
@@ -2163,7 +2283,6 @@ class PainterHostFlapping(Painter):
         return paint_nagiosflag(row, "host_is_flapping", True)
 
 
-@painter_registry.register
 class PainterHostIsActive(Painter):
     @property
     def ident(self) -> str:
@@ -2183,7 +2302,6 @@ class PainterHostIsActive(Painter):
         return paint_nagiosflag(row, "host_active_checks_enabled", False)
 
 
-@painter_registry.register
 class PainterHostNotificationsEnabled(Painter):
     @property
     def ident(self) -> str:
@@ -2203,7 +2321,6 @@ class PainterHostNotificationsEnabled(Painter):
         return paint_nagiosflag(row, "host_notifications_enabled", False)
 
 
-@painter_registry.register
 class PainterHostBlack(Painter):
     @property
     def ident(self) -> str:
@@ -2230,7 +2347,6 @@ class PainterHostBlack(Painter):
         return "nobr", row["host_name"]
 
 
-@painter_registry.register
 class PainterHostWithState(Painter):
     @property
     def ident(self) -> str:
@@ -2260,7 +2376,6 @@ class PainterHostWithState(Painter):
         return "nobr", row["host_name"]
 
 
-@painter_registry.register
 class PainterHost(Painter):
     @property
     def ident(self) -> str:
@@ -2335,7 +2450,6 @@ class PainterHost(Painter):
         )
 
 
-@painter_registry.register
 class PainterAlias(Painter):
     @property
     def ident(self) -> str:
@@ -2355,7 +2469,6 @@ class PainterAlias(Painter):
         return ("", row["host_alias"])
 
 
-@painter_registry.register
 class PainterHostAddress(Painter):
     @property
     def ident(self) -> str:
@@ -2375,7 +2488,6 @@ class PainterHostAddress(Painter):
         return ("", row["host_address"])
 
 
-@painter_registry.register
 class PainterHostIpv4Address(Painter):
     @property
     def ident(self) -> str:
@@ -2395,7 +2507,6 @@ class PainterHostIpv4Address(Painter):
         return _paint_custom_var("host", "ADDRESS_4", row)
 
 
-@painter_registry.register
 class PainterHostIpv6Address(Painter):
     @property
     def ident(self) -> str:
@@ -2415,7 +2526,6 @@ class PainterHostIpv6Address(Painter):
         return _paint_custom_var("host", "ADDRESS_6", row)
 
 
-@painter_registry.register
 class PainterHostAddresses(Painter):
     @property
     def ident(self) -> str:
@@ -2448,7 +2558,6 @@ class PainterHostAddresses(Painter):
         return "", primary + secondary
 
 
-@painter_registry.register
 class PainterHostAddressesAdditional(Painter):
     @property
     def ident(self) -> str:
@@ -2481,7 +2590,6 @@ class PainterHostAddressesAdditional(Painter):
         return "", ", ".join(addresses)
 
 
-@painter_registry.register
 class PainterHostAddressFamily(Painter):
     @property
     def ident(self) -> str:
@@ -2501,7 +2609,6 @@ class PainterHostAddressFamily(Painter):
         return _paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
-@painter_registry.register
 class PainterHostAddressFamilies(Painter):
     @property
     def ident(self) -> str:
@@ -2548,7 +2655,6 @@ def paint_host_count(id_: int | None, count: int) -> CellSpec:
     return "count hstate", "0"
 
 
-@painter_registry.register
 class PainterNumServices(Painter):
     @property
     def ident(self) -> str:
@@ -2571,7 +2677,6 @@ class PainterNumServices(Painter):
         return (None, str(row["host_num_services"]))
 
 
-@painter_registry.register
 class PainterNumServicesOk(Painter):
     @property
     def ident(self) -> str:
@@ -2594,7 +2699,6 @@ class PainterNumServicesOk(Painter):
         return paint_svc_count(0, row["host_num_services_ok"])
 
 
-@painter_registry.register
 class PainterNumProblems(Painter):
     @property
     def ident(self) -> str:
@@ -2622,7 +2726,6 @@ class PainterNumProblems(Painter):
         )
 
 
-@painter_registry.register
 class PainterNumServicesWarn(Painter):
     @property
     def ident(self) -> str:
@@ -2645,7 +2748,6 @@ class PainterNumServicesWarn(Painter):
         return paint_svc_count(1, row["host_num_services_warn"])
 
 
-@painter_registry.register
 class PainterNumServicesCrit(Painter):
     @property
     def ident(self) -> str:
@@ -2668,7 +2770,6 @@ class PainterNumServicesCrit(Painter):
         return paint_svc_count(2, row["host_num_services_crit"])
 
 
-@painter_registry.register
 class PainterNumServicesUnknown(Painter):
     @property
     def ident(self) -> str:
@@ -2691,7 +2792,6 @@ class PainterNumServicesUnknown(Painter):
         return paint_svc_count(3, row["host_num_services_unknown"])
 
 
-@painter_registry.register
 class PainterNumServicesPending(Painter):
     @property
     def ident(self) -> str:
@@ -2746,7 +2846,6 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
     return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
-@painter_registry.register
 class PainterHostServices(Painter):
     @property
     def ident(self) -> str:
@@ -2806,7 +2905,6 @@ class PainterHostServices(Painter):
         return _paint_service_list(row, "host_services_with_state_filtered")
 
 
-@painter_registry.register
 class PainterHostParents(Painter):
     @property
     def ident(self) -> str:
@@ -2830,7 +2928,6 @@ class PainterHostParents(Painter):
         return paint_host_list(row["site"], row["host_parents"])
 
 
-@painter_registry.register
 class PainterHostChilds(Painter):
     @property
     def ident(self) -> str:
@@ -2854,7 +2951,6 @@ class PainterHostChilds(Painter):
         return paint_host_list(row["site"], row["host_childs"])
 
 
-@painter_registry.register
 class PainterHostGroupMemberlist(Painter):
     @property
     def ident(self) -> str:
@@ -2889,7 +2985,6 @@ class PainterHostGroupMemberlist(Painter):
         return "", HTML(", ").join(links)
 
 
-@painter_registry.register
 class PainterHostContacts(Painter):
     @property
     def ident(self) -> str:
@@ -2909,7 +3004,6 @@ class PainterHostContacts(Painter):
         return (None, ", ".join(row["host_contacts"]))
 
 
-@painter_registry.register
 class PainterHostContactGroups(Painter):
     @property
     def ident(self) -> str:
@@ -2929,7 +3023,6 @@ class PainterHostContactGroups(Painter):
         return (None, ", ".join(row["host_contact_groups"]))
 
 
-@painter_registry.register
 class PainterHostCustomNotes(Painter):
     @property
     def ident(self) -> str:
@@ -2949,7 +3042,6 @@ class PainterHostCustomNotes(Painter):
         return _paint_custom_notes("hosts", row)
 
 
-@painter_registry.register
 class PainterHostComments(Painter):
     @property
     def ident(self) -> str:
@@ -2969,7 +3061,6 @@ class PainterHostComments(Painter):
         return _paint_comments("host_", row)
 
 
-@painter_registry.register
 class PainterHostInDowntime(Painter):
     @property
     def ident(self) -> str:
@@ -2989,7 +3080,6 @@ class PainterHostInDowntime(Painter):
         return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
 
 
-@painter_registry.register
 class PainterHostAcknowledged(Painter):
     @property
     def ident(self) -> str:
@@ -3009,7 +3099,6 @@ class PainterHostAcknowledged(Painter):
         return paint_nagiosflag(row, "host_acknowledged", False)
 
 
-@painter_registry.register
 class PainterHostStaleness(Painter):
     @property
     def ident(self) -> str:
@@ -3029,7 +3118,6 @@ class PainterHostStaleness(Painter):
         return ("", "%0.2f" % row.get("host_staleness", 0))
 
 
-@painter_registry.register
 class PainterHostIsStale(Painter):
     @property
     def ident(self) -> str:
@@ -3053,7 +3141,6 @@ class PainterHostIsStale(Painter):
         return _paint_is_stale(row)
 
 
-@painter_registry.register
 class PainterHostServicelevel(Painter):
     @property
     def ident(self) -> str:
@@ -3077,7 +3164,6 @@ class PainterHostServicelevel(Painter):
         return _paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
-@painter_registry.register
 class PainterHostCustomVariables(Painter):
     @property
     def ident(self) -> str:
@@ -3143,7 +3229,6 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
     return None, value
 
 
-@painter_registry.register
 class PainterServiceDiscoveryState(Painter):
     @property
     def ident(self) -> str:
@@ -3163,7 +3248,6 @@ class PainterServiceDiscoveryState(Painter):
         return _paint_discovery_output("discovery_state", row)
 
 
-@painter_registry.register
 class PainterServiceDiscoveryCheck(Painter):
     @property
     def ident(self) -> str:
@@ -3183,7 +3267,6 @@ class PainterServiceDiscoveryCheck(Painter):
         return _paint_discovery_output("discovery_check", row)
 
 
-@painter_registry.register
 class PainterServiceDiscoveryService(Painter):
     @property
     def ident(self) -> str:
@@ -3210,7 +3293,6 @@ class PainterServiceDiscoveryService(Painter):
 #   |_| |_|\___/|___/\__\__, |_|  \___/ \__,_| .__/|___/
 #                       |___/                |_|
 #
-@painter_registry.register
 class PainterHostgroupHosts(Painter):
     @property
     def ident(self) -> str:
@@ -3241,7 +3323,6 @@ class PainterHostgroupHosts(Painter):
         return "", HTMLWriter.render_div(h, class_="objectlist")
 
 
-@painter_registry.register
 class PainterHgNumServices(Painter):
     @property
     def ident(self) -> str:
@@ -3261,7 +3342,6 @@ class PainterHgNumServices(Painter):
         return (None, str(row["hostgroup_num_services"]))
 
 
-@painter_registry.register
 class PainterHgNumServicesOk(Painter):
     @property
     def ident(self) -> str:
@@ -3284,7 +3364,6 @@ class PainterHgNumServicesOk(Painter):
         return paint_svc_count(0, row["hostgroup_num_services_ok"])
 
 
-@painter_registry.register
 class PainterHgNumServicesWarn(Painter):
     @property
     def ident(self) -> str:
@@ -3307,7 +3386,6 @@ class PainterHgNumServicesWarn(Painter):
         return paint_svc_count(1, row["hostgroup_num_services_warn"])
 
 
-@painter_registry.register
 class PainterHgNumServicesCrit(Painter):
     @property
     def ident(self) -> str:
@@ -3330,7 +3408,6 @@ class PainterHgNumServicesCrit(Painter):
         return paint_svc_count(2, row["hostgroup_num_services_crit"])
 
 
-@painter_registry.register
 class PainterHgNumServicesUnknown(Painter):
     @property
     def ident(self) -> str:
@@ -3353,7 +3430,6 @@ class PainterHgNumServicesUnknown(Painter):
         return paint_svc_count(3, row["hostgroup_num_services_unknown"])
 
 
-@painter_registry.register
 class PainterHgNumServicesPending(Painter):
     @property
     def ident(self) -> str:
@@ -3376,7 +3452,6 @@ class PainterHgNumServicesPending(Painter):
         return paint_svc_count("p", row["hostgroup_num_services_pending"])
 
 
-@painter_registry.register
 class PainterHgNumHostsUp(Painter):
     @property
     def ident(self) -> str:
@@ -3399,7 +3474,6 @@ class PainterHgNumHostsUp(Painter):
         return paint_host_count(0, row["hostgroup_num_hosts_up"])
 
 
-@painter_registry.register
 class PainterHgNumHostsDown(Painter):
     @property
     def ident(self) -> str:
@@ -3422,7 +3496,6 @@ class PainterHgNumHostsDown(Painter):
         return paint_host_count(1, row["hostgroup_num_hosts_down"])
 
 
-@painter_registry.register
 class PainterHgNumHostsUnreach(Painter):
     @property
     def ident(self) -> str:
@@ -3445,7 +3518,6 @@ class PainterHgNumHostsUnreach(Painter):
         return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
 
 
-@painter_registry.register
 class PainterHgNumHostsPending(Painter):
     @property
     def ident(self) -> str:
@@ -3468,7 +3540,6 @@ class PainterHgNumHostsPending(Painter):
         return paint_host_count(None, row["hostgroup_num_hosts_pending"])
 
 
-@painter_registry.register
 class PainterHgName(Painter):
     @property
     def ident(self) -> str:
@@ -3488,7 +3559,6 @@ class PainterHgName(Painter):
         return (None, row["hostgroup_name"])
 
 
-@painter_registry.register
 class PainterHgAlias(Painter):
     @property
     def ident(self) -> str:
@@ -3516,7 +3586,6 @@ class PainterHgAlias(Painter):
 #                                     |___/                |_|
 
 
-@painter_registry.register
 class PainterSgServices(Painter):
     @property
     def ident(self) -> str:
@@ -3536,7 +3605,6 @@ class PainterSgServices(Painter):
         return _paint_service_list(row, "servicegroup_members_with_state")
 
 
-@painter_registry.register
 class PainterSgNumServices(Painter):
     @property
     def ident(self) -> str:
@@ -3556,7 +3624,6 @@ class PainterSgNumServices(Painter):
         return (None, str(row["servicegroup_num_services"]))
 
 
-@painter_registry.register
 class PainterSgNumServicesOk(Painter):
     @property
     def ident(self) -> str:
@@ -3576,7 +3643,6 @@ class PainterSgNumServicesOk(Painter):
         return paint_svc_count(0, row["servicegroup_num_services_ok"])
 
 
-@painter_registry.register
 class PainterSgNumServicesWarn(Painter):
     @property
     def ident(self) -> str:
@@ -3596,7 +3662,6 @@ class PainterSgNumServicesWarn(Painter):
         return paint_svc_count(1, row["servicegroup_num_services_warn"])
 
 
-@painter_registry.register
 class PainterSgNumServicesCrit(Painter):
     @property
     def ident(self) -> str:
@@ -3616,7 +3681,6 @@ class PainterSgNumServicesCrit(Painter):
         return paint_svc_count(2, row["servicegroup_num_services_crit"])
 
 
-@painter_registry.register
 class PainterSgNumServicesUnknown(Painter):
     @property
     def ident(self) -> str:
@@ -3636,7 +3700,6 @@ class PainterSgNumServicesUnknown(Painter):
         return paint_svc_count(3, row["servicegroup_num_services_unknown"])
 
 
-@painter_registry.register
 class PainterSgNumServicesPending(Painter):
     @property
     def ident(self) -> str:
@@ -3656,7 +3719,6 @@ class PainterSgNumServicesPending(Painter):
         return paint_svc_count("p", row["servicegroup_num_services_pending"])
 
 
-@painter_registry.register
 class PainterSgName(Painter):
     @property
     def ident(self) -> str:
@@ -3676,7 +3738,6 @@ class PainterSgName(Painter):
         return (None, row["servicegroup_name"])
 
 
-@painter_registry.register
 class PainterSgAlias(Painter):
     @property
     def ident(self) -> str:
@@ -3704,7 +3765,6 @@ class PainterSgAlias(Painter):
 #
 
 
-@painter_registry.register
 class PainterCommentId(Painter):
     @property
     def ident(self) -> str:
@@ -3724,7 +3784,6 @@ class PainterCommentId(Painter):
         return (None, str(row["comment_id"]))
 
 
-@painter_registry.register
 class PainterCommentAuthor(Painter):
     @property
     def ident(self) -> str:
@@ -3744,7 +3803,6 @@ class PainterCommentAuthor(Painter):
         return (None, row["comment_author"])
 
 
-@painter_registry.register
 class PainterCommentComment(Painter):
     @property
     def ident(self) -> str:
@@ -3761,7 +3819,6 @@ class PainterCommentComment(Painter):
         return (None, format_plugin_output(row["comment_comment"], row))
 
 
-@painter_registry.register
 class PainterCommentWhat(Painter):
     @property
     def ident(self) -> str:
@@ -3781,7 +3838,6 @@ class PainterCommentWhat(Painter):
         return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
 
 
-@painter_registry.register
 class PainterCommentTime(Painter):
     @property
     def ident(self) -> str:
@@ -3805,7 +3861,6 @@ class PainterCommentTime(Painter):
         return paint_age(row["comment_entry_time"], True, 3600)
 
 
-@painter_registry.register
 class PainterCommentExpires(Painter):
     @property
     def ident(self) -> str:
@@ -3831,7 +3886,6 @@ class PainterCommentExpires(Painter):
         )
 
 
-@painter_registry.register
 class PainterCommentEntryType(Painter):
     @property
     def ident(self) -> str:
@@ -3883,7 +3937,6 @@ class PainterCommentEntryType(Painter):
 #
 
 
-@painter_registry.register
 class PainterDowntimeId(Painter):
     @property
     def ident(self) -> str:
@@ -3903,7 +3956,6 @@ class PainterDowntimeId(Painter):
         return (None, "%d" % row["downtime_id"])
 
 
-@painter_registry.register
 class PainterDowntimeAuthor(Painter):
     @property
     def ident(self) -> str:
@@ -3923,7 +3975,6 @@ class PainterDowntimeAuthor(Painter):
         return (None, row["downtime_author"])
 
 
-@painter_registry.register
 class PainterDowntimeComment(Painter):
     @property
     def ident(self) -> str:
@@ -3943,7 +3994,6 @@ class PainterDowntimeComment(Painter):
         return (None, format_plugin_output(row["downtime_comment"], row))
 
 
-@painter_registry.register
 class PainterDowntimeFixed(Painter):
     @property
     def ident(self) -> str:
@@ -3963,7 +4013,6 @@ class PainterDowntimeFixed(Painter):
         return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
 
 
-@painter_registry.register
 class PainterDowntimeOrigin(Painter):
     @property
     def ident(self) -> str:
@@ -4007,7 +4056,6 @@ class PainterDowntimeRecurring(Painter):
         return renderer(row, cell)  # pylint: disable=not-callable
 
 
-@painter_registry.register
 class PainterDowntimeWhat(Painter):
     @property
     def ident(self) -> str:
@@ -4027,7 +4075,6 @@ class PainterDowntimeWhat(Painter):
         return (None, row["downtime_is_service"] and _("Service") or _("Host"))
 
 
-@painter_registry.register
 class PainterDowntimeType(Painter):
     @property
     def ident(self) -> str:
@@ -4047,7 +4094,6 @@ class PainterDowntimeType(Painter):
         return (None, row["downtime_type"] == 0 and _("active") or _("pending"))
 
 
-@painter_registry.register
 class PainterDowntimeEntryTime(Painter):
     @property
     def ident(self) -> str:
@@ -4071,7 +4117,6 @@ class PainterDowntimeEntryTime(Painter):
         return paint_age(row["downtime_entry_time"], True, 3600)
 
 
-@painter_registry.register
 class PainterDowntimeStartTime(Painter):
     @property
     def ident(self) -> str:
@@ -4095,7 +4140,6 @@ class PainterDowntimeStartTime(Painter):
         return paint_age(row["downtime_start_time"], True, 3600, what="both")
 
 
-@painter_registry.register
 class PainterDowntimeEndTime(Painter):
     @property
     def ident(self) -> str:
@@ -4119,7 +4163,6 @@ class PainterDowntimeEndTime(Painter):
         return paint_age(row["downtime_end_time"], True, 3600, what="both")
 
 
-@painter_registry.register
 class PainterDowntimeDuration(Painter):
     @property
     def ident(self) -> str:
@@ -4149,7 +4192,6 @@ class PainterDowntimeDuration(Painter):
 #               |___/
 
 
-@painter_registry.register
 class PainterLogDetailsHistory(Painter):
     @property
     def ident(self) -> str:
@@ -4197,7 +4239,6 @@ class PainterLogDetailsHistory(Painter):
         return paint_stalified(row, content)
 
 
-@painter_registry.register
 class PainterLogMessage(Painter):
     @property
     def ident(self) -> str:
@@ -4217,7 +4258,6 @@ class PainterLogMessage(Painter):
         return ("", row["log_message"])
 
 
-@painter_registry.register
 class PainterLogPluginOutput(Painter):
     @property
     def ident(self) -> str:
@@ -4252,7 +4292,6 @@ class PainterLogPluginOutput(Painter):
         return "", ""
 
 
-@painter_registry.register
 class PainterLogWhat(Painter):
     @property
     def ident(self) -> str:
@@ -4277,7 +4316,6 @@ class PainterLogWhat(Painter):
         return "", _("Program")
 
 
-@painter_registry.register
 class PainterLogAttempt(Painter):
     @property
     def ident(self) -> str:
@@ -4297,7 +4335,6 @@ class PainterLogAttempt(Painter):
         return ("", str(row["log_attempt"]))
 
 
-@painter_registry.register
 class PainterLogStateType(Painter):
     @property
     def ident(self) -> str:
@@ -4317,7 +4354,6 @@ class PainterLogStateType(Painter):
         return ("", row["log_state_type"])
 
 
-@painter_registry.register
 class PainterLogStateInfo(Painter):
     @property
     def ident(self) -> str:
@@ -4343,7 +4379,6 @@ class PainterLogStateInfo(Painter):
         return ("", info)
 
 
-@painter_registry.register
 class PainterLogType(Painter):
     @property
     def ident(self) -> str:
@@ -4363,7 +4398,6 @@ class PainterLogType(Painter):
         return ("nowrap", row["log_type"])
 
 
-@painter_registry.register
 class PainterLogContactName(Painter):
     @property
     def ident(self) -> str:
@@ -4404,7 +4438,6 @@ class PainterLogContactName(Painter):
         )
 
 
-@painter_registry.register
 class PainterLogCommand(Painter):
     @property
     def ident(self) -> str:
@@ -4424,7 +4457,6 @@ class PainterLogCommand(Painter):
         return ("nowrap", row["log_command_name"])
 
 
-@painter_registry.register
 class PainterLogIcon(Painter):
     @property
     def ident(self) -> str:
@@ -4526,7 +4558,6 @@ class PainterLogIcon(Painter):
         return "icon", ""
 
 
-@painter_registry.register
 class PainterLogOptions(Painter):
     @property
     def ident(self) -> str:
@@ -4546,7 +4577,6 @@ class PainterLogOptions(Painter):
         return ("", row["log_options"])
 
 
-@painter_registry.register
 class PainterLogComment(Painter):
     @property
     def ident(self) -> str:
@@ -4571,7 +4601,6 @@ class PainterLogComment(Painter):
         return ("", "")
 
 
-@painter_registry.register
 class PainterLogTime(Painter):
     @property
     def ident(self) -> str:
@@ -4595,7 +4624,6 @@ class PainterLogTime(Painter):
         return paint_age(row["log_time"], True, 3600 * 24)
 
 
-@painter_registry.register
 class PainterLogLineno(Painter):
     @property
     def ident(self) -> str:
@@ -4615,7 +4643,6 @@ class PainterLogLineno(Painter):
         return ("number", str(row["log_lineno"]))
 
 
-@painter_registry.register
 class PainterLogDate(Painter):
     @property
     def ident(self) -> str:
@@ -4638,7 +4665,6 @@ class PainterLogDate(Painter):
         return _paint_day(row["log_time"])
 
 
-@painter_registry.register
 class PainterLogState(Painter):
     @property
     def ident(self) -> str:
@@ -4676,7 +4702,6 @@ class PainterLogState(Painter):
 # Alert statistics
 
 
-@painter_registry.register
 class PainterAlertStatsOk(Painter):
     @property
     def ident(self) -> str:
@@ -4699,7 +4724,6 @@ class PainterAlertStatsOk(Painter):
         return ("", str(row["log_alerts_ok"]))
 
 
-@painter_registry.register
 class PainterAlertStatsWarn(Painter):
     @property
     def ident(self) -> str:
@@ -4722,7 +4746,6 @@ class PainterAlertStatsWarn(Painter):
         return paint_svc_count(1, row["log_alerts_warn"])
 
 
-@painter_registry.register
 class PainterAlertStatsCrit(Painter):
     @property
     def ident(self) -> str:
@@ -4745,7 +4768,6 @@ class PainterAlertStatsCrit(Painter):
         return paint_svc_count(2, row["log_alerts_crit"])
 
 
-@painter_registry.register
 class PainterAlertStatsUnknown(Painter):
     @property
     def ident(self) -> str:
@@ -4768,7 +4790,6 @@ class PainterAlertStatsUnknown(Painter):
         return paint_svc_count(3, row["log_alerts_unknown"])
 
 
-@painter_registry.register
 class PainterAlertStatsProblem(Painter):
     @property
     def ident(self) -> str:
@@ -4796,7 +4817,6 @@ class PainterAlertStatsProblem(Painter):
 #
 
 
-@painter_registry.register
 class PainterHostTags(Painter):
     @property
     def ident(self) -> str:
@@ -4854,7 +4874,6 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
         return entries
 
 
-@painter_registry.register
 class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
     @property
     def object_type(self) -> str:
@@ -4879,7 +4898,6 @@ class PainterHostTagsWithTitles(ABCPainterTagsWithTitles):
         return "host"
 
 
-@painter_registry.register
 class PainterServiceTags(Painter):
     @property
     def ident(self) -> str:
@@ -4903,7 +4921,6 @@ class PainterServiceTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "service"), "service", with_links=True)
 
 
-@painter_registry.register
 class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
     @property
     def object_type(self) -> str:
@@ -4928,7 +4945,6 @@ class PainterServiceTagsWithTitles(ABCPainterTagsWithTitles):
         return "service_tags"
 
 
-@painter_registry.register
 class PainterHostLabels(Painter):
     @property
     def ident(self) -> str:
@@ -4966,7 +4982,6 @@ class PainterHostLabels(Painter):
         return self._compute_data(row, cell)
 
 
-@painter_registry.register
 class PainterServiceLabels(Painter):
     @property
     def ident(self) -> str:
@@ -5004,7 +5019,6 @@ class PainterServiceLabels(Painter):
         return self._compute_data(row, cell)
 
 
-@painter_registry.register
 class PainterHostDockerNode(Painter):
     @property
     def ident(self) -> str:
@@ -5130,7 +5144,6 @@ class AbstractPainterSpecificMetric(Painter):
         )
 
 
-@painter_registry.register
 class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
     @property
     def ident(self) -> str:
@@ -5146,7 +5159,6 @@ class PainterHostSpecificMetric(AbstractPainterSpecificMetric):
         return self._render(row, cell, perf_data_entries, check_command)
 
 
-@painter_registry.register
 class PainterServiceSpecificMetric(AbstractPainterSpecificMetric):
     @property
     def ident(self) -> str:
@@ -5230,7 +5242,6 @@ class _PainterHostKubernetes(Painter):
         return "", ""
 
 
-@painter_registry.register
 class PainterHostKubernetesCluster(_PainterHostKubernetes):
     _kubernetes_object_type = "cluster"
     _constraints = ["cluster"]
@@ -5242,7 +5253,6 @@ class PainterHostKubernetesCluster(_PainterHostKubernetes):
         return _("Cluster")
 
 
-@painter_registry.register
 class PainterHostKubernetesNamespace(_PainterHostKubernetes):
     _kubernetes_object_type = "namespace"
     _constraints = ["namespace", "cluster-host", "cluster"]
@@ -5254,7 +5264,6 @@ class PainterHostKubernetesNamespace(_PainterHostKubernetes):
         return _("Namespace")
 
 
-@painter_registry.register
 class PainterHostKubernetesDeployment(_PainterHostKubernetes):
     _kubernetes_object_type = "deployment"
     _constraints = ["deployment", "namespace", "cluster-host", "cluster"]
@@ -5266,7 +5275,6 @@ class PainterHostKubernetesDeployment(_PainterHostKubernetes):
         return _("Deployment")
 
 
-@painter_registry.register
 class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
     _kubernetes_object_type = "daemonset"
     _constraints = ["daemonset", "namespace", "cluster-host", "cluster"]
@@ -5278,7 +5286,6 @@ class PainterHostKubernetesDaemonset(_PainterHostKubernetes):
         return _("DaemonSet")
 
 
-@painter_registry.register
 class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
     _kubernetes_object_type = "statefulset"
     _constraints = ["statefulset", "namespace", "cluster-host", "cluster"]
@@ -5290,7 +5297,6 @@ class PainterHostKubernetesStatefulset(_PainterHostKubernetes):
         return _("StatefulSet")
 
 
-@painter_registry.register
 class PainterHostKubernetesNode(_PainterHostKubernetes):
     _kubernetes_object_type = "node"
     _constraints = ["node", "cluster"]

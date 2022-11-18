@@ -697,6 +697,13 @@ class ModeEditUser(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        def read_password_or_none(field: str) -> Optional[Password]:
+            # make a Password type only if the field has a non-"" value
+            # this is here because we don't have get_validated_type_input on 2.1 yet.
+            if pw := request.get_str_input(field):
+                return Password(pw)
+            return None
+
         if not transactions.check_transaction():
             return redirect(mode_url("users"))
 
@@ -731,7 +738,7 @@ class ModeEditUser(WatoMode):
         # Authentication: Password or Secret
         auth_method = request.var("authmethod")
         if auth_method == "secret":
-            secret = request.get_str_input_mandatory("_auth_secret", "").strip()
+            secret = request.get_str_input_mandatory("_auth_secret", "")
             if secret:
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
@@ -740,10 +747,8 @@ class ModeEditUser(WatoMode):
                 del user_attrs["password"]
 
         else:
-            password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), "").strip()
-            password2 = request.get_str_input_mandatory(
-                "_password2_" + self._pw_suffix(), ""
-            ).strip()
+            password = read_password_or_none("_password_" + self._pw_suffix())
+            password2 = read_password_or_none("_password2_" + self._pw_suffix())
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -759,7 +764,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
-                user_attrs["password"] = hash_password(Password(password))
+                user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial
 

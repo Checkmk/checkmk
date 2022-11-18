@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Optional
 
 from cmk.utils.crypto import Password
 
@@ -31,14 +32,21 @@ class UserChangePasswordPage(ABCUserProfilePage):
         super().__init__("general.change_password")
 
     def _action(self) -> None:
+        def read_password_or_none(field: str) -> Optional[Password]:
+            # make a Password type only if the field has a non-"" value
+            # this is here because we don't have get_validated_type_input on 2.1 yet.
+            if pw := request.get_str_input(field):
+                return Password(pw)
+            return None
+
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
         user_spec = users[user.id]
 
-        cur_password = request.get_str_input_mandatory("cur_password")
-        password = request.get_str_input_mandatory("password")
-        password2 = request.get_str_input_mandatory("password2", "")
+        cur_password = read_password_or_none("cur_password")
+        password = read_password_or_none("password")
+        password2 = read_password_or_none("password2")
 
         # Force change pw mode
         if not cur_password:
@@ -50,14 +58,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
         if cur_password == password:
             raise MKUserError("password", _("The new password must differ from your current one."))
 
-        if userdb.check_credentials(user.id, Password(cur_password)) is False:
+        if userdb.check_credentials(user.id, cur_password) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
             raise MKUserError("password2", _("The both new passwords do not match."))
 
         verify_password_policy(password)
-        user_spec["password"] = hash_password(Password(password))
+        user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
 
         # In case the user was enforced to change it's password, remove the flag

@@ -1,0 +1,19 @@
+Title: Consistently handle white-space in passwords
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1668765103
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Previously it was not possible to set user passwords starting with or ending on white-space characters in the Edit Users UI. This is now possible.
+
+White-space characters at be beginning or end of passwords were stripped in the Edit Users interface. For example, the password "insecure example    " would have been accepted by the interface, but modified to "insecure example". As a result, users might have ended up with a different password than they expected and been unable to log in.
+
+White-spaces in passwords are now no longer stripped, so the password "insecure example    " can be set and used.
+
+Note that the user's Change Password interface, reachable via the User Profile section, was not affected by this and has already allowed passwords starting with or ending on white-space characters.
+

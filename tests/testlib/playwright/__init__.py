@@ -7,6 +7,7 @@
 """Wrapper for a page, with some often used functionality"""
 
 from abc import ABC, abstractmethod
+from typing import Pattern, Union
 
 from playwright.sync_api import expect, Locator, Page
 from playwright.sync_api._generated import FrameLocator
@@ -22,11 +23,11 @@ class LocatorHelper(ABC):
     def locator(self, selector: str) -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str) -> None:
+    def check_success(self, message: Union[str, Pattern]) -> None:
         """check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message)
 
-    def check_error(self, message: str) -> None:
+    def check_error(self, message: Union[str, Pattern]) -> None:
         """check for a error div and its content"""
         expect(self.locator("div.error")).to_have_text(message)
 
@@ -41,6 +42,10 @@ class MainMenu(LocatorHelper):
     def user(self) -> Locator:
         """main menu -> User"""
         return self.page.locator("a.popup_trigger:has-text('User')")
+
+    @property
+    def main_page(self) -> Locator:
+        return self.page.locator('a[title="Go to main page"]')
 
 
 class MainFrame(LocatorHelper):
@@ -74,3 +79,8 @@ class PPage(LocatorHelper):
     def logout(self) -> None:
         self.main_menu.user.click()
         self.page.locator("text=Logout").click()
+
+    def goto_main_dashboard(self) -> None:
+        """Click the banner and wait for the dashboard"""
+        self.main_menu.main_page.click()
+        self.main_frame.check_page_title("Main dashboard")

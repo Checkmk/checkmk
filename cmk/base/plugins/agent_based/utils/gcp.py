@@ -358,6 +358,10 @@ def _cascading_dropdown_level_extractor(
     return None
 
 
+def _dummy_percentile_level_extractor(params: Mapping[str, Any], metric_name: str) -> None:
+    return None
+
+
 def get_percentile_metric_specs(
     gcp_metric: str,
     check_metric_prefix: str,
@@ -365,7 +369,12 @@ def get_percentile_metric_specs(
     render_func: Callable,
     scale: float = 1.0,
     additional_filter_by: Sequence[Filter] | None = None,
+    parametrized: bool = True,
 ) -> Mapping[str, MetricSpec]:
+    level_extractor = (
+        _cascading_dropdown_level_extractor if parametrized else _dummy_percentile_level_extractor
+    )
+
     def _get_spec(gcp_aligner_map: GCPAlignerMap) -> MetricSpec:
         filters = [
             Filter(key=AggregationKey(key="per_series_aligner"), value=gcp_aligner_map.gcp_aligner)
@@ -379,7 +388,7 @@ def get_percentile_metric_specs(
             render_func,
             scale=scale,
             filter_by=filters,
-            level_extractor=_cascading_dropdown_level_extractor,
+            level_extractor=level_extractor,
         )
 
     return {

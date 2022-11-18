@@ -87,9 +87,13 @@ class Perfcounters:
         columns: list[tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:
-            columns.append(("status_" + name, 0))
-            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
-            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
+            columns.extend(
+                [
+                    (f"status_{name}", 0),
+                    (f"status_{name.rstrip('s')}_rate", 0.0),
+                    (f"status_average_{name.rstrip('s')}_rate", 0.0),
+                ]
+            )
 
         for name in cls._weights:
             columns.append((f"status_average_{name}_time", 0.0))
@@ -101,9 +105,13 @@ class Perfcounters:
             row: list[float] = []
             # Please note: status_columns() and get_status() need to produce lists with exact same column order
             for name in self._counter_names:
-                row.append(self._counters[name])
-                row.append(self._rates.get(name, 0.0))
-                row.append(self._average_rates.get(name, 0.0))
+                row.extend(
+                    [
+                        self._counters[name],
+                        self._rates.get(name, 0.0),
+                        self._average_rates.get(name, 0.0),
+                    ]
+                )
 
             for name in self._weights:
                 row.append(self._times.get(name, 0.0))

@@ -34,7 +34,9 @@ def discover(
             ServiceLabel("gcp/filestore/name", item),
             ServiceLabel("gcp/projectId", assets.project),
         ]
-        labels.extend([ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()])
+        labels.extend(
+            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+        )
         yield Service(item=item, labels=labels)
 
 

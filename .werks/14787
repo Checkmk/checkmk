@@ -1,0 +1,15 @@
+Title: Extend service detection for MariaDBs with mk_mysql.vbs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668765550
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+You're affected by this werk if you're monitoring MariaDBs with mk_mysql.vbs and you've given a customized service name.
+Perviously, the Windows Service was only detected, if it contained the "MariaDB" suffix.
+Now Windows Services containing the substring "MariaDB" will be detected (e.g. "MariaDB 10.4.25").
+

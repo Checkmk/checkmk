@@ -37,7 +37,7 @@ from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, collect_attributes, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
-from cmk.gui.sites import get_enabled_sites
+from cmk.gui.sites import configured_sites
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 from cmk.fields import base, DateTime
@@ -860,7 +860,7 @@ class SiteField(base.String):
     default_error_messages = {"unknown_site": "Unknown site {site!r}"}
 
     def _validate(self, value):
-        if value not in get_enabled_sites().keys():
+        if value not in configured_sites().keys():
             raise self.make_error("unknown_site", site=value)
 
 

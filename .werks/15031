@@ -1,0 +1,16 @@
+Title: host_config & dcd: change SiteField field to use configured_sites rather than enabled_sites
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1668778781
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Prior to this werk, the REST API endpoint show all hosts returned a 500 error when one of the returned
+hosts was part of a disabled remote site. This error also affected the DCD as the connector uses the
+same endpoint to retrieve the hosts. This werk resolves this error by changing the site verification
+from using all configured sites rather than all enabled sites.
+

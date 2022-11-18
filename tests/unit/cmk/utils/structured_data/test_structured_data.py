@@ -7,7 +7,7 @@ import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 import pytest
 

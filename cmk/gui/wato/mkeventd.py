@@ -105,7 +105,7 @@ from cmk.gui.plugins.watolib.utils import (
     sample_config_generator_registry,
     SampleConfigGenerator,
 )
-from cmk.gui.site_config import allsites
+from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.user_sites import get_event_console_site_choices
@@ -954,7 +954,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 help=_("Apply this rule only on the following sites"),
                 choices=get_event_console_site_choices(),
                 locked_choices=list(
-                    allsites().keys() - dict(get_event_console_site_choices()).keys()
+                    enabled_sites().keys() - dict(get_event_console_site_choices()).keys()
                 ),
                 locked_choices_text_singular=_("%d locked site"),
                 locked_choices_text_plural=_("%d locked sites"),

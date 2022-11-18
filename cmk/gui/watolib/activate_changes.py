@@ -89,7 +89,7 @@ from cmk.gui.plugins.watolib.utils import (
     get_config_domain,
     SerializedSettings,
 )
-from cmk.gui.site_config import allsites, get_site_config, is_single_local_site, site_is_local
+from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
@@ -2563,7 +2563,7 @@ def activate_changes_start(
                 )
             )
 
-    known_sites = allsites().keys()
+    known_sites = enabled_sites().keys()
     for site in sites:
         if site not in known_sites:
             raise MKUserError(

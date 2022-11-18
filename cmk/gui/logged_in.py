@@ -343,7 +343,7 @@ class LoggedInUser:
         self, unfiltered_sites: SiteConfigurations | None = None
     ) -> SiteConfigurations:
         if unfiltered_sites is None:
-            unfiltered_sites = site_config.allsites()
+            unfiltered_sites = site_config.enabled_sites()
 
         authorized_sites = self.get_attribute("authorized_sites")
         if authorized_sites is None:
@@ -363,7 +363,7 @@ class LoggedInUser:
             SiteConfigurations(
                 {
                     site_id: s
-                    for site_id, s in site_config.allsites().items()
+                    for site_id, s in site_config.enabled_sites().items()
                     if site_id in login_site_ids  #
                 }
             )

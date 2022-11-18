@@ -67,7 +67,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
-from cmk.gui.site_config import allsites, is_wato_slave_site
+from cmk.gui.site_config import enabled_sites, is_wato_slave_site
 from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.html import HTML
@@ -3540,7 +3540,7 @@ class CMEFolder(CREFolder):
                     "following sites <i>%s</i>."
                 )
                 % (
-                    allsites()[site_id]["alias"],
+                    enabled_sites()[site_id]["alias"],
                     self.title(),
                     managed.get_customer_name_by_id(customer_id),
                     folder_sites,
@@ -3566,7 +3566,7 @@ class CMEFolder(CREFolder):
                         )
                         % (
                             subfolder.title(),
-                            allsites()[subfolder_explicit_site]["alias"],
+                            enabled_sites()[subfolder_explicit_site]["alias"],
                             managed.get_customer_name_by_id(subfolder_customer),
                         ),
                     )
@@ -3588,7 +3588,7 @@ class CMEFolder(CREFolder):
                         )
                         % (
                             host.name(),
-                            allsites()[host_explicit_site]["alias"],
+                            enabled_sites()[host_explicit_site]["alias"],
                             managed.get_customer_name_by_id(host_customer),
                         ),
                     )
@@ -3653,7 +3653,7 @@ class CMEFolder(CREFolder):
                     )
                     % (
                         hostname,
-                        allsites()[attributes["site"]]["alias"],
+                        enabled_sites()[attributes["site"]]["alias"],
                         customer_id,
                         folder_sites,
                     ),
@@ -3683,7 +3683,7 @@ class CMEFolder(CREFolder):
                         )
                         % (
                             hostname,
-                            allsites()[host_site]["alias"],
+                            enabled_sites()[host_site]["alias"],
                             managed.get_customer_of_site(host_site),
                             managed.get_customer_of_site(target_site_id),
                         ),

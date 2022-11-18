@@ -22,8 +22,7 @@ def sitenames() -> list[SiteId]:
 # TODO: Cleanup: Make clear that this function is used by the status GUI (and not WATO)
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
-# TODO: Rename this!
-def allsites() -> SiteConfigurations:
+def enabled_sites() -> SiteConfigurations:
     return SiteConfigurations(
         {
             name: get_site_config(name)  #

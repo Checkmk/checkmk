@@ -156,7 +156,7 @@ def test_unauthenticated_users_authorized_sites(
         "site1": {},
     }
 
-    monkeypatch.setattr("cmk.gui.site_config.allsites", lambda: {"site1": {}, "site2": {}})
+    monkeypatch.setattr("cmk.gui.site_config.enabled_sites", lambda: {"site1": {}, "site2": {}})
     assert user.authorized_sites() == {"site1": {}, "site2": {}}
 
 
@@ -166,7 +166,7 @@ def test_unauthenticated_users_authorized_login_sites(
 ) -> None:
     monkeypatch.setattr("cmk.gui.site_config.get_login_slave_sites", lambda: ["slave_site"])
     monkeypatch.setattr(
-        "cmk.gui.site_config.allsites",
+        "cmk.gui.site_config.enabled_sites",
         lambda: {
             "master_site": {},
             "slave_site": {},

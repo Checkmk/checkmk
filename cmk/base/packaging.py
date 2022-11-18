@@ -17,7 +17,9 @@ import cmk.utils.tty as tty
 import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
+    format_file_name,
     get_config_parts,
+    get_enabled_package_infos,
     get_installed_package_info,
     get_package_parts,
     package_dir,
@@ -40,21 +42,20 @@ def packaging_usage() -> None:
         """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME      ...  Collect unpackaged files into new package NAME
-   pack NAME        ...  Create package file from installed package
-   release NAME     ...  Drop installed package NAME, release packaged files
-   find             ...  Find and display unpackaged files
-   list             ...  List all installed packages
-   list NAME        ...  List files of installed package
-   list PACK.mkp    ...  List files of uninstalled package file
-   show NAME        ...  Show information about installed package
-   show PACK.mkp    ...  Show information about uninstalled package file
-   install PACK.mkp ...  Install or update package from file PACK.mkp
-   remove NAME      ...  Uninstall package NAME
-   disable NAME     ...  Disable package NAME
-   enable NAME      ...  Enable previously disabled package NAME
-   disable-outdated ...  Disable outdated packages
-   update-active    ...  Disable inapplicable packages and enable applicable ones
+   create NAME         ...  Collect unpackaged files into new package NAME
+   pack NAME           ...  Create package file from installed package
+   release NAME        ...  Drop installed package NAME, release packaged files
+   find                ...  Find and display unpackaged files
+   list                ...  List all installed packages
+   list NAME           ...  List files of installed package
+   list PACK.mkp       ...  List files of uninstalled package file
+   show NAME           ...  Show information about installed package
+   show PACK.mkp       ...  Show information about uninstalled package file
+   install PACK.mkp    ...  Install or update package from file PACK.mkp
+   remove NAME VERSION ...  Uninstall and delete package NAME
+   disable NAME        ...  Disable package NAME
+   enable NAME VERSION ...  Enable previously disabled package NAME
+   disable-outdated    ...  Disable outdated packages
 
    -v  enables verbose output
 
@@ -277,16 +278,17 @@ def package_pack(args: list[str]) -> None:
 
 
 def package_remove(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P remove NAME")
-    pacname = args[0]
+    if len(args) != 2:
+        raise PackageException("Usage: check_mk -P remove NAME VERSION")
+    name, version = args
 
-    if (package := get_installed_package_info(pacname)) is None:
-        raise PackageException("No such package %s." % pacname)
+    for package in get_enabled_package_infos().values():
+        if package.name == name and package.version == version:
+            raise PackageException("This package is enabled! Please disable it first.")
 
-    logger.log(VERBOSE, "Uninstalling package %s...", pacname)
-    packaging.uninstall(package)
-    logger.log(VERBOSE, "Successfully uninstalled package %s.", pacname)
+    logger.log(VERBOSE, "Removing package %s...", name)
+    packaging.PackageStore().remove(format_file_name(name=name, version=version))
+    logger.log(VERBOSE, "Successfully removed package %s.", name)
 
 
 def package_install(args: list[str]) -> None:
@@ -312,13 +314,9 @@ def package_disable(args: list[str]) -> None:
 
 
 def package_enable(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P enable NAME")
-    if (package := get_installed_package_info(args[0])) is None:
-        raise PackageException("No such package %s." % args[0])
-    packaging.install_optional_package(
-        packaging.format_file_name(name=package.name, version=package.version)
-    )
+    if len(args) != 2:
+        raise PackageException("Usage: check_mk -P enable NAME VERSION")
+    packaging.install_optional_package(packaging.format_file_name(name=args[0], version=args[1]))
 
 
 def package_disable_outdated(args: list[str]) -> None:

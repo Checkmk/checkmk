@@ -510,12 +510,9 @@ class Dashlet(abc.ABC, Generic[T]):
 
         url = self._get_refresh_url()
         try:
-            # pylint is just too stupid, see e.g. https://github.com/PyCQA/pylint/issues/2332
-            # or https://github.com/PyCQA/pylint/issues/2559 plus a dozen other issues...
-            on_refresh = self.on_refresh()  # pylint: disable=assignment-from-none
-            if on_refresh:
-                return "(function() {%s})" % on_refresh
-            return '"%s"' % self._add_context_vars_to_url(url)  # url to dashboard_dashlet.py
+            if on_refresh := self.on_refresh():
+                return f"(function() {{{on_refresh}}})"
+            return f'"{self._add_context_vars_to_url(url)}"'  # url to dashboard_dashlet.py
         except Exception:
             # Ignore the exceptions in non debug mode, assuming the exception also occures
             # while dashlet rendering, which is then shown in the dashlet itselfs.

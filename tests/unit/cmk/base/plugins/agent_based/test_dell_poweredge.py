@@ -5,8 +5,6 @@
 
 from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_amperage
 
-# mypy can not handle globals ignore in dell_poweredge https://github.com/python/mypy/issues/9318
-
 
 def test_check_dell_poweredge_amperage_state_simple() -> None:
     result = check_dell_poweredge_amperage(

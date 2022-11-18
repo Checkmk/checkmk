@@ -166,10 +166,7 @@ def check(item: str, params: Mapping[str, bool], section: _Section) -> CheckResu
         if params[mode.name.lower()] is False:
             continue
         for quota in quotas:
-
-            # https://github.com/PyCQA/pylint/issues/5845
-
-            yield from lnx_quota_limit_check(quota, mode)  # pylint: disable=not-an-iterable
+            yield from lnx_quota_limit_check(quota, mode)
 
 
 register.check_plugin(

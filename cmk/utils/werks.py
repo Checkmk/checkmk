@@ -129,7 +129,6 @@ def _compiled_werks_dir() -> Path:
 
 def load() -> dict[int, Werk]:
     werks: dict[int, Werk] = {}
-    # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(
         _compiled_werks_dir().glob("werks"), _compiled_werks_dir().glob("werks-*")
     ):

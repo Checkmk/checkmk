@@ -1604,8 +1604,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 is_editable = True
 
             if not is_editable:
-                # Bug in pylint 1.9.2 https://github.com/PyCQA/pylint/issues/1984, already fixed in master.
-                if active:  # pylint: disable=simplifiable-if-statement
+                if active:
                     force_entry = True
                 else:
                     disabled = True

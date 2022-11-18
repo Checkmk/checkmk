@@ -63,7 +63,7 @@ def _abs_and_rel_levels(levels: Tuple[str, LEVEL_TYPE]) -> Tuple[LEVEL_TYPE, LEV
             return thresholds, None
         case ("perc_user", thresholds):
             return None, thresholds
-    return None, None  # needed for pylint due to https://github.com/PyCQA/pylint/issues/5288
+    return None, None
 
 
 def check(params: Mapping[str, Any], section: Section) -> CheckResult:

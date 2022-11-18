@@ -139,7 +139,6 @@ def get_source_and_piggyback_hosts(
 ) -> Iterator[tuple[HostName, HostName]]:
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
-    # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         for file_info in _get_piggyback_processed_file_infos(
             HostName(piggybacked_host_folder.name),

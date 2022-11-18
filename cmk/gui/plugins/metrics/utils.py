@@ -486,20 +486,25 @@ def normalize_perf_data(  # type:ignore[no-untyped-def]
 
 def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
 
-    if metric_name not in metric_info:
-        color_index += 1
-        mi: MetricInfo = {
-            "title": metric_name.title(),
-            "unit": "",
-            "color": get_palette_color_by_index(color_index),
-        }
+    if metric_name in metric_info:
+        mi = metric_info[metric_name]
     else:
-        mi = metric_info[metric_name].copy()
+        color_index += 1
+        mi = MetricInfo(
+            title=metric_name.title(),
+            unit="",
+            color=get_palette_color_by_index(color_index),
+        )
 
-    mie: MetricInfoExtended = {}
-    mie.update(mi)  # type: ignore # https://github.com/python/mypy/issues/6462
-    mie["unit"] = unit_info[mi["unit"]]
-    mie["color"] = parse_color_into_hexrgb(mi["color"])
+    mie = MetricInfoExtended(
+        title=mi["title"],
+        unit=unit_info[mi["unit"]],
+        color=parse_color_into_hexrgb(mi["color"]),
+    )
+    if "help" in mi:
+        mie["help"] = mi["help"]
+    if "render" in mi:
+        mie["render"] = mi["render"]
 
     return mie, color_index
 

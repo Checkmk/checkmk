@@ -144,6 +144,8 @@ class Plugin:
     results: Sequence[Result]
     function: Callable[..., CheckResult]
     percentile_metrics: Sequence[tuple[str, Sequence[int]]] = field(default_factory=list)
+    pure_metrics: Sequence[str] = field(default_factory=list)
+    additional_results: Sequence[Result] = field(default_factory=list)
     default_value: float = 42.0
     override_values: Mapping[str, float] = field(default_factory=dict)
 
@@ -153,12 +155,16 @@ class Plugin:
             self.results
         ), "expect to have the same number of metrics and results"
 
+    def expected_results(self) -> set:
+        return set(self.results) | set(self.additional_results)
+
     def expected_metrics(self) -> set:
-        return set(self.metrics) | {
+        expanded_perc_metrics = {
             f"{metric}_{percentile}"
             for metric, percentiles in self.percentile_metrics
             for percentile in percentiles
         }
+        return set(self.metrics) | set(self.pure_metrics) | expanded_perc_metrics
 
     def default_params(self) -> Mapping[str, Any]:
         params: dict[str, Any] = {metric: None for metric in self.metrics}

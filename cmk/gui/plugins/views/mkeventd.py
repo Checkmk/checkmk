@@ -21,7 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
+from cmk.gui.painters.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painters.v0.helpers import paint_nagiosflag
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import (
@@ -48,12 +48,7 @@ from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_var
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
-from cmk.gui.views.data_source import (
-    ABCDataSource,
-    data_source_registry,
-    row_id,
-    RowTableLivestatus,
-)
+from cmk.gui.views.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.views.sorter import (
     cmp_num_split,
     cmp_simple_number,
@@ -61,6 +56,74 @@ from cmk.gui.views.sorter import (
     declare_1to1_sorter,
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
+
+
+def register(data_source_registry: DataSourceRegistry, painter_registry: PainterRegistry) -> None:
+    data_source_registry.register(DataSourceECEvents)
+    data_source_registry.register(DataSourceECEventHistory)
+
+    painter_registry.register(PainterEventId)
+    painter_registry.register(PainterEventCount)
+    painter_registry.register(PainterEventText)
+    painter_registry.register(PainterEventMatchGroups)
+    painter_registry.register(PainterEventFirst)
+    painter_registry.register(PainterEventLast)
+    painter_registry.register(PainterEventComment)
+    painter_registry.register(PainterEventSl)
+    painter_registry.register(PainterEventHost)
+    painter_registry.register(PainterEventIpaddress)
+    painter_registry.register(PainterEventHostInDowntime)
+    painter_registry.register(PainterEventOwner)
+    painter_registry.register(PainterEventContact)
+    painter_registry.register(PainterEventApplication)
+    painter_registry.register(PainterEventPid)
+    painter_registry.register(PainterEventPriority)
+    painter_registry.register(PainterEventFacility)
+    painter_registry.register(PainterEventRuleId)
+    painter_registry.register(PainterEventState)
+    painter_registry.register(PainterEventPhase)
+    painter_registry.register(PainterEventIcons)
+    painter_registry.register(PainterEventHistoryIcons)
+    painter_registry.register(PainterEventContactGroups)
+    painter_registry.register(PainterEventEffectiveContactGroups)
+    painter_registry.register(PainterHistoryLine)
+    painter_registry.register(PainterHistoryTime)
+    painter_registry.register(PainterHistoryWhat)
+    painter_registry.register(PainterHistoryWhatExplained)
+    painter_registry.register(PainterHistoryWho)
+    painter_registry.register(PainterHistoryAddinfo)
+
+    command_registry.register(CommandECUpdateEvent)
+    command_registry.register(CommandECChangeState)
+    command_registry.register(CommandECCustomAction)
+    command_registry.register(CommandECArchiveEvent)
+    command_registry.register(CommandECArchiveEventsOfHost)
+
+    declare_1to1_sorter("event_id", cmp_simple_number)
+    declare_1to1_sorter("event_count", cmp_simple_number)
+    declare_1to1_sorter("event_text", cmp_simple_string)
+    declare_1to1_sorter("event_first", cmp_simple_number)
+    declare_1to1_sorter("event_last", cmp_simple_number)
+    declare_1to1_sorter("event_comment", cmp_simple_string)
+    declare_1to1_sorter("event_sl", cmp_simple_number)
+    declare_1to1_sorter("event_host", cmp_num_split)
+    declare_1to1_sorter("event_ipaddress", cmp_num_split)
+    declare_1to1_sorter("event_contact", cmp_simple_string)
+    declare_1to1_sorter("event_application", cmp_simple_string)
+    declare_1to1_sorter("event_pid", cmp_simple_number)
+    declare_1to1_sorter("event_priority", cmp_simple_number)
+    declare_1to1_sorter("event_facility", cmp_simple_number)  # maybe convert to text
+    declare_1to1_sorter("event_rule_id", cmp_simple_string)
+    declare_1to1_sorter("event_state", cmp_simple_state)
+    declare_1to1_sorter("event_phase", cmp_simple_string)
+    declare_1to1_sorter("event_owner", cmp_simple_string)
+
+    declare_1to1_sorter("history_line", cmp_simple_number)
+    declare_1to1_sorter("history_time", cmp_simple_number)
+    declare_1to1_sorter("history_what", cmp_simple_string)
+    declare_1to1_sorter("history_who", cmp_simple_string)
+    declare_1to1_sorter("history_addinfo", cmp_simple_string)
+
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |
@@ -204,7 +267,6 @@ permission_registry.register(
 )
 
 
-@data_source_registry.register
 class DataSourceECEvents(ABCDataSource):
     @property
     def ident(self) -> str:
@@ -239,7 +301,6 @@ class DataSourceECEvents(ABCDataSource):
         return ["event_first"]
 
 
-@data_source_registry.register
 class DataSourceECEventHistory(ABCDataSource):
     @property
     def ident(self) -> str:
@@ -285,7 +346,6 @@ class DataSourceECEventHistory(ABCDataSource):
 #   '----------------------------------------------------------------------'
 
 
-@painter_registry.register
 class PainterEventId(Painter):
     @property
     def ident(self) -> str:
@@ -305,7 +365,6 @@ class PainterEventId(Painter):
         return ("number", str(row["event_id"]))
 
 
-@painter_registry.register
 class PainterEventCount(Painter):
     @property
     def ident(self) -> str:
@@ -325,7 +384,6 @@ class PainterEventCount(Painter):
         return ("number", str(row["event_count"]))
 
 
-@painter_registry.register
 class PainterEventText(Painter):
     @property
     def ident(self) -> str:
@@ -345,7 +403,6 @@ class PainterEventText(Painter):
         return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
 
 
-@painter_registry.register
 class PainterEventMatchGroups(Painter):
     @property
     def ident(self) -> str:
@@ -371,7 +428,6 @@ class PainterEventMatchGroups(Painter):
         return "", HTML("")
 
 
-@painter_registry.register
 class PainterEventFirst(Painter):
     @property
     def ident(self) -> str:
@@ -395,7 +451,6 @@ class PainterEventFirst(Painter):
         return paint_age(row["event_first"], True, True)
 
 
-@painter_registry.register
 class PainterEventLast(Painter):
     @property
     def ident(self) -> str:
@@ -419,7 +474,6 @@ class PainterEventLast(Painter):
         return paint_age(row["event_last"], True, True)
 
 
-@painter_registry.register
 class PainterEventComment(Painter):
     @property
     def ident(self) -> str:
@@ -439,7 +493,6 @@ class PainterEventComment(Painter):
         return ("", row["event_comment"])
 
 
-@painter_registry.register
 class PainterEventSl(Painter):
     @property
     def ident(self) -> str:
@@ -462,7 +515,6 @@ class PainterEventSl(Painter):
         return "", sl_txt
 
 
-@painter_registry.register
 class PainterEventHost(Painter):
     @property
     def ident(self) -> str:
@@ -515,7 +567,6 @@ def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
     )
 
 
-@painter_registry.register
 class PainterEventIpaddress(Painter):
     @property
     def ident(self) -> str:
@@ -535,7 +586,6 @@ class PainterEventIpaddress(Painter):
         return ("", row["event_ipaddress"])
 
 
-@painter_registry.register
 class PainterEventHostInDowntime(Painter):
     @property
     def ident(self) -> str:
@@ -555,7 +605,6 @@ class PainterEventHostInDowntime(Painter):
         return paint_nagiosflag(row, "event_host_in_downtime", True)
 
 
-@painter_registry.register
 class PainterEventOwner(Painter):
     @property
     def ident(self) -> str:
@@ -575,7 +624,6 @@ class PainterEventOwner(Painter):
         return ("", row["event_owner"])
 
 
-@painter_registry.register
 class PainterEventContact(Painter):
     @property
     def ident(self) -> str:
@@ -595,7 +643,6 @@ class PainterEventContact(Painter):
         return ("", row["event_contact"])
 
 
-@painter_registry.register
 class PainterEventApplication(Painter):
     @property
     def ident(self) -> str:
@@ -615,7 +662,6 @@ class PainterEventApplication(Painter):
         return ("", row["event_application"])
 
 
-@painter_registry.register
 class PainterEventPid(Painter):
     @property
     def ident(self) -> str:
@@ -643,7 +689,6 @@ def _deref(x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
-@painter_registry.register
 class PainterEventPriority(Painter):
     @property
     def ident(self) -> str:
@@ -663,7 +708,6 @@ class PainterEventPriority(Painter):
         return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
 
 
-@painter_registry.register
 class PainterEventFacility(Painter):
     @property
     def ident(self) -> str:
@@ -683,7 +727,6 @@ class PainterEventFacility(Painter):
         return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
 
 
-@painter_registry.register
 class PainterEventRuleId(Painter):
     @property
     def ident(self) -> str:
@@ -707,7 +750,6 @@ class PainterEventRuleId(Painter):
         return "", rule_id
 
 
-@painter_registry.register
 class PainterEventState(Painter):
     @property
     def ident(self) -> str:
@@ -731,7 +773,6 @@ class PainterEventState(Painter):
         )
 
 
-@painter_registry.register
 class PainterEventPhase(Painter):
     @property
     def ident(self) -> str:
@@ -840,7 +881,6 @@ def _is_linked_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[LinkedVi
     return dashlet_config["type"] == "linked_view"
 
 
-@painter_registry.register
 class PainterEventIcons(Painter):
     @property
     def ident(self) -> str:
@@ -864,7 +904,6 @@ class PainterEventIcons(Painter):
         return paint_event_icons(row)
 
 
-@painter_registry.register
 class PainterEventHistoryIcons(Painter):
     @property
     def ident(self) -> str:
@@ -888,7 +927,6 @@ class PainterEventHistoryIcons(Painter):
         return paint_event_icons(row, history=True)
 
 
-@painter_registry.register
 class PainterEventContactGroups(Painter):
     @property
     def ident(self) -> str:
@@ -913,7 +951,6 @@ class PainterEventContactGroups(Painter):
         return "", "<i>" + _("none") + "</i>"
 
 
-@painter_registry.register
 class PainterEventEffectiveContactGroups(Painter):
     @property
     def ident(self) -> str:
@@ -949,7 +986,6 @@ class PainterEventEffectiveContactGroups(Painter):
 # Event History
 
 
-@painter_registry.register
 class PainterHistoryLine(Painter):
     @property
     def ident(self) -> str:
@@ -969,7 +1005,6 @@ class PainterHistoryLine(Painter):
         return ("number", "%s" % row["history_line"])
 
 
-@painter_registry.register
 class PainterHistoryTime(Painter):
     @property
     def ident(self) -> str:
@@ -993,7 +1028,6 @@ class PainterHistoryTime(Painter):
         return paint_age(row["history_time"], True, True)
 
 
-@painter_registry.register
 class PainterHistoryWhat(Painter):
     @property
     def ident(self) -> str:
@@ -1014,7 +1048,6 @@ class PainterHistoryWhat(Painter):
         return "", HTMLWriter.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
-@painter_registry.register
 class PainterHistoryWhatExplained(Painter):
     @property
     def ident(self) -> str:
@@ -1031,7 +1064,6 @@ class PainterHistoryWhatExplained(Painter):
         return ("", str(mkeventd.action_whats[row["history_what"]]))
 
 
-@painter_registry.register
 class PainterHistoryWho(Painter):
     @property
     def ident(self) -> str:
@@ -1051,7 +1083,6 @@ class PainterHistoryWho(Painter):
         return ("", row["history_who"])
 
 
-@painter_registry.register
 class PainterHistoryAddinfo(Painter):
     @property
     def ident(self) -> str:
@@ -1126,7 +1157,6 @@ class ECCommand(Command):
         mkeventd.execute_command(command, site=site)
 
 
-@command_registry.register
 class CommandECUpdateEvent(ECCommand):
     @property
     def ident(self) -> str:
@@ -1218,7 +1248,6 @@ PermissionECChangeEventState = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandECChangeState(ECCommand):
     @property
     def ident(self) -> str:
@@ -1269,7 +1298,6 @@ PermissionECCustomActions = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandECCustomAction(ECCommand):
     @property
     def ident(self) -> str:
@@ -1317,7 +1345,6 @@ PermissionECArchiveEvent = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandECArchiveEvent(ECCommand):
     @property
     def ident(self) -> str:
@@ -1364,7 +1391,6 @@ PermissionECArchiveEventsOfHost = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandECArchiveEventsOfHost(ECCommand):
     @property
     def ident(self) -> str:
@@ -1421,31 +1447,6 @@ def cmp_simple_state(column, ra, rb):
         b = 1.5
     return (a > b) - (a < b)
 
-
-declare_1to1_sorter("event_id", cmp_simple_number)
-declare_1to1_sorter("event_count", cmp_simple_number)
-declare_1to1_sorter("event_text", cmp_simple_string)
-declare_1to1_sorter("event_first", cmp_simple_number)
-declare_1to1_sorter("event_last", cmp_simple_number)
-declare_1to1_sorter("event_comment", cmp_simple_string)
-declare_1to1_sorter("event_sl", cmp_simple_number)
-declare_1to1_sorter("event_host", cmp_num_split)
-declare_1to1_sorter("event_ipaddress", cmp_num_split)
-declare_1to1_sorter("event_contact", cmp_simple_string)
-declare_1to1_sorter("event_application", cmp_simple_string)
-declare_1to1_sorter("event_pid", cmp_simple_number)
-declare_1to1_sorter("event_priority", cmp_simple_number)
-declare_1to1_sorter("event_facility", cmp_simple_number)  # maybe convert to text
-declare_1to1_sorter("event_rule_id", cmp_simple_string)
-declare_1to1_sorter("event_state", cmp_simple_state)
-declare_1to1_sorter("event_phase", cmp_simple_string)
-declare_1to1_sorter("event_owner", cmp_simple_string)
-
-declare_1to1_sorter("history_line", cmp_simple_number)
-declare_1to1_sorter("history_time", cmp_simple_number)
-declare_1to1_sorter("history_what", cmp_simple_string)
-declare_1to1_sorter("history_who", cmp_simple_string)
-declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
 # .
 #   .--Views---------------------------------------------------------------.

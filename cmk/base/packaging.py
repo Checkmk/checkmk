@@ -24,7 +24,9 @@ from cmk.utils.packaging import (
     package_dir,
     read_package_info,
     write_package_info,
+    get_enabled_package_infos,
     parse_package_info,
+    format_file_name,
     get_package_parts,
     unpackaged_files,
     unpackaged_files_in_dir,
@@ -42,20 +44,20 @@ def packaging_usage() -> None:
     sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME      ...  Collect unpackaged files into new package NAME
-   pack NAME        ...  Create package file from installed package
-   release NAME     ...  Drop installed package NAME, release packaged files
-   find             ...  Find and display unpackaged files
-   list             ...  List all installed packages
-   list NAME        ...  List files of installed package
-   list PACK.mkp    ...  List files of uninstalled package file
-   show NAME        ...  Show information about installed package
-   show PACK.mkp    ...  Show information about uninstalled package file
-   install PACK.mkp ...  Install or update package from file PACK.mkp
-   remove NAME      ...  Uninstall package NAME
-   disable NAME     ...  Disable package NAME
-   enable NAME      ...  Enable previously disabled package NAME
-   disable-outdated ...  Disable outdated packages
+   create NAME         ...  Collect unpackaged files into new package NAME
+   pack NAME           ...  Create package file from installed package
+   release NAME        ...  Drop installed package NAME, release packaged files
+   find                ...  Find and display unpackaged files
+   list                ...  List all installed packages
+   list NAME           ...  List files of installed package
+   list PACK.mkp       ...  List files of uninstalled package file
+   show NAME           ...  Show information about installed package
+   show PACK.mkp       ...  Show information about uninstalled package file
+   install PACK.mkp    ...  Install or update package from file PACK.mkp
+   remove NAME VERSION ...  Uninstall and delete package NAME
+   disable NAME        ...  Disable package NAME
+   enable NAME VERSION ...  Enable previously disabled package NAME
+   disable-outdated    ...  Disable outdated packages
 
    -v  enables verbose output
 
@@ -266,16 +268,17 @@ def package_pack(args: List[str]) -> None:
 
 
 def package_remove(args: List[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P remove NAME")
-    pacname = args[0]
-    package = read_package_info(pacname)
-    if not package:
-        raise PackageException("No such package %s." % pacname)
+    if len(args) != 2:
+        raise PackageException("Usage: check_mk -P remove NAME VERSION")
+    name, version = args
 
-    logger.log(VERBOSE, "Uninstalling package %s...", pacname)
-    packaging.uninstall(package)
-    logger.log(VERBOSE, "Successfully uninstalled package %s.", pacname)
+    for package in get_enabled_package_infos().values():
+        if package["name"] == name and package["version"] == version:
+            raise PackageException("This package is enabled! Please disable it first.")
+
+    logger.log(VERBOSE, "Removing package %s...", name)
+    packaging.remove_optional_package(format_file_name(name=name, version=version))
+    logger.log(VERBOSE, "Successfully removed package %s.", name)
 
 
 def package_install(args: List[str]) -> None:
@@ -300,13 +303,9 @@ def package_disable(args: List[str]) -> None:
 
 
 def package_enable(args: List[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P enable NAME")
-    package = read_package_info(args[0])
-    if not package:
-        raise PackageException("No such package %s." % args[0])
-    packaging.install_optional_package(
-        packaging.format_file_name(name=package["name"], version=package["version"]))
+    if len(args) != 2:
+        raise PackageException("Usage: check_mk -P enable NAME VERSION")
+    packaging.install_optional_package(packaging.format_file_name(name=args[0], version=args[1]))
 
 
 def package_disable_outdated(args: List[str]) -> None:

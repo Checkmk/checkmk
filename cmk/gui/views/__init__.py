@@ -16,15 +16,11 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.views.icons.utils import (
-    Icon,
-    icon_and_action_registry,
-    multisite_icons_and_actions,
-)
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.command import register_legacy_command
+from cmk.gui.views.icon import Icon, icon_and_action_registry
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
 from cmk.gui.views.page_edit_view import format_view_title
 from cmk.gui.views.sorter import register_sorter
@@ -35,6 +31,7 @@ from cmk.gui.views.store import multisite_builtin_views
 multisite_commands: list[dict[str, Any]] = []
 multisite_painters: dict[str, dict[str, Any]] = {}
 multisite_sorters: dict[str, Any] = {}
+multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
 @permission_section_registry.register
@@ -61,7 +58,7 @@ def load_plugins() -> None:
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())
 
-    transform_old_dict_based_icons()
+    register_legacy_icons()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
@@ -115,8 +112,9 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.plugins.views as api_module
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
+    from cmk.gui.plugins.views.icons import utils as icon_utils
 
-    from . import command, data_source, inventory, layout, sorter, store
+    from . import command, data_source, icon, inventory, layout, sorter, store
 
     for name in (
         "ABCDataSource",
@@ -243,9 +241,16 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         }
     )
 
+    for name in (
+        "icon_and_action_registry",
+        "Icon",
+        "IconRegistry",
+    ):
+        icon_utils.__dict__[name] = icon.__dict__[name]
+
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.
-def transform_old_dict_based_icons():
+def register_legacy_icons() -> None:
     for icon_id, icon in multisite_icons_and_actions.items():
         icon_class = type(
             "LegacyIcon%s" % icon_id.title(),

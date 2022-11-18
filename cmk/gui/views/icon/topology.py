@@ -5,11 +5,10 @@
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.views.icon import Icon
 
 
-@icon_and_action_registry.register
 class ShowParentChildTopology(Icon):
     @classmethod
     def ident(cls):

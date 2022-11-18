@@ -8,12 +8,11 @@ from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.views.icon import Icon
 
 
-@icon_and_action_registry.register
 class WatoIcon(Icon):
     @classmethod
     def ident(cls):
@@ -62,7 +61,6 @@ class WatoIcon(Icon):
         return None
 
 
-@icon_and_action_registry.register
 class DownloadAgentOutputIcon(Icon):
     """Action for downloading the current agent output."""
 
@@ -86,7 +84,6 @@ class DownloadAgentOutputIcon(Icon):
         )  # pylint: disable=no-value-for-parameter
 
 
-@icon_and_action_registry.register
 class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
 

@@ -9,8 +9,9 @@
 import cmk.gui.pages
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painters.v0.base import painter_registry
+from cmk.gui.permissions import permission_section_registry
 from cmk.gui.plugins.visuals.utils import visual_type_registry
-from cmk.gui.views import datasource_selection, perfometer
+from cmk.gui.views import datasource_selection, icon, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
     command_registry,
@@ -19,9 +20,9 @@ from cmk.gui.views.command import (
 )
 from cmk.gui.views.data_source import data_source_registry, register_data_sources
 from cmk.gui.views.host_tag_plugins import register_tag_plugins
+from cmk.gui.views.icon.page_ajax_popup_action_menu import ajax_popup_action_menu
 from cmk.gui.views.layout import layout_registry, register_layouts
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
-from cmk.gui.views.page_ajax_popup_action_menu import ajax_popup_action_menu
 from cmk.gui.views.page_ajax_reschedule import PageRescheduleCheck
 from cmk.gui.views.page_create_view import page_create_view
 from cmk.gui.views.page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
@@ -50,3 +51,4 @@ register_command_groups(command_group_registry)
 register_commands(command_registry)
 register_data_sources(data_source_registry)
 perfometer.register(sorter_registry, painter_registry)
+icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)

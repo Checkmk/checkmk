@@ -42,7 +42,6 @@ from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
@@ -239,7 +238,6 @@ def reset_gui_registries() -> Iterator[None]:
     """Fixture to reset registries to its default entries."""
     registries: list[Registry[Any]] = [
         dashlet_registry,
-        icon_and_action_registry,
         permission_registry,
         permission_section_registry,
     ]

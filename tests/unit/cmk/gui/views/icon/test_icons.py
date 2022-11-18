@@ -11,8 +11,8 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.permissions
 import cmk.gui.views
-from cmk.gui.plugins.views.icons import utils
-from cmk.gui.plugins.views.icons.utils import get_multisite_icons, Icon
+from cmk.gui.views.icon import Icon, icon_and_action_registry
+from cmk.gui.views.icon import registry as icon_registry
 
 
 def test_builtin_icons_and_actions() -> None:
@@ -60,8 +60,8 @@ def test_builtin_icons_and_actions() -> None:
             "ntop_host",
         ]
 
-    cmk.gui.views.transform_old_dict_based_icons()
-    builtin_icons = sorted(get_multisite_icons().keys())
+    cmk.gui.views.register_legacy_icons()
+    builtin_icons = sorted(icon_and_action_registry.keys())
     assert builtin_icons == sorted(expected_icons_and_actions)
 
 
@@ -74,10 +74,13 @@ def test_legacy_icon_plugin(monkeypatch: pytest.MonkeyPatch) -> None:
         "sort_index": 10,
         "toplevel": True,
     }
+    monkeypatch.setattr(
+        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.transform_old_dict_based_icons()
+    cmk.gui.views.register_legacy_icons()
 
-    registered_icon = get_multisite_icons()["legacy"]
+    registered_icon = registry["legacy"]()
     assert registered_icon.columns() == icon["columns"]
     assert registered_icon.host_columns() == icon["host_columns"]
     assert registered_icon.service_columns() == icon["service_columns"]
@@ -93,10 +96,13 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
         "service_columns": ["scol"],
         "paint": lambda: "bla",
     }
+    monkeypatch.setattr(
+        cmk.gui.views, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
     monkeypatch.setitem(cmk.gui.views.multisite_icons_and_actions, "legacy", icon)
-    cmk.gui.views.transform_old_dict_based_icons()
+    cmk.gui.views.register_legacy_icons()
 
-    registered_icon = get_multisite_icons()["legacy"]
+    registered_icon = registry["legacy"]()
     assert registered_icon.toplevel() is False
     assert registered_icon.sort_index() == 30
 
@@ -120,7 +126,9 @@ def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.Mo
         def render(self, what, row, tags, custom_vars):
             return "agents", "Title", "url"
 
-    monkeypatch.setattr(utils, "icon_and_action_registry", registry := utils.IconRegistry())
+    monkeypatch.setattr(
+        icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
+    )
     registry.register(TestIcon)
 
-    assert "test_icon" in utils.icon_and_action_registry
+    assert "test_icon" in icon_registry.icon_and_action_registry

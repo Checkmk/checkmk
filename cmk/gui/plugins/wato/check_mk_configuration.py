@@ -22,7 +22,6 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
@@ -94,6 +93,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.config_domains import (

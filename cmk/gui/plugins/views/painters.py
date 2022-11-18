@@ -34,18 +34,9 @@ from cmk.gui.painters.v0.helpers import (
     paint_host_list,
     paint_nagiosflag,
     render_cache_info,
-    replace_action_url_macros,
-    transform_action_url,
 )
 from cmk.gui.painters.v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
-from cmk.gui.plugins.views.icons.utils import (
-    get_icons,
-    IconEntry,
-    IconObjectType,
-    iconpainter_columns,
-    LegacyIconEntry,
-)
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
@@ -185,102 +176,6 @@ def _paint_future_time(timestamp: Timestamp) -> CellSpec:
 
 def _paint_day(timestamp: Timestamp) -> CellSpec:
     return "", time.strftime("%A, %Y-%m-%d", time.localtime(timestamp))
-
-
-def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
-    """Paint column with various icons
-
-    The icons use a plugin based mechanism so it is possible to register own icon "handlers".
-    """
-    # EC: In case of unrelated events also skip rendering this painter. All the icons
-    # that display a host state are useless in this case. Maybe we make this decision
-    # individually for the single icons one day.
-    if not row["host_name"] or row.get("event_is_unrelated"):
-        return "", ""  # Host probably does not exist
-
-    toplevel_icons = get_icons(what, row, toplevel=True)
-
-    # In case of non HTML output, just return the top level icon names
-    # as space separated string
-    if html.output_format != "html":
-        return "icons", " ".join(i.icon_name for i in toplevel_icons if isinstance(i, IconEntry))
-
-    output = HTML()
-    for icon in toplevel_icons:
-        if isinstance(icon, IconEntry):
-            if icon.url_spec:
-                url, target_frame = transform_action_url(icon.url_spec)
-                url = replace_action_url_macros(url, what, row)
-
-                onclick = ""
-                if url.startswith("onclick:"):
-                    onclick = url[8:]
-                    url = "javascript:void(0)"
-
-                output += html.render_icon_button(
-                    url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame
-                )
-            else:
-                output += html.render_icon(icon.icon_name, icon.title)
-        elif isinstance(icon, LegacyIconEntry):
-            output += icon.code
-
-    return "icons", output
-
-
-# TODO: Refactor to one icon base class
-@painter_registry.register
-class PainterServiceIcons(Painter):
-    @property
-    def ident(self) -> str:
-        return "service_icons"
-
-    def title(self, cell) -> str:  # type:ignore[no-untyped-def]
-        return _("Service icons")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Icons")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return iconpainter_columns("service", toplevel=None)
-
-    @property
-    def printable(self) -> bool:
-        return False
-
-    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
-        return ("",)  # Do not account for in grouping
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_icons("service", row)
-
-
-@painter_registry.register
-class PainterHostIcons(Painter):
-    @property
-    def ident(self) -> str:
-        return "host_icons"
-
-    def title(self, cell: Cell) -> str:
-        return _("Host icons")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Icons")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return iconpainter_columns("host", toplevel=None)
-
-    @property
-    def printable(self) -> bool:
-        return False
-
-    def group_by(self, row: Row, cell: Cell) -> tuple[str]:
-        return ("",)  # Do not account for in grouping
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_icons("host", row)
 
 
 # .

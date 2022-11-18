@@ -56,13 +56,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
 from cmk.gui.painters.v0.helpers import render_cache_info
 from cmk.gui.painters.v1.helpers import is_stale
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.views.graph import cmk_graph_url
+from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
 
 #   .--Action Menu---------------------------------------------------------.
@@ -77,7 +77,6 @@ from cmk.gui.visual_link import url_to_visual
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class ActionMenuIcon(Icon):
     @classmethod
     def ident(cls):
@@ -132,7 +131,6 @@ class ActionMenuIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class IconImageIcon(Icon):
     @classmethod
     def ident(cls):
@@ -173,7 +171,6 @@ class IconImageIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class RescheduleIcon(Icon):
     @classmethod
     def ident(cls):
@@ -244,7 +241,6 @@ class RescheduleIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class RuleEditorIcon(Icon):
     @classmethod
     def ident(cls):
@@ -302,7 +298,6 @@ class RuleEditorIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class ManpageIcon(Icon):
     @classmethod
     def ident(cls):
@@ -358,7 +353,6 @@ class ManpageIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class AcknowledgeIcon(Icon):
     @classmethod
     def ident(cls):
@@ -395,7 +389,6 @@ class AcknowledgeIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class PerfgraphIcon(Icon):
     @classmethod
     def ident(cls):
@@ -463,7 +456,6 @@ class PerfgraphIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class PredictionIcon(Icon):
     @classmethod
     def ident(cls):
@@ -518,7 +510,6 @@ class PredictionIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class CustomActionIcon(Icon):
     @classmethod
     def ident(cls):
@@ -556,7 +547,6 @@ class CustomActionIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class LogwatchIcon(Icon):
     @classmethod
     def ident(cls):
@@ -600,7 +590,6 @@ class LogwatchIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class NotesIcon(Icon):
     @classmethod
     def ident(cls):
@@ -637,7 +626,6 @@ class NotesIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class DowntimesIcon(Icon):
     @classmethod
     def ident(cls):
@@ -730,7 +718,6 @@ class DowntimesIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class CommentsIcon(Icon):
     @classmethod
     def ident(cls):
@@ -779,7 +766,6 @@ class CommentsIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class NotificationsIcon(Icon):
     @classmethod
     def ident(cls):
@@ -821,7 +807,6 @@ class NotificationsIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class FlappingIcon(Icon):
     @classmethod
     def ident(cls):
@@ -860,7 +845,6 @@ class FlappingIcon(Icon):
 #   +----------------------------------------------------------------------+
 
 
-@icon_and_action_registry.register
 class StalenessIcon(Icon):
     @classmethod
     def ident(cls):
@@ -905,7 +889,6 @@ class StalenessIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class ActiveChecksIcon(Icon):
     @classmethod
     def ident(cls):
@@ -948,7 +931,6 @@ class ActiveChecksIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class PassiveChecksIcon(Icon):
     @classmethod
     def ident(cls):
@@ -988,7 +970,6 @@ class PassiveChecksIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class NotificationPeriodIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1023,7 +1004,6 @@ class NotificationPeriodIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class ServicePeriodIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1060,7 +1040,6 @@ class ServicePeriodIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class AggregationsIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1110,7 +1089,6 @@ class AggregationsIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class StarsIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1154,7 +1132,6 @@ class StarsIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class AggregationIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1208,7 +1185,6 @@ class AggregationIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class CrashdumpsIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1280,7 +1256,6 @@ class CrashdumpsIcon(Icon):
 #   '----------------------------------------------------------------------'
 
 
-@icon_and_action_registry.register
 class CheckPeriodIcon(Icon):
     @classmethod
     def ident(cls):
@@ -1325,7 +1300,6 @@ class CheckPeriodIcon(Icon):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-@icon_and_action_registry.register
 class RobotmkIcon(Icon):
     @classmethod
     def ident(cls) -> str:
@@ -1364,7 +1338,6 @@ class RobotmkIcon(Icon):
         )
 
 
-@icon_and_action_registry.register
 class RobotmkErrorIcon(Icon):
     @classmethod
     def ident(cls) -> str:
@@ -1401,6 +1374,3 @@ class RobotmkErrorIcon(Icon):
                 filename="robotmk.py",
             ),
         )
-
-
-# .

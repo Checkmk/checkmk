@@ -16,14 +16,9 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painters.v0.helpers import replace_action_url_macros, transform_action_url
-from cmk.gui.plugins.views.icons.utils import (
-    get_icons,
-    IconEntry,
-    IconObjectType,
-    iconpainter_columns,
-    LegacyIconEntry,
-)
 from cmk.gui.type_defs import Row
+
+from .painter import get_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry
 
 
 def ajax_popup_action_menu() -> None:

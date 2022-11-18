@@ -9,14 +9,13 @@ from collections.abc import Sequence
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
 from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.views.icon import Icon
 
 
-@icon_and_action_registry.register
 class MkeventdIcon(Icon):
     @classmethod
     def ident(cls):

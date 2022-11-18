@@ -330,6 +330,8 @@ class Request(
         self,
         type_: type[Validation_T],
         varname: str,
+        *,
+        empty_is_none: bool = False,
     ) -> Validation_T | None:
         ...
 
@@ -339,6 +341,8 @@ class Request(
         type_: type[Validation_T],
         varname: str,
         deflt: None,
+        *,
+        empty_is_none: bool = False,
     ) -> Validation_T | None:
         ...
 
@@ -348,6 +352,8 @@ class Request(
         type_: type[Validation_T],
         varname: str,
         deflt: Validation_T,
+        *,
+        empty_is_none: bool = False,
     ) -> Validation_T:
         ...
 
@@ -356,8 +362,13 @@ class Request(
         type_: type[Validation_T],
         varname: str,
         deflt: Validation_T | None = None,
+        *,
+        empty_is_none: bool = False,
     ) -> Validation_T | None:
         """Try to convert the value of an HTTP request variable to a given type
+
+        If empty_is_none is set to True, treat variables that are present but empty as
+        if they were missing (and return the default).
 
         The Checkmk UI excepts `MKUserError` *exceptions* to be raised by
         validation errors. In this case, the UI displays a textual error message to the
@@ -367,6 +378,8 @@ class Request(
         """
         raw_value = self.var(varname)
         if raw_value is None:
+            return deflt
+        if empty_is_none and not raw_value:
             return deflt
         try:
             return type_(raw_value)
@@ -378,8 +391,14 @@ class Request(
         type_: type[Validation_T],
         varname: str,
         deflt: Validation_T | None = None,
+        *,
+        empty_is_none: bool = False,
     ) -> Validation_T:
-        return mandatory_parameter(varname, self.get_validated_type_input(type_, varname, deflt))
+        """Like get_validated_type_input, but raise an error if the input is missing"""
+        return mandatory_parameter(
+            varname,
+            self.get_validated_type_input(type_, varname, deflt, empty_is_none=empty_is_none),
+        )
 
     def get_ascii_input(self, varname: str, deflt: str | None = None) -> str | None:
         """Helper to retrieve a byte string and ensure it only contains ASCII characters

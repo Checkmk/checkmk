@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal
+from typing import Literal, Pattern
 from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import expect, Locator, Page, Response
@@ -24,11 +24,11 @@ class LocatorHelper(ABC):
     def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str) -> None:
+    def check_success(self, message: str | Pattern) -> None:
         """check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message)
 
-    def check_error(self, message: str) -> None:
+    def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""
         expect(self.locator("div.error")).to_have_text(message)
 
@@ -82,6 +82,10 @@ class MainMenu(LocatorHelper):
         if "active" not in classes:
             self.user.click()
         return self.locator("#popup_menu_user")
+
+    @property
+    def main_page(self) -> Locator:
+        return self.locator('a[title="Go to main page"]')
 
     @property
     def user_color_theme(self) -> Locator:
@@ -253,6 +257,11 @@ class PPage(LocatorHelper):
             timeout=TIMEOUT_ACTIVATE_CHANGES_MS
         )
 
+    def goto_main_dashboard(self) -> None:
+        """Click the banner and wait for the dashboard"""
+        self.main_menu.main_page.click()
+        self.main_area.check_page_title("Main dashboard")
+
     @property
     def megamenu_setup(self) -> Locator:
         return self.main_menu.locator("#popup_trigger_mega_menu_setup")
@@ -261,6 +270,11 @@ class PPage(LocatorHelper):
         """main menu -> setup -> Hosts"""
         self.megamenu_setup.click()
         return self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
+
+    def goto_edit_users(self) -> None:
+        """main menu -> setup -> Users"""
+        self.megamenu_setup.click()
+        return self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
 
     @property
     def megamenu_monitoring(self) -> Locator:

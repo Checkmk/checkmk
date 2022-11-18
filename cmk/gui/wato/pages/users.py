@@ -755,7 +755,7 @@ class ModeEditUser(WatoMode):
         # Authentication: Password or Secret
         auth_method = request.var("authmethod")
         if auth_method == "secret":
-            secret = request.get_str_input_mandatory("_auth_secret", "").strip()
+            secret = request.get_str_input_mandatory("_auth_secret", "")
             if secret:
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
@@ -764,10 +764,12 @@ class ModeEditUser(WatoMode):
                 del user_attrs["password"]
 
         else:
-            password = request.get_str_input_mandatory("_password_" + self._pw_suffix(), "").strip()
-            password2 = request.get_str_input_mandatory(
-                "_password2_" + self._pw_suffix(), ""
-            ).strip()
+            password = request.get_validated_type_input(
+                Password, "_password_" + self._pw_suffix(), empty_is_none=True
+            )
+            password2 = request.get_validated_type_input(
+                Password, "_password2_" + self._pw_suffix(), empty_is_none=True
+            )
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
@@ -783,7 +785,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
-                user_attrs["password"] = hash_password(Password(password))
+                user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial
 

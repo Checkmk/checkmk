@@ -11,9 +11,9 @@ from functools import partial
 import cmk.gui.pages
 import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
-import cmk.gui.plugins.views.painters as painters
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
+from cmk.gui.painters.v0 import painters
 from cmk.gui.painters.v0.base import Cell, painter_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.type_defs import CombinedGraphSpec, Row

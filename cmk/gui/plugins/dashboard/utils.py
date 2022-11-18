@@ -35,8 +35,8 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painters.v0.painters import host_state_short, service_state_short
 from cmk.gui.plugins.metrics.utils import GraphRenderOptions
-from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import (
     ColumnName,

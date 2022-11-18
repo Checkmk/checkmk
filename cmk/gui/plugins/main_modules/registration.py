@@ -9,9 +9,9 @@
 import cmk.gui.pages
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
+from cmk.gui.painters.v0 import painters
 from cmk.gui.painters.v0.base import painter_registry
 from cmk.gui.permissions import permission_section_registry
-from cmk.gui.plugins.views import painters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.views import datasource_selection, icon, perfometer
 from cmk.gui.views.command import (

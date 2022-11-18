@@ -885,6 +885,12 @@ metric_info["disk_capacity"] = {
     "color": "12/a",
 }
 
+metric_info["disk_used_capacity"] = {
+    "title": _("Used disk capacity"),
+    "unit": "bytes",
+    "color": "14/a",
+}
+
 metric_info["disks"] = {
     "title": _("Disks"),
     "unit": "count",

@@ -199,7 +199,9 @@ def _vs_sql_disk() -> ValueSpec:
     return Dictionary(
         title=_("Levels disk"),
         elements=[
+            # TODO remove fs_used_percent when doing CMK-11496
             ("fs_used_percent", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
+            ("disk_utilization", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
             ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
             ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
         ],

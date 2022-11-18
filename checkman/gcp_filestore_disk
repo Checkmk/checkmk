@@ -7,8 +7,13 @@ description:
  This check monitors Filestore servers
 
  - disk usage in percent
+ - disk usage in bytes
+ - total disk space in bytes
  - read IOPS
  - write IOPS
+ - average read wait time
+ - average write wait time
+ - overall average latency
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.

@@ -830,6 +830,30 @@ FILESTORE = Service(
                 per_series_aligner=Aligner.ALIGN_RATE,
             ),
         ),
+        Metric(
+            name="file.googleapis.com/nfs/server/average_read_latency",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/average_write_latency",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/free_bytes",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/used_bytes",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
     ],
 )
 

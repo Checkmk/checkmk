@@ -72,11 +72,23 @@ def test_discover_labels_labels_without_user_labels() -> None:
 PLUGINS = [
     Plugin(
         function=check,
-        metrics=["fs_used_percent", "disk_read_ios", "disk_write_ios"],
+        metrics=[
+            "disk_utilization",
+            "disk_read_ios",
+            "disk_write_ios",
+            "disk_average_read_wait",
+            "disk_average_write_wait",
+        ],
+        pure_metrics=["disk_used_capacity", "disk_capacity"],
         results=[
-            Result(state=State.OK, summary="Read operations: 42.0"),
-            Result(state=State.OK, summary="Usage: 4200.00%"),
-            Result(state=State.OK, summary="Write operations: 42.0"),
+            Result(state=State.OK, notice="Utilization: 4200.00%"),
+            Result(state=State.OK, notice="Read operations: 42.00/s"),
+            Result(state=State.OK, notice="Write operations: 42.00/s"),
+            Result(state=State.OK, notice="Average read wait: 42 seconds"),
+            Result(state=State.OK, notice="Average write wait: 42 seconds"),
+        ],
+        additional_results=[
+            Result(state=State.OK, summary="Latency: 42 seconds"),
         ],
     ),
 ]
@@ -102,7 +114,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
 @pytest.mark.parametrize("plugin", PLUGINS)
 def test_yield_results_as_specified(plugin: Plugin) -> None:
     results = {r for r in generate_results(plugin) if isinstance(r, Result)}
-    assert results == set(plugin.results)
+    assert results == plugin.expected_results()
 
 
 @pytest.mark.parametrize("plugin", PLUGINS)

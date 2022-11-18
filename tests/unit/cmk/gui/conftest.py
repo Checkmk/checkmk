@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import threading
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, ContextManager, Literal, NamedTuple
@@ -23,6 +23,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from mypy_extensions import KwArg
 
 from tests.testlib.plugin_registry import reset_registries
+from tests.testlib.rest_api_client import expand_rel, get_link
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
@@ -251,30 +252,6 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-def get_link(resp: dict, rel: str) -> Mapping:
-    for link in resp.get("links", []):
-        if link["rel"].startswith(rel):
-            return link
-    if "result" in resp:
-        for link in resp["result"].get("links", []):
-            if link["rel"].startswith(rel):
-                return link
-    for member in resp.get("members", {}).values():
-        if member["memberType"] == "action":
-            for link in member["links"]:
-                if link["rel"].startswith(rel):
-                    return link
-    raise KeyError(f"{rel!r} not found")
-
-
-def _expand_rel(rel: str) -> str:
-    if rel.startswith(".../"):
-        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
-    if rel.startswith("cmk/"):
-        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
-    return rel
-
-
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
@@ -296,7 +273,7 @@ class WebTestAppForCMK(webtest.TestApp):
         if resp.status_code == 204:
             return False
         try:
-            _ = get_link(resp.json, _expand_rel(rel))
+            _ = get_link(resp.json, expand_rel(rel))
             return True
         except KeyError:
             return False
@@ -313,7 +290,7 @@ class WebTestAppForCMK(webtest.TestApp):
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
             if json_data is None:
                 json_data = resp.json
-            link = get_link(json_data, _expand_rel(rel))
+            link = get_link(json_data, expand_rel(rel))
             if "body_params" in link and link["body_params"]:
                 params["params"] = json.dumps(link["body_params"])
                 params["content_type"] = "application/json"

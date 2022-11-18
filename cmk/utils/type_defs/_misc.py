@@ -372,3 +372,5 @@ InfluxDBConnectionSpec = dict[str, Any]
 #           we need to fix the layering problem with the
 #           global config before this is safe.
 IPMICredentials = Mapping[str, str]
+
+HTTPMethod = Literal["get", "put", "post", "delete"]

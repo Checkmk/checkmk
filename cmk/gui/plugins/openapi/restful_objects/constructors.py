@@ -12,6 +12,7 @@ from urllib.parse import quote
 from werkzeug.datastructures import ETags
 
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
@@ -21,7 +22,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionObject,
     DomainObject,
     DomainType,
-    HTTPMethod,
     LinkRelation,
     LinkType,
     ObjectProperty,

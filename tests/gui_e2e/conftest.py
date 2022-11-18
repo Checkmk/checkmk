@@ -7,6 +7,7 @@
 
 import logging
 import os
+from collections.abc import Iterator
 
 import pytest
 from playwright.sync_api import BrowserContext, Page
@@ -21,7 +22,7 @@ password = "cmk"
 
 
 @pytest.fixture(name="test_site", scope="session", autouse=True)
-def site() -> Site:
+def site() -> Iterator[Site]:
     logger.info("Setting up testsite")
     version = os.environ.get("VERSION", CMKVersion.DAILY)
     reuse = os.environ.get("REUSE")
@@ -43,7 +44,12 @@ def site() -> Site:
         site_to_return = sf.get_site("central")
     logger.info("Testsite %s is up", site_to_return.id)
 
-    return site_to_return
+    try:
+        yield site_to_return
+    finally:
+        # teardown: saving results
+        # TODO: this should be unified in all suites, see CMK-11701
+        site_to_return.save_results()
 
 
 def log_in(log_in_url: str, page: Page, test_site: Site) -> PPage:

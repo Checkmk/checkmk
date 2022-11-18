@@ -40,7 +40,7 @@ from cmk.gui.fields.utils import (
 )
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
-from cmk.gui.site_config import enabled_sites
+from cmk.gui.site_config import configured_sites
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
@@ -1019,11 +1019,11 @@ class SiteField(base.String):
 
     def _validate(self, value):
         if self.presence == "should_exist":
-            if value not in enabled_sites().keys():
+            if value not in configured_sites().keys():
                 raise self.make_error("should_exist", site=value)
 
         if self.presence == "should_not_exist":
-            if value in enabled_sites().keys():
+            if value in configured_sites().keys():
                 raise self.make_error("should_not_exist", site=value)
 
 

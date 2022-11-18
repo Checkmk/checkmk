@@ -163,6 +163,7 @@ def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.co
     Fixture returning the parametrized browser name(s). A subset of the parametrized browser names
     can be selected via the --browser flag in the CLI.
     """
+    browser_name_ci = "chromium"  # only this browser is selected when running the tests in the CI
     browser_name_param = str(request.param)
     browser_names_cli = t.cast(list[str], pytestconfig.getoption("--browser"))
 
@@ -171,6 +172,9 @@ def _browser_name(request: _pytest.fixtures.SubRequest, pytestconfig: _pytest.co
             f"Only {', '.join(str(browser) for browser in browser_names_cli)} engine(s) selected "
             f"from the CLI"
         )
+
+    elif len(browser_names_cli) == 0 and browser_name_param != browser_name_ci:
+        pytest.skip(f"Only {browser_name_ci} engine running inside the CI")
     return browser_name_param
 
 

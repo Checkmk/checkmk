@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import os
 import shlex
 import subprocess
@@ -180,10 +181,8 @@ def _update_mongodb_history_lifetime(settings: Settings, config: Config, mongodb
     if _get_mongodb_max_history_age(mongodb) == config["history_lifetime"] * 86400:
         return  # do not update already correct index
 
-    try:
+    with contextlib.suppress(OperationFailure):  # Ignore not existing index
         mongodb.db.ec_archive.drop_index("dt_-1")
-    except OperationFailure:
-        pass  # Ignore not existing index
 
     # Delete messages after x days
     mongodb.db.ec_archive.ensure_index(

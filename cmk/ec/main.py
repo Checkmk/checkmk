@@ -746,7 +746,7 @@ class EventServer(ECServerThread):
 
             # Read data from pipe
             if pipe in readable:
-                try:
+                with contextlib.suppress(Exception):
                     data = os.read(pipe, 4096)
                     if data:
                         # Prepend previous beginning of message to read data
@@ -773,8 +773,6 @@ class EventServer(ECServerThread):
                                 "Ignoring incomplete message '%r' from pipe", pipe_fragment
                             )
                             pipe_fragment = b""
-                except Exception:
-                    pass
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:
@@ -2753,12 +2751,10 @@ class StatusServer(ECServerThread):
         self._event_status.flush()
         self._event_status.save_status()
         if is_replication_slave(self._config):
-            try:
+            with contextlib.suppress(Exception):
                 self.settings.paths.master_config_file.value.unlink()
                 self.settings.paths.slave_status_file.value.unlink()
                 update_slave_status(self._slave_status, self.settings, self._config)
-            except Exception:
-                pass
         self._logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self) -> None:

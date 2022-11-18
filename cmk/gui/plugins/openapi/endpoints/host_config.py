@@ -611,7 +611,9 @@ def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
 
     agent_links = []
     if not cmk_version.is_raw_edition():
-        from cmk.cee.bakery.type_defs import AgentPackagePlatform  # pylint: disable=no-name-in-module
+        from cmk.cee.bakery.type_defs import (
+            AgentPackagePlatform,
+        )  # pylint: disable=no-name-in-module
 
         for platform in sorted(AgentPackagePlatform, key=lambda p: p.value):
             agent_links.append(

@@ -1,0 +1,20 @@
+Title: MKP manager commandline interface: Fix 'remove' and 'disable' commands
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1668763448
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The <tt>mkp remove</tt> command (or <tt>cmk -P remove</tt>) has been fixed to reflect the recent changes in the GUI.
+You can only remove <i>disabled</i> packages.
+
+The 'disable' command to do this was intruced with 2.0.0p30, but defunct.
+It is now fixed.
+
+Since you can have different versions of the same package uploaded, you have to specify the version as well now:
+
+<tt>mkp remove NAME VERSION</tt>

@@ -329,14 +329,16 @@ def _housekeeping_files(history: History) -> None:
     _expire_logfiles(history._settings, history._config, history._logger, history._lock, False)
 
 
-# Make a new entry in the event history. Each entry is tab-separated line
-# with the following columns:
-# 0: time of log entry
-# 1: type of entry (keyword)
-# 2: user who initiated the action (for GUI actions)
-# 3: additional information about the action
-# 4-oo: StatusTableEvents.columns
 def _add_files(history: History, event: Event, what: HistoryWhat, who: str, addinfo: str) -> None:
+    """Make a new entry in the event history.
+
+    Each entry is tab-separated line with the following columns:
+    0: time of log entry
+    1: type of entry (keyword)
+    2: user who initiated the action (for GUI actions)
+    3: additional information about the action
+    4-oo: StatusTableEvents.columns
+    """
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
         columns = [
@@ -380,9 +382,8 @@ class ActiveHistoryPeriod:
         self.value: int | None = None
 
 
-# Get file object to current log file, handle also
-# history and lifetime limit.
 def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHistoryPeriod) -> Path:
+    """Get file object to current log file, handle also history and lifetime limit."""
     log_dir.mkdir(parents=True, exist_ok=True)
     # Log into file starting at current history period,
     # but: if a newer logfile exists, use that one. This
@@ -404,9 +405,8 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     return log_dir / f"{timestamp}.log"
 
 
-# Return timestamp of the beginning of the current history
-# period.
 def _current_history_period(config: Config) -> int:
+    """Return timestamp of the beginning of the current history period."""
     lt = time.localtime()
     ts = time.mktime(
         time.struct_time(
@@ -429,10 +429,10 @@ def _current_history_period(config: Config) -> int:
     return int(ts) - offset
 
 
-# Delete old log files
 def _expire_logfiles(
     settings: Settings, config: Config, logger: Logger, lock_history: threading.Lock, flush: bool
 ) -> None:
+    """Delete old log files."""
     with lock_history:
         try:
             days = config["history_lifetime"]
@@ -471,12 +471,14 @@ _GREPABLE_COLUMNS = {
 }
 
 
-# Optimization: use grep in order to reduce amount of read lines based on some frequently used
-# filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
-# can output more lines than necessary. This is only a kind of prefiltering.
 def _grep_pipeline(
     filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]]
 ) -> list[str]:
+    """
+    Optimization: use grep in order to reduce amount of read lines based on some frequently used
+    filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
+    can output more lines than necessary. This is only a kind of prefiltering.
+    """
     return [
         command
         for column_name, operator_name, _predicate, argument in filters

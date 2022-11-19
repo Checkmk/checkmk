@@ -46,8 +46,10 @@ def event_has_opened(
     rule: Rule,
     event: Event,
 ) -> None:
-    # Prepare for events with a limited livetime. This time starts
-    # when the event enters the open state or acked state
+    """
+    Prepare for events with a limited lifetime. This time starts
+    when the event enters the open state or acked state.
+    """
     if "livetime" in rule:
         livetime, phases = rule["livetime"]
         event["live_until"] = time.time() + livetime
@@ -70,8 +72,6 @@ def event_has_opened(
     )
 
 
-# Execute a list of actions on an event that has just been
-# opened or cancelled.
 def do_event_actions(
     history: History,
     settings: Settings,
@@ -83,6 +83,9 @@ def do_event_actions(
     event: Event,
     is_cancelling: bool,
 ) -> None:
+    """
+    Execute a list of actions on an event that has just been opened or cancelled.
+    """
     table = config["action"]
     for aname in actions:
         if aname == "@NOTIFY":
@@ -282,8 +285,6 @@ def _get_event_tags(
 # - Das muss sich in den Hilfetexten wiederspiegeln
 
 
-# This function creates a Checkmk Notification for a locally running Checkmk.
-# We simulate a *service* notification.
 def do_notify(
     host_config: HostConfig,
     logger: Logger,
@@ -291,6 +292,11 @@ def do_notify(
     username: str | None = None,
     is_cancelling: bool = False,
 ) -> None:
+    """
+    Creates a Checkmk Notification for a locally running Checkmk.
+
+    We simulate a *service* notification.
+    """
     if not _core_has_notifications_enabled(logger):
         logger.info(
             "Notifications are currently disabled. Skipped notification for event %d", event["id"]
@@ -400,11 +406,14 @@ def _base_notification_context(
     )
 
 
-# "CONTACTS" is allowed to be missing in the context, cmk --notify will
-# add the fallback contacts then.
 def _add_infos_from_monitoring_host(
     host_config: HostConfig, context: ECEventContext, event: Event
 ) -> None:
+    """
+    Note: "CONTACTS" is allowed to be missing in the context, cmk --notify will
+    add the fallback contacts then.
+    """
+
     def _add_artificial_context_info() -> None:
         context.update(
             {
@@ -450,8 +459,10 @@ def _add_infos_from_monitoring_host(
 
 
 def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
-    # Add contact information from the rule, but only if the
-    # host is unknown or if contact groups in rule have precedence
+    """
+    Add contact information from the rule, but only if the
+    host is unknown or if contact groups in rule have precedence
+    """
 
     contact_groups = event.get("contact_groups")
     if (

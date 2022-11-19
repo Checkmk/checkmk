@@ -1899,7 +1899,7 @@ class EventServer(ECServerThread):
 
 
 def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> Event:
-    # Use the trap OID as the application.
+    """New event with the trap OID as the application."""
     trapOIDs, other = partition(
         lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
     )
@@ -2253,10 +2253,12 @@ class StatusTable:
     prefix: str | None = None
     columns: list[tuple[str, Any]] = []
 
-    # Must return a enumerable type containing fully populated lists (rows) matching the
-    # columns of the table
     @abc.abstractmethod
     def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
+        """
+        Must return a enumerable type containing fully populated lists (rows) matching the
+        columns of the table.
+        """
         raise NotImplementedError()
 
     def __init__(self, logger: Logger) -> None:
@@ -2606,11 +2608,13 @@ class StatusServer(ECServerThread):
 
         client_socket.close()  # TODO: This should be in a finally somehow.
 
-    # Only GET queries have customizable output formats. COMMAND is always
-    # a dictionary and COMMAND is always None and always output as "python"
-    # TODO: We should probably nuke these silly cases. Currently the allowed type
-    # of the response depends on the value of query. :-/
     def _answer_query(self, client_socket: socket.socket, query: Query, response: Any) -> None:
+        """
+        Only GET queries have customizable output formats. COMMAND is always
+        a dictionary and COMMAND is always None and always output as "python"
+        TODO: We should probably nuke these silly cases. Currently the allowed type
+        of the response depends on the value of query. :-/
+        """
         if not isinstance(query, QueryGET):
             self._answer_query_python(client_socket, response)
             return
@@ -2745,8 +2749,8 @@ class StatusServer(ECServerThread):
         log.open_log(str(self.settings.paths.log_file.value))
         self._logger.info("Opened new logfile")
 
-    # Erase our current state and history!
     def handle_command_flush(self) -> None:
+        """Erase our current state and history!"""
         self._history.flush()
         self._event_status.flush()
         self._event_status.save_status()
@@ -3107,10 +3111,12 @@ class EventStatus:
         # core_host is needed to initialize the status
         self._initialize_event_limit_status()
 
-    # Called on Event Console initialization from status file to initialize
-    # the current event limit state -> Sets internal counters which are
-    # updated during runtime.
     def _initialize_event_limit_status(self) -> None:
+        """
+        Called on Event Console initialization from status file to initialize
+        the current event limit state -> Sets internal counters which are
+        updated during runtime.
+        """
         self.num_existing_events = len(self._events)
 
         self.num_existing_events_by_host: dict[tuple[str, HostName | None], int] = {}

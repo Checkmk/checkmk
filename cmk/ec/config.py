@@ -324,8 +324,11 @@ class ConfigFromWATO(TypedDict):
     translate_snmptraps: SNMPTrapTranslation
 
 
-# After loading, we add two fields: 'action' for more efficient access to actions plus a timestamp
-# used for replication.
 class Config(ConfigFromWATO):
+    """
+    After loading, we add two fields: 'action' for more efficient access to actions plus a timestamp
+    used for replication.
+    """
+
     action: Mapping[str, Action]
     last_reload: int

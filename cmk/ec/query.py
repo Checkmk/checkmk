@@ -47,9 +47,9 @@ class Query:
 
 
 def filter_operator_in(a: Any, b: Any) -> bool:
-    # implemented as a named function, as it is used in a second filter
-    # cmk.ec.main: StatusTableEvents._enumerate
-    # not implemented as regex/IGNORECASE due to performance
+    """Implemented as a named function, as it is used in a second filter
+    cmk.ec.main: StatusTableEvents._enumerate
+    not implemented as regex/IGNORECASE due to performance"""
     return a.lower() in (e.lower() for e in b)
 
 
@@ -121,10 +121,10 @@ class QueryGET(Query):
             logger.info("Ignoring not-implemented header %s", header)
 
     def _parse_filter(self, textspec: str) -> tuple[str, OperatorName, Callable[[Any], bool], Any]:
-        # Examples:
-        # id = 17
-        # name ~= This is some .* text
-        # host_name =
+        """Examples:
+        id = 17
+        name ~= This is some .* text
+        host_name ="""
         parts = textspec.split(None, 2)
         if len(parts) == 2:
             parts.append("")
@@ -154,9 +154,9 @@ class QueryGET(Query):
         return (column, op_name, lambda x: operator_function(x, argument), argument)
 
     def requested_column_indexes(self) -> list[int | None]:
-        # If a column is not known: Use None as index and None value later.
+        """If a column is not known: Use None as index and None value later."""
         return [
-            self.table.column_indices.get(column_name) for column_name in self.requested_columns  #
+            self.table.column_indices.get(column_name) for column_name in self.requested_columns
         ]
 
     def filter_row(self, row: Sequence[Any]) -> bool:

@@ -147,6 +147,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \

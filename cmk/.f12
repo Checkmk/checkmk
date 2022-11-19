@@ -94,6 +94,7 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/base/cee/plugins/bakery/__init__.py" \
     "$ROOT/lib/python3/cmk/base/cee/bakery/__init__.py" \
     "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py" \
+    "$ROOT/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/cee/plugins/sla/__init__.py" \

@@ -22,8 +22,6 @@ TextPattern = str | Pattern[str] | None
 TextMatchResult = Literal[False] | Sequence[str]
 MatchGroups = dict[str, TextMatchResult]
 
-################################################################################
-
 
 # Horrible ValueSpec...
 class UseSNMPTrapTranslation(TypedDict, total=False):
@@ -31,8 +29,6 @@ class UseSNMPTrapTranslation(TypedDict, total=False):
 
 
 SNMPTrapTranslation = Union[Literal[False], tuple[Literal[True], UseSNMPTrapTranslation]]
-
-################################################################################
 
 
 class EMailActionConfig(TypedDict):
@@ -62,8 +58,6 @@ class ScriptAction(TypedDict):
 
 
 Action = EMailAction | ScriptAction
-
-################################################################################
 
 
 class EventLimit(TypedDict):

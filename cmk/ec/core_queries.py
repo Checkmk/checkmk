@@ -17,8 +17,6 @@ from cmk.utils.type_defs import (
     UserId,
 )
 
-################################################################################
-
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/
 def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> set[UserId]:
@@ -32,9 +30,6 @@ def query_contactgroups_members(group_names: Iterable[ContactgroupName]) -> set[
         LocalConnection().query_column(query) if num_group_names else []
     )
     return {UserId(contact) for contact_list in contact_lists for contact in contact_list}
-
-
-################################################################################
 
 
 class HostInfo(NamedTuple):
@@ -59,14 +54,11 @@ def _create_host_info(row: Mapping[str, Any]) -> HostInfo:
 
 def query_hosts_infos() -> Sequence[HostInfo]:
     return [
-        _create_host_info(row)  #
+        _create_host_info(row)
         for row in LocalConnection().query_table_assoc(
             "GET hosts\nColumns: name alias address custom_variables contacts contact_groups"
         )
     ]
-
-
-################################################################################
 
 
 def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
@@ -75,25 +67,16 @@ def query_hosts_scheduled_downtime_depth(host_name: HostName) -> int:
     )
 
 
-################################################################################
-
-
 def query_status_program_start() -> Timestamp:
-    return LocalConnection().query_value("GET status\nColumns: program_start")  #
-
-
-################################################################################
+    return LocalConnection().query_value("GET status\nColumns: program_start")
 
 
 def query_status_enable_notifications() -> bool:
-    return bool(LocalConnection().query_value("GET status\nColumns: enable_notifications"))  #
-
-
-################################################################################
+    return bool(LocalConnection().query_value("GET status\nColumns: enable_notifications"))
 
 
 def query_timeperiods_in() -> Mapping[TimeperiodName, bool]:
     return {
-        name: bool(in_)  #
-        for name, in_ in LocalConnection().query("GET timeperiods\nColumns: name in")  #
+        name: bool(in_)
+        for name, in_ in LocalConnection().query("GET timeperiods\nColumns: name in")
     }

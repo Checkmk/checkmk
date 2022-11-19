@@ -7,7 +7,7 @@
 
 
 import cmk.gui.pages
-from cmk.gui import crash_reporting, mkeventd, mobile, wato
+from cmk.gui import bi, crash_reporting, mkeventd, mobile, wato
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.painters.v0 import painters
@@ -89,3 +89,10 @@ mkeventd.register(
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry)
 inventory.register()
+bi.register(
+    permission_section_registry,
+    permission_registry,
+    data_source_registry,
+    painter_registry,
+    painter_option_registry,
+)

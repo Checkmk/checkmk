@@ -26,7 +26,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.painter_options import paint_age, PainterOption, ViewPainterOptionRegistry
+from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry
 from cmk.gui.painters.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painters.v0.helpers import (
     get_label_sources,
@@ -68,7 +68,7 @@ from cmk.gui.visual_link import render_link_to_view
 
 
 def register(
-    painter_option_registry: ViewPainterOptionRegistry, painter_registry: PainterRegistry
+    painter_option_registry: PainterOptionRegistry, painter_registry: PainterRegistry
 ) -> None:
     painter_option_registry.register(PainterOptionTimestampFormat)
     painter_option_registry.register(PainterOptionTimestampDate)

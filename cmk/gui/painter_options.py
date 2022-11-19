@@ -200,12 +200,12 @@ class PainterOptions:
         html.end_form()
 
 
-class ViewPainterOptionRegistry(Registry[type[PainterOption]]):
+class PainterOptionRegistry(Registry[type[PainterOption]]):
     def plugin_name(self, instance: type[PainterOption]) -> str:
         return instance().ident
 
 
-painter_option_registry = ViewPainterOptionRegistry()
+painter_option_registry = PainterOptionRegistry()
 
 
 @painter_option_registry.register

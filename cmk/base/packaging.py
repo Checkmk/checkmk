@@ -27,14 +27,13 @@ from cmk.utils.packaging import (
     package_info_template,
     PackageException,
     PackageInfo,
+    PackageName,
     unpackaged_files,
     unpackaged_files_in_dir,
     write_package_info,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
-
-PackageName = str
 
 
 def packaging_usage() -> None:
@@ -129,16 +128,16 @@ def package_info(args: list[str]) -> None:
         show_package_info(name)
 
 
-def show_package_contents(name: PackageName) -> None:
+def show_package_contents(name: str) -> None:
     show_package(name, False)
 
 
-def show_package_info(name: PackageName) -> None:
+def show_package_info(name: str) -> None:
     show_package(name, True)
 
 
 def show_package(  # pylint: disable=too-many-branches
-    name: PackageName,
+    name: str,
     show_info: bool = False,
 ) -> None:
     try:
@@ -148,7 +147,7 @@ def show_package(  # pylint: disable=too-many-branches
                     raise PackageException('Failed to extract "info"')
                 package = PackageInfo.parse_python_string(info.read().decode())
         else:
-            if (this_package := get_installed_package_info(name)) is None:
+            if (this_package := get_installed_package_info(PackageName(name))) is None:
                 raise PackageException("No such package %s." % name)
 
             package = this_package
@@ -190,7 +189,7 @@ def package_create(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P create NAME")
 
-    pacname = args[0]
+    pacname = PackageName(args[0])
     if get_installed_package_info(pacname):
         raise PackageException("Package %s already existing." % pacname)
 
@@ -247,8 +246,7 @@ def package_find(_no_args: list[str]) -> None:
 def package_release(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
-    pacname = args[0]
-    packaging.release(pacname)
+    packaging.release(PackageName(args[0]))
 
 
 def package_pack(args: list[str]) -> None:
@@ -267,7 +265,7 @@ def package_pack(args: list[str]) -> None:
                 "a packet file. Foreign files lying around here will mix up things." % abs_curdir
             )
 
-    pacname = args[0]
+    pacname = PackageName(args[0])
     if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
     tarfilename = packaging.format_file_name(name=pacname, version=package.version)
@@ -309,14 +307,15 @@ def package_install(args: list[str]) -> None:
 def package_disable(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P disable NAME")
-    package_name = args[0]
-    packaging.disable(package_name)
+    packaging.disable(PackageName(args[0]))
 
 
 def package_enable(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
-    packaging.install_optional_package(packaging.format_file_name(name=args[0], version=args[1]))
+    packaging.install_optional_package(
+        packaging.format_file_name(name=PackageName(args[0]), version=args[1])
+    )
 
 
 def package_disable_outdated(args: list[str]) -> None:

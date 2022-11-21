@@ -23,7 +23,7 @@ with open(REPO_PATH / "buildscripts" / "scripts" / "lib" / "ntop_rules.json") as
     MKP_ABLE_NTOP_FILES = json.load(json_file)["mkp-able_ntop_files"]
 NTOP_PACKAGE_INFO = packaging.PackageInfo(
     title="Checkmk ntop integration",
-    name="ntop",
+    name=packaging.PackageName("ntop"),
     description=(
         "This package ships extensions for the Checkmk user interface to make information from "
         "your ntop installations available in the Checkmk user interface. This includes ntop "

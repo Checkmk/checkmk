@@ -37,7 +37,7 @@ from ._package import (
     PackageInfo,
     read_package_info_optionally,
 )
-from ._type_defs import PackageException
+from ._type_defs import PackageException, PackageName
 
 logger = logging.getLogger("cmk.utils.packaging")
 
@@ -80,7 +80,6 @@ def _get_permissions(path: str) -> int:
     raise PackageException("could not determine permissions for %r" % path)
 
 
-PackageName = str
 PartName = str
 PartPath = str
 PartFiles = list[str]
@@ -825,7 +824,7 @@ def _packaged_files_in_dir(part: PartName) -> list[str]:
 
 
 def installed_names() -> list[PackageName]:
-    return sorted([p.name for p in package_dir().iterdir()])
+    return sorted([PackageName(p.name) for p in package_dir().iterdir()])
 
 
 def _package_exists(pacname: PackageName) -> bool:

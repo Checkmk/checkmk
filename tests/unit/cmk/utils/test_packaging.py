@@ -54,8 +54,8 @@ def clean_dirs() -> Iterable[None]:
 @pytest.fixture(name="mkp_bytes")
 def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
     # Create package information
-    _create_simple_test_package("aaa")
-    package_info = _read_package_info("aaa")
+    _create_simple_test_package(packaging.PackageName("aaa"))
+    package_info = _read_package_info(packaging.PackageName("aaa"))
 
     # Build MKP in memory
     mkp = packaging.create_mkp_object(package_info)
@@ -64,7 +64,7 @@ def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
     packaging.uninstall(package_info)
     build_setup_search_index.assert_called_once()
     build_setup_search_index.reset_mock()
-    assert packaging._package_exists("aaa") is False
+    assert packaging._package_exists(packaging.PackageName("aaa")) is False
 
     return mkp
 
@@ -213,20 +213,20 @@ def _create_test_file(name):
 
 def test_create() -> None:
     assert packaging.installed_names() == []
-    _create_simple_test_package("aaa")
+    _create_simple_test_package(packaging.PackageName("aaa"))
     assert packaging.installed_names() == ["aaa"]
 
 
 def test_create_twice() -> None:
-    _create_simple_test_package("aaa")
+    _create_simple_test_package(packaging.PackageName("aaa"))
 
     with pytest.raises(packaging.PackageException):
-        _create_simple_test_package("aaa")
+        _create_simple_test_package(packaging.PackageName("aaa"))
 
 
 def test_read_package_info() -> None:
-    _create_simple_test_package("aaa")
-    package_info = _read_package_info("aaa")
+    _create_simple_test_package(packaging.PackageName("aaa"))
+    package_info = _read_package_info(packaging.PackageName("aaa"))
     assert package_info.version == "1.0"
     assert packaging.package_num_files(package_info) == 1
 
@@ -239,33 +239,33 @@ def test_read_package_info_not_existing() -> None:
 
 
 def test_edit_not_existing() -> None:
-    new_package_info = packaging.package_info_template("aaa")
+    new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
     new_package_info.version = "2.0"
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit("aaa", new_package_info)
+        packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
 
 def test_edit() -> None:
-    new_package_info = packaging.package_info_template("aaa")
+    new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
     new_package_info.version = "2.0"
 
-    package_info = _create_simple_test_package("aaa")
+    package_info = _create_simple_test_package(packaging.PackageName("aaa"))
     assert package_info.version == "1.0"
 
-    packaging.edit("aaa", new_package_info)
+    packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
-    assert _read_package_info("aaa").version == "2.0"
+    assert _read_package_info(packaging.PackageName("aaa")).version == "2.0"
 
 
 def test_edit_rename() -> None:
-    new_package_info = packaging.package_info_template("bbb")
+    new_package_info = packaging.package_info_template(packaging.PackageName("bbb"))
 
-    _create_simple_test_package("aaa")
+    _create_simple_test_package(packaging.PackageName("aaa"))
 
-    packaging.edit("aaa", new_package_info)
+    packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
-    assert _read_package_info("bbb").name == "bbb"
+    assert _read_package_info(packaging.PackageName("bbb")).name == packaging.PackageName("bbb")
     assert (
         packaging.read_package_info_optionally(packaging.package_dir() / "aaa", logging.getLogger())
         is None
@@ -273,20 +273,20 @@ def test_edit_rename() -> None:
 
 
 def test_edit_rename_conflict() -> None:
-    new_package_info = packaging.package_info_template("bbb")
-    _create_simple_test_package("aaa")
-    _create_simple_test_package("bbb")
+    new_package_info = packaging.package_info_template(packaging.PackageName("bbb"))
+    _create_simple_test_package(packaging.PackageName("aaa"))
+    _create_simple_test_package(packaging.PackageName("bbb"))
 
     with pytest.raises(packaging.PackageException):
-        packaging.edit("aaa", new_package_info)
+        packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
 
 def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
     packaging._install(mkp_bytes, allow_outdated=False, post_package_change_actions=True)
     build_setup_search_index.assert_called_once()
 
-    assert packaging._package_exists("aaa") is True
-    package_info = _read_package_info("aaa")
+    assert packaging._package_exists(packaging.PackageName("aaa")) is True
+    package_info = _read_package_info(packaging.PackageName("aaa"))
     assert package_info.version == "1.0"
     assert package_info.files["checks"] == ["aaa"]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
@@ -294,22 +294,22 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
 
 def test_release_not_existing() -> None:
     with pytest.raises(packaging.PackageException):
-        packaging.release("abc")
+        packaging.release(packaging.PackageName("abc"))
 
 
 def test_release() -> None:
-    _create_simple_test_package("aaa")
-    assert packaging._package_exists("aaa") is True
+    _create_simple_test_package(packaging.PackageName("aaa"))
+    assert packaging._package_exists(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release("aaa")
+    packaging.release(packaging.PackageName("aaa"))
 
-    assert packaging._package_exists("aaa") is False
+    assert packaging._package_exists(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
 def test_write_file() -> None:
-    package_info = _create_simple_test_package("aaa")
+    package_info = _create_simple_test_package(packaging.PackageName("aaa"))
 
     mkp = packaging.create_mkp_object(package_info)
 
@@ -329,10 +329,10 @@ def test_write_file() -> None:
 
 
 def test_uninstall(build_setup_search_index: Mock) -> None:
-    package_info = _create_simple_test_package("aaa")
+    package_info = _create_simple_test_package(packaging.PackageName("aaa"))
     packaging.uninstall(package_info)
     build_setup_search_index.assert_called_once()
-    assert packaging._package_exists("aaa") is False
+    assert packaging._package_exists(packaging.PackageName("aaa")) is False
 
 
 def test_unpackaged_files_none() -> None:
@@ -401,8 +401,8 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
 
     # Create package
-    _create_simple_test_package("optional")
-    expected_package_info = _read_package_info("optional")
+    _create_simple_test_package(packaging.PackageName("optional"))
+    expected_package_info = _read_package_info(packaging.PackageName("optional"))
 
     assert packaging.get_optional_package_infos() == {
         "optional-1.0.mkp": (expected_package_info, True)
@@ -413,21 +413,25 @@ def test_parse_package_info_pre_160() -> None:
     # make sure we can read old packages without "usable until"
     raw = {
         k: v
-        for k, v in packaging.package_info_template("testpackage").dict(by_alias=True).items()
+        for k, v in packaging.package_info_template(packaging.PackageName("testpackage"))
+        .dict(by_alias=True)
+        .items()
         if k != "version.usable_until"
     }
     assert packaging.PackageInfo.parse_python_string(repr(raw)).version_usable_until is None
 
 
 def test_parse_package_info() -> None:
-    info_str = packaging.package_info_template("pkgname").file_content()
-    assert packaging.PackageInfo.parse_python_string(info_str).name == "pkgname"
+    info_str = packaging.package_info_template(packaging.PackageName("pkgname")).file_content()
+    assert packaging.PackageInfo.parse_python_string(info_str).name == packaging.PackageName(
+        "pkgname"
+    )
 
 
 def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.package_info_template("ding")
+    package = packaging.package_info_template(packaging.PackageName("ding"))
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
@@ -436,7 +440,7 @@ def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
 def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.package_info_template("ding")
+    package = packaging.package_info_template(packaging.PackageName("ding"))
     package.files = {"gui": ["a"]}
 
     packaging._execute_post_package_change_actions(package)
@@ -447,7 +451,7 @@ def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
 def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.package_info_template("ding")
+    package = packaging.package_info_template(packaging.PackageName("ding"))
     package.files = {"web": ["a"]}
 
     packaging._execute_post_package_change_actions(package)
@@ -456,7 +460,7 @@ def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
 
 
 def _get_test_package_info(properties: Mapping) -> packaging.PackageInfo:
-    pi = packaging.package_info_template("test-package")
+    pi = packaging.package_info_template(packaging.PackageName("test-package"))
     for k, v in properties.items():
         setattr(pi, k, v)
     return pi

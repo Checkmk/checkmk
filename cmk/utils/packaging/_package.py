@@ -16,12 +16,12 @@ from pydantic import BaseModel, Field
 
 from cmk.utils import version as cmk_version
 
-from ._type_defs import PackageException
+from ._type_defs import PackageException, PackageName
 
 
 class PackageInfo(BaseModel):
     title: str
-    name: str
+    name: PackageName
     description: str
     version: str
     version_packaged: str = Field(alias="version.packaged")
@@ -45,7 +45,7 @@ class PackageInfo(BaseModel):
         return cls.parse_obj(ast.literal_eval(raw))
 
 
-def package_info_template(pacname: str) -> PackageInfo:
+def package_info_template(pacname: PackageName) -> PackageInfo:
     return PackageInfo(
         title=f"Title of {pacname}",
         name=pacname,

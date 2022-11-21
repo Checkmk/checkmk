@@ -429,7 +429,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source, file_cache, fetcher in sources.make_non_cluster_sources(
+        for source, file_cache, fetcher in sources.make_sources(
             hostname,
             ipaddress,
             simulation_mode=config.simulation_mode,

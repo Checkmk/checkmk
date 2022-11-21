@@ -6,7 +6,6 @@
 import logging
 import os
 import sys
-import tarfile
 from pathlib import Path
 from typing import AbstractSet
 
@@ -26,7 +25,6 @@ from cmk.utils.packaging import (
     PACKAGE_EXTENSION,
     package_info_template,
     PackageException,
-    PackageInfo,
     PackageName,
     unpackaged_files,
     unpackaged_files_in_dir,
@@ -136,27 +134,15 @@ def show_package_info(name: str) -> None:
     show_package(name, True)
 
 
-def show_package(  # pylint: disable=too-many-branches
-    name: str,
-    show_info: bool = False,
-) -> None:
-    try:
-        if name.endswith(PACKAGE_EXTENSION):
-            with tarfile.open(name, "r:gz") as tar:
-                if (info := tar.extractfile("info")) is None:
-                    raise PackageException('Failed to extract "info"')
-                package = PackageInfo.parse_python_string(info.read().decode())
-        else:
-            if (this_package := get_installed_package_info(PackageName(name))) is None:
-                raise PackageException("No such package %s." % name)
-
-            package = this_package
-            if show_info:
-                sys.stdout.write("Package file:                  %s\n" % (package_dir() / name))
-    except PackageException:
-        raise
-    except Exception as e:
-        raise PackageException(f"Cannot open package {name}: {e}")
+def show_package(name: str, show_info: bool = False) -> None:
+    if name.endswith(PACKAGE_EXTENSION):
+        package = packaging.extract_package_info(Path(name).read_bytes())
+    else:
+        if (this_package := get_installed_package_info(PackageName(name))) is None:
+            raise PackageException("No such package: %s" % name)
+        package = this_package
+        if show_info:
+            sys.stdout.write("Package file:                  %s\n" % (package_dir() / name))
 
     if show_info:
         sys.stdout.write("Name:                          %s\n" % package.name)

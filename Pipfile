@@ -19,7 +19,7 @@ isort = "*"  # used as a plugin for editors
 lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
 mocket = "*"    # used for mocking kubernetes python client
-pylint = "*"  # used by test/Makefile's test-pylint target
+pylint = "==2.15.5"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 twine = "*" # used to upload packages to internal PyPi mirror
@@ -50,7 +50,7 @@ pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
 responses = "*"  # used for unit tests
 webtest = "*"  # used by WSGI based tests
-pre-commit = "*"  # used to fix / find issues before commiting changes
+pre-commit = "*"  # used to fix / find issues before committing changes
 flake8 = "*"
 autoflake = "*"  # used to remove unused import statements
 sphinx = "*"  # used for the plugin API documentation
@@ -66,7 +66,7 @@ pyls-isort = "*"  # isort plugin for python-lsp-server
 pylsp-mypy = "*"  # mypy plugin for python-lsp-server
 mypy-protobuf = "*" # for mypy
 pipfile = "*" # for generating import names during int tests
-py-import-cycles = "*"  # used in tests/Makefile
+py-import-cycles = "==0.1.9"  # used in tests/Makefile
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py

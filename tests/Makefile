@@ -57,7 +57,7 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     '^\#!/.*sh' [^.]* 2>/dev/null)
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
-# until we have a feasible solution or we drop the support for 2.6 completly.
+# until we have a feasible solution or we drop the support for 2.6 completely.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 BROWSER_ENGINES = "chromium" "firefox"
 

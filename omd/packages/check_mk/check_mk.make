@@ -2,10 +2,11 @@ CHECK_MK := check_mk
 CHECK_MK_DIR := $(CHECK_MK)-$(CMK_VERSION)
 
 CHECK_MK_BUILD := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-build
+CHECK_MK_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install-intermediate
 CHECK_MK_INSTALL := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-install
 CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 
-#CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
+CHECK_MK_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(CHECK_MK_DIR)
 CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 #CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
 
@@ -61,17 +62,17 @@ ifneq ($(EDITION),plus)
 	    --exclude "cpe.py"
 endif
 
-$(CHECK_MK_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
-	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
+$(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
+	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
-	install -m 664 $(REPO_PATH)/checks/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/checks
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	install -m 664 $(REPO_PATH)/checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/notifications
-	install -m 775 $(REPO_PATH)/notifications/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/notifications
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	install -m 775 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 	tar -c -C $(REPO_PATH)/web \
 	    $(CHECK_MK_TAROPTS) \
             app \
@@ -83,23 +84,23 @@ $(CHECK_MK_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_
             $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
             htdocs/sounds \
             $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) \
-	    | tar -x -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk
-	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS,ChangeLog} $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
+	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS,ChangeLog} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	tar -c -C $(REPO_PATH)/doc $(CHECK_MK_TAROPTS) --exclude plugin-api \
-	    . | tar -x -C $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk/
+	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 	tar -c -C $(REPO_PATH)/doc \
 	    --transform "s/^plugin-api\/build/plugin-api/" \
-	    plugin-api/build/html | tar -x -C $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk/
+	    plugin-api/build/html | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
 	tar -c -C $(REPO_PATH)/livestatus/api \
 	    $(CHECK_MK_TAROPTS) \
-	    . | tar -x -C $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk/livestatus/
+	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/livestatus/
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/checkman
-	install -m 664 $(REPO_PATH)/checkman/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/checkman
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
+	install -m 664 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude __init__.py \
@@ -142,139 +143,142 @@ $(CHECK_MK_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_
 	    windows/CONTENTS \
 	    windows/mrpe \
 	    windows/plugins \
-	    | tar -x -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/
+	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/bin
 	tar -c -C $(REPO_PATH)/bin \
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude Makefile \
 	    --exclude *.cc \
-	    . | tar -x -C $(DESTDIR)$(OMD_ROOT)/bin
+	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/bin
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python3
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3
 	tar -C $(REPO_PATH) -c \
 	    $(CHECK_MK_TAROPTS) \
 	    $(EDITION_EXCLUDE) \
-	    cmk | tar -x -C $(DESTDIR)$(OMD_ROOT)/lib/python3
+	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
 
 	# cmk needs to be a namespace package (CMK-3979)
 	rm -f \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/special_agents/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/raw/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/raw/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/dashboard/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/config/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/cron/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/userdb/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/bi/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/sidebar/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/icons/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/visuals/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/actions/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/special_agents/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/dashboard/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/config/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/cron/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/userdb/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/bi/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/sidebar/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/icons/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/visuals/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/actions/__init__.py \
 	    \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/cpe/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
 	    \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/check_parameters/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/cpe/plugins/wato/watolib/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/cpe/plugins/agent_based/__init__.py
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/check_parameters/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cpe/plugins/wato/watolib/__init__.py \
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cpe/plugins/agent_based/__init__.py
 
 	# After installing all python modules, ensure they are compiled
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
-	$(LN) -sf python3/cmk $(DESTDIR)$(OMD_ROOT)/lib/check_mk
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib
+	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/lib/check_mk
 	# ... and ensure the same for the local hierarchy
-	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk
-	$(LN) -sf python3/cmk $(DESTDIR)$(OMD_ROOT)/skel/local/lib/check_mk
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
+	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
-	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/base/plugins/agent_based
-	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/special_agents
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
 
 	# Install the diskspace cleanup plugin
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
-	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/diskspace
+	install -m 644 $(PACKAGE_DIR)/$(CHECK_MK)/diskspace $(CHECK_MK_INSTALL_DIR)/share/diskspace/check_mk
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 	tar -c -C $(REPO_PATH)/active_checks \
 	    $(CHECK_MK_TAROPTS) \
 	    --exclude Makefile \
 	    --exclude *.cc \
-	    . | tar -x -C $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/nagios/plugins
 
 	# Install localizations
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale
 	for lang in $(CHECK_MK_LANGUAGES) ; do \
-		$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
-		install -m 644 $(REPO_PATH)/locale/$$lang/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
-		install -m 644 $(REPO_PATH)/locale/$$lang/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang ; \
+		$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/LC_MESSAGES/multisite.mo $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/alias $(CHECK_MK_INSTALL_DIR)/share/check_mk/locale/$$lang ; \
 	done
 
 	# Install hooks
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG_TCP $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/AGENT_RECEIVER_PORT $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SNMPTRAP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MKEVENTD_SYSLOG_TCP $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_AUTHORISATION $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(CHECK_MK_INSTALL_DIR)/lib/omd/hooks/
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-create/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv/
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-cp/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp/
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-restore/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-mv/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-cp/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-cp/
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-restore
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-restore/01_cmk-post-rename-site $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-restore/
+	$(TOUCH) $@
 
+$(CHECK_MK_INSTALL): $(CHECK_MK_INTERMEDIATE_INSTALL)
+	$(RSYNC) $(CHECK_MK_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

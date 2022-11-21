@@ -378,8 +378,13 @@ def _vs_percentile_choice(
 
 def _vs_gcs_http_lb_latencies() -> ValueSpec:
     return Dictionary(
-        title=_("Parameters for the  latencies"),
-        elements=[("latencies", Levels(title=_("Parameters for the latencies"), unit="second"))],
+        title=_("Parameters for the latencies"),
+        elements=[
+            (
+                "latencies",
+                _vs_percentile_choice("Parameters for the latencies", "Latencies", "second"),
+            ),
+        ],
     )
 
 

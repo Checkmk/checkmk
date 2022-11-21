@@ -69,9 +69,12 @@ PLUGINS = [
     pytest.param(
         Plugin(
             function=check_latencies,
-            metrics=["latencies"],
+            metrics=[],
+            percentile_metrics=[("latencies", [50, 95, 99])],
             results=[
-                Result(state=State.OK, summary="Latency: 42 milliseconds"),
+                Result(state=State.OK, summary="Latency (50th percentile): 42 milliseconds"),
+                Result(state=State.OK, summary="Latency (95th percentile): 42 milliseconds"),
+                Result(state=State.OK, summary="Latency (99th percentile): 42 milliseconds"),
             ],
         ),
         id="latencies",
@@ -90,7 +93,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
     section = parse(generate_stringtable(item, 42.0, HTTP_LOADBALANCER))
     yield from plugin.function(
         item=item,
-        params={k: None for k in plugin.metrics},
+        params=plugin.default_params(),
         section_gcp_service_http_lb=section,
         section_gcp_assets=parse_assets(asset_table),
     )

@@ -929,6 +929,18 @@ HTTP_LOADBALANCER = Service(
         Metric(
             name="loadbalancing.googleapis.com/https/total_latencies",
             aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="loadbalancing.googleapis.com/https/total_latencies",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
+            ),
+        ),
+        Metric(
+            name="loadbalancing.googleapis.com/https/total_latencies",
+            aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
             ),
         ),

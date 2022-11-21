@@ -14,7 +14,7 @@ You can find an introduction to hosts including host tags and host tag groups in
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
 

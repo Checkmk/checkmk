@@ -67,6 +67,49 @@ def _central_site(site_factory: SiteFactory) -> Site:
     return _create_site_and_restart_httpd(site_factory, "central")
 
 
+@pytest.fixture(name="remote_site", scope="module")
+def _remote_site(central_site: Site, site_factory: SiteFactory) -> Site:
+    remote_site = _create_site_and_restart_httpd(site_factory, "remote")
+    central_site.openapi.create_site(
+        {
+            "basic_settings": {
+                "alias": "Remote Testsite",
+                "site_id": remote_site.id,
+            },
+            "status_connection": {
+                "connection": {
+                    "socket_type": "tcp",
+                    "host": remote_site.http_address,
+                    "port": remote_site.livestatus_port,
+                    "encrypted": False,
+                    "verify": False,
+                },
+                "proxy": {
+                    "use_livestatus_daemon": "direct",
+                },
+                "connect_timeout": 2,
+                "persistent_connection": False,
+                "url_prefix": f"/{remote_site.id}/",
+                "status_host": {"status_host_set": "disabled"},
+                "disable_in_status_gui": False,
+            },
+            "configuration_connection": {
+                "enable_replication": True,
+                "url_of_remote_site": remote_site.internal_url,
+                "disable_remote_configuration": True,
+                "ignore_tls_errors": True,
+                "direct_login_to_web_gui_allowed": True,
+                "user_sync": {"sync_with_ldap_connections": "all"},
+                "replicate_event_console": True,
+                "replicate_extensions": True,
+            },
+        }
+    )
+    central_site.openapi.login_to_site(remote_site.id)
+    central_site.openapi.activate_changes_and_wait_for_completion()
+    return remote_site
+
+
 def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) -> Site:
     """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
     creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing

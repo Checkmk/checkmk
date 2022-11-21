@@ -12,6 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import (
+    CascadingDropdown,
     Dictionary,
     Filesize,
     Integer,
@@ -348,6 +349,31 @@ rulespec_registry.register(
         item_spec=_item_spec_http_lb,
     )
 )
+
+
+def _vs_percentile_choice(
+    dropdown_title: str, choice_title: str, choice_unit: str
+) -> CascadingDropdown:
+    return CascadingDropdown(
+        title=dropdown_title,
+        choices=[
+            (
+                50,
+                _("50th percentile"),
+                Levels(title=choice_title, unit=choice_unit),
+            ),
+            (
+                95,
+                _("95th percentile"),
+                Levels(title=choice_title, unit=choice_unit),
+            ),
+            (
+                99,
+                _("99th percentile"),
+                Levels(title=choice_title, unit=choice_unit),
+            ),
+        ],
+    )
 
 
 def _vs_gcs_http_lb_latencies() -> ValueSpec:

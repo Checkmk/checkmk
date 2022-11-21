@@ -273,13 +273,19 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
 
 
 def _redirect_for_password_change(user_id: UserId) -> None:
-    if requested_file_name(request) != "user_change_pw":
-        result = userdb.need_to_change_pw(user_id)
-        if result:
-            raise HTTPRedirect(
-                "user_change_pw.py?_origtarget=%s&reason=%s"
-                % (urlencode(makeuri(request, [])), result)
-            )
+    if requested_file_name(request) in (
+        "user_login_two_factor",
+        "user_webauthn_login_begin",
+        "user_webauthn_login_complete",
+        "user_change_pw",
+    ):
+        return
+
+    result = userdb.need_to_change_pw(user_id)
+    if result:
+        raise HTTPRedirect(
+            "user_change_pw.py?_origtarget=%s&reason=%s" % (urlencode(makeuri(request, [])), result)
+        )
 
 
 def _redirect_for_two_factor_authentication(user_id: UserId) -> None:
@@ -424,15 +430,14 @@ def check_auth_by_cookie() -> Optional[UserId]:
     try:
         set_auth_type("cookie")
         return _check_auth_cookie(cookie_name)
-    except MKAuthException:
-        # Suppress cookie validation errors from other sites cookies
-        auth_logger.debug(
-            "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
-        )
+    except HTTPRedirect:
+        # Reraising redirects
+        raise
     except Exception:
         auth_logger.debug(
             "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
         )
+
     return None
 
 
@@ -544,6 +549,13 @@ class LoginPage(Page):
                 # c) Redirect to really requested page
                 _create_auth_session(username, session_id)
 
+                # This must happen before the enforced password change is
+                # checked in order to have the redirects correct...
+                if userdb.is_two_factor_login_enabled(username):
+                    raise HTTPRedirect(
+                        "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+                    )
+
                 # Never use inplace redirect handling anymore as used in the past. This results
                 # in some unexpected situations. We simpy use 302 redirects now. So we have a
                 # clear situation.
@@ -554,11 +566,6 @@ class LoginPage(Page):
                     raise HTTPRedirect(
                         "user_change_pw.py?_origtarget=%s&reason=%s"
                         % (urlencode(origtarget), change_pw_result)
-                    )
-
-                if userdb.is_two_factor_login_enabled(username):
-                    raise HTTPRedirect(
-                        "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                     )
 
                 raise HTTPRedirect(origtarget)

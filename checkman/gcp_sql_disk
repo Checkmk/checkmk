@@ -7,14 +7,17 @@ description:
  This check monitors the disk of database servers and reports
 
  - disk usage in percent
+ - disk usage in bytes
+ - total disk space in bytes
  - average write IOPS in the last minute
  - average read IOPS in the last minute
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.
 
- There are no default levels. Upper levels
- are configurable via the rule "GCP/Cloud SQL disk".
+ Upper levels on disk usage and read/write IOPS are configurable
+ via the rule "GCP/Filestore".
+ Default levels are configured for disk usage: 80%/90% (Warn/Crit).
 
 discovery:
  One service is created for each bucket.

@@ -2,6 +2,8 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -195,20 +197,16 @@ rulespec_registry.register(
 )
 
 
-def _vs_sql_disk() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels disk"),
-        elements=[
-            # TODO remove fs_used_percent when doing CMK-11496
-            ("fs_used_percent", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
-            ("disk_utilization", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
-            ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
-            ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
-            ("disk_average_read_wait", Levels(title=_("Average disk read latency"), unit="s")),
-            ("disk_average_write_wait", Levels(title=_("Average disk write latency"), unit="s")),
-            ("latency", Levels(title=_("Average disk latency"), unit="s")),
-        ],
-    )
+def _vs_disk_elements() -> Sequence[tuple[str, ValueSpec]]:
+    return [
+        ("disk_utilization", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
+        ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
+        ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
+    ]
+
+
+def _vs_disk() -> ValueSpec:
+    return Dictionary(title=_("Levels disk"), elements=_vs_disk_elements())
 
 
 rulespec_registry.register(
@@ -216,11 +214,23 @@ rulespec_registry.register(
         check_group_name="gcp_sql_disk",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_vs_sql_disk,
+        parameter_valuespec=_vs_disk,
         title=lambda: _("GCP/Cloud SQL disk"),
         item_spec=_item_spec_sql,
     )
 )
+
+
+def _vs_latency_disk() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels disk"),
+        elements=[
+            *_vs_disk_elements(),
+            ("disk_average_read_wait", Levels(title=_("Average disk read latency"), unit="s")),
+            ("disk_average_write_wait", Levels(title=_("Average disk write latency"), unit="s")),
+            ("latency", Levels(title=_("Average disk latency"), unit="s")),
+        ],
+    )
 
 
 def _item_spec_filestore() -> ValueSpec:
@@ -232,7 +242,7 @@ rulespec_registry.register(
         check_group_name="gcp_filestore_disk",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_vs_sql_disk,
+        parameter_valuespec=_vs_latency_disk,
         title=lambda: _("GCP/Filestore"),
         item_spec=_item_spec_filestore,
     )

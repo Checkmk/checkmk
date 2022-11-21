@@ -800,6 +800,18 @@ CLOUDSQL = Service(
             ),
         ),
         Metric(
+            name="cloudsql.googleapis.com/database/disk/bytes_used",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="cloudsql.googleapis.com/database/disk/quota",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="cloudsql.googleapis.com/database/replication/replica_lag",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,

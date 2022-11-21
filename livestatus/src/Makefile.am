@@ -5,7 +5,7 @@
 include $(abs_top_srcdir)/defines.make
 
 DOXYGEN ?= doxygen
-PLANTUTML_VERSION ?= 1.2020.16
+PLANTUTML_VERSION ?= 1.2022.12
 IWYU_TOOL ?= python3 $(abs_top_srcdir)/scripts/iwyu_tool.py
 RUN_CLANG_TIDY ?= \
     python3 $(abs_top_srcdir)/scripts/run-clang-tidy.py \

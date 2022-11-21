@@ -651,11 +651,8 @@ class ModeEditUser(WatoMode):
             increase_serial = True  # password changed, reflect in auth serial
 
         else:
-            password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(),
-                                                            '').strip()
-            password2 = html.request.get_str_input_mandatory("_password2_" + self._pw_suffix(),
-                                                             '').strip()
-
+            password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(), '')
+            password2 = html.request.get_str_input_mandatory("_password2_" + self._pw_suffix(), '')
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
             # Note: this validation is done before the main-validiation later on

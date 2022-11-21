@@ -1,0 +1,19 @@
+Title: Regression in mk_docker.py: unexpected keyword argument 'ignore_removed'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669105670
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+If you're using mk_docker.py and the python docker library in version < v3.3.0, you're affected by this since werk #14864.
+The traceback may look like:
+
+<tt>
+list() got an unexpected keyword argument 'ignore_removed'
+</tt>
+
+This is fixed now.

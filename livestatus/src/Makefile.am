@@ -16,7 +16,7 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-asio-1-18-2
+ASIO_VERSION := asio-1.24.0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 RRDTOOL_VERSION := rrdtool-1.7.2
@@ -194,7 +194,7 @@ all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $@
-	rsync -a --delete --exclude=Makefile.am --exclude=.gitignore $</asio/include/ $@
+	rsync -a --delete --exclude="Makefile.*" --exclude=.gitignore $</include/ $@
 	touch $@
 
 $(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff

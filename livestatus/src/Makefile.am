@@ -26,7 +26,7 @@ RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
-GOOGLETEST_VERSION := googletest-f3ef7e173f
+GOOGLETEST_VERSION := googletest-9c332145b7
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 .PHONY: unit-test tidy iwyu documentation documentation-quick

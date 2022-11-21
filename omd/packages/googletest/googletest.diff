@@ -1,14 +1,12 @@
-diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/gtest-param-test.h googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h
---- googletest-f3ef7e173f.orig/googletest/include/gtest/gtest-param-test.h	2021-02-05 19:41:32.000000000 +0100
-+++ googletest-f3ef7e173f/googletest/include/gtest/gtest-param-test.h	2022-01-07 14:25:06.828302401 +0100
-@@ -428,12 +428,12 @@
+diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/gtest-param-test.h googletest-9c332145b7/googletest/include/gtest/gtest-param-test.h
+--- googletest-9c332145b7.orig/googletest/include/gtest/gtest-param-test.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest-9c332145b7/googletest/include/gtest/gtest-param-test.h	2022-11-21 11:40:54.121254716 +0100
+@@ -468,10 +468,10 @@
                ::testing::internal::CodeLocation(__FILE__, __LINE__));          \
        return 0;                                                                \
      }                                                                          \
 -    static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_;               \
 +    static int gtest_registering_dummy_ GTEST_ATTRIBUTE_UNUSED_; /*NOLINT*/    \
-     GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name,    \
-                                                            test_name));        \
    };                                                                           \
    int GTEST_TEST_CLASS_NAME_(test_suite_name,                                  \
 -                             test_name)::gtest_registering_dummy_ =            \
@@ -16,19 +14,19 @@ diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/gtest-param-test.h
        GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::AddToRegistry();     \
    void GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)::TestBody()
  
-@@ -475,7 +475,7 @@
-         ::testing::internal::DefaultParamName<test_suite_name::ParamType>,    \
-         DUMMY_PARAM_))))(info);                                               \
-   }                                                                           \
--  static int gtest_##prefix##test_suite_name##_dummy_                         \
-+  static int gtest_##prefix##test_suite_name##_dummy_ /*NOLINT*/              \
-       GTEST_ATTRIBUTE_UNUSED_ =                                               \
-           ::testing::UnitTest::GetInstance()                                  \
-               ->parameterized_test_registry()                                 \
-diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-death-test-internal.h googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-death-test-internal.h
---- googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-death-test-internal.h	2021-02-05 19:41:32.000000000 +0100
-+++ googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-01-07 14:25:06.828302401 +0100
-@@ -219,14 +219,14 @@
+@@ -513,7 +513,7 @@
+         ::testing::internal::DefaultParamName<test_suite_name::ParamType>,   \
+         DUMMY_PARAM_))))(info);                                              \
+   }                                                                          \
+-  static int gtest_##prefix##test_suite_name##_dummy_                        \
++  static int gtest_##prefix##test_suite_name##_dummy_ /*NOLINT*/             \
+       GTEST_ATTRIBUTE_UNUSED_ =                                              \
+           ::testing::UnitTest::GetInstance()                                 \
+               ->parameterized_test_registry()                                \
+diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-death-test-internal.h googletest-9c332145b7/googletest/include/gtest/internal/gtest-death-test-internal.h
+--- googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest-9c332145b7/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-21 11:43:13.557391478 +0100
+@@ -226,14 +226,14 @@
              #statement,                                                        \
              ::testing::internal::MakeDeathTestMatcher(regex_or_matcher),       \
              __FILE__, __LINE__, &gtest_dt)) {                                  \
@@ -45,10 +43,10 @@ diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-dea
            }                                                                    \
            break;                                                               \
          case ::testing::internal::DeathTest::EXECUTE_TEST: {                   \
-diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-internal.h googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h
---- googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-internal.h	2021-02-05 19:41:32.000000000 +0100
-+++ googletest-f3ef7e173f/googletest/include/gtest/internal/gtest-internal.h	2022-01-07 14:25:06.828302401 +0100
-@@ -1405,7 +1405,7 @@
+diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-internal.h googletest-9c332145b7/googletest/include/gtest/internal/gtest-internal.h
+--- googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-internal.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest-9c332145b7/googletest/include/gtest/internal/gtest-internal.h	2022-11-21 11:46:55.169610283 +0100
+@@ -1406,7 +1406,7 @@
      gtest_msg.value += " with description \"";                                 \
      gtest_msg.value += e.what();                                               \
      gtest_msg.value += "\".";                                                  \
@@ -57,7 +55,7 @@ diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-int
    }
  
  #else  // GTEST_HAS_EXCEPTIONS
-@@ -1428,13 +1428,13 @@
+@@ -1429,13 +1429,13 @@
        gtest_msg.value = "Expected: " #statement                             \
                          " throws an exception of type " #expected_exception \
                          ".\n  Actual: it throws a different type.";         \
@@ -73,7 +71,7 @@ diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-int
      }                                                                       \
    } else /*NOLINT*/                                                         \
      GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__)                   \
-@@ -1449,7 +1449,7 @@
+@@ -1450,7 +1450,7 @@
      gtest_msg.value += " with description \"";                    \
      gtest_msg.value += e.what();                                  \
      gtest_msg.value += "\".";                                     \
@@ -82,44 +80,44 @@ diff -Nur googletest-f3ef7e173f.orig/googletest/include/gtest/internal/gtest-int
    }
  
  #else  // GTEST_HAS_EXCEPTIONS
-@@ -1467,7 +1467,7 @@
-     GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_() \
-     catch (...) { \
-       gtest_msg.value = "it throws."; \
--      goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); \
+@@ -1468,7 +1468,7 @@
+     GTEST_TEST_NO_THROW_CATCH_STD_EXCEPTION_()                           \
+     catch (...) {                                                        \
+       gtest_msg.value = "it throws.";                                    \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__);      \
 +      goto GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__); /*NOLINT*/ \
-     } \
-   } else \
-     GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__): \
-@@ -1485,7 +1485,7 @@
-       gtest_caught_any = true; \
-     } \
-     if (!gtest_caught_any) { \
+     }                                                                    \
+   } else                                                                 \
+     GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__)              \
+@@ -1487,7 +1487,7 @@
+       gtest_caught_any = true;                                       \
+     }                                                                \
+     if (!gtest_caught_any) {                                         \
 -      goto GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__); \
 +      goto GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__); /*NOLINT*/ \
-     } \
-   } else \
-     GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__): \
-@@ -1511,7 +1511,7 @@
+     }                                                                \
+   } else                                                             \
+     GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__)         \
+@@ -1514,7 +1514,7 @@
      ::testing::internal::HasNewFatalFailureHelper gtest_fatal_failure_checker; \
-     GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
-     if (gtest_fatal_failure_checker.has_new_fatal_failure()) { \
--      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__); \
+     GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement);                 \
+     if (gtest_fatal_failure_checker.has_new_fatal_failure()) {                 \
+-      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__);            \
 +      goto GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__); /*NOLINT*/ \
-     } \
-   } else \
-     GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__): \
-@@ -1541,11 +1541,11 @@
-                                                                               \
-    private:                                                                   \
-     void TestBody() override;                                                 \
--    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;     \
+     }                                                                          \
+   } else                                                                       \
+     GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__)                    \
+@@ -1551,11 +1551,11 @@
+                                                                                \
+    private:                                                                    \
+     void TestBody() override;                                                  \
+-    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;      \
 +    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_; /*NOLINT*/ \
-   };                                                                          \
-                                                                               \
-   ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_suite_name,          \
--                                                    test_name)::test_info_ =  \
-+                                                    test_name)::test_info_ =  /*NOLINT*/ \
-       ::testing::internal::MakeAndRegisterTestInfo(                           \
-           #test_suite_name, #test_name, nullptr, nullptr,                     \
-           ::testing::internal::CodeLocation(__FILE__, __LINE__), (parent_id), \
+   };                                                                           \
+                                                                                \
+   ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_suite_name,           \
+-                                                    test_name)::test_info_ =   \
++                                                    test_name)::test_info_ = /*NOLINT*/ \
+       ::testing::internal::MakeAndRegisterTestInfo(                            \
+           #test_suite_name, #test_name, nullptr, nullptr,                      \
+           ::testing::internal::CodeLocation(__FILE__, __LINE__), (parent_id),  \

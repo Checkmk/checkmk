@@ -12,7 +12,7 @@ if not exist "%unpack_cmd%" powershell Write-Host "%unpack_cmd% not found" -Fore
 
 rem with internal folder in the tar.gz
 set nm=googletest
-set vv=-f3ef7e173f
+set vv=-9c332145b7
 set src_dir_name=%omd_path%\%nm%
 if not exist %src_dir_name% powershell Write-Host "%src_dir_name% is not found" -ForegroundColor Red && goto end
 set src_file_name=%nm%%vv%

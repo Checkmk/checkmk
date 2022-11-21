@@ -619,15 +619,21 @@ class ModeEditUser(WatoMode):
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
-        self._user_id = (
-            UserId(_uid) if (_uid := request.get_str_input("edit")) is not None else None
-        )
+        try:
+            self._user_id = (
+                UserId(_uid) if (_uid := request.get_str_input("edit")) is not None else None
+            )
+        except ValueError as e:
+            raise MKUserError("edit", str(e)) from e
         # This is needed for the breadcrumb computation:
         # When linking from user notification rules page the request variable is "user"
         # instead of "edit". We should also change that variable to "user" on this page,
         # then we can simply use self._user_id.
         if not self._user_id and request.has_var("user"):
-            self._user_id = UserId(request.get_str_input_mandatory("user"))
+            try:
+                self._user_id = UserId(request.get_str_input_mandatory("user"))
+            except ValueError as e:
+                raise MKUserError("user", str(e)) from e
 
         self._cloneid = request.get_str_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.

@@ -44,6 +44,7 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import domain_object
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.site_management import (
+    add_changes_after_editing_site_connection,
     LoginException,
     SiteConfig,
     SiteDoesNotExistException,
@@ -116,6 +117,7 @@ def post_site(params: Mapping[str, Any]) -> Response:
     return _convert_validate_and_save_site_data(
         site_id=params["body"]["site_config"]["basic_settings"]["site_id"],
         site_config=params["body"]["site_config"],
+        is_new_connection=True,
     )
 
 
@@ -135,6 +137,7 @@ def put_site(params: Mapping[str, Any]) -> Response:
     return _convert_validate_and_save_site_data(
         site_id=params["site_id"],
         site_config=params["body"]["site_config"],
+        is_new_connection=False,
     )
 
 
@@ -217,8 +220,10 @@ def _serialize_site(site: SiteConfig) -> DomainObject:
 
 
 def _convert_validate_and_save_site_data(
+    *,
     site_id: SiteId,
     site_config: dict[str, Any],
+    is_new_connection: bool,
 ) -> Response:
     site_config["basic_settings"]["site_id"] = site_id
     try:
@@ -227,5 +232,11 @@ def _convert_validate_and_save_site_data(
         SitesApiMgr().validate_and_save_site(site_id, internal_config)
     except MKUserError as exc:
         return _problem_from_user_error(exc)
+
+    add_changes_after_editing_site_connection(
+        site_id=site_id,
+        is_new_connection=is_new_connection,
+        replication_enabled=site_obj.configuration_connection.enable_replication,
+    )
 
     return serve_json(data=_serialize_site(site_obj), status=200)

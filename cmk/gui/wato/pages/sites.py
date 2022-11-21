@@ -82,10 +82,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
-from cmk.gui.watolib.activate_changes import (
-    clear_site_replication_status,
-    get_trial_expired_message,
-)
+from cmk.gui.watolib.activate_changes import get_trial_expired_message
 from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
@@ -95,6 +92,7 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
+from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
@@ -240,27 +238,11 @@ class ModeEditSite(WatoMode):
         self._site = configured_sites[self._site_id] = site_spec
         self._site_mgmt.save_sites(configured_sites)
 
-        if self._new:
-            msg = _("Created new connection to site %s") % self._site_id
-        else:
-            msg = _("Modified site connection %s") % self._site_id
-
-        # Don't know exactly what have been changed, so better issue a change
-        # affecting all domains
-        _changes.add_change(
-            "edit-sites",
-            msg,
-            sites=[self._site_id],
-            domains=ABCConfigDomain.enabled_domains(),
+        msg = add_changes_after_editing_site_connection(
+            site_id=self._site_id,
+            is_new_connection=self._new,
+            replication_enabled=bool(site_spec["replication"]),
         )
-
-        # In case a site is not being replicated anymore, confirm all changes for this site!
-        if not site_spec["replication"] and not site_is_local(self._site_id):
-            clear_site_replication_status(self._site_id)
-
-        if self._site_id != omd_site():
-            # On central site issue a change only affecting the GUI
-            _changes.add_change("edit-sites", msg, sites=[omd_site()], domains=[ConfigDomainGUI])
 
         flash(msg)
         return redirect(mode_url("sites"))

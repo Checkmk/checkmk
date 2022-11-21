@@ -2,3 +2,5 @@
 winbuild
 check-mk-agent-*.noarch.rpm
 check-mk-agent_*_all.deb
+.buildroot.stamp
+.buildroot

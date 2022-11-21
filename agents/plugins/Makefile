@@ -1,3 +1,6 @@
+include ../../defines.make
+include ../../artifacts.make
+
 PIPENV := ../../scripts/run-pipenv
 THREE_TO_TWO := $(PIPENV) run 3to2
 

@@ -3,6 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 include ../defines.make
+include ../artifacts.make
 
 AGENTS_DIR := $(REPO_PATH)/agents
 RPM_VERSION := $(subst -,_,$(VERSION))

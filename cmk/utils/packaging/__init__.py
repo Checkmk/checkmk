@@ -36,7 +36,7 @@ from ._package import (
     PackageInfo,
     read_package_info_optionally,
 )
-from ._type_defs import PackageException, PackageName
+from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 logger = logging.getLogger("cmk.utils.packaging")
 
@@ -165,18 +165,18 @@ def get_package_parts() -> list[PackagePart]:
     ]
 
 
-def format_file_name(*, name: str, version: str) -> str:
+def format_file_name(package_id: PackageID) -> str:
     """
-    >>> f = format_file_name
+    >>> package_id = PackageID(
+    ...     name=PackageName("my_package"),
+    ...     version=PackageVersion("1.0.2"),
+    ... )
 
-    >>> f(name="aaa", version="1.0")
-    'aaa-1.0.mkp'
-
-    >>> f(name="a-a-a", version="99.99")
-    'a-a-a-99.99.mkp'
+    >>> format_file_name(package_id)
+    'my_package-1.0.2.mkp'
 
     """
-    return f"{name}-{version}{PACKAGE_EXTENSION}"
+    return f"{package_id.name}-{package_id.version}{PACKAGE_EXTENSION}"
 
 
 def release(pacname: PackageName) -> None:
@@ -284,7 +284,7 @@ class PackageStore:
 
         package = extract_package_info(file_content)
 
-        base_name = format_file_name(name=package.name, version=package.version)
+        base_name = format_file_name(package.id)
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
@@ -336,10 +336,7 @@ def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, Packag
     for package_path in _get_enabled_package_paths():
         if (package := enabled_packages.get(package_path.name)) is None:
             continue
-        if (
-            package.name == package_name
-            or format_file_name(name=package.name, version=package.version) == package_name
-        ):
+        if package.name == package_name or format_file_name(package.id) == package_name:
             return package_path, package
 
     raise PackageException("Package %s is not enabled" % package_name)
@@ -378,7 +375,7 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(name=manifest.name, version=manifest.version)
+    base_name = format_file_name(manifest.id)
     file_path = cmk.utils.paths.local_optional_packages_dir / base_name
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -426,7 +423,7 @@ def mark_as_enabled(package_path: Path) -> None:
 
 
 def remove_enabled_mark(package_info: PackageInfo) -> None:
-    base_name = format_file_name(name=package_info.name, version=package_info.version)
+    base_name = format_file_name(package_info.id)
     (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
         missing_ok=True
     )  # should never be missing, but don't crash in messed up state
@@ -823,7 +820,7 @@ def _packaged_files_in_dir(part: PartName) -> list[str]:
 
 
 def installed_names() -> list[PackageName]:
-    return sorted([PackageName(p.name) for p in package_dir().iterdir()])
+    return sorted(PackageName(p.name) for p in package_dir().iterdir())
 
 
 def _package_exists(pacname: PackageName) -> bool:

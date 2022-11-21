@@ -29,7 +29,7 @@ NTOP_PACKAGE_INFO = packaging.PackageInfo(
         "your ntop installations available in the Checkmk user interface. This includes ntop "
         "specific views and dashlets."
     ),
-    version="1.0",
+    version=packaging.PackageVersion("1.0"),
     version_packaged=cmk_version.__version__,
     version_min_required=cmk_version.__version__,
     version_usable_until=None,
@@ -38,9 +38,7 @@ NTOP_PACKAGE_INFO = packaging.PackageInfo(
     files={"web": [ntop_file.replace(ENTERPRISE_PREFIX, "") for ntop_file in MKP_ABLE_NTOP_FILES]},
 )
 
-TARFILENAME = packaging.format_file_name(
-    name=NTOP_PACKAGE_INFO.name, version=NTOP_PACKAGE_INFO.version
-)
+TARFILENAME = packaging.format_file_name(NTOP_PACKAGE_INFO.id)
 
 
 Path(TARFILENAME).write_bytes(

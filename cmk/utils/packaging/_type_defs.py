@@ -5,12 +5,18 @@
 from __future__ import annotations
 
 import re
+from typing import NewType
+
+from pydantic import BaseModel
 
 from cmk.utils.exceptions import MKException
 
 
 class PackageException(MKException):
     pass
+
+
+PackageVersion = NewType("PackageVersion", str)
 
 
 class PackageName(str):
@@ -24,3 +30,8 @@ class PackageName(str):
         if not cls._REGEX.match(value):
             raise ValueError(cls._MISMATCH_MSG)
         return super().__new__(cls, value)
+
+
+class PackageID(BaseModel, frozen=True):
+    name: PackageName
+    version: PackageVersion

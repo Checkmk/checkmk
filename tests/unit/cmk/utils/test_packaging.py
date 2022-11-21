@@ -240,7 +240,7 @@ def test_read_package_info_not_existing() -> None:
 
 def test_edit_not_existing() -> None:
     new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
-    new_package_info.version = "2.0"
+    new_package_info.version = packaging.PackageVersion("2.0")
 
     with pytest.raises(packaging.PackageException):
         packaging.edit(packaging.PackageName("aaa"), new_package_info)
@@ -248,14 +248,16 @@ def test_edit_not_existing() -> None:
 
 def test_edit() -> None:
     new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
-    new_package_info.version = "2.0"
+    new_package_info.version = packaging.PackageVersion("2.0")
 
     package_info = _create_simple_test_package(packaging.PackageName("aaa"))
-    assert package_info.version == "1.0"
+    assert package_info.version == packaging.PackageVersion("1.0")
 
     packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
-    assert _read_package_info(packaging.PackageName("aaa")).version == "2.0"
+    assert _read_package_info(packaging.PackageName("aaa")).version == packaging.PackageVersion(
+        "2.0"
+    )
 
 
 def test_edit_rename() -> None:

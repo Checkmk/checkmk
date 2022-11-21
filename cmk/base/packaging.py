@@ -26,6 +26,7 @@ from cmk.utils.packaging import (
     package_info_template,
     PackageException,
     PackageName,
+    PackageVersion,
     unpackaged_files,
     unpackaged_files_in_dir,
     write_package_info,
@@ -102,7 +103,7 @@ def do_packaging(args: list[str]) -> None:
 def package_list(args: list[str]) -> None:
     if len(args) > 0:
         for name in args:
-            show_package_contents(name)
+            show_package_contents(PackageName(name))
     else:
         if logger.isEnabledFor(VERBOSE):
             table = []
@@ -254,7 +255,7 @@ def package_pack(args: list[str]) -> None:
     pacname = PackageName(args[0])
     if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = packaging.format_file_name(name=pacname, version=package.version)
+    tarfilename = packaging.format_file_name(package.id)
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     Path(tarfilename).write_bytes(packaging.create_mkp_object(package))
@@ -264,15 +265,14 @@ def package_pack(args: list[str]) -> None:
 def package_remove(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P remove NAME VERSION")
-    name, version = args
 
-    for package in get_enabled_package_infos().values():
-        if package.name == name and package.version == version:
-            raise PackageException("This package is enabled! Please disable it first.")
+    package_id = packaging.PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
+    if any(package_id == package.id for package in get_enabled_package_infos().values()):
+        raise PackageException("This package is enabled! Please disable it first.")
 
-    logger.log(VERBOSE, "Removing package %s...", name)
-    packaging.PackageStore().remove(format_file_name(name=name, version=version))
-    logger.log(VERBOSE, "Successfully removed package %s.", name)
+    logger.log(VERBOSE, "Removing package %s...", package_id.name)
+    packaging.PackageStore().remove(format_file_name(package_id))
+    logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
 
 
 def package_install(args: list[str]) -> None:
@@ -285,9 +285,7 @@ def package_install(args: list[str]) -> None:
     with Path(path).open("rb") as fh:
         package = packaging.PackageStore().store(fh.read())
 
-    packaging.install_optional_package(
-        packaging.format_file_name(name=package.name, version=package.version)
-    )
+    packaging.install_optional_package(packaging.format_file_name(package.id))
 
 
 def package_disable(args: list[str]) -> None:
@@ -299,9 +297,8 @@ def package_disable(args: list[str]) -> None:
 def package_enable(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
-    packaging.install_optional_package(
-        packaging.format_file_name(name=PackageName(args[0]), version=args[1])
-    )
+    package_id = packaging.PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
+    packaging.install_optional_package(packaging.format_file_name(package_id))
 
 
 def package_disable_outdated(args: list[str]) -> None:

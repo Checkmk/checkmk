@@ -51,7 +51,9 @@ class Performance(SidebarSnapin):
             data = sites.live().query(
                 "GET status\nColumns: service_checks_rate host_checks_rate "
                 "external_commands_rate connections_rate forks_rate "
-                "log_messages_rate cached_log_messages\n"
+                "log_messages_rate cached_log_messages carbon_overflows_rate "
+                "carbon_queue_usage influxdb_overflows_rate influxdb_queue_usage "
+                "rrdcached_overflows_rate rrdcached_queue_usage\n"
             )
         finally:
             sites.live().set_only_sites(None)
@@ -64,6 +66,12 @@ class Performance(SidebarSnapin):
             ("Process creations", True, 4, "%.2f/s"),
             ("New log messages", True, 5, "%.2f/s"),
             ("Cached log messages", True, 6, "%d"),
+            ("Carbon overflow rate", True, 7, "%d/s"),
+            ("Carbon queue usage", True, 8, "%.2f %%"),
+            ("InfluxDB overflow rate", True, 9, "%d/s"),
+            ("InfluxDB queue usage", True, 10, "%.2f %%"),
+            ("RRD overflow rate", True, 11, "%d/s"),
+            ("RRD queue usage", True, 12, "%.2f %%"),
         ]:
             write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 

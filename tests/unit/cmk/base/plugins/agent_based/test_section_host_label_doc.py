@@ -26,7 +26,6 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/docker_object:container",
     "cmk/docker_object:node",
     "cmk/kubernetes/annotation/{key}:{value}",
-    "cmk/kubernetes_object:endpoint",
     "cmk/kubernetes",
     "cmk/kubernetes/deployment",
     "cmk/kubernetes/cronjob",
@@ -44,13 +43,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 KNOWN_MISSING_DOCSTRING: Final = {  # TODO CMK-7660
     "k8s_daemon_pods",
-    "k8s_ingress_infos",
-    "k8s_job_info",
-    "k8s_nodes",
     "k8s_pod_container",
-    "k8s_replicas",
-    "k8s_service_port",
-    "k8s_stateful_set_replicas",
 }
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {

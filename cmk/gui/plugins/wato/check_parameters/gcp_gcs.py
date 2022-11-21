@@ -204,6 +204,9 @@ def _vs_sql_disk() -> ValueSpec:
             ("disk_utilization", Levels(title=_("Disk usage"), unit="%", default_value=(80, 90))),
             ("disk_read_ios", Levels(title=_("Number of read IOPS"))),
             ("disk_write_ios", Levels(title=_("Number of write IOPS"))),
+            ("disk_average_read_wait", Levels(title=_("Average disk read latency"), unit="s")),
+            ("disk_average_write_wait", Levels(title=_("Average disk write latency"), unit="s")),
+            ("latency", Levels(title=_("Average disk latency"), unit="s")),
         ],
     )
 

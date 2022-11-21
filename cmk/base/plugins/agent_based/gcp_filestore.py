@@ -104,6 +104,9 @@ register.check_plugin(
         "disk_utilization": (80.0, 90.0),
         "disk_read_ios": None,
         "disk_write_ios": None,
+        "disk_average_read_wait": None,
+        "disk_average_write_wait": None,
+        "latency": None,
     },
 )
 

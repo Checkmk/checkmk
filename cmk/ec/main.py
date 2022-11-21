@@ -297,7 +297,6 @@ def format_pattern(pattern: TextPattern) -> str:
     return pattern.pattern
 
 
-# Sorry: this code is duplicated in web/plugins/wato/mkeventd.py
 def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
     network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
     if network_bits == 0:

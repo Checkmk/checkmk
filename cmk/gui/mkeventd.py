@@ -298,7 +298,7 @@ def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
     rule: ec.Rule,
     event: dict[str, Any],
 ) -> str | tuple[bool, tuple]:
-    if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+    if not ec.match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 
     if match(rule.get("match_host"), event["host"], complete=True) is False:
@@ -404,39 +404,3 @@ def match(pattern: ec.TextPattern, text: str, complete: bool = True) -> bool | t
     if m:
         return m.groups()
     return False
-
-
-def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
-    network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
-    if network_bits == 0:
-        return True  # event if ipaddress is empty
-    try:
-        ipaddress = parse_ipv4_address(ipaddress_text)
-    except Exception:
-        return False  # invalid address never matches
-
-    # first network_bits of network and ipaddress must be
-    # identical. Create a bitmask.
-    bitmask = 0
-    for n in range(32):
-        bitmask = bitmask << 1
-        if n < network_bits:
-            bit = 1
-        else:
-            bit = 0
-        bitmask += bit
-
-    return (network & bitmask) == (ipaddress & bitmask)
-
-
-def parse_ipv4_address(text: str) -> int:
-    parts = tuple(map(int, text.split(".")))
-    return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
-
-
-def parse_ipv4_network(text: str) -> tuple[int, int]:
-    if "/" not in text:
-        return parse_ipv4_address(text), 32
-
-    network_text, bits_text = text.split("/")
-    return parse_ipv4_address(network_text), int(bits_text)

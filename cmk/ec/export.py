@@ -9,7 +9,7 @@
 from .config import ConfigFromWATO, ECRulePack, ECRulePackSpec, MkpRulePackProxy, Rule, TextPattern
 from .defaults import default_config, default_rule_pack
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
-from .main import SyslogFacility, SyslogPriority
+from .main import match_ipv4_network, SyslogFacility, SyslogPriority
 from .rule_packs import (
     add_rule_pack_proxies,
     ECRuleSpec,

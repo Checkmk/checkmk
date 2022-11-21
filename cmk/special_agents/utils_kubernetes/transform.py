@@ -13,6 +13,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal, TypeAlias, TypeVar
 
 from kubernetes import client  # type: ignore[import]
+from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
@@ -100,6 +101,7 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
         ),
         priority_class_name=spec.priority_class_name,
         active_deadline_seconds=spec.active_deadline_seconds,
+        volumes=parse_obj_as(list[api.Volume], spec.volumes) if spec.volumes else None,
     )
 
 

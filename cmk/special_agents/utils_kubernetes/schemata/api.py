@@ -26,6 +26,7 @@ JobUID = NewType("JobUID", str)
 PodUID = NewType("PodUID", str)
 GitVersion = NewType("GitVersion", str)
 ContainerName = NewType("ContainerName", str)
+VolumeName = NewType("VolumeName", str)
 
 LabelValue = NewType("LabelValue", str)
 """
@@ -536,7 +537,29 @@ class ContainerSpec(BaseModel):
     image_pull_policy: ImagePullPolicy
 
 
+class VolumePersistentVolumeClaimSource(ClientModel):
+    claim_name: str
+    read_only: bool | None
+
+
+class Volume(ClientModel):
+    """
+    name:
+        volume's name; must be a dns_label and unique within the pod
+    persistent_volume_claim:
+        PersistentVolumeClaimVolumeSource represents a reference to a PVC in the same namespace
+    """
+
+    name: VolumeName
+    persistent_volume_claim: VolumePersistentVolumeClaimSource | None
+
+
 class PodSpec(BaseModel):
+    """
+    volumes:
+        list of volumes that can be mounted by container belonging to the pod
+    """
+
     node: NodeName | None = None
     host_network: str | None = None
     dns_policy: str | None = None
@@ -545,6 +568,7 @@ class PodSpec(BaseModel):
     init_containers: Sequence[ContainerSpec]
     priority_class_name: str | None = None
     active_deadline_seconds: int | None = None
+    volumes: Sequence[Volume] | None
 
 
 @enum.unique

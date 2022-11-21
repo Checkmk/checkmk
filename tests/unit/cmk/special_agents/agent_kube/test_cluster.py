@@ -8,10 +8,8 @@ from typing import NoReturn
 from unittest.mock import MagicMock
 
 import pytest
-from pydantic_factories import ModelFactory
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes import performance
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
@@ -30,10 +28,6 @@ from .factory import (
     PodSpecFactory,
     PodStatusFactory,
 )
-
-
-class PerformanceMetricFactory(ModelFactory):
-    __model__ = performance.PerformanceMetric
 
 
 def cluster_api_sections() -> Sequence[str]:

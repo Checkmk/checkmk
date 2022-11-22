@@ -1,0 +1,15 @@
+Title: elasticsearch_cluster_health: Check plugins used to crash if there were no information about shards and tasks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669125896
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+elasticsearch_cluster_health check plugin for tasks and shards used to crash if there were no information available for the two.
+This has now been fixed.
+If the information is not available, the state of these services turn to UNKNOWN and provides a description that information was not found.
+

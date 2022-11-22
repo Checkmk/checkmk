@@ -394,7 +394,7 @@ def test_unpackaged_files() -> None:
 
 
 def test_get_optional_package_infos_none() -> None:
-    assert packaging.get_optional_package_infos() == {}
+    assert packaging.get_optional_package_infos(packaging.PackageStore()) == {}
 
 
 def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -406,7 +406,7 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     _create_simple_test_package(packaging.PackageName("optional"))
     expected_package_info = _read_package_info(packaging.PackageName("optional"))
 
-    assert packaging.get_optional_package_infos() == {
+    assert packaging.get_optional_package_infos(packaging.PackageStore()) == {
         "optional-1.0.mkp": (expected_package_info, True)
     }
 

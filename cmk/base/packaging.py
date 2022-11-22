@@ -282,10 +282,11 @@ def package_install(args: list[str]) -> None:
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
+    store = packaging.PackageStore()
     with Path(path).open("rb") as fh:
-        package = packaging.PackageStore().store(fh.read())
+        package = store.store(fh.read())
 
-    packaging.install_optional_package(packaging.format_file_name(package.id))
+    packaging.install_optional_package(store, packaging.format_file_name(package.id))
 
 
 def package_disable(args: list[str]) -> None:
@@ -298,7 +299,9 @@ def package_enable(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
     package_id = packaging.PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    packaging.install_optional_package(packaging.format_file_name(package_id))
+    packaging.install_optional_package(
+        packaging.PackageStore(), packaging.format_file_name(package_id)
+    )
 
 
 def package_disable_outdated(args: list[str]) -> None:

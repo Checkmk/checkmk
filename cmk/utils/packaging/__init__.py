@@ -316,8 +316,9 @@ class PackageStore:
             return []
 
 
-def read_package(package_file_base_name: str) -> bytes:
-    return _get_full_package_path(package_file_base_name).read_bytes()
+# TODO: this can go
+def read_package(package_store: PackageStore, package_file_base_name: str) -> bytes:
+    return _get_full_package_path(package_store, package_file_base_name).read_bytes()
 
 
 def disable(package_name: PackageName) -> None:
@@ -386,17 +387,19 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     mark_as_enabled(file_path)
 
 
-def _get_full_package_path(package_file_name: str) -> Path:
-    package_store = PackageStore()
+# TODO: this belongs to PackageStore.
+def _get_full_package_path(package_store: PackageStore, package_file_name: str) -> Path:
     for package in package_store.list_local_packages() + package_store.list_shipped_packages():
         if package_file_name == package.name:
             return package
     raise PackageException("Optional package %s does not exist" % package_file_name)
 
 
-def install_optional_package(package_file_base_name: str) -> PackageInfo:
+def install_optional_package(
+    package_store: PackageStore, package_file_base_name: str
+) -> PackageInfo:
     return install(
-        _get_full_package_path(package_file_base_name),
+        _get_full_package_path(package_store, package_file_base_name),
         allow_outdated=True,
     )
 
@@ -715,8 +718,9 @@ def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
     return {name: get_installed_package_info(name) for name in installed_names()}
 
 
-def get_optional_package_infos() -> Mapping[str, tuple[PackageInfo, bool]]:
-    package_store = PackageStore()
+def get_optional_package_infos(
+    package_store: PackageStore,
+) -> Mapping[str, tuple[PackageInfo, bool]]:
     local_packages = package_store.list_local_packages()
     local_names = {p.name for p in local_packages}
     shipped_packages = (

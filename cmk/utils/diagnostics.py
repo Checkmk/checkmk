@@ -266,11 +266,12 @@ class AllPackageInfos(TypedDict):
 
 
 def get_all_package_infos() -> AllPackageInfos:
+    store = packaging.PackageStore()
     return {
         "installed": packaging.get_installed_package_infos(),
         "unpackaged": packaging.get_unpackaged_files(),
         "parts": packaging.package_part_info(),
-        "optional_packages": packaging.get_optional_package_infos(),
+        "optional_packages": packaging.get_optional_package_infos(store),
         "enabled_packages": packaging.get_enabled_package_infos(),
     }
 

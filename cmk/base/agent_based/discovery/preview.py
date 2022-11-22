@@ -67,9 +67,12 @@ def get_check_preview(
     all services if possible"""
     config_cache = config.get_config_cache()
 
+    # Careful:  The order of the next four lines is important.  Most likely, this
+    # is due to the interplay between the IP address and the global variables.
+    # Changing that reproducibly fails the `test_automation_try_discovery_not_existing_host`
+    # integration test.
     ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     host_attrs = get_host_attributes(host_name, config_cache)
-
     cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
@@ -118,7 +121,6 @@ def get_check_preview(
         passive_rows = [
             _check_preview_table_row(
                 host_name,
-                host_config=host_config,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
@@ -142,7 +144,6 @@ def get_check_preview(
         ] + [
             _check_preview_table_row(
                 host_name,
-                host_config=host_config,
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
@@ -152,6 +153,7 @@ def get_check_preview(
             for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
         ]
 
+    host_config = config_cache.make_host_config(host_name)
     return [
         *passive_rows,
         *_active_check_preview_rows(host_name, host_config, host_attrs),
@@ -162,7 +164,6 @@ def get_check_preview(
 def _check_preview_table_row(
     host_name: HostName,
     *,
-    host_config: HostConfig,
     service: ConfiguredService,
     check_source: _Transition | Literal["manual"],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -175,7 +176,6 @@ def _check_preview_table_row(
     result = checking.get_aggregated_result(
         host_name,
         parsed_sections_broker,
-        host_config,
         service,
         plugin,
         value_store_manager=value_store_manager,

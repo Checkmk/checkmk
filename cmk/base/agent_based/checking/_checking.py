@@ -110,7 +110,6 @@ def execute_checkmk_checks(
         service_results = check_host_services(
             hostname,
             config_cache=config_cache,
-            host_config=host_config,
             parsed_sections_broker=broker,
             services=services,
             run_plugin_names=run_plugin_names,
@@ -255,7 +254,6 @@ def check_host_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
@@ -276,7 +274,6 @@ def check_host_services(
                 get_aggregated_result(
                     host_name,
                     parsed_sections_broker,
-                    host_config,
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
@@ -336,7 +333,6 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
 def get_aggregated_result(
     host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
-    host_config: HostConfig,
     service: ConfiguredService,
     plugin: checking_classes.CheckPlugin | None,
     *,

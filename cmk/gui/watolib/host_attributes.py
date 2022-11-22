@@ -25,7 +25,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import config, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
-from cmk.gui.sites import allsites
+from cmk.gui.sites import get_enabled_sites
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils import escaping
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
@@ -1210,7 +1210,7 @@ def _validate_general_host_attributes(host_attributes, new):
                 attr.validate_input(value, "")
 
         # The site attribute gets an extra check
-        if name == "site" and value not in allsites().keys():
+        if name == "site" and value not in get_enabled_sites().keys():
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
 
 

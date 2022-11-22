@@ -100,7 +100,7 @@ from cmk.gui.plugins.wato.utils import (
     SNMPCredentials,
     WatoMode,
 )
-from cmk.gui.sites import allsites, get_event_console_site_choices
+from cmk.gui.sites import get_enabled_sites, get_event_console_site_choices
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
 from cmk.gui.utils.escaping import escape_to_html
@@ -930,7 +930,7 @@ def vs_mkeventd_rule(customer=None):
                 help=_("Apply this rule only on the following sites"),
                 choices=get_event_console_site_choices(),
                 locked_choices=list(
-                    allsites().keys() - dict(get_event_console_site_choices()).keys()
+                    get_enabled_sites().keys() - dict(get_event_console_site_choices()).keys()
                 ),
                 locked_choices_text_singular=_("%d locked site"),
                 locked_choices_text_plural=_("%d locked sites"),

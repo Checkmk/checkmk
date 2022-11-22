@@ -76,9 +76,15 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
     wato_fileheader,
 )
-from cmk.gui.sites import activation_sites, allsites
+from cmk.gui.sites import activation_sites
 from cmk.gui.sites import disconnect as sites_disconnect
-from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
+from cmk.gui.sites import (
+    get_enabled_sites,
+    get_site_config,
+    is_single_local_site,
+    site_is_local,
+    SiteStatus,
+)
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -2758,7 +2764,7 @@ def activate_changes_start(
                 )
             )
 
-    known_sites = allsites().keys()
+    known_sites = get_enabled_sites().keys()
     for site in sites:
         if site not in known_sites:
             raise MKUserError(

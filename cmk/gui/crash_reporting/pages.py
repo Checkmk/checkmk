@@ -50,12 +50,13 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
+
+from .views import CrashReportsRowTable
 
 
 class ReportSubmitDetails(TypedDict):
@@ -103,7 +104,6 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
         }
 
 
-@cmk.gui.pages.page_registry.register_page("crash")
 class PageCrash(ABCCrashReportPage):
     def page(self) -> None:
         row = self._get_crash_row()
@@ -653,7 +653,6 @@ def _show_agent_output(row):
         _show_output_box(_("Agent output"), agent_output)
 
 
-@cmk.gui.pages.page_registry.register_page("download_crash_report")
 class PageDownloadCrashReport(ABCCrashReportPage):
     def page(self) -> None:
         user.need_permission("general.see_crash_reports")

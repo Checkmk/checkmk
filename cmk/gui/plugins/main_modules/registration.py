@@ -7,6 +7,7 @@
 
 
 import cmk.gui.pages
+from cmk.gui import crash_reporting
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.painters.v0 import painters
@@ -46,6 +47,13 @@ cmk.gui.pages.page_registry.register_page("ajax_cascading_render_painer_paramete
 cmk.gui.pages.page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
 cmk.gui.pages.page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
 
+crash_reporting.register(
+    cmk.gui.pages.page_registry,
+    data_source_registry,
+    painter_registry,
+    sorter_registry,
+    command_registry,
+)
 register_post_config_load_hook(register_tag_plugins)
 visual_type_registry.register(VisualTypeViews)
 register_layouts(layout_registry)

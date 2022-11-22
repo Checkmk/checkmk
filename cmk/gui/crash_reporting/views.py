@@ -16,28 +16,17 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.painter_options import paint_age
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
+from cmk.gui.painters.v0.base import Cell, Painter
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import (
-    Command,
-    command_registry,
-    CommandActionResult,
-    PermissionSectionAction,
-)
-from cmk.gui.views.data_source import (
-    ABCDataSource,
-    data_source_registry,
-    DataSourceLivestatus,
-    RowTable,
-)
-from cmk.gui.views.sorter import cmp_simple_number, Sorter, sorter_registry
+from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
+from cmk.gui.views.data_source import ABCDataSource, DataSourceLivestatus, RowTable
+from cmk.gui.views.sorter import cmp_simple_number, Sorter
 
 
-@data_source_registry.register
 class DataSourceCrashReports(DataSourceLivestatus):
     @property
     def ident(self) -> str:
@@ -162,7 +151,6 @@ class CrashReportsRowTable(RowTable):
         return [dict(zip(columns, r)) for r in rows]
 
 
-@painter_registry.register
 class PainterCrashIdent(Painter):
     @property
     def ident(self) -> str:
@@ -190,7 +178,6 @@ class PainterCrashIdent(Painter):
         return (None, HTMLWriter.render_a(row["crash_id"], href=url))
 
 
-@painter_registry.register
 class PainterCrashType(Painter):
     @property
     def ident(self) -> str:
@@ -210,7 +197,6 @@ class PainterCrashType(Painter):
         return (None, row["crash_type"])
 
 
-@painter_registry.register
 class PainterCrashTime(Painter):
     @property
     def ident(self) -> str:
@@ -234,7 +220,6 @@ class PainterCrashTime(Painter):
         return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
 
 
-@painter_registry.register
 class PainterCrashVersion(Painter):
     @property
     def ident(self) -> str:
@@ -254,7 +239,6 @@ class PainterCrashVersion(Painter):
         return (None, row["crash_version"])
 
 
-@painter_registry.register
 class PainterCrashException(Painter):
     @property
     def ident(self) -> str:
@@ -274,7 +258,6 @@ class PainterCrashException(Painter):
         return (None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"]))
 
 
-@sorter_registry.register
 class SorterCrashTime(Sorter):
     @property
     def ident(self) -> str:
@@ -303,7 +286,6 @@ PermissionActionDeleteCrashReport = permission_registry.register(
 )
 
 
-@command_registry.register
 class CommandDeleteCrashReports(Command):
     @property
     def ident(self) -> str:

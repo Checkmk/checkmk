@@ -10,7 +10,7 @@ from pathlib import Path
 import cmk.utils.crash_reporting
 
 import cmk.gui.crash_handler as crash_handler
-import cmk.gui.crash_reporting as crash_reporting
+import cmk.gui.crash_reporting.pages as pages
 
 
 def test_gui_crash_report_registry() -> None:
@@ -27,7 +27,7 @@ def test_gui_crash_report_get_packed(request_context) -> None:  # type:ignore[no
         store.save(crash)
         crash_dir = crash.crash_dir()
 
-    tgz = crash_reporting._pack_crash_report(store.load_serialized_from_directory(crash_dir))
+    tgz = pages._pack_crash_report(store.load_serialized_from_directory(crash_dir))
     buf = io.BytesIO(tgz)
     with tarfile.open(mode="r:gz", fileobj=buf) as tar:
         assert tar.getnames() == ["crash.info"]

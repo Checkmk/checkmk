@@ -942,7 +942,9 @@ def show_bi_availability(view: "View", aggr_rows: "Rows") -> None:
 
                     html.write_text(" &nbsp; ")
                     html.icon_button(
-                        makeuri(request, [("timewarp", "")]), _("Close Timewarp"), "closetimewarp"
+                        makeuri(request, [], delvars=["timewarp"]),
+                        _("Close timewarp"),
+                        "closetimewarp",
                     )
                     html.write_text(
                         "%s %s"

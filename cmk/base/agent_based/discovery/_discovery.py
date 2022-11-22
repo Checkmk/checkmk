@@ -102,7 +102,7 @@ def execute_check_discovery(
             time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
                 piggybacked_hostname=hostname,
             ),
-            is_piggyback=host_config.is_piggyback_host,
+            is_piggyback=config_cache.is_piggyback_host(host_name),
         ),
         *parsing_errors_results,
         _schedule_rediscovery(

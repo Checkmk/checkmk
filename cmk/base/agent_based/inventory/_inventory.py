@@ -149,7 +149,7 @@ def check_inventory_tree(
                 time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
-                is_piggyback=host_config.is_piggyback_host,
+                is_piggyback=config_cache.is_piggyback_host(host_name),
             ),
             *check_parsing_errors(
                 errors=fetched_data_result.parsing_errors,

@@ -2421,18 +2421,10 @@ class HostConfig:
         self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
         self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
 
-        def get_is_piggyback_host() -> bool:
-            if self.tag_groups["piggyback"] == "piggyback":
-                return True
-            if self.tag_groups["piggyback"] == "no-piggyback":
-                return False
-            # Legacy automatic detection
-            return self._config_cache.has_piggyback_data(self.hostname)
-
-        self.is_piggyback_host: Final = get_is_piggyback_host()
-
         # Agent types
-        self.is_agent_host: Final[bool] = self.is_tcp_host or self.is_piggyback_host
+        self.is_agent_host: Final[bool] = self.is_tcp_host or self._config_cache.is_piggyback_host(
+            hostname
+        )
         self.management_protocol: Final = management_protocol.get(hostname)
         self.has_management_board: Final[bool] = self.management_protocol is not None
         self.is_ping_host: Final = not (
@@ -3032,6 +3024,7 @@ class ConfigCache:
                 tuple[RulesetName, cmk.base.check_utils.ConfiguredService],
             ],
         ] = {}
+        self._is_piggyback_host: dict[HostName, bool] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3072,6 +3065,7 @@ class ConfigCache:
 
     def _initialize_caches(self) -> None:
         self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3163,6 +3157,7 @@ class ConfigCache:
 
     def invalidate_host_config(self, hostname: HostName) -> None:
         self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3578,7 +3573,19 @@ class ConfigCache:
             return rules[0]
         return "ipv4"
 
-    def has_piggyback_data(self, host_name: HostName) -> bool:
+    def is_piggyback_host(self, host_name: HostName) -> bool:
+        def get_is_piggyback_host() -> bool:
+            tag_groups: Final = ConfigCache.tags_of_host(host_name)
+            if tag_groups["piggyback"] == "piggyback":
+                return True
+            if tag_groups["piggyback"] == "no-piggyback":
+                return False
+            # Legacy automatic detection
+            return self._has_piggyback_data(host_name)
+
+        return self._is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
+
+    def _has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
 

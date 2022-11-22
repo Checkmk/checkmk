@@ -131,7 +131,7 @@ def execute_checkmk_checks(
                 time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
-                is_piggyback=host_config.is_piggyback_host,
+                is_piggyback=config_cache.is_piggyback_host(hostname),
             ),
             *check_parsing_errors(
                 errors=broker.parsing_errors(),

@@ -1712,7 +1712,6 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         success = True
         output = ""
@@ -1749,7 +1748,7 @@ class AutomationGetAgentOutput(Automation):
                         time_settings=config_cache.get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
-                        is_piggyback=host_config.is_piggyback_host,
+                        is_piggyback=config_cache.is_piggyback_host(hostname),
                         fetcher_type=source.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):

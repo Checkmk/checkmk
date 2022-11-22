@@ -428,7 +428,6 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        host_config = config_cache.make_host_config(hostname)
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             hostname,
             ipaddress,
@@ -453,7 +452,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
-                is_piggyback=host_config.is_piggyback_host,
+                is_piggyback=config_cache.is_piggyback_host(hostname),
                 fetcher_type=source.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):

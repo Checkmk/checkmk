@@ -271,8 +271,7 @@ def test_is_piggyback_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_piggyback_host == result
+    assert ts.apply(monkeypatch).is_piggyback_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -296,8 +295,7 @@ def test_is_piggyback_host_auto(
     monkeypatch.setattr(piggyback, "has_piggyback_raw_data", lambda hostname, cache_age: with_data)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_piggyback_host == result
+    assert ts.apply(monkeypatch).is_piggyback_host(hostname) == result
 
 
 @pytest.mark.parametrize(

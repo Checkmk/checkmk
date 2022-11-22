@@ -5,7 +5,6 @@
 
 from typing import Union
 
-import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
@@ -214,7 +213,6 @@ def page_login() -> None:
     mobile_html_foot()
 
 
-@cmk.gui.pages.register("mobile")
 def page_index() -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
@@ -268,7 +266,6 @@ def page_index() -> None:
     mobile_html_foot()
 
 
-@cmk.gui.pages.register("mobile_view")
 def page_view() -> None:
     view_name = request.var("view_name")
     if not view_name:

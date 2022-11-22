@@ -13,7 +13,7 @@ from cmk.gui.painters.v0.base import Cell
 from cmk.gui.type_defs import PainterSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.views.layout import Layout, layout_registry
+from cmk.gui.views.layout import Layout
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visual_link import render_link_to_view
 
@@ -927,7 +927,6 @@ def render_mobile_table(
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
 
 
-@layout_registry.register
 class LayoutMobileTable(Layout):
     @property
     def ident(self) -> str:
@@ -1006,7 +1005,6 @@ def render_mobile_list(
     html.javascript('$("ul.mobilelist a").attr("data-ajax", "false");')
 
 
-@layout_registry.register
 class LayoutMobileList(Layout):
     @property
     def ident(self) -> str:
@@ -1069,7 +1067,6 @@ def render_mobile_dataset(
     )
 
 
-@layout_registry.register
 class LayoutMobileDataset(Layout):
     @property
     def ident(self) -> str:

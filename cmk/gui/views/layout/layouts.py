@@ -25,10 +25,10 @@ from cmk.gui.visual_link import render_link_to_view
 from ..data_source import row_id
 from .base import Layout
 from .helpers import group_value, output_csv_headers
-from .registry import ViewLayoutRegistry
+from .registry import LayoutRegistry
 
 
-def register_layouts(registry: ViewLayoutRegistry) -> None:
+def register_layouts(registry: LayoutRegistry) -> None:
     registry.register(LayoutSingleDataset)
     registry.register(LayoutBalancedBoxes)
     registry.register(LayoutBalancedGraphBoxes)

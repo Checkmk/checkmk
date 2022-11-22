@@ -8,7 +8,7 @@ from cmk.utils.plugin_registry import Registry
 from .base import Layout
 
 
-class ViewLayoutRegistry(Registry[type[Layout]]):
+class LayoutRegistry(Registry[type[Layout]]):
     def plugin_name(self, instance: type[Layout]) -> str:
         return instance().ident
 
@@ -21,4 +21,4 @@ class ViewLayoutRegistry(Registry[type[Layout]]):
         return choices
 
 
-layout_registry = ViewLayoutRegistry()
+layout_registry = LayoutRegistry()

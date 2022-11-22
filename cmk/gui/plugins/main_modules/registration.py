@@ -7,7 +7,7 @@
 
 
 import cmk.gui.pages
-from cmk.gui import crash_reporting
+from cmk.gui import crash_reporting, mobile
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.painters.v0 import painters
@@ -65,3 +65,4 @@ register_data_sources(data_source_registry)
 perfometer.register(sorter_registry, painter_registry)
 icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
 mkeventd.register(data_source_registry, painter_registry)
+mobile.register(layout_registry)

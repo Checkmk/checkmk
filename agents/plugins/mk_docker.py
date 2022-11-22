@@ -274,7 +274,7 @@ class MKDockerClient(docker.DockerClient):
 
     def __init__(self, config):
         super(MKDockerClient, self).__init__(config["base_url"], version=MKDockerClient.API_VERSION)
-        all_containers = _robust_inspect_containers(self)
+        all_containers = _robust_inspect(self, "containers")
         if config["container_id"] == "name":
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
         elif config["container_id"] == "long":
@@ -463,25 +463,32 @@ def section_node_disk_usage(client):
     section.write()
 
 
-def _robust_inspect_containers(client):
-    # workaround instead of calling client.containers.list() directly to be able to
-    # ignore errors when container was removed in between listing available containers
+def _robust_inspect(client, docker_object):
+    object_map = {
+        "images": {
+            "api": client.api.images,
+            "getter": client.images.get,
+            "kwargs": {},
+        },
+        "containers": {
+            "api": client.api.containers,
+            "getter": client.containers.get,
+            "kwargs": {"all": True},
+        },
+    }
+    if docker_object not in object_map:
+        raise RuntimeError("Unkown docker object: %s" % docker_object)
+
+    api = object_map[docker_object]["api"]
+    getter = object_map[docker_object]["getter"]
+    kwargs = object_map[docker_object]["kwargs"]
+    # workaround instead of calling client.OBJECT.list() directly to be able to
+    # ignore errors when OBJECT was removed in between listing available OBJECT
     # and getting detailed information about them
-    for response in client.api.containers(all=True):
+    for response in api(**kwargs):
         try:
-            yield client.containers.get(response["Id"])
+            yield getter(response["Id"])
         except docker.errors.NotFound:
-            pass
-
-
-def _robust_inspect_images(client):
-    # workaround instead of calling client.images.list() directly to be able to
-    # ignore errors when image was removed in between listing available images
-    # and getting detailed information about them
-    for response in client.api.images():
-        try:
-            yield client.images.get(response["Id"])
-        except docker.errors.ImageNotFound:
             pass
 
 
@@ -490,8 +497,7 @@ def section_node_images(client):
     """in subsections list [[[images]]] and [[[containers]]]"""
     section = Section("node_images")
 
-    images = _robust_inspect_images(client)
-
+    images = _robust_inspect(client, "images")
     LOGGER.debug(images)
     section.append("[[[images]]]")
     for image in images:

@@ -7,7 +7,7 @@
 
 
 import cmk.gui.pages
-from cmk.gui import crash_reporting, mkeventd, mobile
+from cmk.gui import crash_reporting, mkeventd, mobile, wato
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.painters.v0 import painters
@@ -87,3 +87,4 @@ mkeventd.register(
     rulespec_registry,
 )
 mobile.register(layout_registry)
+wato.register(painter_registry, sorter_registry)

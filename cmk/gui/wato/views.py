@@ -9,18 +9,17 @@ from typing import Any
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
+from cmk.gui.painters.v0.base import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.sorter import Sorter, sorter_registry
+from cmk.gui.views.sorter import Sorter
 from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path,
     get_folder_title_path_with_links,
 )
 
 
-@painter_registry.register
 class PainterHostFilename(Painter):
     @property
     def ident(self) -> str:
@@ -80,7 +79,6 @@ def paint_wato_folder(row, how):
     return "", get_wato_folder(row, how)
 
 
-@painter_registry.register
 class PainterWatoFolderAbs(Painter):
     @property
     def ident(self) -> str:
@@ -104,7 +102,6 @@ class PainterWatoFolderAbs(Painter):
         return paint_wato_folder(row, "abs")
 
 
-@painter_registry.register
 class PainterWatoFolderRel(Painter):
     @property
     def ident(self) -> str:
@@ -128,7 +125,6 @@ class PainterWatoFolderRel(Painter):
         return paint_wato_folder(row, "rel")
 
 
-@painter_registry.register
 class PainterWatoFolderPlain(Painter):
     @property
     def ident(self) -> str:
@@ -164,7 +160,6 @@ def _get_wato_folder_text(r: Row, how: str) -> str:
     return str(get_wato_folder(r, how, False))
 
 
-@sorter_registry.register
 class SorterWatoFolderAbs(Sorter):
     @property
     def ident(self) -> str:
@@ -182,7 +177,6 @@ class SorterWatoFolderAbs(Sorter):
         return cmp_wato_folder(r1, r2, "abs")
 
 
-@sorter_registry.register
 class SorterWatoFolderRel(Sorter):
     @property
     def ident(self) -> str:
@@ -200,7 +194,6 @@ class SorterWatoFolderRel(Sorter):
         return cmp_wato_folder(r1, r2, "rel")
 
 
-@sorter_registry.register
 class SorterWatoFolderPlain(Sorter):
     @property
     def ident(self) -> str:

@@ -19,8 +19,9 @@
 #include <utility>
 #include <vector>
 
+#include "Logfile.h"
+
 class LogEntry;
-class Logfile;
 class Logger;
 class MonitoringCore;
 

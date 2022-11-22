@@ -11,7 +11,6 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>

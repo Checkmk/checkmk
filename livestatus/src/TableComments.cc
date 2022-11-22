@@ -6,6 +6,7 @@
 #include "TableComments.h"
 
 #include <chrono>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <type_traits>

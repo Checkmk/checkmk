@@ -29,9 +29,6 @@
 
 #ifdef CMC
 #include "cmc.h"
-class Contact;
-class Host;
-class Service;
 #else
 #include "nagios.h"
 #endif

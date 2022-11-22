@@ -61,7 +61,7 @@ BRANCH_VERSION     := 2.2.0
 #endif
 
 SHELL              := /bin/bash
-CLANG_VERSION      := 12
+CLANG_VERSION      := 14
 
 # In our CI we use this compiler, but we are not restricted to this exact version
 GCC_VERSION_MAJOR      := 12

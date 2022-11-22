@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <ctime>
 #include <iomanip>
 #include <ostream>
 

@@ -6,6 +6,7 @@
 #include "NagiosCore.h"
 
 #include <cstdlib>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <utility>

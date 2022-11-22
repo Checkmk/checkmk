@@ -1,0 +1,13 @@
+Title: Forwarding of Logwatch messages to Event Console: Remove unwanted escaping
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1673253041
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+When forwarding Logwatch messages to the Event Console, depending on the exact message contents,
+the characters <tt>\</tt>, <tt>"</tt> and <tt>]</tt> might have been escaped by mistake with an
+additional <tt>\</tt>.

@@ -321,6 +321,22 @@ from cmk.ec.event import (
             },
             id="variant 9: syslog message (RFC 5424) from logwatch forwarding",
         ),
+        pytest.param(
+            r'<138>1 2022-11-22T12:36:46+00:00 sup-12385 - - - [Checkmk@18662 application="c:\\Users\\SA-Prd-RPAAdmin5\\AppData\\Local\\UiPath\\Logs\\2022-11-21_Execution.log"] error 16',
+            {
+                "application": "c:\\Users\\SA-Prd-RPAAdmin5\\AppData\\Local\\UiPath\\Logs\\2022-11-21_Execution.log",
+                "core_host": None,
+                "facility": 17,
+                "host": "sup-12385",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "pid": 0,
+                "priority": 2,
+                "text": "error 16",
+                "time": 1669120606.0,
+            },
+            id="variant 9: syslog message (RFC 5424) from Windows logwatch forwarding",
+        ),
         (
             # Variant 10:
             "2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:",
@@ -641,12 +657,12 @@ def test_split_syslog_structured_data_and_message_exception(sd_and_message: str)
             id="no checkmk structured data",
         ),
         pytest.param(
-            r'[Checkmk@18662 sl="10" host="abc\\" def" application="[mean\]"]',
+            r'[Checkmk@18662 sl="10" host="abc\" def" application="[mean\]"]',
             (
                 {
                     "sl": "10",
-                    "host": r'abc\\" def',
-                    "application": r"[mean\]",
+                    "host": 'abc" def',
+                    "application": "[mean]",
                 },
                 "",
             ),

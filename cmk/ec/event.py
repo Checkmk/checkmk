@@ -398,9 +398,9 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
-def parse_syslog_message_structured_data(structured_data: str) -> tuple[Mapping[str, str], str]:
+def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
     """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
-    checkmk_id = "Checkmk@18662"  # SyslogMessage.structured_data_id()
+    checkmk_id = "Checkmk@18662"
     if not (checkmk_elements := findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):
         return {}, structured_data
     if len(checkmk_elements) != 1:
@@ -411,4 +411,18 @@ def parse_syslog_message_structured_data(structured_data: str) -> tuple[Mapping[
     for sd_param in findall(r' .*?=".*?(?<!\\)"', checkmk_elements[0]):
         name, value = sd_param[1:].split("=", 1)
         event_update[name] = value[1:-1]
-    return event_update, structured_data.replace(checkmk_elements[0], "")
+    return _unescape_parsed_struc(event_update), structured_data.replace(checkmk_elements[0], "")
+
+
+def _unescape_parsed_struc(parsed_structured_data: Mapping[str, str]) -> dict[str, str]:
+    return {
+        key: _unescape_structured_data_value(value) for key, value in parsed_structured_data.items()
+    }
+
+
+def _unescape_structured_data_value(v: str, /) -> str:
+    """Undo the escaping done in cmk.ec.forward.StructuredDataValue"""
+    v_unescaped = v
+    for escaped_char in ("\\", '"', "]"):
+        v_unescaped = v_unescaped.replace(rf"\{escaped_char}", escaped_char)
+    return v_unescaped

@@ -64,7 +64,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache, HostConfig, HWSWInventoryParameters
 from cmk.base.submitters import Submittee, Submitter
 
 from . import _cluster_modes
@@ -121,6 +121,7 @@ def execute_checkmk_checks(
             _do_inventory_actions_during_checking_for(
                 hostname,
                 host_config,
+                params=config_cache.hwsw_inventory_parameters(hostname),
                 parsed_sections_broker=broker,
             )
         timed_results = [
@@ -151,11 +152,12 @@ def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     host_config: HostConfig,
     *,
+    params: HWSWInventoryParameters,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
 
-    if not host_config.do_status_data_inventory:
+    if not params.status_data_inventory:
         # includes cluster case
         tree_store.remove(host_name=host_name)
         return  # nothing to do here

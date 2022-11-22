@@ -2395,7 +2395,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
         (False, [{"condition": {}, "value": {"status_data_inventory": False}}]),
     ],
 )
-def test_host_config_do_status_data_inventory(
+def test_config_cache_status_data_inventory(
     monkeypatch: MonkeyPatch, result: bool, ruleset: list[tuple] | None
 ) -> None:
     abc_host = HostName("abc")
@@ -2408,8 +2408,7 @@ def test_host_config_do_status_data_inventory(
         },
     )
     config_cache = ts.apply(monkeypatch)
-
-    assert config_cache.make_host_config(abc_host).do_status_data_inventory == result
+    assert config_cache.hwsw_inventory_parameters(abc_host).status_data_inventory == result
 
 
 @pytest.mark.parametrize(

@@ -1115,7 +1115,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(hostname, host_config)
+    ) = _get_needed_plugin_names(config_cache, hostname, host_config)
 
     if config_cache.is_cluster(hostname):
         nodes = config_cache.nodes_of(hostname)
@@ -1128,7 +1128,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(node, node_config)
+            ) = _get_needed_plugin_names(config_cache, node, node_config)
             needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
@@ -1329,6 +1329,7 @@ if '-d' in sys.argv:
 
 
 def _get_needed_plugin_names(
+    config_cache: ConfigCache,
     host_name: HostName,
     host_config: HostConfig,
 ) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
@@ -1355,7 +1356,7 @@ def _get_needed_plugin_names(
     # Inventory plugins get passed parsed data these days.
     # Load the required sections, or inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: set[InventoryPluginName] = set()
-    if host_config.do_status_data_inventory:
+    if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for parsed_section_name in inventory_plugin.sections:

@@ -39,5 +39,5 @@ def inventorize_marked_hosts(
                 execute_active_check_inventory(
                     host_name,
                     host_config,
-                    host_config.hwsw_inventory_parameters,
+                    config_cache.hwsw_inventory_parameters(host_name),
                 )

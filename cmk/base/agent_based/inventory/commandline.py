@@ -16,7 +16,7 @@ from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName
 from cmk.core_helpers.type_defs import SectionNameCollection
 
 import cmk.base.section as section
-from cmk.base.config import get_config_cache, HostConfig
+from cmk.base.config import get_config_cache, HostConfig, HWSWInventoryParameters
 
 from ._inventory import check_inventory_tree
 
@@ -39,6 +39,7 @@ def commandline_inventory(
             _commandline_inventory_on_host(
                 hostname,
                 host_config=config_cache.make_host_config(hostname),
+                parameters=config_cache.hwsw_inventory_parameters(hostname),
                 selected_sections=selected_sections,
                 run_plugin_names=run_plugin_names,
             )
@@ -55,6 +56,7 @@ def _commandline_inventory_on_host(
     host_name: HostName,
     *,
     host_config: HostConfig,
+    parameters: HWSWInventoryParameters,
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
 ) -> None:
@@ -67,7 +69,7 @@ def _commandline_inventory_on_host(
         host_config=host_config,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
-        parameters=host_config.hwsw_inventory_parameters,
+        parameters=parameters,
         old_tree=old_tree,
     ).check_result
 

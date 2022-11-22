@@ -2911,30 +2911,6 @@ class HostConfig:
         )
 
     @property
-    def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
-        if self._config_cache.is_cluster(self.hostname):
-            return HWSWInventoryParameters.from_raw({})
-
-        # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
-        rules = active_checks.get("cmk_inv")
-        if rules is None:
-            return HWSWInventoryParameters.from_raw({})
-
-        # 'host_extra_conf' is already cached thus we can
-        # use it after every check cycle.
-        entries = self._config_cache.host_extra_conf(self.hostname, rules)
-
-        if not entries:
-            return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
-
-        # Convert legacy rules to current dict format (just like the valuespec)
-        return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
-
-    @property
-    def do_status_data_inventory(self) -> bool:
-        return self.hwsw_inventory_parameters.status_data_inventory
-
-    @property
     def is_dyndns_host(self) -> bool:
         return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
@@ -3026,6 +3002,7 @@ class ConfigCache:
         ] = {}
         self._is_piggyback_host: dict[HostName, bool] = {}
         self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
+        self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3068,6 +3045,7 @@ class ConfigCache:
         self._enforced_services_table.clear()
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3168,6 +3146,7 @@ class ConfigCache:
         self._enforced_services_table.clear()
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3238,6 +3217,30 @@ class ConfigCache:
             CheckPluginName(maincheckify(str(raw_name))),
             None if raw_item is None else str(raw_item),
             TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
+        )
+
+    def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
+        def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
+            if self.is_cluster(host_name):
+                return HWSWInventoryParameters.from_raw({})
+
+            # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
+            rules = active_checks.get("cmk_inv")
+            if rules is None:
+                return HWSWInventoryParameters.from_raw({})
+
+            # 'host_extra_conf' is already cached thus we can
+            # use it after every check cycle.
+            entries = self.host_extra_conf(host_name, rules)
+
+            if not entries:
+                return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
+
+            # Convert legacy rules to current dict format (just like the valuespec)
+            return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
+
+        return self._hwsw_inventory_parameters.setdefault(
+            host_name, get_hwsw_inventory_parameters()
         )
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:

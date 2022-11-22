@@ -384,7 +384,11 @@ class _Builder:
                 ),
                 on_error=self.on_scan_error,
                 missing_sys_description=self.missing_sys_description,
-                do_status_data_inventory=self.host_config.do_status_data_inventory,
+                do_status_data_inventory=(
+                    self.config_cache.hwsw_inventory_parameters(
+                        self.host_name
+                    ).status_data_inventory
+                ),
                 section_store_path=make_persisted_section_dir(source),
                 snmp_config=self.config_cache.make_snmp_config(source.hostname, source.ipaddress),
             ),
@@ -434,7 +438,11 @@ class _Builder:
                     ),
                     on_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
-                    do_status_data_inventory=self.host_config.do_status_data_inventory,
+                    do_status_data_inventory=(
+                        self.config_cache.hwsw_inventory_parameters(
+                            self.host_name
+                        ).status_data_inventory
+                    ),
                     section_store_path=make_persisted_section_dir(source),
                     snmp_config=self.config_cache.make_snmp_config(
                         source.hostname, source.ipaddress

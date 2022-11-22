@@ -64,20 +64,17 @@ def _commandline_checking(
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_name)
 
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ipaddress)]
     else:
-        hosts = [
-            (node, config.lookup_ip_address(config_cache.make_host_config(node))) for node in nodes
-        ]
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched = fetch_all(
         *(

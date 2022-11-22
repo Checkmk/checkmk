@@ -1259,7 +1259,6 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1289,7 +1288,7 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = config.lookup_ip_address(host_config)
+                resolved_address = config.lookup_ip_address(hostname)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1298,6 +1297,7 @@ class AutomationDiagHost(Automation):
 
             ipaddress = resolved_address
 
+        host_config = config_cache.make_host_config(hostname)
         try:
             if test == "ping":
                 return automation_results.DiagHostResult(
@@ -1713,14 +1713,13 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         success = True
         output = ""
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(host_config)
+            ipaddress = config.lookup_ip_address(hostname)
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
                 for source, file_cache, fetcher in sources.make_sources(
@@ -1750,7 +1749,7 @@ class AutomationGetAgentOutput(Automation):
                         time_settings=config_cache.get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
-                        is_piggyback=host_config.is_piggyback_host,
+                        is_piggyback=config_cache.make_host_config(hostname).is_piggyback_host,
                         fetcher_type=source.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):

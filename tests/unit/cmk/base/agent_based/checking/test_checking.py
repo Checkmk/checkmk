@@ -252,7 +252,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.0",
+        lambda *args, **kw: "dummy.test.ip.0",
     )
     # empty for a node:
     assert [] == checking._get_clustered_service_node_keys(
@@ -292,7 +292,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
+        lambda hostname, **kw: "dummy.test.ip.%s" % hostname[4],
     )
     assert checking._get_clustered_service_node_keys(
         config_cache, cluster, SourceType.HOST, "Test Service"
@@ -303,7 +303,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
-        lambda host_config, *, family=None: "dummy.test.ip.0",
+        lambda *args, **kw: "dummy.test.ip.0",
     )
     assert [
         HostKey(hostname="node1.test", source_type=SourceType.HOST),

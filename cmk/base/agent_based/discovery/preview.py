@@ -71,16 +71,12 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
-    ip_address = (
-        None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
-    )
+    ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ip_address)]
     else:
-        hosts = [
-            (node, config.lookup_ip_address(config_cache.make_host_config(node))) for node in nodes
-        ]
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched: Sequence[
         tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]

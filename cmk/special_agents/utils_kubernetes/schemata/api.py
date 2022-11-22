@@ -10,6 +10,7 @@ The schemas should not be affected by different kubernetes server or client vers
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
 """
+from __future__ import annotations
 
 import enum
 from collections.abc import Mapping, Sequence
@@ -118,6 +119,58 @@ NodeName = NewType("NodeName", str)
 IpAddress = NewType("IpAddress", str)
 
 ObjectName = TypeVar("ObjectName", bound=str)
+
+
+def parse_frac_prefix(value: str) -> float:
+    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
+
+    Examples:
+       >>> parse_frac_prefix("359m")
+       0.359
+       >>> parse_frac_prefix("4k")
+       4000.0
+    """
+
+    if value.endswith("m"):
+        return 0.001 * float(value[:-1])
+    if value.endswith("k"):
+        return 1e3 * float(value[:-1])
+    return float(value)
+
+
+def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
+    if value.endswith("Ki"):
+        return 1024**1 * float(value[:-2])
+    if value.endswith("Mi"):
+        return 1024**2 * float(value[:-2])
+    if value.endswith("Gi"):
+        return 1024**3 * float(value[:-2])
+    if value.endswith("Ti"):
+        return 1024**4 * float(value[:-2])
+    if value.endswith("Pi"):
+        return 1024**5 * float(value[:-2])
+    if value.endswith("Ei"):
+        return 1024**6 * float(value[:-2])
+
+    if value.endswith("K") or value.endswith("k"):
+        return 1e3 * float(value[:-1])
+    if value.endswith("M"):
+        return 1e6 * float(value[:-1])
+    if value.endswith("G"):
+        return 1e9 * float(value[:-1])
+    if value.endswith("T"):
+        return 1e12 * float(value[:-1])
+    if value.endswith("P"):
+        return 1e15 * float(value[:-1])
+    if value.endswith("E"):
+        return 1e18 * float(value[:-1])
+
+    # millibytes are a useless, but valid option:
+    # https://github.com/kubernetes/kubernetes/issues/28741
+    if value.endswith("m"):
+        return 1e-3 * float(value[:-1])
+
+    return float(value)
 
 
 class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):

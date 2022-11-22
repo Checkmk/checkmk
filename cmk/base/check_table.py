@@ -63,7 +63,7 @@ def _aggregate_check_table_services(
     if not (skip_autochecks or host_config.is_ping_host):
         yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
 
-    yield from (s for s in _get_enforced_services(host_config) if sfilter.keep(s))
+    yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
     if config_cache.is_cluster(host_name):
@@ -132,8 +132,13 @@ class _ServiceFilter:
         return not svc_is_mine
 
 
-def _get_enforced_services(host_config: HostConfig) -> Iterable[ConfiguredService]:
-    return [service for _ruleset_name, service in host_config.enforced_services_table().values()]
+def _get_enforced_services(
+    config_cache: ConfigCache, host_name: HostName
+) -> list[ConfiguredService]:
+    return [
+        service
+        for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
+    ]
 
 
 def _get_services_from_cluster_nodes(
@@ -154,8 +159,7 @@ def _get_clustered_services(
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
-        node_config = config_cache.make_host_config(node)
-        node_checks = list(_get_enforced_services(node_config))
+        node_checks = _get_enforced_services(config_cache, node)
         if not (skip_autochecks or host_config.is_ping_host):
             node_checks += config_cache.get_autochecks_of(node)
 

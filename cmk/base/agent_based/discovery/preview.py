@@ -111,14 +111,9 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
-    host_config = config_cache.make_host_config(host_name)
-    grouped_services = get_host_services(
-        host_name,
-        host_config,
-        parsed_sections_broker,
-        on_error,
-    )
+    grouped_services = get_host_services(host_name, config_cache, parsed_sections_broker, on_error)
 
+    host_config = config_cache.make_host_config(host_name)
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [
             _check_preview_table_row(
@@ -154,7 +149,7 @@ def get_check_preview(
                 found_on_nodes=[host_name],
                 value_store_manager=value_store_manager,
             )
-            for _ruleset_name, service in host_config.enforced_services_table().values()
+            for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
         ]
 
     return [

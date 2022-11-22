@@ -72,7 +72,7 @@ def execute_check_discovery(
     )
     services = get_host_services(
         host_name,
-        host_config,
+        config_cache,
         parsed_sections_broker,
         on_error=OnError.RAISE,
     )

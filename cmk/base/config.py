@@ -2790,56 +2790,6 @@ class HostConfig:
         """Return the free form configured custom checks without formalization"""
         return self._config_cache.host_extra_conf(self.hostname, custom_checks)
 
-    def enforced_services_table(
-        self,
-    ) -> Mapping[
-        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
-    ]:
-        """Return a table of enforced services
-
-        Note: We need to reverse the order of the enforced services.
-        Users assume that earlier rules have precedence over later ones.
-        Important if there are two rules for a host with the same combination of plugin name
-        and item.
-        """
-        return {
-            ServiceID(check_plugin_name, item): (
-                RulesetName(checkgroup_name),
-                cmk.base.check_utils.ConfiguredService(
-                    check_plugin_name=check_plugin_name,
-                    item=item,
-                    description=descr,
-                    parameters=compute_check_parameters(
-                        self._config_cache.host_of_clustered_service(self.hostname, descr),
-                        check_plugin_name,
-                        item,
-                        {},
-                        configured_parameters=TimespecificParameters((params,)),
-                    ),
-                    discovered_parameters={},
-                    service_labels={},
-                ),
-            )
-            for checkgroup_name, ruleset in static_checks.items()
-            for check_plugin_name, item, params in (
-                self._sanitize_enforced_entry(*entry)
-                for entry in reversed(self._config_cache.host_extra_conf(self.hostname, ruleset))
-            )
-            if (descr := service_description(self.hostname, check_plugin_name, item))
-        }
-
-    @staticmethod
-    def _sanitize_enforced_entry(
-        raw_name: object,
-        raw_item: object,
-        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
-    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
-        return (
-            CheckPluginName(maincheckify(str(raw_name))),
-            None if raw_item is None else str(raw_item),
-            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
-        )
-
     @property
     def hostgroups(self) -> list[HostgroupName]:
         """Returns the list of hostgroups of this host
@@ -3075,6 +3025,13 @@ def lookup_ip_address(
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
+        self._enforced_services_table: dict[
+            HostName,
+            Mapping[
+                cmk.base.check_utils.ServiceID,
+                tuple[RulesetName, cmk.base.check_utils.ConfiguredService],
+            ],
+        ] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3114,6 +3071,7 @@ class ConfigCache:
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
     def _initialize_caches(self) -> None:
+        self._enforced_services_table.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3204,6 +3162,7 @@ class ConfigCache:
         return self._host_configs.setdefault(hostname, HostConfig(self, hostname))
 
     def invalidate_host_config(self, hostname: HostName) -> None:
+        self._enforced_services_table.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3222,6 +3181,59 @@ class ConfigCache:
 
     def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
+
+    def enforced_services_table(
+        self, hostname: HostName
+    ) -> Mapping[
+        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
+    ]:
+        """Return a table of enforced services
+
+        Note: We need to reverse the order of the enforced services.
+        Users assume that earlier rules have precedence over later ones.
+        Important if there are two rules for a host with the same combination of plugin name
+        and item.
+        """
+        return self._enforced_services_table.setdefault(
+            hostname,
+            {
+                ServiceID(check_plugin_name, item): (
+                    RulesetName(checkgroup_name),
+                    cmk.base.check_utils.ConfiguredService(
+                        check_plugin_name=check_plugin_name,
+                        item=item,
+                        description=descr,
+                        parameters=compute_check_parameters(
+                            self.host_of_clustered_service(hostname, descr),
+                            check_plugin_name,
+                            item,
+                            {},
+                            configured_parameters=TimespecificParameters((params,)),
+                        ),
+                        discovered_parameters={},
+                        service_labels={},
+                    ),
+                )
+                for checkgroup_name, ruleset in static_checks.items()
+                for check_plugin_name, item, params in (
+                    ConfigCache._sanitize_enforced_entry(*entry)
+                    for entry in reversed(self.host_extra_conf(hostname, ruleset))
+                )
+                if (descr := service_description(hostname, check_plugin_name, item))
+            },
+        )
+
+    @staticmethod
+    def _sanitize_enforced_entry(
+        raw_name: object,
+        raw_item: object,
+        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
+    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
+        return (
+            CheckPluginName(maincheckify(str(raw_name))),
+            None if raw_item is None else str(raw_item),
+            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
+        )
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

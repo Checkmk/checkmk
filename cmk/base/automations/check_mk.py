@@ -164,7 +164,6 @@ class AutomationDiscovery(DiscoveryAutomation):
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
-                host_config=host_config,
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
@@ -759,7 +758,7 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Enforced services
-        for checkgroup_name, service in host_config.enforced_services_table().values():
+        for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():
             if service.description == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?

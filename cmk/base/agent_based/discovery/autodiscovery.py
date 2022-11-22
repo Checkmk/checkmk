@@ -105,7 +105,6 @@ def automation_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
@@ -180,7 +179,7 @@ def automation_discovery(
         # Compute current state of new and existing checks
         services = _get_host_services(
             host_name,
-            host_config,
+            config_cache,
             parsed_sections_broker,
             on_error=on_error,
         )
@@ -214,7 +213,7 @@ def automation_discovery(
 
 def _get_host_services(
     host_name: HostName,
-    host_config: HostConfig,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -235,7 +234,7 @@ def _get_host_services(
     services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
-    enforced_services = host_config.enforced_services_table()
+    enforced_services = config_cache.enforced_services_table(host_name)
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
@@ -447,7 +446,6 @@ def _discover_marked_host(
     result = automation_discovery(
         host_name,
         config_cache=config_cache,
-        host_config=host_config,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,
@@ -563,7 +561,7 @@ def _may_rediscover(
 # This function is cluster-aware
 def get_host_services(
     host_name: HostName,
-    host_config: HostConfig,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -584,7 +582,7 @@ def get_host_services(
     services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
-    enforced_services = host_config.enforced_services_table()
+    enforced_services = config_cache.enforced_services_table(host_name)
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 

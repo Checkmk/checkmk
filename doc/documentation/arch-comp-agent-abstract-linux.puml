@@ -1,0 +1,25 @@
+@startuml agent-abstract
+    package "Agent" {
+        [check-mk-agent-async] as check_mk_agent_async
+        component "[[../arch-comp-agent-linux.html check-mk-agent]]" as check_mk_agent
+        check_mk_agent -left- check_mk_agent_async
+
+
+        [cmk-agent-ctl] as cmk_agent_ctl
+        () "Unix socket" as unix_socket
+        [cmk-update-agent] as cmk_update_agent
+
+
+        check_mk_agent - unix_socket
+        cmk_agent_ctl .up.> unix_socket: reads
+
+        check_mk_agent_async ..> cmk_update_agent: executes
+    }
+
+    [Monitoring site] as site
+    cmk_agent_ctl ..> site: register, push
+    cmk_agent_ctl <.. site: pull
+    cmk_update_agent ..> site: download agent package
+
+
+@enduml

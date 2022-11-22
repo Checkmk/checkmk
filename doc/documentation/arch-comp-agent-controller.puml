@@ -1,0 +1,28 @@
+@startuml agent-controller
+    package "Agent" {
+        package "cmk-agent" as cmkagent {
+            component [cmk-agent-ctl] as cmk_agent_ctl
+            () "TCP/TLS" as agent_tls
+            () "Unix socket" as socket
+        }
+        package "root" {
+            component "[[../arch-comp-agent-linux.html check-mk-agent]]" as check_mk_agent
+        }
+
+        cmkagent -[hidden]left- root
+
+        cmk_agent_ctl - agent_tls
+        socket - cmk_agent_ctl: reads
+        socket <-left- check_mk_agent: writes
+    }
+
+    [fetcher] as fetcher
+    component "[[../arch-comp-agent-receiver.html agent-receiver]]" as receiver
+    () HTTPS as https
+
+    fetcher -[hidden]-> receiver
+    receiver -left- https
+    fetcher .[norank].> agent_tls: pull
+    cmk_agent_ctl .[norank].> https: register, push
+
+@enduml

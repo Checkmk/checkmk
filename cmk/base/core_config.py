@@ -810,7 +810,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: str | None = None
     if ConfigCache.is_ipv4_host(hostname):
-        v4address = ip_address_of(hostname, socket.AF_INET)
+        v4address = ip_address_of(hostname, host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -818,7 +818,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: str | None = None
     if ConfigCache.is_ipv6_host(hostname):
-        v6address = ip_address_of(hostname, socket.AF_INET6)
+        v6address = ip_address_of(hostname, host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -872,7 +872,8 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
-            addr = ip_address_of(h, family)
+            node_config = config_cache.make_host_config(h)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -882,7 +883,8 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
-            addr = ip_address_of(h, family)
+            node_config = config_cache.make_host_config(h)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -965,9 +967,11 @@ def _verify_cluster_datasource(
             warning(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
 
 
-def ip_address_of(host_name: HostName, family: socket.AddressFamily) -> str | None:
+def ip_address_of(
+    host_name: HostName, host_config: HostConfig, family: socket.AddressFamily
+) -> str | None:
     try:
-        return config.lookup_ip_address(host_name, family=family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
         config_cache = config.get_config_cache()
         if config_cache.is_cluster(host_name):

@@ -1253,16 +1253,21 @@ if '-d' in sys.argv:
             raise TypeError()
 
         for node in nodes:
+            node_config = config_cache.make_host_config(node)
             if ConfigCache.is_ipv4_host(node):
-                needed_ipaddresses[node] = config.lookup_ip_address(node, family=socket.AF_INET)
+                needed_ipaddresses[node] = config.lookup_ip_address(
+                    node_config, family=socket.AF_INET
+                )
 
             if ConfigCache.is_ipv6_host(node):
-                needed_ipv6addresses[node] = config.lookup_ip_address(node, family=socket.AF_INET6)
+                needed_ipv6addresses[node] = config.lookup_ip_address(
+                    node_config, family=socket.AF_INET6
+                )
 
         try:
             if ConfigCache.is_ipv4_host(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
-                    hostname, family=socket.AF_INET
+                    host_config, family=socket.AF_INET
                 )
         except Exception:
             pass
@@ -1270,17 +1275,19 @@ if '-d' in sys.argv:
         try:
             if ConfigCache.is_ipv6_host(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                    hostname, family=socket.AF_INET6
+                    host_config, family=socket.AF_INET6
                 )
         except Exception:
             pass
     else:
         if ConfigCache.is_ipv4_host(hostname):
-            needed_ipaddresses[hostname] = config.lookup_ip_address(hostname, family=socket.AF_INET)
+            needed_ipaddresses[hostname] = config.lookup_ip_address(
+                host_config, family=socket.AF_INET
+            )
 
         if ConfigCache.is_ipv6_host(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                hostname, family=socket.AF_INET6
+                host_config, family=socket.AF_INET6
             )
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)

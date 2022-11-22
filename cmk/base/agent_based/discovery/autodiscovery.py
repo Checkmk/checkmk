@@ -130,11 +130,17 @@ def automation_discovery(
                 host_name
             )  # this is cluster-aware!
 
+        ipaddress = (
+            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
+        )
         nodes = config_cache.nodes_of(host_name)
         if nodes is None:
-            hosts = [(host_name, config.lookup_ip_address(host_name))]
+            hosts = [(host_name, ipaddress)]
         else:
-            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+            hosts = [
+                (node, config.lookup_ip_address(config_cache.make_host_config(node)))
+                for node in nodes
+            ]
 
         fetched: Sequence[
             tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]

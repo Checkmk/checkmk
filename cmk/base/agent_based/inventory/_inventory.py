@@ -113,7 +113,11 @@ def check_inventory_tree(
             update_result=UpdateResult(save_tree=False, reason=""),
         )
 
-    fetched_data_result = _fetch_real_host_data(host_name, selected_sections=selected_sections)
+    fetched_data_result = _fetch_real_host_data(
+        host_name,
+        host_config=host_config,
+        selected_sections=selected_sections,
+    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -206,15 +210,18 @@ def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
 def _fetch_real_host_data(
     host_name: HostName,
     *,
+    host_config: HostConfig,
     selected_sections: SectionNameCollection,
 ) -> FetchedDataResult:
-    ipaddress = config.lookup_ip_address(host_name)
+    ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ipaddress)]
     else:
-        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+        hosts = [
+            (node, config.lookup_ip_address(config_cache.make_host_config(node))) for node in nodes
+        ]
 
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]

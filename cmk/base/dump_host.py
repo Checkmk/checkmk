@@ -32,6 +32,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.config import HostConfig
 
 
 def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
@@ -110,7 +111,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        hostname, family=config_cache.default_address_family(hostname)
+        hostname, host_config, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
@@ -120,6 +121,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         try:
             secondary = _ip_address_for_dump_host(
                 hostname,
+                host_config,
                 family=config_cache.default_address_family(hostname),
             )
         except Exception:
@@ -234,11 +236,12 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
 
 def _ip_address_for_dump_host(
     host_name: HostName,
+    host_config: HostConfig,
     *,
     family: socket.AddressFamily,
 ) -> str | None:
     config_cache = config.get_config_cache()
     try:
-        return config.lookup_ip_address(host_name, family=family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception:
         return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)

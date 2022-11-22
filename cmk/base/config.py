@@ -3026,12 +3026,12 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
 
 
 def lookup_ip_address(
-    host_name: HostName,
+    host_config: HostConfig,
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
     config_cache = get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
+    host_name = host_config.hostname
     if family is None:
         family = config_cache.default_address_family(host_name)
     config_cache = get_config_cache()

@@ -198,6 +198,11 @@ def check_gcp_sql_network(
             "Out",
             render.networkbandwidth,
         ),
+        "connections": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/network/connections",
+            "Active connections",
+            str,
+        ),
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -211,7 +216,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_network",
     discovery_function=discover,
     check_function=check_gcp_sql_network,
-    check_default_parameters={"net_data_sent": None, "net_data_recv": None},
+    check_default_parameters={"net_data_sent": None, "net_data_recv": None, "connections": None},
 )
 
 

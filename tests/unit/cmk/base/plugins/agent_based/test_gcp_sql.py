@@ -243,10 +243,11 @@ PLUGINS = [
     pytest.param(
         Plugin(
             function=check_gcp_sql_network,
-            metrics=["net_data_sent", "net_data_recv"],
+            metrics=["net_data_sent", "net_data_recv", "connections"],
             results=[
                 Result(state=State.OK, summary="In: 3.36 Bit/s"),
                 Result(state=State.OK, summary="Out: 3.36 Bit/s"),
+                Result(state=State.OK, summary="Active connections: 0.42"),
             ],
         ),
         id="network",

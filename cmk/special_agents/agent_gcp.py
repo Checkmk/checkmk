@@ -763,6 +763,12 @@ CLOUDSQL = Service(
             ),
         ),
         Metric(
+            name="cloudsql.googleapis.com/database/network/connections",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="cloudsql.googleapis.com/database/memory/utilization",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,

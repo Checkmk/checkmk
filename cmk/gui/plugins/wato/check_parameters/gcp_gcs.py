@@ -57,11 +57,7 @@ rulespec_registry.register(
 
 def _vs_gcs_bucket_network() -> ValueSpec:
     return Dictionary(
-        title=_("Parameters for the bucket network io"),
-        elements=[
-            ("net_data_sent", Levels(title=_("Parameters send bytes"), unit="bytes/s")),
-            ("net_data_recv", Levels(title=_("Parameters received bytes"), unit="bytes/s")),
-        ],
+        title=_("Parameters for the bucket network io"), elements=_vs_network_elements
     )
 
 
@@ -133,16 +129,6 @@ rulespec_registry.register(
 )
 
 
-def _vs_run_network() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on network traffic"),
-        elements=[
-            ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
-            ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes/s")),
-        ],
-    )
-
-
 def _vs_run_memory() -> ValueSpec:
     return Dictionary(
         title=_("Levels memory"),
@@ -185,12 +171,30 @@ rulespec_registry.register(
     )
 )
 
+
+def _vs_network_elements() -> Sequence[tuple[str, ValueSpec]]:
+    return [
+        ("net_data_sent", SimpleLevels(title=_("Data sent"), unit="bytes/s")),
+        ("net_data_recv", SimpleLevels(title=_("Data received"), unit="bytes/s")),
+    ]
+
+
+def _vs_sql_network() -> ValueSpec:
+    return Dictionary(
+        title=_("Levels on network traffic"),
+        elements=[
+            *_vs_network_elements(),
+            ("connections", SimpleLevels(title=_("Active connections"))),
+        ],
+    )
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="gcp_sql_network",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_vs_run_network,
+        parameter_valuespec=_vs_sql_network,
         title=lambda: _("GCP/Cloud SQL network"),
         item_spec=_item_spec_sql,
     )

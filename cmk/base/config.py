@@ -3841,7 +3841,7 @@ class ConfigCache:
         if folder_cgrs:
             cgrs.update(folder_cgrs[0])
 
-        if monitoring_core == "nagios" and enable_rulebased_notifications:
+        if monitoring_core == "nagios":
             cgrs.add("check-mk-notify")
 
         return list(cgrs)

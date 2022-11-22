@@ -900,12 +900,6 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
             if "pager" in contact:
                 contact_spec["pager"] = contact["pager"]
 
-            not_enabled = (
-                False
-                if config.enable_rulebased_notifications
-                else contact.get("notifications_enabled", True)
-            )
-
             for what in ["host", "service"]:
                 if what == "host":
                     no: str = contact.get("host_notification_options", "")
@@ -914,7 +908,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
                 else:
                     raise ValueError()
 
-                if not no or not not_enabled:
+                if not no:
                     contact_spec["%s_notifications_enabled" % what] = 0
                     no = "n"
 
@@ -933,7 +927,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
             contact_spec["contactgroups"] = ", ".join(cgrs)
             cfg.write(_format_nagios_object("contact", contact_spec))
 
-    if config.enable_rulebased_notifications and hostnames:
+    if hostnames:
         cfg.contactgroups_to_define.add("check-mk-notify")
         cfg.write("# Needed for rule based notifications\n")
         cfg.write(

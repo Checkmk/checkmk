@@ -78,6 +78,7 @@ def test_format_nagios_object() -> None:
                 "address": "127.0.0.1",
                 "alias": "localhost",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "localhost",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
@@ -108,6 +109,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "lOCALhost",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "host2",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
@@ -142,6 +144,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "cluster1",
                 "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "cluster1",
                 "hostgroups": "check_mk",
                 "parents": "",
@@ -177,6 +180,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "CLUSTer",
                 "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "cluster2",
                 "hostgroups": "check_mk",
                 "parents": "node1,node2",
@@ -208,6 +212,7 @@ def test_format_nagios_object() -> None:
                 "address": "127.0.0.1",
                 "alias": "node1",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "node1",
                 "hostgroups": "check_mk",
                 "parents": "switch",
@@ -468,7 +473,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -501,7 +505,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2\n'
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -539,7 +542,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!'--arg1' 'arument1' '--host_alias' '$HOSTALIAS$'\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -573,7 +575,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -615,7 +616,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           HTTP my special HTTP\n"
             "  use                           check_mk_default\n"
@@ -680,7 +680,6 @@ def test_create_nagios_servicedefs_active_check(
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
             "  use                           check_mk_default\n"
@@ -867,7 +866,6 @@ def test_create_nagios_servicedefs_invalid_args(
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"

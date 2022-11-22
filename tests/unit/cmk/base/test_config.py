@@ -1308,13 +1308,13 @@ def test_hostgroups(monkeypatch: MonkeyPatch, hostname_str: str, result: list[st
     "hostname_str,result",
     [
         # No rule matches for this host
-        ("testhost1", []),
+        ("testhost1", ["check-mk-notify"]),
         # Take the group from the ruleset (dingdong) and the definition from the nearest folder in
         # the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
-        ("testhost2", ["abc", "dingdong"]),
+        ("testhost2", ["abc", "dingdong", "check-mk-notify"]),
         # Take the group from all rulesets (dingdong, haha) and the definition from the nearest
         # folder in the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
-        ("testhost3", ["abc", "dingdong", "haha"]),
+        ("testhost3", ["abc", "dingdong", "haha", "check-mk-notify"]),
     ],
 )
 def test_contactgroups(monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]) -> None:
@@ -2037,13 +2037,13 @@ def test_config_cache_servicegroups_of_service(
     "hostname_str,result",
     [
         # No rule matches for this host
-        ("testhost1", []),
+        ("testhost1", ["check-mk-notify"]),
         # Take the group from the ruleset (dingdong) and the definition from the nearest folder in
         # the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
-        ("testhost2", ["abc", "dingdong"]),
+        ("testhost2", ["abc", "dingdong", "check-mk-notify"]),
         # Take the group from all rulesets (dingdong, haha) and the definition from the nearest
         # folder in the hierarchy (abc). Don't apply the definition from the parent folder (xyz).
-        ("testhost3", ["abc", "dingdong", "haha"]),
+        ("testhost3", ["abc", "dingdong", "haha", "check-mk-notify"]),
     ],
 )
 def test_config_cache_contactgroups_of_service(

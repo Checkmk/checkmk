@@ -325,7 +325,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
         XLOG::d("Failed to start minibox sync {}", entry.command_line_);
 
         // string is form the legacy agent
-        return result + "3 Unable to execute - plugin may be missing.\n";
+        return result + "3 Unable to execute - plugin may be missing.";
     }
 
     auto success = minibox.waitForEnd(timeout);
@@ -344,7 +344,6 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
 
         // mrpe output must be patched in a bit strange way
         FixCrCnForMrpe(data);
-        data += "\n";
 
         if (cfg::LogMrpeOutput()) {
             XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
@@ -356,6 +355,35 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     return result;
 }
 
+std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
+                            std::chrono::milliseconds timeout) {
+    // TODO(au): Only use cache if requested
+    const auto &[cached_result, cached_state] =
+        cache.getLineData(entry.description_);
+    switch (cached_state) {
+        case MrpeCache::LineState::ready:
+            return cached_result;
+        case MrpeCache::LineState::absent: {
+            cache.createLine(entry.description_, entry.cache_age_max(),
+                             entry.add_age());
+        }
+            [[fallthrough]];
+        case MrpeCache::LineState::old: {
+            const auto result = ExecMrpeEntry(entry, timeout);
+            cache.updateLine(entry.description_, result);
+            // Now we have to call getLineData again, because the "add_age"
+            // information gets added here
+            // TODO(au): Eliminate this additional call, e.g. by moving the
+            // formatting of a result completely to this function or to
+            // MrpeEntry
+            return std::get<0>(cache.getLineData(entry.description_));
+        }
+    }
+
+    // unreachable
+    return {};
+}
+
 std::string MrpeProvider::makeBody() {
     std::string out;
     auto parallel = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kMrpeParallel,
@@ -364,14 +392,16 @@ std::string MrpeProvider::makeBody() {
         std::mutex lock;
         std::for_each(std::execution::par_unseq, entries_.begin(),
                       entries_.end(), [&out, &lock, this](auto &&entry) {
-                          auto ret = ExecMrpeEntry(
-                              entry, std::chrono::seconds(timeout()));
+                          auto ret = MrpeEntryResult(
+                              entry, cache_, std::chrono::seconds(timeout()));
                           std::lock_guard lk(lock);
-                          out += ret;
+                          out += ret + "\n";
                       });
     } else
         for (const auto &entry : entries_) {
-            out += ExecMrpeEntry(entry, std::chrono::seconds(timeout()));
+            out += MrpeEntryResult(entry, cache_,
+                                   std::chrono::seconds(timeout())) +
+                   "\n";
         }
 
     return out;

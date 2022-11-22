@@ -223,7 +223,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
                                   wtools::ToStr(mrpe_file_1.filename()) + ")");
         EXPECT_EQ(table_1[1], "Type");
         EXPECT_EQ(table_1[2], "0");
-        EXPECT_EQ(table_1[3], "output_of_mrpe1\n");
+        EXPECT_EQ(table_1[3], "output_of_mrpe1");
     }
     {
         auto result_2 = ExecMrpeEntry(entries[1], std::chrono::seconds(10));
@@ -234,7 +234,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
                                   wtools::ToStr(mrpe_file_2.filename()) + ")");
         EXPECT_EQ(table_2[1], "Type");
         EXPECT_EQ(table_2[2], "0");
-        EXPECT_EQ(table_2[3], "output_of_mrpe2\n");
+        EXPECT_EQ(table_2[3], "output_of_mrpe2");
     }
     auto result_missing = ExecMrpeEntry(entries[2], std::chrono::seconds(10));
     {
@@ -245,7 +245,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
         EXPECT_EQ(table_missing[1], "BadFile");
         EXPECT_EQ(table_missing[2], "3");
         EXPECT_EQ(table_missing[3],
-                  "Unable to execute - plugin may be missing.\n");
+                  "Unable to execute - plugin may be missing.");
     }
 }
 
@@ -351,6 +351,90 @@ TEST(SectionProviderMrpe, Run) {
         { EXPECT_TRUE(table[0].find(hdr0) == 0 || table[1].find(hdr0) == 0); }
         { EXPECT_TRUE(table[0].find(hdr1) == 0 || table[1].find(hdr1) == 0); }
     }
-}  // namespace cma::provider
+}
+
+TEST(SectionProviderMrpe, RunCachedIntegration) {
+    YamlLoaderMrpe w;
+    using namespace cma::cfg;
+    MrpeProvider mrpe;
+    EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
+    auto yaml = GetLoadedConfig();
+    ASSERT_TRUE(yaml.IsMap());
+
+    auto mrpe_yaml_optional = GetGroup(yaml, groups::kMrpe);
+    ASSERT_TRUE(mrpe_yaml_optional.has_value());
+    {
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
+
+        ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
+        auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
+        ASSERT_EQ(entries.size(), 0)
+            << "check that yml is ok";  // include and check
+    }
+
+    replaceYamlSeq(
+        groups::kMrpe, vars::kMrpeConfig,
+        {
+            R"(check = Time 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = CachedTime (10:no) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = CachedTimeWithAge (10:yes) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+        });
+
+    auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    EXPECT_EQ(strings.size(), 3);
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.includes().size(), 0);
+    ASSERT_EQ(mrpe.checks().size(), 3);
+
+    EXPECT_EQ(mrpe.entries().size(), 3);
+    mrpe.updateSectionStatus();
+
+    yaml[groups::kMrpe][vars::kMrpeParallel] = false;
+    auto accu = mrpe.generateContent();
+    ASSERT_TRUE(!accu.empty());
+    auto table = cma::tools::SplitString(accu, "\n");
+    EXPECT_EQ(table[0], "<<<mrpe>>>");
+
+    // expect "(powershell.exe) Time 0 TIMESTAMP"
+    auto result_1 = cma::tools::SplitString(table[1], " ");
+    auto mrpe_1 = mrpe.entries()[0];
+    EXPECT_EQ(result_1.size(), 4);
+    EXPECT_EQ(result_1[0], fmt::format("({})", mrpe_1.exe_name_));
+    EXPECT_EQ(result_1[1], mrpe_1.description_);
+    EXPECT_EQ(result_1[2], "0");
+    auto &time_1 = result_1[3];
+    std::cout << time_1 << std::endl;
+
+    // expect "(powershell.exe) Time 0 TIMESTAMP"
+    auto result_2 = cma::tools::SplitString(table[2], " ");
+    auto mrpe_2 = mrpe.entries()[1];
+    EXPECT_EQ(result_2.size(), 4);
+    EXPECT_EQ(result_2[0], fmt::format("({})", mrpe_2.exe_name_));
+    EXPECT_EQ(result_2[1], mrpe_2.description_);
+    EXPECT_EQ(result_2[2], "0");
+    auto &time_2 = result_2[3];
+
+    // expect "(powershell.exe) Time 0 TIMESTAMP (DIFF;10)"
+    auto result_3 = cma::tools::SplitString(table[3], " ");
+    auto mrpe_3 = mrpe.entries()[2];
+    EXPECT_EQ(result_3.size(), 5);
+    EXPECT_EQ(result_3[0], fmt::format("({})", mrpe_3.exe_name_));
+    EXPECT_EQ(result_3[1], mrpe_3.description_);
+    EXPECT_EQ(result_3[2], "0");
+    auto &time_3 = result_3[3];
+    EXPECT_TRUE(result_3[3].find(";10)"));
+
+    // TODO(au) Current implementation always caches for time differences < 1s.
+    // Fix this!
+    cma::tools::sleep(1100);
+
+    // expect TIMESTAMP to change for first check, while the other two are
+    // cached and stay unchanged
+    auto second_run = mrpe.generateContent();
+    auto second_table = cma::tools::SplitString(second_run, "\n");
+    EXPECT_TRUE(time_1 != cma::tools::SplitString(second_table[1], " ")[3]);
+    EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[3]);
+    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[3]);
+}
 
 }  // namespace cma::provider

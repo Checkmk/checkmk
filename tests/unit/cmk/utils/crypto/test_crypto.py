@@ -7,7 +7,7 @@ from typing import Any, AnyStr
 
 import pytest
 
-from cmk.utils.crypto import const_time_compare, Password
+from cmk.utils.crypto import Password
 
 
 @pytest.mark.parametrize(
@@ -44,19 +44,3 @@ def test_invalid_password(password: AnyStr) -> None:
 )
 def test_password_eq(a: Password, b: Any, expected: bool) -> None:
     assert (a == b) == expected
-
-
-@pytest.mark.parametrize(
-    "a,b,expected",
-    [
-        ("test", "test", True),
-        (b"", "", True),
-        ("test", b"test", True),
-        (b"\xf0\x9f\x98\xb9", "😹", True),
-        ("hello", "test", False),
-        (b"hello", "test", False),
-        (b"hello", b"test", False),
-    ],
-)
-def test_const_time_compare(a: AnyStr, b: AnyStr, expected: bool) -> None:
-    assert const_time_compare(a, b) == expected

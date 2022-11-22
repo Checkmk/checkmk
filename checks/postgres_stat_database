@@ -101,6 +101,11 @@ def check_postgres_stat_database_size(item, params, parsed):
     levels = params.get("database_size")
     stats = parsed[item]
     size = stats["datsize"]
+
+    if size in ["", None]:
+        yield (1, "Database size is not available.")
+        return
+
     yield check_levels(
         size,
         "size",

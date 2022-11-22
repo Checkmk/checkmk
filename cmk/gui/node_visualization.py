@@ -24,6 +24,7 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import active_config
+from cmk.gui.dashboard import get_topology_view_and_filters
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -47,9 +48,8 @@ from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import PainterSpec, Visual, VisualContext, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
-from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
-from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
+from cmk.gui.views.store import multisite_builtin_views
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -248,18 +248,6 @@ class ParentChildTopologyPage(Page):
                 ],
             ),
         )
-
-
-def get_topology_view_and_filters() -> tuple[View, list[Filter]]:
-    view_name = "topology_filters"
-
-    view_spec = get_permitted_views()[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}))
-    filters = cmk.gui.visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
-    )
-    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return view, show_filters
 
 
 @page_registry.register_page("ajax_initial_topology_filters")

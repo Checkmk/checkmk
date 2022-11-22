@@ -44,7 +44,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.node_visualization import get_topology_view_and_filters
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_javascript_link,
@@ -92,7 +91,12 @@ from cmk.gui.plugins.dashboard.utils import (
     ViewDashletConfig,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
+from cmk.gui.plugins.visuals.utils import (
+    Filter,
+    visual_info_registry,
+    visual_type_registry,
+    VisualType,
+)
 from cmk.gui.type_defs import InfoName, SingleInfos, ViewName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -100,10 +104,12 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, TextInput, Transform, ValueSpec
+from cmk.gui.view import View
 from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.page_edit_view import view_choices
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 dashlet_padding = (
@@ -1046,7 +1052,8 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         board = _load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
         board = _add_context_to_dashboard(board)
 
-        # For the topology dashboard filters are retrieved from a corresponding view context
+        # For the topology dashboard filters are retrieved from a corresponding view context.
+        # This should not be needed here. Can't we load the context from the board as we usually do?
         if page_name == "topology":
             _view, show_filters = get_topology_view_and_filters()
             return {
@@ -1054,6 +1061,18 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             }
 
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
+
+
+def get_topology_view_and_filters() -> tuple[View, list[Filter]]:
+    view_name = "topology_filters"
+
+    view_spec = get_permitted_views()[view_name]
+    view = View(view_name, view_spec, view_spec.get("context", {}))
+    filters = cmk.gui.visuals.filters_of_visual(
+        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
+    )
+    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
+    return view, show_filters
 
 
 @dataclass

@@ -3025,6 +3025,7 @@ class ConfigCache:
             ],
         ] = {}
         self._is_piggyback_host: dict[HostName, bool] = {}
+        self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3066,6 +3067,7 @@ class ConfigCache:
     def _initialize_caches(self) -> None:
         self._enforced_services_table.clear()
         self._is_piggyback_host.clear()
+        self._snmp_config.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3126,23 +3128,30 @@ class ConfigCache:
     def make_snmp_config(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> SNMPHostConfig:
-        return SNMPHostConfig(
-            is_ipv6_primary=self.is_ipv6_primary(host_name),
-            hostname=host_name,
-            ipaddress=ip_address,
-            credentials=self._snmp_credentials(host_name),
-            port=self._snmp_port(host_name),
-            is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
-            is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(host_name, snmpv2c_hosts),
-            bulk_walk_size_of=self._bulk_walk_size(host_name),
-            timing=self._snmp_timing(host_name),
-            oid_range_limits={
-                SectionName(name): rule
-                for name, rule in reversed(self.host_extra_conf(host_name, snmp_limit_oid_range))
-            },
-            snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
-            character_encoding=self._snmp_character_encoding(host_name),
-            snmp_backend=self.get_snmp_backend(host_name),
+        return self._snmp_config.setdefault(
+            (host_name, ip_address),
+            SNMPHostConfig(
+                is_ipv6_primary=self.is_ipv6_primary(host_name),
+                hostname=host_name,
+                ipaddress=ip_address,
+                credentials=self._snmp_credentials(host_name),
+                port=self._snmp_port(host_name),
+                is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
+                is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(
+                    host_name, snmpv2c_hosts
+                ),
+                bulk_walk_size_of=self._bulk_walk_size(host_name),
+                timing=self._snmp_timing(host_name),
+                oid_range_limits={
+                    SectionName(name): rule
+                    for name, rule in reversed(
+                        self.host_extra_conf(host_name, snmp_limit_oid_range)
+                    )
+                },
+                snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
+                character_encoding=self._snmp_character_encoding(host_name),
+                snmp_backend=self.get_snmp_backend(host_name),
+            ),
         )
 
     def make_host_config(self, hostname: HostName) -> HostConfig:
@@ -3158,6 +3167,7 @@ class ConfigCache:
     def invalidate_host_config(self, hostname: HostName) -> None:
         self._enforced_services_table.clear()
         self._is_piggyback_host.clear()
+        self._snmp_config.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:

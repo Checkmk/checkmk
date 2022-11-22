@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-CMAKE_VERSION=3.21.1
+CMAKE_VERSION=3.25.0
 DIR_NAME=cmake-${CMAKE_VERSION}-Linux-x86_64
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR=/opt

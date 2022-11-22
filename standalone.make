@@ -5,6 +5,8 @@
 # TODO(sp) We should really use autotools here...
 ifneq ($(shell which g++-12 2>/dev/null),)
         CXX := g++-12 -std=c++17
+else ifneq ($(shell which clang++-15 2>/dev/null),)
+        CXX := clang++-15 -std=c++17
 else ifneq ($(shell which clang++-14 2>/dev/null),)
         CXX := clang++-14 -std=c++17
 else ifneq ($(shell which clang++-13 2>/dev/null),)

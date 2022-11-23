@@ -261,10 +261,19 @@ class PackageStore:
         except FileNotFoundError:
             return []
 
+    def get_existing_package_path(self, package_id: PackageID) -> Path:
+        """Return the path of an existing package
 
-# TODO: this can go
-def read_package(package_store: PackageStore, package_id: PackageID) -> bytes:
-    return _get_full_package_path(package_store, package_id).read_bytes()
+        (not to confuse with the path of a package file that is to be created!)
+        """
+        # TODO: can we drop this, and just hand out the bytes or create the "enabled link"?
+        base_name = format_file_name(package_id)
+        if (local_package_path := self.local_packages / base_name).exists():
+            return local_package_path
+        if not (shipped_package_path := self.shipped_packages / base_name).exists():
+            # yes, this is a race condition. But we want to make the intention clear.
+            raise PackageException(f"no such package: {package_id.name} {package_id.version}")
+        return shipped_package_path
 
 
 def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
@@ -357,18 +366,9 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     mark_as_enabled(file_path)
 
 
-# TODO: this belongs to PackageStore.
-def _get_full_package_path(package_store: PackageStore, package_id: PackageID) -> Path:
-    package_file_name = format_file_name(package_id)
-    for package in package_store.list_local_packages() + package_store.list_shipped_packages():
-        if package_file_name == package.name:
-            return package
-    raise PackageException("Optional package %s does not exist" % package_file_name)
-
-
 def install_optional_package(package_store: PackageStore, package_id: PackageID) -> PackageInfo:
     return install(
-        _get_full_package_path(package_store, package_id),
+        package_store.get_existing_package_path(package_id),
         allow_outdated=True,
     )
 

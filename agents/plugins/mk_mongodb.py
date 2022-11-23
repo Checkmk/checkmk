@@ -28,12 +28,12 @@ __version__ = "2.2.0i1"
 
 import argparse
 import configparser
-import inspect
 import json
 import logging
 import os
 import sys
 import time
+import types
 from collections import defaultdict
 from urllib.parse import quote_plus
 
@@ -63,9 +63,9 @@ PYMONGO_VERSION = tuple(int(i) for i in pymongo.version.split("."))
 
 
 def get_database_info(client):
-    if inspect.ismethod(client.list_database_names):
+    if isinstance(client.list_database_names, types.MethodType):
         db_names = client.list_database_names()
-    elif inspect.ismethod(client.database_names):
+    elif isinstance(client.database_names, types.MethodType):
         db_names = client.database_names()
     else:
         db_names = []

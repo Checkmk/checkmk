@@ -5,7 +5,6 @@
 
 import abc
 import http.client as http_client
-import inspect
 import json
 from collections.abc import Callable
 from typing import Any
@@ -124,12 +123,12 @@ class PageRegistry(cmk.utils.plugin_registry.Registry[type[Page]]):
 
     def register_page(self, path: str) -> Callable[[type[Page]], type[Page]]:
         def wrap(plugin_class: type[Page]) -> type[Page]:
-            if not inspect.isclass(plugin_class):
+            if not isinstance(plugin_class, type):
                 raise NotImplementedError()
 
             # mypy is not happy with this. Find a cleaner way
-            plugin_class._ident = path
-            plugin_class.ident = classmethod(lambda cls: cls._ident)
+            plugin_class._ident = path  # type: ignore[attr-defined]
+            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
 
             self.register(plugin_class)
             return plugin_class

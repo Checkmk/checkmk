@@ -8,7 +8,6 @@ from __future__ import annotations
 import ast
 import contextlib
 import copy
-import inspect
 import ipaddress
 import itertools
 import marshal
@@ -18,6 +17,7 @@ import py_compile
 import socket
 import struct
 import sys
+import types
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
@@ -1930,7 +1930,7 @@ def _set_check_variable_defaults(
             continue
 
         # NOTE: Classes and builtin functions are callable, too!
-        if callable(value) or inspect.ismodule(value):
+        if callable(value) or isinstance(value, types.ModuleType):
             continue
 
         _check_variable_defaults[varname] = copy.copy(value)

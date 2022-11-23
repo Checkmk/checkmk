@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import dataclasses
 import numbers
 import os
 import shutil
@@ -24,6 +25,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.store import save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ConfigurationWarnings,
@@ -52,6 +54,12 @@ CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
 
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
 AbstractServiceID = Union[ActiveServiceID, ServiceID]
+
+
+@dataclasses.dataclass(frozen=True)
+class CollectedHostLabels:
+    host_labels: Labels
+    service_labels: dict[ServiceName, Labels]
 
 
 class MonitoringCore(abc.ABC):
@@ -1051,3 +1059,25 @@ def translate_ds_program_source_cmdline(
         )
 
     return _translate_host_macros(_translate_legacy_macros(template, host_name, ipaddress))
+
+
+def write_notify_host_file(
+    config_path: VersionedConfigPath,
+    labels_per_host: dict[HostName, CollectedHostLabels],
+) -> None:
+    notify_labels_path: Path = Path(config_path) / "notify" / "labels"
+    for host, labels in labels_per_host.items():
+        host_path = notify_labels_path / host
+        save_object_to_file(
+            host_path,
+            dataclasses.asdict(
+                CollectedHostLabels(
+                    host_labels=labels.host_labels,
+                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                )
+            ),
+        )
+
+
+def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:
+    return {key[8:]: value for key, value in key_value_pairs if key.startswith("__LABEL_")}

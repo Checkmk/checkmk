@@ -1156,9 +1156,11 @@ modes.register(
 
 
 def mode_dump_nagios_config(args: list[HostName]) -> None:
+    from cmk.utils.config_path import VersionedConfigPath
+
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
 
-    create_config(sys.stdout, args if len(args) else None)
+    create_config(sys.stdout, VersionedConfigPath.current(), args if len(args) else None)
 
 
 modes.register(

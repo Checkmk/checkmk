@@ -5302,53 +5302,52 @@ def test_cleanup_contexts(  # type:ignore[no-untyped-def]
 
 def test_get_context_specs_no_info_limit() -> None:
     result = visuals.get_context_specs(["host"], list(utils.visual_info_registry.keys()))
-    assert sorted([r[0] for r in result]) == sorted(
-        [
-            "host",
-            "service",
-            "hostgroup",
-            "servicegroup",
-            "log",
-            "comment",
-            "downtime",
-            "aggr",
-            "aggr_group",
-            "discovery",
-            "event",
-            "history",
-            "invbackplane",
-            "invchassis",
-            "invcontainer",
-            "invfan",
-            "invmodule",
-            "invother",
-            "invpsu",
-            "invsensor",
-            "invstack",
-            "invunknown",
-            "invinterface",
-            "invtunnels",
-            "invcmksites",
-            "invcmkversions",
-            "invdockercontainers",
-            "invdockerimages",
-            "invibmmqchannels",
-            "invibmmqmanagers",
-            "invibmmqqueues",
-            "invoradataguardstats",
-            "invorainstance",
-            "invorapga",
-            "invorarecoveryarea",
-            "invorasga",
-            "invorasystemparameter",
-            "invoratablespace",
-            "invkernelconfig",
-            "invswpac",
-        ]
-        + ["customer"]
-        if cmk_version.is_managed_edition()
-        else []
-    )
+    expected = [
+        "host",
+        "service",
+        "hostgroup",
+        "servicegroup",
+        "log",
+        "comment",
+        "downtime",
+        "aggr",
+        "aggr_group",
+        "discovery",
+        "event",
+        "history",
+        "invbackplane",
+        "invchassis",
+        "invcontainer",
+        "invfan",
+        "invmodule",
+        "invother",
+        "invpsu",
+        "invsensor",
+        "invstack",
+        "invunknown",
+        "invinterface",
+        "invtunnels",
+        "invcmksites",
+        "invcmkversions",
+        "invdockercontainers",
+        "invdockerimages",
+        "invibmmqchannels",
+        "invibmmqmanagers",
+        "invibmmqqueues",
+        "invoradataguardstats",
+        "invorainstance",
+        "invorapga",
+        "invorarecoveryarea",
+        "invorasga",
+        "invorasystemparameter",
+        "invoratablespace",
+        "invkernelconfig",
+        "invswpac",
+    ]
+    if cmk_version.is_managed_edition():
+        expected += ["customer"]
+
+    assert sorted([r[0] for r in result]) == sorted(expected)
 
 
 def test_get_context_specs_only_host_and_service_info() -> None:

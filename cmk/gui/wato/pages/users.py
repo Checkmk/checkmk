@@ -633,9 +633,12 @@ class ModeEditUser(WatoMode):
             except ValueError as e:
                 raise MKUserError("user", str(e)) from e
 
-        self._cloneid = request.get_validated_type_input_mandatory(
-            UserId, "clone"
-        )  # Only needed in 'new' mode
+        try:
+            # cloneid is not mandatory because it is only needed in 'new' mode
+            self._cloneid = request.get_validated_type_input(UserId, "clone")
+        except ValueError as e:
+            raise MKUserError("clone", str(e)) from e
+
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user: bool = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())

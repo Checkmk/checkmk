@@ -63,7 +63,7 @@ def test_apc_symmetra_power_detect(walk: str) -> None:
         pytest.param(
             DATA0,
             [
-                Service(item="1", parameters={"auto-migration-wrapper-key": (20, 1)}),
+                Service(item="1"),
                 # XXX: this is wrong, and should include the other two phases
             ],
             id="data0",
@@ -71,9 +71,9 @@ def test_apc_symmetra_power_detect(walk: str) -> None:
         pytest.param(
             DATA1,
             [
-                Service(item="1", parameters={"auto-migration-wrapper-key": (20, 1)}),
-                Service(item="2", parameters={"auto-migration-wrapper-key": (20, 1)}),
-                Service(item="3", parameters={"auto-migration-wrapper-key": (20, 1)}),
+                Service(item="1"),
+                Service(item="2"),
+                Service(item="3"),
             ],
             id="data1",
         ),
@@ -82,7 +82,7 @@ def test_apc_symmetra_power_detect(walk: str) -> None:
 def test_apc_symmetra_power_discover(
     fix_register: FixRegister, walk: str, result: DiscoveryResult
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("apc_symmetra_power")]
+    plugin = fix_register.check_plugins[CheckPluginName("epower")]
 
     parsed = get_parsed_snmp_section(SectionName("apc_symmetra_power"), walk)
 
@@ -95,50 +95,40 @@ def test_apc_symmetra_power_discover(
         pytest.param(
             DATA0,
             "1",
-            {"auto-migration-wrapper-key": (20, 1)},
+            {"levels_lower": (20, 1)},
             [
-                Result(
-                    state=State.OK, summary="current power: 1309 W, warn/crit at and below 20/1 W"
-                ),
-                Metric("power", 1309.0, levels=(20.0, 1.0), boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Power: 1309 W"),
+                Metric("power", 1309.0),
             ],
             id="data0",
         ),
         pytest.param(
             DATA1,
             "2",
-            {"auto-migration-wrapper-key": (20, 1)},
+            {"levels_lower": (20, 1)},
             [
-                Result(
-                    state=State.OK, summary="current power: 2000 W, warn/crit at and below 20/1 W"
-                ),
-                Metric("power", 2000.0, levels=(20.0, 1.0), boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Power: 2000 W"),
+                Metric("power", 2000.0),
             ],
             id="data1",
         ),
         pytest.param(
             DATA1,
             "2",
-            {"auto-migration-wrapper-key": (3000, 2000)},
+            {"levels_lower": (3000, 2000)},
             [
-                Result(
-                    state=State.WARN,
-                    summary="current power: 2000 W, warn/crit at and below 3000/2000 W",
-                ),
-                Metric("power", 2000.0, levels=(3000.0, 2000.0), boundaries=(0.0, None)),
+                Result(state=State.WARN, summary="Power: 2000 W (warn/crit below 3000 W/2000 W)"),
+                Metric("power", 2000.0),
             ],
             id="data1-warn",
         ),
         pytest.param(
             DATA1,
             "2",
-            {"auto-migration-wrapper-key": (6000, 3000)},
+            {"levels_lower": (6000, 3000)},
             [
-                Result(
-                    state=State.CRIT,
-                    summary="current power: 2000 W, warn/crit at and below 6000/3000 W",
-                ),
-                Metric("power", 2000.0, levels=(6000.0, 3000.0), boundaries=(0.0, None)),
+                Result(state=State.CRIT, summary="Power: 2000 W (warn/crit below 6000 W/3000 W)"),
+                Metric("power", 2000.0),
             ],
             id="data1-crit",
         ),
@@ -147,7 +137,7 @@ def test_apc_symmetra_power_discover(
 def test_apc_symmetra_power_check(
     fix_register: FixRegister, walk: str, item: str, params: Any, result: CheckResult
 ) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("apc_symmetra_power")]
+    plugin = fix_register.check_plugins[CheckPluginName("epower")]
 
     parsed = get_parsed_snmp_section(SectionName("apc_symmetra_power"), walk)
 

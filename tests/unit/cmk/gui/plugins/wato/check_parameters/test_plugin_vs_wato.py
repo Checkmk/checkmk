@@ -348,7 +348,6 @@ class ErrorReporter:
         ("check", "apc_ats_output", "checkgroup_parameters:apc_ats_output"),
         ("check", "apc_humidity", "checkgroup_parameters:humidity"),
         ("check", "apc_symmetra", "checkgroup_parameters:apc_symentra"),
-        ("check", "apc_symmetra_power", "checkgroup_parameters:apc_power"),
         ("check", "apc_symmetra_temp", "checkgroup_parameters:temperature"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),

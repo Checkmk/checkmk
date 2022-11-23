@@ -22,6 +22,7 @@ from cmk.update_config.update_state import format_warning, UpdateActionState
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
     "checkgroup_parameters:systemd_services": "checkgroup_parameters:systemd_units_services",
+    "checkgroup_parameters:apc_symmetra_power": "checkgroup_parameters:epower",
     "static_checks:systemd_services": "static_checks:systemd_units_services",
 }
 

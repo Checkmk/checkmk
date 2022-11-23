@@ -7,11 +7,11 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-ups_power_default_levels = (20, 1)  # warning / critical
+ups_power_default_levels = {"levels_lower": (20, 1)}  # warning / critical
 
 
 def check_ups_power(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels_lower"]
     for idx, _raw_voltage, raw_power in info:
         if idx == item:
             power = saveint(raw_power)

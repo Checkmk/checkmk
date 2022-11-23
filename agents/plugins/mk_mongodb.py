@@ -835,7 +835,7 @@ class Config:
         return config for latest pymongo (3.12.X)
         """
         pymongo_config = {}
-        if self.username and self.auth_mechanism != 'MONGODB-X509':
+        if self.username and self.auth_mechanism != "MONGODB-X509":
             pymongo_config["username"] = self.username
             if self.password:
                 pymongo_config["password"] = self.password
@@ -852,7 +852,7 @@ class Config:
 
         if self.auth_mechanism is not None:
             pymongo_config["authMechanism"] = self.auth_mechanism
-        if self.auth_source is not None and self.auth_mechanism != 'MONGODB-X509':
+        if self.auth_source is not None and self.auth_mechanism != "MONGODB-X509":
             pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
             pymongo_config["host"] = self.host

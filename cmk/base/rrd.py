@@ -6,8 +6,6 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from six import ensure_str
-
 import cmk.utils
 import cmk.utils.paths
 from cmk.utils.type_defs import HostName, MetricName
@@ -40,16 +38,14 @@ def set_text_attr(node: ET.Element, attr_name: str, value: str | None) -> None:
 
 
 def write_xml(element: ET.Element, filepath: str) -> None:
-    with Path(filepath).open("w", encoding="utf-8") as fid:
-        fid.write('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n')
-        # TODO: Can be set to encoding="unicode" with Python3
-        # ? with UTF-8 encoding the argument of ensure_str seems to be of type bytes, with unicode encoding-str
-        fid.write(
-            ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                ET.tostring(element, method="html", encoding="UTF-8")
-            )
+    Path(filepath).write_text(
+        (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            + ET.tostring(element, method="html", encoding="unicode")
             + "\n"
-        )
+        ),
+        encoding="utf-8",
+    )
 
 
 def update_metric_pnp_xml_info_file(

@@ -12,8 +12,6 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any, Final
 
-from six import ensure_str
-
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData
 
@@ -25,7 +23,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        cmdline: bytes | str,
+        cmdline: str,
         stdin: str | None,
         is_cmc: bool,
     ) -> None:
@@ -140,17 +138,9 @@ class ProgramFetcher(Fetcher[AgentRawData]):
         )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
-            # ? exepath is AnyStr
-            raise MKFetcherError(
-                "Program '%s' not found (exit code 127)"
-                % ensure_str(exepath)  # pylint: disable= six-ensure-str-bin-call
-            )
+            raise MKFetcherError(f"Program '{exepath}' not found (exit code 127)")
         if self._process.returncode:
             raise MKFetcherError(
-                "Agent exited with code %d: %s"
-                % (
-                    self._process.returncode,
-                    ensure_str(stderr).strip(),  # pylint: disable= six-ensure-str-bin-call
-                )
+                f"Agent exited with code {self._process.returncode}: {stderr.decode().strip()}"
             )
         return stdout

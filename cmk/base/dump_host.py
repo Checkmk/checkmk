@@ -51,14 +51,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / fetcher.hostname)
 
     if isinstance(fetcher, ProgramFetcher):
-        response = [
-            "Program: %s"
-            % (
-                fetcher.cmdline
-                if isinstance(fetcher.cmdline, str)
-                else fetcher.cmdline.decode("utf8")
-            )
-        ]
+        response = [f"Program: {fetcher.cmdline}"]
         if fetcher.stdin:
             response.extend(["  Program stdin:", fetcher.stdin])
         return "\n".join(response)

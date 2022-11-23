@@ -5316,7 +5316,6 @@ def test_get_context_specs_no_info_limit() -> None:
             "discovery",
             "event",
             "history",
-            "customer",
             "invbackplane",
             "invchassis",
             "invcontainer",
@@ -5346,6 +5345,9 @@ def test_get_context_specs_no_info_limit() -> None:
             "invkernelconfig",
             "invswpac",
         ]
+        + ["customer"]
+        if cmk_version.is_managed_edition()
+        else []
     )
 
 

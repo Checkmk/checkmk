@@ -38,8 +38,8 @@ from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.bi import actions
 from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
-    BIAggregationFunctionCountOK,
     BIAggregationFunctionCountMinOK,
+    BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
 from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind

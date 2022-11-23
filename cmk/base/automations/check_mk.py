@@ -1373,7 +1373,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: float | None,
     ) -> tuple[int, str]:
         state, output = 0, ""
-        for source, file_cache, fetcher in sources.make_non_cluster_sources(
+        for source, file_cache, fetcher in sources.make_sources(
             host_name,
             ipaddress,
             simulation_mode=config.simulation_mode,
@@ -1714,7 +1714,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(hostname)
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
-                for source, file_cache, fetcher in sources.make_non_cluster_sources(
+                for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,
                     simulation_mode=config.simulation_mode,

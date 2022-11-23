@@ -9,7 +9,7 @@
 
 import logging
 import os.path
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from functools import partial
 from pathlib import Path
 from typing import Final
@@ -49,8 +49,8 @@ import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
 __all__ = [
+    "do_fetch",
     "fetch_all",
-    "make_non_cluster_sources",
     "make_sources",
     "make_plugin_store",
     "parse",
@@ -643,7 +643,7 @@ class _Builder:
             yield source, fetcher, file_cache
 
 
-def make_non_cluster_sources(
+def make_sources(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
@@ -673,54 +673,20 @@ def fetch_all(
     mode: Mode,
 ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: list[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ] = []
-    for source, file_cache, fetcher in sources:
-        console.vverbose(f"  Source: {source}\n")
-
-        with CPUTracker() as tracker:
-            raw_data = get_raw_data(file_cache, fetcher, mode)
-        out.append((source, raw_data, tracker.duration))
-    return out
-
-
-def make_sources(
-    host_name: HostName,
-    ip_address: HostAddress | None,
-    *,
-    ip_lookup: Callable[[HostName], HostAddress | None],
-    selected_sections: SectionNameCollection,
-    force_snmp_cache_refresh: bool,
-    on_scan_error: OnError,
-    simulation_mode: bool,
-    missing_sys_description: bool,
-    file_cache_max_age: MaxAge,
-) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
-    config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        # Not a cluster
-        host_names = [host_name]
-    else:
-        host_names = nodes
     return [
-        source
-        for host_name_ in host_names
-        for source in make_non_cluster_sources(
-            host_name_,
-            (ip_address if config_cache.nodes_of(host_name) is None else ip_lookup(host_name_)),
-            force_snmp_cache_refresh=(
-                force_snmp_cache_refresh if config_cache.nodes_of(host_name) is None else False
-            ),
-            selected_sections=(
-                selected_sections if config_cache.nodes_of(host_name) is None else NO_SELECTION
-            ),
-            on_scan_error=(
-                on_scan_error if config_cache.nodes_of(host_name) is None else OnError.RAISE
-            ),
-            simulation_mode=simulation_mode,
-            missing_sys_description=missing_sys_description,
-            file_cache_max_age=file_cache_max_age,
-        )
+        do_fetch(source_info, file_cache, fetcher, mode=mode)
+        for source_info, file_cache, fetcher in sources
     ]
+
+
+def do_fetch(
+    source_info: SourceInfo,
+    file_cache: FileCache,
+    fetcher: Fetcher,
+    *,
+    mode: Mode,
+) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
+    console.vverbose(f"  Source: {source_info}\n")
+    with CPUTracker() as tracker:
+        raw_data = get_raw_data(file_cache, fetcher, mode)
+    return source_info, raw_data, tracker.duration

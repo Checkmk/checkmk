@@ -132,22 +132,29 @@ def automation_discovery(
         ipaddress = (
             None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
         )
+        nodes = config_cache.nodes_of(host_name)
+        if nodes is None:
+            hosts = [(host_name, ipaddress)]
+        else:
+            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
         fetched: Sequence[
             tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
         ] = fetch_all(
-            make_sources(
-                host_name,
-                ipaddress,
-                ip_lookup=config.lookup_ip_address,
-                selected_sections=NO_SELECTION,
-                force_snmp_cache_refresh=not use_cached_snmp_data,
-                on_scan_error=on_error,
-                simulation_mode=config.simulation_mode,
-                missing_sys_description=config_cache.in_binary_hostlist(
-                    host_name, config.snmp_without_sys_descr
-                ),
-                file_cache_max_age=max_cachefile_age,
+            *(
+                make_sources(
+                    host_name_,
+                    ipaddress_,
+                    force_snmp_cache_refresh=not use_cached_snmp_data if nodes is None else False,
+                    selected_sections=NO_SELECTION,
+                    on_scan_error=on_error if nodes is None else OnError.RAISE,
+                    simulation_mode=config.simulation_mode,
+                    missing_sys_description=config_cache.in_binary_hostlist(
+                        host_name, config.snmp_without_sys_descr
+                    ),
+                    file_cache_max_age=max_cachefile_age,
+                )
+                for host_name_, ipaddress_ in hosts
             ),
             mode=Mode.DISCOVERY,
         )

@@ -66,28 +66,37 @@ def commandline_discovery(
     """
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
+
     mode = Mode.DISCOVERY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for host_name in sorted(host_names):
+        nodes = config_cache.nodes_of(host_name)
+        if nodes is None:
+            hosts = [(host_name, config.lookup_ip_address(host_name))]
+        else:
+            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+
         section.section_begin(host_name)
         try:
             fetched: Sequence[
                 tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
             ] = fetch_all(
-                make_sources(
-                    host_name,
-                    config.lookup_ip_address(host_name),
-                    ip_lookup=config.lookup_ip_address,
-                    selected_sections=selected_sections,
-                    force_snmp_cache_refresh=False,
-                    on_scan_error=on_error,
-                    simulation_mode=config.simulation_mode,
-                    missing_sys_description=config_cache.in_binary_hostlist(
-                        host_name,
-                        config.snmp_without_sys_descr,
-                    ),
-                    file_cache_max_age=config.max_cachefile_age(),
+                *(
+                    make_sources(
+                        host_name_,
+                        ip_address_,
+                        force_snmp_cache_refresh=False,
+                        selected_sections=selected_sections if nodes is None else NO_SELECTION,
+                        on_scan_error=on_error if nodes is None else OnError.RAISE,
+                        simulation_mode=config.simulation_mode,
+                        missing_sys_description=config_cache.in_binary_hostlist(
+                            host_name,
+                            config.snmp_without_sys_descr,
+                        ),
+                        file_cache_max_age=config.max_cachefile_age(),
+                    )
+                    for host_name_, ip_address_ in hosts
                 ),
                 mode=mode,
             )
@@ -240,22 +249,30 @@ def _commandline_check_discovery(
     if ipaddress is None and not config_cache.is_cluster(host_name):
         ipaddress = config.lookup_ip_address(host_name)
 
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
+        hosts = [(host_name, ipaddress)]
+    else:
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+
     fetched = fetch_all(
-        make_sources(
-            host_name,
-            ipaddress,
-            ip_lookup=config.lookup_ip_address,
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-            simulation_mode=config.simulation_mode,
-            missing_sys_description=config_cache.in_binary_hostlist(
-                host_name,
-                config.snmp_without_sys_descr,
-            ),
-            file_cache_max_age=config.max_cachefile_age(
-                discovery=None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0
-            ),
+        *(
+            make_sources(
+                host_name_,
+                ipaddress_,
+                force_snmp_cache_refresh=False,
+                selected_sections=NO_SELECTION,
+                on_scan_error=OnError.RAISE,
+                simulation_mode=config.simulation_mode,
+                missing_sys_description=config_cache.in_binary_hostlist(
+                    host_name,
+                    config.snmp_without_sys_descr,
+                ),
+                file_cache_max_age=config.max_cachefile_age(
+                    discovery=(None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0)
+                ),
+            )
+            for host_name_, ipaddress_ in hosts
         ),
         mode=Mode.DISCOVERY,
     )

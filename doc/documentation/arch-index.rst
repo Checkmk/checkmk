@@ -45,6 +45,8 @@ Components
 
    arch-comp-agent-linux.rst
    arch-comp-push-agent.rst
+   arch-comp-agent-updater.rst
+
    arch-comp-grafana-connector.rst
 
    arch-comp-template.rst

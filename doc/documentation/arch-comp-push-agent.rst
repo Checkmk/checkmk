@@ -76,13 +76,6 @@ The controller will advertise its readiness to establish a TLS connections by se
 
 When talking to the agent-receiver HTTPS is used.
 
-`cmk-updater-agent`
--------------------
-The agent updater is usually invoked by the agent as a plugin.
-It contacts the Checkmk server with host specific credentials and checks if a new version of the agent is available.
-If so it downloads the agent, checks the signature (which is attached to the response) and writes the new agent to disk.
-Via a `systemd` timer the `cmk-updater-agent` is called (every minute) in order to install available agents.
-
 Runtime view
 ============
 On older setups `systemd` or `xinetd` executes the `check-mk-agent` command if somebody connects to the defined port.
@@ -93,10 +86,7 @@ Deployment view
 ===============
 The agent is usually installed as a package.
 
-If the agent updater is used the agent updater polls the server regularly to check if a new version is available.
-If so it downloads the agent and a `systemd` timer regularly checks for new agents to install.
 
 Risks and technical debts
 =========================
 - See :doc:`arch-comp-agent-linux` for `check-mk-agent` specific risks and debts
-- `cmk-update-agent`: If the site is not using HTTPS the `host_secret` can get lost.

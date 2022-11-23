@@ -1,0 +1,24 @@
+@startuml agent-updater
+
+package "Agent" {
+    component "[[../arch-comp-agent-linux.html check-mk-agent-async]]" as check_mk_agent_async
+    database FS as filesystem
+    [cmk-update-agent install] as cmk_update_agent_1
+    [cmk-update-agent] as cmk_update_agent_2
+    [systemd.timer] as systemd_timer
+
+    systemd_timer ..> cmk_update_agent_1: triggers
+
+    cmk_update_agent_2 - filesystem: download / write
+    filesystem - cmk_update_agent_1: read / install
+
+    check_mk_agent_async ..> cmk_update_agent_2: executes
+    cmk_update_agent_2 -> check_mk_agent_async: plugin output
+}
+
+() HTTPS as https_gui
+component "[[ ../arch-comp-gui.html GUI]]" as gui
+https_gui -- gui
+cmk_update_agent_2 ..> https_gui
+
+@enduml

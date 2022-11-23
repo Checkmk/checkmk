@@ -79,7 +79,7 @@ test_neb_LDFLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 test_neb_LDADD = \
-    liblivestatus.a \
+    liblivestatusneb.a \
     -lstdc++fs \
     @RE2_LIBS@ \
     $(LIBS_DIR)/libgtest.a \
@@ -90,16 +90,16 @@ test_neb_LDADD = \
 unit-test: test_neb$(EXEEXT)
 	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
 
-pkglib_LIBRARIES = liblivestatus.a
+pkglib_LIBRARIES = liblivestatusneb.a
 
-liblivestatus_a_CXXFLAGS = -fPIC
-liblivestatus_a_CPPFLAGS = \
+liblivestatusneb_a_CXXFLAGS = -fPIC
+liblivestatusneb_a_CPPFLAGS = \
     $(AM_CPPFLAGS) \
     $(RRDTOOL_CPPFLAGS)
-liblivestatus_a_LD_FLAGS = \
+liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
-liblivestatus_a_SOURCES = \
+liblivestatusneb_a_SOURCES = \
         AndingFilter.cc \
         AttributeListColumn.cc \
         Average.cc \
@@ -187,7 +187,7 @@ liblivestatus_a_SOURCES = \
         opids.cc \
         pnp4nagios.cc \
         strutil.cc
-$(liblivestatus_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
+$(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
 all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
@@ -239,18 +239,18 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $@
 
-livestatus.o: $(liblivestatus_a_OBJECTS)
+livestatus.o: $(liblivestatusneb_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
 # target, so we use a cruel sed hack below. :-P
-compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatus_a_SOURCES)
+compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatusneb_a_SOURCES)
 	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json
@@ -284,7 +284,7 @@ all-local: livestatus.o
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
 	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
-	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
+	rm -f $(DESTDIR)$(pkglibdir)/liblivestatusneb.a
 
 clean-local:
 	rm -rf *~ compile_commands.json test_detail.xml html $(INCLUDES_DIR) $(LIBS_DIR) $(ASIO_VERSION) $(GOOGLETEST_VERSION)

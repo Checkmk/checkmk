@@ -1,0 +1,15 @@
+Title: apc_symmetra_power failed to discover all phases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669197355
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+For certain models only the first phase was discovered.
+Now all three phases should be discovered.
+
+

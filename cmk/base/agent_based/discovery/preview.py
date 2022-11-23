@@ -66,11 +66,8 @@ def get_check_preview(
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
 
-    ip_address = (
-        None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
-    )
+    ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     host_attrs = get_host_attributes(host_name, config_cache)
 
     cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
@@ -82,9 +79,7 @@ def get_check_preview(
         make_sources(
             host_name,
             ip_address,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
+            ip_lookup=config.lookup_ip_address,
             selected_sections=NO_SELECTION,
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
@@ -116,6 +111,7 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
+    host_config = config_cache.make_host_config(host_name)
     grouped_services = get_host_services(
         host_name,
         host_config,

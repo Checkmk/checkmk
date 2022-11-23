@@ -131,7 +131,7 @@ def automation_discovery(
             )  # this is cluster-aware!
 
         ipaddress = (
-            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
+            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
         )
 
         fetched: Sequence[
@@ -140,9 +140,7 @@ def automation_discovery(
             make_sources(
                 host_name,
                 ipaddress,
-                ip_lookup=lambda host_name: config.lookup_ip_address(
-                    config_cache.make_host_config(host_name)
-                ),
+                ip_lookup=config.lookup_ip_address,
                 selected_sections=NO_SELECTION,
                 force_snmp_cache_refresh=not use_cached_snmp_data,
                 on_scan_error=on_error,

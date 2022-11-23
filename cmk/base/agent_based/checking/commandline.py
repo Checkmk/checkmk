@@ -64,20 +64,17 @@ def _commandline_checking(
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_name)
 
     fetched = fetch_all(
         make_sources(
             host_name,
             ipaddress,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
+            ip_lookup=config.lookup_ip_address,
             selected_sections=selected_sections,
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,

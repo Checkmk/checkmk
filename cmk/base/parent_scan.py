@@ -131,8 +131,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         settings = {}
 
     if config.monitoring_host:
-        host_config = config_cache.make_host_config(config.monitoring_host)
-        nagios_ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
+        nagios_ip = config.lookup_ip_address(config.monitoring_host, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -143,9 +142,8 @@ def scan_parents_of(  # pylint: disable=too-many-branches
     procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
-        host_config = config_cache.make_host_config(host)
         try:
-            ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
+            ip = config.lookup_ip_address(host, family=socket.AF_INET)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -341,9 +339,8 @@ def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostNa
         cache = _config_cache.get("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
-            host_config = config_cache.make_host_config(host)
             try:
-                cache[config.lookup_ip_address(host_config, family=socket.AF_INET)] = host
+                cache[config.lookup_ip_address(host, family=socket.AF_INET)] = host
             except Exception:
                 pass
     else:

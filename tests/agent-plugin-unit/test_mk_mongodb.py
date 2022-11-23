@@ -336,6 +336,7 @@ def test_transform_config(pymongo_version, pymongo_config) -> None:  # type:igno
             self.tls_enable = True
             self.tls_verify = None
             self.tls_ca_file = None
+            self.tls_cert_key_file = None
             self.auth_mechanism = None
             self.auth_source = None
             self.port = None

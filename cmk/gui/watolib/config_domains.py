@@ -31,13 +31,13 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
+import cmk.gui.mkeventd as mkeventd
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
-from cmk.gui.mkeventd import execute_command
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
     DomainRequest,
@@ -248,7 +248,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
-            execute_command("RELOAD", site=omd_site())
+            mkeventd.execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", "Activated changes of event console configuration")
             if hooks.registered("mkeventd-activate-changes"):
                 hooks.call("mkeventd-activate-changes")

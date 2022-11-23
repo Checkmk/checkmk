@@ -4,14 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from datetime import datetime
-
-from _pytest.monkeypatch import MonkeyPatch
-from freezegun import freeze_time
 
 from cmk.ec.export import ECRulePack, MkpRulePackProxy
 
-from cmk.gui.wato import mkeventd
 from cmk.gui.wato.mkeventd import MatchItemGeneratorECRulePacksAndRules
 from cmk.gui.watolib.search import MatchItem
 
@@ -63,27 +58,3 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
             match_texts=["mkp_rule_id", "descr", "comment"],
         ),
     ]
-
-
-@freeze_time(datetime.utcfromtimestamp(1622638021))
-def test_send_event(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        mkeventd,
-        "execute_command",
-        lambda *args, **kwargs: None,
-    )
-    assert (
-        mkeventd.send_event(
-            {
-                "facility": 17,
-                "priority": 1,
-                "sl": 20,
-                "host": "horst",
-                "ipaddress": "127.0.0.1",
-                "application": "Barz App",
-                "text": "I am a unit test",
-                "site": "heute",
-            }
-        )
-        == '<137>1 2021-06-02T12:47:01+00:00 horst - - - [Checkmk@18662 ipaddress="127.0.0.1" sl="20" application="Barz App"] I am a unit test'
-    )

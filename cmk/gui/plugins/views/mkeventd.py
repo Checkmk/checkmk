@@ -12,6 +12,7 @@ from livestatus import OnlySites, SiteId
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.type_defs import HostName
 
+import cmk.gui.mkeventd as mkeventd
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -55,11 +56,6 @@ from cmk.gui.views.sorter import (
     declare_1to1_sorter,
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
-
-from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
-from .helpers import action_choices
-from .livestatus import execute_command
-from .permission_section import PermissionSectionEventConsole
 
 
 def register(data_source_registry: DataSourceRegistry, painter_registry: PainterRegistry) -> None:
@@ -232,7 +228,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="seeall",
         title=_("See all events"),
         description=_(
@@ -245,7 +241,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="seeunrelated",
         title=_("See events not related to a known host"),
         description=_(
@@ -259,7 +255,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="see_in_tactical_overview",
         title=_("See events in the sidebar element 'Overview'"),
         description=_(
@@ -709,7 +705,7 @@ class PainterEventPriority(Painter):
         return ["event_priority"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", dict(_deref(syslog_priorities))[row["event_priority"]])
+        return ("", dict(_deref(mkeventd.syslog_priorities))[row["event_priority"]])
 
 
 class PainterEventFacility(Painter):
@@ -728,7 +724,7 @@ class PainterEventFacility(Painter):
         return ["event_facility"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", dict(_deref(syslog_facilities))[row["event_facility"]])
+        return ("", dict(_deref(mkeventd.syslog_facilities))[row["event_facility"]])
 
 
 class PainterEventRuleId(Painter):
@@ -793,7 +789,7 @@ class PainterEventPhase(Painter):
         return ["event_phase"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", phase_names.get(row["event_phase"], ""))
+        return ("", mkeventd.phase_names.get(row["event_phase"], ""))
 
 
 def paint_event_icons(row, history=False):
@@ -1049,7 +1045,7 @@ class PainterHistoryWhat(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         what = row["history_what"]
-        return "", HTMLWriter.render_span(what, title=str(action_whats[what]))
+        return "", HTMLWriter.render_span(what, title=str(mkeventd.action_whats[what]))
 
 
 class PainterHistoryWhatExplained(Painter):
@@ -1065,7 +1061,7 @@ class PainterHistoryWhatExplained(Painter):
         return ["history_what"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(action_whats[row["history_what"]]))
+        return ("", str(mkeventd.action_whats[row["history_what"]]))
 
 
 class PainterHistoryWho(Painter):
@@ -1118,7 +1114,7 @@ class PainterHistoryAddinfo(Painter):
 
 PermissionECUpdateEvent = permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="update",
         title=_l("Update an event"),
         description=_l("Needed for acknowledging and changing the comment and contact of an event"),
@@ -1129,7 +1125,7 @@ PermissionECUpdateEvent = permission_registry.register(
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="update_comment",
         title=_l("Update an event: change comment"),
         description=_l("Needed for changing a comment when updating an event"),
@@ -1140,7 +1136,7 @@ permission_registry.register(
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="update_contact",
         title=_l("Update an event: change contact"),
         description=_l("Needed for changing a contact when updating an event"),
@@ -1158,7 +1154,7 @@ class ECCommand(Command):
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
         assert isinstance(command, str)
-        execute_command(command, site=site)
+        mkeventd.execute_command(command, site=site)
 
 
 class CommandECUpdateEvent(ECCommand):
@@ -1240,7 +1236,7 @@ class CommandECUpdateEvent(ECCommand):
 
 PermissionECChangeEventState = permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="changestate",
         title=_l("Change event state"),
         description=_l(
@@ -1290,7 +1286,7 @@ class CommandECChangeState(ECCommand):
 
 PermissionECCustomActions = permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="actions",
         title=_l("Perform custom action"),
         description=_l(
@@ -1324,14 +1320,14 @@ class CommandECCustomAction(ECCommand):
         )
 
     def render(self, what) -> None:  # type:ignore[no-untyped-def]
-        for action_id, title in action_choices(omit_hidden=True):
+        for action_id, title in mkeventd.action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        for action_id, title in action_choices(omit_hidden=True):
+        for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
                 title = _('execute the action "%s"') % title
                 return "ACTION;{};{};{}".format(row["event_id"], user.id, action_id), title
@@ -1340,7 +1336,7 @@ class CommandECCustomAction(ECCommand):
 
 PermissionECArchiveEvent = permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="delete",
         title=_l("Archive an event"),
         description=_l("Finally archive an event without any further action"),
@@ -1386,7 +1382,7 @@ class CommandECArchiveEvent(ECCommand):
 
 PermissionECArchiveEventsOfHost = permission_registry.register(
     Permission(
-        section=PermissionSectionEventConsole,
+        section=mkeventd.PermissionSectionEventConsole,
         name="archive_events_of_hosts",
         title=_l("Archive events of hosts"),
         description=_l("Archive all open events of all hosts shown in host views"),

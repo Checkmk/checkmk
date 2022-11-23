@@ -131,7 +131,7 @@ class BaseSpec(_BaseSpecMandatory, total=False):
 
 
 class _OverridableSpecMandatory(BaseSpec):
-    owner: str
+    owner: UserId
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
 
 

@@ -201,12 +201,11 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
     def add_default_bookmark_list(
         cls, instances: pagetypes.OverridableInstances[BookmarkList]
     ) -> None:
-        assert user.id is not None
         attrs = BookmarkListSpec(
             {
                 "title": "My Bookmarks",
                 "public": False,
-                "owner": str(user.id),
+                "owner": user.ident,
                 "name": "my_bookmarks",
                 "description": "Your personal bookmarks",
                 "default_topic": "My Bookmarks",
@@ -214,7 +213,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
             }
         )
 
-        instances.add_instance((user.id, "my_bookmarks"), cls(attrs))
+        instances.add_instance((user.ident, "my_bookmarks"), cls(attrs))
 
     @classmethod
     def load_legacy_bookmarks(cls, instances: pagetypes.OverridableInstances[BookmarkList]) -> None:

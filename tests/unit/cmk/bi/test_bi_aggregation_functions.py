@@ -8,6 +8,7 @@ import pytest
 
 from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
+    BIAggregationFunctionCountMinOK,
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
@@ -90,6 +91,34 @@ def test_aggr_restrict_state_warn(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize(
     "states, ok_type, ok_value, warn_type, warn_value, expected_state",
     [
+        ([0, 0, 0, 0], "count", 1, "count", 1, 2),
+        ([0, 0, 0, 0], "count", 5, "count", 1, 2),
+        ([0, 0, 1, 1], "count", 2, "count", 1, 0),
+        ([0, 0, 1, 1], "count", 3, "count", 2, 1),
+        ([0, 0, 0, 0], "percentage", 50, "count", 1, 2),
+        ([0, 0, 1, 1], "percentage", 50, "count", 1, 0),
+        ([0, 1, 1, 1], "percentage", 25, "count", 1, 2),
+        ([0, 0, 0, 1], "percentage", 26, "count", 1, 1),
+        ([0, 0, 1, 1], "percentage", 50, "percentage", 25, 0),
+        ([0, 0, 0, 1], "percentage", 50, "percentage", 25, 1),
+        ([1, 1, 1, 1], "percentage", 50, "percentage", 25, 2),
+    ],
+)
+def test_aggr_count_ok(  # type:ignore[no-untyped-def]
+    states, ok_type, ok_value, warn_type, warn_value, expected_state
+) -> None:
+    schema_config = {
+        "levels_ok": {"type": ok_type, "value": ok_value},
+        "levels_warn": {"type": warn_type, "value": warn_value},
+    }
+    aggr_config = BIAggregationFunctionCountOK.schema()().dump(schema_config)
+    aggr_function = BIAggregationFunctionCountOK(aggr_config)
+    assert aggr_function.aggregate(states) == expected_state
+
+
+@pytest.mark.parametrize(
+    "states, ok_type, ok_value, warn_type, warn_value, expected_state",
+    [
         ([0, 0, 0, 0], "count", 1, "count", 1, 0),
         ([0, 0, 0, 0], "count", 5, "count", 1, 1),
         ([0, 0, 1, 1], "count", 3, "count", 1, 1),
@@ -103,13 +132,14 @@ def test_aggr_restrict_state_warn(  # type:ignore[no-untyped-def]
         ([1, 1, 1, 1], "percentage", 50, "percentage", 1, 2),
     ],
 )
-def test_aggr_count_ok(  # type:ignore[no-untyped-def]
+def test_aggr_count_min_ok(  # type:ignore[no-untyped-def]
     states, ok_type, ok_value, warn_type, warn_value, expected_state
 ) -> None:
     schema_config = {
         "levels_ok": {"type": ok_type, "value": ok_value},
         "levels_warn": {"type": warn_type, "value": warn_value},
     }
-    aggr_config = BIAggregationFunctionCountOK.schema()().dump(schema_config)
-    aggr_function = BIAggregationFunctionCountOK(aggr_config)
+    aggr_config = BIAggregationFunctionCountMinOK.schema()().dump(schema_config)
+    aggr_function = BIAggregationFunctionCountMinOK(aggr_config)
     assert aggr_function.aggregate(states) == expected_state
+

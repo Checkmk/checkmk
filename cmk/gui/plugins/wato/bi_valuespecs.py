@@ -954,6 +954,7 @@ class BIConfigAggregationFunctionCountOK(
             ],
         )
 
+
 @bi_config_aggregation_function_registry.register
 class BIConfigAggregationFunctionCountMinOK(
     BIAggregationFunctionCountMinOK, ABCBIConfigAggregationFunction

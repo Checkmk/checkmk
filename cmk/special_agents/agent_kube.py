@@ -34,6 +34,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass
+from itertools import chain
 from typing import Literal, TypeVar
 from urllib.parse import urlparse
 
@@ -59,6 +60,8 @@ from cmk.special_agents.utils_kubernetes.common import (
     PodLookupName,
     PodsToHost,
     RawMetrics,
+    SectionName,
+    WriteableSection,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -1302,8 +1305,12 @@ def write_deployments_api_sections(
             output_sections(deployment)
 
 
+def namespaced_name(namespace: str, name: str) -> str:
+    return f"{namespace}_{name}"
+
+
 def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
-    return f"{metadata.namespace}_{metadata.name}"
+    return namespaced_name(metadata.namespace, metadata.name)
 
 
 def write_daemon_sets_api_sections(
@@ -1869,47 +1876,71 @@ def pod_info(
     )
 
 
-def write_api_pods_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
-    pods: Sequence[api.Pod],
-    kubernetes_cluster_hostname: str,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    def output_pod_sections(
-        pod: api.Pod,
-        cluster_name: str,
-        annotation_key_pattern: AnnotationOption,
-    ) -> None:
-        sections = {
-            "kube_pod_conditions_v1": lambda: pod_conditions(pod.status),
-            "kube_pod_containers_v1": lambda: section.PodContainers(containers=pod.containers)
-            if pod.containers
-            else None,
-            "kube_pod_container_specs_v1": lambda: pod_container_specs(pod.spec),
-            "kube_pod_init_containers_v1": lambda: section.PodContainers(
-                containers=pod.init_containers
-            )
-            if pod.init_containers
-            else None,
-            "kube_pod_init_container_specs_v1": lambda: pod_init_container_specs(pod.spec),
-            "kube_start_time_v1": lambda: pod_start_time(pod.status),
-            "kube_pod_lifecycle_v1": lambda: pod_lifecycle_phase(pod.status),
-            "kube_pod_info_v1": lambda: pod_info(
-                pod, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
-            ),
-            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods([pod]),
-            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods([pod]),
-        }
-        _write_sections(sections)
+def create_pod_api_sections(
+    pod: api.Pod,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_container_specs_v1"),
+            section=pod_container_specs(pod.spec),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_init_container_specs_v1"),
+            section=pod_init_container_specs(pod.spec),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_lifecycle_v1"),
+            section=pod_lifecycle_phase(pod.status),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=_collect_cpu_resources_from_api_pods([pod]),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=_collect_memory_resources_from_api_pods([pod]),
+        ),
+    )
 
-    for pod in pods:
-        with ConditionalPiggybackSection(piggyback_formatter(pod)):
-            output_pod_sections(pod, cluster_name, annotation_key_pattern)
+    if (section_conditions := pod_conditions(pod.status)) is not None:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_conditions_v1"),
+            section=section_conditions,
+        )
+
+    if (section_start_time := pod_start_time(pod.status)) is not None:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_start_time_v1"),
+            section=section_start_time,
+        )
+
+    if pod.containers:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_containers_v1"),
+            section=section.PodContainers(containers=pod.containers),
+        )
+
+    if pod.init_containers:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_init_containers_v1"),
+            section=section.PodContainers(containers=pod.init_containers),
+        )
 
 
-def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_name: str) -> str:
-    return f"{object_type}_{cluster_name}_{namespaced_name}"
+def cluster_piggyback_formatter(
+    cluster_name: str, object_type: str, obj_namespaced_name: str
+) -> str:
+    return f"{object_type}_{cluster_name}_{obj_namespaced_name}"
 
 
 def piggyback_formatter_with_cluster_name(
@@ -1924,29 +1955,31 @@ def piggyback_formatter_with_cluster_name(
             return cluster_piggyback_formatter(
                 cluster_name,
                 object_type="node",
-                namespaced_name=kube_object.metadata.name,
+                obj_namespaced_name=kube_object.metadata.name,
             )
         case Deployment() | DaemonSet() | StatefulSet():
             return cluster_piggyback_formatter(
                 cluster_name,
                 object_type=kube_object.type_,
-                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+                obj_namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
             )
         case api.Namespace():
             return cluster_piggyback_formatter(
-                cluster_name, object_type="namespace", namespaced_name=namespace_name(kube_object)
+                cluster_name,
+                object_type="namespace",
+                obj_namespaced_name=namespace_name(kube_object),
             )
         case api.CronJob():
             return cluster_piggyback_formatter(
                 cluster_name,
                 object_type="cronjob",
-                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+                obj_namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
             )
         case api.Pod():
             return cluster_piggyback_formatter(
                 cluster_name,
                 object_type="pod",
-                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+                obj_namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
             )
 
 
@@ -2090,29 +2123,36 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     piggyback_formatter=piggyback_formatter,
                 )
 
-            if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
-                LOGGER.info("Write cronjob pods sections based on API data")
-                write_api_pods_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
-                    monitored_api_cron_job_pods,
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=piggyback_formatter,
-                )
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
-                write_api_pods_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
-                    [
-                        pod
-                        for pod in api_data.pods
-                        if pod_lookup_from_api_pod(pod)
-                        not in [pod_lookup_from_api_pod(pod) for pod in monitored_api_cron_job_pods]
-                    ],
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=piggyback_formatter,
+                unmonitored_pods = (
+                    {pod_lookup_from_api_pod(pod) for pod in monitored_api_cron_job_pods}
+                    if MonitoredObject.cronjobs_pods not in arguments.monitored_objects
+                    else {}
                 )
+
+                for pod in api_data.pods:
+                    if pod_lookup_from_api_pod(pod) in unmonitored_pods:
+                        continue
+
+                    pod_piggyback_name = piggyback_formatter(pod)
+                    sections = create_pod_api_sections(pod, piggyback_name=pod_piggyback_name)
+                    sections = chain(
+                        sections,
+                        [
+                            WriteableSection(
+                                piggyback_name=pod_piggyback_name,
+                                section_name=SectionName("kube_pod_info_v1"),
+                                section=pod_info(
+                                    pod=pod,
+                                    cluster_name=arguments.cluster,
+                                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                                    annotation_key_pattern=arguments.annotation_key_pattern,
+                                ),
+                            )
+                        ],
+                    )
+                    common.write_sections(sections)
 
             usage_config = query.parse_session_config(arguments)
 

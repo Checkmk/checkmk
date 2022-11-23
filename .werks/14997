@@ -1,0 +1,15 @@
+Title: Fix wrong negate value for "Host Auxiliary Tags" filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1669192215
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+If a view used the filter "Host Auxiliary Tags", the selected tags always
+showed the negate option as active on edit of the view.
+
+On save this negate option would be saved, leading to unintended results in the
+view.

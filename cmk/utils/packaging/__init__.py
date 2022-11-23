@@ -13,7 +13,7 @@ from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Final, NamedTuple, TypedDict
+from typing import Any, Final, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -22,7 +22,6 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
-from cmk.utils.exceptions import MKException
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
 from cmk.utils.version import parse_check_mk_version

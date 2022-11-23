@@ -5,9 +5,11 @@
 
 from cmk.gui.painters.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionSectionRegistry
+from cmk.gui.plugins.watolib.utils import ConfigDomainRegistry, SampleConfigGeneratorRegistry
 from cmk.gui.views.data_source import DataSourceRegistry
 
-from . import views
+from . import views, wato
+from .config_domain import ConfigDomainEventConsole
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices, service_levels
 from .livestatus import execute_command
@@ -19,9 +21,13 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
+    config_domain_registry: ConfigDomainRegistry,
+    sample_config_generator_registry: SampleConfigGeneratorRegistry,
 ) -> None:
     views.register(data_source_registry, painter_registry)
+    wato.register(sample_config_generator_registry)
     permission_section_registry.register(PermissionSectionEventConsole)
+    config_domain_registry.register(ConfigDomainEventConsole)
 
 
 __all__ = [
@@ -35,4 +41,5 @@ __all__ = [
     "service_levels",
     "action_choices",
     "execute_command",
+    "ConfigDomainEventConsole",
 ]

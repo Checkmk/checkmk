@@ -11,8 +11,7 @@ from freezegun import freeze_time
 
 from cmk.ec.export import ECRulePack, MkpRulePackProxy
 
-from cmk.gui.wato import mkeventd
-from cmk.gui.wato.mkeventd import MatchItemGeneratorECRulePacksAndRules
+from cmk.gui.mkeventd import wato as mkeventd_wato
 from cmk.gui.watolib.search import MatchItem
 
 
@@ -33,7 +32,7 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
     ]
 
     assert list(
-        MatchItemGeneratorECRulePacksAndRules(
+        mkeventd_wato.MatchItemGeneratorECRulePacksAndRules(
             "event_console",
             lambda: rule_packs,
         ).generate_match_items()
@@ -68,12 +67,12 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
 @freeze_time(datetime.utcfromtimestamp(1622638021))
 def test_send_event(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        mkeventd,
+        mkeventd_wato,
         "execute_command",
         lambda *args, **kwargs: None,
     )
     assert (
-        mkeventd.send_event(
+        mkeventd_wato.send_event(
             {
                 "facility": 17,
                 "priority": 1,

@@ -9,7 +9,6 @@ import urllib3 as _urllib3
 
 import cmk.gui.background_job as _background_job
 import cmk.gui.hooks as _hooks
-import cmk.gui.mkeventd as _mkeventd
 import cmk.gui.pages as _pages
 import cmk.gui.userdb as _userdb
 import cmk.gui.watolib.auth_php as _auth_php
@@ -66,7 +65,6 @@ def _register_config_domains() -> None:
         _config_domains.ConfigDomainCore,
         _config_domains.ConfigDomainGUI,
         _config_domains.ConfigDomainLiveproxy,
-        _config_domains.ConfigDomainEventConsole,
         _config_domains.ConfigDomainCACertificates,
         _config_domains.ConfigDomainOMD,
     )
@@ -122,12 +120,6 @@ def _register_pages():
         _pages.register(name)(func)
 
 
-def _register_permission_section_registry():
-    clss = (_mkeventd.PermissionSectionEventConsole,)
-    for cls in clss:
-        _permission_section_registry.register(cls)
-
-
 def _register_post_config_load():
     for cls in (
         _userdb._fix_user_connections,
@@ -161,6 +153,5 @@ _register_config_domains()
 _register_host_attributes()
 _register_host_attribute()
 _register_pages()
-_register_permission_section_registry()
 _register_post_config_load()
 _register_cronjobs()

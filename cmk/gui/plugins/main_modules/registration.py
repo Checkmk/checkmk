@@ -14,6 +14,7 @@ from cmk.gui.painters.v0 import painters
 from cmk.gui.painters.v0.base import painter_registry
 from cmk.gui.permissions import permission_section_registry
 from cmk.gui.plugins.visuals.utils import visual_type_registry
+from cmk.gui.plugins.watolib.utils import config_domain_registry, sample_config_generator_registry
 from cmk.gui.views import datasource_selection, icon, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
@@ -63,5 +64,11 @@ register_commands(command_registry)
 register_data_sources(data_source_registry)
 perfometer.register(sorter_registry, painter_registry)
 icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
-mkeventd.register(permission_section_registry, data_source_registry, painter_registry)
+mkeventd.register(
+    permission_section_registry,
+    data_source_registry,
+    painter_registry,
+    config_domain_registry,
+    sample_config_generator_registry,
+)
 mobile.register(layout_registry)

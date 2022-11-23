@@ -25,19 +25,14 @@ import cmk.utils.version as cmk_version
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.process import pid_from_file, send_signal
-from cmk.utils.site import omd_site
 from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
-import cmk.gui.hooks as hooks
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
-from cmk.gui.mkeventd import execute_command
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
     DomainRequest,
@@ -228,34 +223,6 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             "connect_retry": 4.0,
             "cache": True,
         }
-
-
-class ConfigDomainEventConsole(ABCConfigDomain):
-    needs_sync = True
-    needs_activation = True
-    in_global_settings = False
-
-    @classmethod
-    def ident(cls) -> ConfigDomainName:
-        return config_domain_name.EVENT_CONSOLE
-
-    @classmethod
-    def enabled(cls):
-        return active_config.mkeventd_enabled
-
-    def config_dir(self):
-        return str(ec.rule_pack_dir())
-
-    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        if getattr(active_config, "mkeventd_enabled", False):
-            execute_command("RELOAD", site=omd_site())
-            log_audit("mkeventd-activate", "Activated changes of event console configuration")
-            if hooks.registered("mkeventd-activate-changes"):
-                hooks.call("mkeventd-activate-changes")
-        return []
-
-    def default_globals(self) -> Mapping[str, Any]:
-        return ec.default_config()
 
 
 class ConfigDomainCACertificates(ABCConfigDomain):

@@ -8,9 +8,9 @@ from datetime import datetime
 
 from cmk.utils.object_diff import make_diff_text
 
-import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
+import cmk.gui.watolib.timeperiods
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
@@ -371,12 +371,14 @@ def get_vs_flexible_notifications():
                                         elements=[
                                             DropdownChoice(
                                                 label=_("from:"),
-                                                choices=cmk.gui.mkeventd.service_levels,
+                                                # Will be removed soon
+                                                choices=[],
                                                 prefix_values=True,
                                             ),
                                             DropdownChoice(
                                                 label=_(" to:"),
-                                                choices=cmk.gui.mkeventd.service_levels,
+                                                # Will be removed soon
+                                                choices=[],
                                                 prefix_values=True,
                                             ),
                                         ],

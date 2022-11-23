@@ -23,7 +23,6 @@ from cmk.utils.type_defs import CheckPluginName
 import cmk.gui.backup as backup
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-import cmk.gui.mkeventd
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.host_attributes as _host_attributes
 import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
@@ -1287,12 +1286,12 @@ class ABCEventsMode(WatoMode, abc.ABC):
                     elements=[
                         DropdownChoice(
                             label=_("from:"),
-                            choices=cmk.gui.mkeventd.service_levels,
+                            choices=[],  # Will be removed soon
                             prefix_values=True,
                         ),
                         DropdownChoice(
                             label=_(" to:"),
-                            choices=cmk.gui.mkeventd.service_levels,
+                            choices=[],  # Will be removed soon
                             prefix_values=True,
                         ),
                     ],

@@ -44,7 +44,6 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.mkeventd import execute_command
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName
@@ -58,7 +57,6 @@ else:
 
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -106,8 +104,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
-    sample_config_generator_registry,
     SampleConfigGenerator,
+    SampleConfigGeneratorRegistry,
 )
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
@@ -157,7 +155,7 @@ from cmk.gui.wato.pages.global_settings import (
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
-from cmk.gui.watolib.config_domains import ConfigDomainEventConsole, ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import HostsWithAttributes, make_action_link
 from cmk.gui.watolib.search import (
@@ -168,6 +166,18 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
+
+from .config_domain import ConfigDomainEventConsole
+from .defines import syslog_facilities, syslog_priorities
+from .helpers import action_choices, service_levels
+from .livestatus import execute_command
+from .permission_section import PermissionSectionEventConsole
+from .rule_matching import event_rule_matches
+
+
+# TODO: Move all other registrations to the function here
+def register(sample_config_generator_registry: SampleConfigGeneratorRegistry) -> None:
+    sample_config_generator_registry.register(SampleConfigGeneratorECSampleRulepack)
 
 
 def _compiled_mibs_dir() -> Path:
@@ -494,7 +504,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         "value",
                         DropdownChoice(
                             title=_("Value"),
-                            choices=cmk.gui.mkeventd.service_levels,
+                            choices=service_levels,
                             prefix_values=True,
                             help=_("The default/fixed service level to use for this rule."),
                         ),
@@ -579,7 +589,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             ListChoice(
                 title=_("Actions"),
                 help=_("Actions to automatically perform when this event occurs"),
-                choices=cmk.gui.mkeventd.action_choices,
+                choices=action_choices,
             ),
         ),
         (
@@ -604,7 +614,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
             ListChoice(
                 title=_("Actions when cancelling"),
                 help=_("Actions to automatically perform when an event is being cancelled."),
-                choices=cmk.gui.mkeventd.action_choices,
+                choices=action_choices,
             ),
         ),
         (
@@ -1021,12 +1031,12 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 elements=[
                     DropdownChoice(
                         label=_("from:"),
-                        choices=cmk.gui.mkeventd.syslog_priorities,
+                        choices=syslog_priorities,
                         default_value=4,
                     ),
                     DropdownChoice(
                         label=_(" to:"),
-                        choices=cmk.gui.mkeventd.syslog_priorities,
+                        choices=syslog_priorities,
                         default_value=0,
                     ),
                 ],
@@ -1040,7 +1050,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                     "Make the rule match only if the message has a certain syslog facility. "
                     "Messages not having a facility are classified as <tt>user</tt>."
                 ),
-                choices=cmk.gui.mkeventd.syslog_facilities,
+                choices=syslog_facilities,
             ),
         ),
         (
@@ -1058,12 +1068,12 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 elements=[
                     DropdownChoice(
                         label=_("from:"),
-                        choices=cmk.gui.mkeventd.service_levels,
+                        choices=service_levels,
                         prefix_values=True,
                     ),
                     DropdownChoice(
                         label=_(" to:"),
-                        choices=cmk.gui.mkeventd.service_levels,
+                        choices=service_levels,
                         prefix_values=True,
                     ),
                 ],
@@ -1111,12 +1121,12 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                 elements=[
                     DropdownChoice(
                         label=_("from:"),
-                        choices=cmk.gui.mkeventd.syslog_priorities,
+                        choices=syslog_priorities,
                         default_value=7,
                     ),
                     DropdownChoice(
                         label=_(" to:"),
-                        choices=cmk.gui.mkeventd.syslog_priorities,
+                        choices=syslog_priorities,
                         default_value=5,
                     ),
                 ],
@@ -1344,7 +1354,6 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
 #   '----------------------------------------------------------------------'
 
 
-@sample_config_generator_registry.register
 class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -1491,7 +1500,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                     "priority",
                     DropdownChoice(
                         title=_("Syslog priority"),
-                        choices=cmk.gui.mkeventd.syslog_priorities,
+                        choices=syslog_priorities,
                         default_value=5,
                     ),
                 ),
@@ -1499,7 +1508,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                     "facility",
                     DropdownChoice(
                         title=_("Syslog facility"),
-                        choices=cmk.gui.mkeventd.syslog_facilities,
+                        choices=syslog_facilities,
                         default_value=1,
                     ),
                 ),
@@ -1507,7 +1516,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                     "sl",
                     DropdownChoice(
                         title=_("Service level"),
-                        choices=cmk.gui.mkeventd.service_levels,
+                        choices=service_levels,
                         prefix_values=True,
                     ),
                 ),
@@ -1904,7 +1913,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     skips = 0
 
                     for rule in rule_pack["rules"]:
-                        result = cmk.gui.mkeventd.event_rule_matches(rule_pack, rule, event)
+                        result = event_rule_matches(rule_pack, rule, event)
                         if isinstance(result, tuple):
                             cancelling, groups = result
 
@@ -2190,8 +2199,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             html.begin_form("move_to", method="POST")
 
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
-        priorities = _deref(cmk.gui.mkeventd.syslog_priorities)
-        facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
+        priorities = _deref(syslog_priorities)
+        facilities = dict(_deref(syslog_facilities))
 
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
@@ -2234,7 +2243,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         "disabled", _("This rule is currently disabled and will not be applied")
                     )
                 elif event:
-                    result = cmk.gui.mkeventd.event_rule_matches(self._rule_pack, rule, event)
+                    result = event_rule_matches(self._rule_pack, rule, event)
                     if not isinstance(result, tuple):
                         html.icon("rulenmatch", _("Rule does not match: %s") % result)
                     else:
@@ -2321,9 +2330,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(
                     _("Service Level"),
-                    dict(cmk.gui.mkeventd.service_levels()).get(
-                        rule["sl"]["value"], rule["sl"]["value"]
-                    ),
+                    dict(service_levels()).get(rule["sl"]["value"], rule["sl"]["value"]),
                 )
                 hits = rule.get("hits")
                 table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
@@ -3448,7 +3455,7 @@ def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
 
 permission_registry.register(
     Permission(
-        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        section=PermissionSectionEventConsole,
         name="config",
         title=_l("Configuration of Event Console"),
         description=_l(
@@ -3460,7 +3467,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        section=PermissionSectionEventConsole,
         name="edit",
         title=_l("Configuration of event rules"),
         description=_l(
@@ -3473,7 +3480,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        section=PermissionSectionEventConsole,
         name="activate",
         title=_l("Activate changes for event console"),
         description=_l(
@@ -3487,7 +3494,7 @@ permission_registry.register(
 
 permission_registry.register(
     Permission(
-        section=cmk.gui.mkeventd.PermissionSectionEventConsole,
+        section=PermissionSectionEventConsole,
         name="switchmode",
         title=_l("Switch slave replication mode"),
         description=_l(
@@ -4628,7 +4635,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
                 "the following syslog facility will be set for these messages. Choosing "
                 "a unique facility makes creation of rules easier."
             ),
-            choices=cmk.gui.mkeventd.syslog_facilities,
+            choices=syslog_facilities,
         )
 
     def need_restart(self) -> bool:
@@ -4874,7 +4881,7 @@ def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
     return DropdownChoice(
         title=_("Service Level of hosts"),
         help=_sl_help(),
-        choices=cmk.gui.mkeventd.service_levels,
+        choices=service_levels,
     )
 
 
@@ -4895,7 +4902,7 @@ def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
             " Note: if no service level is configured for a service "
             "then that of the host will be used instead (if configured)."
         ),
-        choices=cmk.gui.mkeventd.service_levels,
+        choices=service_levels,
     )
 
 

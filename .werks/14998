@@ -1,0 +1,34 @@
+Title: Remove long deprecated flexible and plain email notifications
+Class: feature
+Compatible: incomp
+Component: notifications
+Date: 1669196147
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+This change only affects you, in case you have set the global setting "Rule
+based notifications" to "Off" in your installation.
+
+Flexible and plain email notifications are deprecated since version 1.5.
+
+If you still use flexible or plain email notifications configured within the
+user profile, this werk will remove this notification option in the
+usersettings and the GUI. Affected users will be logged to
+~/var/log/update.log, e.g.:
+
+"Removed notification configuration from user: MY_USER"
+
+All listed users will automatically be updated to use the rule based
+notifications. Effectively, the HTML email notifications will be enabled for
+them. If you want to use a different notification mechanic, then review the
+notification rules and update them according to your needs.
+
+You can find more about the notification configuration
+<a href='https://docs.checkmk.com/latest/en/notifications.html'>here</a>.
+
+Still existing spool files will be converted to HTML email notifications on update.
+If a remote site with a version prior 2.2 has flexible or plain email
+notifications enabled and uses notification forwarding, the notifications will
+be coverted to HTML email notifications on the recieving site.

@@ -1515,11 +1515,12 @@ class _FilterHostAuxTags(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
+            negate_varname = varname + "_neg"
             html.dropdown(
                 varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
             )
             html.open_nobr()
-            html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))
+            html.checkbox(negate_varname, bool(value.get(negate_varname)), label=_("negate"))
             html.close_nobr()
 
     @staticmethod

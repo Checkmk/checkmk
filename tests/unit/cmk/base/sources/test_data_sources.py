@@ -10,7 +10,7 @@ from tests.testlib.base import Scenario
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 
-from cmk.base.sources import make_sources
+from cmk.base.sources import make_non_cluster_sources
 
 
 def make_scenario(hostname, tags):
@@ -95,7 +95,7 @@ def test_host_config_creates_passing_source_sources(
 
     assert [
         type(fetcher)
-        for _meta, _file_cache, fetcher in make_sources(
+        for _meta, _file_cache, fetcher in make_non_cluster_sources(
             hostname,
             "127.0.0.1",
             simulation_mode=True,

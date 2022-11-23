@@ -11,10 +11,10 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_livestatus_hosts_generic_filter(  # type:ignore[no-untyped-def]
+def test_openapi_livestatus_hosts_generic_filter(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live: MockLiveStatusConnection = mock_livestatus
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -66,10 +66,10 @@ def test_openapi_livestatus_hosts_generic_filter(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_livestatus_hosts_empty_query(  # type:ignore[no-untyped-def]
+def test_openapi_livestatus_hosts_empty_query(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus,
-):
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
 
     live = mock_livestatus
 
@@ -100,3 +100,42 @@ def test_openapi_livestatus_hosts_empty_query(  # type:ignore[no-untyped-def]
             status=200,
         )
         assert resp.json["value"][0]["id"] == "heute"
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_livestatus_hosts_single_column(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    live.add_table(
+        "hosts",
+        [
+            {
+                "name": "heute",
+                "address": "127.0.0.1",
+                "alias": "heute",
+                "downtimes_with_info": [],
+                "scheduled_downtime_depth": 0,
+            },
+        ],
+    )
+
+    live.expect_query(
+        [
+            "GET hosts",
+            "Columns: name",
+            "Filter: alias ~ heute",
+        ],
+    )
+    with live:
+        aut_user_auth_wsgi_app.call_method(
+            "get",
+            base
+            + '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}&columns=name',
+            headers={"Accept": "application/json"},
+            status=200,
+        )

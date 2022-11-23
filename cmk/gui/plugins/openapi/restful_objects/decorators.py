@@ -253,7 +253,7 @@ def _from_multi_dict(multi_dict: MultiDict) -> ArgDict:
     """
     ret = {}
     for key, values in multi_dict.to_dict(flat=False).items():
-        if len(values) == 1:
+        if len(values) == 1 and key != "columns":
             ret[key] = values[0]
         else:
             ret[key] = values

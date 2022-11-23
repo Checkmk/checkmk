@@ -1,0 +1,14 @@
+Title: REST API: Fix when calling host status endpoint using the example in ReDocs
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1669200333
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The werk fixes an issue with the host status endpoint when using the example found in ReDocs
+or when specifying one column in the request query string.
+

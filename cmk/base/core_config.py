@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import dataclasses
 import numbers
 import os
 import shutil
@@ -38,6 +39,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.store import save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ConfigurationWarnings,
@@ -67,6 +69,12 @@ ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
+
+
+@dataclasses.dataclass(frozen=True)
+class CollectedHostLabels:
+    host_labels: Labels
+    service_labels: dict[ServiceName, Labels]
 
 
 class MonitoringCore(abc.ABC):
@@ -966,3 +974,25 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
                     raise
 
     return s
+
+
+def write_notify_host_file(
+    config_path: VersionedConfigPath,
+    labels_per_host: dict[HostName, CollectedHostLabels],
+) -> None:
+    notify_labels_path: Path = Path(config_path) / "notify" / "labels"
+    for host, labels in labels_per_host.items():
+        host_path = notify_labels_path / host
+        save_object_to_file(
+            host_path,
+            dataclasses.asdict(
+                CollectedHostLabels(
+                    host_labels=labels.host_labels,
+                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                )
+            ),
+        )
+
+
+def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:
+    return {key[8:]: value for key, value in key_value_pairs if key.startswith("__LABEL_")}

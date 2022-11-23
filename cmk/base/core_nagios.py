@@ -34,6 +34,7 @@ from cmk.utils.type_defs import (
     HostsToUpdate,
     InventoryPluginName,
     Item,
+    Labels,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -49,7 +50,13 @@ import cmk.base.sources as sources
 import cmk.base.utils
 from cmk.base.check_utils import ServiceID
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
-from cmk.base.core_config import CoreCommand, CoreCommandName
+from cmk.base.core_config import (
+    CollectedHostLabels,
+    CoreCommand,
+    CoreCommandName,
+    get_labels_from_attributes,
+    write_notify_host_file,
+)
 
 ObjectSpec = Dict[str, Any]
 
@@ -73,10 +80,10 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_to_update: HostsToUpdate = None,
     ) -> None:
-        self._create_core_config()
+        self._create_core_config(config_path)
         self._precompile_hostchecks(config_path)
 
-    def _create_core_config(self) -> None:
+    def _create_core_config(self, config_path: VersionedConfigPath) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -86,7 +93,7 @@ class NagiosCore(core_config.MonitoringCore):
         while the monitoring is running.
         """
         config_buffer = StringIO()
-        create_config(config_buffer, hostnames=None)
+        create_config(config_buffer, config_path, hostnames=None)
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
@@ -127,7 +134,11 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
-def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
+def create_config(
+    outfile: IO[str],
+    config_path: VersionedConfigPath,
+    hostnames: Optional[list[HostName]],
+) -> None:
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -157,8 +168,13 @@ def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None
     _output_conf_header(cfg)
 
     stored_passwords = cmk.utils.password_store.load()
+    all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in sorted(hostnames):
-        _create_nagios_config_host(cfg, config_cache, hostname, stored_passwords)
+        all_host_labels[hostname] = _create_nagios_config_host(
+            cfg, config_cache, hostname, stored_passwords
+        )
+
+    write_notify_host_file(config_path, all_host_labels)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -187,15 +203,26 @@ def _create_nagios_config_host(
     config_cache: ConfigCache,
     hostname: HostName,
     stored_passwords: Mapping[str, str],
-) -> None:
+) -> CollectedHostLabels:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
+
     host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
         cfg.write(_format_nagios_object("host", host_spec))
-    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, stored_passwords)
+
+    return CollectedHostLabels(
+        host_labels=get_labels_from_attributes(list(host_attrs.items())),
+        service_labels=_create_nagios_servicedefs(
+            cfg,
+            config_cache,
+            hostname,
+            host_attrs,
+            stored_passwords,
+        ),
+    )
 
 
 def _create_nagios_host_spec(
@@ -309,7 +336,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     hostname: HostName,
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
-) -> None:
+) -> dict[ServiceName, Labels]:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
     host_config = config_cache.get_host_config(hostname)
@@ -347,9 +374,9 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
-    used_descriptions: Dict[ServiceName, AbstractServiceID] = {}
+    used_descriptions: dict[ServiceName, AbstractServiceID] = {}
+    service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
-
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"
@@ -390,11 +417,16 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
-        service_spec.update(
-            core_config.get_cmk_passive_service_attributes(
-                config_cache, host_config, service, check_mk_attrs
-            )
+        passive_service_attributes = core_config.get_cmk_passive_service_attributes(
+            config_cache, host_config, service, check_mk_attrs
         )
+
+        service_labels[service.description] = {
+            label.name: label.value for label in service.service_labels.values()
+        } | get_labels_from_attributes(list(passive_service_attributes.items()))
+
+        service_spec.update(passive_service_attributes)
+
         service_spec.update(
             _extra_service_conf_of(cfg, config_cache, hostname, service.description)
         )
@@ -656,6 +688,8 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 "PING IPv6",
                 host_attrs.get("_NODEIPS_6"),
             )
+
+    return service_labels
 
 
 def _add_ping_service(

@@ -714,8 +714,12 @@ def get_unpackaged_files() -> dict[str, list[str]]:
     return {part.ident: files for part, files in unpackaged_files().items()}
 
 
-def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
-    return {name: get_installed_package_info(name) for name in installed_names()}
+def get_installed_package_infos() -> Mapping[PackageName, PackageInfo]:
+    return {
+        name: manifest
+        for name in installed_names()
+        if (manifest := get_installed_package_info(name)) is not None
+    }
 
 
 def get_optional_package_infos(

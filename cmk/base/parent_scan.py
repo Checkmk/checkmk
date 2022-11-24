@@ -65,10 +65,8 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
         while len(chunk) < config.max_num_processes and len(hosts) > 0:
             host = hosts.pop()
 
-            host_config = config_cache.make_host_config(host)
-
             # skip hosts that already have a parent
-            if host_config.parents:
+            if config_cache.parents(host):
                 console.verbose("(manual parent) ")
                 continue
             chunk.append(host)

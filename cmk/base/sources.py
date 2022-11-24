@@ -539,7 +539,7 @@ class _Builder:
                 ),
             )
 
-        connection_mode = self.host_config.agent_connection_mode()
+        connection_mode = self.config_cache.agent_connection_mode(self.host_name)
         if connection_mode == "push-agent":
             source = SourceInfo(
                 self.host_name,

@@ -27,7 +27,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
-from cmk.base.config import HostConfig
 
 
 def test_format_nagios_object() -> None:
@@ -633,16 +632,16 @@ def test_create_nagios_servicedefs_active_check(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -728,16 +727,16 @@ def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
     monkeypatch: MonkeyPatch,
     capsys,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -778,17 +777,17 @@ def test_create_nagios_servicedefs_omit_service(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(config, "service_ignored", lambda *_: True)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -826,18 +825,18 @@ def test_create_nagios_servicedefs_invalid_args(
     error_message: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+        core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
 
 @pytest.mark.parametrize(
@@ -895,16 +894,16 @@ def test_create_nagios_config_commands(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
     core_nagios._create_nagios_config_commands(cfg)
 
     assert outfile.getvalue() == expected_result

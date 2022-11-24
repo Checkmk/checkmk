@@ -285,7 +285,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
         # the ruleset "parents" in case no explicit parents are set
         if not attrs.get("parents", []):
-            parents_list = host_config.parents
+            parents_list = config_cache.parents(hostname)
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
@@ -295,7 +295,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
-    for key, value in host_config.extra_host_attributes.items():
+    for key, value in config_cache.extra_host_attributes(hostname).items():
         if key == "cmk_agent_connection":
             continue
         if config_cache.is_cluster(hostname) and key == "parents":
@@ -419,7 +419,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # legacy checks via active_checks
     actchecks = []
-    for plugin_name, entries in host_config.active_checks:
+    for plugin_name, entries in config_cache.active_checks(hostname):
         cfg.active_checks_to_define.add(plugin_name)
         act_info = config.active_check_info[plugin_name]
         for params in entries:

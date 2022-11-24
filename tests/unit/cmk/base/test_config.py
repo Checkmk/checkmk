@@ -979,8 +979,7 @@ def test_host_config_extra_host_attributes(
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).extra_host_attributes == result
+    assert ts.apply(monkeypatch).extra_host_attributes(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1169,8 +1168,7 @@ def test_host_config_active_checks(
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).active_checks == result
+    assert ts.apply(monkeypatch).active_checks(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1683,11 +1681,11 @@ def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
-    assert cluster_config.make_host_config(HostName("node1")).parents == []
-    assert cluster_config.make_host_config(HostName("host1")).parents == []
+    assert cluster_config.parents(HostName("node1")) == []
+    assert cluster_config.parents(HostName("host1")) == []
     # TODO: Move cluster/node parent handling to HostConfig
     # assert cluster_config.make_host_config("cluster1").parents == ["node1"]
-    assert cluster_config.make_host_config(HostName("cluster1")).parents == []
+    assert cluster_config.parents(HostName("cluster1")) == []
 
 
 def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:

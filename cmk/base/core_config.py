@@ -792,20 +792,20 @@ def _set_addresses(
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:
-    host_config = config_cache.make_host_config(hostname)
-    attrs = host_config.extra_host_attributes
+    attrs = config_cache.extra_host_attributes(hostname)
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
-    attrs["_TAGS"] = " ".join(sorted(config_cache.make_host_config(hostname).tags))
+    host_config = config_cache.make_host_config(hostname)
 
+    attrs["_TAGS"] = " ".join(sorted(host_config.tags))
     attrs.update(_get_tag_attributes(host_config.tag_groups, "TAG"))
     attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
     attrs.update(_get_tag_attributes(host_config.label_sources, "LABELSOURCE"))
 
     if "alias" not in attrs:
-        attrs["alias"] = host_config.alias
+        attrs["alias"] = config_cache.alias(hostname)
 
     # Now lookup configured IP addresses
     v4address: str | None = None

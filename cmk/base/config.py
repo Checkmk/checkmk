@@ -2405,8 +2405,6 @@ class HostConfig:
 
         self._config_cache: Final = config_cache
 
-        self._explicit_attributes_lookup = None
-
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags: Final = self._config_cache.tag_list_of_host(hostname)
         self.tag_groups: Final = ConfigCache.tags_of_host(hostname)
@@ -2428,52 +2426,6 @@ class HostConfig:
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
         )
-
-    @property
-    def alias(self) -> str:
-        # Alias by explicit matching
-        alias = self._explicit_host_attributes.get("alias")
-        if alias:
-            return alias
-
-        # Alias by rule matching
-        default: Ruleset[HostName] = []
-        aliases = self._config_cache.host_extra_conf(
-            self.hostname, extra_host_conf.get("alias", default)
-        )
-
-        # Fallback alias
-        if not aliases:
-            return self.hostname
-
-        # First rule match
-        return aliases[0]
-
-    @property
-    def parents(self) -> list[str]:
-        """Returns the parents of a host configured via ruleset "parents"
-
-        Use only those parents which are defined and active in all_hosts"""
-        parent_candidates = set()
-
-        # Parent by explicit matching
-        explicit_parents = self._explicit_host_attributes.get("parents")
-        if explicit_parents:
-            parent_candidates.update(explicit_parents.split(","))
-
-        # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
-        for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
-            parent_candidates.update(parent_names.split(","))
-
-        return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
-
-    def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
-        mode = self._explicit_host_attributes.get("cmk_agent_connection", "pull-agent")
-        if mode == "pull-agent":
-            return "pull-agent"
-        if mode == "push-agent":
-            return "push-agent"
-        raise NotImplementedError(f"unknown connection mode: {mode!r}")
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
@@ -2663,40 +2615,6 @@ class HostConfig:
     def icons_and_actions(self) -> list[str]:
         return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
 
-    @property
-    def extra_host_attributes(self) -> ObjectAttributes:
-        attrs: ObjectAttributes = {}
-        attrs.update(self._explicit_host_attributes)
-
-        for key, ruleset in extra_host_conf.items():
-            if key in attrs:
-                # An explicit value is already set
-                values = [attrs[key]]
-            else:
-                values = self._config_cache.host_extra_conf(self.hostname, ruleset)
-                if not values:
-                    continue
-
-            if values[0] is not None:
-                attrs[key] = values[0]
-
-        # Convert _keys to uppercase. Affects explicit and rule based keys
-        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
-        return attrs
-
-    @property
-    def _explicit_host_attributes(self) -> ObjectAttributes:
-        if self._explicit_attributes_lookup is not None:
-            return self._explicit_attributes_lookup
-
-        hostname = self.hostname
-        cache = {}
-        for key, hostnames in explicit_host_conf.items():
-            if hostname in hostnames:
-                cache[key] = hostnames[hostname]
-        self._explicit_attributes_lookup = cache
-        return self._explicit_attributes_lookup
-
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
@@ -2705,28 +2623,6 @@ class HostConfig:
         return self._config_cache.host_extra_conf_merged(
             self.hostname, notification_parameters.get(plugin_name, default)
         )
-
-    @property
-    def active_checks(self) -> list[tuple[str, list[Any]]]:
-        """Returns the list of active checks configured for this host
-
-        These are configured using the active check formalization of WATO
-        where the whole parameter set is configured using valuespecs.
-        """
-        configured_checks: list[tuple[str, list[Any]]] = []
-        for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
-            # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
-            # user has enabled the inventory for ping only hosts
-            if plugin_name == "cmk_inv" and self._config_cache.is_ping_host(self.hostname):
-                continue
-
-            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
-            if not entries:
-                continue
-
-            configured_checks.append((plugin_name, entries))
-
-        return configured_checks
 
     @property
     def custom_checks(self) -> list[dict]:
@@ -2955,8 +2851,10 @@ class ConfigCache:
         self._is_piggyback_host: dict[HostName, bool] = {}
         self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
         self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
+        self._explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self._computed_datasources: dict[HostName, ComputedDataSources] = {}
         self._discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
+        self._active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3000,8 +2898,10 @@ class ConfigCache:
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
         self._computed_datasources.clear()
         self._discovery_check_parameters.clear()
+        self._active_checks.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3103,8 +3003,10 @@ class ConfigCache:
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
         self._computed_datasources.clear()
         self._discovery_check_parameters.clear()
+        self._active_checks.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3207,6 +3109,78 @@ class ConfigCache:
     def has_management_board(self, host_name: HostName) -> bool:
         return self.management_protocol(host_name) is not None
 
+    def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
+        def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:
+            for key, mapping in explicit_host_conf.items():
+                with contextlib.suppress(KeyError):
+                    yield key, mapping[host_name]
+
+        return self._explicit_host_attributes.setdefault(
+            host_name, dict(make_explicit_host_attributes())
+        )
+
+    def alias(self, host_name: HostName) -> str:
+        # Alias by explicit matching
+        alias_ = self.explicit_host_attributes(host_name).get("alias")
+        if alias_:
+            return alias_
+
+        # Alias by rule matching
+        default: Ruleset[HostName] = []
+        aliases = self.host_extra_conf(host_name, extra_host_conf.get("alias", default))
+
+        # Fallback alias
+        if not aliases:
+            return host_name
+
+        # First rule match
+        return aliases[0]
+
+    def parents(self, host_name: HostName) -> list[str]:
+        """Returns the parents of a host configured via ruleset "parents"
+
+        Use only those parents which are defined and active in all_hosts"""
+        parent_candidates = set()
+
+        # Parent by explicit matching
+        explicit_parents = self.explicit_host_attributes(host_name).get("parents")
+        if explicit_parents:
+            parent_candidates.update(explicit_parents.split(","))
+
+        # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
+        for parent_names in self.host_extra_conf(host_name, parents):
+            parent_candidates.update(parent_names.split(","))
+
+        return list(parent_candidates.intersection(self.all_active_realhosts()))
+
+    def agent_connection_mode(self, host_name: HostName) -> Literal["pull-agent", "push-agent"]:
+        mode = self.explicit_host_attributes(host_name).get("cmk_agent_connection", "pull-agent")
+        if mode == "pull-agent":
+            return "pull-agent"
+        if mode == "push-agent":
+            return "push-agent"
+        raise NotImplementedError(f"unknown connection mode: {mode!r}")
+
+    def extra_host_attributes(self, host_name: HostName) -> ObjectAttributes:
+        attrs: ObjectAttributes = {}
+        attrs.update(self.explicit_host_attributes(host_name))
+
+        for key, ruleset in extra_host_conf.items():
+            if key in attrs:
+                # An explicit value is already set
+                values = [attrs[key]]
+            else:
+                values = self.host_extra_conf(host_name, ruleset)
+                if not values:
+                    continue
+
+            if values[0] is not None:
+                attrs[key] = values[0]
+
+        # Convert _keys to uppercase. Affects explicit and rule based keys
+        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
+        return attrs
+
     def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
         return self._computed_datasources.setdefault(
             host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags_of_host(host_name))
@@ -3286,6 +3260,31 @@ class ConfigCache:
         return self.host_extra_conf_merged(
             host_name, inv_parameters.get(str(ruleset_name), default)
         )
+
+    def active_checks(self, host_name: HostName) -> list[tuple[str, list[Any]]]:
+        """Returns the list of active checks configured for this host
+
+        These are configured using the active check formalization of WATO
+        where the whole parameter set is configured using valuespecs.
+        """
+
+        def make_active_checks() -> list[tuple[str, list[Any]]]:
+            configured_checks: list[tuple[str, list[Any]]] = []
+            for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+                # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
+                # user has enabled the inventory for ping only hosts
+                if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
+                    continue
+
+                entries = self.host_extra_conf(host_name, ruleset)
+                if not entries:
+                    continue
+
+                configured_checks.append((plugin_name, entries))
+
+            return configured_checks
+
+        return self._active_checks.setdefault(host_name, make_active_checks())
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

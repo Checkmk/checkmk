@@ -5,7 +5,7 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -116,7 +116,6 @@ def get_check_preview(
 
     grouped_services = get_host_services(host_name, config_cache, parsed_sections_broker, on_error)
 
-    host_config = config_cache.make_host_config(host_name)
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [
             _check_preview_table_row(
@@ -156,7 +155,12 @@ def get_check_preview(
     host_config = config_cache.make_host_config(host_name)
     return [
         *passive_rows,
-        *_active_check_preview_rows(host_name, host_config, host_attrs),
+        *_active_check_preview_rows(
+            host_name,
+            config_cache.alias(host_name),
+            config_cache.active_checks(host_name),
+            host_attrs,
+        ),
         *_custom_check_preview_rows(host_name, host_config),
     ], host_labels
 
@@ -219,7 +223,8 @@ def _custom_check_preview_rows(
 
 def _active_check_preview_rows(
     host_name: HostName,
-    host_config: HostConfig,
+    alias: str,
+    active_checks: list[tuple[str, list[Any]]],
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
     return list(
@@ -234,10 +239,10 @@ def _active_check_preview_rows(
                 else "active",
                 effective_parameters=params,
             )
-            for plugin_name, entries in host_config.active_checks
+            for plugin_name, entries in active_checks
             for params in entries
             for descr in get_active_check_descriptions(
-                host_name, host_config.alias, host_attrs, plugin_name, params
+                host_name, alias, host_attrs, plugin_name, params
             )
         }.values()
     )

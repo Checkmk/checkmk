@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
+from typing import Any
 
 import pydantic
 
@@ -12,13 +13,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from .utils.threepar import parse_3par
 
 
 class SpaceUsage(pydantic.BaseModel):
-    totalMiB: int
-    usedMiB: int
+    totalMiB: float
+    usedMiB: float
 
     @property
     def freeMiB(self):
@@ -83,4 +85,65 @@ register.check_plugin(
     discovery_function=discover_threepar_cpgs,
     check_function=check_threepar_cpgs,
     service_name="CPG %s",
+)
+
+
+def discover_threepar_cpgs_usage(section: ThreeparCPGSection) -> DiscoveryResult:
+    for cpg in section.values():
+        if count_threepar_vvs(cpg) > 0:
+            for fs in [
+                "SAUsage",
+                "SDUsage",
+                "UsrUsage",
+            ]:
+                yield Service(item=f"{cpg.name} {fs}")
+
+
+def check_threepar_cpgs_usage(
+    item: str, params: Mapping[str, Any], section: ThreeparCPGSection
+) -> CheckResult:
+    for cpg in section.values():
+        if f"{cpg.name} SAUsage" == item:
+            yield from df_check_filesystem_single(
+                value_store=get_value_store(),
+                mountpoint=item,
+                filesystem_size=cpg.sa_usage.totalMiB,
+                free_space=cpg.sa_usage.freeMiB,
+                reserved_space=0.0,
+                inodes_avail=None,
+                inodes_total=None,
+                params=params,
+            )
+        if f"{cpg.name} SDUsage" == item:
+            yield from df_check_filesystem_single(
+                value_store=get_value_store(),
+                mountpoint=item,
+                filesystem_size=cpg.sd_usage.totalMiB,
+                free_space=cpg.sd_usage.freeMiB,
+                reserved_space=0.0,
+                inodes_avail=None,
+                inodes_total=None,
+                params=params,
+            )
+        if f"{cpg.name} UsrUsage" == item:
+            yield from df_check_filesystem_single(
+                value_store=get_value_store(),
+                mountpoint=item,
+                filesystem_size=cpg.usr_usage.totalMiB,
+                free_space=cpg.usr_usage.freeMiB,
+                reserved_space=0.0,
+                inodes_avail=None,
+                inodes_total=None,
+                params=params,
+            )
+
+
+register.check_plugin(
+    name="3par_cpgs_usage",
+    discovery_function=discover_threepar_cpgs_usage,
+    check_function=check_threepar_cpgs_usage,
+    service_name="CPG %s",
+    check_ruleset_name="threepar_cpgs",
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+    sections=["3par_cpgs"],
 )

@@ -3205,7 +3205,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     source_descr: str,
     new_site_name: str | None,
-) -> None:
+) -> SiteContext:
     try:
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
     except Exception as e:
@@ -3290,6 +3290,8 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     else:
         postprocess_restore_as_site_user(version_info, site, options, orig_apache_port)
 
+    return site
+
 
 def main_restore(
     version_info: VersionInfo,
@@ -3325,7 +3327,7 @@ def main_restore(
             fileobj=fileobj,
             mode=mode,
         ) as tar:
-            _restore_backup_from_tar(
+            site = _restore_backup_from_tar(
                 tar=tar,
                 site=site,
                 options=options,
@@ -3336,6 +3338,9 @@ def main_restore(
             )
     except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
+
+    if "reuse" not in options:
+        save_instance_id(site)
 
 
 def prepare_restore_as_root(

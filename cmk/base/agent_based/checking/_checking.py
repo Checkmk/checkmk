@@ -451,14 +451,7 @@ def _get_clustered_service_node_keys(
         or ()
     )
 
-    return [
-        HostKey(
-            nc.hostname,
-            source_type,
-        )
-        for nodename in used_nodes
-        if (nc := config_cache.make_host_config(nodename))
-    ]
+    return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
 def _get_monitoring_data_kwargs(

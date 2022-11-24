@@ -301,16 +301,16 @@ class _Builder:
         # TODO: We should cleanup these old directories one day, then we can
         #       remove this special case.
         #
-        if self.host_config.is_all_agents_host:
+        if self.config_cache.is_all_agents_host(self.host_name):
             self._add(*self._get_agent())
             for elem in self._get_special_agents():
                 self._add(*elem)
 
-        elif self.host_config.is_all_special_agents_host:
+        elif self.config_cache.is_all_special_agents_host(self.host_name):
             for elem in self._get_special_agents():
                 self._add(*elem)
 
-        elif self.host_config.is_tcp_host:
+        elif self.config_cache.is_tcp_host(self.host_name):
             special_agents = tuple(self._get_special_agents())
             if special_agents:
                 self._add(*special_agents[0])
@@ -364,7 +364,7 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self.host_config.is_snmp_host:
+        if not self.config_cache.is_snmp_host(self.host_name):
             return
         self._initialize_snmp_plugin_store()
         source = SourceInfo(
@@ -411,7 +411,7 @@ class _Builder:
         )
 
     def _initialize_mgmt_boards(self) -> None:
-        protocol = self.host_config.management_protocol
+        protocol = self.config_cache.management_protocol(self.host_name)
         if protocol is None:
             return
 

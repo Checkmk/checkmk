@@ -1009,9 +1009,7 @@ def mode_snmpget(args: list[str]) -> None:
 
     if not hostnames:
         hostnames.extend(
-            host
-            for host in config_cache.all_active_realhosts()
-            if config_cache.make_host_config(host).is_snmp_host
+            host for host in config_cache.all_active_realhosts() if config_cache.is_snmp_host(host)
         )
 
     assert hostnames

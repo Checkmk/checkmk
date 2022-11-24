@@ -490,8 +490,7 @@ def test_is_tcp_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_tcp_host == result
+    assert ts.apply(monkeypatch).is_tcp_host(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -516,8 +515,7 @@ def test_is_ping_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_ping_host == result
+    assert ts.apply(monkeypatch).is_ping_host(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -536,8 +534,7 @@ def test_is_snmp_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_snmp_host == result
+    assert ts.apply(monkeypatch).is_snmp_host(hostname) is result
 
 
 def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -582,8 +579,7 @@ def test_is_dual_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_dual_host == result
+    assert ts.apply(monkeypatch).is_dual_host(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -602,8 +598,7 @@ def test_is_all_agents_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_all_agents_host == result
+    assert ts.apply(monkeypatch).is_all_agents_host(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -622,8 +617,7 @@ def test_is_all_special_agents_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags)
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).is_all_special_agents_host == result
+    assert ts.apply(monkeypatch).is_all_special_agents_host(hostname) is result
 
 
 @pytest.mark.parametrize(

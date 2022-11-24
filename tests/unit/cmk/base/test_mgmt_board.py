@@ -10,6 +10,8 @@ import pytest
 # No stub file
 from tests.testlib.base import Scenario
 
+from cmk.utils.type_defs import HostName
+
 
 @pytest.mark.parametrize(
     "protocol,cred_attribute,credentials",
@@ -28,47 +30,56 @@ from tests.testlib.base import Scenario
 def test_mgmt_explicit_settings(  # type:ignore[no-untyped-def]
     monkeypatch, protocol, cred_attribute, credentials
 ) -> None:
+    host = HostName("mgmt-host")
+
     ts = Scenario()
-    ts.add_host("mgmt-host")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": protocol})
-    ts.set_option(cred_attribute, {"mgmt-host": credentials})
+    ts.add_host(host)
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: protocol})
+    ts.set_option(cred_attribute, {host: credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board
-    assert host_config.management_protocol == protocol
+    assert config_cache.has_management_board(host)
+    assert config_cache.management_protocol(host) == protocol
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials == credentials
 
 
 def test_mgmt_explicit_address(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    host = HostName("mgmt-host")
+
     ts = Scenario()
-    ts.add_host("mgmt-host")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": "snmp"})
-    ts.set_option("host_attributes", {"mgmt-host": {"management_address": "127.0.0.2"}})
+    ts.add_host(host)
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: "snmp"})
+    ts.set_option("host_attributes", {host: {"management_address": "127.0.0.2"}})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board
-    assert host_config.management_protocol == "snmp"
+    assert config_cache.has_management_board(host)
+    assert config_cache.management_protocol(host) == "snmp"
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.2"
     assert host_config.management_credentials == "public"
 
 
 def test_mgmt_disabled(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    host = HostName("mgmt-host")
+
     ts = Scenario()
-    ts.add_host("mgmt-host")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": None})
-    ts.set_option("host_attributes", {"mgmt-host": {"management_address": "127.0.0.1"}})
-    ts.set_option("management_snmp_credentials", {"mgmt-host": "HOST"})
+    ts.add_host(host)
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: None})
+    ts.set_option("host_attributes", {host: {"management_address": "127.0.0.1"}})
+    ts.set_option("management_snmp_credentials", {host: "HOST"})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board is False
-    assert host_config.management_protocol is None
+    assert config_cache.has_management_board(host) is False
+    assert config_cache.management_protocol(host) is None
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials is None
 
@@ -106,14 +117,16 @@ def test_mgmt_config_ruleset(
         ],
     )
 
-    ts.add_host("mgmt-host", host_path="/wato/folder1/hosts.mk")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": protocol})
+    host = HostName("mgmt-host")
+    ts.add_host(host, host_path="/wato/folder1/hosts.mk")
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: protocol})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board
-    assert host_config.management_protocol == protocol
+    assert config_cache.has_management_board(host)
+    assert config_cache.management_protocol(host) == protocol
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials == ruleset_credentials
 
@@ -156,14 +169,16 @@ def test_mgmt_config_ruleset_order(
         ],
     )
 
-    ts.add_host("mgmt-host", host_path="/wato/folder1/hosts.mk")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": "snmp"})
+    host = HostName("mgmt-host")
+    ts.add_host(host, host_path="/wato/folder1/hosts.mk")
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: "snmp"})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board
-    assert host_config.management_protocol == "snmp"
+    assert config_cache.has_management_board(host)
+    assert config_cache.management_protocol(host) == "snmp"
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials == "RULESET1"
 
@@ -201,15 +216,17 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
         ],
     )
 
-    ts.add_host("mgmt-host", host_path="/wato/folder1/hosts.mk")
-    ts.set_option("ipaddresses", {"mgmt-host": "127.0.0.1"})
-    ts.set_option("management_protocol", {"mgmt-host": protocol})
-    ts.set_option(cred_attribute, {"mgmt-host": host_credentials})
+    host = HostName("mgmt-host")
+    ts.add_host(host, host_path="/wato/folder1/hosts.mk")
+    ts.set_option("ipaddresses", {host: "127.0.0.1"})
+    ts.set_option("management_protocol", {host: protocol})
+    ts.set_option(cred_attribute, {host: host_credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config("mgmt-host")
-    assert host_config.has_management_board
-    assert host_config.management_protocol == protocol
+    assert config_cache.has_management_board(host)
+    assert config_cache.management_protocol(host) == protocol
+
+    host_config = config_cache.make_host_config(host)
     assert host_config.management_address == "127.0.0.1"
     assert host_config.management_credentials == host_credentials
 
@@ -416,7 +433,8 @@ def test_mgmt_board_ip_addresses(
     ipv6addresses,
     ip_address_result,
 ):
-    hostname = "mgmt-host"
+    hostname = HostName("mgmt-host")
+
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
     ts.set_option("host_attributes", {hostname: host_attributes})
@@ -426,9 +444,9 @@ def test_mgmt_board_ip_addresses(
     ts.set_option(cred_attribute, {hostname: credentials})
 
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config(hostname)
+    assert config_cache.has_management_board(hostname)
+    assert config_cache.management_protocol(hostname) == protocol
 
-    assert host_config.has_management_board
-    assert host_config.management_protocol == protocol
+    host_config = config_cache.make_host_config(hostname)
     assert host_config.management_address == ip_address_result
     assert host_config.management_credentials == credentials

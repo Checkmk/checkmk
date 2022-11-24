@@ -57,6 +57,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
+from cmk.utils.tags import ComputedDataSources
 from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
@@ -2415,35 +2416,13 @@ class HostConfig:
             hostname
         )
 
-        self.computed_datasources: Final = cmk.utils.tags.compute_datasources(self.tag_groups)
-
-        # Basic types
-        self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
-        self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
-
-        # Agent types
-        self.is_agent_host: Final[bool] = self.is_tcp_host or self._config_cache.is_piggyback_host(
-            hostname
-        )
-        self.management_protocol: Final = management_protocol.get(hostname)
-        self.has_management_board: Final[bool] = self.management_protocol is not None
-        self.is_ping_host: Final = not (
-            self.is_snmp_host or self.is_agent_host or self.has_management_board
-        )
-
-        self.is_dual_host: Final = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host: Final = self.computed_datasources.is_all_agents_host
-        self.is_all_special_agents_host: Final = (
-            self.computed_datasources.is_all_special_agents_host
-        )
-
     def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             hostname=self.hostname,
             is_ipv4_host=ConfigCache.is_ipv4_host(self.hostname),
             is_ipv6_host=ConfigCache.is_ipv6_host(self.hostname),
             is_no_ip_host=ConfigCache.is_no_ip_host(self.hostname),
-            is_snmp_host=self.is_snmp_host,
+            is_snmp_host=self._config_cache.is_snmp_host(self.hostname),
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
             default_address_family=self._config_cache.default_address_family(self.hostname),
             management_address=self.management_address,
@@ -2579,13 +2558,13 @@ class HostConfig:
 
     @property
     def agent_description(self) -> str:
-        if self.is_all_agents_host:
+        if self._config_cache.is_all_agents_host(self.hostname):
             return "Normal Checkmk agent, all configured special agents"
 
-        if self.is_all_special_agents_host:
+        if self._config_cache.is_all_special_agents_host(self.hostname):
             return "No Checkmk agent, all configured special agents"
 
-        if self.is_tcp_host:
+        if self._config_cache.is_tcp_host(self.hostname):
             return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"
@@ -2721,7 +2700,9 @@ class HostConfig:
     def discovery_check_parameters(self) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""
         service_discovery_name = ConfigCache.service_discovery_name()
-        if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
+        if self._config_cache.is_ping_host(self.hostname) or service_ignored(
+            self.hostname, None, service_discovery_name
+        ):
             return DiscoveryCheckParameters.commandline_only_defaults()
 
         entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
@@ -2741,7 +2722,7 @@ class HostConfig:
         )
 
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
-        return CheckmkCheckParameters(enabled=not self.is_ping_host)
+        return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
     def inventory_parameters(self, ruleset_name: RuleSetName) -> dict:
         default: Ruleset[object] = []
@@ -2766,7 +2747,7 @@ class HostConfig:
         for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
             # user has enabled the inventory for ping only hosts
-            if plugin_name == "cmk_inv" and self.is_ping_host:
+            if plugin_name == "cmk_inv" and self._config_cache.is_ping_host(self.hostname):
                 continue
 
             entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
@@ -2838,7 +2819,7 @@ class HostConfig:
 
     @property
     def management_credentials(self) -> ManagementCredentials | None:
-        protocol = self.management_protocol
+        protocol = self._config_cache.management_protocol(self.hostname)
         credentials_variable: Mapping[HostName, ManagementCredentials]
         default_value: ManagementCredentials | None = None
         if protocol == "snmp":
@@ -2878,7 +2859,7 @@ class HostConfig:
 
     @property
     def management_snmp_config(self) -> SNMPHostConfig:
-        if self.management_protocol != "snmp":
+        if self._config_cache.management_protocol(self.hostname) != "snmp":
             raise MKGeneralException("Management board is not configured to be contacted via SNMP")
 
         address = self.management_address
@@ -2916,7 +2897,8 @@ class HostConfig:
 
 
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
-    mgmt_address = host_config.management_address
+    mgmt_address: Final = host_config.management_address
+    host_name: Final = host_config.hostname
     try:
         mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
     except (ValueError, TypeError):
@@ -2926,13 +2908,13 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
     try:
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
-            host_name=mgmt_address or host_config.hostname,
-            family=config_cache.default_address_family(host_config.hostname),
+            host_name=mgmt_address or host_name,
+            family=config_cache.default_address_family(host_name),
             configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
             is_snmp_usewalk_host=(
-                config_cache.get_snmp_backend(host_config.hostname) is SNMPBackendEnum.STORED_WALK
-                and (host_config.management_protocol == "snmp")
+                config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
+                and (config_cache.management_protocol(host_name) == "snmp")
             ),
             override_dns=fake_dns,
             is_dyndns_host=host_config.is_dyndns_host,
@@ -2962,7 +2944,7 @@ def lookup_ip_address(
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=(
             config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
-            and host_config.is_snmp_host
+            and config_cache.is_snmp_host(host_name)
         ),
         override_dns=fake_dns,
         is_dyndns_host=host_config.is_dyndns_host,
@@ -3003,6 +2985,7 @@ class ConfigCache:
         self._is_piggyback_host: dict[HostName, bool] = {}
         self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
         self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
+        self._computed_datasources: dict[HostName, ComputedDataSources] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3046,6 +3029,7 @@ class ConfigCache:
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
+        self._computed_datasources.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3147,6 +3131,7 @@ class ConfigCache:
         self._is_piggyback_host.clear()
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
+        self._computed_datasources.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3242,6 +3227,54 @@ class ConfigCache:
         return self._hwsw_inventory_parameters.setdefault(
             host_name, get_hwsw_inventory_parameters()
         )
+
+    def management_protocol(self, host_name: HostName) -> Literal["snmp", "ipmi"] | None:
+        return management_protocol.get(host_name)
+
+    def has_management_board(self, host_name: HostName) -> bool:
+        return self.management_protocol(host_name) is not None
+
+    def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
+        return self._computed_datasources.setdefault(
+            host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags_of_host(host_name))
+        )
+
+    def is_tcp_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_tcp
+
+    def is_snmp_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_snmp
+
+    def is_piggyback_host(self, host_name: HostName) -> bool:
+        def get_is_piggyback_host() -> bool:
+            tag_groups: Final = ConfigCache.tags_of_host(host_name)
+            if tag_groups["piggyback"] == "piggyback":
+                return True
+            if tag_groups["piggyback"] == "no-piggyback":
+                return False
+            # Legacy automatic detection
+            return self._has_piggyback_data(host_name)
+
+        return self._is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
+
+    def is_agent_host(self, host_name: HostName) -> bool:
+        return self.is_tcp_host(host_name) or self.is_piggyback_host(host_name)
+
+    def is_ping_host(self, host_name: HostName) -> bool:
+        return not (
+            self.is_snmp_host(host_name)
+            or self.is_agent_host(host_name)
+            or self.has_management_board(host_name)
+        )
+
+    def is_dual_host(self, host_name: HostName) -> bool:
+        return self.is_tcp_host(host_name) and self.is_snmp_host(host_name)
+
+    def is_all_agents_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_all_agents_host
+
+    def is_all_special_agents_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_all_special_agents_host
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts
@@ -3585,18 +3618,6 @@ class ConfigCache:
         if rules:
             return rules[0]
         return "ipv4"
-
-    def is_piggyback_host(self, host_name: HostName) -> bool:
-        def get_is_piggyback_host() -> bool:
-            tag_groups: Final = ConfigCache.tags_of_host(host_name)
-            if tag_groups["piggyback"] == "piggyback":
-                return True
-            if tag_groups["piggyback"] == "no-piggyback":
-                return False
-            # Legacy automatic detection
-            return self._has_piggyback_data(host_name)
-
-        return self._is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
     def _has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)

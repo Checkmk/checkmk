@@ -12,6 +12,6 @@ project(
   LANGUAGES CXX)
 
 add_subdirectory(src)
-add_subdirectory(loader)
+add_subdirectory(test)
 add_subdirectory(doc)
 

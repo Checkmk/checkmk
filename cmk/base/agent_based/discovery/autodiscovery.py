@@ -49,7 +49,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources import fetch_all, make_sources
@@ -381,7 +381,6 @@ def discover_marked_hosts(
             activation_required |= _discover_marked_host(
                 host_name,
                 config_cache=config_cache,
-                host_config=config_cache.make_host_config(host_name),
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -423,14 +422,13 @@ def _discover_marked_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
 ) -> bool:
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
-    if (params := host_config.discovery_check_parameters()).commandline_only:
+    if (params := config_cache.discovery_check_parameters(host_name)).commandline_only:
         console.verbose("  failed: discovery check disabled\n")
         return False
 

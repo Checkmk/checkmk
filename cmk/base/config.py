@@ -2697,30 +2697,6 @@ class HostConfig:
         self._explicit_attributes_lookup = cache
         return self._explicit_attributes_lookup
 
-    def discovery_check_parameters(self) -> DiscoveryCheckParameters:
-        """Compute the parameters for the discovery check for a host"""
-        service_discovery_name = ConfigCache.service_discovery_name()
-        if self._config_cache.is_ping_host(self.hostname) or service_ignored(
-            self.hostname, None, service_discovery_name
-        ):
-            return DiscoveryCheckParameters.commandline_only_defaults()
-
-        entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
-        if not entries:
-            return DiscoveryCheckParameters.default()
-
-        if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
-            return DiscoveryCheckParameters.commandline_only_defaults()
-
-        return DiscoveryCheckParameters(
-            commandline_only=False,
-            check_interval=int(check_interval),
-            severity_new_services=int(entry["severity_unmonitored"]),
-            severity_vanished_services=int(entry["severity_vanished"]),
-            severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
-            rediscovery=entry.get("inventory_rediscovery", {}),
-        )
-
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
@@ -2986,6 +2962,7 @@ class ConfigCache:
         self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
         self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
         self._computed_datasources: dict[HostName, ComputedDataSources] = {}
+        self._discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -3030,6 +3007,7 @@ class ConfigCache:
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
         self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3132,6 +3110,7 @@ class ConfigCache:
         self._snmp_config.clear()
         self._hwsw_inventory_parameters.clear()
         self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3275,6 +3254,36 @@ class ConfigCache:
 
     def is_all_special_agents_host(self, host_name: HostName) -> bool:
         return self.computed_datasources(host_name).is_all_special_agents_host
+
+    def discovery_check_parameters(self, host_name: HostName) -> DiscoveryCheckParameters:
+        """Compute the parameters for the discovery check for a host"""
+
+        def make_discovery_check_parameters() -> DiscoveryCheckParameters:
+            service_discovery_name = ConfigCache.service_discovery_name()
+            if self.is_ping_host(host_name) or service_ignored(
+                host_name, None, service_discovery_name
+            ):
+                return DiscoveryCheckParameters.commandline_only_defaults()
+
+            entries = self.host_extra_conf(host_name, periodic_discovery)
+            if not entries:
+                return DiscoveryCheckParameters.default()
+
+            if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+                return DiscoveryCheckParameters.commandline_only_defaults()
+
+            return DiscoveryCheckParameters(
+                commandline_only=False,
+                check_interval=int(check_interval),
+                severity_new_services=int(entry["severity_unmonitored"]),
+                severity_vanished_services=int(entry["severity_vanished"]),
+                severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
+                rediscovery=entry.get("inventory_rediscovery", {}),
+            )
+
+        return self._discovery_check_parameters.setdefault(
+            host_name, make_discovery_check_parameters()
+        )
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

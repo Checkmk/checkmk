@@ -103,14 +103,12 @@ HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(
-        self, config_cache: ConfigCache, host_name: HostName, host_config: HostConfig
-    ) -> None:
+    def _trigger_discovery_check(self, config_cache: ConfigCache, host_name: HostName) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
 
-        if host_config.discovery_check_parameters().commandline_only:
+        if config_cache.discovery_check_parameters(host_name).commandline_only:
             return
 
         if config_cache.is_cluster(host_name):
@@ -160,7 +158,6 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryResult] = {}
 
         for hostname in hostnames:
-            host_config = config_cache.make_host_config(hostname)
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
@@ -174,7 +171,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
                 # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(config_cache, hostname, host_config)
+                self._trigger_discovery_check(config_cache, hostname)
 
         return automation_results.DiscoveryResult(results)
 
@@ -268,7 +265,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         new_items: SetAutochecksTable | SetAutochecksTablePre20 = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         # Not loading all checks improves performance of the calls and as a result the
         # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
@@ -299,7 +295,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             )
 
         config_cache.set_autochecks(hostname, new_services)
-        self._trigger_discovery_check(config_cache, hostname, host_config)
+        self._trigger_discovery_check(config_cache, hostname)
         return automation_results.SetAutochecksResult()
 
 
@@ -347,8 +343,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
-        self._trigger_discovery_check(config_cache, hostname, host_config)
+        self._trigger_discovery_check(config_cache, hostname)
         return automation_results.UpdateHostLabelsResult()
 
 

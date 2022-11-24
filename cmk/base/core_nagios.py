@@ -587,7 +587,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     service_discovery_name = ConfigCache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
-    if not (disco_params := host_config.discovery_check_parameters()).commandline_only:
+    if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,

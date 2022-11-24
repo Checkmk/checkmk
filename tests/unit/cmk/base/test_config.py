@@ -1041,7 +1041,7 @@ def test_host_config_inventory_parameters(
         ),
     ],
 )
-def test_host_config_discovery_check_parameters(
+def test_discovery_check_parameters(
     monkeypatch: MonkeyPatch, hostname_str: str, result: config.DiscoveryCheckParameters
 ) -> None:
     hostname = HostName(hostname_str)
@@ -1070,8 +1070,7 @@ def test_host_config_discovery_check_parameters(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).discovery_check_parameters() == result
+    assert ts.apply(monkeypatch).discovery_check_parameters(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -2505,8 +2504,7 @@ def test_host_config_add_discovery_check(
 
     monkeypatch.setattr(config, "inventory_check_interval", 42)
 
-    host_config = config_cache.make_host_config(xyz_host)
-    assert host_config.discovery_check_parameters().commandline_only == result
+    assert config_cache.discovery_check_parameters(xyz_host).commandline_only is result
 
 
 def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None:

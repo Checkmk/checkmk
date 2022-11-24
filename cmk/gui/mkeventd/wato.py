@@ -76,7 +76,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     ConfigVariableGroupNotifications,
@@ -86,24 +86,23 @@ from cmk.gui.plugins.wato.utils import (
     flash,
     get_search_expression,
     HostRulespec,
-    main_module_registry,
     MainModuleTopicEvents,
-    mode_registry,
     mode_url,
     redirect,
-    rulespec_group_registry,
-    rulespec_registry,
     RulespecGroup,
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
     ServiceRulespec,
     WatoMode,
 )
+from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.plugins.watolib.utils import (
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
@@ -158,6 +157,8 @@ from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import HostsWithAttributes, make_action_link
+from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -175,9 +176,72 @@ from .permission_section import PermissionSectionEventConsole
 from .rule_matching import event_rule_matches
 
 
-# TODO: Move all other registrations to the function here
-def register(sample_config_generator_registry: SampleConfigGeneratorRegistry) -> None:
+def register(
+    permission_registry: PermissionRegistry,
+    sample_config_generator_registry: SampleConfigGeneratorRegistry,
+    mode_registry: ModeRegistry,
+    main_module_registry: MainModuleRegistry,
+    config_var_group_registry: ConfigVariableGroupRegistry,
+    config_var_registry: ConfigVariableRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,
+    rulespec_registry: RulespecRegistry,
+) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorECSampleRulepack)
+
+    mode_registry.register(ModeEventConsoleRulePacks)
+    mode_registry.register(ModeEventConsoleRules)
+    mode_registry.register(ModeEventConsoleEditRulePack)
+    mode_registry.register(ModeEventConsoleEditRule)
+    mode_registry.register(ModeEventConsoleStatus)
+    mode_registry.register(ModeEventConsoleSettings)
+    mode_registry.register(ModeEventConsoleEditGlobalSetting)
+    mode_registry.register(ModeEventConsoleMIBs)
+    mode_registry.register(ModeEventConsoleUploadMIBs)
+
+    main_module_registry.register(MainModuleEventConsole)
+    main_module_registry.register(MainModuleEventConsoleRules)
+
+    config_var_group_registry.register(ConfigVariableGroupEventConsoleGeneric)
+    config_var_group_registry.register(ConfigVariableGroupEventConsoleLogging)
+    config_var_group_registry.register(ConfigVariableGroupEventConsoleSNMP)
+    config_var_registry.register(ConfigVariableEventConsoleRemoteStatus)
+    config_var_registry.register(ConfigVariableEventConsoleReplication)
+    config_var_registry.register(ConfigVariableEventConsoleRetentionInterval)
+    config_var_registry.register(ConfigVariableEventConsoleHousekeepingInterval)
+    config_var_registry.register(ConfigVariableEventConsoleStatisticsInterval)
+    config_var_registry.register(ConfigVariableEventConsoleLogMessages)
+    config_var_registry.register(ConfigVariableEventConsoleRuleOptimizer)
+    config_var_registry.register(ConfigVariableEventConsoleActions)
+    config_var_registry.register(ConfigVariableEventConsoleArchiveOrphans)
+    config_var_registry.register(ConfigVariableHostnameTranslation)
+    config_var_registry.register(ConfigVariableEventConsoleEventLimit)
+    config_var_registry.register(ConfigVariableEventConsoleHistoryRotation)
+    config_var_registry.register(ConfigVariableEventConsoleHistoryLifetime)
+    config_var_registry.register(ConfigVariableEventConsoleSocketQueueLength)
+    config_var_registry.register(ConfigVariableEventConsoleEventSocketQueueLength)
+    config_var_registry.register(ConfigVariableEventConsoleTranslateSNMPTraps)
+    config_var_registry.register(ConfigVariableEventConsoleSNMPCredentials)
+    config_var_registry.register(ConfigVariableEventConsoleDebugRules)
+    config_var_registry.register(ConfigVariableEventConsoleLogLevel)
+    config_var_registry.register(ConfigVariableEventLogRuleHits)
+    config_var_registry.register(ConfigVariableEventConsoleConnectTimeout)
+    config_var_registry.register(ConfigVariableEventConsolePrettyPrintRules)
+    config_var_registry.register(ConfigVariableEventConsoleNotifyContactgroup)
+    config_var_registry.register(ConfigVariableEventConsoleNotifyRemoteHost)
+    config_var_registry.register(ConfigVariableEventConsoleNotifyFacility)
+
+    rulespec_group_registry.register(RulespecGroupEventConsole)
+    rulespec_registry.register(ECEventLimitRulespec)
+    rulespec_registry.register(ActiveCheckMKEventsRulespec)
+    rulespec_registry.register(ExtraHostConfECSLRulespec)
+    rulespec_registry.register(ExtraServiceConfECSLRulespec)
+    rulespec_registry.register(ExtraHostConfECContact)
+    rulespec_registry.register(ExtraServiceConfECContact)
+
+    permission_registry.register(ConfigureECPermission)
+    permission_registry.register(ConfigureECRulesPermission)
+    permission_registry.register(ActivateECPermission)
+    permission_registry.register(SwitchSlaveReplicationPermission)
 
 
 def _compiled_mibs_dir() -> Path:
@@ -1531,7 +1595,6 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         )
 
 
-@mode_registry.register
 class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2000,7 +2063,6 @@ def _deref(x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
-@mode_registry.register
 class ModeEventConsoleRules(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2378,7 +2440,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         ]
 
 
-@mode_registry.register
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2495,7 +2556,6 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         )
 
 
-@mode_registry.register
 class ModeEventConsoleEditRule(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2689,7 +2749,6 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return vs_mkeventd_rule(self._rule_pack.get("customer"))
 
 
-@mode_registry.register
 class ModeEventConsoleStatus(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2797,7 +2856,6 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             html.end_form()
 
 
-@mode_registry.register
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -2900,7 +2958,6 @@ class ConfigVariableGroupEventConsole(ConfigVariableGroup):
     pass
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: Generic")
@@ -2909,7 +2966,6 @@ class ConfigVariableGroupEventConsoleGeneric(ConfigVariableGroupEventConsole):
         return 18
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: Logging & diagnose")
@@ -2918,7 +2974,6 @@ class ConfigVariableGroupEventConsoleLogging(ConfigVariableGroupEventConsole):
         return 19
 
 
-@config_variable_group_registry.register
 class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
     def title(self) -> str:
         return _("Event Console: SNMP traps")
@@ -2927,7 +2982,6 @@ class ConfigVariableGroupEventConsoleSNMP(ConfigVariableGroupEventConsole):
         return 20
 
 
-@mode_registry.register
 class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -2967,7 +3021,6 @@ class MIBInfo:
     organization: str
 
 
-@mode_registry.register
 class ModeEventConsoleMIBs(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -3158,7 +3211,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
 
 
-@mode_registry.register
 class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -3453,61 +3505,52 @@ def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
 #   | Declaration of Event Console specific permissions for Multisite      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="config",
-        title=_l("Configuration of Event Console"),
-        description=_l(
-            "This permission allows to configure the global settings of the event console."
-        ),
-        defaults=["admin"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="edit",
-        title=_l("Configuration of event rules"),
-        description=_l(
-            "This permission allows the creation, modification and "
-            "deletion of event correlation rules."
-        ),
-        defaults=["admin"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="activate",
-        title=_l("Activate changes for event console"),
-        description=_l(
-            "Activation of changes for the event console (rule modification, "
-            "global settings) is done separately from the monitoring configuration "
-            "and needs this permission."
-        ),
-        defaults=["admin"],
-    )
-)
-
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="switchmode",
-        title=_l("Switch slave replication mode"),
-        description=_l(
-            "This permission is only useful if the Event Console is "
-            "setup as a replication slave. It allows a manual switch "
-            "between sync and takeover mode."
-        ),
-        defaults=["admin"],
-    )
+ConfigureECPermission = Permission(
+    section=PermissionSectionEventConsole,
+    name="config",
+    title=_l("Configuration of Event Console"),
+    description=_l("This permission allows to configure the global settings of the event console."),
+    defaults=["admin"],
 )
 
 
-@main_module_registry.register
+ConfigureECRulesPermission = Permission(
+    section=PermissionSectionEventConsole,
+    name="edit",
+    title=_l("Configuration of event rules"),
+    description=_l(
+        "This permission allows the creation, modification and "
+        "deletion of event correlation rules."
+    ),
+    defaults=["admin"],
+)
+
+
+ActivateECPermission = Permission(
+    section=PermissionSectionEventConsole,
+    name="activate",
+    title=_l("Activate changes for event console"),
+    description=_l(
+        "Activation of changes for the event console (rule modification, "
+        "global settings) is done separately from the monitoring configuration "
+        "and needs this permission."
+    ),
+    defaults=["admin"],
+)
+
+SwitchSlaveReplicationPermission = Permission(
+    section=PermissionSectionEventConsole,
+    name="switchmode",
+    title=_l("Switch slave replication mode"),
+    description=_l(
+        "This permission is only useful if the Event Console is "
+        "setup as a replication slave. It allows a manual switch "
+        "between sync and takeover mode."
+    ),
+    defaults=["admin"],
+)
+
+
 class MainModuleEventConsole(ABCMainModule):
     @property
     def mode_or_url(self) -> str:
@@ -3560,7 +3603,6 @@ class MainModuleEventConsole(ABCMainModule):
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3624,7 +3666,6 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleReplication(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3748,7 +3789,6 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3770,7 +3810,6 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3793,7 +3832,6 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3816,7 +3854,6 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleLogMessages(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3841,7 +3878,6 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3860,7 +3896,6 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleActions(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -3999,7 +4034,6 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
         return False
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4023,7 +4057,6 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableHostnameTranslation(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4124,7 +4157,6 @@ def vs_ec_host_limit(title: str) -> Dictionary:
     )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4179,7 +4211,6 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4200,7 +4231,6 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4220,7 +4250,6 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4247,7 +4276,6 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
@@ -4274,7 +4302,6 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
@@ -4316,7 +4343,6 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
@@ -4377,7 +4403,6 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleDebugRules(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
@@ -4401,7 +4426,6 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleLogLevel(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
@@ -4477,7 +4501,6 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
         return elements
 
 
-@config_variable_registry.register
 class ConfigVariableEventLogRuleHits(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
@@ -4502,7 +4525,6 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
 
 
 # TODO: Isn't this variable deprecated since 1.5? Investigate and drop/mark as deprecated
-@config_variable_registry.register
 class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
@@ -4527,7 +4549,6 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -4553,7 +4574,6 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -4583,7 +4603,6 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
         return True
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -4616,7 +4635,6 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
         return True
 
 
-@config_variable_registry.register
 class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -4642,7 +4660,6 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return True
 
 
-@main_module_registry.register
 class MainModuleEventConsoleRules(ABCMainModule):
     @property
     def enabled(self) -> bool:
@@ -4692,7 +4709,6 @@ class MainModuleEventConsoleRules(ABCMainModule):
         )
 
 
-@rulespec_group_registry.register
 class RulespecGroupEventConsole(RulespecGroup):
     @property
     def name(self) -> str:
@@ -4715,12 +4731,10 @@ def _valuespec_extra_host_conf__ec_event_limit() -> Transform:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupEventConsole,
-        name="extra_host_conf:_ec_event_limit",
-        valuespec=_valuespec_extra_host_conf__ec_event_limit,
-    )
+ECEventLimitRulespec = HostRulespec(
+    group=RulespecGroupEventConsole,
+    name="extra_host_conf:_ec_event_limit",
+    valuespec=_valuespec_extra_host_conf__ec_event_limit,
 )
 
 
@@ -4849,13 +4863,11 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupEventConsole,
-        match_type="all",
-        name="active_checks:mkevents",
-        valuespec=_valuespec_active_checks_mkevents,
-    )
+ActiveCheckMKEventsRulespec = HostRulespec(
+    group=RulespecGroupEventConsole,
+    match_type="all",
+    name="active_checks:mkevents",
+    valuespec=_valuespec_active_checks_mkevents,
 )
 
 
@@ -4885,12 +4897,10 @@ def _valuespec_extra_host_conf__ec_sl() -> DropdownChoice:
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupHostsMonitoringRulesVarious,
-        name="extra_host_conf:_ec_sl",
-        valuespec=_valuespec_extra_host_conf__ec_sl,
-    )
+ExtraHostConfECSLRulespec = HostRulespec(
+    group=RulespecGroupHostsMonitoringRulesVarious,
+    name="extra_host_conf:_ec_sl",
+    valuespec=_valuespec_extra_host_conf__ec_sl,
 )
 
 
@@ -4906,13 +4916,11 @@ def _valuespec_extra_service_conf__ec_sl() -> DropdownChoice:
     )
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupMonitoringConfigurationVarious,
-        item_type="service",
-        name="extra_service_conf:_ec_sl",
-        valuespec=_valuespec_extra_service_conf__ec_sl,
-    )
+ExtraServiceConfECSLRulespec = ServiceRulespec(
+    group=RulespecGroupMonitoringConfigurationVarious,
+    item_type="service",
+    name="extra_service_conf:_ec_sl",
+    valuespec=_valuespec_extra_service_conf__ec_sl,
 )
 
 
@@ -4943,12 +4951,10 @@ def _valuespec_extra_host_conf__ec_contact() -> TextInput:
     return _vs_contact(_("Host contact information"))
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupEventConsole,
-        name="extra_host_conf:_ec_contact",
-        valuespec=_valuespec_extra_host_conf__ec_contact,
-    )
+ExtraHostConfECContact = HostRulespec(
+    group=RulespecGroupEventConsole,
+    name="extra_host_conf:_ec_contact",
+    valuespec=_valuespec_extra_host_conf__ec_contact,
 )
 
 
@@ -4956,13 +4962,11 @@ def _valuespec_extra_service_conf__ec_contact() -> TextInput:
     return _vs_contact(title=_("Service contact information"))
 
 
-rulespec_registry.register(
-    ServiceRulespec(
-        group=RulespecGroupEventConsole,
-        item_type="service",
-        name="extra_service_conf:_ec_contact",
-        valuespec=_valuespec_extra_service_conf__ec_contact,
-    )
+ExtraServiceConfECContact = ServiceRulespec(
+    group=RulespecGroupEventConsole,
+    item_type="service",
+    name="extra_service_conf:_ec_contact",
+    valuespec=_valuespec_extra_service_conf__ec_contact,
 )
 
 

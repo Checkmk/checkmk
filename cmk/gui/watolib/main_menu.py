@@ -166,9 +166,9 @@ class ABCMainModule(MenuItem, abc.ABC):
         yield  # pylint: disable=unreachable
 
 
-class ModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):
+class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):
     def plugin_name(self, instance):
         return instance().mode_or_url
 
 
-main_module_registry = ModuleRegistry()
+main_module_registry = MainModuleRegistry()

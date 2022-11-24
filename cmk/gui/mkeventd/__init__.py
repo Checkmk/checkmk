@@ -4,9 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.painters.v0.base import PainterRegistry
-from cmk.gui.permissions import PermissionSectionRegistry
-from cmk.gui.plugins.watolib.utils import ConfigDomainRegistry, SampleConfigGeneratorRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
+from cmk.gui.plugins.watolib.utils import (
+    ConfigDomainRegistry,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
+    SampleConfigGeneratorRegistry,
+)
 from cmk.gui.views.data_source import DataSourceRegistry
+from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 
 from . import views, wato
 from .config_domain import ConfigDomainEventConsole
@@ -19,13 +27,29 @@ from .rule_matching import event_rule_matches
 
 def register(
     permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
     config_domain_registry: ConfigDomainRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
+    mode_registry: ModeRegistry,
+    main_module_registry: MainModuleRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
+    config_variable_registry: ConfigVariableRegistry,
+    rulespec_group_registry: RulespecGroupRegistry,
+    rulespec_registry: RulespecRegistry,
 ) -> None:
     views.register(data_source_registry, painter_registry)
-    wato.register(sample_config_generator_registry)
+    wato.register(
+        permission_registry,
+        sample_config_generator_registry,
+        mode_registry,
+        main_module_registry,
+        config_variable_group_registry,
+        config_variable_registry,
+        rulespec_group_registry,
+        rulespec_registry,
+    )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)
 
@@ -37,7 +61,6 @@ __all__ = [
     "syslog_facilities",
     "phase_names",
     "action_whats",
-    "PermissionSectionEventConsole",
     "service_levels",
     "action_choices",
     "execute_command",

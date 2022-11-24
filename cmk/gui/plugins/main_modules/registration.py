@@ -12,9 +12,15 @@ from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.painters.v0 import painters
 from cmk.gui.painters.v0.base import painter_registry
-from cmk.gui.permissions import permission_section_registry
+from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.visuals.utils import visual_type_registry
-from cmk.gui.plugins.watolib.utils import config_domain_registry, sample_config_generator_registry
+from cmk.gui.plugins.wato.utils import mode_registry
+from cmk.gui.plugins.watolib.utils import (
+    config_domain_registry,
+    config_variable_group_registry,
+    config_variable_registry,
+    sample_config_generator_registry,
+)
 from cmk.gui.views import datasource_selection, icon, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
@@ -34,6 +40,8 @@ from cmk.gui.views.page_edit_views import page_edit_views
 from cmk.gui.views.page_show_view import page_show_view
 from cmk.gui.views.sorter import register_sorters, sorter_registry
 from cmk.gui.views.visual_type import VisualTypeViews
+from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
 cmk.gui.pages.register("view")(page_show_view)
 cmk.gui.pages.register("create_view")(datasource_selection.page_create_view)
@@ -66,9 +74,16 @@ perfometer.register(sorter_registry, painter_registry)
 icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
 mkeventd.register(
     permission_section_registry,
+    permission_registry,
     data_source_registry,
     painter_registry,
     config_domain_registry,
     sample_config_generator_registry,
+    mode_registry,
+    main_module_registry,
+    config_variable_group_registry,
+    config_variable_registry,
+    rulespec_group_registry,
+    rulespec_registry,
 )
 mobile.register(layout_registry)

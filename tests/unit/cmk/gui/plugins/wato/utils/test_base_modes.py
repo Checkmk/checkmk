@@ -16,9 +16,9 @@ from cmk.gui.plugins.wato.utils.main_menu import (
     MainModuleTopicHosts,
 )
 from cmk.gui.type_defs import Icon, PermissionName
-from cmk.gui.watolib.main_menu import ModuleRegistry
+from cmk.gui.watolib.main_menu import MainModuleRegistry
 
-module_registry = ModuleRegistry()
+module_registry = MainModuleRegistry()
 
 
 class SomeWatoMode(WatoMode):

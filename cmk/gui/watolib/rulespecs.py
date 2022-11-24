@@ -38,7 +38,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.gui.watolib.check_mk_automations import get_check_information
-from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -1188,7 +1188,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
 def main_module_from_rulespec_group_name(
     group_name: str,
-    main_module_reg: ModuleRegistry,
+    main_module_reg: MainModuleRegistry,
 ) -> ABCMainModule:
     return main_module_reg[
         makeuri_contextless_rulespec_group(

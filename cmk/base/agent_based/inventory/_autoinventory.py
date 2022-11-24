@@ -8,7 +8,6 @@ from cmk.utils.type_defs import EVERYTHING
 
 import cmk.base.config as config
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
-from cmk.base.core_config import MonitoringCore
 
 from .active import execute_active_check_inventory
 
@@ -16,7 +15,6 @@ __all__ = ["inventorize_marked_hosts"]
 
 
 def inventorize_marked_hosts(
-    core: MonitoringCore,
     config_cache: config.ConfigCache,
     autoinventory_queue: AutoQueue,
 ) -> None:

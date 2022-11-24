@@ -2083,7 +2083,6 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
 
     config.load()
     inventory.inventorize_marked_hosts(
-        create_core(config.monitoring_core),
         config.get_config_cache(),
         queue,
     )

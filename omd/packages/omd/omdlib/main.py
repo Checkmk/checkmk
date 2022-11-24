@@ -3334,6 +3334,9 @@ def main_restore(
     except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
+    if "reuse" not in options:
+        save_instance_id(site)
+
 
 def prepare_restore_as_root(
     version_info: VersionInfo, site: SiteContext, options: CommandOptions

@@ -8,7 +8,7 @@ import logging
 from collections import defaultdict
 from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import DefaultDict, NamedTuple
+from typing import Callable, DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -28,6 +28,7 @@ from cmk.utils.type_defs import (
     HostName,
     MetricTuple,
     ParsedSectionName,
+    RuleSetName,
     ServiceName,
     SourceType,
     state_markers,
@@ -64,7 +65,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import ConfigCache, HostConfig, HWSWInventoryParameters
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 from cmk.base.submitters import Submittee, Submitter
 
 from . import _cluster_modes
@@ -89,7 +90,6 @@ def execute_checkmk_checks(
     submitter: Submitter,
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(hostname)
     exit_spec = config_cache.exit_code_spec(hostname)
 
     services = config.resolve_service_dependencies(
@@ -119,7 +119,7 @@ def execute_checkmk_checks(
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
                 hostname,
-                host_config,
+                inventory_parameters=config_cache.inventory_parameters,
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 parsed_sections_broker=broker,
             )
@@ -149,8 +149,8 @@ def execute_checkmk_checks(
 
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
-    host_config: HostConfig,
     *,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     params: HWSWInventoryParameters,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
@@ -163,7 +163,7 @@ def _do_inventory_actions_during_checking_for(
 
     status_data_tree = inventorize_status_data_of_real_host(
         host_name,
-        host_config=host_config,
+        inventory_parameters=inventory_parameters,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
     )

@@ -33,9 +33,8 @@ def inventorize_marked_hosts(
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autoinventory_queue.queued_hosts()):
             if host_name in process_hosts:
-                host_config = config_cache.make_host_config(host_name)
                 execute_active_check_inventory(
                     host_name,
-                    host_config,
-                    config_cache.hwsw_inventory_parameters(host_name),
+                    inventory_parameters=config_cache.inventory_parameters,
+                    parameters=config_cache.hwsw_inventory_parameters(host_name),
                 )

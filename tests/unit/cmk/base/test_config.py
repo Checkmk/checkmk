@@ -1017,8 +1017,7 @@ def test_host_config_inventory_parameters(
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).inventory_parameters(RuleSetName("if")) == result
+    assert ts.apply(monkeypatch).inventory_parameters(hostname, RuleSetName("if")) == result
 
 
 @pytest.mark.parametrize(

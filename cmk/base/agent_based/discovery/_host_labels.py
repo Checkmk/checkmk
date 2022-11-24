@@ -7,7 +7,7 @@
 This module exposes three functions:
  * analyse_node_labels
  * analyse_cluster_labels
- * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
+ * analyse_host_labels (dispatching to one of the above based on the cluster configuration)
 
 """
 from collections.abc import Mapping, Sequence

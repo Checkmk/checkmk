@@ -18,7 +18,7 @@ import time
 from collections.abc import Collection, Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple
+from typing import Callable, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -34,6 +34,7 @@ from cmk.utils.type_defs import (
     HostName,
     InventoryPluginName,
     result,
+    RuleSetName,
     SourceType,
 )
 
@@ -58,7 +59,6 @@ from cmk.base.agent_based.utils import (
     summarize_host_sections,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
 from ._tree_aggregator import ItemsOfInventoryPlugin, RealHostTreeUpdater
@@ -89,7 +89,7 @@ class CheckInventoryTreeResult:
 def check_inventory_tree(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
     parameters: config.HWSWInventoryParameters,
@@ -120,7 +120,7 @@ def check_inventory_tree(
         items_of_inventory_plugins=list(
             _collect_inventory_plugin_items(
                 host_name,
-                host_config=host_config,
+                inventory_parameters=inventory_parameters,
                 parsed_sections_broker=fetched_data_result.parsed_sections_broker,
                 run_plugin_names=run_plugin_names,
             )
@@ -334,14 +334,14 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     return _create_trees_from_inventory_plugin_items(
         _collect_inventory_plugin_items(
             host_name,
-            host_config=host_config,
+            inventory_parameters=inventory_parameters,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
         )
@@ -368,7 +368,7 @@ def inventorize_status_data_of_real_host(
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
@@ -398,8 +398,8 @@ def _collect_inventory_plugin_items(
             if inventory_plugin.inventory_ruleset_name is not None:
                 kwargs = {
                     **kwargs,
-                    "params": host_config.inventory_parameters(
-                        inventory_plugin.inventory_ruleset_name
+                    "params": inventory_parameters(
+                        host_name, inventory_plugin.inventory_ruleset_name
                     ),
                 }
 

@@ -2700,12 +2700,6 @@ class HostConfig:
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
-    def inventory_parameters(self, ruleset_name: RuleSetName) -> dict:
-        default: Ruleset[object] = []
-        return self._config_cache.host_extra_conf_merged(
-            self.hostname, inv_parameters.get(str(ruleset_name), default)
-        )
-
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> dict:
         default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
@@ -3283,6 +3277,14 @@ class ConfigCache:
 
         return self._discovery_check_parameters.setdefault(
             host_name, make_discovery_check_parameters()
+        )
+
+    def inventory_parameters(
+        self, host_name: HostName, ruleset_name: RuleSetName
+    ) -> dict[str, object]:
+        default: Ruleset[object] = []
+        return self.host_extra_conf_merged(
+            host_name, inv_parameters.get(str(ruleset_name), default)
         )
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:

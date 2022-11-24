@@ -1229,7 +1229,7 @@ def test_check_inventory_tree(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
-        host_config=config_cache.make_host_config(hostname),
+        inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=config.HWSWInventoryParameters.from_raw(
@@ -1278,7 +1278,7 @@ def test_check_inventory_tree_no_data_or_files(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
-        host_config=config_cache.make_host_config(hostname),
+        inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=config.HWSWInventoryParameters.from_raw({}),

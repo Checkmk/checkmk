@@ -142,3 +142,4 @@ def test_aggr_count_min_ok(  # type:ignore[no-untyped-def]
     aggr_config = BIAggregationFunctionCountMinOK.schema()().dump(schema_config)
     aggr_function = BIAggregationFunctionCountMinOK(aggr_config)
     assert aggr_function.aggregate(states) == expected_state
+    

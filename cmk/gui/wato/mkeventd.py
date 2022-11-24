@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import ast
 import io
 import os
 import re
+import socket
 import sys
 import time
 import zipfile
@@ -27,7 +29,7 @@ from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
 from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
 from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
 
-from livestatus import SiteId
+from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
 import cmk.utils.log
 import cmk.utils.packaging
@@ -40,6 +42,9 @@ from cmk.utils.site import omd_site
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.mkeventd import execute_command
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName
@@ -57,8 +62,7 @@ import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -168,6 +172,19 @@ from cmk.gui.watolib.utils import site_neutral_path
 
 def _compiled_mibs_dir() -> Path:
     return cmk.utils.paths.omd_root / "local/share/check_mk/compiled_mibs"
+
+
+def mib_upload_dir() -> Path:
+    return cmk.utils.paths.local_mib_dir
+
+
+def mib_dirs() -> list[tuple[Path, str]]:
+    # ASN1 MIB source directory candidates. Non existing dirs are ok.
+    return [
+        (mib_upload_dir(), _("Custom MIBs")),
+        (cmk.utils.paths.mib_dir, _("MIBs shipped with Checkmk")),
+        (Path("/usr/share/snmp/mibs"), _("System MIBs")),
+    ]
 
 
 # .
@@ -1405,7 +1422,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
             raise MKUserError("event_p_application", _("Please specify an application name"))
         if not event.get("host"):
             raise MKUserError("event_p_host", _("Please specify a host name"))
-        rfc = cmk.gui.mkeventd.send_event(event)
+        rfc = send_event(event)
         flash(
             escape_to_html(_("Test event generated and sent to Event Console."))
             + HTMLWriter.render_br()
@@ -1615,7 +1632,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         # Reset all rule hit counteres
         elif request.has_var("_reset_counters"):
             for site in _get_event_console_sync_sites():
-                cmk.gui.mkeventd.execute_command("RESETCOUNTERS", site=site)
+                execute_command("RESETCOUNTERS", site=site)
             self._add_change("counter-reset", _("Resetted all rule hit counters to zero"))
 
         # Copy rules from master
@@ -1703,7 +1720,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return redirect(self.mode_url())
 
     def _copy_rules_from_master(self) -> None:
-        answer = cmk.gui.mkeventd.query_ec_directly(b"REPLICATE 0")
+        answer = query_ec_directly(b"REPLICATE 0")
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
@@ -1711,7 +1728,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
     def page(self) -> None:  # pylint: disable=too-many-branches
         self._verify_ec_enabled()
-        rep_mode = cmk.gui.mkeventd.replication_mode()
+        rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_link(
                 url=make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]),
@@ -2649,7 +2666,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 "edit-rule", _("Modified event correlation rule %s") % self._rule["id"]
             )
             # Reset hit counters of this rule
-            cmk.gui.mkeventd.execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
+            execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())
         return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
 
     def page(self) -> None:
@@ -2707,7 +2724,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             new_mode = "sync"
         else:
             new_mode = "takeover"
-        cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], omd_site())
+        execute_command("SWITCHMODE", [new_mode], omd_site())
         log_audit("mkeventd-switchmode", "Switched replication slave mode to %s" % new_mode)
         flash(_("Switched to %s mode") % new_mode)
         return None
@@ -2721,11 +2738,11 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
             "before starting this site."
         )
 
-        if not cmk.gui.mkeventd.daemon_running():
+        if not daemon_running():
             html.show_warning(warning)
             return
 
-        status = cmk.gui.mkeventd.get_local_ec_status()
+        status = get_local_ec_status()
         if not status:
             html.show_warning(warning)
             return
@@ -3024,7 +3041,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             return redirect(self.mode_url())
 
         if filename := request.var("_delete"):
-            if info := self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir()).get(filename):
+            if info := self._load_snmp_mibs(mib_upload_dir()).get(filename):
                 self._delete_mib(filename, info.name)
         elif request.var("_bulk_delete_custom_mibs"):
             self._bulk_delete_custom_mibs_after_confirm()
@@ -3032,7 +3049,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return redirect(self.mode_url())
 
     def _bulk_delete_custom_mibs_after_confirm(self) -> None:
-        custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
+        custom_mibs = self._load_snmp_mibs(mib_upload_dir())
         selected_custom_mibs: list[str] = []
         for varname, _value in request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
@@ -3053,16 +3070,16 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 f.with_suffix(".py"),
                 ("__pycache__" / f).with_suffix(pyc_suffix),
             )
-        } | {cmk.gui.mkeventd.mib_upload_dir() / filename}:
+        } | {mib_upload_dir() / filename}:
             path.unlink(missing_ok=True)
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        for path, title in cmk.gui.mkeventd.mib_dirs():
+        for path, title in mib_dirs():
             self._show_mib_table(path, title)
 
     def _show_mib_table(self, path: Path, title: str) -> None:
-        is_custom_dir = path == cmk.gui.mkeventd.mib_upload_dir()
+        is_custom_dir = path == mib_upload_dir()
 
         if is_custom_dir:
             html.begin_form("bulk_delete_form", method="POST")
@@ -3246,8 +3263,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             mibname = filename
 
         msg = self._validate_and_compile_mib(mibname.upper(), content)
-        cmk.gui.mkeventd.mib_upload_dir().mkdir(parents=True, exist_ok=True)
-        with (cmk.gui.mkeventd.mib_upload_dir() / filename).open("wb") as f:
+        mib_upload_dir().mkdir(parents=True, exist_ok=True)
+        with (mib_upload_dir() / filename).open("wb") as f:
             f.write(content)
         self._add_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
         return msg
@@ -3281,9 +3298,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
 
         # Directories containing ASN1 MIB files which may be used for
         # dependency resolution
-        compiler.addSources(
-            *[FileReader(str(path)) for path, _title in cmk.gui.mkeventd.mib_dirs()]
-        )
+        compiler.addSources(*[FileReader(str(path)) for path, _title in mib_dirs()])
 
         # check for already compiled MIBs
         compiler.addSearchers(PyFileSearcher(compiled_mibs_dir))
@@ -5102,3 +5117,76 @@ match_item_generator_registry.register(
         ModeEventConsoleSettings,
     )
 )
+
+
+def _socket_path() -> Path:
+    return cmk.utils.paths.omd_root / "tmp/run/mkeventd/status"
+
+
+def daemon_running() -> bool:
+    return _socket_path().exists()
+
+
+# TODO: Shouldn't the parameter be an ec.Event? But that has no "site" attribute?!
+def send_event(event: dict[str, Any]) -> str:
+    syslog_message_str = repr(
+        ec.SyslogMessage(
+            facility=event["facility"],
+            severity=event["priority"],
+            timestamp=time.time(),
+            host_name=event["host"],
+            application=event["application"],
+            text=event["text"],
+            ip_address=event["ipaddress"],
+            service_level=event["sl"],
+        )
+    )
+
+    execute_command("CREATE", [syslog_message_str], site=event["site"])
+
+    return syslog_message_str
+
+
+def get_local_ec_status() -> dict[str, Any] | None:
+    response = LocalConnection().query("GET eventconsolestatus")
+    if len(response) == 1:
+        return None  # In case the EC is not running, there may be some
+    return dict(zip(response[0], response[1]))
+
+
+def replication_mode() -> str:
+    try:
+        status = get_local_ec_status()
+        if not status:
+            return "stopped"
+        return status["status_replication_slavemode"]
+    except MKLivestatusSocketError:
+        return "stopped"
+
+
+# Only use this for master/slave replication. For status queries use livestatus
+def query_ec_directly(query: bytes) -> dict[str, Any]:
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.settimeout(active_config.mkeventd_connect_timeout)
+        sock.connect(str(_socket_path()))
+        sock.sendall(query)
+        sock.shutdown(socket.SHUT_WR)
+
+        response_text = b""
+        while True:
+            chunk = sock.recv(8192)
+            response_text += chunk
+            if not chunk:
+                break
+
+        return ast.literal_eval(response_text.decode())
+    except SyntaxError:
+        raise MKGeneralException(
+            _("Invalid response from event daemon: <pre>%s</pre>") % response_text
+        )
+
+    except Exception as e:
+        raise MKGeneralException(
+            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e)
+        )

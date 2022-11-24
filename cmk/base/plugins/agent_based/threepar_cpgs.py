@@ -6,9 +6,13 @@ from collections.abc import Mapping
 
 import pydantic
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
-from .agent_based_api.v1 import register
+from .agent_based_api.v1 import register, Result, Service, State
 from .utils.threepar import parse_3par
 
 
@@ -36,6 +40,12 @@ class ThreeparCPG(pydantic.BaseModel):
 
 ThreeparCPGSection = Mapping[str, ThreeparCPG]
 
+_STATES = {
+    1: (State.OK, "Normal"),
+    2: (State.WARN, "Degraded"),
+    3: (State.CRIT, "Failed"),
+}
+
 
 def parse_threepar_cpgs(string_table: StringTable) -> ThreeparCPGSection:
     if (raw_members := parse_3par(string_table).get("members")) is None:
@@ -51,4 +61,26 @@ def count_threepar_vvs(cpg: ThreeparCPG) -> int:
 register.agent_section(
     name="3par_cpgs",
     parse_function=parse_threepar_cpgs,
+)
+
+
+def discover_threepar_cpgs(section: ThreeparCPGSection) -> DiscoveryResult:
+    for cpg in section.values():
+        if cpg.name and count_threepar_vvs(cpg) > 0:
+            yield Service(item=cpg.name)
+
+
+def check_threepar_cpgs(item: str, section: ThreeparCPGSection) -> CheckResult:
+    if (cpg := section.get(item)) is None:
+        return
+
+    state, state_readable = _STATES[cpg.state]
+    yield Result(state=state, summary=f"{state_readable}, {count_threepar_vvs(cpg)} VVs")
+
+
+register.check_plugin(
+    name="3par_cpgs",
+    discovery_function=discover_threepar_cpgs,
+    check_function=check_threepar_cpgs,
+    service_name="CPG %s",
 )

@@ -14,6 +14,11 @@ from cmk.utils.type_defs import CheckPluginName, SectionName
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.threepar_cpgs import (
+    check_threepar_cpgs,
+    discover_threepar_cpgs,
+    parse_threepar_cpgs,
+)
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
@@ -21,11 +26,6 @@ STRING_TABLE = [
         '{"total": 1,"members": [{"id": 0,"uuid": "b5611ec3-b459-4cfe-91d8-64b6c074e72b","name": "SSD_R6","numFPVVs": 1,"numTPVVs": 0,"numTDVVs": 15,"UsrUsage": {"totalMiB": 20261120,"rawTotalMiB": 24313343,"usedMiB": 20261120,"rawUsedMiB": 24313343},"SAUsage": {"totalMiB": 104448,"rawTotalMiB": 313344,"usedMiB": 94976,"rawUsedMiB": 284928},"SDUsage": {"totalMiB": 44800,"rawTotalMiB": 53760,"usedMiB": 25600,"rawUsedMiB": 30719},"state": 1}]}'
     ]
 ]
-
-
-@pytest.fixture(name="check")
-def _3par_cpgs_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("3par_cpgs")]
 
 
 @pytest.fixture(name="usage_check")
@@ -48,14 +48,11 @@ def _3par_cpgs_usage_check_plugin(fix_register: FixRegister) -> CheckPlugin:
         ),
     ],
 )
-def test_discover_3par_cpgs(
-    check: CheckPlugin,
-    fix_register: FixRegister,
+def test_discover_threepar_cpgs(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_3par_cpgs = fix_register.agent_sections[SectionName("3par_cpgs")].parse_function
-    assert list(check.discovery_function(parse_3par_cpgs(section))) == expected_discovery_result
+    assert list(discover_threepar_cpgs(parse_threepar_cpgs(section))) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -96,19 +93,15 @@ def test_discover_3par_cpgs(
     ],
 )
 def test_check_3par_cpgs(
-    check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result],
 ) -> None:
-    parse_3par_cpgs = fix_register.agent_sections[SectionName("3par_cpgs")].parse_function
     assert (
         list(
-            check.check_function(
+            check_threepar_cpgs(
                 item=item,
-                params={},
-                section=parse_3par_cpgs(section),
+                section=parse_threepar_cpgs(section),
             )
         )
         == expected_check_result

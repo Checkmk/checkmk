@@ -1,0 +1,12 @@
+Title: Fix wrong choices in "Service Contact Group" filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1669275899
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+The filter "Service Contact Group" showed service groups instead of contact
+groups as choices.

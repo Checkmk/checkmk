@@ -32,7 +32,7 @@ def run_make_targets(Map args) {
 
             // TODO dir + set WORKSPACE is needed due to nested dependency
             dir("${checkout_dir}") {
-                withEnv(["WORKSPACE=${checkout_dir}"]) {
+                withEnv(["WORKSPACE=${WORKSPACE}"]) {
 
                     // TODO preprocess values in top level scripts
                     def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"

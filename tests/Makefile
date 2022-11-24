@@ -42,7 +42,9 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 
 # evaluate this only if needed, it slows down tab expansion otherwise.
 # asio-asio*, googletest* and __pycache__ are excluded because they are present during CI call
+# "_deps" is excluded as an owned by cmake build
 SHELL_FILES_REL = $(shell cd ..; grep -rl \
+    --exclude-dir="_deps" \
     --exclude-dir="asio-asio*" \
     --exclude-dir="googletest*" \
     --exclude-dir="__pycache__" \

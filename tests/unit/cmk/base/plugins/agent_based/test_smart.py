@@ -3,10 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import on_time
 
+from cmk.base.api.agent_based.checking_classes import IgnoreResults
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
@@ -484,7 +488,7 @@ SECTION_NVME = {
 @pytest.mark.parametrize(
     "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
 )
-def test_parse_smart(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_smart(string_table: StringTable, section: smart.Section) -> None:
     assert smart.parse_raw_values(string_table) == section
 
 
@@ -523,7 +527,7 @@ def test_parse_smart(string_table, section) -> None:  # type:ignore[no-untyped-d
         ),
     ],
 )
-def test_discover_smart_stats(section, discovered) -> None:  # type:ignore[no-untyped-def]
+def test_discover_smart_stats(section: smart.Section, discovered: Sequence[Service]) -> None:
     assert list(smart.discover_smart_stats(section)) == discovered
 
 
@@ -586,7 +590,12 @@ def test_discover_smart_stats(section, discovered) -> None:  # type:ignore[no-un
         ),
     ],
 )
-def test_check_smart_stats(item, params, section, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_smart_stats(
+    item: str,
+    params: Mapping[str, int],
+    section: smart.Section,
+    result: Sequence[IgnoreResults | Metric | Result],
+) -> None:
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 

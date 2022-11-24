@@ -718,14 +718,14 @@ def test_create_nagios_servicedefs_active_check(
         ),
     ],
 )
-def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
+def test_create_nagios_servicedefs_with_warnings(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: dict[str, Any],
     expected_result: str,
     expected_warning: str,
     monkeypatch: MonkeyPatch,
-    capsys,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 

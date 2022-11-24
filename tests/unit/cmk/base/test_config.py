@@ -416,13 +416,13 @@ def _management_config_ruleset() -> list[dict[str, Any]]:
         ),
     ],
 )
-def test_host_config_management_credentials(  # type:ignore[no-untyped-def]
+def test_host_config_management_credentials(
     monkeypatch: MonkeyPatch,
     protocol: str | None,
     credentials: dict[str, str] | None,
     expected_result: str | dict[str, str] | None,
     ruleset: list,
-):
+) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)

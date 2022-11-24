@@ -468,9 +468,9 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
         ("127.0.0.1", "127.0.0.1"),
     ],
 )
-def test_lookup_mgmt_board_ip_address_dual_host(  # type:ignore[no-untyped-def]
+def test_lookup_mgmt_board_ip_address_dual_host(
     monkeypatch: MonkeyPatch, hostname_str: str, result_address: str
-):
+) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(

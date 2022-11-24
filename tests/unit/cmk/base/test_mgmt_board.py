@@ -5,7 +5,10 @@
 
 # TODO: This should be realized as unit tests
 
+from collections.abc import Mapping
+
 import pytest
+from pytest import MonkeyPatch
 
 # No stub file
 from tests.testlib.base import Scenario
@@ -27,8 +30,11 @@ from cmk.utils.type_defs import HostName
         ),
     ],
 )
-def test_mgmt_explicit_settings(  # type:ignore[no-untyped-def]
-    monkeypatch, protocol, cred_attribute, credentials
+def test_mgmt_explicit_settings(
+    monkeypatch: MonkeyPatch,
+    protocol: str,
+    cred_attribute: str,
+    credentials: str | Mapping[str, str],
 ) -> None:
     host = HostName("mgmt-host")
 
@@ -47,7 +53,7 @@ def test_mgmt_explicit_settings(  # type:ignore[no-untyped-def]
     assert host_config.management_credentials == credentials
 
 
-def test_mgmt_explicit_address(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
     host = HostName("mgmt-host")
 
     ts = Scenario()
@@ -65,7 +71,7 @@ def test_mgmt_explicit_address(monkeypatch) -> None:  # type:ignore[no-untyped-d
     assert host_config.management_credentials == "public"
 
 
-def test_mgmt_disabled(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
     host = HostName("mgmt-host")
 
     ts = Scenario()

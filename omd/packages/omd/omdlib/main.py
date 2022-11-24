@@ -75,6 +75,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.instance_id import save_instance_id
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
@@ -2040,6 +2041,8 @@ def main_create(
         )
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
+
+    save_instance_id(site)
 
 
 def welcome_message(site: SiteContext, admin_password: Password[str]) -> None:

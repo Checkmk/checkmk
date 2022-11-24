@@ -37,6 +37,8 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
 
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
+                      $(wildcard $(addprefix packages/livestatus/src/,*.cc)) \
+                      $(wildcard $(addprefix packages/livestatus/include/livestatus/,*.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
@@ -511,7 +513,7 @@ format: format-python format-c format-shell format-js format-css
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-clang-format-with = $(CLANG_FORMAT) -style=file $(1) $(FILES_TO_FORMAT_LINUX)
+clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
 
 format-c:
 	$(call clang-format-with,-i)

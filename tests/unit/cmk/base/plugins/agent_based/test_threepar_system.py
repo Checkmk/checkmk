@@ -98,6 +98,7 @@ def test_check_3par_system(
     assert (
         list(
             check_threepar_system(
+                item="test-name",
                 section=parse_threepar_system(section),
             )
         )

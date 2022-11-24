@@ -50,7 +50,7 @@ def discover_threepar_system(section: ThreeParSystem) -> DiscoveryResult:
         yield Service(item=section.name)
 
 
-def check_threepar_system(section: ThreeParSystem) -> CheckResult:
+def check_threepar_system(item: str, section: ThreeParSystem) -> CheckResult:
 
     yield Result(
         state=State.OK,
@@ -66,5 +66,5 @@ register.check_plugin(
     name="3par_system",
     check_function=check_threepar_system,
     discovery_function=discover_threepar_system,
-    service_name="3PAR",
+    service_name="3PAR %s",
 )

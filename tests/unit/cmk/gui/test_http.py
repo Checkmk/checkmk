@@ -9,6 +9,7 @@ from collections.abc import Iterator
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from pydantic import BaseModel
 from werkzeug.test import create_environ
 
 import cmk.gui.http as http
@@ -252,6 +253,31 @@ def test_get_integer_input_mandatory_not_a_number() -> None:
     with pytest.raises(MKUserError) as e:
         request.get_integer_input_mandatory("not_a_number")
     assert "is not an integer" in "%s" % e
+
+
+class ModelForTest(BaseModel):
+    my_float: float
+    my_string: str
+
+
+def test_get_model_mandatory(request_context: RequestContextFixture) -> None:
+
+    request.set_var("my_model", '{"my_float": 23.42, "my_string": "yes"}')
+
+    with pytest.raises(MKUserError):
+        request.get_model_mandatory(ModelForTest, "Not existing")
+
+    assert request.get_model_mandatory(ModelForTest, "my_model") == ModelForTest(
+        my_float=23.42, my_string="yes"
+    )
+
+
+def test_get_model_mandatory_invalid(request_context: RequestContextFixture) -> None:
+
+    request.set_var("my_model", '{"my_float": "mööp", "my_string": 17}')
+
+    with pytest.raises(MKUserError):
+        request.get_model_mandatory(ModelForTest, "my_model")
 
 
 @pytest.mark.usefixtures("set_int_vars")

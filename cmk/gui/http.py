@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from typing import Any, overload, Protocol, TypeVar
 
 import werkzeug
+from pydantic import BaseModel
 from six import ensure_str
 from werkzeug.utils import get_content_type
 
@@ -36,6 +37,8 @@ class ValidatedClass(Protocol):
 
 
 Validation_T = TypeVar("Validation_T", bound=ValidatedClass)
+
+Model_T = TypeVar("Model_T", bound=BaseModel)
 
 
 class LegacyVarsMixin:
@@ -324,6 +327,17 @@ class Request(
 
     def get_str_input_mandatory(self, varname: str, deflt: str | None = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
+
+    def get_model_mandatory(
+        self,
+        model: type[Model_T],
+        varname: str,
+    ) -> Model_T:
+        """Try to convert the value of an HTTP request variable to a given pydantic model"""
+        try:
+            return model.parse_raw(mandatory_parameter(varname, self.var(varname)))
+        except ValueError as exception:
+            raise MKUserError(varname, _("The value is not valid: '%s'") % exception)
 
     @overload
     def get_validated_type_input(

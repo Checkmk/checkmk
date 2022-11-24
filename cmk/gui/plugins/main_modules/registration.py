@@ -21,7 +21,7 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     sample_config_generator_registry,
 )
-from cmk.gui.views import datasource_selection, icon, perfometer
+from cmk.gui.views import datasource_selection, icon, inventory, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
     command_registry,
@@ -88,3 +88,4 @@ mkeventd.register(
 )
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry)
+inventory.register()

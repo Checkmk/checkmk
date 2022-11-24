@@ -20,12 +20,13 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
 )
-from cmk.gui.views.inventory import inventory_displayhints
+
+from .registry import InventoryHintRegistry
+
 
 # fmt: off
-
-inventory_displayhints.update(
-    {
+def register(inventory_displayhints: InventoryHintRegistry) -> None:
+    inventory_displayhints.update({
         ".hardware.": {"title": _l("Hardware"), "icon": "hardware"},
         ".hardware.chassis.": {"title": _l("Chassis")},
         ".hardware.cpu.": {
@@ -1522,7 +1523,5 @@ inventory_displayhints.update(
         ".networking.tunnels:*.peername": {"title": _l("Peer Name")},
         ".networking.tunnels:*.sourceip": {"title": _l("Source IP Address")},
         ".networking.tunnels:*.tunnelinterface": {"title": _l("Tunnel Interface")},
-    }
-)
-
+    })
 # fmt: on

@@ -1,7 +1,7 @@
 # The target is not generated automatically with full build: this is intended,
 # because documentation is to be generated separately from the main build
 
-find_package(Doxygen REQUIRED dot)
+find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
   message("Doxygen will use ${PROJECT_SOURCE_DIR} as a base")

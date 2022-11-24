@@ -483,6 +483,7 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
+	cd packages/livestatus && cmake -S . -B build && cmake --build build
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4

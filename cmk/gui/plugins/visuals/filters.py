@@ -492,7 +492,7 @@ filter_registry.register(
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
         query_filter=query_filters.MultipleQuery(
             ident="optservice_contactgroup",
             request_var="optservice_contact_group",

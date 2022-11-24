@@ -1,0 +1,26 @@
+title: Kubernetes: Persistent Volume Claim
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+
+ This check monitors the Persistent Volume Claim (PVC) and its attached volume.
+
+ The check displays the reported status of the PVC. If available, the check measures the
+ volume usage of the attached volume storage. The usage is checked against a warning and
+ critical level which can be configured in the respective rule.
+
+ The current volume usage is only available under the specific condition that kubelet endpoints
+ report the necessary volume metrics. In the case where these metrics are unavailable,
+ the service will default to simply reporting the configured capacity level of the persistent
+ volume claim.
+
+ The check only supports storage types which are actually mounted on the node level.
+
+ Currently, this check does not have inodes support.
+
+ The check requires that the special agent kube is configured.
+
+discovery:
+ One service is created per Persistent Volume Claim for the respective Kubernetes object.

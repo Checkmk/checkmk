@@ -2444,6 +2444,9 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
 
+    if what == "cp":
+        save_instance_id(new_site)
+
     finalize_site(version_info, new_site, what, "apache-reload" in options)
 
 

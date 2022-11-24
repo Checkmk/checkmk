@@ -114,6 +114,14 @@ check-version:
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
 
+ifeq ($(ENTERPRISE),yes)
+$(REPO_PATH)/agents/plugins/cmk-update-agent:
+	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
+
+$(REPO_PATH)/agents/plugins/cmk-update-agent-32:
+	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
+endif
+
 $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 	@echo "ERROR: Should have already been built by Windows node jobs"
 	@echo "If you don't need the windows artifacts, you can use "
@@ -126,12 +134,8 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: config.h.in $(SOURCE_BUILT_AGENTS) $(DIST_DEPS) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+dist: config.h.in $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) $(DIST_DEPS) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
 	$(MAKE) -C agents/plugins
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
-endif
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \

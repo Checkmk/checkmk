@@ -19,9 +19,11 @@ SOURCE_BUILT_LINUX_AGENTS := \
 	$(REPO_PATH)/agents/check-mk-agent_$(VERSION)-1_all.deb \
 	$(REPO_PATH)/agents/linux/cmk-agent-ctl
 ifeq ($(ENTERPRISE),yes)
-SOURCE_BUILT_LINUX_AGENTS := $(SOURCE_BUILT_LINUX_AGENTS) \
+SOURCE_BUILT_AGENT_UPDATER := \
 	$(REPO_PATH)/agents/plugins/cmk-update-agent \
 	$(REPO_PATH)/agents/plugins/cmk-update-agent-32
+else
+SOURCE_BUILT_AGENT_UPDATER :=
 endif
 SOURCE_BUILT_OHM := \
 	$(REPO_PATH)/agents/windows/OpenHardwareMonitorCLI.exe \
@@ -33,5 +35,6 @@ SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
 SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_LINUX_AGENTS) \
+	$(SOURCE_BUILT_AGENT_UPDATER) \
 	$(SOURCE_BUILT_OHM) \
 	$(SOURCE_BUILT_WINDOWS)

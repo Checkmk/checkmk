@@ -65,7 +65,7 @@ def run_make_targets(Map args) {
 
                     // Cleanup test results directory before starting the test to prevent previous
                     // runs somehow affecting the current run.
-                    sh("[ -d test-results ] && rm -rf test-results || true")
+                    sh("[ -d ${WORKSPACE}/test-results ] && rm -rf ${WORKSPACE}/test-results || true")
 
                     // Initialize our virtual environment before parallelization
                     sh("make .venv")
@@ -90,15 +90,17 @@ def run_make_targets(Map args) {
                         parallel DOCKER_BUILDS
                     } finally {
                         stage('archive artifacts') {
-                            archiveArtifacts("test-results/**")
-                            xunit([Custom(
-                                customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
-                                deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: "**/junit.xml",
-                                skipNoTestFiles: false,
-                                stopProcessingIfError: true
-                            )])
+                            dir(WORKSPACE) {
+                                archiveArtifacts("test-results/**")
+                                xunit([Custom(
+                                    customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
+                                    deleteOutputFiles: true,
+                                    failIfNotNew: true,
+                                    pattern: "**/junit.xml",
+                                    skipNoTestFiles: false,
+                                    stopProcessingIfError: true
+                                )])
+                            }
                         }
                     }
                 }

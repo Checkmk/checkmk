@@ -7,7 +7,7 @@
 from . import result
 from ._misc import *  # TODO(ML): We should clean this up some day.
 from .automations import *
-from .core_config import *
+from .core_config import *  # pylint: disable=cyclic-import
 from .ip_lookup import *
 from .notify import *
 from .parent_scan import *

@@ -39,7 +39,6 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import HostConfig
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,
@@ -152,7 +151,6 @@ def get_check_preview(
             for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
         ]
 
-    host_config = config_cache.make_host_config(host_name)
     return [
         *passive_rows,
         *_active_check_preview_rows(
@@ -161,7 +159,7 @@ def get_check_preview(
             config_cache.active_checks(host_name),
             host_attrs,
         ),
-        *_custom_check_preview_rows(host_name, host_config),
+        *_custom_check_preview_rows(host_name, config_cache.custom_checks(host_name)),
     ], host_labels
 
 
@@ -203,7 +201,7 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    host_name: HostName, host_config: HostConfig
+    host_name: HostName, custom_checks: list[dict]
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -216,7 +214,7 @@ def _custom_check_preview_rows(
                 if config.service_ignored(host_name, None, description=entry["service_description"])
                 else "custom",
             )
-            for entry in host_config.custom_checks
+            for entry in custom_checks
         }.values()
     )
 

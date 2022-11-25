@@ -722,7 +722,6 @@ class AutomationAnalyseServices(Automation):
                 service_info := self._get_service_info(
                     config_cache=config_cache,
                     host_name=hostname,
-                    host_config=config_cache.make_host_config(hostname),
                     host_attrs=core_config.get_host_attributes(hostname, config_cache),
                     servicedesc=servicedesc,
                 )
@@ -741,7 +740,6 @@ class AutomationAnalyseServices(Automation):
         self,
         config_cache: ConfigCache,
         host_name: HostName,
-        host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
@@ -773,7 +771,7 @@ class AutomationAnalyseServices(Automation):
             return autocheck_service
 
         # 3. Classical checks
-        for entry in host_config.custom_checks:
+        for entry in config_cache.custom_checks(host_name):
             desc = entry["service_description"]
             if desc == servicedesc:
                 result: automation_results.ServiceInfo = {
@@ -1576,12 +1574,11 @@ class AutomationActiveCheck(Automation):
         plugin, item = args[1:]
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
         with redirect_stdout(open(os.devnull, "w")):
             host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
         if plugin == "custom":
-            for entry in host_config.custom_checks:
+            for entry in config_cache.custom_checks(hostname):
                 if entry["service_description"] != item:
                     continue
 

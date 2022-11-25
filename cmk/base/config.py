@@ -2625,11 +2625,6 @@ class HostConfig:
         )
 
     @property
-    def custom_checks(self) -> list[dict]:
-        """Return the free form configured custom checks without formalization"""
-        return self._config_cache.host_extra_conf(self.hostname, custom_checks)
-
-    @property
     def hostgroups(self) -> list[HostgroupName]:
         """Returns the list of hostgroups of this host
 
@@ -3260,6 +3255,10 @@ class ConfigCache:
         return self.host_extra_conf_merged(
             host_name, inv_parameters.get(str(ruleset_name), default)
         )
+
+    def custom_checks(self, host_name: HostName) -> list[dict]:
+        """Return the free form configured custom checks without formalization"""
+        return self.host_extra_conf(host_name, custom_checks)
 
     def active_checks(self, host_name: HostName) -> list[tuple[str, list[Any]]]:
         """Returns the list of active checks configured for this host

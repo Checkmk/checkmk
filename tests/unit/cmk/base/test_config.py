@@ -1201,8 +1201,7 @@ def test_host_config_custom_checks(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).custom_checks == result
+    assert ts.apply(monkeypatch).custom_checks(hostname) == result
 
 
 @pytest.mark.parametrize(

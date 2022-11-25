@@ -500,7 +500,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                     cfg.write(get_dependencies(hostname, description))
 
     # Legacy checks via custom_checks
-    custchecks = host_config.custom_checks
+    custchecks = config_cache.custom_checks(hostname)
     if custchecks:
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:

@@ -257,8 +257,7 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age(), false);
-        ASSERT_EQ(me.cache_age_max(), 0);
+        ASSERT_FALSE(me.caching_.has_value());
     }
 
     {
@@ -269,8 +268,8 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age(), true);
-        ASSERT_EQ(me.cache_age_max(), 123456);
+        ASSERT_EQ(me.caching_->add_age, true);
+        ASSERT_EQ(me.caching_->max_age, 123456);
     }
 }
 
@@ -405,7 +404,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto &time_1 = result_1[3];
     std::cout << time_1 << std::endl;
 
-    // expect "(powershell.exe) Time 0 TIMESTAMP"
+    // expect "(powershell.exe) CachedTime 0 TIMESTAMP"
     auto result_2 = cma::tools::SplitString(table[2], " ");
     auto mrpe_2 = mrpe.entries()[1];
     EXPECT_EQ(result_2.size(), 4);
@@ -414,7 +413,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     EXPECT_EQ(result_2[2], "0");
     auto &time_2 = result_2[3];
 
-    // expect "(powershell.exe) Time 0 TIMESTAMP (DIFF;10)"
+    // expect "(powershell.exe) CachedTimeWithAge 0 TIMESTAMP (DIFF;10)"
     auto result_3 = cma::tools::SplitString(table[3], " ");
     auto mrpe_3 = mrpe.entries()[2];
     EXPECT_EQ(result_3.size(), 5);
@@ -424,9 +423,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto &time_3 = result_3[3];
     EXPECT_TRUE(result_3[3].find(";10)"));
 
-    // TODO(au) Current implementation always caches for time differences < 1s.
-    // Fix this!
-    cma::tools::sleep(1100);
+    cma::tools::sleep(10);
 
     // expect TIMESTAMP to change for first check, while the other two are
     // cached and stay unchanged

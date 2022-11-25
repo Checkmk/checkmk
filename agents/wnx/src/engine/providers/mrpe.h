@@ -22,6 +22,11 @@ constexpr bool kMrpeRemoveAbsentFiles{false};
 
 std::vector<std::string> TokenizeString(const std::string &val, int sub_match);
 
+struct MrpeCachingInfo {
+    int max_age;
+    bool add_age;
+};
+
 class MrpeEntry {
 public:
     MrpeEntry(std::string run_as_user,  // only from cfg
@@ -39,20 +44,13 @@ public:
         loadFromString(value);
     }
 
-    [[nodiscard]] bool add_age() const noexcept { return add_age_; }
-    [[nodiscard]] int cache_age_max() const noexcept { return cache_max_age_; }
-
     void loadFromString(const std::string &value);
     std::string run_as_user_;
     std::string command_line_;
     std::string exe_name_;
     std::string description_;
     std::string full_path_name_;
-
-private:
-    // caching support
-    int cache_max_age_{0};
-    bool add_age_{false};
+    std::optional<MrpeCachingInfo> caching_;
 };
 
 class MrpeCache {

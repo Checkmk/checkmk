@@ -42,7 +42,7 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
 }
 
 namespace {
-std::optional<std::tuple<int, bool>> ParseCacheAgeToken(std::string_view text) {
+std::optional<MrpeCachingInfo> ParseCacheAgeToken(std::string_view text) {
     if (text.size() < 3 || text[0] != '(' || text[text.size() - 1] != ')') {
         return {};
     }
@@ -57,7 +57,7 @@ std::optional<std::tuple<int, bool>> ParseCacheAgeToken(std::string_view text) {
     try {
         auto cache_age = std::stoi(tokens[0].c_str() + 1);
 
-        return {{cache_age, add_age}};
+        return MrpeCachingInfo{cache_age, add_age};
 
     } catch (std::invalid_argument const &e) {
         XLOG::l("mrpe entry malformed '{}'", e.what());
@@ -87,11 +87,10 @@ void MrpeEntry::loadFromString(const std::string &value) {
 
     int position_exe = 1;
 
-    auto optional_cache_data = ParseCacheAgeToken(tokens[1]);
+    caching_ = ParseCacheAgeToken(tokens[1]);
 
-    if (optional_cache_data.has_value()) {
+    if (caching_) {
         position_exe++;
-        std::tie(cache_max_age_, add_age_) = *optional_cache_data;
     }
 
     auto exe_name = tokens[position_exe];  // Intentional copy
@@ -357,15 +356,19 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
 
 std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
                             std::chrono::milliseconds timeout) {
-    // TODO(au): Only use cache if requested
+    if (!entry.caching_) {
+        return ExecMrpeEntry(entry, timeout);
+    }
+
     const auto &[cached_result, cached_state] =
         cache.getLineData(entry.description_);
     switch (cached_state) {
-        case MrpeCache::LineState::ready:
+        case MrpeCache::LineState::ready: {
             return cached_result;
+        }
         case MrpeCache::LineState::absent: {
-            cache.createLine(entry.description_, entry.cache_age_max(),
-                             entry.add_age());
+            cache.createLine(entry.description_, entry.caching_->max_age,
+                             entry.caching_->add_age);
         }
             [[fallthrough]];
         case MrpeCache::LineState::old: {

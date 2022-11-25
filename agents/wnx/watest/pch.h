@@ -54,5 +54,6 @@
 #define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING  // NOLINT
 #include "common/yaml.h"
 #include "gtest/gtest.h"
+#define ENABLE_WHITE_BOX_TESTING
 
 #endif  // PCH_H

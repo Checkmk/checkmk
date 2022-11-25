@@ -957,7 +957,7 @@ public:
         std::string source_text_;
         bool run_ = true;
         YAML::Node source_;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
         friend class AgentConfig;
         FRIEND_TEST(AgentConfig, ExeUnitTest);
 #endif

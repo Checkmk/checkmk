@@ -658,7 +658,7 @@ private:
 
     SectionProvider<provider::PerfCpuLoad> perf_cpuload_provider_;
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ServiceProcessorTest;
     FRIEND_TEST(ServiceProcessorTest, StartStopExe);
     FRIEND_TEST(ServiceProcessorTest, Generate);

@@ -89,7 +89,7 @@ private:
     bool use_winperf_processor_{false};
     bool use_test_{false};
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     FRIEND_TEST(RealtimeTest, LowLevel);
 #endif
 };

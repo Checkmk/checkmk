@@ -78,7 +78,7 @@ private:
     [[nodiscard]] std::filesystem::path findBin(
         const std::filesystem::path &modules_dir) const noexcept;
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ModulesTest;
     FRIEND_TEST(ModulesTest, Loader);
     FRIEND_TEST(ModulesTest, Internal);
@@ -172,7 +172,7 @@ private:
     static PathVector ScanDir(const std::filesystem::path &dir) noexcept;
     std::vector<std::filesystem::path> files_;
     std::vector<Module> modules_;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
     FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);

@@ -132,7 +132,7 @@ private:
     std::filesystem::path public_logs_;   //
     std::filesystem::path private_logs_;  //
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class AgentConfig;
     FRIEND_TEST(AgentConfig, FoldersTest);
 
@@ -468,7 +468,7 @@ private:
 
     static std::atomic<uint64_t> g_uniq_id;
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, LogFileLocation);
     FRIEND_TEST(CmaCfg, InitEnvironment);

@@ -590,6 +590,12 @@ def test_inv_oracle_instance(
 def test_inv_oracle_instance_multiline() -> None:
     lines = [
         [
+            "SID-ERROR",
+            "FAILURE",
+            "ERROR: ORA-12541: TNS:no listener   SP2-0751: Unable to connect to Oracle.  "
+            "Exiting SQL*Plus",
+        ],
+        [
             "SID",
             "VERSION",
             "OPENMODE",
@@ -639,6 +645,21 @@ def test_inv_oracle_instance_multiline() -> None:
         ],
     ]
     expected_data = [
+        TableRow(
+            path=["software", "applications", "oracle", "instance"],
+            key_columns={
+                "sid": "SID-ERROR",
+            },
+            inventory_columns={
+                "pname": None,
+                "version": None,
+                "openmode": None,
+                "logmode": None,
+                "logins": None,
+                "db_creation_time": None,
+            },
+            status_columns={},
+        ),
         TableRow(
             path=["software", "applications", "oracle", "instance"],
             key_columns={

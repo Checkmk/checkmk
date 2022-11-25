@@ -29,7 +29,7 @@ def _vs_network_elements() -> Sequence[tuple[str, ValueSpec]]:
     ]
 
 
-def _vs_run_cpu() -> ValueSpec:
+def _vs_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[

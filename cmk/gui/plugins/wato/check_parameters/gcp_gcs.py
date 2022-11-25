@@ -8,7 +8,6 @@ from cmk.gui.plugins.wato.check_parameters.gcp import (
     _vs_disk_elements,
     _vs_network_elements,
     _vs_percentile_choice,
-    _vs_run_cpu,
 )
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -23,7 +22,6 @@ from cmk.gui.valuespec import (
     Filesize,
     Integer,
     ListOf,
-    MonitoringState,
     Percentage,
     RegExp,
     TextInput,
@@ -98,109 +96,6 @@ rulespec_registry.register(
         parameter_valuespec=_vs_gcs_bucket_objects,
         title=lambda: _("GCP/GCS objects"),
         item_spec=_item_spec_gcs,
-    )
-)
-
-
-def _vs_sql_status() -> ValueSpec:
-    return Dictionary(
-        title=_("Map GCP status to check mk"),
-        elements=[
-            ("RUNNING", MonitoringState(title=_("Running"), default_value=0)),
-            ("SUSPEND", MonitoringState(title=_("Suspend"), default_value=1)),
-            ("RUNNABLE", MonitoringState(title=_("Runnable"), default_value=0)),
-            ("PENDING_CREATE", MonitoringState(title=_("Pending create"), default_value=3)),
-            ("MAINTENANCE", MonitoringState(title=_("Maintenance"), default_value=3)),
-            ("FAILED", MonitoringState(title=_("Failed"), default_value=2)),
-            ("UNKOWN_STATE", MonitoringState(title=_("Unknown"), default_value=3)),
-        ],
-    )
-
-
-def _item_spec_sql() -> ValueSpec:
-    return TextInput(title=_("Database server"))
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_sql_status",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_sql_status,
-        title=lambda: _("GCP/Cloud SQL status"),
-        item_spec=_item_spec_sql,
-    )
-)
-
-
-def _vs_run_memory() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels memory"),
-        elements=[
-            (
-                "memory_util",
-                SimpleLevels(Percentage, title=_("Memory utilization"), default_value=(80, 90)),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_sql_cpu",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_cpu,
-        title=lambda: _("GCP/Cloud SQL CPU utilization"),
-        item_spec=_item_spec_sql,
-    )
-)
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_sql_memory",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_run_memory,
-        title=lambda: _("GCP/Cloud SQL memory utilization"),
-        item_spec=_item_spec_sql,
-    )
-)
-
-
-def _vs_sql_network() -> ValueSpec:
-    return Dictionary(
-        title=_("Levels on network traffic"),
-        elements=[
-            *_vs_network_elements(),
-            ("connections", SimpleLevels(title=_("Active connections"))),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_sql_network",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_sql_network,
-        title=lambda: _("GCP/Cloud SQL network"),
-        item_spec=_item_spec_sql,
-    )
-)
-
-
-def _vs_disk() -> ValueSpec:
-    return Dictionary(title=_("Levels disk"), elements=_vs_disk_elements())
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_sql_disk",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_disk,
-        title=lambda: _("GCP/Cloud SQL disk"),
-        item_spec=_item_spec_sql,
     )
 )
 
@@ -432,29 +327,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_vs_health,
         title=lambda: _("GCP Health"),
-    )
-)
-
-
-def _vs_sql_replication_lag() -> ValueSpec:
-    return Dictionary(
-        title=_("Parameters for the replication lag"),
-        elements=[
-            (
-                "replication_lag",
-                Levels(title=_("Upper levels on the replication lag"), unit="second"),
-            )
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="gcp_replication_lag",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_vs_sql_replication_lag,
-        title=lambda: _("GCP/Cloud SQL replication lag"),
-        item_spec=_item_spec_sql,
     )
 )

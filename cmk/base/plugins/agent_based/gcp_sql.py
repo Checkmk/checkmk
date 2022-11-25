@@ -118,7 +118,7 @@ register.check_plugin(
         "PENDING_CREATE": int(State.UNKNOWN),
         "MAINTENANCE": int(State.UNKNOWN),
         "FAILED": int(State.CRIT),
-        "UNKOWN_STATE": int(State.CRIT),
+        "UNKNOWN_STATE": int(State.CRIT),
     },
 )
 

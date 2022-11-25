@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors status of your sql server. The status as reported by GCP
  is converted to corresponding service states. Possible value are: RUNNING,
- SUSPEND, RUNNABLE, PENDING_CREATE, MAINTENANCE, FAILED, UNKOWN_STATE
+ SUSPEND, RUNNABLE, PENDING_CREATE, MAINTENANCE, FAILED, UNKNOWN_STATE
  The mapping of each status can be done with the rule "GCP/Cloud SQL status".
 
  To make this check work you have to configure the related

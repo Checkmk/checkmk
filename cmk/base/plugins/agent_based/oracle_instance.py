@@ -194,7 +194,7 @@ def inventory_oracle_instance(section: Section) -> InventoryResult:
                     "db_creation_time": None,
                 },
             )
-            return
+            continue
 
         try:
             status_columns = {"db_uptime": int(item_data.up_seconds)}  # type: ignore[arg-type]

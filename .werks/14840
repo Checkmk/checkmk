@@ -1,0 +1,11 @@
+Title: oracle_instance: Fix missing inventory entries if related SID has an error
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1669371400
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+

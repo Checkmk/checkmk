@@ -242,6 +242,7 @@ class AutomationTryDiscovery(Automation):
 
         return discovery.get_check_preview(
             host_name=HostName(args[0]),
+            config_cache=config.get_config_cache(),
             max_cachefile_age=config.max_cachefile_age(),
             use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,

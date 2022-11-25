@@ -25,7 +25,7 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.auto_queue import AutoQueue
-from cmk.base.config import DiscoveryCheckParameters
+from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 from cmk.base.discovered_labels import HostLabel
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -39,6 +39,7 @@ __all__ = ["execute_check_discovery"]
 def execute_check_discovery(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
@@ -48,8 +49,6 @@ def execute_check_discovery(
     #    - Set FileCacheGlobals.maybe = True (set max_cachefile_age, else 0)
     #    - Set FileCacheGlobals.use_outdated = True
     # 2. Then these settings are used to read cache file or not
-
-    config_cache = config.get_config_cache()
     params = config_cache.discovery_check_parameters(host_name)
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
@@ -64,6 +63,7 @@ def execute_check_discovery(
 
     host_labels = analyse_host_labels(
         host_name=host_name,
+        config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -71,8 +71,8 @@ def execute_check_discovery(
     )
     services = get_host_services(
         host_name,
-        config_cache,
-        parsed_sections_broker,
+        config_cache=config_cache,
+        parsed_sections_broker=parsed_sections_broker,
         on_error=OnError.RAISE,
     )
 
@@ -98,7 +98,7 @@ def execute_check_discovery(
         *summarize_host_sections(
             source_results=source_results,
             exit_spec_cb=config_cache.exit_code_spec,
-            time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+            time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
                 piggybacked_hostname=hostname,
             ),
             is_piggyback=config_cache.is_piggyback_host(host_name),
@@ -106,6 +106,7 @@ def execute_check_discovery(
         *parsing_errors_results,
         _schedule_rediscovery(
             host_name,
+            config_cache=config_cache,
             need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
             and all(r.state == 0 for r in parsing_errors_results),
         ),
@@ -231,13 +232,13 @@ def _check_host_labels(
 def _schedule_rediscovery(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
         return ActiveCheckResult()
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
-    config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if config_cache.is_cluster(host_name) and nodes:
         for nodename in nodes:

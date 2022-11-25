@@ -23,7 +23,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
-import cmk.base.config as config
+from cmk.base.config import ConfigCache
 from cmk.base.submitters import Submitter
 
 from ._checking import execute_checkmk_checks
@@ -32,6 +32,7 @@ from ._checking import execute_checkmk_checks
 def active_check_checking(
     hostname: HostName,
     *,
+    config_cache: ConfigCache,
     submitter: Submitter,
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
@@ -47,7 +48,6 @@ def active_check_checking(
         - `cmk.base.discovery.active_check_discovery()` for the discovery.
 
     """
-    config_cache = config.get_config_cache()
     return error_handling.check_result(
         partial(
             execute_checkmk_checks,

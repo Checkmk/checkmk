@@ -67,6 +67,7 @@ import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.auto_queue import AutoQueue
+from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import parse as parse_raw_data
@@ -1468,7 +1469,10 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         return
 
     config.load()
-    discovery.discover_marked_hosts(create_core(config.monitoring_core), queue)
+    config_cache = config.get_config_cache()
+    discovery.discover_marked_hosts(
+        create_core(config.monitoring_core), queue, config_cache=config_cache
+    )
 
 
 modes.register(
@@ -1508,6 +1512,7 @@ def mode_check_discovery(
     _handle_fetcher_options(options)
     return discovery.commandline_check_discovery(
         hostname,
+        config_cache=config.get_config_cache(),
         ipaddress=None,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
@@ -1705,6 +1710,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
         set(hostnames),
+        config_cache=config.get_config_cache(),
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
         arg_only_new=options["discover"] == 1,
@@ -1823,6 +1829,7 @@ def mode_check(
     checking.commandline_checking(
         hostname,
         ipaddress,
+        config_cache=config.get_config_cache(),
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
         submitter=get_submitter_(
@@ -1940,6 +1947,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     inventory.commandline_inventory(
         hostnames,
+        config_cache=config_cache,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
     )
@@ -1988,6 +1996,7 @@ def mode_inventory_as_check(
     options: dict,
     hostname: HostName,
     *,
+    config_cache: ConfigCache,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> int:
@@ -1995,6 +2004,7 @@ def mode_inventory_as_check(
     return inventory.active_check_inventory(
         hostname,
         options,
+        config_cache=config_cache,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -2010,6 +2020,7 @@ def register_mode_inventory_as_check(
             long_option="inventory-as-check",
             handler_function=partial(
                 mode_inventory_as_check,
+                config_cache=config.get_config_cache(),
                 active_check_handler=active_check_handler,
                 keepalive=keepalive,
             ),

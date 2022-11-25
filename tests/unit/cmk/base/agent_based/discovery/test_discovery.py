@@ -58,7 +58,7 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesTable,
 )
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.discovered_labels import HostLabel
 
 
@@ -872,10 +872,11 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(testhost, ipaddress="127.0.0.1")
     ts.fake_standard_linux_agent_output(testhost)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     discovery.commandline_discovery(
         arg_hostnames={testhost},
+        config_cache=config_cache,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         arg_only_new=False,
@@ -891,6 +892,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
 class RealHostScenario(NamedTuple):
     hostname: HostName
+    config_cache: ConfigCache
     parsed_sections_broker: ParsedSectionsBroker
 
     @property
@@ -907,7 +909,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     hostname = HostName("test-realhost")
     ts = Scenario()
     ts.add_host(hostname, ipaddress="127.0.0.1")
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
@@ -982,10 +984,11 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         }
     )
 
-    return RealHostScenario(hostname, broker)
+    return RealHostScenario(hostname, config_cache, broker)
 
 
 class ClusterScenario(NamedTuple):
+    config_cache: ConfigCache
     host_config: HostConfig
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
@@ -1014,7 +1017,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
             }
         ],
     )
-    host_config = ts.apply(monkeypatch).make_host_config(hostname)
+    config_cache = ts.apply(monkeypatch)
+    host_config = config_cache.make_host_config(hostname)
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
@@ -1139,6 +1143,7 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
     )
 
     return ClusterScenario(
+        config_cache,
         host_config,
         broker,
         node1_hostname,
@@ -1489,6 +1494,7 @@ def test__discover_host_labels_and_services_on_realhost(
     # we're depending on the changed host labels:
     _ = analyse_node_labels(
         host_name=scenario.hostname,
+        config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1516,6 +1522,7 @@ def test__perform_host_label_discovery_on_realhost(
 
     host_label_result = analyse_node_labels(
         host_name=scenario.hostname,
+        config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1549,6 +1556,7 @@ def test__discover_services_on_cluster(
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
         scenario.host_config.hostname,
+        config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1557,8 +1565,9 @@ def test__discover_services_on_cluster(
 
     discovered_services = _get_cluster_services(
         scenario.host_config.hostname,
-        scenario.parsed_sections_broker,
-        OnError.RAISE,
+        config_cache=scenario.config_cache,
+        parsed_sections_broker=scenario.parsed_sections_broker,
+        on_error=OnError.RAISE,
     )
 
     services = set(discovered_services)
@@ -1575,6 +1584,7 @@ def test__perform_host_label_discovery_on_cluster(
 
     host_label_result = discovery._host_labels.analyse_cluster_labels(
         scenario.host_config.hostname,
+        config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,

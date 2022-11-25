@@ -144,7 +144,7 @@ def automation_discovery(
                 force_snmp_cache_refresh=not use_cached_snmp_data,
                 on_scan_error=on_error,
                 simulation_mode=config.simulation_mode,
-                missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                missing_sys_description=config_cache.in_binary_hostlist(
                     host_name, config.snmp_without_sys_descr
                 ),
                 file_cache_max_age=max_cachefile_age,
@@ -162,6 +162,7 @@ def automation_discovery(
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
                 host_name=host_name,
+                config_cache=config_cache,
                 parsed_sections_broker=parsed_sections_broker,
                 load_labels=True,
                 save_labels=True,
@@ -217,17 +218,23 @@ def _get_host_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
-    config_cache = config.get_config_cache()
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
+        services = {
+            **_get_cluster_services(
+                host_name,
+                config_cache=config_cache,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+            )
+        }
     else:
         services = {
             **_get_node_services(
                 host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
-                host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
+                host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
@@ -353,11 +360,10 @@ def _make_diff(
 def discover_marked_hosts(
     core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
+    *,
+    config_cache: ConfigCache,
 ) -> None:
     """Autodiscovery"""
-
-    config_cache = config.get_config_cache()
-
     autodiscovery_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
         logger=console.verbose,
@@ -396,7 +402,7 @@ def discover_marked_hosts(
     ):
         try:
             _config_cache.clear_all()
-            config.get_config_cache().initialize()
+            config_cache.initialize()
 
             # reset these to their original value to create a correct config
             cmk.core_helpers.cache.FileCacheGlobals.use_outdated = False
@@ -415,7 +421,7 @@ def discover_marked_hosts(
                 )
         finally:
             _config_cache.clear_all()
-            config.get_config_cache().initialize()
+            config_cache.initialize()
 
 
 def _discover_marked_host(
@@ -559,14 +565,21 @@ def _may_rediscover(
 # This function is cluster-aware
 def get_host_services(
     host_name: HostName,
+    *,
     config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
-    config_cache = config.get_config_cache()
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
+        services = {
+            **_get_cluster_services(
+                host_name,
+                config_cache=config_cache,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+            )
+        }
     else:
         services = {
             **_get_node_services(
@@ -669,16 +682,16 @@ def _group_by_transition(
 
 def _get_cluster_services(
     host_name: HostName,
+    *,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
-    config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return {}
 
     cluster_items: ServicesTable[_BasicTransition] = {}
-    config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.

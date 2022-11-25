@@ -2795,7 +2795,6 @@ def lookup_ip_address(
     host_config = config_cache.make_host_config(host_name)
     if family is None:
         family = config_cache.default_address_family(host_name)
-    config_cache = get_config_cache()
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
@@ -2855,7 +2854,7 @@ class ConfigCache:
     def is_cluster(self, host_name: HostName) -> bool:
         return host_name in self.all_configured_clusters()
 
-    def initialize(self) -> None:
+    def initialize(self) -> ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
@@ -2887,6 +2886,8 @@ class ConfigCache:
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
+
+        return self
 
     def _initialize_caches(self) -> None:
         self._enforced_services_table.clear()
@@ -4123,7 +4124,7 @@ def get_config_cache() -> ConfigCache:
     config_cache = _config_cache.get("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
-        config_cache["cache"] = cache_class()
+        config_cache["cache"] = cache_class().initialize()
     return config_cache["cache"]
 
 

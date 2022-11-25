@@ -287,6 +287,7 @@ def test_mkbackup_simple_backup(  # type:ignore[no-untyped-def]
     _execute_backup(site)
 
 
+@pytest.mark.skip("CMK-11747")
 def test_mkbackup_simple_restore(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
@@ -296,6 +297,7 @@ def test_mkbackup_encrypted_backup(site: Site, test_cfg) -> None:  # type:ignore
     _execute_backup(site, job_id="testjob-encrypted")
 
 
+@pytest.mark.skip("CMK-11747")
 def test_mkbackup_encrypted_backup_and_restore(  # type:ignore[no-untyped-def]
     site, test_cfg
 ) -> None:
@@ -307,6 +309,7 @@ def test_mkbackup_encrypted_backup_and_restore(  # type:ignore[no-untyped-def]
     _execute_restore(site, backup_id, env)
 
 
+@pytest.mark.skip("CMK-11747")
 def test_mkbackup_compressed_backup_and_restore(  # type:ignore[no-untyped-def]
     site, test_cfg
 ) -> None:
@@ -314,6 +317,7 @@ def test_mkbackup_compressed_backup_and_restore(  # type:ignore[no-untyped-def]
     _execute_restore(site, backup_id)
 
 
+@pytest.mark.skip("CMK-11747")
 def test_mkbackup_no_history_backup_and_restore(  # type:ignore[no-untyped-def]
     site, test_cfg, backup_path
 ) -> None:

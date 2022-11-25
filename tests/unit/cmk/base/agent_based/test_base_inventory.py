@@ -1229,6 +1229,7 @@ def test_check_inventory_tree(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
+        config_cache=config_cache,
         inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
@@ -1278,6 +1279,7 @@ def test_check_inventory_tree_no_data_or_files(
 
     check_result = _inventory.check_inventory_tree(
         hostname,
+        config_cache=config_cache,
         inventory_parameters=config_cache.inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,

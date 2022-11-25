@@ -14,7 +14,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
-import cmk.base.config as config
+from cmk.base.config import ConfigCache
 
 from ._discovery import execute_check_discovery
 
@@ -24,13 +24,13 @@ __all__ = ["active_check_discovery"]
 def active_check_discovery(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
-    config_cache = config.get_config_cache()
     return error_handling.check_result(
         partial(execute_check_discovery, host_name, fetched=fetched),
         exit_spec=config_cache.exit_code_spec(host_name),

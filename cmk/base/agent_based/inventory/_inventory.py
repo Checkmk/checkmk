@@ -69,6 +69,7 @@ from cmk.base.agent_based.utils import (
     summarize_host_sections,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 from cmk.base.sources import fetch_all, make_sources
 
 __all__ = [
@@ -97,13 +98,13 @@ class CheckInventoryTreeResult:
 def check_inventory_tree(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
-    config_cache = config.get_config_cache()
     if config_cache.is_cluster(host_name):
         inventory_tree = _inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
         return CheckInventoryTreeResult(
@@ -121,7 +122,9 @@ def check_inventory_tree(
             update_result=UpdateResult(save_tree=False, reason=""),
         )
 
-    fetched_data_result = _fetch_real_host_data(host_name, selected_sections=selected_sections)
+    fetched_data_result = _fetch_real_host_data(
+        host_name, config_cache=config_cache, selected_sections=selected_sections
+    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -215,9 +218,9 @@ def _fetch_real_host_data(
     host_name: HostName,
     *,
     selected_sections: SectionNameCollection,
+    config_cache: ConfigCache,
 ) -> FetchedDataResult:
     ipaddress = config.lookup_ip_address(host_name)
-    config_cache = config.get_config_cache()
 
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
@@ -230,7 +233,7 @@ def _fetch_real_host_data(
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+            missing_sys_description=config_cache.in_binary_hostlist(
                 host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config_cache.max_cachefile_age(host_name),
@@ -679,7 +682,7 @@ def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: 
 
 def _check_fetched_data_or_trees(
     *,
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     fetched_data_result: FetchedDataResult,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
@@ -702,7 +705,7 @@ def _check_fetched_data_or_trees(
 
 def _check_trees(
     *,
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
     old_tree: StructuredDataNode,

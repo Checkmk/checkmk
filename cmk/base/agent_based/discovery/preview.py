@@ -39,6 +39,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,
@@ -58,14 +59,13 @@ __all__ = ["get_check_preview"]
 def get_check_preview(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    config_cache = config.get_config_cache()
-
     # Careful:  The order of the next four lines is important.  Most likely, this
     # is due to the interplay between the IP address and the global variables.
     # Changing that reproducibly fails the `test_automation_try_discovery_not_existing_host`
@@ -86,7 +86,7 @@ def get_check_preview(
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+            missing_sys_description=config_cache.in_binary_hostlist(
                 host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=max_cachefile_age,
@@ -103,6 +103,7 @@ def get_check_preview(
 
     host_labels = analyse_host_labels(
         host_name=host_name,
+        config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -113,12 +114,18 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
-    grouped_services = get_host_services(host_name, config_cache, parsed_sections_broker, on_error)
+    grouped_services = get_host_services(
+        host_name,
+        config_cache=config_cache,
+        parsed_sections_broker=parsed_sections_broker,
+        on_error=on_error,
+    )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [
             _check_preview_table_row(
                 host_name,
+                config_cache=config_cache,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
@@ -142,6 +149,7 @@ def get_check_preview(
         ] + [
             _check_preview_table_row(
                 host_name,
+                config_cache=config_cache,
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
@@ -166,6 +174,7 @@ def get_check_preview(
 def _check_preview_table_row(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     service: ConfiguredService,
     check_source: _Transition | Literal["manual"],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -177,6 +186,7 @@ def _check_preview_table_row(
 
     result = checking.get_aggregated_result(
         host_name,
+        config_cache,
         parsed_sections_broker,
         service,
         plugin,

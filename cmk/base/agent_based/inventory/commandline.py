@@ -17,7 +17,7 @@ from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, RuleS
 from cmk.core_helpers.type_defs import SectionNameCollection
 
 import cmk.base.section as section
-from cmk.base.config import get_config_cache, HWSWInventoryParameters
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 
 from ._inventory import check_inventory_tree
 
@@ -27,18 +27,18 @@ __all__ = ["commandline_inventory"]
 def commandline_inventory(
     hostnames: list[HostName],
     *,
+    config_cache: ConfigCache,
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
-
-    config_cache = get_config_cache()
     for hostname in hostnames:
         section.section_begin(hostname)
         try:
             _commandline_inventory_on_host(
                 hostname,
+                config_cache=config_cache,
                 inventory_parameters=config_cache.inventory_parameters,
                 parameters=config_cache.hwsw_inventory_parameters(hostname),
                 selected_sections=selected_sections,
@@ -56,6 +56,7 @@ def commandline_inventory(
 def _commandline_inventory_on_host(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     selected_sections: SectionNameCollection,
@@ -67,6 +68,7 @@ def _commandline_inventory_on_host(
 
     check_result = check_inventory_tree(
         host_name,
+        config_cache=config_cache,
         inventory_parameters=inventory_parameters,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,

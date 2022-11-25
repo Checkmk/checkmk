@@ -16,6 +16,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
+from cmk.base.config import ConfigCache
 from cmk.base.sources import fetch_all, make_sources
 from cmk.base.submitters import Submitter
 
@@ -26,6 +27,7 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
@@ -33,12 +35,12 @@ def commandline_checking(
     keepalive: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
-    config_cache = config.get_config_cache()
     return error_handling.check_result(
         partial(
             _commandline_checking,
             host_name,
             ipaddress,
+            config_cache=config_cache,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
             submitter=submitter,
@@ -58,12 +60,12 @@ def _commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
-    config_cache = config.get_config_cache()
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
@@ -79,7 +81,7 @@ def _commandline_checking(
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+            missing_sys_description=config_cache.in_binary_hostlist(
                 host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config_cache.max_cachefile_age(host_name),
@@ -88,6 +90,7 @@ def _commandline_checking(
     )
     return execute_checkmk_checks(
         hostname=host_name,
+        config_cache=config_cache,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,

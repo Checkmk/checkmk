@@ -84,12 +84,12 @@ class _AggregatedResult(NamedTuple):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
+    config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     submitter: Submitter,
 ) -> ActiveCheckResult:
-    config_cache = config.get_config_cache()
     exit_spec = config_cache.exit_code_spec(hostname)
 
     services = config.resolve_service_dependencies(
@@ -128,7 +128,7 @@ def execute_checkmk_checks(
                 source_results=source_results,
                 include_ok_results=True,
                 exit_spec_cb=config_cache.exit_code_spec,
-                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
                 is_piggyback=config_cache.is_piggyback_host(hostname),
@@ -273,6 +273,7 @@ def check_host_services(
             submittables = [
                 get_aggregated_result(
                     host_name,
+                    config_cache,
                     parsed_sections_broker,
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
@@ -332,6 +333,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
 
 def get_aggregated_result(
     host_name: HostName,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     service: ConfiguredService,
     plugin: checking_classes.CheckPlugin | None,
@@ -352,7 +354,6 @@ def get_aggregated_result(
             cache_info=None,
         )
 
-    config_cache = config.get_config_cache()
     check_function = (
         _cluster_modes.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),

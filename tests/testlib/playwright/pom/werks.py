@@ -15,8 +15,7 @@ class Werks(PPage):
         ppage: PPage,
     ):
         super().__init__(ppage.page, ppage.site_id, ppage.site_url)
-        self.main_menu.help.click()
-        self.main_menu.help_werks.click()
+        self.click_and_wait(self.main_menu.help_werks, navigate=True)
         self.main_area.check_page_title(self.page_title)
         self.main_area.page.wait_for_load_state("networkidle")
 

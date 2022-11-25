@@ -55,7 +55,7 @@ ifneq ($(EDITION),managed)
 	    --exclude "cme" \
 	    --exclude "cme.py"
 endif
-ifneq ($(EDITION),plus)
+ifeq ($(filter $(EDITION),plus free),)
 	EDITION_EXCLUDE += \
 	    --exclude "plus" \
 	    --exclude "cpe" \

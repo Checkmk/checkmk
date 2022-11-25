@@ -154,7 +154,9 @@ ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),free)
-include $(REPO_PATH)/enterprise/enterprise.make
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/plus/plus.make
 endif
 ifeq ($(EDITION),managed)
 include \

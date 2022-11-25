@@ -75,7 +75,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.instance_id import save_instance_id
+from omdlib.instance_id import has_instance_id, save_instance_id
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
@@ -222,6 +222,9 @@ def all_sites() -> Iterable[str]:
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     prepare_and_populate_tmpfs(version_info, site)
     call_init_scripts(site, "start")
+    if not has_instance_id(site):
+        # Existing sites may not have an instance ID yet. After an update we create a new one.
+        save_instance_id(site)
 
 
 def stop_if_not_stopped(site: SiteContext) -> None:

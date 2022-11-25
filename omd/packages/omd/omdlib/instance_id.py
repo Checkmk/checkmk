@@ -28,8 +28,16 @@ from uuid import uuid4
 from omdlib.contexts import SiteContext
 
 
+def has_instance_id(site: SiteContext) -> bool:
+    return _get_instance_id_filepath(site).exists()
+
+
 def save_instance_id(site: SiteContext) -> None:
-    folder = Path(site.dir, "etc/omd")
-    folder.mkdir(parents=True, exist_ok=True)
-    with (folder / "instance_id").open("w", encoding="utf-8") as f:
+    instance_id_filepath = _get_instance_id_filepath(site)
+    instance_id_filepath.parent.mkdir(parents=True, exist_ok=True)
+    with instance_id_filepath.open("w", encoding="utf-8") as f:
         f.write(str(uuid4()))
+
+
+def _get_instance_id_filepath(site: SiteContext) -> Path:
+    return Path(site.dir, "etc/omd/instance_id")

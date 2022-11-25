@@ -7,28 +7,35 @@ from pathlib import Path
 from uuid import UUID
 
 from omdlib.contexts import SiteContext
-from omdlib.instance_id import save_instance_id
+from omdlib.instance_id import has_instance_id, save_instance_id
 
 
 def test_save_instance_id(site_context: SiteContext) -> None:
+    assert not has_instance_id(site_context)
+
     save_instance_id(site_context)
 
-    instance_id_filepath = Path(site_context.dir, "etc/omd/instance_id")
+    assert has_instance_id(site_context)
 
-    assert instance_id_filepath.exists()
+    instance_id_filepath = Path(site_context.dir, "etc/omd/instance_id")
     with instance_id_filepath.open("r", encoding="utf-8") as fp:
         UUID(fp.read())
 
 
 def test_save_instance_id_twice(site_context: SiteContext) -> None:
+    assert not has_instance_id(site_context)
+
     save_instance_id(site_context)
 
-    instance_id_filepath = Path(site_context.dir, "etc/omd/instance_id")
+    assert has_instance_id(site_context)
 
+    instance_id_filepath = Path(site_context.dir, "etc/omd/instance_id")
     with instance_id_filepath.open("r", encoding="utf-8") as fp:
         instance_id = UUID(fp.read())
 
     save_instance_id(site_context)
+
+    assert has_instance_id(site_context)
 
     with instance_id_filepath.open("r", encoding="utf-8") as fp:
         assert UUID(fp.read()) != instance_id

@@ -18,6 +18,7 @@ DATA = [
     ["Test 1", "1632216559.73749", "Running"],
     ["Test 2", "1632216559.87806", "Failed"],
     ["Test 3", "1632216559.87806", "Stopped"],
+    ["Test 4", "null", "Disabled"],
 ]
 
 
@@ -30,6 +31,7 @@ DATA = [
                 Service(item="Test 1"),
                 Service(item="Test 2"),
                 Service(item="Test 3"),
+                Service(item="Test 4"),
             ],
         ),
     ],
@@ -76,6 +78,14 @@ def test_veeam_cdp_jobs_discovery(
                     state=state.CRIT,
                     summary="Time since last CDP Run: 1 minute 40 seconds (warn/crit at 1 minute 0 seconds/1 minute 20 seconds)",
                 ),
+            ],
+        ),
+        (
+            "Test 4",
+            veeam_cdp_jobs.CheckParams(age=(60, 80)),
+            DATA,
+            [
+                Result(state=state.OK, summary="State: Disabled"),
             ],
         ),
     ],

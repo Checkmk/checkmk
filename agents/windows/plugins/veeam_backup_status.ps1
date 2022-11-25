@@ -66,7 +66,8 @@ foreach ($mycdpjobs in $cdpjobs)
 	$MyCdpJobsName = $mycdpjobs.Name -replace "\'","_" -replace " ","_"
 
 	$MyCdpJobsNextRun = $mycdpjobs.NextRun
-    $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s
+	if ($MyCdpJobsNextRun -ne $null) { $MyCdpJobsNextRun = get-date -date $MyCdpJobsNextRun -Uformat %s }
+	else { $MyCdpJobsNextRun = "null" }
 
 	$MyCdpJobsPolicyState = $mycdpjobs.PolicyState
 

@@ -6,7 +6,7 @@
 
 import time
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple, TypedDict
+from typing import Mapping, NamedTuple, Optional, Tuple, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service
 from .agent_based_api.v1 import State as state
@@ -18,12 +18,13 @@ class CDPState(Enum):
     RUNNING = "Running"
     FAILED = "Failed"
     STOPPED = "Stopped"
+    DISABLED = "Disabled"
     UNKNOWN = None
 
 
 class CDPJob(NamedTuple):
     name: str
-    time_diff: float
+    time_diff: Optional[float]
     state: CDPState
 
 
@@ -31,6 +32,7 @@ STATE_MAPPING: Mapping[CDPState, state] = {
     CDPState.RUNNING: state.OK,
     CDPState.FAILED: state.CRIT,
     CDPState.STOPPED: state.CRIT,
+    CDPState.DISABLED: state.OK,
     CDPState.UNKNOWN: state.UNKNOWN,
 }
 
@@ -43,7 +45,11 @@ class CheckParams(TypedDict):
 
 def parse_veeam_cdp_jobs(string_table: type_defs.StringTable) -> Section:
     return {
-        name: CDPJob(name, time.time() - float(last_sync), CDPState(state))
+        name: CDPJob(
+            name,
+            None if last_sync == "null" else time.time() - float(last_sync),
+            CDPState(state),
+        )
         for name, last_sync, state in string_table
     }
 
@@ -67,13 +73,14 @@ def check_veeam_cdp_jobs(item: str, params: CheckParams, section: Section) -> Ch
         state=STATE_MAPPING.get(cdp.state, state.UNKNOWN),
         summary=f"State: {cdp.state.value}",
     )
-    yield from check_levels(
-        value=cdp.time_diff,
-        levels_upper=params.get("age"),
-        metric_name=None,
-        render_func=render.timespan,
-        label="Time since last CDP Run",
-    )
+    if cdp.time_diff is not None:
+        yield from check_levels(
+            value=cdp.time_diff,
+            levels_upper=params.get("age"),
+            metric_name=None,
+            render_func=render.timespan,
+            label="Time since last CDP Run",
+        )
 
 
 register.check_plugin(

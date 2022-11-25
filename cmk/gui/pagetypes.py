@@ -791,7 +791,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         for name, page_dict in cls.builtin_pages().items():
             page_dict = cls._transform_old_spec(page_dict)
             new_page = cls(page_dict)
-            instances.add_instance((UserId(page_dict["owner"]), name), new_page)
+            instances.add_instance((page_dict["owner"], name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):

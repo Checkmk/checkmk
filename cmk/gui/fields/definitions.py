@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Any, Literal
 
 import pytz
-from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
+from cryptography.x509 import CertificateSigningRequest, InvalidVersion, load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import post_load, pre_dump, utils, ValidationError
@@ -1349,7 +1349,7 @@ class X509ReqPEMFieldUUID(base.String):
                 )
                 .encode()
             )
-        except ValueError:
+        except (ValueError, InvalidVersion):
             raise self.make_error("malformed")
 
 

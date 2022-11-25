@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from tests.composition.utils import (
     execute,
     get_cre_agent_path,
     install_agent_package,
+    is_containerized,
 )
 
 from cmk.utils.version import Edition
@@ -141,3 +143,29 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _run_cron() -> Iterator[None]:
+    """Run cron for background jobs"""
+    if not is_containerized():
+        yield
+        return
+    for cron_cmd in (
+        cron_cmds := (
+            "cron",  # Ubuntu, Debian, ...
+            "crond",  # RHEL (CentOS, AlmaLinux)
+        )
+    ):
+        try:
+            subprocess.run(
+                [cron_cmd],
+                # calling cron spawns a background process, which fails if cron is already running
+                check=False,
+            )
+        except FileNotFoundError:
+            continue
+        break
+    else:
+        raise RuntimeError(f"No cron executable found (tried {','.join(cron_cmds)})")
+    yield

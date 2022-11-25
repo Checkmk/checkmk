@@ -420,7 +420,6 @@ def test_create_correct_number_pod_names_for_cluster_host(
         api_cron_jobs=[],
         # This test is not supposed to generate any PiggyBack host:
         piggyback_formatter=_raise_error,  # type: ignore[arg-type]
-        piggyback_formatter_node=_raise_error,  # type: ignore[arg-type]
     )
     cluster_piggy_back = [p for p in pods_to_host.piggybacks if p.piggyback == ""]
 

@@ -9,6 +9,7 @@ import json
 import shutil
 from pathlib import Path
 from typing import NamedTuple
+from unittest import mock
 
 import pytest
 import requests
@@ -17,6 +18,7 @@ import livestatus
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 import cmk.base.diagnostics as diagnostics
 
@@ -115,7 +117,6 @@ def test_diagnostics_element_general_content(tmp_path, _collectors):
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
 
-    assert isinstance(tmp_path, Path)
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("general.json")
 
@@ -142,6 +143,45 @@ def test_diagnostics_element_perfdata():
     assert diagnostics_element.description == (
         "Performance Data related to sizing, e.g. number of helpers, hosts, services"
     )
+
+
+@mock.patch("cmk.base.diagnostics.cmk.base.config.load", return_value=True)
+def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus):
+
+    test_columns = {
+        "connections": 1253,
+        "livestatus_version": "2022.01.13",
+        "program_version": "Check_MK 2022.01.13",
+        "program_start": 1643262759,
+        "num_hosts": 1,
+        "num_services": 125,
+        "core_pid": 73181,
+        "license_usage_history": 12345,
+    }
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["local"])
+    live.add_table("status", [test_columns])
+    live.expect_query("GET status\nColumnHeaders: on\n")
+
+    with live(expect_status_query=False):
+        # response = live.result_of_next_query('GET status')
+        # assert len(response) == 1
+
+        diagnostics_element = diagnostics.PerfDataDiagnosticsElement()
+        tmppath = Path(tmp_path).joinpath("tmp")
+        filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+
+        assert isinstance(filepath, Path)
+        assert filepath == tmppath.joinpath("perfdata.json")
+
+        content = json.loads(filepath.open().read())
+
+        del test_columns["license_usage_history"]
+        for info_key in test_columns:
+            assert info_key in content
+
+        assert "license_usage_history" not in content
 
 
 def test_diagnostics_element_hw_info():

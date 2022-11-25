@@ -130,6 +130,8 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    check_mk_caching_agent.linux \
 	    CONTENTS \
 	    mk-job \
+	    mk-job.solaris \
+	    mk-job.aix \
 	    waitmax \
 	    linux \
 	    windows/cfg_examples \

@@ -1617,6 +1617,9 @@ def determine_pods_to_host(
         monitored_pods = pods_from_namespaces(
             filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
         )
+        if MonitoredObject.cronjobs_pods not in monitored_objects:
+            cronjob_pod_uids = {uid for cronjob in api_cron_jobs for uid in cronjob.pod_uids}
+            monitored_pods = [pod for pod in monitored_pods if pod.uid not in cronjob_pod_uids]
         piggybacks.extend(
             Piggyback(
                 piggyback=piggyback_formatter(

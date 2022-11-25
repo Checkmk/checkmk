@@ -3,9 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <chrono>
+#include <cmath>
 #include <memory>
-#include <ostream>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include "Logger.h"
 #include "Renderer.h"
@@ -13,23 +16,28 @@
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 
-struct SeparatorsParam {
+using namespace std::chrono_literals;
+
+struct Param {
     OutputFormat format;
     std::string query;
     std::string row;
     std::string list;
     std::string sublist;
     std::string dict;
+    std::string null;
+    std::string blob;
+    std::string string;
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const SeparatorsParam &s) {
-        return os << "SeparatorsParam{" << static_cast<int>(s.format) << ", "
-                  << s.query << ", " << s.row << ", " << s.list << ", "
-                  << s.sublist << "}";
+    friend std::ostream &operator<<(std::ostream &os, const Param &s) {
+        return os << "Param{" << static_cast<int>(s.format) << ", " << s.query
+                  << ", " << s.row << ", " << s.list << ", " << s.sublist
+                  << ", " << s.dict << ", " << s.null << ", " << s.blob << ", "
+                  << s.string << "}";
     }
 };
 
-class SeparatorsTestFixture : public ::testing::TestWithParam<SeparatorsParam> {
+class Fixture : public ::testing::TestWithParam<Param> {
     std::ostringstream out_;
 
 public:
@@ -38,10 +46,11 @@ public:
                               CSVSeparators{"\n", ";", ",", "|"},
                               Encoding::utf8);
     }
+    void clear_result() { out_.str(""); }
     std::string result() const { return out_.str(); }
 };
 
-TEST_P(SeparatorsTestFixture, QuerySeparators) {
+TEST_P(Fixture, QuerySeparators) {
     auto renderer = make_renderer(GetParam().format);
     renderer->beginQuery();
     renderer->output(1);
@@ -51,7 +60,7 @@ TEST_P(SeparatorsTestFixture, QuerySeparators) {
     EXPECT_EQ(GetParam().query, result());
 }
 
-TEST_P(SeparatorsTestFixture, RowSeparators) {
+TEST_P(Fixture, RowSeparators) {
     auto renderer = make_renderer(GetParam().format);
     renderer->beginRow();
     renderer->beginRowElement();
@@ -65,7 +74,7 @@ TEST_P(SeparatorsTestFixture, RowSeparators) {
     EXPECT_EQ(GetParam().row, result());
 }
 
-TEST_P(SeparatorsTestFixture, ListSeparators) {
+TEST_P(Fixture, ListSeparators) {
     auto renderer = make_renderer(GetParam().format);
     renderer->beginList();
     renderer->output(1);
@@ -75,7 +84,7 @@ TEST_P(SeparatorsTestFixture, ListSeparators) {
     EXPECT_EQ(GetParam().list, result());
 }
 
-TEST_P(SeparatorsTestFixture, SublistSeparators) {
+TEST_P(Fixture, SublistSeparators) {
     auto renderer = make_renderer(GetParam().format);
     renderer->beginSublist();
     renderer->output(1);
@@ -85,7 +94,7 @@ TEST_P(SeparatorsTestFixture, SublistSeparators) {
     EXPECT_EQ(GetParam().sublist, result());
 }
 
-TEST_P(SeparatorsTestFixture, DictSeparators) {
+TEST_P(Fixture, DictSeparators) {
     auto renderer = make_renderer(GetParam().format);
     renderer->beginDict();
     renderer->output(1);
@@ -99,16 +108,162 @@ TEST_P(SeparatorsTestFixture, DictSeparators) {
     EXPECT_EQ(GetParam().dict, result());
 }
 
+TEST_P(Fixture, Integrals) {
+    auto renderer = make_renderer(GetParam().format);
+
+    clear_result();
+    renderer->output(-4711);
+    EXPECT_EQ("-4711", result());
+
+    clear_result();
+    renderer->output(12345678U);
+    EXPECT_EQ("12345678", result());
+
+    clear_result();
+    renderer->output(-9876543210L);
+    EXPECT_EQ("-9876543210", result());
+
+    clear_result();
+    renderer->output(876543212345UL);
+    EXPECT_EQ("876543212345", result());
+}
+
+TEST_P(Fixture, Double) {
+    auto renderer = make_renderer(GetParam().format);
+
+    clear_result();
+    renderer->output(-1.25);
+    EXPECT_EQ("-1.25", result());
+
+    clear_result();
+    renderer->output(1234.5);
+    EXPECT_EQ("1234.5", result());
+
+    clear_result();
+    renderer->output(std::nan(""));
+    EXPECT_EQ(GetParam().null, result());
+}
+
+TEST_P(Fixture, Chars) {
+    auto renderer = make_renderer(GetParam().format);
+
+    clear_result();
+    renderer->output(PlainChar{'x'});
+    EXPECT_EQ("x", result());
+
+    clear_result();
+    renderer->output(PlainChar{'\xe4'});
+    EXPECT_EQ("\xe4", result());
+
+    clear_result();
+    renderer->output(HexEscape{'x'});
+    EXPECT_EQ("\\x78", result());
+
+    clear_result();
+    renderer->output(HexEscape{'\xe4'});
+    EXPECT_EQ("\\xe4", result());
+
+    clear_result();
+    renderer->output(char16_t{0x57});
+    EXPECT_EQ("\\u0057", result());
+
+    clear_result();
+    renderer->output(char16_t{0x3b5});
+    EXPECT_EQ("\\u03b5", result());
+
+    clear_result();
+    renderer->output(char32_t{0x57});
+    EXPECT_EQ("\\u0057", result());
+
+    clear_result();
+    renderer->output(char32_t{0x3b5});
+    EXPECT_EQ("\\u03b5", result());
+
+    clear_result();
+    renderer->output(char32_t{0x1f60b});
+    EXPECT_EQ("\\U0001f60b", result());
+}
+
+TEST_P(Fixture, RowFragment) {
+    auto renderer = make_renderer(GetParam().format);
+    renderer->output(RowFragment{"Blöhööööd!\nMöp...\t\x47\x11"});
+    EXPECT_EQ("Blöhööööd!\nMöp...\t\x47\x11", result());
+}
+
+TEST_P(Fixture, Null) {
+    auto renderer = make_renderer(GetParam().format);
+    renderer->output(Null{});
+    EXPECT_EQ(GetParam().null, result());
+}
+
+TEST_P(Fixture, Blob) {
+    auto renderer = make_renderer(GetParam().format);
+    renderer->output(std::vector<char>{'p', '\\', '\x0a', '\xff', '\x0e'});
+    EXPECT_EQ(GetParam().blob, result());
+}
+
+TEST_P(Fixture, String) {
+    auto renderer = make_renderer(GetParam().format);
+    renderer->output(std::string{"A small\nt\u03b5st...\U0001f60b"});
+    // TODO(sp) The JSON renderer is buggy, the current test expectation just
+    // record the status quo.
+    if (GetParam().format == OutputFormat::json) {
+        GTEST_SKIP();
+    }
+    EXPECT_EQ(GetParam().string, result());
+}
+
+TEST_P(Fixture, TimePoint) {
+    auto renderer = make_renderer(GetParam().format);
+    renderer->output(std::chrono::system_clock::time_point{31415926s});
+    EXPECT_EQ("31415926", result());
+}
+
 INSTANTIATE_TEST_SUITE_P(
-    SeparatorsTests, SeparatorsTestFixture,
+    RendererTests, Fixture,
     ::testing::Values(
-        SeparatorsParam{OutputFormat::csv,  //
-                        "12", "\"1\",\"2\"\r\n", "1,2", "1|2", "1|2,3|4"},
-        SeparatorsParam{OutputFormat::broken_csv,  //
-                        "12", "1;2\n", "1,2", "1|2", "1|2,3|4"},
-        SeparatorsParam{OutputFormat::json,  //
-                        "[1,\n2]\n", "[1,2]", "[1,2]", "[1,2]", "{1:2,3:4}"},
-        SeparatorsParam{OutputFormat::python,  //
-                        "[1,\n2]\n", "[1,2]", "[1,2]", "[1,2]", "{1:2,3:4}"},
-        SeparatorsParam{OutputFormat::python3,  //
-                        "[1,\n2]\n", "[1,2]", "[1,2]", "[1,2]", "{1:2,3:4}"}));
+        Param{.format = OutputFormat::csv,
+              .query = "12",
+              .row = "\"1\",\"2\"\r\n",
+              .list = "1,2",
+              .sublist = "1|2",
+              .dict = "1|2,3|4",
+              .null = "",
+              .blob = "p\\\n\xFF\xE",
+              .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
+        Param{.format = OutputFormat::broken_csv,
+              .query = "12",
+              .row = "1;2\n",
+              .list = "1,2",
+              .sublist = "1|2",
+              .dict = "1|2,3|4",
+              .null = "",
+              .blob = "p\\\n\xFF\xE",
+              .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
+        Param{.format = OutputFormat::json,
+              .query = "[1,\n2]\n",
+              .row = "[1,2]",
+              .list = "[1,2]",
+              .sublist = "[1,2]",
+              .dict = "{1:2,3:4}",
+              .null = "null",
+              .blob = "\"p\\u005c\\u000a\\u00ff\\u000e\"",
+              .string = "\"A small\\u000at\\u03b5st...\\U0001f60b\""},
+        Param{.format = OutputFormat::python,
+              .query = "[1,\n2]\n",
+              .row = "[1,2]",
+              .list = "[1,2]",
+              .sublist = "[1,2]",
+              .dict = "{1:2,3:4}",
+              .null = "None",
+              .blob = "b\"p\\x5c\\x0a\\xff\\x0e\"",
+              .string = "u\"A small\\u000at\\u03b5st...\\U0001f60b\""},
+        Param{.format = OutputFormat::python3,
+              .query = "[1,\n2]\n",
+              .row = "[1,2]",
+              .list = "[1,2]",
+              .sublist = "[1,2]",
+              .dict = "{1:2,3:4}",
+              .null = "None",
+              .blob = "b\"p\\x5c\\x0a\\xff\\x0e\"",
+              .string = "u\"A small\\u000at\\u03b5st...\\U0001f60b\""}));

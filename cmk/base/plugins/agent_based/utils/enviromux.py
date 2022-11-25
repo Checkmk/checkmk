@@ -173,7 +173,7 @@ def parse_enviromux_micro(
     for line in string_table:
         try:
             enviromux_micro_sensors.setdefault(
-                f"{line[2]} {line[0]}",
+                f"{line[2]} {line[0]}" if "#" not in line[2] else line[2],
                 EnviromuxSensor(
                     type_=SENSOR_TYPE_NAMES.get(line[1], "Unknown"),
                     value=float(line[3]) / 10.0,

@@ -412,7 +412,6 @@ def test_create_correct_number_pod_names_for_cluster_host(
 
     pods_to_host = agent.determine_pods_to_host(
         monitored_objects=[],
-        monitored_pods=set(),
         composed_entities=composed_entities,
         monitored_namespaces=set(),
         api_pods=pods,

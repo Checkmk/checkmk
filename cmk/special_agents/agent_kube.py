@@ -1563,7 +1563,6 @@ def pods_from_namespaces(
 
 def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
-    monitored_pods: set[PodLookupName],
     composed_entities: ComposedEntities,
     monitored_namespaces: set[api.NamespaceName],
     api_pods: Sequence[api.Pod],
@@ -1615,26 +1614,18 @@ def determine_pods_to_host(
     # on write_sections_based_on_performance_pods should be refactored to use the
     # other function similar to namespaces
     if MonitoredObject.pods in monitored_objects:
-        running_pods = pods_from_namespaces(
+        monitored_pods = pods_from_namespaces(
             filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
         )
-        lookup_name_piggyback_mappings = {
-            pod_lookup_from_api_pod(pod): pod_name(pod, prepend_namespace=True) for pod in api_pods
-        }
-
-        monitored_running_pods = monitored_pods.intersection(
-            {pod_lookup_from_api_pod(pod) for pod in running_pods}
-        )
-
         piggybacks.extend(
             Piggyback(
                 piggyback=piggyback_formatter(
                     object_type="pod",
-                    namespaced_name=lookup_name_piggyback_mappings[pod_name],
+                    namespaced_name=pod_name(pod, prepend_namespace=True),
                 ),
-                pod_names=[pod_name],
+                pod_names=[pod_lookup_from_api_pod(pod)],
             )
-            for pod_name in monitored_running_pods
+            for pod in monitored_pods
         )
     if MonitoredObject.nodes in monitored_objects:
         piggybacks.extend(
@@ -2054,11 +2045,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 
-            monitored_pods: set[PodLookupName] = {
-                pod_lookup_from_api_pod(pod)
-                for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
-            }
-
             monitored_api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
@@ -2176,7 +2162,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
                 pods_to_host = determine_pods_to_host(
                     composed_entities=composed_entities,
-                    monitored_pods=monitored_pods,
                     monitored_objects=arguments.monitored_objects,
                     monitored_namespaces=monitored_namespace_names,
                     api_pods=api_data.pods,

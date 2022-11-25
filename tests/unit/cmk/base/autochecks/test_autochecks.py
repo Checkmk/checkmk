@@ -29,7 +29,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 
 @pytest.fixture()
-def test_config(monkeypatch) -> ConfigCache:  # type:ignore[no-untyped-def]
+def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
     ts = Scenario()
     ts.add_host("host")
     return ts.apply(monkeypatch)

@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.snmplib.type_defs import SpecialColumn
@@ -10,8 +13,10 @@ from cmk.snmplib.type_defs import SpecialColumn
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     _create_layout_recover_function,
     _create_snmp_trees_from_tuple,
+    LayoutRecoverSuboids,
 )
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import OID_END, OID_STRING
 
 DATA_2X2 = [["1", "2"], ["3", "4"]]
@@ -40,8 +45,10 @@ DATA_2X2 = [["1", "2"], ["3", "4"]]
         ),
     ],
 )
-def test_create_layout_recover_function(  # type:ignore[no-untyped-def]
-    suboids_list, input_data, expected_output
+def test_create_layout_recover_function(
+    suboids_list: list[LayoutRecoverSuboids | None],
+    input_data: StringTable,
+    expected_output: StringTable,
 ) -> None:
     layout_recover_func = _create_layout_recover_function(suboids_list)
     assert layout_recover_func(input_data) == expected_output
@@ -92,7 +99,9 @@ def test_create_layout_recover_function(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_create_snmp_trees_from_tuple(  # type:ignore[no-untyped-def]
-    element, expected_tree, expected_suboids
+def test_create_snmp_trees_from_tuple(
+    element: tuple[str, Sequence[str | int], Sequence[str]],
+    expected_tree: Sequence[SNMPTree],
+    expected_suboids: LayoutRecoverSuboids | None,
 ) -> None:
     assert _create_snmp_trees_from_tuple(element) == (expected_tree, expected_suboids)

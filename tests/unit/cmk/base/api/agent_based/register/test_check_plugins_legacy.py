@@ -7,6 +7,8 @@
 
 import inspect
 
+from pytest import MonkeyPatch
+
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
@@ -27,7 +29,7 @@ MINIMAL_CHECK_INFO = {
 }
 
 
-def test_create_discovery_function(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_create_discovery_function(monkeypatch: MonkeyPatch) -> None:
     def insane_discovery(info):
         """Completely crazy discovery function:
 

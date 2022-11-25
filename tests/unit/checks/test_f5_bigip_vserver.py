@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -86,8 +88,10 @@ from tests.testlib import Check
         ),
     ],
 )
-def test_wmi_cpu_load_discovery(  # type:ignore[no-untyped-def]
-    info, item, expected_item_data
+def test_wmi_cpu_load_discovery(
+    info: Sequence[Sequence[str]],
+    item: str,
+    expected_item_data: Mapping[str, str | Sequence[float]],
 ) -> None:
     check = Check("f5_bigip_vserver")
     assert sorted(check.run_parse(info)[item].items()) == sorted(expected_item_data.items())

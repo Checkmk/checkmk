@@ -9,6 +9,7 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
@@ -27,7 +28,7 @@ _broken_info = [
         _broken_info,
     ],
 )
-def test_oracle_jobs_discovery_error(info) -> None:  # type:ignore[no-untyped-def]
+def test_oracle_jobs_discovery_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
     assert list(check.run_discovery(info)) == []
 
@@ -38,7 +39,7 @@ def test_oracle_jobs_discovery_error(info) -> None:  # type:ignore[no-untyped-de
         _broken_info,
     ],
 )
-def test_oracle_jobs_check_error(info) -> None:  # type:ignore[no-untyped-def]
+def test_oracle_jobs_check_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
     with pytest.raises(MKCounterWrapped):
         check.run_check("DB19.SYS.JOB1", {}, info)

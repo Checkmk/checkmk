@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -11,8 +13,8 @@ from tests.testlib import Check
 @pytest.mark.parametrize(
     "info, expected_result", [([["", "", ""], ["2", "237273", "130456"]], [("2", {})])]
 )
-def test_inventory_dell_compellent_folder(  # type:ignore[no-untyped-def]
-    info, expected_result
+def test_inventory_dell_compellent_folder(
+    info: Sequence[Sequence[str]], expected_result: Sequence[tuple[str, Mapping[object, object]]]
 ) -> None:
     result = Check("dell_compellent_folder").run_discovery(info)
     assert list(result) == expected_result

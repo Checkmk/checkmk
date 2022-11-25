@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -65,8 +67,8 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_multipath(  # type:ignore[no-untyped-def]
-    section, item, check_results
+def test_check_esx_vsphere_hostsystem_multipath(
+    section: Section, item: str, check_results: Sequence[str | int]
 ) -> None:
     check = Check("esx_vsphere_hostsystem.multipath")
     assert list(check.run_check(item, {}, section) or ()) == check_results

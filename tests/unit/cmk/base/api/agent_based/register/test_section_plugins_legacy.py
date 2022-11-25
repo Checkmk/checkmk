@@ -41,7 +41,7 @@ def old_school_discover_function(parsed_extra):
         ("foobar", "foobar"),
     ],
 )
-def test_get_section_name(name_in, name_out) -> None:  # type:ignore[no-untyped-def]
+def test_get_section_name(name_in: str, name_out: str) -> None:
     assert name_out == section_plugins_legacy.get_section_name(name_in)
 
 

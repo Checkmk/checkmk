@@ -7,6 +7,10 @@ import pytest
 
 from tests.testlib import Check
 
+from tests.unit.checks.test_nimble_latency import Result
+
+from cmk.base.api.agent_based.type_defs import StringTable
+
 
 @pytest.mark.parametrize(
     "info, expected_result",
@@ -21,7 +25,7 @@ from tests.testlib import Check
         )
     ],
 )
-def test_check_sophos_disk(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_sophos_disk(info: StringTable, expected_result: Result) -> None:
     parsed_info = Check("sophos_disk").run_parse(info)
     result = Check("sophos_disk").run_check(None, {"disk_levels": (40, 60)}, parsed_info)
     assert result == expected_result

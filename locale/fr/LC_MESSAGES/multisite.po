@@ -1096,9 +1096,6 @@ msgstr "percentile"
 msgid "99th percentile"
 msgstr "percentile"
 
-msgid "99th percentile request latency"
-msgstr "99e percentile de latence des demandes"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -2422,9 +2419,6 @@ msgstr "Clé/token API"
 msgid "API server connection"
 msgstr "Connexion au serveur API"
 
-msgid "API server endpoint"
-msgstr "Point de terminaison du serveur API"
-
 #, fuzzy
 msgid "APPEND"
 msgstr "PEND"
@@ -2674,9 +2668,6 @@ msgstr "Niveaux absolus pour le trafic décodé"
 
 msgid "Absolute levels for discards rates"
 msgstr "Niveaux absolus des taux de rejets"
-
-msgid "Absolute levels for error rates"
-msgstr "Niveaux absolus pour les taux d'erreur"
 
 #, python-format
 msgid "Absolute levels for free %s"
@@ -6210,8 +6201,16 @@ msgstr "Longueur moyenne des files d'attente d'E/S sur les disques"
 msgid "Average disk latency"
 msgstr "Latence moyenne des disques"
 
+#, fuzzy
+msgid "Average disk read latency"
+msgstr "Latence moyenne des disques"
+
 msgid "Average disk read queue length"
 msgstr "Longueur moyenne de la file d'attente de lecture du disque"
+
+#, fuzzy
+msgid "Average disk write latency"
+msgstr "Latence moyenne des disques"
 
 msgid "Average disk write queue length"
 msgstr "Longueur moyenne de la file d'attente d'écriture sur le disque"
@@ -8470,11 +8469,23 @@ msgstr ""
 msgid "Capacity remaining"
 msgstr "Capacité restante"
 
+#, fuzzy
+msgid "Carbon Overflows Rate"
+msgstr "Débordements"
+
+#, fuzzy
+msgid "Carbon Queue Usage"
+msgstr "Nom du gestionnaire de la file d'attente"
+
 msgid "Carbon connections"
 msgstr "Connexions en carbone"
 
 msgid "Carbon monoxide"
 msgstr "Monoxyde de carbone"
+
+#, fuzzy
+msgid "Carbon queue usage"
+msgstr "Nom de la file d'attente de courrier"
 
 msgid "Casa module: CPU temperature"
 msgstr "Module Casa : Température du CPU"
@@ -9881,9 +9892,6 @@ msgstr "Sujet de clonage"
 msgid "Clone view"
 msgstr "Vue clonée"
 
-msgid "Close Timewarp"
-msgstr "Fermer Timewarp"
-
 msgid ""
 "Close connection once more than this number of bytes are received. Per "
 "default the number of read bytes is not limited. This setting is only used "
@@ -9892,6 +9900,10 @@ msgstr ""
 "Ferme la connexion dès que le nombre d'octets reçus est supérieur à ce "
 "nombre. Par défaut, le nombre d'octets lus n'est pas limité. Ce paramètre "
 "n'est utilisé que si vous attendez des chaînes de caractères dans la réponse."
+
+#, fuzzy
+msgid "Close timewarp"
+msgstr "Fermer Timewarp"
 
 msgid "Closed"
 msgstr "Fermé"
@@ -9946,9 +9958,6 @@ msgstr "Définition des nœuds de cluster"
 
 msgid "Cluster problems"
 msgstr "Problèmes de grappes"
-
-msgid "Cluster roles"
-msgstr "Rôles des clusters"
 
 msgid "Cluster statistics"
 msgstr "Statistiques des groupes"
@@ -12421,6 +12430,10 @@ msgstr "Limite personnalisée"
 msgid "Custom localizations"
 msgstr "Localisations personnalisées"
 
+#, fuzzy
+msgid "Custom logos"
+msgstr "Hôte personnalisé"
+
 msgid "Custom notification"
 msgstr "Notification personnalisée"
 
@@ -13642,9 +13655,6 @@ msgstr "Supprimer le travail %s%s ?"
 msgid "Delete last alert handler rule"
 msgstr "Supprimer la dernière règle de traitement des alertes"
 
-msgid "Delete logo"
-msgstr "Supprimer le logo"
-
 msgid "Delete messages"
 msgstr "Supprimer les messages"
 
@@ -13685,9 +13695,6 @@ msgstr "Supprimer les MIB sélectionnées"
 
 msgid "Delete selected users"
 msgstr "Supprimer les utilisateurs sélectionnés"
-
-msgid "Delete the current logo"
-msgstr "Supprimer le logo actuel"
 
 #, python-format
 msgid "Delete this %s"
@@ -13749,6 +13756,10 @@ msgstr "Supprimer ce travail"
 
 msgid "Delete this key"
 msgstr "Supprimer cette touche"
+
+#, fuzzy
+msgid "Delete this logo"
+msgstr "Supprimer ce travail"
 
 msgid "Delete this metric"
 msgstr "Supprimer cette métrique"
@@ -13824,7 +13835,12 @@ msgstr "MIB supprimée %s"
 msgid "Deleted attribute %s"
 msgstr "Suppression de l'attribut %s"
 
-msgid "Deleted custom GUI logo"
+#, fuzzy, python-format
+msgid "Deleted custom GUI logo %s"
+msgstr "Suppression du logo personnalisé de l'interface graphique"
+
+#, fuzzy, python-format
+msgid "Deleted custom logo %s"
 msgstr "Suppression du logo personnalisé de l'interface graphique"
 
 #, python-format
@@ -14244,9 +14260,6 @@ msgstr "Descriptions"
 
 msgid "Deselect all checkboxes"
 msgstr "Désélectionner toutes les cases à cocher"
-
-msgid "Design"
-msgstr "Design"
 
 msgid "Design This Graph"
 msgstr "Concevoir ce graphique"
@@ -15694,6 +15707,10 @@ msgstr "Voulez-vous vraiment supprimer la balise auxiliaire '%s' ?"
 msgid "Do you really want to delete the connection to the site %s?"
 msgstr "Voulez-vous vraiment supprimer la connexion au site %s ?"
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the custom %s?"
+msgstr "Voulez-vous vraiment supprimer le client %s ?"
+
 #, python-format
 msgid "Do you really want to delete the custom attribute \"%s\"?"
 msgstr "Voulez-vous vraiment supprimer l'attribut personnalisé \"%s\" ?"
@@ -15797,9 +15814,6 @@ msgstr "Voulez-vous vraiment supprimer ce travail ?"
 
 msgid "Do you really want to delete this target?"
 msgstr "Voulez-vous vraiment supprimer cette cible ?"
-
-msgid "Do you really want to delete your logo?"
-msgstr "Voulez-vous vraiment supprimer votre logo ?"
 
 #, python-format
 msgid "Do you really want to disable the two-factor authentication of %s?"
@@ -17388,6 +17402,10 @@ msgstr "Fin des temps"
 msgid "End-to-end latency"
 msgstr "Latence de bout en bout"
 
+#, fuzzy, python-format
+msgid "End: %s"
+msgstr "Modifier %s : %s"
+
 msgid "Ended"
 msgstr "Terminé"
 
@@ -17411,9 +17429,6 @@ msgstr "Fin du droit de préemption"
 
 msgid "Endpoint"
 msgstr "Point d'accès"
-
-msgid "Endpoints"
-msgstr "Points finaux"
 
 msgid "Enforce IPv4"
 msgstr "Appliquer IPv4"
@@ -19133,9 +19148,6 @@ msgstr "Options de montage du système de fichiers (Linux/UNIX)"
 msgid "Filesystem types to ignore"
 msgstr "Types de systèmes de fichiers à ignorer"
 
-msgid "Filesystem usage"
-msgstr "Utilisation du système de fichiers"
-
 msgid "Filesystems"
 msgstr "Systèmes de fichiers"
 
@@ -20153,11 +20165,19 @@ msgid "GCP/Cloud Run CPU utilization"
 msgstr "GCP/Cloud Run Cpu"
 
 #, fuzzy
+msgid "GCP/Cloud Run instance"
+msgstr "Réseau GCP/Cloud Run"
+
+#, fuzzy
 msgid "GCP/Cloud Run memory utilization"
 msgstr "Mémoire de GCP/Cloud Run"
 
 #, fuzzy
 msgid "GCP/Cloud Run network"
+msgstr "Réseau GCP/Cloud Run"
+
+#, fuzzy
+msgid "GCP/Cloud Run performance"
 msgstr "Réseau GCP/Cloud Run"
 
 #, fuzzy
@@ -23594,10 +23614,6 @@ msgstr ""
 "Si aucun intervalle de temps explicite n'est fourni, le rapport utilise cet "
 "intervalle par défaut."
 
-msgid "If no port is given, a default value of 443 will be used."
-msgstr ""
-"Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
-
 msgid ""
 "If non-zero, the list of all the matching processes and their details in the "
 "long-output will include up to the first N characters of all arguments for "
@@ -25659,6 +25675,14 @@ msgstr "Connexion à InfluxDB"
 msgid "InfluxDB Connections"
 msgstr "Connexions InfluxDB"
 
+#, fuzzy
+msgid "InfluxDB Overflows Rate"
+msgstr "Règles du service InfluxDB"
+
+#, fuzzy
+msgid "InfluxDB Queue Usage"
+msgstr "Instance InfluxDB"
+
 msgid "InfluxDB connections"
 msgstr "Connexions InfluxDB"
 
@@ -25667,6 +25691,10 @@ msgstr "Instance InfluxDB"
 
 msgid "InfluxDB processing"
 msgstr "Traitement InfluxDB"
+
+#, fuzzy
+msgid "InfluxDB queue usage"
+msgstr "Règles du service InfluxDB"
 
 msgid "InfluxDB service rules"
 msgstr "Règles du service InfluxDB"
@@ -25706,9 +25734,6 @@ msgstr "Sessions Informix"
 
 msgid "Informix table extents"
 msgstr "Extensions de table Informix"
-
-msgid "Ingresses"
-msgstr "Ingresses"
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr "Hériter de la plage horaire du rapport (Reporting uniquement)"
@@ -26279,9 +26304,6 @@ msgstr "Page de manuel invalide : Impossible de récupérer le titre"
 
 msgid "Invalid messaging method selected."
 msgstr "La méthode de messagerie sélectionnée n'est pas valide."
-
-msgid "Invalid or no package type specified"
-msgstr "Invalide ou aucun type de paquet spécifié"
 
 msgid "Invalid package name"
 msgstr "Nom de paquet non valide"
@@ -27006,9 +27028,6 @@ msgstr "Kube-state-metrics"
 msgid "Kubernetes"
 msgstr "Kubernetes"
 
-msgid "Kubernetes (deprecated)"
-msgstr "Kubernetes (obsolète)"
-
 msgid "Kubernetes CPU resource utilization"
 msgstr "Utilisation des ressources CPU de Kubernetes"
 
@@ -27048,28 +27067,12 @@ msgstr "Déploiement de Kubernetes"
 msgid "Kubernetes Namespace"
 msgstr "Espace de noms Kubernetes"
 
-msgid "Kubernetes Namespaced pods Filesystem usage"
-msgstr ""
-"Kubernetes Pods à espacement de noms Utilisation des systèmes de fichiers"
-
-msgid "Kubernetes Namespaced pods cpu usage"
-msgstr "Kubernetes Namespaced pods cpu usage"
-
-msgid "Kubernetes Namespaced pods memory usage"
-msgstr "Utilisation de la mémoire des pods de Kubernetes Namespaced"
-
 #, fuzzy
 msgid "Kubernetes Namespaces"
 msgstr "Espace de noms Kubernetes"
 
-msgid "Kubernetes Network interfaces"
-msgstr "Kubernetes Interfaces réseau"
-
 msgid "Kubernetes Node"
 msgstr "Node Kubernetes"
-
-msgid "Kubernetes Port"
-msgstr "Port Kubernetes"
 
 msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
@@ -27092,9 +27095,6 @@ msgstr "Conteneurs de nœuds Kubernetes"
 
 msgid "Kubernetes node count"
 msgstr "Nombre de nœuds Kubernetes"
-
-msgid "Kubernetes nodes"
-msgstr "Nœuds Kubernetes"
 
 msgid "Kubernetes pod conditions"
 msgstr "Conditions des pods Kubernetes"
@@ -27122,9 +27122,6 @@ msgstr "Utilisation de la mémoire des quotas de ressources Kubernetes"
 
 msgid "Kubernetes resources"
 msgstr "Ressources Kubernetes"
-
-msgid "Kubernetes roles"
-msgstr "Rôles de Kubernetes"
 
 msgid "L2 cache hit ratio"
 msgstr "Taux de réussite du cache L2"
@@ -27384,6 +27381,10 @@ msgstr "Dernières coordonnées connues"
 msgid "Last known summary"
 msgstr "Dernier résumé connu"
 
+#, fuzzy
+msgid "Last license verification"
+msgstr "Vérification du certificat SSL"
+
 msgid "Last log"
 msgstr "Dernier journal"
 
@@ -27427,6 +27428,22 @@ msgstr "La semaine dernière"
 
 msgid "Last year"
 msgstr "L'année dernière"
+
+#, fuzzy
+msgid "Latencies"
+msgstr "Latence"
+
+#, fuzzy
+msgid "Latencies (50th percentile)"
+msgstr "percentile"
+
+#, fuzzy
+msgid "Latencies (95th percentile)"
+msgstr "percentile"
+
+#, fuzzy
+msgid "Latencies (99th percentile)"
+msgstr "percentile"
 
 msgid "Latency"
 msgstr "Latence"
@@ -27625,6 +27642,10 @@ msgid "Levels for Airflow Deviation measured at airflow sensors "
 msgstr ""
 "Niveaux d'écart de débit d'air mesurés par les capteurs de débit d'air "
 
+#, fuzzy
+msgid "Levels for CPU utilization"
+msgstr "Niveaux d'utilisation totale du CPU"
+
 msgid "Levels for Cisco CPU memory"
 msgstr "Niveaux de la mémoire du processeur Cisco"
 
@@ -27763,6 +27784,10 @@ msgid "Levels for memory"
 msgstr "Niveaux pour la mémoire"
 
 msgid "Levels for memory usage"
+msgstr "Niveaux d'utilisation de la mémoire"
+
+#, fuzzy
+msgid "Levels for memory utilization"
 msgstr "Niveaux d'utilisation de la mémoire"
 
 msgid "Levels for minimum wait time for a lock"
@@ -27938,6 +27963,10 @@ msgstr "Niveaux d'attente"
 msgid "Levels health"
 msgstr "Santé en cluster"
 
+#, fuzzy
+msgid "Levels instance"
+msgstr "Niveaux sur les instances"
+
 msgid "Levels memory"
 msgstr "Mémoire des niveaux"
 
@@ -28099,6 +28128,10 @@ msgid "Levels over an extended time period on total CPU utilization"
 msgstr "Niveaux d'utilisation totale du CPU sur une période prolongée"
 
 #, fuzzy
+msgid "Levels performance"
+msgstr "Niveaux de performance"
+
+#, fuzzy
 msgid "Levels qps"
 msgstr "Disque de niveau"
 
@@ -28133,6 +28166,10 @@ msgstr "Utilisation de la licence"
 
 msgid "License agreement"
 msgstr "Contrat de licence"
+
+#, fuzzy
+msgid "License details"
+msgstr "État de la licence"
 
 msgid "License state"
 msgstr "État de la licence"
@@ -28242,6 +28279,10 @@ msgstr "Limite aux services suivants"
 
 msgid "Limit width"
 msgstr "Largeur de la limite"
+
+#, fuzzy, python-format
+msgid "Limit: %s"
+msgstr "Limites"
 
 msgid "Limits"
 msgstr "Limites"
@@ -28969,6 +29010,10 @@ msgstr "Se connecter au site \"%s\""
 msgid "Login is not allowed on this site."
 msgstr "La connexion n'est pas autorisée sur ce site."
 
+#, fuzzy
+msgid "Login mask logo"
+msgstr "se connecter en tant que rôle"
+
 msgid "Login mode"
 msgstr "Mode de connexion"
 
@@ -28989,6 +29034,9 @@ msgstr "Connectez-vous avec les informations d'identification suivantes"
 
 msgid "Logo"
 msgstr "Logo"
+
+msgid "Logos"
+msgstr "Logos"
 
 msgid "Logout"
 msgstr "Déconnexion"
@@ -30750,9 +30798,6 @@ msgstr "Utilisation de la mémoire : Pods"
 msgid "Memory used"
 msgstr "Mémoire utilisée"
 
-msgid "Memory used %"
-msgstr "Mémoire utilisée (%)"
-
 msgid "Memory used by caches"
 msgstr "Mémoire utilisée par les caches"
 
@@ -30924,6 +30969,10 @@ msgid "MiB"
 msgstr "MiB"
 
 msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Microsoft Azure Status"
 msgstr "Microsoft Azure"
 
 msgid "Microsoft Hyper-V Server VM state"
@@ -31144,9 +31193,6 @@ msgstr ""
 #, python-format
 msgid "Missing parameter \"%s\"."
 msgstr "Paramètre \"%s\" manquant."
-
-msgid "Missing password"
-msgstr "Mot de passe manquant"
 
 msgid "Missing prediction data."
 msgstr "Données de prédiction manquantes."
@@ -32172,9 +32218,6 @@ msgstr "Nom de la machine virtuelle et/ou<br>du type de collecte d'ordures"
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nom de la machine virtuelle et/ou du<br>threadpool"
 
-msgid "Name or number of the port"
-msgstr "Nom ou numéro du port"
-
 msgid "Name resolution"
 msgstr "Résolution du nom"
 
@@ -32200,9 +32243,6 @@ msgstr ""
 
 msgid "Namespace"
 msgstr "Espace de nommage"
-
-msgid "Namespace prefix for hosts"
-msgstr "Préfixe d'espace de nommage pour les hôtes"
 
 msgid "Namespace problems"
 msgstr "Problèmes d'espace de nom"
@@ -32233,6 +32273,10 @@ msgid "Navigation"
 msgstr "Navigation"
 
 msgid "Navigation bar icons"
+msgstr "Icônes de la barre de navigation"
+
+#, fuzzy
+msgid "Navigation bar logo"
 msgstr "Icônes de la barre de navigation"
 
 #, python-format
@@ -32992,9 +33036,6 @@ msgstr "Nom du nœud ou du godet"
 
 msgid "Node or bucket name"
 msgstr "Nom du nœud ou du seau"
-
-msgid "Node port"
-msgstr "Port du nœud"
 
 msgid "Node state"
 msgstr "État du nœud"
@@ -33984,7 +34025,8 @@ msgstr "Nombre de shards relocalisés"
 msgid "Number of requests"
 msgstr "Nombre de demandes"
 
-msgid "Number of requests with return code class 2xx (sucess)"
+#, fuzzy
+msgid "Number of requests with return code class 2xx (success)"
 msgstr "Nombre de demandes avec un code de retour de classe 2xx (succès)"
 
 msgid "Number of requests with return code class 3xx (redirection)"
@@ -34075,6 +34117,10 @@ msgstr "Nombre de services en état WARN (groupe d'hôtes)"
 
 msgid "Number of services in state WARN (service group)"
 msgstr "Nombre de services en état WARN (groupe de services)"
+
+#, fuzzy
+msgid "Number of shadow hosts"
+msgstr "Nombre d'hôtes"
 
 msgid "Number of shared and exclusive locks"
 msgstr "Nombre de verrous partagés et exclusifs"
@@ -34966,6 +35012,10 @@ msgstr "Options"
 msgid "Options for report emails"
 msgstr "Options pour les e-mails de rapport"
 
+#, fuzzy, python-format
+msgid "Options: %s"
+msgstr "Options"
+
 msgid "Oracle"
 msgstr "Oracle"
 
@@ -35409,9 +35459,6 @@ msgstr "POP3"
 msgid "POST / GET Variables"
 msgstr "Variables POST / GET"
 
-msgid "PROXY"
-msgstr "PROXY"
-
 #, fuzzy
 msgid "PSU"
 msgstr "CPU"
@@ -35682,10 +35729,6 @@ msgid "Parameters for switch port inventory"
 msgstr "Paramètres pour l'inventaire des ports du commutateur"
 
 #, fuzzy
-msgid "Parameters for the  latencies"
-msgstr "Paramètres pour le taux de réussite des touches"
-
-#, fuzzy
 msgid "Parameters for the  requests"
 msgstr "Paramètres pour les demandes de seau"
 
@@ -35735,12 +35778,6 @@ msgstr "Paramètres de comptage des objets du seau"
 
 msgid "Parameters of total bucket size"
 msgstr "Paramètres de la taille totale du seau"
-
-msgid "Parameters received bytes"
-msgstr "Paramètres reçus octets"
-
-msgid "Parameters send bytes"
-msgstr "Paramètres d'envoi des octets"
 
 msgid "Parameters:"
 msgstr "Paramètres :"
@@ -36163,9 +36200,6 @@ msgstr "Niveaux de pourcentage ->"
 #, python-format
 msgid "Percentual levels for %s memory"
 msgstr "Niveaux per capita pour la mémoire %s"
-
-msgid "Percentual levels for error rates"
-msgstr "Niveaux de pourcentage pour les taux d'erreur"
 
 #, python-format
 msgid "Percentual levels for free %s"
@@ -38215,6 +38249,14 @@ msgstr ""
 "Numéro d'entrée RRA %d : le nombre d'étapes doit être supérieur à celui de "
 "l'entrée précédente."
 
+#, fuzzy
+msgid "RRD Overflows Rate"
+msgstr "Débordements"
+
+#, fuzzy
+msgid "RRD Queue Usage"
+msgstr "Nom de la file d'attente"
+
 msgid "RRD consolidation"
 msgstr "Consolidation du RRD"
 
@@ -38246,6 +38288,10 @@ msgstr ""
 
 msgid "RRD processing"
 msgstr "Traitement RRD"
+
+#, fuzzy
+msgid "RRD queue usage"
+msgstr "Nom de la file d'attente de courrier"
 
 msgid "RRD storage format"
 msgstr "Format de stockage RRD"
@@ -38365,6 +38411,18 @@ msgstr "Raritan PDU : Phases d'entrée"
 
 msgid "Rate of change"
 msgstr "Taux de changement"
+
+#, fuzzy
+msgid "Rate of performance data loss for Carbon"
+msgstr "Aucune donnée de performance : %s"
+
+#, fuzzy
+msgid "Rate of performance data loss for InfluxDB"
+msgstr "Aucune donnée de performance : %s"
+
+#, fuzzy
+msgid "Rate of performance data loss for RRD"
+msgstr "Aucune donnée de performance : %s"
 
 msgid "Rate timewindow"
 msgstr "Fenêtre de temps du taux"
@@ -38752,6 +38810,10 @@ msgstr "Jeux de regex"
 
 msgid "Region name"
 msgstr "Nom de la région"
+
+#, fuzzy
+msgid "Regions to monitor"
+msgstr "Files d'attente à surveiller"
 
 msgid "Regions to use"
 msgstr "Régions à utiliser"
@@ -39277,9 +39339,6 @@ msgstr "État de la réplique"
 msgid "Replica update state"
 msgstr "État de la mise à jour de la réplique"
 
-msgid "Replicas"
-msgstr "Répliques"
-
 msgid "Replicate Event Console config"
 msgstr "Répliquer la configuration de la console d'événements"
 
@@ -39411,6 +39470,28 @@ msgstr "Demande"
 
 msgid "Request Method"
 msgstr "Méthode de demande"
+
+#, fuzzy
+msgid "Request latencies"
+msgstr "Latence de la demande"
+
+#, fuzzy
+msgid "Request latencies with return code class 2xx (success)"
+msgstr "Nombre de demandes avec un code de retour de classe 2xx (succès)"
+
+#, fuzzy
+msgid "Request latencies with return code class 3xx (redirection)"
+msgstr "Nombre de demandes avec un code de retour de classe 3xx (redirection)"
+
+#, fuzzy
+msgid "Request latencies with return code class 4xx (client error)"
+msgstr ""
+"Nombre de demandes avec un code de retour de classe 4xx (erreur du client)"
+
+#, fuzzy
+msgid "Request latencies with return code class 5xx (server error)"
+msgstr ""
+"Nombre de demandes avec un code de retour de classe 5xx (erreur de serveur)"
 
 msgid "Request metrics"
 msgstr "Demande de métriques"
@@ -39763,6 +39844,10 @@ msgstr "Résultat du dernier processus %s"
 msgid "Result of last synchronization process"
 msgstr "Résultat du dernier processus de synchronisation"
 
+#, fuzzy, python-format
+msgid "Result: %s"
+msgstr "Résultats"
+
 msgid "Resulting notifications"
 msgstr "Notifications résultantes"
 
@@ -39855,6 +39940,24 @@ msgstr "Recommencer ce test"
 
 msgid "Retry time"
 msgstr "Temps de répétition"
+
+#, fuzzy
+msgid "Return code class 2xx (success)"
+msgstr "Nombre de demandes avec un code de retour de classe 2xx (succès)"
+
+#, fuzzy
+msgid "Return code class 3xx (redirection)"
+msgstr "Nombre de demandes avec un code de retour de classe 3xx (redirection)"
+
+#, fuzzy
+msgid "Return code class 4xx (client error)"
+msgstr ""
+"Nombre de demandes avec un code de retour de classe 4xx (erreur du client)"
+
+#, fuzzy
+msgid "Return code class 5xx (server error)"
+msgstr ""
+"Nombre de demandes avec un code de retour de classe 5xx (erreur de serveur)"
 
 msgid "Return process times within performance data"
 msgstr "Retour des temps de traitement dans les données de performance"
@@ -40336,9 +40439,6 @@ msgstr "SAP-Client"
 
 msgid "SAS Ports"
 msgstr "Ports SAS"
-
-msgid "SCTP"
-msgstr "SCTP"
 
 msgid "SDM template mismatch"
 msgstr "Mauvaise concordance du modèle SDM"
@@ -43874,18 +43974,6 @@ msgstr "Version spécifique"
 
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
-"Kubernetes API. This is a useful option for Rancher installations (more "
-"information can be found in the manual). If this option is not relevant for "
-"your installation, please leave it unchecked."
-msgstr ""
-"Spécifie un préfixe de chemin d'accès à l'URL, qui est ajouté aux appels "
-"d'API à l'API Kubernetes. Il s'agit d'une option utile pour les "
-"installations Rancher (vous trouverez de plus amples informations dans le "
-"manuel). Si cette option n'est pas pertinente pour votre installation, "
-"veuillez ne pas la cocher."
-
-msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
 "Prometheus API. If this option is not relevant for your installation, please "
 "leave it unchecked."
 msgstr ""
@@ -44639,6 +44727,10 @@ msgstr "Commencez !"
 msgid "Start-Time"
 msgstr "Heure de début"
 
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "Commencé à : %s."
+
 msgid "Started"
 msgstr "Démarré"
 
@@ -45328,9 +45420,6 @@ msgstr "État, si l'agrégat BI est reconnu"
 msgid "State, if BI aggregate is in scheduled downtime"
 msgstr "État, si l'agrégat BI est en arrêt programmé"
 
-msgid "Stateful sets"
-msgstr "Ensembles Stateful"
-
 msgid "StatefulSet"
 msgstr "StatefulSet"
 
@@ -45993,9 +46082,6 @@ msgstr ""
 "Intervertir les marges de gauche et de droite sur les pages dont les numéros "
 "sont pairs."
 
-msgid "Swap memory usage"
-msgstr "Utilisation de la mémoire swap"
-
 msgid "Swap used"
 msgstr "Swap utilisé"
 
@@ -46148,9 +46234,6 @@ msgstr "Système"
 
 msgid "System Authentication"
 msgstr "Authentification du système"
-
-msgid "System CPU usage"
-msgstr "Utilisation du CPU du système"
 
 msgid "System Events on APX Inrow Devices"
 msgstr "Événements système sur les appareils APX Inrow"
@@ -46517,9 +46600,6 @@ msgstr "État cible"
 
 msgid "Target group name"
 msgstr "Nom du groupe cible"
-
-msgid "Target port"
-msgstr "Port cible"
 
 msgid "Target states"
 msgstr "États cibles"
@@ -47450,15 +47530,6 @@ msgstr ""
 "href='%s'>documentation en ligne</a> pour plus de détails. Le préfixe doit "
 "se terminer par une barre oblique. Omettez le <tt>/nagvis/</tt> du préfixe."
 
-msgid ""
-"The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
-"or the \"IP Address\" options are selected, the DNS hostname or IP address "
-"and a secure protocol (HTTPS) are used."
-msgstr ""
-"L'URL qui sera contactée pour les appels à l'API Kubernetes. Si les options "
-"\"Nom d'hôte\" ou \"Adresse IP\" sont sélectionnées, le nom d'hôte ou "
-"l'adresse IP du DNS et un protocole sécurisé (HTTPS) sont utilisés."
-
 msgid "The User Base DN could be found."
 msgstr "Le DN de la base utilisateur n'a pu être trouvé."
 
@@ -48212,6 +48283,10 @@ msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
 "l'état actuel de la surveillance (y compris les acquittements et les temps "
 "d'arrêt)"
+
+#, fuzzy, python-format
+msgid "The custom logo %s has been deleted."
+msgstr "Le logo a été supprimé."
 
 #, python-format
 msgid "The customer ID %s does not exist."
@@ -49180,12 +49255,6 @@ msgstr "Le fichier journal n'existe pas sur le site."
 
 msgid "The login is currently locked"
 msgstr "Le login est actuellement verrouillé"
-
-msgid "The logo has been deleted."
-msgstr "Le logo a été supprimé."
-
-msgid "The logo has been uploaded."
-msgstr "Le logo a été téléchargé."
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "Le sujet du mail est utilisé comme application syslog."
@@ -51271,19 +51340,6 @@ msgid ""
 "These labels can be refered to by the ruleset \"%s\", to control the "
 "behaviour during host creation."
 msgstr ""
-
-msgid ""
-"These levels make the check go warning or critical whenever the "
-"<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
-"monitored interface reaches the given bounds. The percentual error rate is "
-"computed by dividing number of errors by the total number of packets "
-"(successful plus errors)."
-msgstr ""
-"Ces niveaux font passer la vérification en avertissement ou en critique dès "
-"que le <b>taux d'erreur percentile</b> ou le <b>taux d'erreur absolue</b> de "
-"l'interface surveillée atteint les limites données. Le taux d'erreur "
-"percentile est calculé en divisant le nombre d'erreurs par le nombre total "
-"de paquets (succès plus erreurs)."
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -54929,15 +54985,6 @@ msgstr ""
 "classifications de balises. Vous pouvez configurer les balises à utiliser "
 "dans vos paramètres globaux de Multisite."
 
-msgid ""
-"This special agent is deprecated and will be removed in Checkmk version "
-"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
-"agent for Kubernetes."
-msgstr ""
-"Cet agent spécial est déprécié et sera supprimé dans la version 2.2.0 de "
-"Checkmk. Veuillez utiliser le jeu de règles \"Kubernetes\" ; pour configurer "
-"le nouvel agent spécial pour Kubernetes."
-
 msgid "This stored report does not exist."
 msgstr "Ce rapport stocké n'existe pas."
 
@@ -55220,10 +55267,12 @@ msgstr ""
 msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
 msgstr "Ceci déploiera le plugin agent <tt>mk_mongodb.py</tt>."
 
+#, fuzzy
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
-"MySQL databases."
+"MySQL databases. On Windows, the plugin will look for service names "
+"containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""
 "Cela permettra de déployer le plugin agent <tt>mk_mysql</tt> sur les "
 "systèmes linux et <tt>mk_mysql.vbs</tt> sur les systèmes windows pour la "
@@ -55633,6 +55682,10 @@ msgstr "Temps jusqu'à l'expiration de la licence"
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr "Time warp - montrer l'agrégat BI pendant cette période de temps"
+
+#, fuzzy, python-format
+msgid "Time: %s"
+msgstr "Times"
 
 msgid "Timed out Active Directory Requests"
 msgstr "Requêtes Active Directory expirées"
@@ -56139,9 +56192,6 @@ msgstr "Longueur totale de la file d'attente Postfix"
 msgid "Total log file size: Absolute upper levels"
 msgstr "Taille totale du fichier journal : Niveaux supérieurs absolus"
 
-msgid "Total memory usage"
-msgstr "Utilisation totale de la mémoire"
-
 #, fuzzy
 msgid "Total memory utilization"
 msgstr "Utilisation de la mémoire"
@@ -56308,9 +56358,6 @@ msgstr "Total des pages imprimées"
 
 msgid "Total query timeout"
 msgstr "Délai total d'interrogation"
-
-msgid "Total replicas"
-msgstr "Total des répliques"
 
 msgid "Total restarts"
 msgstr "Total des redémarrages"
@@ -56617,6 +56664,10 @@ msgstr "Type de la valeur"
 
 msgid "Type of tree layout"
 msgstr "Type de disposition des arbres"
+
+#, fuzzy, python-format
+msgid "Type: %s"
+msgstr "Modèle : %s"
 
 msgid "Types of events that are being processed"
 msgstr "Types d'événements en cours de traitement"
@@ -57420,7 +57471,8 @@ msgstr "Télécharger la clé de signature de l'agent"
 msgid "Upload backup key"
 msgstr "Télécharger la clé de sauvegarde"
 
-msgid "Upload custom logo"
+#, fuzzy
+msgid "Upload custom logos"
 msgstr "Télécharger un logo personnalisé"
 
 msgid "Upload extension package"
@@ -57438,8 +57490,13 @@ msgstr "Télécharger nouveau :"
 msgid "Upload package"
 msgstr "Télécharger le paquet"
 
-msgid "Uploaded a custom GUI logo"
+#, fuzzy, python-format
+msgid "Uploaded custom GUI logo: %s"
 msgstr "Téléchargement d'un logo GUI personnalisé"
+
+#, fuzzy, python-format
+msgid "Uploaded custom logo %s"
+msgstr "Télécharger un logo personnalisé"
 
 #, fuzzy, python-format
 msgid "Uploaded extension package %s-%s (%s)"
@@ -58915,6 +58972,10 @@ msgstr "Utilisé par"
 msgid "Used by tags"
 msgstr "Utilisé par les tags"
 
+#, fuzzy
+msgid "Used disk capacity"
+msgstr "Capacité totale du disque"
+
 msgid "Used file handles"
 msgstr "Manches de fichiers utilisés"
 
@@ -58993,9 +59054,6 @@ msgstr "Agent de l'utilisateur"
 
 msgid "User Base-DN"
 msgstr "Numéro de base de l'utilisateur"
-
-msgid "User CPU usage"
-msgstr "Utilisation du CPU par l'utilisateur"
 
 msgid "User ID"
 msgstr "ID utilisateur"
@@ -63026,11 +63084,12 @@ msgstr ""
 "l'option de requête PromQL personnalisée ci-dessous si l'un des types de "
 "cible d'extraction ne figure pas dans la liste."
 
+#, fuzzy, python-format
 msgid ""
-"You can upload a <i>PNG</i> image here to replace the  default Check_MK Logo "
-"in the sidebar. The image needs to have a size of 271px width and 46px "
-"height to be displayed correctly. Images with other ratios will be processed "
-"but displayed with the size mentioned."
+"You can upload a <i>PNG</i> image here to replace the default Checkmk %s. "
+"The image needs to have a size of %dpx width and %dpx height to be displayed "
+"correctly. Images with greater width or height cannot be uploaded, and the "
+"image will be rendered with the mentioned size."
 msgstr ""
 "Vous pouvez télécharger une image <i>PNG</i> ici pour remplacer le logo "
 "Check_MK par défaut dans la barre latérale. L'image doit avoir une taille de "
@@ -63953,6 +64012,12 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "Votre entrée ne correspond pas au format requis."
 
+#, fuzzy
+msgid "Your logo has been uploaded."
+msgid_plural "Your logos have been uploaded"
+msgstr[0] "Le logo a été téléchargé."
+msgstr[1] "Le logo a été téléchargé."
+
 msgid "Your modifications affect some objects"
 msgstr "Vos modifications affectent certains objets"
 
@@ -64283,9 +64348,6 @@ msgstr "inférieur à la valeur prévue"
 
 msgid "best state"
 msgstr "meilleur état"
-
-msgid "billable time"
-msgstr "temps facturable"
 
 msgid "bindings"
 msgstr "fixations"
@@ -64618,9 +64680,6 @@ msgstr "fin"
 
 msgid "entries"
 msgstr "entrées"
-
-msgid "errors"
-msgstr "erreurs"
 
 msgid "estimated duration"
 msgstr "durée estimée"
@@ -65490,9 +65549,6 @@ msgstr "par seconde"
 msgid "percent"
 msgstr "pour cent"
 
-msgid "percent errors"
-msgstr "pourcentages d'erreurs"
-
 msgid "percent higher than average"
 msgstr "pour cent de plus que la moyenne"
 
@@ -66085,6 +66141,183 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "API server endpoint"
+#~ msgstr "Point de terminaison du serveur API"
+
+#~ msgid "Absolute levels for error rates"
+#~ msgstr "Niveaux absolus pour les taux d'erreur"
+
+#~ msgid "Cluster roles"
+#~ msgstr "Rôles des clusters"
+
+#~ msgid "Endpoints"
+#~ msgstr "Points finaux"
+
+#~ msgid "Filesystem usage"
+#~ msgstr "Utilisation du système de fichiers"
+
+#~ msgid "If no port is given, a default value of 443 will be used."
+#~ msgstr ""
+#~ "Si aucun port n'est indiqué, une valeur par défaut de 443 sera utilisée."
+
+#~ msgid "Ingresses"
+#~ msgstr "Ingresses"
+
+#~ msgid "Kubernetes (deprecated)"
+#~ msgstr "Kubernetes (obsolète)"
+
+#~ msgid "Kubernetes Namespaced pods Filesystem usage"
+#~ msgstr ""
+#~ "Kubernetes Pods à espacement de noms Utilisation des systèmes de fichiers"
+
+#~ msgid "Kubernetes Namespaced pods cpu usage"
+#~ msgstr "Kubernetes Namespaced pods cpu usage"
+
+#~ msgid "Kubernetes Namespaced pods memory usage"
+#~ msgstr "Utilisation de la mémoire des pods de Kubernetes Namespaced"
+
+#~ msgid "Kubernetes Network interfaces"
+#~ msgstr "Kubernetes Interfaces réseau"
+
+#~ msgid "Kubernetes Port"
+#~ msgstr "Port Kubernetes"
+
+#~ msgid "Kubernetes nodes"
+#~ msgstr "Nœuds Kubernetes"
+
+#~ msgid "Kubernetes roles"
+#~ msgstr "Rôles de Kubernetes"
+
+#~ msgid "Memory used %"
+#~ msgstr "Mémoire utilisée (%)"
+
+#~ msgid "Name or number of the port"
+#~ msgstr "Nom ou numéro du port"
+
+#~ msgid "Namespace prefix for hosts"
+#~ msgstr "Préfixe d'espace de nommage pour les hôtes"
+
+#~ msgid "Node port"
+#~ msgstr "Port du nœud"
+
+#~ msgid "PROXY"
+#~ msgstr "PROXY"
+
+#~ msgid "Parameters received bytes"
+#~ msgstr "Paramètres reçus octets"
+
+#~ msgid "Parameters send bytes"
+#~ msgstr "Paramètres d'envoi des octets"
+
+#~ msgid "Percentual levels for error rates"
+#~ msgstr "Niveaux de pourcentage pour les taux d'erreur"
+
+#~ msgid "Replicas"
+#~ msgstr "Répliques"
+
+#~ msgid "SCTP"
+#~ msgstr "SCTP"
+
+#~ msgid ""
+#~ "Specifies a URL path prefix, which is prepended to API calls to the "
+#~ "Kubernetes API. This is a useful option for Rancher installations (more "
+#~ "information can be found in the manual). If this option is not relevant "
+#~ "for your installation, please leave it unchecked."
+#~ msgstr ""
+#~ "Spécifie un préfixe de chemin d'accès à l'URL, qui est ajouté aux appels "
+#~ "d'API à l'API Kubernetes. Il s'agit d'une option utile pour les "
+#~ "installations Rancher (vous trouverez de plus amples informations dans le "
+#~ "manuel). Si cette option n'est pas pertinente pour votre installation, "
+#~ "veuillez ne pas la cocher."
+
+#~ msgid "Stateful sets"
+#~ msgstr "Ensembles Stateful"
+
+#~ msgid "Swap memory usage"
+#~ msgstr "Utilisation de la mémoire swap"
+
+#~ msgid "System CPU usage"
+#~ msgstr "Utilisation du CPU du système"
+
+#~ msgid "Target port"
+#~ msgstr "Port cible"
+
+#~ msgid ""
+#~ "The URL that will be contacted for Kubernetes API calls. If the \"Hostname"
+#~ "\" or the \"IP Address\" options are selected, the DNS hostname or IP "
+#~ "address and a secure protocol (HTTPS) are used."
+#~ msgstr ""
+#~ "L'URL qui sera contactée pour les appels à l'API Kubernetes. Si les "
+#~ "options \"Nom d'hôte\" ou \"Adresse IP\" sont sélectionnées, le nom "
+#~ "d'hôte ou l'adresse IP du DNS et un protocole sécurisé (HTTPS) sont "
+#~ "utilisés."
+
+#~ msgid ""
+#~ "These levels make the check go warning or critical whenever the "
+#~ "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
+#~ "monitored interface reaches the given bounds. The percentual error rate "
+#~ "is computed by dividing number of errors by the total number of packets "
+#~ "(successful plus errors)."
+#~ msgstr ""
+#~ "Ces niveaux font passer la vérification en avertissement ou en critique "
+#~ "dès que le <b>taux d'erreur percentile</b> ou le <b>taux d'erreur "
+#~ "absolue</b> de l'interface surveillée atteint les limites données. Le "
+#~ "taux d'erreur percentile est calculé en divisant le nombre d'erreurs par "
+#~ "le nombre total de paquets (succès plus erreurs)."
+
+#~ msgid ""
+#~ "This special agent is deprecated and will be removed in Checkmk version "
+#~ "2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
+#~ "agent for Kubernetes."
+#~ msgstr ""
+#~ "Cet agent spécial est déprécié et sera supprimé dans la version 2.2.0 de "
+#~ "Checkmk. Veuillez utiliser le jeu de règles \"Kubernetes\" ; pour "
+#~ "configurer le nouvel agent spécial pour Kubernetes."
+
+#~ msgid "Total memory usage"
+#~ msgstr "Utilisation totale de la mémoire"
+
+#~ msgid "Total replicas"
+#~ msgstr "Total des répliques"
+
+#~ msgid "User CPU usage"
+#~ msgstr "Utilisation du CPU par l'utilisateur"
+
+#~ msgid "errors"
+#~ msgstr "erreurs"
+
+#~ msgid "percent errors"
+#~ msgstr "pourcentages d'erreurs"
+
+#~ msgid "Delete logo"
+#~ msgstr "Supprimer le logo"
+
+#~ msgid "Delete the current logo"
+#~ msgstr "Supprimer le logo actuel"
+
+#~ msgid "Design"
+#~ msgstr "Design"
+
+#~ msgid "Do you really want to delete your logo?"
+#~ msgstr "Voulez-vous vraiment supprimer votre logo ?"
+
+#, fuzzy
+#~| msgid "Parameters for the key hit ratio"
+#~ msgid "Parameters for the  latencies"
+#~ msgstr "Paramètres pour le taux de réussite des touches"
+
+#~ msgid "99th percentile request latency"
+#~ msgstr "99e percentile de latence des demandes"
+
+#~ msgid "Missing password"
+#~ msgstr "Mot de passe manquant"
+
+#~ msgid "billable time"
+#~ msgstr "temps facturable"
+
+#~ msgid "Invalid or no package type specified"
+#~ msgstr "Invalide ou aucun type de paquet spécifié"
 
 #~ msgid "GCP/GCE CPU"
 #~ msgstr "CPU GCP/GCE"
@@ -70364,9 +70597,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 #~ msgid "Repository/Tag"
 #~ msgstr "Dépôt/Tag"
 
-#~ msgid "Request latency"
-#~ msgstr "Latence de la demande"
-
 #~ msgid "Resident items ratio"
 #~ msgstr "Ratio d'éléments résiduels"
 
@@ -72011,9 +72241,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Linux / Unix Plugins"
 #~ msgstr "Plugins Linux / Unix"
-
-#~ msgid "Logos"
-#~ msgstr "Logos"
 
 #~ msgid "Max. Age"
 #~ msgstr "Âge Max."

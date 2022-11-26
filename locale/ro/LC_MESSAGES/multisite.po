@@ -1114,10 +1114,6 @@ msgstr "trei nivele"
 msgid "99th percentile"
 msgstr "trei nivele"
 
-#, fuzzy
-msgid "99th percentile request latency"
-msgstr "Nivelurile maxime pentru voltaj"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -2046,9 +2042,6 @@ msgstr "API accesibil"
 msgid "API server connection"
 msgstr "Conexiune Noua"
 
-msgid "API server endpoint"
-msgstr ""
-
 msgid "APPEND"
 msgstr ""
 
@@ -2309,10 +2302,6 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
 msgid "Absolute levels for discards rates"
-msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-msgid "Absolute levels for error rates"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, python-format
@@ -5853,8 +5842,16 @@ msgstr ""
 msgid "Average disk latency"
 msgstr ""
 
+#, fuzzy
+msgid "Average disk read latency"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Average disk read queue length"
 msgstr ""
+
+#, fuzzy
+msgid "Average disk write latency"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Average disk write queue length"
 msgstr ""
@@ -7878,12 +7875,23 @@ msgstr ""
 msgid "Capacity remaining"
 msgstr ""
 
+msgid "Carbon Overflows Rate"
+msgstr ""
+
+#, fuzzy
+msgid "Carbon Queue Usage"
+msgstr "Numele elementului pentru eveniment"
+
 #, fuzzy
 msgid "Carbon connections"
 msgstr "Conexiuni Active"
 
 msgid "Carbon monoxide"
 msgstr ""
+
+#, fuzzy
+msgid "Carbon queue usage"
+msgstr "Nume nou"
 
 msgid "Casa module: CPU temperature"
 msgstr ""
@@ -9212,13 +9220,13 @@ msgstr "Adaungă un nou element"
 msgid "Clone view"
 msgstr "Conexiune Noua"
 
-msgid "Close Timewarp"
-msgstr ""
-
 msgid ""
 "Close connection once more than this number of bytes are received. Per "
 "default the number of read bytes is not limited. This setting is only used "
 "if you expect strings in the response."
+msgstr ""
+
+msgid "Close timewarp"
 msgstr ""
 
 msgid "Closed"
@@ -9280,10 +9288,6 @@ msgstr ""
 
 #, fuzzy
 msgid "Cluster problems"
-msgstr "trei nivele"
-
-#, fuzzy
-msgid "Cluster roles"
 msgstr "trei nivele"
 
 msgid "Cluster statistics"
@@ -11718,6 +11722,10 @@ msgstr "Atribute personalizate"
 msgid "Custom localizations"
 msgstr ""
 
+#, fuzzy
+msgid "Custom logos"
+msgstr "Atribute personalizate"
+
 msgid "Custom notification"
 msgstr ""
 
@@ -12953,10 +12961,6 @@ msgstr ""
 msgid "Delete last alert handler rule"
 msgstr ""
 
-#, fuzzy
-msgid "Delete logo"
-msgstr "Sterge Elementul"
-
 msgid "Delete messages"
 msgstr ""
 
@@ -12997,10 +13001,6 @@ msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete selected users"
-msgstr "Sterge Elementul"
-
-#, fuzzy
-msgid "Delete the current logo"
 msgstr "Sterge Elementul"
 
 #, python-format
@@ -13075,6 +13075,10 @@ msgstr "Sterge Elementul"
 
 #, fuzzy
 msgid "Delete this key"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Delete this logo"
 msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -13158,8 +13162,13 @@ msgstr ""
 msgid "Deleted attribute %s"
 msgstr ""
 
-msgid "Deleted custom GUI logo"
-msgstr ""
+#, fuzzy, python-format
+msgid "Deleted custom GUI logo %s"
+msgstr "Perioada de timp Noua"
+
+#, fuzzy, python-format
+msgid "Deleted custom logo %s"
+msgstr "Perioada de timp Noua"
 
 #, python-format
 msgid "Deleted notification rule %d of user %s"
@@ -13560,10 +13569,6 @@ msgstr "foloseste descrierea"
 #, fuzzy
 msgid "Deselect all checkboxes"
 msgstr "Verificări active"
-
-#, fuzzy
-msgid "Design"
-msgstr "Atribute personalizate"
 
 msgid "Design This Graph"
 msgstr ""
@@ -15034,6 +15039,10 @@ msgstr ""
 msgid "Do you really want to delete the connection to the site %s?"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the custom %s?"
+msgstr "O agregare legată de un singur element"
+
 #, python-format
 msgid "Do you really want to delete the custom attribute \"%s\"?"
 msgstr ""
@@ -15137,9 +15146,6 @@ msgid "Do you really want to delete this job?"
 msgstr ""
 
 msgid "Do you really want to delete this target?"
-msgstr ""
-
-msgid "Do you really want to delete your logo?"
 msgstr ""
 
 #, fuzzy, python-format
@@ -16678,6 +16684,10 @@ msgstr ""
 msgid "End-to-end latency"
 msgstr "Perioada de timp Noua"
 
+#, fuzzy, python-format
+msgid "End: %s"
+msgstr "Adăugat %s"
+
 msgid "Ended"
 msgstr ""
 
@@ -16702,9 +16712,6 @@ msgstr ""
 #, fuzzy
 msgid "Endpoint"
 msgstr "Numele Elementului"
-
-msgid "Endpoints"
-msgstr ""
 
 msgid "Enforce IPv4"
 msgstr ""
@@ -18459,10 +18466,6 @@ msgid "Filesystem types to ignore"
 msgstr ""
 
 #, fuzzy
-msgid "Filesystem usage"
-msgstr "Spațiu liber exact"
-
-#, fuzzy
 msgid "Filesystems"
 msgstr "Spațiu liber exact"
 
@@ -19398,11 +19401,19 @@ msgid "GCP/Cloud Run CPU utilization"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "GCP/Cloud Run instance"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "GCP/Cloud Run memory utilization"
 msgstr "Adresă"
 
 #, fuzzy
 msgid "GCP/Cloud Run network"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "GCP/Cloud Run performance"
 msgstr "Adresă"
 
 #, fuzzy
@@ -22465,9 +22476,6 @@ msgid ""
 "range."
 msgstr ""
 
-msgid "If no port is given, a default value of 443 will be used."
-msgstr ""
-
 msgid ""
 "If non-zero, the list of all the matching processes and their details in the "
 "long-output will include up to the first N characters of all arguments for "
@@ -23891,6 +23899,15 @@ msgstr "Conexiuni Active"
 msgid "InfluxDB Connections"
 msgstr "Conexiuni Active"
 
+# georgem ##############
+#, fuzzy
+msgid "InfluxDB Overflows Rate"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "InfluxDB Queue Usage"
+msgstr "Adaugă instanță NGINX"
+
 #, fuzzy
 msgid "InfluxDB connections"
 msgstr "Conexiune Noua"
@@ -23902,6 +23919,11 @@ msgstr "Adaugă instanță NGINX"
 #, fuzzy
 msgid "InfluxDB processing"
 msgstr "Conexiuni Active"
+
+# georgem ##############
+#, fuzzy
+msgid "InfluxDB queue usage"
+msgstr "Grup nou"
 
 # georgem ##############
 #, fuzzy
@@ -23948,10 +23970,6 @@ msgstr "Reguli neaplicate"
 #, fuzzy
 msgid "Informix table extents"
 msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-msgid "Ingresses"
-msgstr "Adresă"
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr ""
@@ -24508,9 +24526,6 @@ msgid "Invalid man page: Failed to get the title"
 msgstr ""
 
 msgid "Invalid messaging method selected."
-msgstr ""
-
-msgid "Invalid or no package type specified"
 msgstr ""
 
 #, fuzzy
@@ -25210,10 +25225,6 @@ msgid "Kubernetes"
 msgstr ""
 
 #, fuzzy
-msgid "Kubernetes (deprecated)"
-msgstr "Adresă"
-
-#, fuzzy
 msgid "Kubernetes CPU resource utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -25257,28 +25268,13 @@ msgstr "(fără condiții)"
 msgid "Kubernetes Namespace"
 msgstr "Adresă"
 
-msgid "Kubernetes Namespaced pods Filesystem usage"
-msgstr ""
-
-msgid "Kubernetes Namespaced pods cpu usage"
-msgstr ""
-
-msgid "Kubernetes Namespaced pods memory usage"
-msgstr ""
-
 #, fuzzy
 msgid "Kubernetes Namespaces"
 msgstr "Adresă"
 
-msgid "Kubernetes Network interfaces"
-msgstr ""
-
 #, fuzzy
 msgid "Kubernetes Node"
 msgstr "Adresă"
-
-msgid "Kubernetes Port"
-msgstr ""
 
 #, fuzzy
 msgid "Kubernetes StatefulSet"
@@ -25307,9 +25303,6 @@ msgstr "Adresă"
 #, fuzzy
 msgid "Kubernetes node count"
 msgstr "Adresă"
-
-msgid "Kubernetes nodes"
-msgstr ""
 
 #, fuzzy
 msgid "Kubernetes pod conditions"
@@ -25344,9 +25337,6 @@ msgid "Kubernetes resource quota memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Kubernetes resources"
-msgstr ""
-
-msgid "Kubernetes roles"
 msgstr ""
 
 msgid "L2 cache hit ratio"
@@ -25619,6 +25609,10 @@ msgid "Last known summary"
 msgstr ""
 
 #, fuzzy
+msgid "Last license verification"
+msgstr "Activare Configurare"
+
+#, fuzzy
 msgid "Last log"
 msgstr "Descarca"
 
@@ -25664,6 +25658,22 @@ msgstr ""
 
 msgid "Last year"
 msgstr ""
+
+#, fuzzy
+msgid "Latencies"
+msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Latencies (50th percentile)"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Latencies (95th percentile)"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Latencies (99th percentile)"
+msgstr "trei nivele"
 
 msgid "Latency"
 msgstr ""
@@ -25873,6 +25883,10 @@ msgid "Levels for Airflow Deviation measured at airflow sensors "
 msgstr ""
 
 #, fuzzy
+msgid "Levels for CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Levels for Cisco CPU memory"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -26042,6 +26056,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Levels for memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Levels for memory utilization"
 msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Levels for minimum wait time for a lock"
@@ -26232,6 +26250,10 @@ msgid "Levels health"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
+msgid "Levels instance"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels memory"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -26408,6 +26430,10 @@ msgid "Levels over an extended time period on total CPU utilization"
 msgstr ""
 
 #, fuzzy
+msgid "Levels performance"
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
 msgid "Levels qps"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -26446,6 +26472,10 @@ msgstr ""
 #, fuzzy
 msgid "License agreement"
 msgstr "% utilizare"
+
+#, fuzzy
+msgid "License details"
+msgstr "Stare adiministrativă"
 
 #, fuzzy
 msgid "License state"
@@ -26557,6 +26587,10 @@ msgstr ""
 #, fuzzy
 msgid "Limit width"
 msgstr "latime"
+
+#, fuzzy, python-format
+msgid "Limit: %s"
+msgstr "Adaugă limite"
 
 #, fuzzy
 msgid "Limits"
@@ -27278,6 +27312,10 @@ msgstr ""
 msgid "Login is not allowed on this site."
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Login mask logo"
+msgstr "Descarca"
+
 msgid "Login mode"
 msgstr ""
 
@@ -27299,6 +27337,9 @@ msgid "Login with the following credentials"
 msgstr ""
 
 msgid "Logo"
+msgstr ""
+
+msgid "Logos"
 msgstr ""
 
 msgid "Logout"
@@ -29151,10 +29192,6 @@ msgstr "% utilizare"
 msgid "Memory used"
 msgstr "% utilizare"
 
-#, fuzzy
-msgid "Memory used %"
-msgstr "% utilizare"
-
 msgid "Memory used by caches"
 msgstr ""
 
@@ -29336,6 +29373,10 @@ msgstr ""
 
 msgid "Microsoft Azure"
 msgstr ""
+
+#, fuzzy
+msgid "Microsoft Azure Status"
+msgstr "Statusul Serverului"
 
 msgid "Microsoft Hyper-V Server VM state"
 msgstr ""
@@ -29568,10 +29609,6 @@ msgstr ""
 #, python-format
 msgid "Missing parameter \"%s\"."
 msgstr ""
-
-#, fuzzy
-msgid "Missing password"
-msgstr "Parola"
 
 msgid "Missing prediction data."
 msgstr ""
@@ -30661,10 +30698,6 @@ msgstr ""
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr ""
 
-#, fuzzy
-msgid "Name or number of the port"
-msgstr "Numele elementului pentru eveniment"
-
 msgid "Name resolution"
 msgstr ""
 
@@ -30687,10 +30720,6 @@ msgstr ""
 #, fuzzy
 msgid "Namespace"
 msgstr "spatiu utilizat"
-
-#, fuzzy
-msgid "Namespace prefix for hosts"
-msgstr "Cautare"
 
 #, fuzzy
 msgid "Namespace problems"
@@ -30719,6 +30748,10 @@ msgstr "Agregare noua"
 
 #, fuzzy
 msgid "Navigation bar icons"
+msgstr "Agregare noua"
+
+#, fuzzy
+msgid "Navigation bar logo"
 msgstr "Agregare noua"
 
 #, python-format
@@ -31504,10 +31537,6 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Node or bucket name"
 msgstr "foloseste numele portului"
-
-#, fuzzy
-msgid "Node port"
-msgstr "catre port:"
 
 #, fuzzy
 msgid "Node state"
@@ -32467,7 +32496,7 @@ msgstr "Numarul maxim de conexiuni"
 msgid "Number of requests"
 msgstr "Numarul maxim de conexiuni"
 
-msgid "Number of requests with return code class 2xx (sucess)"
+msgid "Number of requests with return code class 2xx (success)"
 msgstr ""
 
 msgid "Number of requests with return code class 3xx (redirection)"
@@ -32569,6 +32598,10 @@ msgstr "Grup nou"
 #, fuzzy
 msgid "Number of services in state WARN (service group)"
 msgstr "Grup nou"
+
+#, fuzzy
+msgid "Number of shadow hosts"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Number of shared and exclusive locks"
 msgstr ""
@@ -33437,6 +33470,10 @@ msgstr ""
 msgid "Options for report emails"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Options: %s"
+msgstr "Grup nou"
+
 msgid "Oracle"
 msgstr ""
 
@@ -33857,9 +33894,6 @@ msgstr ""
 msgid "POST / GET Variables"
 msgstr ""
 
-msgid "PROXY"
-msgstr ""
-
 msgid "PSU"
 msgstr ""
 
@@ -34137,10 +34171,6 @@ msgid "Parameters for switch port inventory"
 msgstr ""
 
 #, fuzzy
-msgid "Parameters for the  latencies"
-msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
 msgid "Parameters for the  requests"
 msgstr "trei nivele"
 
@@ -34190,14 +34220,6 @@ msgstr ""
 
 msgid "Parameters of total bucket size"
 msgstr ""
-
-#, fuzzy
-msgid "Parameters received bytes"
-msgstr "Sterge Elementul"
-
-#, fuzzy
-msgid "Parameters send bytes"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Parameters:"
@@ -34604,10 +34626,6 @@ msgstr "trei nivele"
 #, python-format
 msgid "Percentual levels for %s memory"
 msgstr ""
-
-#, fuzzy
-msgid "Percentual levels for error rates"
-msgstr "trei nivele"
 
 #, python-format
 msgid "Percentual levels for free %s"
@@ -36575,6 +36593,13 @@ msgid ""
 "previous entry."
 msgstr ""
 
+msgid "RRD Overflows Rate"
+msgstr ""
+
+#, fuzzy
+msgid "RRD Queue Usage"
+msgstr "Nume nou"
+
 msgid "RRD consolidation"
 msgstr ""
 
@@ -36599,6 +36624,10 @@ msgstr ""
 
 msgid "RRD processing"
 msgstr ""
+
+#, fuzzy
+msgid "RRD queue usage"
+msgstr "Nume nou"
 
 msgid "RRD storage format"
 msgstr ""
@@ -36723,6 +36752,15 @@ msgid "Raritan PDU: Input Phases"
 msgstr ""
 
 msgid "Rate of change"
+msgstr ""
+
+msgid "Rate of performance data loss for Carbon"
+msgstr ""
+
+msgid "Rate of performance data loss for InfluxDB"
+msgstr ""
+
+msgid "Rate of performance data loss for RRD"
 msgstr ""
 
 msgid "Rate timewindow"
@@ -37131,6 +37169,10 @@ msgstr "Reguli"
 #, fuzzy
 msgid "Region name"
 msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Regions to monitor"
+msgstr "Adaugă instanță pentru monitorizare"
 
 msgid "Regions to use"
 msgstr ""
@@ -37657,10 +37699,6 @@ msgid "Replica update state"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
-msgid "Replicas"
-msgstr "Numele Aplicatiei"
-
-#, fuzzy
 msgid "Replicate Event Console config"
 msgstr "Acces la Consola de Evenimente"
 
@@ -37789,6 +37827,22 @@ msgstr "cereri"
 #, fuzzy
 msgid "Request Method"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Request latencies"
+msgstr "cereri/sec"
+
+msgid "Request latencies with return code class 2xx (success)"
+msgstr ""
+
+msgid "Request latencies with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Request latencies with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Request latencies with return code class 5xx (server error)"
+msgstr ""
 
 #, fuzzy
 msgid "Request metrics"
@@ -38167,6 +38221,10 @@ msgstr ""
 msgid "Result of last synchronization process"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Result: %s"
+msgstr "(altul: %s)"
+
 msgid "Resulting notifications"
 msgstr ""
 
@@ -38257,6 +38315,18 @@ msgid "Retry this test"
 msgstr ""
 
 msgid "Retry time"
+msgstr ""
+
+msgid "Return code class 2xx (success)"
+msgstr ""
+
+msgid "Return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Return code class 4xx (client error)"
+msgstr ""
+
+msgid "Return code class 5xx (server error)"
 msgstr ""
 
 msgid "Return process times within performance data"
@@ -38743,9 +38813,6 @@ msgid "SAP-Client"
 msgstr ""
 
 msgid "SAS Ports"
-msgstr ""
-
-msgid "SCTP"
 msgstr ""
 
 msgid "SDM template mismatch"
@@ -42179,13 +42246,6 @@ msgstr ""
 
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
-"Kubernetes API. This is a useful option for Rancher installations (more "
-"information can be found in the manual). If this option is not relevant for "
-"your installation, please leave it unchecked."
-msgstr ""
-
-msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
 "Prometheus API. If this option is not relevant for your installation, please "
 "leave it unchecked."
 msgstr ""
@@ -42773,6 +42833,10 @@ msgstr ""
 
 msgid "Start-Time"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "Setari"
 
 msgid "Started"
 msgstr ""
@@ -43436,10 +43500,6 @@ msgstr ""
 
 msgid "State, if BI aggregate is in scheduled downtime"
 msgstr ""
-
-#, fuzzy
-msgid "Stateful sets"
-msgstr "Adaugă comentarii"
 
 #, fuzzy
 msgid "StatefulSet"
@@ -44139,10 +44199,6 @@ msgstr ""
 msgid "Swap left and right margins on pages with even numbers"
 msgstr ""
 
-#, fuzzy
-msgid "Swap memory usage"
-msgstr "Nivelurile maxime pentru voltaj"
-
 msgid "Swap used"
 msgstr ""
 
@@ -44296,10 +44352,6 @@ msgstr ""
 #, fuzzy
 msgid "System Authentication"
 msgstr "trimite notificare"
-
-#, fuzzy
-msgid "System CPU usage"
-msgstr "Nume nou"
 
 msgid "System Events on APX Inrow Devices"
 msgstr ""
@@ -44697,10 +44749,6 @@ msgstr ""
 #, fuzzy
 msgid "Target group name"
 msgstr "Numele Elementului"
-
-#, fuzzy
-msgid "Target port"
-msgstr "rapoarte"
 
 msgid "Target states"
 msgstr ""
@@ -45393,12 +45441,6 @@ msgid ""
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
 
-msgid ""
-"The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
-"or the \"IP Address\" options are selected, the DNS hostname or IP address "
-"and a secure protocol (HTTPS) are used."
-msgstr ""
-
 msgid "The User Base DN could be found."
 msgstr ""
 
@@ -45941,6 +45983,10 @@ msgstr ""
 
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "The custom logo %s has been deleted."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy, python-format
 msgid "The customer ID %s does not exist."
@@ -46707,12 +46753,6 @@ msgid "The logfile does not exist on site."
 msgstr ""
 
 msgid "The login is currently locked"
-msgstr ""
-
-msgid "The logo has been deleted."
-msgstr ""
-
-msgid "The logo has been uploaded."
 msgstr ""
 
 msgid "The mail subject is used as syslog appliaction"
@@ -48327,14 +48367,6 @@ msgstr ""
 msgid ""
 "These labels can be refered to by the ruleset \"%s\", to control the "
 "behaviour during host creation."
-msgstr ""
-
-msgid ""
-"These levels make the check go warning or critical whenever the "
-"<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
-"monitored interface reaches the given bounds. The percentual error rate is "
-"computed by dividing number of errors by the total number of packets "
-"(successful plus errors)."
 msgstr ""
 
 msgid ""
@@ -50799,12 +50831,6 @@ msgid ""
 "of Multisite."
 msgstr ""
 
-msgid ""
-"This special agent is deprecated and will be removed in Checkmk version "
-"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
-"agent for Kubernetes."
-msgstr ""
-
 msgid "This stored report does not exist."
 msgstr ""
 
@@ -51007,7 +51033,8 @@ msgstr ""
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
-"MySQL databases."
+"MySQL databases. On Windows, the plugin will look for service names "
+"containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""
 
 msgid ""
@@ -51373,6 +51400,10 @@ msgstr ""
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Time: %s"
+msgstr "Adăugat %s"
 
 #, fuzzy
 msgid "Timed out Active Directory Requests"
@@ -51851,10 +51882,6 @@ msgid "Total log file size: Absolute upper levels"
 msgstr ""
 
 #, fuzzy
-msgid "Total memory usage"
-msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
 msgid "Total memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
@@ -52066,10 +52093,6 @@ msgstr ""
 
 msgid "Total query timeout"
 msgstr ""
-
-#, fuzzy
-msgid "Total replicas"
-msgstr "sesiuni"
 
 #, fuzzy
 msgid "Total restarts"
@@ -52391,6 +52414,10 @@ msgid "Type of the value"
 msgstr ""
 
 msgid "Type of tree layout"
+msgstr ""
+
+#, python-format
+msgid "Type: %s"
 msgstr ""
 
 msgid "Types of events that are being processed"
@@ -53157,7 +53184,7 @@ msgstr ""
 msgid "Upload backup key"
 msgstr ""
 
-msgid "Upload custom logo"
+msgid "Upload custom logos"
 msgstr ""
 
 msgid "Upload extension package"
@@ -53175,7 +53202,12 @@ msgstr ""
 msgid "Upload package"
 msgstr ""
 
-msgid "Uploaded a custom GUI logo"
+#, python-format
+msgid "Uploaded custom GUI logo: %s"
+msgstr ""
+
+#, python-format
+msgid "Uploaded custom logo %s"
 msgstr ""
 
 #, fuzzy, python-format
@@ -54617,6 +54649,10 @@ msgid "Used by tags"
 msgstr "Spațiu liber exact"
 
 #, fuzzy
+msgid "Used disk capacity"
+msgstr "Capacitatea maxima"
+
+#, fuzzy
 msgid "Used file handles"
 msgstr "licente nefolosite"
 
@@ -54697,9 +54733,6 @@ msgid "User Agent"
 msgstr ""
 
 msgid "User Base-DN"
-msgstr ""
-
-msgid "User CPU usage"
 msgstr ""
 
 #, fuzzy
@@ -57845,11 +57878,12 @@ msgid ""
 "of the Scrape Target types are not listed here."
 msgstr ""
 
+#, python-format
 msgid ""
-"You can upload a <i>PNG</i> image here to replace the  default Check_MK Logo "
-"in the sidebar. The image needs to have a size of 271px width and 46px "
-"height to be displayed correctly. Images with other ratios will be processed "
-"but displayed with the size mentioned."
+"You can upload a <i>PNG</i> image here to replace the default Checkmk %s. "
+"The image needs to have a size of %dpx width and %dpx height to be displayed "
+"correctly. Images with greater width or height cannot be uploaded, and the "
+"image will be rendered with the mentioned size."
 msgstr ""
 
 msgid "You can use <tt>*</tt> and <tt>?</tt> here."
@@ -58528,6 +58562,12 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr ""
 
+msgid "Your logo has been uploaded."
+msgid_plural "Your logos have been uploaded"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
 msgid "Your modifications affect some objects"
 msgstr ""
 
@@ -58843,10 +58883,6 @@ msgstr ""
 
 msgid "best state"
 msgstr ""
-
-#, fuzzy
-msgid "billable time"
-msgstr "Proprietatile Folderului"
 
 msgid "bindings"
 msgstr ""
@@ -59192,9 +59228,6 @@ msgid "end"
 msgstr ""
 
 msgid "entries"
-msgstr ""
-
-msgid "errors"
 msgstr ""
 
 #, fuzzy
@@ -60122,9 +60155,6 @@ msgstr " secunde "
 msgid "percent"
 msgstr ""
 
-msgid "percent errors"
-msgstr ""
-
 msgid "percent higher than average"
 msgstr ""
 
@@ -60737,6 +60767,110 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Absolute levels for error rates"
+#~ msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+#~ msgid "Cluster roles"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Filesystem usage"
+#~ msgstr "Spațiu liber exact"
+
+#, fuzzy
+#~ msgid "Ingresses"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Kubernetes (deprecated)"
+#~ msgstr "Adresă"
+
+#, fuzzy
+#~ msgid "Memory used %"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Name or number of the port"
+#~ msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+#~ msgid "Namespace prefix for hosts"
+#~ msgstr "Cautare"
+
+#, fuzzy
+#~ msgid "Node port"
+#~ msgstr "catre port:"
+
+#, fuzzy
+#~ msgid "Parameters received bytes"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
+#~ msgid "Parameters send bytes"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Percentual levels for error rates"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Replicas"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Stateful sets"
+#~ msgstr "Adaugă comentarii"
+
+#, fuzzy
+#~ msgid "Swap memory usage"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "System CPU usage"
+#~ msgstr "Nume nou"
+
+#, fuzzy
+#~ msgid "Target port"
+#~ msgstr "rapoarte"
+
+#, fuzzy
+#~ msgid "Total memory usage"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Total replicas"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Delete logo"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
+#~ msgid "Delete the current logo"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
+#~ msgid "Design"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Parameters for the  latencies"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~ msgid "99th percentile request latency"
+#~ msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+#~ msgid "Missing password"
+#~ msgstr "Parola"
+
+#, fuzzy
+#~ msgid "billable time"
+#~ msgstr "Proprietatile Folderului"
+
+#, fuzzy
 #~ msgid "GCP/Memorystore redis CPU"
 #~ msgstr "cereri"
 
@@ -61044,10 +61178,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "SAP value discovery"
 #~ msgstr "Inventariere in masa"
-
-#, fuzzy
-#~ msgid "Site Status"
-#~ msgstr "Statusul Serverului"
 
 #, fuzzy
 #~ msgid "Host State"

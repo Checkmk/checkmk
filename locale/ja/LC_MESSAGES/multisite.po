@@ -1083,9 +1083,6 @@ msgstr "パーセンタイル"
 msgid "99th percentile"
 msgstr "パーセンタイル"
 
-msgid "99th percentile request latency"
-msgstr "99%リクエストレイテンシー"
-
 msgid ""
 "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback "
 "translations</a> are performed before the piggyback connector creates hosts. "
@@ -2263,9 +2260,6 @@ msgstr "APIキー/トークン"
 msgid "API server connection"
 msgstr "APIサーバー接続"
 
-msgid "API server endpoint"
-msgstr "APIサーバーエンドポイント"
-
 #, fuzzy
 msgid "APPEND"
 msgstr "保留"
@@ -2513,9 +2507,6 @@ msgstr "デコードされたトラフィックの絶対レベル"
 
 msgid "Absolute levels for discards rates"
 msgstr "廃棄率の絶対レベル"
-
-msgid "Absolute levels for error rates"
-msgstr "エラー率の絶対レベル"
 
 #, python-format
 msgid "Absolute levels for free %s"
@@ -5900,8 +5891,16 @@ msgstr "平均ディスクI / Oキュー長"
 msgid "Average disk latency"
 msgstr "平均ディスク遅延"
 
+#, fuzzy
+msgid "Average disk read latency"
+msgstr "平均ディスク遅延"
+
 msgid "Average disk read queue length"
 msgstr "ディスク読み取りキューの平均の長さ"
+
+#, fuzzy
+msgid "Average disk write latency"
+msgstr "平均ディスク遅延"
 
 msgid "Average disk write queue length"
 msgstr "ディスク書き込みキューの平均の長さ"
@@ -8000,11 +7999,23 @@ msgstr ""
 msgid "Capacity remaining"
 msgstr "残り容量"
 
+#, fuzzy
+msgid "Carbon Overflows Rate"
+msgstr "オーバーフロー"
+
+#, fuzzy
+msgid "Carbon Queue Usage"
+msgstr "キューマネージャーの名前"
+
 msgid "Carbon connections"
 msgstr "カーボン接続"
 
 msgid "Carbon monoxide"
 msgstr "一酸化炭素"
+
+#, fuzzy
+msgid "Carbon queue usage"
+msgstr "メールキュー名"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casaモジュール: CPU温度"
@@ -9334,9 +9345,6 @@ msgstr "クローントピック"
 msgid "Clone view"
 msgstr "クローン ビュー"
 
-msgid "Close Timewarp"
-msgstr "タイムワープを閉じる"
-
 msgid ""
 "Close connection once more than this number of bytes are received. Per "
 "default the number of read bytes is not limited. This setting is only used "
@@ -9345,6 +9353,10 @@ msgstr ""
 "このバイト数を超えて受信したら、接続を閉じます。デフォルトでは、読み取りバイ"
 "ト数は制限されていません。この設定は、応答に文字列が含まれると予想される場合"
 "にのみ使用されます。"
+
+#, fuzzy
+msgid "Close timewarp"
+msgstr "タイムワープを閉じる"
 
 msgid "Closed"
 msgstr "クローズド"
@@ -9399,9 +9411,6 @@ msgstr "クラスターノードの定義"
 
 msgid "Cluster problems"
 msgstr "クラスターの問題"
-
-msgid "Cluster roles"
-msgstr "クラスターの役割"
 
 msgid "Cluster statistics"
 msgstr "クラスター統計"
@@ -11734,6 +11743,10 @@ msgstr "カスタム制限"
 msgid "Custom localizations"
 msgstr "カスタムローカリゼーション"
 
+#, fuzzy
+msgid "Custom logos"
+msgstr "カスタムホスト"
+
 msgid "Custom notification"
 msgstr "カスタム通知"
 
@@ -12914,9 +12927,6 @@ msgstr "ジョブ%s%sを削除しますか?"
 msgid "Delete last alert handler rule"
 msgstr "最後のアラートハンドラルールを削除する"
 
-msgid "Delete logo"
-msgstr "ロゴを削除"
-
 msgid "Delete messages"
 msgstr "メッセージを削除する"
 
@@ -12956,9 +12966,6 @@ msgstr "選択したMIBを削除します"
 
 msgid "Delete selected users"
 msgstr "選択したユーザーを削除します"
-
-msgid "Delete the current logo"
-msgstr "現在のロゴを削除します"
 
 #, python-format
 msgid "Delete this %s"
@@ -13020,6 +13027,10 @@ msgstr ""
 
 msgid "Delete this key"
 msgstr "このキーを削除します"
+
+#, fuzzy
+msgid "Delete this logo"
+msgstr "この行を削除します"
 
 msgid "Delete this metric"
 msgstr "このメトリックを削除します"
@@ -13095,7 +13106,12 @@ msgstr "削除されたMIB%s"
 msgid "Deleted attribute %s"
 msgstr "属性 %sを削除しました"
 
-msgid "Deleted custom GUI logo"
+#, fuzzy, python-format
+msgid "Deleted custom GUI logo %s"
+msgstr "カスタムGUIロゴを削除"
+
+#, fuzzy, python-format
+msgid "Deleted custom logo %s"
 msgstr "カスタムGUIロゴを削除"
 
 #, python-format
@@ -13506,9 +13522,6 @@ msgstr "説明"
 
 msgid "Deselect all checkboxes"
 msgstr "すべてのチェックボックスの選択を解除します"
-
-msgid "Design"
-msgstr "設計"
 
 msgid "Design This Graph"
 msgstr "このグラフを設計する"
@@ -14895,6 +14908,10 @@ msgstr "本当に補助タグ '%s'を削除しますか？"
 msgid "Do you really want to delete the connection to the site %s?"
 msgstr "本当にサイト %s への接続を削除しますか？"
 
+#, fuzzy, python-format
+msgid "Do you really want to delete the custom %s?"
+msgstr "本当に顧客 %s を削除しますか？"
+
 #, python-format
 msgid "Do you really want to delete the custom attribute \"%s\"?"
 msgstr "カスタム属性\"%s\"を本当に削除しますか?"
@@ -14994,9 +15011,6 @@ msgstr "本当にこのジョブを削除しますか？"
 
 msgid "Do you really want to delete this target?"
 msgstr "このターゲットを本当に削除しますか？"
-
-msgid "Do you really want to delete your logo?"
-msgstr "本当にロゴを削除しますか?"
 
 #, python-format
 msgid "Do you really want to disable the two-factor authentication of %s?"
@@ -16520,6 +16534,10 @@ msgstr "終了時間"
 msgid "End-to-end latency"
 msgstr "エンドツーエンドのレイテンシ"
 
+#, fuzzy, python-format
+msgid "End: %s"
+msgstr "%s を編集: %s"
+
 msgid "Ended"
 msgstr "終了しました"
 
@@ -16542,9 +16560,6 @@ msgid "Ending pre-emptivley"
 msgstr "プリエンプティブリーの終了"
 
 msgid "Endpoint"
-msgstr "エンドポイント"
-
-msgid "Endpoints"
 msgstr "エンドポイント"
 
 msgid "Enforce IPv4"
@@ -18213,9 +18228,6 @@ msgstr "ファイルシステムのマウントオプション(Linux/UNIX)"
 msgid "Filesystem types to ignore"
 msgstr "無視するファイルシステムの種類"
 
-msgid "Filesystem usage"
-msgstr "ファイルシステムの使用法"
-
 msgid "Filesystems"
 msgstr "ファイルシステム"
 
@@ -19176,11 +19188,19 @@ msgid "GCP/Cloud Run CPU utilization"
 msgstr "GCP/Cloud Runネットワーク"
 
 #, fuzzy
+msgid "GCP/Cloud Run instance"
+msgstr "GCP/Cloud Runネットワーク"
+
+#, fuzzy
 msgid "GCP/Cloud Run memory utilization"
 msgstr "GCP/Cloud Runネットワーク"
 
 #, fuzzy
 msgid "GCP/Cloud Run network"
+msgstr "GCP/Cloud Runネットワーク"
+
+#, fuzzy
+msgid "GCP/Cloud Run performance"
 msgstr "GCP/Cloud Runネットワーク"
 
 #, fuzzy
@@ -22381,9 +22401,6 @@ msgstr ""
 "明示的な時間範囲が指定されていない場合、レポートはデフォルトでこの範囲になり"
 "ます。"
 
-msgid "If no port is given, a default value of 443 will be used."
-msgstr "ポートが指定されていない場合、デフォルト値の443が使用されます。"
-
 msgid ""
 "If non-zero, the list of all the matching processes and their details in the "
 "long-output will include up to the first N characters of all arguments for "
@@ -24214,6 +24231,14 @@ msgstr ""
 msgid "InfluxDB Connections"
 msgstr ""
 
+#, fuzzy
+msgid "InfluxDB Overflows Rate"
+msgstr "InfluxDBインスタンス"
+
+#, fuzzy
+msgid "InfluxDB Queue Usage"
+msgstr "InfluxDBインスタンス"
+
 msgid "InfluxDB connections"
 msgstr ""
 
@@ -24222,6 +24247,10 @@ msgstr "InfluxDBインスタンス"
 
 msgid "InfluxDB processing"
 msgstr "InfluxDB処理"
+
+#, fuzzy
+msgid "InfluxDB queue usage"
+msgstr "InfluxDBインスタンス"
 
 msgid "InfluxDB service rules"
 msgstr ""
@@ -24261,9 +24290,6 @@ msgstr "Informix セッション"
 
 msgid "Informix table extents"
 msgstr "Informix テーブルエクステント"
-
-msgid "Ingresses"
-msgstr "イングレス"
 
 msgid "Inherit from report time range (Reporting only)"
 msgstr "レポートの時間範囲から継承(レポートのみ)"
@@ -24807,9 +24833,6 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
-
-msgid "Invalid or no package type specified"
-msgstr "無効またはパッケージタイプが指定されていません"
 
 msgid "Invalid package name"
 msgstr "パッケージ名が無効です"
@@ -25501,9 +25524,6 @@ msgstr "Kube-state-metrics"
 msgid "Kubernetes"
 msgstr "Kubernetes"
 
-msgid "Kubernetes (deprecated)"
-msgstr "Kubernetes （非推奨）"
-
 msgid "Kubernetes CPU resource utilization"
 msgstr "Kubernetes CPU使用率"
 
@@ -25543,27 +25563,12 @@ msgstr "Kubernetes デプロイ"
 msgid "Kubernetes Namespace"
 msgstr "Kubernetes 名前空間"
 
-msgid "Kubernetes Namespaced pods Filesystem usage"
-msgstr "KubernetesネームスペースPodファイルシステムの使用法"
-
-msgid "Kubernetes Namespaced pods cpu usage"
-msgstr "Kubernetes名前空間PodのCPU使用率"
-
-msgid "Kubernetes Namespaced pods memory usage"
-msgstr "Kubernetes名前空間Podのメモリ使用量"
-
 #, fuzzy
 msgid "Kubernetes Namespaces"
 msgstr "Kubernetes 名前空間"
 
-msgid "Kubernetes Network interfaces"
-msgstr "Kubernetesネットワークインターフェース"
-
 msgid "Kubernetes Node"
 msgstr "Kubernetesノード"
-
-msgid "Kubernetes Port"
-msgstr "Kubernetesポート"
 
 msgid "Kubernetes StatefulSet"
 msgstr "Kubernetesステートフルセット"
@@ -25586,9 +25591,6 @@ msgstr "Kubernetesノードコンテナー"
 
 msgid "Kubernetes node count"
 msgstr "Kubernetesノード数"
-
-msgid "Kubernetes nodes"
-msgstr "Kubernetesノード"
 
 msgid "Kubernetes pod conditions"
 msgstr "Kubernetes Podコンテナー"
@@ -25616,9 +25618,6 @@ msgstr "Kubernetesリソースクオータ メモリー使用率"
 
 msgid "Kubernetes resources"
 msgstr "Kubernetesリソース"
-
-msgid "Kubernetes roles"
-msgstr "Kubernetesの役割"
 
 msgid "L2 cache hit ratio"
 msgstr "L2キャッシュヒット率"
@@ -25875,6 +25874,10 @@ msgstr "最後にわかった詳細"
 msgid "Last known summary"
 msgstr "最後に知られている要約"
 
+#, fuzzy
+msgid "Last license verification"
+msgstr "SSL証明書の検証"
+
 msgid "Last log"
 msgstr "最終ログ"
 
@@ -25917,6 +25920,22 @@ msgstr "先週"
 
 msgid "Last year"
 msgstr "昨年"
+
+#, fuzzy
+msgid "Latencies"
+msgstr "レイテンシー"
+
+#, fuzzy
+msgid "Latencies (50th percentile)"
+msgstr "パーセンタイル"
+
+#, fuzzy
+msgid "Latencies (95th percentile)"
+msgstr "パーセンタイル"
+
+#, fuzzy
+msgid "Latencies (99th percentile)"
+msgstr "パーセンタイル"
 
 msgid "Latency"
 msgstr "レイテンシー"
@@ -26108,6 +26127,10 @@ msgstr "ATS出力パラメータのレベル"
 msgid "Levels for Airflow Deviation measured at airflow sensors "
 msgstr ""
 
+#, fuzzy
+msgid "Levels for CPU utilization"
+msgstr "総CPU使用率のレベル"
+
 msgid "Levels for Cisco CPU memory"
 msgstr "Cisco CPUメモリのレベル"
 
@@ -26246,6 +26269,10 @@ msgid "Levels for memory"
 msgstr "記憶のレベル"
 
 msgid "Levels for memory usage"
+msgstr "メモリ使用量のレベル"
+
+#, fuzzy
+msgid "Levels for memory utilization"
 msgstr "メモリ使用量のレベル"
 
 msgid "Levels for minimum wait time for a lock"
@@ -26418,6 +26445,10 @@ msgstr "待機レベル"
 msgid "Levels health"
 msgstr "クラスターの状態"
 
+#, fuzzy
+msgid "Levels instance"
+msgstr "インスタンスのレベル"
+
 msgid "Levels memory"
 msgstr "メモリーレベル"
 
@@ -26572,6 +26603,10 @@ msgid "Levels over an extended time period on total CPU utilization"
 msgstr "総CPU使用率の長期間にわたるレベル"
 
 #, fuzzy
+msgid "Levels performance"
+msgstr "パフォーマンスのレベル"
+
+#, fuzzy
 msgid "Levels qps"
 msgstr "diskレベル"
 
@@ -26606,6 +26641,10 @@ msgstr "ライセンスの使用法"
 
 msgid "License agreement"
 msgstr "ライセンス契約"
+
+#, fuzzy
+msgid "License details"
+msgstr "ライセンスの状態"
 
 msgid "License state"
 msgstr "ライセンスの状態"
@@ -26710,6 +26749,10 @@ msgstr "以下のサービスに限定する"
 
 msgid "Limit width"
 msgstr "幅を制限する"
+
+#, fuzzy, python-format
+msgid "Limit: %s"
+msgstr "制限"
 
 msgid "Limits"
 msgstr "制限"
@@ -27412,6 +27455,10 @@ msgstr "サイト \"%s\" にログイン"
 msgid "Login is not allowed on this site."
 msgstr "このサイトへのログインは許可されていません。"
 
+#, fuzzy
+msgid "Login mask logo"
+msgstr "ロールとしてログイン"
+
 msgid "Login mode"
 msgstr "ログインモード"
 
@@ -27431,6 +27478,10 @@ msgid "Login with the following credentials"
 msgstr "次の資格情報でログインします"
 
 msgid "Logo"
+msgstr "ロゴ"
+
+#, fuzzy
+msgid "Logos"
 msgstr "ロゴ"
 
 msgid "Logout"
@@ -29120,9 +29171,6 @@ msgstr "メモリ使用量: Pod"
 msgid "Memory used"
 msgstr "使用メモリ"
 
-msgid "Memory used %"
-msgstr "使用メモリ %"
-
 msgid "Memory used by caches"
 msgstr "キャッシュによって使用されるメモリ"
 
@@ -29290,6 +29338,10 @@ msgid "MiB"
 msgstr ""
 
 msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Microsoft Azure Status"
 msgstr "Microsoft Azure"
 
 msgid "Microsoft Hyper-V Server VM state"
@@ -29505,9 +29557,6 @@ msgstr ""
 #, python-format
 msgid "Missing parameter \"%s\"."
 msgstr "パラメータ \"%s\" がありません。"
-
-msgid "Missing password"
-msgstr "パスワード欠落"
 
 msgid "Missing prediction data."
 msgstr "予測データがありません。"
@@ -30514,9 +30563,6 @@ msgstr "仮想マシンの名前および/または<br>ガベージコレクシ�
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "仮想マシンおよび/または<br>スレッドプールの名前"
 
-msgid "Name or number of the port"
-msgstr "ポートの名前または番号"
-
 msgid "Name resolution"
 msgstr "名前解決"
 
@@ -30544,9 +30590,6 @@ msgstr ""
 msgid "Namespace"
 msgstr "ネームスペース"
 
-msgid "Namespace prefix for hosts"
-msgstr "ホストの名前空間プレフィックス"
-
 msgid "Namespace problems"
 msgstr "名前空間の問題"
 
@@ -30569,6 +30612,10 @@ msgid "Navigation"
 msgstr "ナビゲーション"
 
 msgid "Navigation bar icons"
+msgstr "ナビゲーションバーのアイコン"
+
+#, fuzzy
+msgid "Navigation bar logo"
 msgstr "ナビゲーションバーのアイコン"
 
 #, python-format
@@ -31308,9 +31355,6 @@ msgstr "ノードまたはバケット名"
 
 msgid "Node or bucket name"
 msgstr "ノードまたはバケット名"
-
-msgid "Node port"
-msgstr "ノードポート"
 
 msgid "Node state"
 msgstr "ノードの状態"
@@ -32242,7 +32286,7 @@ msgstr "リローケイトするシャードの数"
 msgid "Number of requests"
 msgstr "リクエスト数"
 
-msgid "Number of requests with return code class 2xx (sucess)"
+msgid "Number of requests with return code class 2xx (success)"
 msgstr ""
 
 msgid "Number of requests with return code class 3xx (redirection)"
@@ -32329,6 +32373,10 @@ msgstr "WARN状態のサービス数(ホストグループ)"
 
 msgid "Number of services in state WARN (service group)"
 msgstr "WARN状態のサービス数(サービスグループ)"
+
+#, fuzzy
+msgid "Number of shadow hosts"
+msgstr "ホストの数"
 
 msgid "Number of shared and exclusive locks"
 msgstr "共有ロックと排他ロックの数"
@@ -33177,6 +33225,10 @@ msgstr "オプション"
 msgid "Options for report emails"
 msgstr "レポートメールのオプション"
 
+#, fuzzy, python-format
+msgid "Options: %s"
+msgstr "オプション"
+
 msgid "Oracle"
 msgstr "オラクル"
 
@@ -33597,9 +33649,6 @@ msgstr "POP3"
 msgid "POST / GET Variables"
 msgstr "POST/GET 変数"
 
-msgid "PROXY"
-msgstr "プロキシ"
-
 #, fuzzy
 msgid "PSU"
 msgstr "CPU"
@@ -33868,10 +33917,6 @@ msgid "Parameters for switch port inventory"
 msgstr "スイッチポートインベントリのパラメータ"
 
 #, fuzzy
-msgid "Parameters for the  latencies"
-msgstr "キーヒット率に関するパラメータ"
-
-#, fuzzy
 msgid "Parameters for the  requests"
 msgstr "バケットリクエストのパラメーター"
 
@@ -33921,12 +33966,6 @@ msgstr ""
 
 msgid "Parameters of total bucket size"
 msgstr "最大バケットサイズのパラメータ"
-
-msgid "Parameters received bytes"
-msgstr "パラメータ受信バイト数"
-
-msgid "Parameters send bytes"
-msgstr "パラメータ送信バイト数"
 
 msgid "Parameters:"
 msgstr "パラメーター:"
@@ -34326,9 +34365,6 @@ msgstr "パーセントレベル->"
 #, python-format
 msgid "Percentual levels for %s memory"
 msgstr "%s メモリのパーセントレベル"
-
-msgid "Percentual levels for error rates"
-msgstr "エラー率のパーセントレベル"
 
 #, python-format
 msgid "Percentual levels for free %s"
@@ -36262,6 +36298,14 @@ msgstr ""
 "RRAエントリ番号 %d: ステップ数は前のエントリのステップ数よりも大きくする必要"
 "があります。"
 
+#, fuzzy
+msgid "RRD Overflows Rate"
+msgstr "オーバーフロー"
+
+#, fuzzy
+msgid "RRD Queue Usage"
+msgstr "キュー名"
+
 msgid "RRD consolidation"
 msgstr "RRDの統合"
 
@@ -36288,6 +36332,10 @@ msgstr ""
 
 msgid "RRD processing"
 msgstr "RRD処理"
+
+#, fuzzy
+msgid "RRD queue usage"
+msgstr "メールキュー名"
 
 msgid "RRD storage format"
 msgstr "RRDストレージ形式"
@@ -36407,6 +36455,18 @@ msgstr "Raritan PDU: 入力フェーズ"
 
 msgid "Rate of change"
 msgstr "変化率"
+
+#, fuzzy
+msgid "Rate of performance data loss for Carbon"
+msgstr "パフォーマンスデータなし: %s"
+
+#, fuzzy
+msgid "Rate of performance data loss for InfluxDB"
+msgstr "パフォーマンスデータなし: %s"
+
+#, fuzzy
+msgid "Rate of performance data loss for RRD"
+msgstr "パフォーマンスデータなし: %s"
 
 msgid "Rate timewindow"
 msgstr "レートタイムウィンドウ"
@@ -36781,6 +36841,10 @@ msgstr "正規表現セット"
 
 msgid "Region name"
 msgstr "リージョン名"
+
+#, fuzzy
+msgid "Regions to monitor"
+msgstr "監視するキュー"
 
 msgid "Regions to use"
 msgstr ""
@@ -37287,9 +37351,6 @@ msgstr "レプリカ状態"
 msgid "Replica update state"
 msgstr "レプリカ更新状態"
 
-msgid "Replicas"
-msgstr "レプリカ"
-
 msgid "Replicate Event Console config"
 msgstr "イベントコンソール設定の複製"
 
@@ -37417,6 +37478,22 @@ msgid "Request"
 msgstr "リクエスト"
 
 msgid "Request Method"
+msgstr ""
+
+#, fuzzy
+msgid "Request latencies"
+msgstr "リクエスト遅延"
+
+msgid "Request latencies with return code class 2xx (success)"
+msgstr ""
+
+msgid "Request latencies with return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Request latencies with return code class 4xx (client error)"
+msgstr ""
+
+msgid "Request latencies with return code class 5xx (server error)"
 msgstr ""
 
 msgid "Request metrics"
@@ -37751,6 +37828,10 @@ msgstr "最後の %s プロセスの結果"
 msgid "Result of last synchronization process"
 msgstr "最後の同期プロセスの結果"
 
+#, fuzzy, python-format
+msgid "Result: %s"
+msgstr "結果"
+
 msgid "Resulting notifications"
 msgstr "結果の通知"
 
@@ -37841,6 +37922,18 @@ msgstr "このテストを再試行してください"
 
 msgid "Retry time"
 msgstr "再試行時間"
+
+msgid "Return code class 2xx (success)"
+msgstr ""
+
+msgid "Return code class 3xx (redirection)"
+msgstr ""
+
+msgid "Return code class 4xx (client error)"
+msgstr ""
+
+msgid "Return code class 5xx (server error)"
+msgstr ""
 
 msgid "Return process times within performance data"
 msgstr "パフォーマンスデータ内のプロセス時間を返す"
@@ -38304,9 +38397,6 @@ msgstr "SAPクライアント"
 
 msgid "SAS Ports"
 msgstr "SASポート"
-
-msgid "SCTP"
-msgstr "SCTP"
 
 msgid "SDM template mismatch"
 msgstr "SDMテンプレートの不一致"
@@ -41647,17 +41737,6 @@ msgstr "特定のバージョン"
 
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
-"Kubernetes API. This is a useful option for Rancher installations (more "
-"information can be found in the manual). If this option is not relevant for "
-"your installation, please leave it unchecked."
-msgstr ""
-"Kubernetes APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定しま"
-"す。これは、Rancherのインストールに便利なオプションです(詳細については、マ"
-"ニュアルを参照してください)。このオプションがインストールに関係しない場合は、"
-"オフのままにしてください。"
-
-msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
 "Prometheus API. If this option is not relevant for your installation, please "
 "leave it unchecked."
 msgstr ""
@@ -42344,6 +42423,10 @@ msgstr "開始!"
 msgid "Start-Time"
 msgstr "始まる時間"
 
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "開始: %s。"
+
 msgid "Started"
 msgstr "開始"
 
@@ -43016,9 +43099,6 @@ msgstr "状態、BIアグリゲートが確認された場合"
 msgid "State, if BI aggregate is in scheduled downtime"
 msgstr "BIアグリゲートがスケジュールされたダウンタイムにある場合の状態"
 
-msgid "Stateful sets"
-msgstr "ステートフルセット"
-
 msgid "StatefulSet"
 msgstr "ステートフルセット"
 
@@ -43662,9 +43742,6 @@ msgstr "インストールされたスワップ"
 msgid "Swap left and right margins on pages with even numbers"
 msgstr "偶数ページの左右の余白を入れ替えます"
 
-msgid "Swap memory usage"
-msgstr "スワップメモリ使用量"
-
 msgid "Swap used"
 msgstr "使用したスワップ"
 
@@ -43808,9 +43885,6 @@ msgstr "システム"
 
 msgid "System Authentication"
 msgstr "システム認証"
-
-msgid "System CPU usage"
-msgstr "システムのCPU使用率"
 
 msgid "System Events on APX Inrow Devices"
 msgstr "APX Inrowデバイスのシステムイベント"
@@ -44170,9 +44244,6 @@ msgstr "ターゲット状態"
 
 msgid "Target group name"
 msgstr "ターゲットグループ名"
-
-msgid "Target port"
-msgstr "ターゲットポート"
 
 msgid "Target states"
 msgstr "ターゲットの状態"
@@ -45008,15 +45079,6 @@ msgid ""
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
 
-msgid ""
-"The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
-"or the \"IP Address\" options are selected, the DNS hostname or IP address "
-"and a secure protocol (HTTPS) are used."
-msgstr ""
-"KubernetesAPI呼び出しのために連絡されるURL。\"ホスト名\"または\"IPアドレス"
-"\"オプションが選択されている場合、DNSホスト名またはIPアドレスとセキュアプロト"
-"コル(HTTPS)が使用されます。"
-
 msgid "The User Base DN could be found."
 msgstr "ユーザーベースDNが見つかりました。"
 
@@ -45668,6 +45730,10 @@ msgstr "現在のライブステータスの使用量は %.2f%% です"
 
 msgid "The current monitoring state (including acknowledgements and downtimes)"
 msgstr "現在の監視状態(確認応答とダウンタイムを含む)"
+
+#, fuzzy, python-format
+msgid "The custom logo %s has been deleted."
+msgstr "ロゴが削除されました。"
 
 #, python-format
 msgid "The customer ID %s does not exist."
@@ -46520,12 +46586,6 @@ msgstr "ログファイルがサイトに存在しません。"
 
 msgid "The login is currently locked"
 msgstr "ログインは現在ロックされています"
-
-msgid "The logo has been deleted."
-msgstr "ロゴが削除されました。"
-
-msgid "The logo has been uploaded."
-msgstr "ロゴがアップロードされました。"
 
 msgid "The mail subject is used as syslog appliaction"
 msgstr "メールの件名はsyslogアプリケーションとして使用されます"
@@ -48385,18 +48445,6 @@ msgid ""
 "These labels can be refered to by the ruleset \"%s\", to control the "
 "behaviour during host creation."
 msgstr ""
-
-msgid ""
-"These levels make the check go warning or critical whenever the "
-"<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
-"monitored interface reaches the given bounds. The percentual error rate is "
-"computed by dividing number of errors by the total number of packets "
-"(successful plus errors)."
-msgstr ""
-"これらのレベルにより、監視対象インターフェースの<b>パーセントエラー率</b>また"
-"は<b>絶対エラー率</b>が指定された範囲に達すると、チェックが警告またはクリティ"
-"カルになります。パーセントエラー率は、エラーの数をパケットの総数(成功とエ"
-"ラー)で割ることによって計算されます。"
 
 msgid ""
 "These levels make the check go warning or critical whenever the "
@@ -51540,12 +51588,6 @@ msgstr ""
 "このスナップインは、タグ分類に基づいてホストのツリービューを表示します。マル"
 "チサイトのグローバル設定で使用するタグを構成できます。"
 
-msgid ""
-"This special agent is deprecated and will be removed in Checkmk version "
-"2.2.0. Please use the \"Kubernetes\" ruleset to configure the new special "
-"agent for Kubernetes."
-msgstr ""
-
 msgid "This stored report does not exist."
 msgstr ""
 
@@ -51804,10 +51846,12 @@ msgstr ""
 msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
 msgstr "エージェントプラグイン<tt>mk_mongodb</tt>をデプロイします。"
 
+#, fuzzy
 msgid ""
 "This will deploy the agent plugin <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
-"MySQL databases."
+"MySQL databases. On Windows, the plugin will look for service names "
+"containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""
 "これにより、エージェントプラグイン<tt>mk_mysql</tt>がLinuxシステムにデプロイ"
 "され、<tt>mk_mysql.vbs</tt>がWindowsシステムにデプロイされてMySQLデータベース"
@@ -52193,6 +52237,10 @@ msgstr "ライセンスの有効期限が切れるまでの時間"
 
 msgid "Time warp - show BI aggregate during this time period"
 msgstr "タイムワープ - この期間中のBI集計を表示します"
+
+#, fuzzy, python-format
+msgid "Time: %s"
+msgstr "時間"
 
 msgid "Timed out Active Directory Requests"
 msgstr "Active Directory要求がタイムアウトしました"
@@ -52667,9 +52715,6 @@ msgstr "Postfixのキューの長さ合計"
 msgid "Total log file size: Absolute upper levels"
 msgstr "ログファイルの合計サイズ: 絶対上位レベル"
 
-msgid "Total memory usage"
-msgstr "合計メモリ使用量"
-
 #, fuzzy
 msgid "Total memory utilization"
 msgstr "メモリ使用率"
@@ -52832,9 +52877,6 @@ msgstr "印刷されたページの総数"
 
 msgid "Total query timeout"
 msgstr "合計クエリタイムアウト"
-
-msgid "Total replicas"
-msgstr "合計レプリカ数"
 
 msgid "Total restarts"
 msgstr "合計再起動回数"
@@ -53139,6 +53181,10 @@ msgstr "値のタイプ"
 
 msgid "Type of tree layout"
 msgstr "ツリーレイアウトのタイプ"
+
+#, fuzzy, python-format
+msgid "Type: %s"
+msgstr "テンプレート: %s"
 
 msgid "Types of events that are being processed"
 msgstr "処理されているイベントの種類"
@@ -53911,7 +53957,8 @@ msgstr "エージェントの署名キーをアップロードする"
 msgid "Upload backup key"
 msgstr "バックアップキーをアップロードする"
 
-msgid "Upload custom logo"
+#, fuzzy
+msgid "Upload custom logos"
 msgstr "カスタムロゴをアップロードする"
 
 msgid "Upload extension package"
@@ -53929,8 +53976,13 @@ msgstr "新規アップロード:"
 msgid "Upload package"
 msgstr "パッケージをアップロード"
 
-msgid "Uploaded a custom GUI logo"
+#, fuzzy, python-format
+msgid "Uploaded custom GUI logo: %s"
 msgstr "カスタムGUIロゴをアップロードしました"
+
+#, fuzzy, python-format
+msgid "Uploaded custom logo %s"
+msgstr "カスタムロゴをアップロードする"
 
 #, fuzzy, python-format
 msgid "Uploaded extension package %s-%s (%s)"
@@ -55310,6 +55362,10 @@ msgstr "によって使われた"
 msgid "Used by tags"
 msgstr "タグで使用"
 
+#, fuzzy
+msgid "Used disk capacity"
+msgstr "総ディスク容量"
+
 msgid "Used file handles"
 msgstr "使用済みファイルハンドル"
 
@@ -55387,9 +55443,6 @@ msgstr "ユーザーエージェント"
 
 msgid "User Base-DN"
 msgstr "ユーザーベース-DN"
-
-msgid "User CPU usage"
-msgstr "ユーザーのCPU使用率"
 
 msgid "User ID"
 msgstr "ユーザーID"
@@ -58973,11 +59026,12 @@ msgid ""
 "of the Scrape Target types are not listed here."
 msgstr ""
 
+#, python-format
 msgid ""
-"You can upload a <i>PNG</i> image here to replace the  default Check_MK Logo "
-"in the sidebar. The image needs to have a size of 271px width and 46px "
-"height to be displayed correctly. Images with other ratios will be processed "
-"but displayed with the size mentioned."
+"You can upload a <i>PNG</i> image here to replace the default Checkmk %s. "
+"The image needs to have a size of %dpx width and %dpx height to be displayed "
+"correctly. Images with greater width or height cannot be uploaded, and the "
+"image will be rendered with the mentioned size."
 msgstr ""
 
 msgid "You can use <tt>*</tt> and <tt>?</tt> here."
@@ -59765,6 +59819,11 @@ msgstr ""
 msgid "Your input does not match the required format."
 msgstr "入力が必要な形式と一致しません。"
 
+#, fuzzy
+msgid "Your logo has been uploaded."
+msgid_plural "Your logos have been uploaded"
+msgstr[0] "ロゴがアップロードされました。"
+
 msgid "Your modifications affect some objects"
 msgstr "変更は一部のオブジェクトに影響します"
 
@@ -60075,9 +60134,6 @@ msgstr "予測値を下回る"
 
 msgid "best state"
 msgstr "最高の状態"
-
-msgid "billable time"
-msgstr "課金時間"
 
 msgid "bindings"
 msgstr "バインディング"
@@ -60409,9 +60465,6 @@ msgstr "終わり"
 
 msgid "entries"
 msgstr "エントリ"
-
-msgid "errors"
-msgstr "エラー"
 
 msgid "estimated duration"
 msgstr "推定期間"
@@ -61275,9 +61328,6 @@ msgstr "毎秒"
 msgid "percent"
 msgstr "パーセント"
 
-msgid "percent errors"
-msgstr "エラー率"
-
 msgid "percent higher than average"
 msgstr "平均より高いパーセント"
 
@@ -61865,6 +61915,169 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "API server endpoint"
+#~ msgstr "APIサーバーエンドポイント"
+
+#~ msgid "Absolute levels for error rates"
+#~ msgstr "エラー率の絶対レベル"
+
+#~ msgid "Cluster roles"
+#~ msgstr "クラスターの役割"
+
+#~ msgid "Endpoints"
+#~ msgstr "エンドポイント"
+
+#~ msgid "Filesystem usage"
+#~ msgstr "ファイルシステムの使用法"
+
+#~ msgid "If no port is given, a default value of 443 will be used."
+#~ msgstr "ポートが指定されていない場合、デフォルト値の443が使用されます。"
+
+#~ msgid "Ingresses"
+#~ msgstr "イングレス"
+
+#~ msgid "Kubernetes (deprecated)"
+#~ msgstr "Kubernetes （非推奨）"
+
+#~ msgid "Kubernetes Namespaced pods Filesystem usage"
+#~ msgstr "KubernetesネームスペースPodファイルシステムの使用法"
+
+#~ msgid "Kubernetes Namespaced pods cpu usage"
+#~ msgstr "Kubernetes名前空間PodのCPU使用率"
+
+#~ msgid "Kubernetes Namespaced pods memory usage"
+#~ msgstr "Kubernetes名前空間Podのメモリ使用量"
+
+#~ msgid "Kubernetes Network interfaces"
+#~ msgstr "Kubernetesネットワークインターフェース"
+
+#~ msgid "Kubernetes Port"
+#~ msgstr "Kubernetesポート"
+
+#~ msgid "Kubernetes nodes"
+#~ msgstr "Kubernetesノード"
+
+#~ msgid "Kubernetes roles"
+#~ msgstr "Kubernetesの役割"
+
+#~ msgid "Memory used %"
+#~ msgstr "使用メモリ %"
+
+#~ msgid "Name or number of the port"
+#~ msgstr "ポートの名前または番号"
+
+#~ msgid "Namespace prefix for hosts"
+#~ msgstr "ホストの名前空間プレフィックス"
+
+#~ msgid "Node port"
+#~ msgstr "ノードポート"
+
+#~ msgid "PROXY"
+#~ msgstr "プロキシ"
+
+#~ msgid "Parameters received bytes"
+#~ msgstr "パラメータ受信バイト数"
+
+#~ msgid "Parameters send bytes"
+#~ msgstr "パラメータ送信バイト数"
+
+#~ msgid "Percentual levels for error rates"
+#~ msgstr "エラー率のパーセントレベル"
+
+#~ msgid "Replicas"
+#~ msgstr "レプリカ"
+
+#~ msgid "SCTP"
+#~ msgstr "SCTP"
+
+#~ msgid ""
+#~ "Specifies a URL path prefix, which is prepended to API calls to the "
+#~ "Kubernetes API. This is a useful option for Rancher installations (more "
+#~ "information can be found in the manual). If this option is not relevant "
+#~ "for your installation, please leave it unchecked."
+#~ msgstr ""
+#~ "Kubernetes APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定し"
+#~ "ます。これは、Rancherのインストールに便利なオプションです(詳細については、"
+#~ "マニュアルを参照してください)。このオプションがインストールに関係しない場"
+#~ "合は、オフのままにしてください。"
+
+#~ msgid "Stateful sets"
+#~ msgstr "ステートフルセット"
+
+#~ msgid "Swap memory usage"
+#~ msgstr "スワップメモリ使用量"
+
+#~ msgid "System CPU usage"
+#~ msgstr "システムのCPU使用率"
+
+#~ msgid "Target port"
+#~ msgstr "ターゲットポート"
+
+#~ msgid ""
+#~ "The URL that will be contacted for Kubernetes API calls. If the \"Hostname"
+#~ "\" or the \"IP Address\" options are selected, the DNS hostname or IP "
+#~ "address and a secure protocol (HTTPS) are used."
+#~ msgstr ""
+#~ "KubernetesAPI呼び出しのために連絡されるURL。\"ホスト名\"または\"IPアドレス"
+#~ "\"オプションが選択されている場合、DNSホスト名またはIPアドレスとセキュアプ"
+#~ "ロトコル(HTTPS)が使用されます。"
+
+#~ msgid ""
+#~ "These levels make the check go warning or critical whenever the "
+#~ "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
+#~ "monitored interface reaches the given bounds. The percentual error rate "
+#~ "is computed by dividing number of errors by the total number of packets "
+#~ "(successful plus errors)."
+#~ msgstr ""
+#~ "これらのレベルにより、監視対象インターフェースの<b>パーセントエラー率</b>"
+#~ "または<b>絶対エラー率</b>が指定された範囲に達すると、チェックが警告または"
+#~ "クリティカルになります。パーセントエラー率は、エラーの数をパケットの総数"
+#~ "(成功とエラー)で割ることによって計算されます。"
+
+#~ msgid "Total memory usage"
+#~ msgstr "合計メモリ使用量"
+
+#~ msgid "Total replicas"
+#~ msgstr "合計レプリカ数"
+
+#~ msgid "User CPU usage"
+#~ msgstr "ユーザーのCPU使用率"
+
+#~ msgid "errors"
+#~ msgstr "エラー"
+
+#~ msgid "percent errors"
+#~ msgstr "エラー率"
+
+#~ msgid "Delete logo"
+#~ msgstr "ロゴを削除"
+
+#~ msgid "Delete the current logo"
+#~ msgstr "現在のロゴを削除します"
+
+#~ msgid "Design"
+#~ msgstr "設計"
+
+#~ msgid "Do you really want to delete your logo?"
+#~ msgstr "本当にロゴを削除しますか?"
+
+#, fuzzy
+#~| msgid "Parameters for the key hit ratio"
+#~ msgid "Parameters for the  latencies"
+#~ msgstr "キーヒット率に関するパラメータ"
+
+#~ msgid "99th percentile request latency"
+#~ msgstr "99%リクエストレイテンシー"
+
+#~ msgid "Missing password"
+#~ msgstr "パスワード欠落"
+
+#~ msgid "billable time"
+#~ msgstr "課金時間"
+
+#~ msgid "Invalid or no package type specified"
+#~ msgstr "無効またはパッケージタイプが指定されていません"
 
 #, fuzzy
 #~| msgid "Memorystore Redis"
@@ -65742,9 +65955,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Repository/Tag"
 #~ msgstr "リポジトリ/タグ"
-
-#~ msgid "Request latency"
-#~ msgstr "リクエスト遅延"
 
 #~ msgid "Resident items ratio"
 #~ msgstr "レジデント項目比率"

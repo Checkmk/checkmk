@@ -9,18 +9,17 @@ from typing import Any, Dict, List, Mapping, Tuple
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.prism import load_json
 
 Section = List[Dict[Any, Any]]
 StringMap = Mapping[str, str]
 
 
 def parse_prism_alerts(string_table: StringTable) -> Section:
-    import ast
-
     parsed = []
-    data = ast.literal_eval(string_table[0][0])
+    data = load_json(string_table)
 
-    for entity in data.get("entities"):
+    for entity in data.get("entities", {}):
         full_context = dict(zip(entity["context_types"], entity["context_values"]))
 
         try:

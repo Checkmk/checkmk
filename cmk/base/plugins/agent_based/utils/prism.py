@@ -11,6 +11,12 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+import json
+from typing import Any, Dict
+
+from ..agent_based_api.v1.type_defs import StringTable
+
+PrismAPIData = Dict[str, Any]
 
 PRISM_POWER_STATES = {
     "on": 0,
@@ -27,3 +33,10 @@ PRISM_POWER_STATES = {
     "resetting": 1,
     "migrating": 0,
 }
+
+
+def load_json(string_table: StringTable) -> PrismAPIData:
+    try:
+        return json.loads(string_table[0][0])
+    except (IndexError, json.decoder.JSONDecodeError):
+        return {}

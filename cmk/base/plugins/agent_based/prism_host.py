@@ -15,17 +15,13 @@ from typing import Any, Dict
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
+from .utils.prism import load_json
 
 Section = Dict[str, Any]
 
 
 def parse_prism_host(string_table: StringTable) -> Section:
-    import ast
-
-    parsed = {}
-    parsed = ast.literal_eval(string_table[0][0])
-
-    return parsed
+    return load_json(string_table)
 
 
 register.agent_section(

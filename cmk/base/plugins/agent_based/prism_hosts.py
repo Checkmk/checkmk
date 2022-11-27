@@ -11,20 +11,20 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import ast
 import time
 from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.prism import load_json
 
 Section = Dict[str, Mapping[str, Any]]
 
 
 def parse_prism_hosts(string_table: StringTable) -> Section:
     parsed: Section = {}
-    data = ast.literal_eval(string_table[0][0])
-    for element in data.get("entities"):
+    data = load_json(string_table)
+    for element in data.get("entities", {}):
         parsed.setdefault(element.get("name", "unknown"), element)
     return parsed
 

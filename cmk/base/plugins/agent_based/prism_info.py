@@ -8,15 +8,13 @@ from typing import Any, Dict
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.prism import load_json
 
 Section = Dict[Any, Any]
 
 
 def parse_prism_info(string_table: StringTable) -> Section:
-    import ast
-
-    data = ast.literal_eval(string_table[0][0])
-    return data
+    return load_json(string_table)
 
 
 register.agent_section(

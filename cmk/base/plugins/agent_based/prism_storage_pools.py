@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # ported by (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
-import ast
 from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.prism import load_json
 
 Section = Dict[str, Mapping[str, Any]]
 
 
 def parse_prism_storage_pools(string_table: StringTable) -> Section:
     parsed: Section = {}
-    data = ast.literal_eval(string_table[0][0])
-    for element in data.get("entities"):
+    data = load_json(string_table)
+    for element in data.get("entities", {}):
         parsed.setdefault(element.get("name", "unknown"), element)
     return parsed
 

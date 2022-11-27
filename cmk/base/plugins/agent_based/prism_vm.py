@@ -11,19 +11,17 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-import ast
 from typing import Any, Dict
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
+from .utils.prism import load_json
 
 Section = Dict[str, Any]
 
 
 def parse_prism_vm(string_table: StringTable) -> Section:
-    parsed = {}
-    parsed = ast.literal_eval(string_table[0][0])
-    return parsed
+    return load_json(string_table)
 
 
 register.agent_section(

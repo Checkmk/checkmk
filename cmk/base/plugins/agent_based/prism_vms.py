@@ -15,7 +15,7 @@ from typing import Any, Dict, Mapping
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.prism import PRISM_POWER_STATES, load_json
+from .utils.prism import load_json, PRISM_POWER_STATES
 
 Section = Dict[str, Mapping[str, Any]]
 

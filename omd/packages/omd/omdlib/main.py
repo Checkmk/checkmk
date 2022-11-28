@@ -2973,6 +2973,10 @@ def main_init_action(  # pylint: disable=too-many-branches
             # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
             save_tmpfs_dump(site)
 
+        if command == "start" and not has_instance_id(site):
+            # Existing sites may not have an instance ID yet. After an update we create a new one.
+            save_instance_id(site)
+
         sys.exit(exit_status)
 
     # if no site is selected, all sites are affected

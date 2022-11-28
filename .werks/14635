@@ -1,0 +1,15 @@
+Title: postgres_stat_database: Check plugin used to crash if database size was an empty string
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669113538
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p31
+
+The check plugin used to crash if the database size was an empty string.
+This has now been fixed. 
+From now on if the database size is an empty string, the check state will turn to WARN and in the summary it will say that the database size is not available.
+

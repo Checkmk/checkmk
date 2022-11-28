@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.painters.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionSectionRegistry
 
+from ..painter.v0.base import PainterRegistry
 from .base import Icon
 from .builtin import (
     AcknowledgeIcon,

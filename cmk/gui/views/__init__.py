@@ -9,7 +9,6 @@ import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _, _u
-from cmk.gui.painters.v0.base import register_painter
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -23,6 +22,7 @@ from cmk.gui.views.command import register_legacy_command
 from cmk.gui.views.icon import Icon, icon_and_action_registry
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
 from cmk.gui.views.page_edit_view import format_view_title
+from cmk.gui.views.painter.v0.base import register_painter
 from cmk.gui.views.sorter import register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -106,10 +106,10 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.exporter as exporter
     import cmk.gui.painter_options as painter_options
-    import cmk.gui.painters.v0.base as painter_base
-    import cmk.gui.painters.v0.helpers as painter_helpers
-    import cmk.gui.painters.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module
+    import cmk.gui.views.painter.v0.base as painter_base
+    import cmk.gui.views.painter.v0.helpers as painter_helpers
+    import cmk.gui.views.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
     from cmk.gui.plugins.views.icons import utils as icon_utils

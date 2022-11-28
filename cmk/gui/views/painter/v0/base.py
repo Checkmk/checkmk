@@ -28,9 +28,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.painters.v1.painter_lib import experimental_painter_registry
-from cmk.gui.painters.v1.painter_lib import Painter as V1Painter
-from cmk.gui.painters.v1.painter_lib import PainterConfiguration
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.type_defs import (
     ColumnName,
@@ -53,6 +50,10 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
+
+from ..v1.painter_lib import experimental_painter_registry
+from ..v1.painter_lib import Painter as V1Painter
+from ..v1.painter_lib import PainterConfiguration
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = Union[str | tuple[Literal["icon"], str]]

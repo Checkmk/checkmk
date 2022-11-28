@@ -19,7 +19,6 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.painters.v0.base import Cell, Painter2
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
@@ -44,6 +43,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
 
+from .painter.v0.base import Cell, Painter2
 from .store import multisite_builtin_views
 
 multisite_builtin_views.update(

@@ -242,7 +242,6 @@ modes: dict[Any, Any] = {}
 
 # Import the module to register page handler
 import cmk.gui.wato.page_handler
-from cmk.gui.painters.v0.base import PainterRegistry
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
     search_form,
@@ -255,6 +254,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
     register_modules,
     WatoModule,
 )
+from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.sorter import SorterRegistry
 
 from .views import (

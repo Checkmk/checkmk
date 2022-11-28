@@ -6,8 +6,9 @@
 import abc
 from collections.abc import Sequence
 
-from cmk.gui.painters.v0.base import Cell
 from cmk.gui.type_defs import Rows, ViewSpec
+
+from ..painter.v0.base import Cell
 
 
 class Layout(abc.ABC):

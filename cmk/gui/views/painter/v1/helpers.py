@@ -6,9 +6,10 @@ from collections.abc import Sequence
 from typing import NamedTuple
 
 from cmk.gui.config import active_config
-from cmk.gui.painters.v1.painter_lib import PainterConfiguration
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.view_utils import CellContent, CellSpec
+
+from .painter_lib import PainterConfiguration
 
 
 def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:

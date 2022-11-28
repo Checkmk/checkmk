@@ -31,7 +31,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOption, PainterOptionRegistry, PainterOptions
-from cmk.gui.painters.v0.base import Cell, CellSpec, CSVExportError, Painter, PainterRegistry
 from cmk.gui.permissions import (
     Permission,
     PermissionRegistry,
@@ -47,6 +46,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, DropdownChoiceEntries, ValueSpec
 from cmk.gui.views.data_source import ABCDataSource, DataSourceRegistry, RowTable
+from cmk.gui.views.painter.v0.base import Cell, CellSpec, CSVExportError, Painter, PainterRegistry
 
 from cmk.bi.compiler import BICompiler
 from cmk.bi.computer import BIAggregationFilter, BIComputer

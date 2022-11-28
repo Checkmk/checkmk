@@ -11,11 +11,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.painters.v0.base import Cell
 from cmk.gui.type_defs import PainterSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.views.layout import Layout
+from cmk.gui.views.painter.v0.base import Cell
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visual_link import render_link_to_view
 

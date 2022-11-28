@@ -35,7 +35,6 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.painters.v0.painters import host_state_short, service_state_short
 from cmk.gui.plugins.metrics.utils import GraphRenderOptions
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import (
@@ -69,6 +68,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
+from cmk.gui.views.painter.v0.painters import host_state_short, service_state_short
 from cmk.gui.views.store import get_all_views, get_permitted_views, internal_view_to_runtime_view
 
 DashboardName = str

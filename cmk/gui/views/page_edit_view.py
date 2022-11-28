@@ -16,7 +16,6 @@ from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import ColumnName, PainterSpec, SingleInfos, SorterSpec, ViewSpec
@@ -41,6 +40,7 @@ from cmk.gui.valuespec import (
 
 from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
+from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views, get_permitted_views
 

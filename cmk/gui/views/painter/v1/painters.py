@@ -5,7 +5,10 @@
 from collections.abc import Callable, Sequence
 
 from cmk.gui.i18n import _l
-from cmk.gui.painters.v1.helpers import (
+from cmk.gui.type_defs import Rows
+from cmk.gui.view_utils import CellSpec
+
+from .helpers import (
     get_perfdata_nth_value,
     get_single_int_column,
     get_single_str_column,
@@ -13,14 +16,7 @@ from cmk.gui.painters.v1.helpers import (
     render_str_with_staleness,
     StrWithStaleness,
 )
-from cmk.gui.painters.v1.painter_lib import (
-    experimental_painter_registry,
-    Formatters,
-    Painter,
-    PainterConfiguration,
-)
-from cmk.gui.type_defs import Rows
-from cmk.gui.view_utils import CellSpec
+from .painter_lib import experimental_painter_registry, Formatters, Painter, PainterConfiguration
 
 experimental_painter_registry.register(
     Painter[str](

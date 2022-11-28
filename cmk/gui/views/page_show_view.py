@@ -39,7 +39,6 @@ from cmk.gui.inventory import (
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.painters.v0.base import Cell, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, Row, Rows, SorterName, SorterSpec, ViewSpec
 from cmk.gui.utils.urls import makeuri_contextless
@@ -49,6 +48,7 @@ from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.views.data_source import data_source_registry
 
 from . import availability
+from .painter.v0.base import Cell, JoinCell
 from .sorter import SorterEntry
 from .store import get_all_views, get_permitted_views
 

@@ -9,10 +9,10 @@ from typing import Any
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painters.v0.base import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.painter.v0.base import Cell, Painter
 from cmk.gui.views.sorter import Sorter
 from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path,

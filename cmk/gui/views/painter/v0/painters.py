@@ -27,15 +27,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry
-from cmk.gui.painters.v0.base import Cell, Painter, PainterRegistry
-from cmk.gui.painters.v0.helpers import (
-    get_label_sources,
-    get_tag_groups,
-    paint_host_list,
-    paint_nagiosflag,
-    render_cache_info,
-)
-from cmk.gui.painters.v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, Row, SorterName, VisualLinkSpec
@@ -65,6 +56,16 @@ from cmk.gui.view_utils import (
     render_tag_groups,
 )
 from cmk.gui.visual_link import render_link_to_view
+
+from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
+from .base import Cell, Painter, PainterRegistry
+from .helpers import (
+    get_label_sources,
+    get_tag_groups,
+    paint_host_list,
+    paint_nagiosflag,
+    render_cache_info,
+)
 
 
 def register(

@@ -792,7 +792,7 @@ class Table:
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
         if not isinstance(other, Table):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
+            raise TypeError(f"Cannot update {type(self)} from {type(other)}")
 
         # TODO cleanup
 
@@ -1072,7 +1072,7 @@ class Attributes:
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
         if not isinstance(other, Attributes):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
+            raise TypeError(f"Cannot update {type(self)} from {type(other)}")
 
         reasons = []
         retentions: RetentionIntervalsByKeys = {}

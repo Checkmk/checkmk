@@ -554,8 +554,7 @@ def _may_update(
     inventory_tree: StructuredDataNode,
     previous_tree: StructuredDataNode,
 ) -> UpdateResult:
-    intervals_from_config = _get_intervals_from_config(raw_intervals_from_config)
-    if not intervals_from_config:
+    if not (intervals_from_config := _get_intervals_from_config(raw_intervals_from_config)):
         return UpdateResult(
             save_tree=False,
             reason="No retention intervals found.",

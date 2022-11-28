@@ -16,7 +16,6 @@
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
-#include "RendererPython.h"
 #include "RendererPython3.h"
 #include "data_encoding.h"
 
@@ -33,8 +32,6 @@ std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
                                                        data_encoding);
         case OutputFormat::json:
             return std::make_unique<RendererJSON>(os, logger, data_encoding);
-        case OutputFormat::python:
-            return std::make_unique<RendererPython>(os, logger, data_encoding);
         case OutputFormat::python3:
             return std::make_unique<RendererPython3>(os, logger, data_encoding);
     }

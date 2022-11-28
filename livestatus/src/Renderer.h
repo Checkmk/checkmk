@@ -18,7 +18,7 @@ enum class Encoding;
 class CSVSeparators;
 class Logger;
 
-enum class OutputFormat { csv, broken_csv, json, python, python3 };
+enum class OutputFormat { csv, broken_csv, json, python3 };
 
 struct Null {};
 

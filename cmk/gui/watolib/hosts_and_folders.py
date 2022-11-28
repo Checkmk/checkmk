@@ -2144,7 +2144,21 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _rewrite_hosts_file(self):
         self._load_hosts_on_demand()
+
+        for host in self._hosts.values():
+            self._correct_snmp_types(host)
+
         self.save_hosts()
+
+    @staticmethod
+    def _correct_snmp_types(host):
+        """For a while, the Web Api would write lists instead of tuples into the hosts.mk files"""
+        snmp_keys = ["snmp_community", "explicit_snmp_communities"]
+
+        for key in snmp_keys:
+            if value := host.attribute(key, None):
+                if isinstance(value, list):
+                    host.set_attribute(key, tuple(value))
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |

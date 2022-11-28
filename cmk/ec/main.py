@@ -568,7 +568,7 @@ class EventServer(ECServerThread):
         if not path.exists():
             os.mkfifo(str(path))
         # We want to be able to receive events from all users on the local system
-        path.chmod(0o666)  # nosec
+        path.chmod(0o662)
 
         self._logger.info("Created FIFO '%s' for receiving events", path)
 
@@ -633,7 +633,7 @@ class EventServer(ECServerThread):
         path.parent.mkdir(parents=True, exist_ok=True)
         self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._eventsocket.bind(str(path))
-        path.chmod(0o664)
+        path.chmod(0o660)
         self._eventsocket.listen(self._config["eventsocket_queue_len"])
         self._logger.info("Opened UNIX socket '%s' for receiving events", path)
 
@@ -2468,7 +2468,7 @@ class StatusServer(ECServerThread):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.bind(str(path))
         # Make sure that socket is group writable
-        path.chmod(0o664)
+        path.chmod(0o660)
         self._socket.listen(self._config["socket_queue_len"])
         self._unix_socket_queue_len = self._config["socket_queue_len"]  # detect changes in config
 

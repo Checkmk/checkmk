@@ -92,7 +92,7 @@ set_up_get_epoch() {
 set_up_current_shell() {
     # Note the current shell may not be the same as what is specified in the
     # shebang, e.g. when reconfigured in the xinetd/systemd/whateverd config file
-    CURRENT_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+    CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
 #

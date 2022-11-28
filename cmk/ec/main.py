@@ -879,7 +879,7 @@ class EventServer(ECServerThread):
         #    and have not reached the required number of hits and whose
         #    time is elapsed.
         # 2. Automatically delete all events that are in state "open"
-        #    and whose livetime is elapsed.
+        #    and whose lifetime is elapsed.
         events_to_delete: list[tuple[Event, HistoryWhat]] = []
         events = self._event_status.events()
         now = time.time()
@@ -996,7 +996,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "closed"
                     events_to_delete.append((event, "EXPIRED"))
                     self._logger.info(
-                        "Livetime of event %d (rule %s) exceeded. Deleting event.",
+                        "Lifetime of event %d (rule %s) exceeded. Deleting event.",
                         event["id"],
                         event["rule_id"],
                     )
@@ -1014,7 +1014,7 @@ class EventServer(ECServerThread):
         # We need to handle to cases:
         # 1. An event for such a rule already exists and is
         #    in the state "counting" -> this can only be the case if
-        #    more than one occurrance is required.
+        #    more than one occurrence is required.
         # 2. No event at all exists.
         #    in that case.
         for rule in self._rules:
@@ -1985,7 +1985,7 @@ class RuleMatcher:
                 self._logger.info("  found new event")
             return MatchSuccess(cancelling=False, match_groups=match_groups)
 
-        # Looks like there was no match, output some additonal info
+        # Looks like there was no match, output some additional info
         # Reasons preventing create-event
         if self._debug_rules:
             if match_groups["match_groups_message"] is False:
@@ -3369,7 +3369,7 @@ class EventStatus:
 
     def count_event_up(self, found: Event, event: Event) -> None:
         """
-        Update event with new information from new occurrance,
+        Update event with new information from new occurrence,
         but preserve certain attributes from the original (first)
         event.
         """
@@ -3402,8 +3402,8 @@ class EventStatus:
         self, event_server: EventServer, event: Event, rule: str, count: dict[str, int]
     ) -> Event | None:
         """
-        Find previous occurrance of this event and account for
-        one new occurrance. In case of negated count (expecting rules)
+        Find previous occurrence of this event and account for
+        one new occurrence. In case of negated count (expecting rules)
         we do never modify events that are already in the state "open"
         since the event has been created because the count was too
         low in the specified period of time.
@@ -3884,7 +3884,7 @@ def main() -> None:  # pylint: disable=too-many-branches
 
         cmk.utils.daemon.lock_with_pid_file(pid_path)
 
-        # Install signal hander
+        # Install signal handler
         def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)

@@ -248,7 +248,7 @@ metric_info["influxdb_bytes_sent"] = {
     "color": "21/a",
 }
 metric_info["influxdb_bytes_sent_rate"] = {
-    "title": _l("Rate of bytes sent the InfluxDB connection"),
+    "title": _l("Rate of bytes sent to the InfluxDB connection"),
     "unit": "bytes/s",
     "color": "21/a",
 }
@@ -279,7 +279,7 @@ metric_info["rrdcached_bytes_sent"] = {
     "color": "21/a",
 }
 metric_info["rrdcached_bytes_sent_rate"] = {
-    "title": _l("Rate of bytes sent the RRD connection"),
+    "title": _l("Rate of bytes sent to the RRD connection"),
     "unit": "bytes/s",
     "color": "21/a",
 }
@@ -310,7 +310,7 @@ metric_info["carbon_bytes_sent"] = {
     "color": "21/a",
 }
 metric_info["carbon_bytes_sent_rate"] = {
-    "title": _l("Rate of bytes sent the Carbon connection"),
+    "title": _l("Rate of bytes sent to the Carbon connection"),
     "unit": "bytes/s",
     "color": "21/a",
 }

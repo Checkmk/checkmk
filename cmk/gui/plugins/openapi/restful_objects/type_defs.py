@@ -47,6 +47,7 @@ DomainType = Literal[
     "user",
     "user_config",
     "user_role",
+    "aux_tag",
 ]  # fmt: off
 
 DomainObject = dict[str, Any]
@@ -61,6 +62,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/create",
+    "cmk/create_aux_tag",
     "cmk/create_host",
     "cmk/create_for_host",
     "cmk/create_service",

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
+from typing import Iterator, NamedTuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -55,8 +55,7 @@ class AuxTag:
         self.title = title
         self.topic = topic
 
-    # TODO: Rename to "to_config"
-    def get_dict_format(self) -> AuxTagSpec:
+    def to_config(self) -> AuxTagSpec:
         response = AuxTagSpec({"id": self.id, "title": self.title})
         if self.topic:
             response["topic"] = self.topic
@@ -64,9 +63,7 @@ class AuxTag:
 
     @property
     def choice_title(self) -> str:
-        if self.topic:
-            return f"{self.topic} / {self.title}"
-        return self.title
+        return f"{self.topic} / {self.title}"
 
     def validate(self) -> None:
         if not self.id:
@@ -88,6 +85,10 @@ class AuxTagList:
             if aux_tag.id not in tag_ids:
                 self.append(aux_tag)
         return self
+
+    def __iter__(self) -> Iterator:
+        for tag in self._tags:
+            yield tag
 
     def get_tags(self) -> Sequence[AuxTag]:
         return self._tags
@@ -126,7 +127,7 @@ class AuxTagList:
                 )
 
             if aux_tag.id in seen:
-                raise MKGeneralException(_('Duplicate tag ID "%s" in auxilary tags') % aux_tag.id)
+                raise MKGeneralException(_('Duplicate tag ID "%s" in auxiliary tags') % aux_tag.id)
 
             seen.add(aux_tag.id)
 
@@ -149,7 +150,7 @@ class AuxTagList:
     def get_dict_format(self) -> list[AuxTagSpec]:
         response = []
         for tag in self._tags:
-            response.append(tag.get_dict_format())
+            response.append(tag.to_config())
         return response
 
     def get_choices(self) -> Sequence[tuple[str, str]]:
@@ -349,6 +350,19 @@ class TagConfig:
             for grouped_tag in tag_group.tags:
                 aux_tag_map[grouped_tag.id] = grouped_tag.aux_tag_ids
         return aux_tag_map
+
+    def get_aux_tag_by_id(self, tag_group_id: TagID) -> AuxTag:
+        return self.aux_tag_list.get_aux_tag(tag_group_id)
+
+    def insert_aux_tag(self, aux_tag: AuxTag) -> None:
+        self.aux_tag_list.append(aux_tag)
+        self.aux_tag_list.validate()
+
+    def update_aux_tag(self, aux_tag_id: TagID, aux_tag: AuxTag) -> None:
+        self.aux_tag_list.update(aux_tag_id, aux_tag)
+
+    def remove_aux_tag(self, tag_id: TagID) -> None:
+        self.aux_tag_list.remove(tag_id)
 
     def get_aux_tags_by_topic(self) -> Sequence[tuple[str, Sequence[AuxTag]]]:
         by_topic: dict[str, list[AuxTag]] = {}

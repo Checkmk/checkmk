@@ -1,0 +1,14 @@
+Title: aux_tags: New REST API endpoint implementation
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1669651175
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces the implementation of the Auxiliary Tags endpoints. These
+endpoints replace the old Web-API functionality.  Users can now GET, CREATE, PUT
+and DELETE Auxiliary Tags via the REST API. Client scripts should be adjusted
+accordingly.

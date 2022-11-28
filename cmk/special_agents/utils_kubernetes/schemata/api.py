@@ -98,6 +98,11 @@ labels with other special characters.
 """
 
 
+# TODO: introduce NamespacedName as its own type
+def namespaced_name(namespace: str, name: str) -> str:
+    return f"{namespace}_{name}"
+
+
 class ClientModel(BaseModel):
     class Config:
         orm_mode = True
@@ -342,6 +347,40 @@ class HealthZ(BaseModel):
 class APIHealth(BaseModel):
     ready: HealthZ
     live: HealthZ
+
+
+class OpenMetricSample(BaseModel):
+    metric_name: KubeletVolumeMetricName
+    labels: KubeletVolumeLabels
+    value: float
+
+
+class KubeletVolumeMetricName(enum.Enum):
+    used = "kubelet_volume_stats_used_bytes"
+    capacity = "kubelet_volume_stats_capacity_bytes"
+    available = "kubelet_volume_stats_available_bytes"
+
+
+class KubeletVolumeLabels(BaseModel):
+    namespace: str
+    persistentvolumeclaim: str
+
+
+class KubeletVolumeMetricSample(OpenMetricSample):
+    metric_name: KubeletVolumeMetricName
+    labels: KubeletVolumeLabels
+
+
+class UnusedKubeletMetricSample(BaseModel):
+    pass
+
+
+_KubeletMetrics = KubeletVolumeMetricSample | UnusedKubeletMetricSample
+
+
+class KubeletMetricSample(BaseModel):
+    # https://github.com/pydantic/pydantic/issues/675#issuecomment-513029543
+    __root__: _KubeletMetrics
 
 
 class KubeletInfo(BaseModel):

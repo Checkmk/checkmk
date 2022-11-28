@@ -1316,12 +1316,8 @@ def write_deployments_api_sections(
             output_sections(deployment)
 
 
-def namespaced_name(namespace: str, name: str) -> str:
-    return f"{namespace}_{name}"
-
-
 def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
-    return namespaced_name(metadata.namespace, metadata.name)
+    return api.namespaced_name(metadata.namespace, metadata.name)
 
 
 def write_daemon_sets_api_sections(
@@ -2172,7 +2168,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     )
 
                     attached_pvc_namespaced_names = [
-                        namespaced_name(namespace=pod_namespace(pod), name=pvc_name)
+                        api.namespaced_name(namespace=pod_namespace(pod), name=pvc_name)
                         for pvc_name in pod_attached_persistent_volume_claim_names(pod)
                     ]
                     attached_pvcs = {

@@ -31,6 +31,7 @@ from cmk.special_agents.utils_kubernetes.transform import (
     resource_quota_from_client,
     statefulset_from_client,
 )
+from cmk.special_agents.utils_kubernetes.transform_any import parse_open_metric_samples
 from cmk.special_agents.utils_kubernetes.transform_json import (
     JSONStatefulSetList,
     statefulset_list_from_json,
@@ -175,6 +176,9 @@ class RawAPI:
     def query_raw_statefulsets(self) -> JSONStatefulSetList:
         return json.loads(self._request("GET", "/apis/apps/v1/statefulsets").response)
 
+    def query_kubelet_metrics(self, node_name: str) -> str:
+        return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+
 
 def _extract_sequence_based_identifier(git_version: str) -> str | None:
     """
@@ -310,6 +314,7 @@ class APIData:
     nodes: Sequence[api.Node]
     pods: Sequence[api.Pod]
     persistent_volume_claims: Sequence[api.PersistentVolumeClaim]
+    kubelet_open_metrics: Sequence[api.OpenMetricSample]
     resource_quotas: Sequence[api.ResourceQuota]
     cluster_details: api.ClusterDetails
 
@@ -332,6 +337,7 @@ class UnparsedAPIData(Generic[StatefulSets]):
     node_to_kubelet_health: Mapping[str, api.HealthZ]
     api_health: api.APIHealth
     raw_statefulsets: StatefulSets
+    raw_kubelet_open_metrics_dumps: Sequence[str]
 
 
 def query_raw_api_data_v1(
@@ -358,6 +364,9 @@ def query_raw_api_data_v1(
             for raw_node in raw_nodes
         },
         api_health=raw_api.query_api_health(),
+        raw_kubelet_open_metrics_dumps=[
+            raw_api.query_kubelet_metrics(raw_node.metadata.name) for raw_node in raw_nodes
+        ],
     )
 
 
@@ -385,6 +394,9 @@ def query_raw_api_data_v2(
             for raw_node in raw_nodes
         },
         api_health=raw_api.query_api_health(),
+        raw_kubelet_open_metrics_dumps=[
+            raw_api.query_kubelet_metrics(raw_node.metadata.name) for raw_node in raw_nodes
+        ],
     )
 
 
@@ -417,6 +429,7 @@ def parse_api_data(
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
     controllers_to_dependents: Mapping[str, Sequence[str]],
     git_version: api.GitVersion,
+    kubelet_open_metrics_dumps: Sequence[str],
     versioned_parse_statefulsets: Callable[
         [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
     ],
@@ -487,6 +500,11 @@ def parse_api_data(
         nodes=nodes,
         pods=pods,
         persistent_volume_claims=persistent_volume_claims,
+        kubelet_open_metrics=[
+            kubelet_metric_sample
+            for dump in kubelet_open_metrics_dumps
+            for kubelet_metric_sample in parse_open_metric_samples(dump)
+        ],
         resource_quotas=resource_quotas,
         cluster_details=cluster_details,
     )
@@ -538,6 +556,7 @@ def create_api_data_v1(
         pod_to_controllers,
         map_controllers_top_to_down(object_to_owners),
         git_version,
+        kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
         versioned_parse_statefulsets=statefulset_list_from_client,
     )
 
@@ -588,6 +607,7 @@ def create_api_data_v2(
         pod_to_controllers,
         map_controllers_top_to_down(object_to_owners),
         git_version,
+        kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
         versioned_parse_statefulsets=statefulset_list_from_json,
     )
 

@@ -1,0 +1,26 @@
+Title: mk_postgres.py: correct UNIX socket not found when instances are configured
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669646781
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+You are affected by this werk if you have configured one or more PostgreSQL
+instances that should be monitored by an agent plugin of Checkmk version >
+1.6.0. This means that you are using the rule "Instances settings" in the
+ruleset "PostgreSQL database nd sessions (Linux, Windows)". In order to apply
+this fix, the agent plugin must be reinstalled on the host.
+
+When PostgreSQL instances are configured explicity via the respective .env and
+.pgpass config files, the agent plugin was no longer able to determine the
+correct "psql" binary to use in order to run SQL queries via the commandline.
+This lead to an error message similar to:
+<br>
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.123"
+failed: No such file or directory
+<br>
+This has been fixed.

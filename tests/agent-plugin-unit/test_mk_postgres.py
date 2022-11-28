@@ -71,7 +71,14 @@ class TestLinux:
     def is_linux(self, monkeypatch, mk_postgres):
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
-        monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
+        monkeypatch.setattr(
+            mk_postgres,
+            "open_env_file",
+            lambda *_args: [
+                "export PGPORT=5432",
+                "export PGVERSION=12.3",
+            ],
+        )
 
     def test_get_default_path(
         self,
@@ -155,11 +162,11 @@ class TestLinux:
             "name": "mydb",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
+            "pg_version": "12.3",
         }
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
-                ("/usr/lib/postgres/psql", None),
                 ("postgres\ndb1", None),
                 ("12.3.6", None),
             ]
@@ -169,8 +176,8 @@ class TestLinux:
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
-        assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
-        assert myPostgresOnLinux.psql_binary_dirname == "/usr/lib/postgres"
+        assert myPostgresOnLinux.psql_binary_path == "/mydb/12.3/bin/psql"
+        assert myPostgresOnLinux.psql_binary_dirname == "/mydb/12.3/bin"
         assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
         assert myPostgresOnLinux.get_server_version() == 12.3
         assert myPostgresOnLinux.pg_database == "mydb"
@@ -192,6 +199,7 @@ class TestLinux:
             "name": "main",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
+            "version": "12.3",
         }
         process_mock = Mock()
         attrs = {
@@ -235,7 +243,14 @@ class TestWindows:
     def is_windows(self, monkeypatch, mk_postgres):
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
-        monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
+        monkeypatch.setattr(
+            mk_postgres,
+            "open_env_file",
+            lambda *_args: [
+                "export PGPORT=5432",
+                "export PGVERSION=12.1",
+            ],
+        )
         monkeypatch.setattr(
             mk_postgres.PostgresWin,
             "_call_wmic_logicaldisk",
@@ -267,6 +282,7 @@ class TestWindows:
         assert instances[0]["name"] == "db1"
         assert instances[0]["pg_user"] == "USER_NAME"
         assert instances[0]["pg_passfile"] == "/PATH/TO/.pgpass"
+        assert instances[0]["pg_version"] == "12.1"
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
@@ -309,6 +325,7 @@ class TestWindows:
             "name": "mydb",
             "pg_user": "myuser",
             "pg_passfile": "c:\\User\\.pgpass",
+            "pg_version": "12.1",
         }
         process_mock = Mock()
         attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1.5", b"ok")]}

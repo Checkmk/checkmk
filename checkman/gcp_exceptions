@@ -1,0 +1,16 @@
+title: GCP Exceptions
+agents: gcp
+catalog: cloud/gcp
+license: GPLv2
+distribution: check_mk
+description:
+ This check collects known exceptions during the execution of the
+ special agent {agent_gcp} for monitoring Google Cloud Platform:
+
+ - PermissionDenied if the CLoud Asset API has not been enabled
+
+ The service is {OK} if no exceptions occur
+ otherwise it goes {CRIT}.
+
+discovery:
+ One service is created.

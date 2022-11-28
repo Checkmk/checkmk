@@ -5,14 +5,17 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
+import sys
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
+from types import TracebackType
 from typing import Any, Protocol
 
 import requests
 import typing_extensions
+from google.api_core.exceptions import PermissionDenied
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -306,7 +309,22 @@ class HealthSection:
         return json.dumps(self.health_info)
 
 
-Section = AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection
+@dataclass(frozen=True)
+class ExceptionSection:
+    exc_type: type[BaseException] | None
+    exception: BaseException | None
+    traceback: TracebackType | None
+    name: str = "exception"
+
+    def serialize(self) -> str | None:
+        if self.exc_type is None:
+            return None
+        return f"{self.exc_type.__name__}: {self.exception}"
+
+
+Section = (
+    AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection | ExceptionSection
+)
 
 #################
 # Serialization #
@@ -348,6 +366,12 @@ def _health_serializer(section: HealthSection) -> None:
         w.append(section.serialize())
 
 
+def _exception_serializer(section: ExceptionSection) -> None:
+    with SectionWriter("gcp_exceptions") as w:
+        if section.exc_type is not None:
+            w.append(section.serialize())
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
@@ -360,6 +384,8 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _cost_serializer(section)
         elif isinstance(section, HealthSection):
             _health_serializer(section)
+        elif isinstance(section, ExceptionSection):
+            _exception_serializer(section)
         else:
             typing_extensions.assert_never(section)
 
@@ -521,13 +547,19 @@ def run(
     monitor_health: bool,
     piggy_back_prefix: str,
 ) -> None:
-    assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
-    serializer([assets])
-    serializer(run_metrics(client, services))
-    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-    serializer(run_cost(client, cost))
-    if monitor_health:
-        serializer(run_health(client))
+    try:
+        assets = run_assets(
+            client, [s.name for s in services] + [s.name for s in piggy_back_services]
+        )
+        serializer([assets])
+        serializer(run_metrics(client, services))
+        serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
+        serializer(run_cost(client, cost))
+        if monitor_health:
+            serializer(run_health(client))
+        serializer([ExceptionSection(None, None, None)])
+    except PermissionDenied:
+        serializer([ExceptionSection(*sys.exc_info())])
 
 
 #######################################################################

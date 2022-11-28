@@ -80,6 +80,7 @@ def get_kube_check_section_models(
     """
     temporary_exceptions: dict[SectionName, type[check.Section]] = {
         SectionName("kube_pvc_v1"): check.PersistentVolumeClaims,
+        SectionName("kube_pvc_volumes_v1"): check.PersistentVolumeClaimAttachedVolumes,
     }
     result = kube_parsed_section_types | _KNOWN_EXCEPTIONS | temporary_exceptions
     # make sure signature is not lying, also mypy is happier this way

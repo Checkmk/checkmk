@@ -462,6 +462,13 @@ class Cpu(BaseModel):
     usage: float
 
 
+class AttachedVolume(BaseModel):
+    capacity: float
+    free: float
+    persistent_volume_claim: str
+    namespace: str
+
+
 class PerformanceUsage(Section):
     """section: [kube_performance_cpu_v1, kube_performance_memory_v1]"""
 
@@ -689,3 +696,9 @@ class PersistentVolumeClaims(Section):
     """section: kube_pvc_v1"""
 
     claims: Mapping[str, PersistentVolumeClaim]
+
+
+class PersistentVolumeClaimAttachedVolumes(Section):
+    """section: kube_pvc_volumes_v1"""
+
+    volumes: Mapping[str, AttachedVolume]

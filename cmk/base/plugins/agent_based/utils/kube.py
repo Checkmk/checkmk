@@ -927,6 +927,19 @@ class PersistentVolumeClaims(Section):
     claims: Mapping[str, PersistentVolumeClaim]
 
 
+class AttachedVolume(BaseModel):
+    capacity: float
+    free: float
+    persistent_volume_claim: str
+    namespace: str
+
+
+class PersistentVolumeClaimAttachedVolumes(Section):
+    """section: kube_pvc_volumes_v1"""
+
+    volumes: Mapping[str, AttachedVolume]
+
+
 class IdentificationError(BaseModel):
     """Errors due to incorrect labels set by the user."""
 

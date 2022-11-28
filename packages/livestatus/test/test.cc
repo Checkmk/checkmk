@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "livestatus/Logger.h"
 #include "livestatus/POSIXUtils.h"

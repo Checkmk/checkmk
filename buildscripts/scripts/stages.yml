@@ -1,6 +1,8 @@
+# Describes stages for test-gerrit Job
+
 # some thoughts about this file:
 # - stages should abort early if semantical condition is not met
-# - stages should be sorted by propability to fail * duration
+# - stages should be sorted by probability to fail * duration
 # - `make` is not needed at this level (but make-target could still call validate_changes.py)
 # - running inside docker should be optional
 # - some variables are not needed
@@ -80,9 +82,14 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true"
       REPLACE_NEWLINES: true
 
-      # Gather the list of changed livestatus / core files
+      # Gather the list of changed old livestatus / core files
     - NAME: CHANGED_CORE_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
+      REPLACE_NEWLINES: true
+
+      # Gather the list of changed lib livestatus files
+    - NAME: CHANGED_LIVESTATUS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^packages/livestatus' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_CLANG_TIDY_FILE
@@ -263,7 +270,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
 
     - NAME: 'Clang Tidy Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -274,7 +281,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
 
     - NAME: 'Clang Tidy core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -285,7 +292,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
 
     - NAME: 'IWYU Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -296,7 +303,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
 
     - NAME: 'IWYU core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_TESTS_MAKEFILE
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -307,7 +314,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
 
     - NAME: 'Unit Test Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES
       DIR: 'livestatus/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"
@@ -317,7 +324,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/livestatus-neb-cmc.txt"
 
     - NAME: 'Unit Test core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES
       DIR: 'enterprise/core/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"

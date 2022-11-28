@@ -28,6 +28,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
@@ -416,11 +417,13 @@ class TimePeriods:
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True)
 class MatchFailure:
-    pass
+    reason: str
 
 
-class MatchSuccess(NamedTuple):
+@dataclass(frozen=True)
+class MatchSuccess:
     cancelling: bool
     match_groups: dict[str, Any]
 
@@ -1371,8 +1374,10 @@ class EventServer(ECServerThread):
             try:
                 result = self.event_rule_matches(rule, event)
             except Exception as e:
-                self._logger.exception("  Exception during matching:\n%s", e)
-                result = MatchFailure()
+                result = MatchFailure(
+                    f"Rule would match, but due to inverted matching does not. {e}"
+                )
+                self._logger.exception(result.reason)
 
             if isinstance(result, MatchSuccess):
                 self._perfcounters.count("rule_hits")
@@ -1532,28 +1537,28 @@ class EventServer(ECServerThread):
         except Exception:
             return False
 
-    # Checks if an event matches a rule. Returns either False (no match)
-    # or a pair of matchtype, groups, where matchtype is False for a
-    # normal match and True for a cancelling match and the groups is a tuple
-    # if matched regex groups in either text (normal) or match_ok (cancelling)
-    # match.
     def event_rule_matches(self, rule: Rule, event: Event) -> MatchResult:
+        """
+        Checks if an event matches a rule. Returns either MatchFailure (no match)
+        or a MatchSuccess with a pair of matchtype, groups, where matchtype is False for a
+        normal match and True for a cancelling match and the groups is a tuple
+        if matched regex groups in either text (normal) or match_ok (cancelling)
+        match.
+        """
         self._perfcounters.count("rule_tries")
         with self._lock_configuration:
             result = self._rule_matcher.event_rule_matches_non_inverted(rule, event)
             if rule.get("invert_matching"):
                 if isinstance(result, MatchFailure):
                     result = MatchSuccess(cancelling=False, match_groups={})
-                    if self._config["debug_rules"]:
-                        self._logger.info(
-                            "  Rule would not match, but due to inverted matching does."
-                        )
+                    self._rule_matcher._log_rule_matching(
+                        "Rule would not match, but due to inverted matching does."
+                    )
                 else:
-                    result = MatchFailure()
-                    if self._config["debug_rules"]:
-                        self._logger.info(
-                            "  Rule would match, but due to inverted matching does not."
-                        )
+                    result = MatchFailure(
+                        "Rule would match, but due to inverted matching does not."
+                    )
+                    self._rule_matcher._log_rule_matching(result.reason)
             return result
 
     # Rewrite texts and compute other fields in the event
@@ -1922,32 +1927,38 @@ class RuleMatcher:
         self._config = config
         self._time_periods = TimePeriods(logger)
 
-    @property
-    def _debug_rules(self) -> bool:
-        return self._config["debug_rules"]
+    def _log_rule_matching(self, message: str, *args: object, indent: bool = True) -> None:
+        """Check if debug rules is on and log the message as info level"""
+        if self._config["debug_rules"]:
+            self._logger.error(f"  {message}" if indent else message, *args)
 
     def event_rule_matches_non_inverted(self, rule: Rule, event: Event) -> MatchResult:
-        if self._debug_rules:
-            self._logger.info("Trying rule %s/%s...", rule["pack"], rule["id"])
-            self._logger.info("  Text:   %s", event["text"])
-            self._logger.info("  Syslog: %d.%d", event["facility"], event["priority"])
-            self._logger.info("  Host:   %s", event["host"])
+        self._log_rule_matching("Trying rule %s/%s...", rule["pack"], rule["id"], indent=False)
+        self._log_rule_matching("  Text:   %s", event["text"])
+        self._log_rule_matching("  Syslog: %d.%d", event["facility"], event["priority"])
+        self._log_rule_matching("  Host:   %s", event["host"])
 
         # Generic conditions without positive/canceling matches
-        if not self.event_rule_matches_generic(rule, event):
-            return MatchFailure()
+        generic_match_result = self.event_rule_matches_generic(rule, event)
+        if isinstance(generic_match_result, MatchFailure):
+            self._log_rule_matching(generic_match_result.reason)
+            return generic_match_result
 
         # Determine syslog priority
         match_priority = self.event_rule_determine_match_priority(rule, event)
         if match_priority is None:
             # Abort on negative outcome, neither positive nor negative
-            return MatchFailure()
+            result = MatchFailure("The syslog priority does not match")
+            self._log_rule_matching(result.reason)
+            return result
 
         # Determine and cleanup match_groups
         match_groups: MatchGroups = {}
-        if not self.event_rule_determine_match_groups(rule, event, match_groups):
+        match_groups_result = self.event_rule_determine_match_groups(rule, event, match_groups)
+        if isinstance(match_groups_result, MatchFailure):
+            self._log_rule_matching(match_groups_result.reason)
             # Abort on negative outcome, neither positive nor negative
-            return MatchFailure()
+            return match_groups_result
 
         return self._check_match_outcome(rule, match_groups, match_priority)
 
@@ -1971,8 +1982,7 @@ class RuleMatcher:
             )
             and ("cancel_priority" not in rule or match_priority.has_canceling_match)
         ):
-            if self._debug_rules:
-                self._logger.info("  found canceling event")
+            self._log_rule_matching("  found canceling event")
             return MatchSuccess(cancelling=True, match_groups=match_groups)
 
         # Check create-event
@@ -1981,41 +1991,39 @@ class RuleMatcher:
             and match_groups.get("match_groups_syslog_application", ()) is not False
             and match_priority.has_match
         ):
-            if self._debug_rules:
-                self._logger.info("  found new event")
+            self._log_rule_matching("  found new event")
             return MatchSuccess(cancelling=False, match_groups=match_groups)
 
         # Looks like there was no match, output some additional info
         # Reasons preventing create-event
-        if self._debug_rules:
-            if match_groups["match_groups_message"] is False:
-                self._logger.info("  did not create event, because of wrong message")
+        if match_groups["match_groups_message"] is False:
+            self._log_rule_matching("did not create event, because of wrong message")
+        if "match_application" in rule and match_groups["match_groups_syslog_application"] is False:
+            self._log_rule_matching("did not create event, because of wrong syslog application")
+        if "match_priority" in rule and not match_priority.has_match:
+            self._log_rule_matching("did not create event, because of wrong syslog priority")
+
+        if has_canceling_condition:
+            # Reasons preventing cancel-event
+            if "match_ok" in rule and match_groups.get("match_groups_message_ok", False) is False:
+                self._log_rule_matching("did not cancel event, because of wrong message")
             if (
-                "match_application" in rule
-                and match_groups["match_groups_syslog_application"] is False
+                "cancel_application" in rule
+                and match_groups.get("match_groups_syslog_application_ok", False) is False
             ):
-                self._logger.info("  did not create event, because of wrong syslog application")
-            if "match_priority" in rule and not match_priority.has_match:
-                self._logger.info("  did not create event, because of wrong syslog priority")
+                self._log_rule_matching("did not cancel event, because of wrong syslog application")
+            if "cancel_priority" in rule and not match_priority.has_canceling_match:
+                self._log_rule_matching("did not cancel event, because of wrong cancel priority")
 
-            if has_canceling_condition:
-                # Reasons preventing cancel-event
-                if (
-                    "match_ok" in rule
-                    and match_groups.get("match_groups_message_ok", False) is False
-                ):
-                    self._logger.info("  did not cancel event, because of wrong message")
-                if (
-                    "cancel_application" in rule
-                    and match_groups.get("match_groups_syslog_application_ok", False) is False
-                ):
-                    self._logger.info("  did not cancel event, because of wrong syslog application")
-                if "cancel_priority" in rule and not match_priority.has_canceling_match:
-                    self._logger.info("  did not cancel event, because of wrong cancel priority")
+        # TODO: create a better reason
+        return MatchFailure("Unknown")
 
-        return MatchFailure()
+    def event_rule_matches_generic(self, rule: Rule, event: Event) -> MatchResult:
+        """
+        Return match result against a list of generic match functions.
 
-    def event_rule_matches_generic(self, rule: Rule, event: Event) -> bool:
+        Such as site, host, ip, facility, service_level and timeperiod.
+        """
         generic_match_functions = [
             self.event_rule_matches_site,
             self.event_rule_matches_host,
@@ -2025,7 +2033,13 @@ class RuleMatcher:
             self.event_rule_matches_timeperiod,
         ]
 
-        return all(match_function(rule, event) for match_function in generic_match_functions)
+        for match_function in generic_match_functions:
+            result = match_function(rule, event)
+            if isinstance(result, MatchFailure):
+                self._log_rule_matching(result.reason)
+                return result
+
+        return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_determine_match_priority(self, rule: Rule, event: Event) -> MatchPriority | None:
         p = event["priority"]
@@ -2046,81 +2060,75 @@ class RuleMatcher:
             return None
         return MatchPriority(has_match=has_match, has_canceling_match=has_canceling_match)
 
-    def event_rule_matches_site(self, rule: Rule, event: Event) -> bool:
-        return "match_site" not in rule or omd_site() in rule["match_site"]
+    def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:
+        if "match_site" not in rule or omd_site() in rule["match_site"]:
+            return MatchSuccess(cancelling=False, match_groups={})
+        return MatchFailure("The site does not match.")
 
-    def event_rule_matches_host(self, rule: Rule, event: Event) -> bool:
+    def event_rule_matches_host(self, rule: Rule, event: Event) -> MatchResult:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
-            if self._debug_rules:
-                self._logger.info(
-                    "  did not match because of wrong host '%s' (need '%s')",
-                    event["host"],
-                    format_pattern(rule.get("match_host")),
-                )
-            return False
-        return True
+            return MatchFailure(
+                f"Did not match because of wrong host {event['host']!r} (need {format_pattern(rule.get('match_host'))!r})"
+            )
 
-    def event_rule_matches_ip(self, rule: Rule, event: Event) -> bool:
+        return MatchSuccess(cancelling=False, match_groups={})
+
+    def event_rule_matches_ip(self, rule: Rule, event: Event) -> MatchResult:
         if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
-            if self._debug_rules:
-                self._logger.info(
-                    "  did not match because of wrong source IP address '%s' (need '%s')",
-                    event["ipaddress"],
-                    rule.get("match_ipaddress"),
-                )
-            return False
-        return True
+            return MatchFailure(
+                f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
+            )
 
-    def event_rule_matches_facility(self, rule: Rule, event: Event) -> bool:
+        return MatchSuccess(cancelling=False, match_groups={})
+
+    def event_rule_matches_facility(self, rule: Rule, event: Event) -> MatchResult:
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
-            if self._debug_rules:
-                self._logger.info("  did not match because of wrong syslog facility")
-            return False
-        return True
+            return MatchFailure("Did not match because of wrong syslog facility")
 
-    def event_rule_matches_service_level(self, rule: Rule, event: Event) -> bool:
+        return MatchSuccess(cancelling=False, match_groups={})
+
+    def event_rule_matches_service_level(self, rule: Rule, event: Event) -> MatchResult:
         if "match_sl" in rule:
             sl_from, sl_to = rule["match_sl"]
             if sl_from > sl_to:
                 sl_to, sl_from = sl_from, sl_to
             p = event.get("sl", 0)
             if p < sl_from or p > sl_to:
-                if self._debug_rules:
-                    self._logger.info(
-                        "  did not match because of wrong service level %d (need %d..%d)",
-                        p,
-                        sl_from,
-                        sl_to,
-                    )
-                return False
-        return True
-
-    def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> bool:
-        if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
-            if self._debug_rules:
-                self._logger.info(
-                    "  did not match, because time period %s is not active",
-                    rule["match_timeperiod"],
+                return MatchFailure(
+                    f"Did not match because of wrong service level {p} (need {sl_from}..{sl_to})"
                 )
-            return False
-        return True
+
+        return MatchSuccess(cancelling=False, match_groups={})
+
+    def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
+        if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
+            return MatchFailure(
+                f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
+            )
+        return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_determine_match_groups(
         self, rule: Rule, event: Event, match_groups: MatchGroups
-    ) -> bool:
+    ) -> MatchResult:
+
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
         ]
-        return all(
-            match_function(rule, event, match_groups) for match_function in match_group_functions
-        )
+
+        for match_function in match_group_functions:
+            result = match_function(rule, event, match_groups)
+            if isinstance(result, MatchFailure):
+                self._log_rule_matching(result.reason)
+                return result
+
+        return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_matches_syslog_application(
         self, rule: Rule, event: Event, match_groups: MatchGroups
-    ) -> bool:
+    ) -> MatchResult:
         if "match_application" not in rule and "cancel_application" not in rule:
-            return True
+            return MatchSuccess(cancelling=False, match_groups={})
 
         # Syslog application
         if "match_application" in rule:
@@ -2139,15 +2147,13 @@ class RuleMatcher:
             match_groups.get("match_groups_syslog_application", False) is False
             and match_groups.get("match_groups_syslog_application_ok", False) is False
         ):
-            if self._debug_rules:
-                self._logger.info("  did not match, syslog application does not match")
-            return False
+            return MatchFailure("did not match, syslog application does not match")
 
-        return True
+        return MatchSuccess(cancelling=False, match_groups={})
 
     def event_rule_matches_message(
         self, rule: Rule, event: Event, match_groups: MatchGroups
-    ) -> bool:
+    ) -> MatchResult:
         # Message matching, this condition is always active
         match_groups["match_groups_message"] = match(
             rule.get("match"), event["text"], complete=False
@@ -2164,11 +2170,9 @@ class RuleMatcher:
             match_groups["match_groups_message"] is False
             and match_groups.get("match_groups_message_ok", False) is False
         ):
-            if self._debug_rules:
-                self._logger.info("  did not match, message text does not match")
-            return False
+            return MatchFailure("did not match, message text does not match")
 
-        return True
+        return MatchSuccess(cancelling=False, match_groups={})
 
 
 # .

@@ -92,6 +92,7 @@ class PostgresBase:
         self.pg_port = instance["pg_port"]
         self.pg_database = instance["pg_database"]
         self.pg_passfile = instance.get("pg_passfile", "")
+        self.pg_version = instance.get("pg_version")
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
@@ -370,16 +371,30 @@ class PostgresWin(PostgresBase):
         # type: () -> str
         """This method returns the system specific psql interface binary as callable string"""
 
+        if self.pg_version is None:
+            # This is a fallback in case the user does not have any instances
+            # configured.
+            return self._default_psql_binary_path()
+
+        return self._psql_path(self.pg_version)
+
+    def _default_psql_binary_path(self):
+        # type: () -> str
+
         # TODO: Make this more clever...
         for pg_version in self._supported_pg_versions:
-            psql_path = "C:\\Program Files\\PostgreSQL\\{pg_version}\\bin\\{psql_binary_name}.exe".format(
-                pg_version=pg_version,
-                psql_binary_name=self.psql_binary_name,
-            )
+            psql_path = self._psql_path(pg_version)
             if os.path.isfile(psql_path):
                 return psql_path
 
         raise IOError("Could not determine %s bin and its path." % self.psql_binary_name)
+
+    def _psql_path(self, pg_version):
+        # type: (str) -> str
+        return "C:\\Program Files\\PostgreSQL\\{pg_version}\\bin\\{psql_binary_name}.exe".format(
+            pg_version=pg_version.split(".", 1)[0],  # Only the major version is relevant
+            psql_binary_name=self.psql_binary_name,
+        )
 
     def get_psql_binary_dirname(self):
         # type: () -> str
@@ -640,6 +655,23 @@ class PostgresLinux(PostgresBase):
 
     def get_psql_binary_path(self):
         # type: () -> str
+
+        if self.pg_version is None:
+            # This is a fallback in case the user does not have any instances
+            # configured. However, it may not work (see next comment).
+            return self._default_psql_binary_path()
+
+        # If possible, do not use the binary from PATH directly. This could
+        # lead to a generic binary that is not able to find the correct UNIX
+        # socket. See SUP-11729.
+        return "/{pg_database}/{pg_version}/bin/{psql_binary_name}".format(
+            pg_database=self.pg_database,
+            pg_version=self.pg_version,
+            psql_binary_name=self.psql_binary_name,
+        )
+
+    def _default_psql_binary_path(self):
+        # type: () -> str
         try:
             proc = subprocess.Popen(["which", self.psql_binary_name], stdout=subprocess.PIPE)
             out = ensure_str(proc.communicate()[0])
@@ -896,15 +928,18 @@ def open_env_file(file_to_open):
 def parse_env_file(env_file):
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
+    pg_version = None
     for line in open_env_file(env_file):
         line = line.strip()
         if 'PGDATABASE=' in line:
             pg_database = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
-        if 'PGPORT=' in line:
+        elif 'PGPORT=' in line:
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif 'PGVERSION=' in line:
+            pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port
+    return pg_database, pg_port, pg_version
 
 
 def parse_postgres_cfg(postgres_cfg):
@@ -934,13 +969,14 @@ def parse_postgres_cfg(postgres_cfg):
         if key == "INSTANCE":
             env_file, pg_user, pg_passfile = value.split(conf_sep)
             env_file = env_file.strip()
-            pg_database, pg_port = parse_env_file(env_file)
+            pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append({
                 "name": env_file.split(os.sep)[-1].split(".")[0],
                 "pg_user": pg_user.strip(),
                 "pg_passfile": pg_passfile.strip(),
                 "pg_database": pg_database,
                 "pg_port": pg_port,
+                "pg_version": pg_version
             })
     if dbuser is None:
         raise ValueError("DBUSER must be specified in postgres.cfg")

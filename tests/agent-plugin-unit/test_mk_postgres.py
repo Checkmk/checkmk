@@ -55,14 +55,20 @@ def is_linux(monkeypatch, mk_postgres):
     monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', False)
     monkeypatch.setattr(mk_postgres, 'IS_LINUX', True)
     monkeypatch.setattr(mk_postgres, "get_postgres_user_linux", fake_get_postgres_user_linux)
-    monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
+    monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: [
+        "export PGPORT=5432",
+        "export PGVERSION=12.3",
+    ])
 
 
 @pytest.fixture()
 def is_windows(monkeypatch, mk_postgres):
     monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', True)
     monkeypatch.setattr(mk_postgres, 'IS_LINUX', False)
-    monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
+    monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: [
+        "export PGPORT=5432",
+        "export PGVERSION=12.1",
+    ])
 
 
 def test_postgres_linux_config_without_instance(mk_postgres, monkeypatch, is_linux):
@@ -156,11 +162,11 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
         'name': 'mydb',
         'pg_user': 'myuser',
         'pg_passfile': '/home/.pgpass',
+        "pg_version": "12.3",
     }
     process_mock = Mock()
     attrs = {
         'communicate.side_effect': [
-            ('/usr/lib/postgres/psql', None),
             ('postgres\ndb1', None),
             ('12.3.6', None),
         ]
@@ -170,8 +176,8 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
     myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
 
     assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
-    assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
-    assert myPostgresOnLinux.psql_binary_dirname == "/usr/lib/postgres"
+    assert myPostgresOnLinux.psql_binary_path == "/mydb/12.3/bin/psql"
+    assert myPostgresOnLinux.psql_binary_dirname == "/mydb/12.3/bin"
     assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
     assert myPostgresOnLinux.get_server_version() == 12.3
     assert myPostgresOnLinux.pg_database == "mydb"
@@ -196,6 +202,7 @@ def test_postgres_factory_windows_with_instance(
         'name': 'mydb',
         'pg_user': 'myuser',
         'pg_passfile': 'c:\\User\\.pgpass',
+        "pg_version": "12.1",
     }
     process_mock = Mock()
     attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1.5', b'ok')]}
@@ -204,7 +211,6 @@ def test_postgres_factory_windows_with_instance(
 
     myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
 
-    mock_isfile.assert_called_with('C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe')
     assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
     assert myPostgresOnWin.psql_binary_path == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
     assert myPostgresOnWin.psql_binary_dirname == "C:\\Program Files\\PostgreSQL\\12\\bin"
@@ -225,6 +231,7 @@ def test_get_instances(mock_Popen, mk_postgres):
         "name": "main",
         "pg_user": "myuser",
         "pg_passfile": "/home/.pgpass",
+        "pg_version": "12.3",
     }
     process_mock = Mock()
     attrs = {

@@ -2021,7 +2021,7 @@ class ActivateChanges(BaseSchema):
         example=False,
     )
     sites = fields.List(
-        gui_fields.SiteField(),
+        gui_fields.SiteField(presence="ignore"),
         description=(
             "The names of the sites on which the configuration shall be activated."
             " An empty list means all sites which have pending changes."

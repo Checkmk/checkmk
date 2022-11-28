@@ -857,11 +857,37 @@ def attributes_field(
 class SiteField(base.String):
     """A field representing a site name."""
 
-    default_error_messages = {"unknown_site": "Unknown site {site!r}"}
+    default_error_messages = {
+        "should_exist": "The site {site!r} should exist but it doesn't.",
+        "should_not_exist": "The site {site!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: typing.Literal[
+            "should_exist", "should_not_exist", "might_not_exist", "ignore"
+        ] = "should_exist",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.presence = presence
 
     def _validate(self, value):
-        if value not in configured_sites().keys():
-            raise self.make_error("unknown_site", site=value)
+        if self.presence == "might_not_exist":
+            return
+
+        if self.presence == "should_exist":
+            if value not in configured_sites().keys():
+                raise self.make_error("should_exist", site=value)
+
+        if self.presence == "should_not_exist":
+            if value in configured_sites().keys():
+                raise self.make_error("should_not_exist", site=value)
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if self.presence == "might_not_exist" and value not in configured_sites().keys():
+            return "Unknown Site: " + value
+        return super()._serialize(value, attr, obj, **kwargs)
 
 
 def customer_field(**kw):

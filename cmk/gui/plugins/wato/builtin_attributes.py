@@ -574,7 +574,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                     title=_("Run as"),
                     help=_(
                         "Execute the network scan in the Check_MK user context of the "
-                        "choosen user. This user needs the permission to add new hosts "
+                        "chosen user. This user needs the permission to add new hosts "
                         "to this folder."
                     ),
                     choices=self._get_all_user_ids,
@@ -987,7 +987,9 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.SiteField(description="The site that should monitor this host.")
+        return gui_fields.SiteField(
+            description="The site that should monitor this host.", presence="might_not_exist"
+        )
 
     def get_tag_groups(self, value):
         # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting

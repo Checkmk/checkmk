@@ -20,7 +20,7 @@ from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -464,7 +464,6 @@ def test_openapi_host_update_after_move(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
 ):
-
     aut_user_auth_wsgi_app.post(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "bar", "parent": "/"}',
@@ -744,7 +743,6 @@ def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]):
 def test_openapi_host_created_timestamp(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
-
     json_data = {
         "folder": "/",
         "host_name": "foobar.com",
@@ -1395,3 +1393,51 @@ def test_openapi_host_with_invalid_snmp_community_option(
         content_type="application/json",
         headers={"Accept": "application/json"},
     )
+
+
+def test_openapi_all_hosts_with_non_existing_site(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_all_hosts_recursively(_cls):
+        return {
+            "foo": CREHost(
+                folder=CREFolder.root_folder(),
+                host_name="foo",
+                attributes={"site": "a_non_existing_site"},
+                cluster_nodes=None,
+            )
+        }
+
+    monkeypatch.setattr(CREFolder, "all_hosts_recursively", mock_all_hosts_recursively)
+
+    aut_user_auth_wsgi_app.get(
+        f"{base}/domain-types/host_config/collections/all",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_openapi_host_with_non_existing_site(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_host(_hostname):
+        return CREHost(
+            folder=CREFolder.root_folder(),
+            host_name="foo",
+            attributes={"site": "a_non_existing_site"},
+            cluster_nodes=None,
+        )
+
+    monkeypatch.setattr(Host, "host", mock_host)
+
+    resp = aut_user_auth_wsgi_app.get(
+        f"{base}/objects/host_config/foo",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"

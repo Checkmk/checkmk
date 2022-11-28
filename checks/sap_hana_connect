@@ -36,7 +36,9 @@ def parse_sap_hana_connect(info):
             if "Driver version" in elem:
                 inst["driver_version"] = elem.split("Driver version")[1].lstrip()
             if "Connect string:" in elem:
-                inst["server_node"] = re.search("SERVERNODE=(.*),SERVERDB", elem).group(1)
+                inst["server_node"] = re.search("SERVERNODE=(.*?),(SERVERDB|UID|PWD)", elem).group(
+                    1
+                )
             if "Select now()" in elem:
                 inst["timestamp"] = re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", elem).group()
 

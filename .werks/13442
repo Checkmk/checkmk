@@ -1,0 +1,17 @@
+Title: sap_hana_connect crashed on missing SERVERDB
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669647973
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+sap_hana_connect crashed with
+
+AttributeError ('NoneType' object has no attribute 'group')
+
+when the connect string did not contain a SERVERDB entry.
+

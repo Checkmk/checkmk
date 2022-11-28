@@ -3,20 +3,48 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <cctype>
 #include <chrono>
 #include <cmath>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "Logger.h"
+#include "OStreamStateSaver.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 
 using namespace std::chrono_literals;
+
+// This class is just a workaround for encoding bugs in googletest where
+// test_details.xml might end up containing invalid XML.
+struct Blob {
+    std::string contents;
+};
+
+std::ostream &operator<<(std::ostream &os, const Blob &blob) {
+    OStreamStateSaver s(os);
+    for (auto ch : blob.contents) {
+        if (std::isprint(ch) != 0) {
+            os << ch;
+        } else {
+            os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
+               << static_cast<unsigned>(static_cast<unsigned char>(ch));
+        }
+    }
+    return os;
+}
+
+bool operator==(const Blob &lhs, const Blob &rhs) {
+    return lhs.contents == rhs.contents;
+}
+
+bool operator!=(const Blob &lhs, const Blob &rhs) { return !(lhs == rhs); }
 
 struct Param {
     OutputFormat format;
@@ -26,16 +54,16 @@ struct Param {
     std::string sublist;
     std::string dict;
     std::string null;
-    std::string blob;
+    Blob blob;
     std::string string;
-
-    friend std::ostream &operator<<(std::ostream &os, const Param &s) {
-        return os << "Param{" << static_cast<int>(s.format) << ", " << s.query
-                  << ", " << s.row << ", " << s.list << ", " << s.sublist
-                  << ", " << s.dict << ", " << s.null << ", " << s.blob << ", "
-                  << s.string << "}";
-    }
 };
+
+std::ostream &operator<<(std::ostream &os, const Param &p) {
+    return os << "Param{" << static_cast<int>(p.format) << ", " << p.query
+              << ", " << p.row << ", " << p.list << ", " << p.sublist << ", "
+              << p.dict << ", " << p.null << ", " << p.blob << ", " << p.string
+              << "}";
+}
 
 class Fixture : public ::testing::TestWithParam<Param> {
     std::ostringstream out_;
@@ -199,7 +227,7 @@ TEST_P(Fixture, Null) {
 TEST_P(Fixture, Blob) {
     auto renderer = make_renderer(GetParam().format);
     renderer->output(std::vector<char>{'p', '\\', '\x0a', '\xff', '\x0e'});
-    EXPECT_EQ(GetParam().blob, result());
+    EXPECT_EQ(GetParam().blob, Blob{result()});
 }
 
 TEST_P(Fixture, String) {
@@ -229,7 +257,7 @@ INSTANTIATE_TEST_SUITE_P(
               .sublist = "1|2",
               .dict = "1|2,3|4",
               .null = "",
-              .blob = "p\\\n\xFF\xE",
+              .blob = {"p\\\n\xFF\xE"},
               .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
         Param{.format = OutputFormat::broken_csv,
               .query = "12",
@@ -238,7 +266,7 @@ INSTANTIATE_TEST_SUITE_P(
               .sublist = "1|2",
               .dict = "1|2,3|4",
               .null = "",
-              .blob = "p\\\n\xFF\xE",
+              .blob = {"p\\\n\xFF\xE"},
               .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
         Param{.format = OutputFormat::json,
               .query = "[1,\n2]\n",
@@ -247,7 +275,7 @@ INSTANTIATE_TEST_SUITE_P(
               .sublist = "[1,2]",
               .dict = "{1:2,3:4}",
               .null = "null",
-              .blob = "\"p\\u005c\\u000a\\u00ff\\u000e\"",
+              .blob = {"\"p\\u005c\\u000a\\u00ff\\u000e\""},
               .string = "\"A small\\u000at\\u03b5st...\\U0001f60b\""},
         Param{.format = OutputFormat::python3,
               .query = "[1,\n2]\n",
@@ -256,5 +284,5 @@ INSTANTIATE_TEST_SUITE_P(
               .sublist = "[1,2]",
               .dict = "{1:2,3:4}",
               .null = "None",
-              .blob = "b\"p\\x5c\\x0a\\xff\\x0e\"",
+              .blob = {"b\"p\\x5c\\x0a\\xff\\x0e\""},
               .string = "u\"A small\\u000at\\u03b5st...\\U0001f60b\""}));

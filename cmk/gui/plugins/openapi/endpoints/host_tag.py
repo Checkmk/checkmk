@@ -260,5 +260,5 @@ def serialize_host_tag_group(details: TaggroupSpec) -> dict[str, Any]:
                 base=constructors.object_href("host_tag_group", details["id"]),
             )
         },
-        extensions={"topic": details["topic"], "tags": details["tags"]},
+        extensions={"topic": details.get("topic", "Tags"), "tags": details["tags"]},
     )

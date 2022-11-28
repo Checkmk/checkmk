@@ -1,0 +1,14 @@
+Title: "Topic" attribute for host tags is now optional in REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1669628439
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+When creating a host tag group using the REST API, it is now optional to specify a topic.
+When reading a host tag group without a specifically set topic, it will be displayed as "Tags".
+This matches the behaviour of the GUI.
+

@@ -1692,7 +1692,6 @@ class InputHostTagGroup(BaseSchema):
         description="A title for the host tag",
     )
     topic = fields.String(
-        required=True,
         example="Data Sources",
         description="Different tags can be grouped in a topic",
     )

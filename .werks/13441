@@ -1,0 +1,12 @@
+Title: Baking agent with encrypted realtime checks
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1669645571
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+Could not bake agents when choosing "Use TLS encryption (Linux)" and enabling
+"Encryption for Realtime Updates".

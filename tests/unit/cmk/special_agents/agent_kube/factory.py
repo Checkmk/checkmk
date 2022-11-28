@@ -8,7 +8,7 @@ from collections.abc import Iterator, Sequence
 from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes import common, performance
+from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -224,6 +224,25 @@ def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Nod
         kubelet_info=node.kubelet_info,
         pods=pods,
     )
+
+
+# Prometheus API
+
+
+class ResponseSuccessFactory(ModelFactory):
+    __model__ = prometheus_api.ResponseSuccess
+
+
+class ResponseErrorFactory(ModelFactory):
+    __model__ = prometheus_api.ResponseError
+
+
+class VectorFactory(ModelFactory):
+    __model__ = prometheus_api.Vector
+
+
+class SampleFactory(ModelFactory):
+    __model__ = prometheus_api.Sample
 
 
 # Cluster related Factories

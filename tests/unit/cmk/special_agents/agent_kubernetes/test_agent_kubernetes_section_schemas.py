@@ -41,7 +41,7 @@ def get_kube_agent_sections(fix_register: FixRegister) -> Mapping[SectionName, A
     return {
         name: section
         for name, section in fix_register.agent_sections.items()
-        if str(name).startswith("kube_")
+        if str(name).startswith("kube_") or name in {SectionName("prometheus_debug_v1")}
     }
 
 

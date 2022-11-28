@@ -50,13 +50,7 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
-from cmk.special_agents.utils_kubernetes import (
-    common,
-    performance,
-    prometheus_api,
-    prometheus_section,
-    query,
-)
+from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -2135,23 +2129,11 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     ],
                     logger=LOGGER,
                 )
-                # TODO: CMK-11387
-                if (
-                    not isinstance(cpu, prometheus_api.ResponseSuccess)
-                    or not isinstance(cpu.data, prometheus_api.Vector)
-                    or not cpu.data.result
-                ):
-                    return 0
-                if (
-                    not isinstance(memory, prometheus_api.ResponseSuccess)
-                    or not isinstance(memory.data, prometheus_api.Vector)
-                    or not memory.data.result
-                ):
-                    return 0
-                prometheus_selectors = prometheus_section.create_selectors(
-                    cpu.data.result,
-                    memory.data.result,
+
+                common.write_sections(
+                    [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
                 )
+                prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
                 pods_to_host = determine_pods_to_host(
                     composed_entities=composed_entities,
                     monitored_objects=arguments.monitored_objects,

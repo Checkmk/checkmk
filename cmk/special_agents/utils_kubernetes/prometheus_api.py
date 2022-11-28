@@ -15,6 +15,7 @@
 import datetime
 import enum
 from collections.abc import Mapping, Sequence
+from json import JSONDecodeError
 from typing import Annotated, Literal, NewType
 
 from pydantic import BaseModel, Field, parse_raw_as, ValidationError
@@ -100,8 +101,10 @@ class ResponseError(ParseModel):
 Response = Annotated[ResponseSuccess | ResponseError, Field(discriminator="status")]
 
 
-def parse_raw_response(response: bytes | str | bytearray) -> Response | ValidationError:
+def parse_raw_response(
+    response: bytes | str | bytearray,
+) -> Response | ValidationError | JSONDecodeError:
     try:
         return parse_raw_as(Response, response)  # type: ignore[arg-type]
-    except ValidationError as e:
+    except (ValidationError, JSONDecodeError) as e:
         return e

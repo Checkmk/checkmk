@@ -12,9 +12,10 @@
 
 import argparse
 import enum
+import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping
-from typing import final, NewType
+from typing import final, NewType, Tuple, Union
 
 import requests
 import urllib3
@@ -25,6 +26,13 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.special_agents.utils_kubernetes.prometheus_api import parse_raw_response, Response
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
+
+HTTPResult = Union[
+    Response,
+    ValidationError,
+    json.JSONDecodeError,
+    requests.exceptions.RequestException,
+]
 
 
 class PrometheusEndpoints(str, enum.Enum):
@@ -48,6 +56,9 @@ class Query(str, enum.Enum):
     sum_container_memory_working_set_bytes = (
         'sum(container_memory_working_set_bytes{container=""}) BY (pod, namespace)'
     )
+
+
+HTTPResponse = Tuple[Query, HTTPResult]
 
 
 @final
@@ -79,6 +90,9 @@ class CollectorSessionConfig(SessionConfig):
 class PrometheusSessionConfig(SessionConfig):
     prometheus_endpoint: str
 
+    def query_url(self) -> str:
+        return self.prometheus_endpoint + PrometheusEndpoints.query
+
 
 def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:
     if not config.usage_verify_cert:
@@ -104,13 +118,13 @@ def send_requests(
     config: PrometheusSessionConfig,
     queries: Iterable[Query],
     logger: logging.Logger,
-) -> Iterator[Response | ValidationError | IOError]:
+) -> Iterator[HTTPResponse]:
     session = create_session(config, logger)
 
     for query in queries:
         yield _send_query_request_get(
             query=query,
-            base_url=config.prometheus_endpoint,
+            query_url=config.query_url(),
             session=session,
             requests_verify=config.usage_verify_cert,
             requests_timeout=config.requests_timeout(),
@@ -120,20 +134,14 @@ def send_requests(
 def _send_query_request_get(
     query: Query,
     session: requests.Session,
-    base_url: str,
+    query_url: str,
     requests_verify: bool,
     requests_timeout: TCPTimeout,
-) -> Response | requests.RequestException | ValidationError:
-    request = requests.Request(
-        "GET",
-        base_url + PrometheusEndpoints.query + f"?query={query}",
-    )
+) -> HTTPResponse:
+    request = requests.Request("GET", query_url + f"?query={query}")
     prepared_request = session.prepare_request(request)
     try:
         response = session.send(prepared_request, verify=requests_verify, timeout=requests_timeout)
-    except requests.RequestException as e:
-        return e
-    try:
-        return parse_raw_response(response.content)
-    except ValidationError as e:
-        return e
+    except requests.exceptions.RequestException as e:
+        return query, e
+    return query, parse_raw_response(response.content)

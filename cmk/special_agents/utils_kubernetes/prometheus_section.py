@@ -2,10 +2,9 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from typing import Iterable, Sequence, Type, TypeVar
 
-from cmk.special_agents.utils_kubernetes import common, prometheus_api
+from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 Self = TypeVar("Self", bound="Measurement")
@@ -41,10 +40,21 @@ def _filter_fully_labeled(samples: Sequence[prometheus_api.Sample]) -> list[prom
     return [sample for sample in samples if {"pod", "namespace"} == set(sample.metric)]
 
 
+def _substitute_if_error(response: query.HTTPResult) -> Sequence[prometheus_api.Sample]:
+    return (
+        response.data.result
+        if isinstance(response, prometheus_api.ResponseSuccess)
+        and isinstance(response.data, prometheus_api.Vector)
+        else []
+    )
+
+
 def create_selectors(
-    cpu_samples: Sequence[prometheus_api.Sample],
-    memory_samples: Sequence[prometheus_api.Sample],
+    cpu_response: query.HTTPResult,
+    memory_response: query.HTTPResult,
 ) -> tuple[common.Selector[CPUMeasurement], common.Selector[MemoryMeasurement]]:
+    cpu_samples = _substitute_if_error(cpu_response)
+    memory_samples = _substitute_if_error(memory_response)
     return (
         common.Selector(
             [CPUMeasurement.from_sample(s) for s in _filter_fully_labeled(cpu_samples)],
@@ -66,4 +76,15 @@ def _aggregate_cpu_metrics(metrics: Iterable[CPUMeasurement]) -> section.Perform
 def _aggregate_memory_metrics(metrics: Iterable[MemoryMeasurement]) -> section.PerformanceUsage:
     return section.PerformanceUsage(
         resource=section.Memory(usage=sum((m.value for m in metrics), start=0.0))
+    )
+
+
+def debug_section(base_url: str, *responses: query.HTTPResponse) -> common.WriteableSection:
+    return common.WriteableSection(
+        piggyback_name="",
+        section_name=common.SectionName("prometheus_debug_v1"),
+        section=section.OpenShiftEndpoint(
+            url=base_url,
+            results=[section.PrometheusResult.from_response(response) for response in responses],
+        ),
     )

@@ -10,7 +10,7 @@ import itertools
 import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Callable, Generic, Iterator, NewType, TypeVar
+from typing import Callable, Generic, Iterable, Iterator, NewType, TypeVar
 
 from pydantic import BaseModel
 
@@ -65,7 +65,7 @@ class WriteableSection:
     section: section.Section
 
 
-def write_sections(items: Iterator[WriteableSection]) -> None:
+def write_sections(items: Iterable[WriteableSection]) -> None:
     def key_function(item: WriteableSection) -> str:
         return item.piggyback_name
 

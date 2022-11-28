@@ -95,7 +95,9 @@ class PostgresBase:
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
-        self.psql, self.bin_path = self.get_psql_and_bin_path()
+        self.psql_binary_name = "psql"
+        self.psql_binary_path = self.get_psql_binary_path()
+        self.psql_binary_dirname = self.get_psql_binary_dirname()
         self.conn_time = ""  # For caching as conn_time and version are in one query
 
     @abc.abstractmethod
@@ -110,7 +112,11 @@ class PostgresBase:
         """This method implements the system specific way to call the psql interface"""
 
     @abc.abstractmethod
-    def get_psql_and_bin_path(self):
+    def get_psql_binary_path(self):
+        """This method returns the system specific psql binary and its path"""
+
+    @abc.abstractmethod
+    def get_psql_binary_dirname(self):
         """This method returns the system specific psql binary and its path"""
 
     @abc.abstractmethod
@@ -243,7 +249,7 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],)
+            ["%s%spg_isready" % (self.psql_binary_dirname, self.sep), "-p", self.pg_port],)
 
         sys.stdout.write("%s\n" % ensure_str(out))
 
@@ -346,11 +352,11 @@ class PostgresWin(PostgresBase):
 
         if mixed_cmd:
             cmd_str = "cmd /c echo %s | cmd /c \"\"%s\" -X %s -A -F\"%s\" -U %s\"" % (
-                sql_cmd, self.psql, extra_args, field_sep, self.db_user)
+                sql_cmd, self.psql_binary_path, extra_args, field_sep, self.db_user)
 
         else:
             cmd_str = "cmd /c \"\"%s\" -X %s -A -F\"%s\" -U %s -c \"%s\"\" " % (
-                self.psql, extra_args, field_sep, self.db_user, sql_cmd)
+                self.psql_binary_path, extra_args, field_sep, self.db_user, sql_cmd)
 
         proc = subprocess.Popen(
             cmd_str,
@@ -360,18 +366,24 @@ class PostgresWin(PostgresBase):
         out = ensure_str(proc.communicate()[0])
         return out.rstrip()
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_binary_path(self):
+        # type: () -> str
         """This method returns the system specific psql interface binary as callable string"""
 
         # TODO: Make this more clever...
-        for pg_ver in self._supported_pg_versions:
-            bin_path = "C:\\Program Files\\PostgreSQL\\%s\\bin" % pg_ver
-            psql_path = "%s\\psql.exe" % bin_path
+        for pg_version in self._supported_pg_versions:
+            psql_path = "C:\\Program Files\\PostgreSQL\\{pg_version}\\bin\\{psql_binary_name}.exe".format(
+                pg_version=pg_version,
+                psql_binary_name=self.psql_binary_name,
+            )
             if os.path.isfile(psql_path):
-                return psql_path, bin_path
+                return psql_path
 
-        raise IOError("Could not determine psql bin and its path.")
+        raise IOError("Could not determine %s bin and its path." % self.psql_binary_name)
+
+    def get_psql_binary_dirname(self):
+        # type: () -> str
+        return self.psql_binary_path.rsplit("\\", 1)[0]
 
     def get_instances(self):
         # type: () -> str
@@ -609,8 +621,8 @@ class PostgresLinux(PostgresBase):
         # see https://www.postgresql.org/docs/9.2/app-psql.html
         if mixed_cmd:
             cmd_to_pipe = subprocess.Popen(["echo", sql_cmd], stdout=subprocess.PIPE)
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql, extra_args,
-                                                     field_sep, "")
+            base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql_binary_path,
+                                                     extra_args, field_sep, "")
 
             receiving_pipe = subprocess.Popen(base_cmd_list,
                                               stdin=cmd_to_pipe.stdout,
@@ -619,22 +631,26 @@ class PostgresLinux(PostgresBase):
             out = ensure_str(receiving_pipe.communicate()[0])
 
         else:
-            base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql, extra_args,
-                                                     field_sep, " -c \"%s\" " % sql_cmd)
+            base_cmd_list[-1] = base_cmd_list[-1] % (self.pg_passfile, self.psql_binary_path,
+                                                     extra_args, field_sep, " -c \"%s\" " % sql_cmd)
             proc = subprocess.Popen(base_cmd_list, env=self.my_env, stdout=subprocess.PIPE)
             out = ensure_str(proc.communicate()[0])
 
         return out.rstrip()
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_binary_path(self):
+        # type: () -> str
         try:
-            proc = subprocess.Popen(["which", "psql"], stdout=subprocess.PIPE)
+            proc = subprocess.Popen(["which", self.psql_binary_name], stdout=subprocess.PIPE)
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
-            raise RuntimeError("Could not determine psql executable.")
+            raise RuntimeError("Could not determine %s executable." % self.psql_binary_name)
 
-        return out.split("/")[-1].rstrip(), out.replace("psql", "").rstrip()
+        return out.strip()
+
+    def get_psql_binary_dirname(self):
+        # type: () -> str
+        return self.psql_binary_path.rsplit("/", 1)[0]
 
     def get_instances(self):
         # type: () -> str

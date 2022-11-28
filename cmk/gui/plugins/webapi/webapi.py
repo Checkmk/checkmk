@@ -205,26 +205,22 @@ class APICallHosts(APICallCollection):
                 "required_keys": ["hostname", "folder"],
                 "required_permissions": ["wato.manage_hosts", "wato.edit_hosts"],
                 "optional_keys": ["attributes", "nodes", "create_folders"],
-                "required_input_format": "python",
             },
             "add_hosts": {
                 "handler": self._add_hosts,
                 "required_permissions": ["wato.manage_hosts", "wato.edit_hosts"],
                 "required_keys": ["hosts"],
-                "required_input_format": "python",
             },
             "edit_host": {
                 "handler": self._edit,
                 "required_keys": ["hostname"],
                 "required_permissions": ["wato.edit_hosts"],
                 "optional_keys": ["unset_attributes", "attributes", "nodes"],
-                "required_input_format": "python",
             },
             "edit_hosts": {
                 "handler": self._edit_hosts,
                 "required_permissions": ["wato.edit_hosts"],
                 "required_keys": ["hosts"],
-                "required_input_format": "python",
             },
             "get_host": {
                 "handler": self._get,
@@ -232,7 +228,6 @@ class APICallHosts(APICallCollection):
                 "optional_keys": ["effective_attributes"],
                 "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
-                "required_output_format": "python",
             },
             "delete_host": {
                 "handler": self._delete,
@@ -249,7 +244,6 @@ class APICallHosts(APICallCollection):
                 "optional_keys": ["effective_attributes"],
                 "required_permissions": ["wato.see_all_folders"],
                 "locking": False,
-                "required_output_format": "python",
             },
         }
 

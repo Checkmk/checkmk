@@ -256,13 +256,11 @@ class CMKWebSession:
                  create_folders=True,
                  expect_error=False,
                  verify_set_attributes=True):
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         if attributes is None:
             attributes = {}
 
-        result = self._api_request("webapi.py?action=add_host&request_format=python", {
-            "request": pformat({
+        result = self._api_request("webapi.py?action=add_host", {
+            "request": json.dumps({
                 "hostname": hostname,
                 "folder": folder,
                 "attributes": attributes or {},
@@ -287,8 +285,6 @@ class CMKWebSession:
 
     # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
     def add_hosts(self, create_hosts):
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         hosts = [{
             "hostname": hostname,
             "folder": folder,
@@ -296,8 +292,8 @@ class CMKWebSession:
             "create_folders": True,
         } for hostname, folder, attributes in create_hosts]
 
-        result = self._api_request("webapi.py?action=add_hosts&request_format=python", {
-            "request": pformat({
+        result = self._api_request("webapi.py?action=add_hosts", {
+            "request": json.dumps({
                 "hosts": hosts,
             }),
         })
@@ -310,8 +306,6 @@ class CMKWebSession:
             assert hostname in hosts
 
     def edit_host(self, hostname, attributes=None, unset_attributes=None, cluster_nodes=None):
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         if attributes is None:
             attributes = {}
 
@@ -319,8 +313,8 @@ class CMKWebSession:
             unset_attributes = []
 
         result = self._api_request(
-            "webapi.py?action=edit_host&request_format=python", {
-                "request": pformat({
+            "webapi.py?action=edit_host", {
+                "request": json.dumps({
                     "hostname": hostname,
                     "unset_attributes": unset_attributes,
                     "attributes": attributes,
@@ -340,16 +334,14 @@ class CMKWebSession:
         assert host["attributes"] == attributes
 
     def edit_hosts(self, edit_hosts):
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         hosts = [{
             "hostname": hostname,
             "attributes": attributes,
             "unset_attributes": unset_attributes,
         } for hostname, attributes, unset_attributes in edit_hosts]
 
-        result = self._api_request("webapi.py?action=edit_hosts&request_format=python", {
-            "request": pformat({
+        result = self._api_request("webapi.py?action=edit_hosts", {
+            "request": json.dumps({
                 "hosts": hosts,
             }),
         })
@@ -369,14 +361,13 @@ class CMKWebSession:
                 assert unset not in host["attributes"]
 
     def get_host(self, hostname, effective_attributes=False):
-
-        result = self._api_request("webapi.py?action=get_host&output_format=python", {
-            "request": json.dumps({
-                "hostname": hostname,
-                "effective_attributes": effective_attributes,
-            }),
-        },
-                                   output_format="python")
+        result = self._api_request(
+            "webapi.py?action=get_host", {
+                "request": json.dumps({
+                    "hostname": hostname,
+                    "effective_attributes": effective_attributes,
+                }),
+            })
 
         assert isinstance(result, dict)
         assert "hostname" in result
@@ -386,15 +377,12 @@ class CMKWebSession:
         return result
 
     def host_exists(self, hostname):
-        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
-
         try:
-            result = self._api_request("webapi.py?action=get_host&request_format=python", {
-                "request": pformat({
+            result = self._api_request("webapi.py?action=get_host", {
+                "request": json.dumps({
                     "hostname": hostname,
                 }),
-            },
-                                       output_format="python")
+            })
         except AssertionError as e:
             if "No such host" in "%s" % e:
                 return False
@@ -513,12 +501,11 @@ class CMKWebSession:
         assert result is None
 
     def get_all_hosts(self, effective_attributes=False):
-        result = self._api_request("webapi.py?action=get_all_hosts&output_format=python", {
+        result = self._api_request("webapi.py?action=get_all_hosts", {
             "request": json.dumps({
                 "effective_attributes": effective_attributes,
             }),
-        },
-                                   output_format="python")
+        })
 
         assert isinstance(result, dict)
         return result

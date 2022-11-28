@@ -1011,13 +1011,18 @@ class SiteField(base.String):
 
     def __init__(
         self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "should_exist",
+        presence: Literal[
+            "should_exist", "should_not_exist", "might_not_exist", "ignore"
+        ] = "should_exist",
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.presence = presence
 
     def _validate(self, value):
+        if self.presence == "might_not_exist":
+            return
+
         if self.presence == "should_exist":
             if value not in configured_sites().keys():
                 raise self.make_error("should_exist", site=value)
@@ -1025,6 +1030,11 @@ class SiteField(base.String):
         if self.presence == "should_not_exist":
             if value in configured_sites().keys():
                 raise self.make_error("should_not_exist", site=value)
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if self.presence == "might_not_exist" and value not in configured_sites().keys():
+            return "Unknown Site: " + value
+        return super()._serialize(value, attr, obj, **kwargs)
 
 
 def customer_field(**kw):

@@ -1,0 +1,17 @@
+Title: Fix combined graphs in reports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1669636766
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+Since werk #14295 in version 2.1.0p14, some combined graphs showed an exception
+like "Cannot render graph: host, service description or regex not found in
+context".
+
+A workaround was, to edit the content element and set the missing context
+filter. Unfortunately, if you used host or service groups as filter, this
+workaround didn't work.

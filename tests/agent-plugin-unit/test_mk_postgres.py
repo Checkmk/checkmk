@@ -126,8 +126,8 @@ class TestLinux:
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
-        assert myPostgresOnLinux.psql == "psql"
-        assert myPostgresOnLinux.bin_path == "/usr/lib/postgres/"
+        assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
+        assert myPostgresOnLinux.psql_binary_dirname == "/usr/lib/postgres"
         assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
         assert myPostgresOnLinux.get_server_version() == 12.3
         assert myPostgresOnLinux.pg_database == "postgres"
@@ -159,8 +159,8 @@ class TestLinux:
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
-        assert myPostgresOnLinux.psql == "psql"
-        assert myPostgresOnLinux.bin_path == "/usr/lib/postgres/"
+        assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
+        assert myPostgresOnLinux.psql_binary_dirname == "/usr/lib/postgres"
         assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
         assert myPostgresOnLinux.get_server_version() == 12.3
         assert myPostgresOnLinux.pg_database == "mydb"
@@ -281,8 +281,10 @@ class TestWindows:
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
-        assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
-        assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"
+        assert (
+            myPostgresOnWin.psql_binary_path == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
+        )
+        assert myPostgresOnWin.psql_binary_dirname == "C:\\Program Files\\PostgreSQL\\12\\bin"
         assert myPostgresOnWin.get_databases() == ["postgres", "db1"]
         assert myPostgresOnWin.get_server_version() == 12.1
         assert myPostgresOnWin.pg_database == "postgres"
@@ -316,8 +318,10 @@ class TestWindows:
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
-        assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
-        assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"
+        assert (
+            myPostgresOnWin.psql_binary_path == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
+        )
+        assert myPostgresOnWin.psql_binary_dirname == "C:\\Program Files\\PostgreSQL\\12\\bin"
         assert myPostgresOnWin.get_databases() == ["postgres", "db1"]
         assert myPostgresOnWin.get_server_version() == 12.1
         assert myPostgresOnWin.pg_database == "mydb"

@@ -285,4 +285,4 @@ INSTANTIATE_TEST_SUITE_P(
               .dict = "{1:2,3:4}",
               .null = "None",
               .blob = {"b\"p\\x5c\\x0a\\xff\\x0e\""},
-              .string = "u\"A small\\u000at\\u03b5st...\\U0001f60b\""}));
+              .string = "\"A small\\u000at\\u03b5st...\\U0001f60b\""}));

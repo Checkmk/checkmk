@@ -142,7 +142,6 @@ liblivestatusneb_a_SOURCES = \
         RendererBrokenCSV.cc \
         RendererCSV.cc \
         RendererJSON.cc \
-        RendererPython.cc \
         RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \

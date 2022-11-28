@@ -449,7 +449,7 @@ const std::map<std::string, OutputFormat> formats{
     {"CSV", OutputFormat::csv},
     {"csv", OutputFormat::broken_csv},
     {"json", OutputFormat::json},
-    {"python", OutputFormat::python},
+    {"python", OutputFormat::python3},  // just an alias, deprecate?
     {"python3", OutputFormat::python3}};
 }  // namespace
 

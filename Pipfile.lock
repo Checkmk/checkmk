@@ -3291,11 +3291,11 @@
         },
         "pkginfo": {
             "hashes": [
-                "sha256:848865108ec99d4901b2f7e84058b6e7660aae8ae10164e015a6dcf5b242a594",
-                "sha256:a84da4318dd86f870a9447a8c98340aa06216bfc6f2b7bdc4b8766984ae1867c"
+                "sha256:4955f1c299e374ccb918dd895c0328d67599bad836dfda2b4639148a113dafec",
+                "sha256:8eb655f8d7fcc568c68f172507f5879a85a30c88ab944263b38dbe704044dfa8"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'",
-            "version": "==1.8.3"
+            "markers": "python_version >= '3.6'",
+            "version": "==1.9.1"
         },
         "platformdirs": {
             "hashes": [

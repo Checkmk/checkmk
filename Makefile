@@ -46,6 +46,10 @@ FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
 
+CMAKE_FORMAT       := cmake-format
+CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/_deps/*')
+
+
 WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
@@ -521,6 +525,12 @@ format-c:
 
 test-format-c:
 	@$(call clang-format-with,-Werror --dry-run)
+
+format-cmake:
+	$(CMAKE_FORMAT) -i $(CMAKE_TXT_FILES)
+
+test-format-cmake:
+	$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
 
 format-python: format-python-isort format-python-black
 

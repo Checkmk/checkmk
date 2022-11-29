@@ -9,110 +9,107 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfNetworkPorts, ListOfStrings, Migrate
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfNetworkPorts, ListOfStrings
 
 
-def _parameter_valuespec_sshd_config() -> Migrate:
-    return Migrate(
-        migrate=lambda p: {k.lower(): v for k, v in p.items()},
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "permitrootlogin",
-                    DropdownChoice(
-                        title=_("Permit root login"),
-                        choices=[
-                            ("yes", _("yes")),
-                            ("key-based", _("without-password/prohibit-password (Key based)")),
-                            ("forced-commands-only", _("forced-commands-only")),
-                            ("no", _("no")),
-                        ],
-                        default_value="key-based",
-                    ),
+def _parameter_valuespec_sshd_config() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "PermitRootLogin",
+                DropdownChoice(
+                    title=_("Permit root login"),
+                    choices=[
+                        ("yes", _("yes")),
+                        ("key-based", _("without-password/prohibit-password (Key based)")),
+                        ("forced-commands-only", _("forced-commands-only")),
+                        ("no", _("no")),
+                    ],
+                    default_value="key-based",
                 ),
-                (
-                    "protocol",
-                    DropdownChoice(
-                        title=_("Allowed protocols"),
-                        choices=[
-                            ("1", _("Version 1")),
-                            ("2", _("Version 2")),
-                            ("1,2", _("Version 1 and 2")),
-                        ],
-                        default_value="2",
-                    ),
+            ),
+            (
+                "Protocol",
+                DropdownChoice(
+                    title=_("Allowed protocols"),
+                    choices=[
+                        ("1", _("Version 1")),
+                        ("2", _("Version 2")),
+                        ("1,2", _("Version 1 and 2")),
+                    ],
+                    default_value="2",
                 ),
-                ("port", ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22])),
-                (
-                    "passwordauthentication",
-                    DropdownChoice(
-                        title=_("Allow password authentication"),
-                        help=_("Specifies whether password authentication is allowed"),
-                        choices=[
-                            ("yes", _("Yes")),
-                            ("no", _("No")),
-                        ],
-                        default_value="no",
-                    ),
+            ),
+            ("Port", ListOfNetworkPorts(title=_("Allowed Ports"), default_value=[22])),
+            (
+                "PasswordAuthentication",
+                DropdownChoice(
+                    title=_("Allow password authentication"),
+                    help=_("Specifies whether password authentication is allowed"),
+                    choices=[
+                        ("yes", _("Yes")),
+                        ("no", _("No")),
+                    ],
+                    default_value="no",
                 ),
-                (
-                    "permitemptypasswords",
-                    DropdownChoice(
-                        title=_("Permit empty passwords"),
-                        help=_(
-                            "If password authentication is used this option "
-                            "specifies wheter the server allows login to accounts "
-                            "with empty passwords"
-                        ),
-                        choices=[
-                            ("yes", _("Yes")),
-                            ("no", _("No")),
-                        ],
-                        default_value="no",
+            ),
+            (
+                "PermitEmptyPasswords",
+                DropdownChoice(
+                    title=_("Permit empty passwords"),
+                    help=_(
+                        "If password authentication is used this option "
+                        "specifies wheter the server allows login to accounts "
+                        "with empty passwords"
                     ),
+                    choices=[
+                        ("yes", _("Yes")),
+                        ("no", _("No")),
+                    ],
+                    default_value="no",
                 ),
-                (
-                    "challengeresponseauthentication",
-                    DropdownChoice(
-                        title=_("Allow challenge-response authentication"),
-                        choices=[
-                            ("yes", _("Yes")),
-                            ("no", _("No")),
-                        ],
-                        default_value="no",
-                    ),
+            ),
+            (
+                "ChallengeResponseAuthentication",
+                DropdownChoice(
+                    title=_("Allow challenge-response authentication"),
+                    choices=[
+                        ("yes", _("Yes")),
+                        ("no", _("No")),
+                    ],
+                    default_value="no",
                 ),
-                (
-                    "x11forwarding",
-                    DropdownChoice(
-                        title=_("Permit X11 forwarding"),
-                        choices=[
-                            ("yes", _("Yes")),
-                            ("no", _("No")),
-                        ],
-                        default_value="no",
-                    ),
+            ),
+            (
+                "X11Forwarding",
+                DropdownChoice(
+                    title=_("Permit X11 forwarding"),
+                    choices=[
+                        ("yes", _("Yes")),
+                        ("no", _("No")),
+                    ],
+                    default_value="no",
                 ),
-                (
-                    "usepam",
-                    DropdownChoice(
-                        title=_("Use pluggable authentication module"),
-                        choices=[
-                            ("yes", _("Yes")),
-                            ("no", _("No")),
-                        ],
-                        default_value="no",
-                    ),
+            ),
+            (
+                "UsePAM",
+                DropdownChoice(
+                    title=_("Use pluggable authentication module"),
+                    choices=[
+                        ("yes", _("Yes")),
+                        ("no", _("No")),
+                    ],
+                    default_value="no",
                 ),
-                (
-                    "ciphers",
-                    ListOfStrings(
-                        title=_("Allowed Ciphers"),
-                        orientation="horizontal",
-                    ),
+            ),
+            (
+                "Ciphers",
+                ListOfStrings(
+                    title=_("Allowed Ciphers"),
+                    orientation="horizontal",
                 ),
-            ],
-        ),
+            ),
+        ],
     )
 
 

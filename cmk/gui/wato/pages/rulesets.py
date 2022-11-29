@@ -888,22 +888,22 @@ class ModeEditRuleset(WatoMode):
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Setup"),
-                            entries=list(self._page_menu_entries_related()),
-                        ),
-                    ],
-                ),
-                PageMenuDropdown(
                     name="rules",
                     title=_("Rules"),
                     topics=[
                         PageMenuTopic(
                             title=_("Add rule"),
                             entries=list(self._page_menu_entries_rules()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
                         ),
                     ],
                 ),

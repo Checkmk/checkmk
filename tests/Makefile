@@ -353,7 +353,7 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--map enterprise:cee managed:cme plus:cpe \
+		--threshold 11 \
 		--packages cmk enterprise managed plus \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \

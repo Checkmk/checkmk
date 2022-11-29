@@ -5,8 +5,6 @@
 from tests.testlib.playwright.helpers import expect, PPage
 
 _backup_passphrase = "cmk"
-_n_tries = 10
-_retry_timeout = 10000  # ms
 
 
 def _go_to_backups_page(logged_in_page: PPage) -> None:

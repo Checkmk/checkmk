@@ -18,3 +18,7 @@ patch()
 
 load("//packages/redis:redis_http.bzl", "redis")
 redis()
+
+load("//packages/openssl:openssl_http.bzl", "openssl")
+openssl()
+

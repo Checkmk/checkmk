@@ -50,27 +50,23 @@ target_compile_options(
          -gdwarf-4
          -std=c++17)
 
-execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse --show-toplevel
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    RESULT_VARIABLE res
-    OUTPUT_VARIABLE abs_top_dir
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-message("Abs top dir: ${abs_top_dir}")
-
 find_package(PythonInterp)
-find_program(iwyu_tool_path NAMES iwyu_tool.py PATHS ${abs_top_dir}/scripts)
-message("iwyu_tool_path: ${iwyu_tool_path} in ${abs_top_dir}/scripts")
+find_program(
+  iwyu_tool_path
+  NAMES iwyu_tool.py
+  PATHS ${root_repo_dir}/scripts)
+message("iwyu_tool_path: ${iwyu_tool_path} in ${root_repo_dir}/scripts")
 
-if (iwyu_tool_path AND PYTHONINTERP_FOUND)
-  add_custom_target(iwyu
-    COMMAND "${PYTHON_EXECUTABLE}" "${iwyu_tool_path}" -j4 --output-format=clang -p "${CMAKE_BINARY_DIR}" -- ${IWYU_EXTRA_ARGS} -Xiwyu --mapping_file=${abs_top_dir}/livestatus/iwyu-mappings/check_mk.imp
+if(iwyu_tool_path AND PYTHONINTERP_FOUND)
+  add_custom_target(
+    iwyu
+    COMMAND
+      "${PYTHON_EXECUTABLE}" "${iwyu_tool_path}" -j4 --output-format=clang -p
+      "${CMAKE_BINARY_DIR}" -- ${IWYU_EXTRA_ARGS} -Xiwyu
+      --mapping_file=${root_repo_dir}/livestatus/iwyu-mappings/check_mk.imp
     COMMENT "Running include-what-you-use tool"
-    VERBATIM
-  )
+    VERBATIM)
 endif()
-
 
 # Black Magic for IDE:
 source_group(

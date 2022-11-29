@@ -2431,44 +2431,6 @@ class HostConfig:
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
-    def snmp_fetch_interval(self, section_name: SectionName) -> int | None:
-        """Return the fetch interval of SNMP sections in seconds
-
-        This has been added to reduce the fetch interval of single SNMP sections
-        to be executed less frequently than the "Check_MK" service is executed.
-        """
-        section = agent_based_register.get_section_plugin(section_name)
-        if not isinstance(section, SNMPSectionPlugin):
-            return None  # no values at all for non snmp section
-
-        # Previous to 1.5 "match" could be a check name (including subchecks) instead of
-        # only main check names -> section names. This has been cleaned up, but we still
-        # need to be compatible. Strip of the sub check part of "match".
-        for match, minutes in self._config_cache.host_extra_conf(
-            self.hostname,
-            snmp_check_interval,
-        ):
-            if match is None or match.split(".")[0] == str(section_name):
-                return minutes * 60  # use first match
-
-        return None
-
-    def disabled_snmp_sections(self) -> set[SectionName]:
-        """Return a set of disabled snmp sections"""
-        rules = self._config_cache.host_extra_conf(self.hostname, snmp_exclude_sections)
-        merged_section_settings = {"if64adm": True}
-        for rule in reversed(rules):
-            for section in rule.get("sections_enabled", ()):
-                merged_section_settings[section] = False
-            for section in rule.get("sections_disabled", ()):
-                merged_section_settings[section] = True
-
-        return {
-            SectionName(name)
-            for name, is_disabled in merged_section_settings.items()
-            if is_disabled
-        }
-
     @property
     def agent_port(self) -> int:
         ports = self._config_cache.host_extra_conf(self.hostname, agent_ports)
@@ -2761,8 +2723,6 @@ def lookup_ip_address(
 #   +----------------------------------------------------------------------+
 
 
-# TODO: Shouldn't we find a better place for the *_of_service() methods?
-# Wouldn't it be better to make them part of HostConfig?
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
@@ -2784,6 +2744,8 @@ class ConfigCache:
         self._hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
         self._contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
         self._explicit_check_command: dict[HostName, HostCheckCommand] = {}
+        self._snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
+        self._disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2837,6 +2799,8 @@ class ConfigCache:
         self._hostgroups.clear()
         self._contactgroups.clear()
         self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -2946,6 +2910,8 @@ class ConfigCache:
         self._hostgroups.clear()
         self._contactgroups.clear()
         self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3317,6 +3283,53 @@ class ConfigCache:
         if ConfigCache.is_no_ip_host(host_name):
             return "ok"
         return default_host_check_command
+
+    def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
+        """Return the fetch interval of SNMP sections in seconds
+
+        This has been added to reduce the fetch interval of single SNMP sections
+        to be executed less frequently than the "Check_MK" service is executed.
+        """
+
+        def snmp_fetch_interval_impl() -> int | None:
+            section = agent_based_register.get_section_plugin(section_name)
+            if not isinstance(section, SNMPSectionPlugin):
+                return None  # no values at all for non snmp section
+
+            # Previous to 1.5 "match" could be a check name (including subchecks) instead of
+            # only main check names -> section names. This has been cleaned up, but we still
+            # need to be compatible. Strip of the sub check part of "match".
+            for match, minutes in self.host_extra_conf(
+                host_name,
+                snmp_check_interval,
+            ):
+                if match is None or match.split(".")[0] == str(section_name):
+                    return minutes * 60  # use first match
+
+            return None
+
+        return self._snmp_fetch_interval.setdefault(
+            (host_name, section_name), snmp_fetch_interval_impl()
+        )
+
+    def disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
+        def disabled_snmp_sections_impl() -> frozenset[SectionName]:
+            """Return a set of disabled snmp sections"""
+            rules = self.host_extra_conf(host_name, snmp_exclude_sections)
+            merged_section_settings = {"if64adm": True}
+            for rule in reversed(rules):
+                for section in rule.get("sections_enabled", ()):
+                    merged_section_settings[section] = False
+                for section in rule.get("sections_disabled", ()):
+                    merged_section_settings[section] = True
+
+            return frozenset(
+                SectionName(name)
+                for name, is_disabled in merged_section_settings.items()
+                if is_disabled
+            )
+
+        return self._disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

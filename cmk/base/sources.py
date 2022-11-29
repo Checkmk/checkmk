@@ -46,7 +46,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache
 
 __all__ = [
     "do_fetch",
@@ -150,9 +150,10 @@ def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(hostname)
     return SNMPParserConfig(
-        check_intervals=make_check_intervals(hostname, host_config, selected_sections=NO_SELECTION),
+        check_intervals=make_check_intervals(
+            config_cache, hostname, selected_sections=NO_SELECTION
+        ),
         keep_outdated=FileCacheGlobals.keep_outdated,
     )
 
@@ -185,20 +186,20 @@ def make_plugin_store() -> SNMPPluginStore:
 
 
 def make_check_intervals(
+    config_cache: ConfigCache,
     host_name: HostName,
-    host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
 ) -> Mapping[SectionName, int | None]:
     return {
-        section_name: host_config.snmp_fetch_interval(section_name)
+        section_name: config_cache.snmp_fetch_interval(host_name, section_name)
         for section_name in _make_checking_sections(host_name, selected_sections=selected_sections)
     }
 
 
 def make_sections(
+    config_cache: ConfigCache,
     host_name: HostName,
-    host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
 ) -> dict[SectionName, SectionMeta]:
@@ -207,13 +208,13 @@ def make_sections(
         return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
 
     checking_sections = _make_checking_sections(host_name, selected_sections=selected_sections)
-    disabled_sections = host_config.disabled_snmp_sections()
+    disabled_sections = config_cache.disabled_snmp_sections(host_name)
     return {
         name: SectionMeta(
             checking=name in checking_sections,
             disabled=name in disabled_sections,
             redetect=name in checking_sections and needs_redetection(name),
-            fetch_interval=host_config.snmp_fetch_interval(name),
+            fetch_interval=config_cache.snmp_fetch_interval(host_name, name),
         )
         for name in (checking_sections | disabled_sections)
     }
@@ -378,8 +379,8 @@ class _Builder:
             source,
             SNMPFetcher(
                 sections=make_sections(
+                    self.config_cache,
                     self.host_name,
-                    self.host_config,
                     selected_sections=self.selected_sections,
                 ),
                 on_error=self.on_scan_error,
@@ -434,7 +435,9 @@ class _Builder:
                 source,
                 SNMPFetcher(
                     sections=make_sections(
-                        self.host_name, self.host_config, selected_sections=self.selected_sections
+                        self.config_cache,
+                        self.host_name,
+                        selected_sections=self.selected_sections,
                     ),
                     on_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,

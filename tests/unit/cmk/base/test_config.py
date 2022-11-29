@@ -1514,7 +1514,7 @@ def test_config_cache_snmp_credentials_of_version(
         ("testhost2", "snmp_uptime", 4),
     ],
 )
-def test_host_config_snmp_check_interval(
+def test_snmp_check_interval(
     monkeypatch: MonkeyPatch, hostname_str: str, section_name: str, result: int | None
 ) -> None:
     hostname = HostName(hostname_str)
@@ -1529,10 +1529,9 @@ def test_host_config_snmp_check_interval(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).snmp_fetch_interval(
-        SectionName(section_name)
-    ) == (60 * result if result else None)
+    assert ts.apply(monkeypatch).snmp_fetch_interval(hostname, SectionName(section_name)) == (
+        60 * result if result else None
+    )
 
 
 def test_http_proxies() -> None:

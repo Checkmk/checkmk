@@ -58,8 +58,6 @@ public:
     struct Line {
         std::string data;
         std::chrono::steady_clock::time_point tp;
-        int max_age{0};
-        bool add_age{false};
     };
 
     enum class LineState { absent, ready, old };
@@ -71,10 +69,10 @@ public:
     MrpeCache &operator=(const MrpeCache &) = delete;
     MrpeCache &operator=(MrpeCache &&) = delete;
 
-    void createLine(std::string_view key, int max_age, bool add_age);
+    void createLine(std::string_view key);
     bool updateLine(std::string_view key, std::string_view data);
 
-    std::tuple<std::string, LineState> getLineData(std::string_view key);
+    std::tuple<std::string, LineState> getLineData(std::string_view key, int max_age);
 
 private:
     std::unordered_map<std::string, Line> cache_;

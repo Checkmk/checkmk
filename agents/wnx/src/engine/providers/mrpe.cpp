@@ -361,15 +361,14 @@ std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
     }
 
     const auto &[cached_result, cached_state] =
-        cache.getLineData(entry.description_);
+        cache.getLineData(entry.description_, entry.caching_->max_age);
 
     switch (cached_state) {
         case MrpeCache::LineState::ready: {
             return cached_result;
         }
         case MrpeCache::LineState::absent: {
-            cache.createLine(entry.description_, entry.caching_->max_age,
-                             entry.caching_->add_age);
+            cache.createLine(entry.description_);
         }
             [[fallthrough]];
         case MrpeCache::LineState::old: {
@@ -410,11 +409,9 @@ std::string MrpeProvider::makeBody() {
     return out;
 }
 
-void MrpeCache::createLine(std::string_view key, int max_age, bool add_age) {
+void MrpeCache::createLine(std::string_view key) {
     try {
         Line l;
-        l.add_age = add_age;
-        l.max_age = max_age;
         cache_[std::string(key)] = l;
     } catch (const std::exception &e) {
         XLOG::l("exception '{}' in mrpe cache", e.what());
@@ -440,7 +437,7 @@ bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
 }
 
 std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
-    std::string_view key) {
+    std::string_view key, int max_age) {
     try {
         auto k = std::string(key);
         auto it = cache_.find(k);
@@ -457,7 +454,7 @@ std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
         auto time_pos = std::chrono::steady_clock::now();
         auto diff = duration_cast<std::chrono::seconds>(time_pos - line.tp);
         auto status =
-            diff.count() > line.max_age ? LineState::old : LineState::ready;
+            diff.count() > max_age ? LineState::old : LineState::ready;
 
         return {line.data, status};
     } catch (const std::exception &e) {

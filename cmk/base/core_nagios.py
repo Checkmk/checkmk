@@ -198,12 +198,10 @@ def _create_nagios_config_host(
 def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
 ) -> ObjectSpec:
-    host_config = config_cache.make_host_config(hostname)
-
     ip = attrs["address"]
 
     if config_cache.is_cluster(hostname):
-        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname, host_config)
+        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname)
         attrs.update(core_config.get_cluster_attributes(config_cache, hostname, nodes))
 
     #   _
@@ -254,6 +252,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         cfg.custom_commands_to_define.add(command_name)
         return command
 
+    host_config = config_cache.make_host_config(hostname)
     # Host check command might differ from default
     command = core_config.host_check_command(
         config_cache,

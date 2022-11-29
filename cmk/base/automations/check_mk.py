@@ -91,7 +91,7 @@ import cmk.base.sources as sources
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -1290,7 +1290,6 @@ class AutomationDiagHost(Automation):
 
             ipaddress = resolved_address
 
-        host_config = config_cache.make_host_config(hostname)
         try:
             if test == "ping":
                 return automation_results.DiagHostResult(
@@ -1301,7 +1300,6 @@ class AutomationDiagHost(Automation):
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
                         hostname,
-                        host_config,
                         ipaddress,
                         agent_port=agent_port,
                         cmd=cmd,
@@ -1322,7 +1320,7 @@ class AutomationDiagHost(Automation):
                 return automation_results.DiagHostResult(
                     *self._execute_snmp(
                         test,
-                        host_config,
+                        config_cache.make_snmp_config(hostname, ipaddress),
                         hostname,
                         ipaddress,
                         snmp_community,
@@ -1366,7 +1364,6 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         host_name: HostName,
-        host_config: HostConfig,
         ipaddress: HostAddress,
         agent_port: int,
         cmd: str,
@@ -1389,7 +1386,7 @@ class AutomationDiagHost(Automation):
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd, host_name, host_config, ipaddress
+                        cmd, host_name, ipaddress
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
@@ -1446,12 +1443,12 @@ class AutomationDiagHost(Automation):
             raise
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(  # pylint: disable=too-many-branches
+    def _execute_snmp(  # type: ignore[no-untyped-def]  # pylint: disable=too-many-branches
         self,
-        test,
-        host_config,
-        hostname,
-        ipaddress,
+        test: str,
+        snmp_config: SNMPHostConfig,
+        hostname: HostName,
+        ipaddress: HostAddress,
         snmp_community,
         snmp_timeout,
         snmp_retries,
@@ -1461,9 +1458,7 @@ class AutomationDiagHost(Automation):
         snmpv3_security_password,
         snmpv3_privacy_proto,
         snmpv3_privacy_password,
-    ):
-        snmp_config = host_config.snmp_config(ipaddress)
-
+    ) -> tuple[int, str]:
         # SNMPv3 tuples
         # ('noAuthNoPriv', "username")
         # ('authNoPriv', 'md5', '11111111', '22222222')

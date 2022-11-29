@@ -139,7 +139,6 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
-    # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if config_cache.is_cluster(hostname):
         parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:

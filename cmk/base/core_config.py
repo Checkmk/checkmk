@@ -896,17 +896,13 @@ def get_cluster_attributes(
     return attrs
 
 
-def get_cluster_nodes_for_config(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    host_config: HostConfig,
-) -> list[HostName]:
+def get_cluster_nodes_for_config(config_cache: ConfigCache, host_name: HostName) -> list[HostName]:
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         return []
 
     _verify_cluster_address_family(host_name, nodes, config_cache)
-    _verify_cluster_datasource(host_name, nodes, config_cache, host_config)
+    _verify_cluster_datasource(host_name, nodes, config_cache)
     nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
@@ -949,9 +945,8 @@ def _verify_cluster_datasource(
     host_name: HostName,
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
-    host_config: HostConfig,
 ) -> None:
-    cluster_tg = host_config.tag_groups
+    cluster_tg = config_cache.make_host_config(host_name).tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
     for nodename in nodes:
@@ -1040,14 +1035,13 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
 def translate_ds_program_source_cmdline(
     template: str,
     host_name: HostName,
-    host_config: HostConfig,
     ipaddress: HostAddress | None,
 ) -> str:
-    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
+    def _translate_host_macros(cmd: str) -> str:
         config_cache = config.get_config_cache()
         attrs = get_host_attributes(host_name, config_cache)
         if config_cache.is_cluster(host_name):
-            parents_list = get_cluster_nodes_for_config(config_cache, host_name, host_config)
+            parents_list = get_cluster_nodes_for_config(config_cache, host_name)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
             attrs.update(
                 get_cluster_attributes(
@@ -1074,7 +1068,4 @@ def translate_ds_program_source_cmdline(
             },
         )
 
-    return _translate_host_macros(
-        _translate_legacy_macros(template, host_name, ipaddress),
-        host_config,
-    )
+    return _translate_host_macros(_translate_legacy_macros(template, host_name, ipaddress))

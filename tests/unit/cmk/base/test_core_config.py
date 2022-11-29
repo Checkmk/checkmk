@@ -392,13 +392,10 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
     hostname = HostName("testhost")
     ts = Scenario()
     ts.add_host(hostname)
-    config_cache = ts.apply(monkeypatch)
+    ts.apply(monkeypatch)
 
     assert core_config.translate_ds_program_source_cmdline(
-        template,
-        hostname,
-        config_cache.make_host_config(hostname),
-        ipaddress,
+        template, hostname, ipaddress
     ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 
 

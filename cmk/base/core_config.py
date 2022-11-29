@@ -174,7 +174,6 @@ def _cluster_ping_command(
 
 def host_check_command(
     config_cache: ConfigCache,
-    host_config: HostConfig,
     host_name: HostName,
     ip: HostAddress,
     is_clust: bool,
@@ -182,6 +181,7 @@ def host_check_command(
     host_check_via_service_status: Callable,
     host_check_via_custom_check: Callable,
 ) -> CoreCommand | None:
+    host_config = config_cache.make_host_config(host_name)
     value = _get_host_check_command(host_config, default_host_check_command)
 
     if value == "smart":

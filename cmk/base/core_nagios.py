@@ -45,7 +45,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
+from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
 
 ObjectSpec = dict[str, Any]
@@ -252,11 +252,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         cfg.custom_commands_to_define.add(command_name)
         return command
 
-    host_config = config_cache.make_host_config(hostname)
     # Host check command might differ from default
     command = core_config.host_check_command(
         config_cache,
-        host_config,
         hostname,
         ip,
         config_cache.is_cluster(hostname),
@@ -267,13 +265,13 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     if command:
         host_spec["check_command"] = command
 
-    hostgroups = host_config.hostgroups
+    hostgroups = config_cache.hostgroups(hostname)
     if config.define_hostgroups or hostgroups == [config.default_host_group]:
         cfg.hostgroups_to_define.update(hostgroups)
     host_spec["hostgroups"] = ",".join(hostgroups)
 
     # Contact groups
-    contactgroups = host_config.contactgroups
+    contactgroups = config_cache.contactgroups(hostname)
     if contactgroups:
         host_spec["contact_groups"] = ",".join(contactgroups)
         cfg.contactgroups_to_define.update(contactgroups)
@@ -1108,13 +1106,11 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     *,
     verify_site_python: bool = True,
 ) -> str | None:
-    host_config = config_cache.make_host_config(hostname)
-
     (
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(config_cache, hostname, host_config)
+    ) = _get_needed_plugin_names(config_cache, hostname)
 
     if config_cache.is_cluster(hostname):
         nodes = config_cache.nodes_of(hostname)
@@ -1122,12 +1118,11 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             raise TypeError()
 
         for node in nodes:
-            node_config = config_cache.make_host_config(node)
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(config_cache, node, node_config)
+            ) = _get_needed_plugin_names(config_cache, node)
             needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
@@ -1328,13 +1323,13 @@ if '-d' in sys.argv:
 
 
 def _get_needed_plugin_names(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    host_config: HostConfig,
+    config_cache: ConfigCache, host_name: HostName
 ) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 
-    needed_legacy_check_plugin_names = {f"agent_{name}" for name, _p in host_config.special_agents}
+    needed_legacy_check_plugin_names = {
+        f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
+    }
 
     # Collect the needed check plugin names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:

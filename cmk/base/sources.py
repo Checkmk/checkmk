@@ -606,7 +606,7 @@ class _Builder:
         def make_id(agentname: str) -> str:
             return f"special_{agentname}"
 
-        for agentname, params in self.host_config.special_agents:
+        for agentname, params in self.config_cache.special_agents(self.host_name):
             source = SourceInfo(
                 self.host_name,
                 self.ipaddress,

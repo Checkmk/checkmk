@@ -153,14 +153,14 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         tty.yellow
         + "Host groups:            "
         + tty.normal
-        + ", ".join(host_config.hostgroups)
+        + ", ".join(config_cache.hostgroups(hostname))
         + "\n"
     )
     out.output(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
-        + ", ".join(host_config.contactgroups)
+        + ", ".join(config_cache.contactgroups(hostname))
         + "\n"
     )
 
@@ -170,7 +170,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             hostname,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+            missing_sys_description=config_cache.in_binary_hostlist(
                 hostname, config.snmp_without_sys_descr
             ),
             file_cache_max_age=file_cache.MaxAge.none(),

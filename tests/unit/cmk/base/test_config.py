@@ -777,9 +777,7 @@ def test_host_config_datasource_program(
         ),
     ],
 )
-def test_host_config_special_agents(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: list[tuple]
-) -> None:
+def test_special_agents(monkeypatch: MonkeyPatch, hostname_str: str, result: list[tuple]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -800,8 +798,7 @@ def test_host_config_special_agents(
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).special_agents == result
+    assert ts.apply(monkeypatch).special_agents(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1292,9 +1289,7 @@ def test_host_config_static_checks(
         ("testhost2", ["dingdong"]),
     ],
 )
-def test_host_config_hostgroups(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
-) -> None:
+def test_hostgroups(monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -1307,8 +1302,7 @@ def test_host_config_hostgroups(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).hostgroups == result
+    assert ts.apply(monkeypatch).hostgroups(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -1324,9 +1318,7 @@ def test_host_config_hostgroups(
         ("testhost3", ["abc", "dingdong", "haha"]),
     ],
 )
-def test_host_config_contactgroups(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
-) -> None:
+def test_contactgroups(monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -1353,8 +1345,7 @@ def test_host_config_contactgroups(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.make_host_config(hostname).contactgroups) == sorted(result)
+    assert sorted(ts.apply(monkeypatch).contactgroups(hostname)) == sorted(result)
 
 
 @pytest.mark.parametrize(

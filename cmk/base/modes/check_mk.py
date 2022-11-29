@@ -250,8 +250,7 @@ def _list_all_hosts(hostgroups: list[HostgroupName], options: dict) -> list[Host
 
     hostlist = []
     for hn in hostnames:
-        host_config = config_cache.make_host_config(hn)
-        for hg in host_config.hostgroups:
+        for hg in config_cache.hostgroups(hn):
             if hg in hostgroups:
                 hostlist.append(hn)
                 break

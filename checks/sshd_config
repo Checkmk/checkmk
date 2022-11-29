@@ -4,88 +4,124 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example output from agent:
-# <<<sshd_config>>>
-# Port 22
-# Port 12345
-# Protocol 2,1
-# ChallengeResponseAuthentication no
-# UsePAM yes
-# X11Forwarding yes
-# PrintMotd no
-# AcceptEnv LANG LC_*
-# Subsystem sftp /usr/lib/openssh/sftp-server
+from collections.abc import Callable, Iterator, Mapping
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+_Section = Mapping[str, object]
 
 
-def parse_sshd_config(info):
-    identity = lambda x: x
+# Unlike the other options, port can be defined multiple times
+def _parse_ports(string_table: StringTable) -> list[int]:
+    # lower to stay compatible with older plugin versions
+    return [int(line[1]) for line in string_table if line[0].lower() == "port"]
 
-    def map_permit_root_login(value):
-        if value in ["prohibit-password", "without-password"]:
-            return "key-based"
-        return value
 
-    relevant_options = {
-        # option                             parse function
-        "Protocol": lambda x: ",".join(sorted(x.split(","))),
-        # Port can be defined multiple times in sshd_config.
-        # Therefore we use a list of ints.
-        "Port": lambda x: [int(x)],
-        "PermitRootLogin": map_permit_root_login,
-        "PasswordAuthentication": identity,
-        "PermitEmptyPasswords": identity,
-        "ChallengeResponseAuthentication": identity,
-        "X11Forwarding": identity,
-        "UsePAM": identity,
-        "Ciphers": lambda x: sorted(x.split(",")),
+def _identity(x: object) -> object:
+    return x
+
+
+def _map_permit_root_login(value: str) -> str:
+    if value in ["prohibit-password", "without-password"]:
+        return "key-based"
+    return value
+
+
+_RELEVANT_SINGULAR_OPTIONS_PARSER: Mapping[str, Callable[[str], object]] = {
+    "protocol": lambda x: ",".join(sorted(x.split(","))),
+    "permitrootlogin": _map_permit_root_login,
+    "passwordauthentication": _identity,
+    "permitemptypasswords": _identity,
+    "challengeresponseauthentication": _identity,
+    "kbdinteractiveauthentication": _identity,
+    "x11forwarding": _identity,
+    "usepam": _identity,
+    "ciphers": lambda x: sorted(x.split(",")),
+}
+
+
+def parse_sshd_config(string_table: StringTable) -> _Section:
+    ports = _parse_ports(string_table)
+    return {
+        **({"port": ports} if ports else {}),
+        **{
+            key: _RELEVANT_SINGULAR_OPTIONS_PARSER[key](" ".join(line[1:]))
+            for line in string_table
+            # lower to stay compatible with older plugin versions
+            if (key := line[0].lower()) in _RELEVANT_SINGULAR_OPTIONS_PARSER
+        },
     }
 
-    parsed = {}
-    for line in info:
-        if len(line) < 2:
-            continue
 
-        key, val = line[0], " ".join(line[1:])
-        if key not in relevant_options:
-            continue
-
-        parse_func = relevant_options[key]
-        val = parse_func(val)
-
-        if not key in parsed:
-            parsed[key] = val
-        else:
-            parsed[key] += val
-
-    return parsed
+def inventory_sshd_config(section: _Section) -> Iterator:
+    yield (None, {})
 
 
-def inventory_sshd_config(parsed):
-    return [(None, {})]
+_OPTIONS_TO_HUMAN_READABLE = {
+    "protocol": "Protocols",
+    "port": "Ports",
+    "permitrootlogin": "Permit root login",
+    "passwordauthentication": "Allow password authentication",
+    "permitemptypasswords": "Permit empty passwords",
+    "kbdinteractiveauthentication": "Allow keyboard-interactive authentication",
+    "challengeresponseauthentication": "Allow challenge-response authentication",
+    "x11forwarding": "Permit X11 forwarding",
+    "usepam": "Use pluggable authentication module",
+    "ciphers": "Ciphers",
+}
+
+_MISSING_OPTIONS_TO_HUMAN_READABLE = {
+    "kbdinteractiveauthentication": "Allow keyboard-interactive/challenge-response authentication",
+    "challengeresponseauthentication": "Allow keyboard-interactive/challenge-response authentication",
+}
 
 
-def check_sshd_config(_no_item, params, parsed):
-    root_login = params.get("PermitRootLogin", "")
-    if root_login == "without-password":
-        params["PermitRootLogin"] = "key-based"
+def _value_to_human_readable(v: object) -> str:
+    return ", ".join(map(str, v)) if isinstance(v, list) else str(v)
 
-    # type_ is needed because info contains unicode and params str
-    convert = lambda x, type_: (x if isinstance(x, type_) else ", ".join(map(type_, x)))
 
-    for option, val in parsed.items():
+def _adjust_params(*, params: Mapping[str, object], section: _Section) -> Mapping[str, object]:
+    if params.get("permitrootlogin") == "without-password":
+        params = {
+            **params,
+            "permitrootlogin": "key-based",
+        }
+
+    previous_sshd_config_variable_names = {
+        "kbdinteractiveauthentication": "challengeresponseauthentication"
+    }
+
+    return {
+        (
+            deprecated_name
+            if (
+                (deprecated_name := previous_sshd_config_variable_names.get(option))
+                and deprecated_name in section
+            )
+            else option
+        ): value
+        for option, value in params.items()
+    }
+
+
+def check_sshd_config(_no_item: None, params: Mapping[str, object], section: _Section) -> Iterator:
+    params = _adjust_params(params=params, section=section)
+
+    for option, val in section.items():
         state = 0
-        infotext = "%s: %s" % (option, convert(val, str))
+        infotext = "%s: %s" % (_OPTIONS_TO_HUMAN_READABLE[option], _value_to_human_readable(val))
 
-        expected = params.get(option)
-        if expected and expected != val:
+        if (expected := params.get(option)) and expected != val:
             state = 2
-            infotext += " (expected %s)" % convert(expected, str)
+            infotext += " (expected %s)" % _value_to_human_readable(expected)
 
         yield state, infotext
 
-    for option in params:
-        if not option in parsed:
-            yield 2, "%s: not present in sshd_config" % option
+    for option in sorted(set(params) - set(section)):
+        yield 2, "%s: not present in SSH daemon configuration" % _MISSING_OPTIONS_TO_HUMAN_READABLE.get(
+            option,
+            _OPTIONS_TO_HUMAN_READABLE[option],
+        )
 
 
 check_info["sshd_config"] = {

@@ -11,7 +11,13 @@
 # shellcheck disable=SC2034
 CMK_VERSION="2.1.0p18"
 
-if command -v sshd >/dev/null 2>&1; then
+SSHD_CONFIG=/etc/ssh/sshd_config
+
+drop_comments_whitespace() {
+    sed -e '/^#/d' -e '/^\s*$/d' -e 's/\s\+/ /g' "$1"
+}
+
+if [ -f $SSHD_CONFIG ]; then
     echo "<<<sshd_config>>>"
-    sshd -T
+    drop_comments_whitespace $SSHD_CONFIG
 fi

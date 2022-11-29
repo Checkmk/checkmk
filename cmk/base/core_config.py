@@ -42,13 +42,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 from cmk.base.check_utils import ConfiguredService
-from cmk.base.config import (
-    ConfigCache,
-    HostCheckCommand,
-    HostConfig,
-    ObjectAttributes,
-    TaggroupIDToTagID,
-)
+from cmk.base.config import ConfigCache, ObjectAttributes, TaggroupIDToTagID
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ObjectMacros = dict[str, AnyStr]
@@ -150,17 +144,6 @@ def duplicate_service_warning(
 #                                  Tuple[Literal["custom"], TextInput]])
 
 
-def _get_host_check_command(
-    host_config: HostConfig, default_host_check_command: str
-) -> HostCheckCommand:
-    explicit_command = host_config.explicit_check_command
-    if explicit_command is not None:
-        return explicit_command
-    if ConfigCache.is_no_ip_host(host_config.hostname):
-        return "ok"
-    return default_host_check_command
-
-
 def _cluster_ping_command(
     config_cache: ConfigCache, host_name: HostName, ip: HostAddress
 ) -> CoreCommand | None:
@@ -181,8 +164,7 @@ def host_check_command(
     host_check_via_service_status: Callable,
     host_check_via_custom_check: Callable,
 ) -> CoreCommand | None:
-    host_config = config_cache.make_host_config(host_name)
-    value = _get_host_check_command(host_config, default_host_check_command)
+    value = config_cache.host_check_command(host_name, default_host_check_command)
 
     if value == "smart":
         if is_clust:

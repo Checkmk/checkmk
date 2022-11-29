@@ -2575,17 +2575,6 @@ class HostConfig:
         return entries[0]
 
     @property
-    def explicit_check_command(self) -> HostCheckCommand:
-        entries = self._config_cache.host_extra_conf(self.hostname, host_check_commands)
-        if not entries:
-            return None
-
-        if entries[0] == "smart" and monitoring_core != "cmc":
-            return "ping"  # avoid problems when switching back to nagios core
-
-        return entries[0]
-
-    @property
     def ping_levels(self) -> PingLevels:
         levels: PingLevels = {}
 
@@ -2794,6 +2783,7 @@ class ConfigCache:
         self._special_agents: dict[HostName, Sequence[tuple[str, dict]]] = {}
         self._hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
         self._contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
+        self._explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2846,6 +2836,7 @@ class ConfigCache:
         self._special_agents.clear()
         self._hostgroups.clear()
         self._contactgroups.clear()
+        self._explicit_check_command.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -2954,6 +2945,7 @@ class ConfigCache:
         self._special_agents.clear()
         self._hostgroups.clear()
         self._contactgroups.clear()
+        self._explicit_check_command.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3302,6 +3294,29 @@ class ConfigCache:
             return list(set(cgrs))
 
         return self._contactgroups.setdefault(host_name, contactgroups_impl())
+
+    def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
+        def explicit_check_command_impl() -> HostCheckCommand:
+            entries = self.host_extra_conf(host_name, host_check_commands)
+            if not entries:
+                return None
+
+            if entries[0] == "smart" and monitoring_core != "cmc":
+                return "ping"  # avoid problems when switching back to nagios core
+
+            return entries[0]
+
+        return self._explicit_check_command.setdefault(host_name, explicit_check_command_impl())
+
+    def host_check_command(
+        self, host_name: HostName, default_host_check_command: HostCheckCommand
+    ) -> HostCheckCommand:
+        explicit_command = self.explicit_check_command(host_name)
+        if explicit_command is not None:
+            return explicit_command
+        if ConfigCache.is_no_ip_host(host_name):
+            return "ok"
+        return default_host_check_command
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

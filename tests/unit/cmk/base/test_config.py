@@ -842,7 +842,7 @@ def test_host_config_only_from(
         ("testhost3", "nagios", "ping"),
     ],
 )
-def test_host_config_explicit_check_command(
+def test_explicit_check_command(
     monkeypatch: MonkeyPatch, hostname_str: str, core_name: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
@@ -866,8 +866,7 @@ def test_host_config_explicit_check_command(
             },
         ],
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).explicit_check_command == result
+    assert ts.apply(monkeypatch).explicit_check_command(hostname) == result
 
 
 @pytest.mark.parametrize(

@@ -52,6 +52,7 @@ def active_check_checking(
         partial(
             execute_checkmk_checks,
             hostname=hostname,
+            config_cache=config_cache,
             fetched=fetched,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,

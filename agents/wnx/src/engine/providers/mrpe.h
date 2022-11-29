@@ -73,7 +73,6 @@ public:
 
     void createLine(std::string_view key, int max_age, bool add_age);
     bool updateLine(std::string_view key, std::string_view data);
-    bool eraseLine(std::string_view key);
 
     std::tuple<std::string, LineState> getLineData(std::string_view key);
 

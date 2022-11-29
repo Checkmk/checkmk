@@ -439,22 +439,6 @@ bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
     return false;
 }
 
-// returns true if erased
-bool MrpeCache::eraseLine(std::string_view key) {
-    try {
-        auto k = std::string(key);
-        if (!cache_.contains(k)) {
-            return false;
-        }
-        cache_.erase(k);
-        return true;
-    } catch (const std::exception &e) {
-        XLOG::l("exception '{}' in mrpe update cache", e.what());
-    }
-
-    return false;
-}
-
 std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
     std::string_view key) {
     try {

@@ -7,11 +7,13 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostKey, HostName, ParsedSectionName, ServiceState
+from cmk.utils.type_defs import ExitSpec, HostKey, HostName, ParsedSectionName, result, ServiceState
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.summarize import summarize
+from cmk.core_helpers.type_defs import SourceInfo
 
-from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
+from .data_provider import ParsedSectionContent, ParsedSectionsBroker
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
 
@@ -67,7 +69,7 @@ def get_section_cluster_kwargs(
 
 def summarize_host_sections(
     *,
-    source_results: SourceResults,
+    source_results: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]],
     include_ok_results: bool = False,
     override_non_ok_state: ServiceState | None = None,
     exit_spec_cb: Callable[[HostName, str], ExitSpec],

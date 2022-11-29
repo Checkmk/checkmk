@@ -60,7 +60,6 @@ from cmk.base.agent_based.data_provider import (
     make_broker,
     parse_messages,
     ParsedSectionsBroker,
-    SourceResults,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import (
@@ -80,7 +79,7 @@ __all__ = [
 
 class FetchedDataResult(NamedTuple):
     parsed_sections_broker: ParsedSectionsBroker
-    source_results: SourceResults
+    source_results: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
     processing_failed: bool
     no_data_or_files: bool

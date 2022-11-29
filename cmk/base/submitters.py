@@ -11,7 +11,7 @@ import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import Final, IO, Literal, NamedTuple, Union
+from typing import Final, IO, Literal, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -21,7 +21,7 @@ from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
 
-_CacheInfo = Union[tuple[int, int] | None]
+_CacheInfo = tuple[int, int]
 
 
 def _sanitize_perftext(
@@ -113,7 +113,7 @@ def get_submitter(
 class Submittee(NamedTuple):
     name: ServiceName
     result: ServiceCheckResult
-    cache_info: _CacheInfo
+    cache_info: _CacheInfo | None
     pending: bool
 
 
@@ -121,7 +121,7 @@ class FormattedSubmittee(NamedTuple):
     name: ServiceName
     state: ServiceState
     details: ServiceDetails
-    cache_info: _CacheInfo
+    cache_info: _CacheInfo | None
 
 
 class Submitter(abc.ABC):

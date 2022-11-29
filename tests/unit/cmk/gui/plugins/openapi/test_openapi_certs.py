@@ -35,16 +35,6 @@ ZHJCNN5QlnOgbFF8RyRqVMkPp80jto0pbrCbeLZuFx4PxCmd17X4kQdMdecGXxv0
 
 # CSR which was signed by a different public key than the one it contains
 _CSR_INVALID = """-----BEGIN CERTIFICATE REQUEST-----
-MIHHMHMCAQAwDjEMMAoGA1UEAwwDZm9vMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB
-APCnnjq2IOcNrsqqILKIkw9DbQAVIyDpLvtX+Yah9f26ab+faP2cBbGeQsiRSO8w
-dDS6YO1W0r+jVzeQwNBTbMECAwEAAaAAMA0GCSqGSIb3DQEBCwUAA0EAu2Vs1FXX
-q/T1vtvUWue+rw4M2dCeKFXQqwtWBY5JMEeaaoqEJzJwf2TO/Rfk6On0f+JaLLF6
-jNp2vnF2EMUCXg==
------END CERTIFICATE REQUEST-----
-"""
-
-# CSR with invalid version
-_CSR_INVALID_VERSION = """-----BEGIN CERTIFICATE REQUEST-----
 MIICVDCCATwCAQIwDzENMAsGA1UEAwwEaHVyejCCASIwDQYJKoZIhvcNAQEBBQAD
 ggEPADCCAQoCggEBAMoIqXeS86zKNwd3auWbBIsJZz6yQL4z3yVMzGuEwpMN8DBN
 UxEygrvjLJr9BV4+TRnoyxErAlFvaGevZHuhCyLFHPrTZFcKqPCqrmZ1yy4dD/Kp
@@ -165,10 +155,6 @@ def test_csr_403(
         pytest.param(
             _CSR_INVALID,
             id="public key mismatch",
-        ),
-        pytest.param(
-            _CSR_INVALID_VERSION,
-            id="invalid version",
         ),
         pytest.param(
             _CSR_CN_NO_UUID,

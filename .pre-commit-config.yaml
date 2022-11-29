@@ -1,6 +1,6 @@
 #
 # This is the configuration file for the pre-commit framework.
-# To use this you need to install it separately and activate it for your repository.
+# To use this you need to install it seperately and activate it for your repository.
 # To do so issue the following commands:
 #
 #     pip3 install pre-commit
@@ -33,11 +33,6 @@ repos:
                     ^enterprise/agents/plugins/|
                     ^tests/agent-plugin-unit/
                 )
-
-    - repo: https://github.com/crate-ci/typos
-      rev: v1.12.14
-      hooks:
-        - id: typos
     - repo: local
       hooks:
           - id: remove-stale-imports

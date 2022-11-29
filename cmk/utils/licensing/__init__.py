@@ -30,7 +30,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageSampleWithSiteHash,
     RawLicenseUsageSample,
 )
-from cmk.utils.paths import license_usage_dir, log_dir
+from cmk.utils.paths import licensing_dir, log_dir
 
 
 def init_logging() -> logging.Logger:
@@ -82,8 +82,8 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         logger.error("Creation of sample failed due to a livestatus error: %s", e)
         return 1
 
-    license_usage_dir.mkdir(parents=True, exist_ok=True)
-    next_run_filepath = license_usage_dir / "next_run"
+    licensing_dir.mkdir(parents=True, exist_ok=True)
+    next_run_filepath = licensing_dir / "next_run"
 
     with store.locked(next_run_filepath), store.locked(_get_history_dump_filepath()):
         now = datetime.now()
@@ -203,7 +203,7 @@ def _create_next_run_ts(now: datetime) -> int:
 
 
 def _get_history_dump_filepath() -> Path:
-    return license_usage_dir / "history.json"
+    return licensing_dir / "history.json"
 
 
 class RawLicenseUsageHistoryDump(TypedDict):
@@ -337,11 +337,11 @@ class LicenseUsageHistory:
 
 
 def _get_extensions_filepath() -> Path:
-    return license_usage_dir / "extensions.json"
+    return licensing_dir / "extensions.json"
 
 
 def save_extensions(extensions: LicenseUsageExtensions) -> None:
-    license_usage_dir.mkdir(parents=True, exist_ok=True)
+    licensing_dir.mkdir(parents=True, exist_ok=True)
     extensions_filepath = _get_extensions_filepath()
 
     with store.locked(extensions_filepath):

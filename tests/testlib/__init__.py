@@ -255,9 +255,7 @@ def fake_version_and_paths() -> None:
         Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
     )
 
-    monkeypatch.setattr(
-        "cmk.utils.paths.license_usage_dir", Path(cmk.utils.paths.var_dir, "license_usage")
-    )
+    monkeypatch.setattr("cmk.utils.paths.licensing_dir", Path(cmk.utils.paths.var_dir, "licensing"))
 
 
 def import_module_hack(pathname: str) -> ModuleType:

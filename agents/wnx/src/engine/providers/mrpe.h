@@ -123,7 +123,7 @@ void FixCrCnForMrpe(std::string &str);
 std::string ExecMrpeEntry(const MrpeEntry &entry,
                           std::chrono::milliseconds timeout);
 std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
-                        std::chrono::milliseconds timeout);
+                            std::chrono::milliseconds timeout);
 void AddCfgFileToEntries(const std::string &user,
                          const std::filesystem::path &path,
                          std::vector<MrpeEntry> &entries);

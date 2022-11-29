@@ -362,6 +362,7 @@ std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
 
     const auto &[cached_result, cached_state] =
         cache.getLineData(entry.description_);
+
     switch (cached_state) {
         case MrpeCache::LineState::ready: {
             return cached_result;
@@ -372,17 +373,16 @@ std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
         }
             [[fallthrough]];
         case MrpeCache::LineState::old: {
-            const auto result = ExecMrpeEntry(entry, timeout);
+            auto result = ExecMrpeEntry(entry, timeout);
+            if (entry.caching_->add_age) {
+                result = std::format("cached({},{}) {}",
+                                     cma::tools::SecondsSinceEpoch(),
+                                     entry.caching_->max_age, result);
+            }
             cache.updateLine(entry.description_, result);
-            // Now we have to call getLineData again, because the "add_age"
-            // information gets added here
-            // TODO(au): Eliminate this additional call, e.g. by moving the
-            // formatting of a result completely to this function or to
-            // MrpeEntry
-            return std::get<0>(cache.getLineData(entry.description_));
+            return result;
         }
     }
-
     // unreachable
     return {};
 }
@@ -455,18 +455,11 @@ std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
         }
 
         auto time_pos = std::chrono::steady_clock::now();
-
         auto diff = duration_cast<std::chrono::seconds>(time_pos - line.tp);
-
-        auto result = line.data;
-        if (line.add_age) {
-            result += fmt::format(" ({};{})", diff.count(), line.max_age);
-        }
-
         auto status =
             diff.count() > line.max_age ? LineState::old : LineState::ready;
 
-        return {result, status};
+        return {line.data, status};
     } catch (const std::exception &e) {
         XLOG::l("exception '{}' in mrpe update cache", e.what());
     }

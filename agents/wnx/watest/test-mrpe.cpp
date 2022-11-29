@@ -413,15 +413,17 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     EXPECT_EQ(result_2[2], "0");
     auto &time_2 = result_2[3];
 
-    // expect "(powershell.exe) CachedTimeWithAge 0 TIMESTAMP (DIFF;10)"
+    // expect "cached(TIME_SINCE_EPOCH;10) (powershell.exe) CachedTimeWithAge 0
+    // TIMESTAMP"
     auto result_3 = cma::tools::SplitString(table[3], " ");
     auto mrpe_3 = mrpe.entries()[2];
     EXPECT_EQ(result_3.size(), 5);
-    EXPECT_EQ(result_3[0], fmt::format("({})", mrpe_3.exe_name_));
-    EXPECT_EQ(result_3[1], mrpe_3.description_);
-    EXPECT_EQ(result_3[2], "0");
-    auto &time_3 = result_3[3];
-    EXPECT_TRUE(result_3[3].find(";10)"));
+    EXPECT_EQ(result_3[0].find("cached("), 0);
+    EXPECT_EQ(result_3[0].find(",10)"), result_3[0].size() - 4);
+    EXPECT_EQ(result_3[1], fmt::format("({})", mrpe_3.exe_name_));
+    EXPECT_EQ(result_3[2], mrpe_3.description_);
+    EXPECT_EQ(result_3[3], "0");
+    auto &time_3 = result_3[4];
 
     cma::tools::sleep(10);
 
@@ -431,7 +433,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto second_table = cma::tools::SplitString(second_run, "\n");
     EXPECT_TRUE(time_1 != cma::tools::SplitString(second_table[1], " ")[3]);
     EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[3]);
-    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[3]);
+    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[4]);
 }
 
 }  // namespace cma::provider

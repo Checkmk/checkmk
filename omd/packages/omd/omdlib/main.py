@@ -2045,8 +2045,6 @@ def main_create(
         sys.stdout.write("You can now mount a filesystem to %s.\n" % (site.dir))
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
-    save_instance_id(site)
-
 
 def welcome_message(site: SiteContext, admin_password: Password[str]) -> None:
     sys.stdout.write(f"Created new site {site.name} with version {omdlib.__version__}.\n\n")
@@ -2152,6 +2150,10 @@ def init_site(
         for hook_name, value in config_settings.items():
             site.conf[hook_name] = value
     create_config_environment(site)
+
+    # 'init'/'create' are only-root opts, thus the instance ID is saved with the wrong
+    # permissions which get fixed with chown_tree
+    save_instance_id(site)
 
     # Change the few files that config save as created as root
     chown_tree(site.dir, site.name)
@@ -2420,6 +2422,11 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         if not os.path.exists(rrdcacheddir):
             os.mkdir(rrdcacheddir)
 
+    if what == "cp":
+        # 'cp' is an only-root opt, thus the instance ID is saved with the wrong
+        # permissions which get fixed with chown_tree
+        save_instance_id(new_site)
+
     # give new user all files
     chown_tree(new_site.dir, new_site.name)
 
@@ -2446,9 +2453,6 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
-
-    if what == "cp":
-        save_instance_id(new_site)
 
     finalize_site(version_info, new_site, what, "apache-reload" in options)
 

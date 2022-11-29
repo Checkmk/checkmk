@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p18
+Version: 2.1.0p17
 
 The Windows agent plugin for monitoring Veeam jobs (<tt>veeam_backup_status.ps1</tt>) crashed if
 there was a disabled CDP job on the target system. This has been fixed, hence, disabled jobs will

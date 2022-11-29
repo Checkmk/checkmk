@@ -217,7 +217,7 @@ def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
     try:
         key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
         use_key_for_signing = key_usage.value.key_cert_sign is True
-    except x509.extensions.ExtensionNotFound:
+    except x509.ExtensionNotFound:
         use_key_for_signing = False
 
     try:
@@ -225,7 +225,7 @@ def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
             ExtensionOID.BASIC_CONSTRAINTS
         )
         is_ca = basic_constraints.value.ca is True
-    except x509.extensions.ExtensionNotFound:
+    except x509.ExtensionNotFound:
         is_ca = False
 
     return is_ca and use_key_for_signing

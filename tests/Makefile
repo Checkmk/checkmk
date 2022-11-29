@@ -353,8 +353,8 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--threshold 11 \
-		--packages cmk enterprise managed plus \
+		--threshold 13 \
+		--packages cmk omd/packages/omd/omdlib \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \
 		--verbose

@@ -1,7 +1,13 @@
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-set(HEADER_LIST "${Livestatus_SOURCE_DIR}/include/livestatus/Logger.h")
-add_library(livestatus STATIC Logger.cc POSIXUtils.cc ${HEADER_LIST})
+set(header_location ${Livestatus_SOURCE_DIR}/include/livestatus)
+set(livestatus_headers
+    ${header_location}/BitMask.h ${header_location}/ChronoUtils.h
+    ${header_location}/Logger.h ${header_location}/POSIXUtils.h
+    ${header_location}/Poller.h)
+set(livestatus_sources Logger.cc POSIXUtils.cc)
+
+add_library(livestatus STATIC ${livestatus_headers} ${livestatus_sources})
 
 include(FetchContent)
 
@@ -50,14 +56,7 @@ target_compile_options(
          -gdwarf-4
          -std=c++17)
 
-find_package(PythonInterp)
-find_program(
-  iwyu_tool_path
-  NAMES iwyu_tool.py
-  PATHS ${root_repo_dir}/scripts)
-message("iwyu_tool_path: ${iwyu_tool_path} in ${root_repo_dir}/scripts")
-
-if(iwyu_tool_path AND PYTHONINTERP_FOUND)
+if(iwyu_tool_path)
   add_custom_target(
     iwyu
     COMMAND
@@ -65,6 +64,26 @@ if(iwyu_tool_path AND PYTHONINTERP_FOUND)
       "${CMAKE_BINARY_DIR}" -- ${IWYU_EXTRA_ARGS} -Xiwyu
       --mapping_file=${root_repo_dir}/livestatus/iwyu-mappings/check_mk.imp
     COMMENT "Running include-what-you-use tool"
+    VERBATIM)
+endif()
+
+if(run_clang_tidy_path)
+  if(${CLANG_VERSION})
+    message("CLANG_VERSION is set to ${CLANG_VERSION}")
+  else()
+    message("CLANG_VERSION is not set, falling back to 14")
+    set(CLANG_VERSION 14)
+  endif()
+
+  add_custom_target(
+    tidy
+    COMMAND
+      "${PYTHON_EXECUTABLE}" "${run_clang_tidy_path}"
+      -clang-tidy-binary=clang-tidy-${CLANG_VERSION}
+      -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}
+      ${CLANG_TIDY_EXTRA_ARGS} -quiet -j6 -p=${CMAKE_BINARY_DIR}
+      ${livestatus_sources}
+    COMMENT "Running clang-tidy tool"
     VERBATIM)
 endif()
 

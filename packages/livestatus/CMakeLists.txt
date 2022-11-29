@@ -12,6 +12,22 @@ project(
   DESCRIPTION "Livestatus library"
   LANGUAGES CXX)
 
+# TOOLING:
+find_package(PythonInterp REQUIRED)
+
+find_program(
+  iwyu_tool_path
+  NAMES iwyu_tool.py
+  PATHS ${root_repo_dir}/scripts)
+message("iwyu_tool_path: ${iwyu_tool_path} in ${root_repo_dir}/scripts")
+
+find_program(
+  run_clang_tidy_path
+  NAMES run-clang-tidy.py
+  PATHS ${root_repo_dir}/scripts)
+message("run-clang-tidy: ${run_clang_tidy_path} in ${root_repo_dir}/scripts")
+
+# SUB-DIRS:
 add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(doc)

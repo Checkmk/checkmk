@@ -97,10 +97,10 @@ def test_aggr_restrict_state_warn(  # type:ignore[no-untyped-def]
         ([0, 0, 1, 1], "count", 3, "count", 2, 1),
         ([0, 0, 0, 0], "percentage", 50, "count", 1, 2),
         ([0, 0, 1, 1], "percentage", 50, "count", 1, 0),
-        ([0, 1, 1, 1], "percentage", 25, "count", 1, 2),
-        ([0, 0, 0, 1], "percentage", 26, "count", 1, 1),
+        ([0, 1, 1, 1], "percentage", 25, "count", 1, 0),
+        ([0, 0, 0, 1], "percentage", 26, "count", 1, 2),
         ([0, 0, 1, 1], "percentage", 50, "percentage", 25, 0),
-        ([0, 0, 0, 1], "percentage", 50, "percentage", 25, 1),
+        ([0, 0, 0, 1], "percentage", 50, "percentage", 75, 1),
         ([1, 1, 1, 1], "percentage", 50, "percentage", 25, 2),
     ],
 )

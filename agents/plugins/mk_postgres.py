@@ -928,7 +928,6 @@ def open_env_file(file_to_open):
 def parse_env_file(env_file):
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
-    pg_version = None
     for line in open_env_file(env_file):
         line = line.strip()
         if 'PGDATABASE=' in line:

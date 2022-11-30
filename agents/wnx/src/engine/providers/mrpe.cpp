@@ -369,10 +369,9 @@ std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
         }
             [[fallthrough]];
         case MrpeCache::LineState::old: {
-            auto result =
-                std::format("cached({},{}) {}", cma::tools::SecondsSinceEpoch(),
-                            *entry.caching_interval_,
-                            ExecMrpeEntry(entry, timeout));
+            auto result = std::format(
+                "cached({},{}) {}", cma::tools::SecondsSinceEpoch(),
+                *entry.caching_interval_, ExecMrpeEntry(entry, timeout));
             cache.updateLine(entry.description_, result);
             return result;
         }
@@ -406,8 +405,7 @@ std::string MrpeProvider::makeBody() {
 
 void MrpeCache::createLine(std::string_view key) {
     try {
-        Line l;
-        cache_[std::string(key)] = l;
+        cache_.insert_or_assign(std::string{key}, Line{});
     } catch (const std::exception &e) {
         XLOG::l("exception '{}' in mrpe cache", e.what());
     }

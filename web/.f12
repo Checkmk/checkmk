@@ -31,10 +31,10 @@ sudo rsync -arxR \
     htdocs/images \
     htdocs/jquery \
     htdocs/openapi \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}"; done) \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}".map; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}"; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}".map; done) \
     htdocs/sounds \
-    $(for i in ${THEME_RESOURCES}; do echo "${i#web/}"; done) \
+    $(for i in ${THEME_RESOURCES}; do echo "${i#$REPO_PATH/web/}"; done) \
     "$ROOT/share/check_mk/web/"
 
 # Also deploy all other directories of same type

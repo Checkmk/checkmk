@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-import json
 from unittest import TestCase
 
 from dateutil.tz import tzutc
 from kubernetes import client  # type: ignore[import]
-from mocket import Mocketizer  # type: ignore[import]
-from mocket.mockhttp import Entry  # type: ignore[import]
+
+from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -27,42 +26,28 @@ from cmk.special_agents.utils_kubernetes.transform import (
 class TestAPIPod:
     def test_parse_metadata(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
         mocked_pods = {
-            "kind": "PodList",
-            "apiVersion": "v1",
-            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
-            "items": [
-                {
-                    "metadata": {
-                        "name": "cluster-collector-595b64557d-x9t5q",
-                        "generateName": "cluster-collector-595b64557d-",
-                        "namespace": "checkmk-monitoring",
-                        "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
-                        "resourceVersion": "221646",
-                        "creationTimestamp": "2022-03-28T09:19:41Z",
-                        "labels": {"app": "cluster-collector"},
-                        "annotations": {"foo": "case"},
-                        "ownerReferences": [
-                            {
-                                "apiVersion": "apps/v1",
-                                "kind": "ReplicaSet",
-                                "name": "cluster-collector-595b64557d",
-                                "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
-                                "controller": "true",
-                                "blockOwnerDeletion": "true",
-                            }
-                        ],
-                    },
-                },
-            ],
+            "metadata": {
+                "name": "cluster-collector-595b64557d-x9t5q",
+                "generateName": "cluster-collector-595b64557d-",
+                "namespace": "checkmk-monitoring",
+                "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                "resourceVersion": "221646",
+                "creationTimestamp": "2022-03-28T09:19:41Z",
+                "labels": {"app": "cluster-collector"},
+                "annotations": {"foo": "case"},
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "kind": "ReplicaSet",
+                        "name": "cluster-collector-595b64557d",
+                        "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                        "controller": "true",
+                        "blockOwnerDeletion": "true",
+                    }
+                ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/pods",
-            body=json.dumps(mocked_pods),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+        pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
 
         metadata = parse_metadata(pod.metadata, type_=str)
         assert metadata.name == "cluster-collector-595b64557d-x9t5q"
@@ -77,40 +62,27 @@ class TestAPIPod:
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
         mocked_pods = {
-            "kind": "PodList",
-            "apiVersion": "v1",
-            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
-            "items": [
-                {
-                    "metadata": {
-                        "name": "cluster-collector-595b64557d-x9t5q",
-                        "generateName": "cluster-collector-595b64557d-",
-                        "namespace": "checkmk-monitoring",
-                        "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
-                        "resourceVersion": "221646",
-                        "creationTimestamp": "2022-03-28T09:19:41Z",
-                        "ownerReferences": [
-                            {
-                                "apiVersion": "apps/v1",
-                                "kind": "ReplicaSet",
-                                "name": "cluster-collector-595b64557d",
-                                "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
-                                "controller": "true",
-                                "blockOwnerDeletion": "true",
-                            }
-                        ],
-                    },
-                },
-            ],
+            "metadata": {
+                "name": "cluster-collector-595b64557d-x9t5q",
+                "generateName": "cluster-collector-595b64557d-",
+                "namespace": "checkmk-monitoring",
+                "uid": "b1c113f5-ee08-44c2-8438-a83ca240e04a",
+                "resourceVersion": "221646",
+                "creationTimestamp": "2022-03-28T09:19:41Z",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "kind": "ReplicaSet",
+                        "name": "cluster-collector-595b64557d",
+                        "uid": "547e9da2-cbfa-4116-9cb6-67487b11a786",
+                        "controller": "true",
+                        "blockOwnerDeletion": "true",
+                    }
+                ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/pods",
-            body=json.dumps(mocked_pods),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+
+        pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
 
         metadata = parse_metadata(pod.metadata, type_=str)
         assert metadata.labels == {}
@@ -118,30 +90,19 @@ class TestAPIPod:
 
     def test_parse_conditions(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
         node_with_conditions = {
-            "items": [
-                {
-                    "status": {
-                        "conditions": [
-                            {
-                                "type": "Ready",
-                                "status": "False",
-                                "reason": None,
-                                "message": None,
-                                "lastTransitionTime": "2021-10-08T07:39:10Z",
-                            },
-                        ],
+            "status": {
+                "conditions": [
+                    {
+                        "type": "Ready",
+                        "status": "False",
+                        "reason": None,
+                        "message": None,
+                        "lastTransitionTime": "2021-10-08T07:39:10Z",
                     },
-                },
-            ],
+                ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/pods",
-            body=json.dumps(node_with_conditions),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+        pod = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Pod")
         condition = pod_conditions(pod.status.conditions)[0]
         assert condition.detail is None
         assert condition.status is False
@@ -150,37 +111,23 @@ class TestAPIPod:
 
     def test_parse_containers(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
         mocked_pods = {
-            "kind": "PodList",
-            "apiVersion": "v1",
-            "metadata": {"selfLink": "/api/v1/pods", "resourceVersion": "6605101"},
-            "items": [
-                {
-                    "status": {
-                        "containerStatuses": [
-                            {
-                                "name": "cadvisor",
-                                "state": {"running": {"startedAt": "2021-10-08T07:39:10Z"}},
-                                "lastState": {},
-                                "ready": True,
-                                "restartCount": 0,
-                                "image": "some_image",
-                                "imageID": "some_irrelevant_id",
-                                "containerID": "some_container_id",
-                                "started": True,
-                            }
-                        ],
-                    },
-                }
-            ],
+            "status": {
+                "containerStatuses": [
+                    {
+                        "name": "cadvisor",
+                        "state": {"running": {"startedAt": "2021-10-08T07:39:10Z"}},
+                        "lastState": {},
+                        "ready": True,
+                        "restartCount": 0,
+                        "image": "some_image",
+                        "imageID": "some_irrelevant_id",
+                        "containerID": "some_container_id",
+                        "started": True,
+                    }
+                ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/pods",
-            body=json.dumps(mocked_pods),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            pod = list(core_client.list_pod_for_all_namespaces().items)[0]
+        pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
         containers = pod_containers(pod.status.container_statuses)
         assert len(containers) == 1
         assert "cadvisor" in containers

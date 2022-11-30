@@ -2,13 +2,11 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import datetime
-import json
 
 from kubernetes import client  # type: ignore[import]
-from mocket import Mocketizer  # type: ignore[import]
-from mocket.mockhttp import Entry  # type: ignore[import]
+
+from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
@@ -78,33 +76,23 @@ class TestAPINode:
 
     def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:
         node_list_with_info = {
-            "items": [
-                {
-                    "status": {
-                        "nodeInfo": {
-                            "machineID": "abd0bd9c2f234af099e849787da63620",
-                            "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
-                            "bootID": "04bae495-8ea7-4230-9bf0-9ce841201c0c",
-                            "kernelVersion": "5.4.0-88-generic",
-                            "osImage": "Ubuntu 20.04.3 LTS",
-                            "containerRuntimeVersion": "docker://20.10.7",
-                            "kubeletVersion": "v1.21.7",
-                            "kubeProxyVersion": "v1.21.7",
-                            "operatingSystem": "linux",
-                            "architecture": "amd64",
-                        },
-                    },
-                }
-            ]
+            "status": {
+                "nodeInfo": {
+                    "machineID": "abd0bd9c2f234af099e849787da63620",
+                    "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
+                    "bootID": "04bae495-8ea7-4230-9bf0-9ce841201c0c",
+                    "kernelVersion": "5.4.0-88-generic",
+                    "osImage": "Ubuntu 20.04.3 LTS",
+                    "containerRuntimeVersion": "docker://20.10.7",
+                    "kubeletVersion": "v1.21.7",
+                    "kubeProxyVersion": "v1.21.7",
+                    "operatingSystem": "linux",
+                    "architecture": "amd64",
+                },
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/nodes",
-            body=json.dumps(node_list_with_info),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            node = list(core_client.list_node().items)[0]
+
+        node = core_client.api_client.deserialize(FakeResponse(node_list_with_info), "V1Node")
         parsed_node_info = node_info(node)
         assert isinstance(parsed_node_info, api.NodeInfo)
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
@@ -112,63 +100,53 @@ class TestAPINode:
 
     def test_parse_conditions(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
         node_with_conditions = {
-            "items": [
-                {
-                    "status": {
-                        "conditions": [
-                            {
-                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
-                                "lastTransitionTime": "2019-07-09T16:17:29Z",
-                                "message": "kubelet has no disk pressure",
-                                "reason": "KubeletHasNoDiskPressure",
-                                "status": "False",
-                                "type": "DiskPressure",
-                            },
-                            {
-                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
-                                "lastTransitionTime": "2019-07-09T16:17:29Z",
-                                "message": "kubelet has sufficient memory available",
-                                "reason": "KubeletHasSufficientMemory",
-                                "status": "False",
-                                "type": "MemoryPressure",
-                            },
-                            {
-                                "lastHeartbeatTime": "2019-07-09T16:17:47Z",
-                                "lastTransitionTime": "2019-07-09T16:17:47Z",
-                                "message": "RouteController created a route",
-                                "reason": "RouteCreated",
-                                "status": "False",
-                                "type": "NetworkUnavailable",
-                            },
-                            {
-                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
-                                "lastTransitionTime": "2019-07-09T16:17:29Z",
-                                "message": "kubelet has sufficient PID available",
-                                "reason": "KubeletHasSufficientPID",
-                                "status": "False",
-                                "type": "PIDPressure",
-                            },
-                            {
-                                "lastHeartbeatTime": "2019-09-20T19:32:50Z",
-                                "lastTransitionTime": "2019-07-09T16:17:49Z",
-                                "message": "kubelet is posting ready status. AppArmor enabled",
-                                "reason": "KubeletReady",
-                                "status": "True",
-                                "type": "Ready",
-                            },
-                        ],
+            "status": {
+                "conditions": [
+                    {
+                        "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                        "lastTransitionTime": "2019-07-09T16:17:29Z",
+                        "message": "kubelet has no disk pressure",
+                        "reason": "KubeletHasNoDiskPressure",
+                        "status": "False",
+                        "type": "DiskPressure",
                     },
-                },
-            ],
+                    {
+                        "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                        "lastTransitionTime": "2019-07-09T16:17:29Z",
+                        "message": "kubelet has sufficient memory available",
+                        "reason": "KubeletHasSufficientMemory",
+                        "status": "False",
+                        "type": "MemoryPressure",
+                    },
+                    {
+                        "lastHeartbeatTime": "2019-07-09T16:17:47Z",
+                        "lastTransitionTime": "2019-07-09T16:17:47Z",
+                        "message": "RouteController created a route",
+                        "reason": "RouteCreated",
+                        "status": "False",
+                        "type": "NetworkUnavailable",
+                    },
+                    {
+                        "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                        "lastTransitionTime": "2019-07-09T16:17:29Z",
+                        "message": "kubelet has sufficient PID available",
+                        "reason": "KubeletHasSufficientPID",
+                        "status": "False",
+                        "type": "PIDPressure",
+                    },
+                    {
+                        "lastHeartbeatTime": "2019-09-20T19:32:50Z",
+                        "lastTransitionTime": "2019-07-09T16:17:49Z",
+                        "message": "kubelet is posting ready status. AppArmor enabled",
+                        "reason": "KubeletReady",
+                        "status": "True",
+                        "type": "Ready",
+                    },
+                ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/nodes",
-            body=json.dumps(node_with_conditions),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            node = list(core_client.list_node().items)[0]
+
+        node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         conditions = node_conditions(node.status)
         assert conditions is not None
         assert len(conditions) == 5
@@ -180,27 +158,13 @@ class TestAPINode:
     def test_parse_conditions_no_status(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"items": [{"status": {}}]}  # type: ignore
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/nodes",
-            body=json.dumps(node_with_conditions),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            node = list(core_client.list_node().items)[0]
+        node_with_conditions = {"status": {}}  # type: ignore
+        node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         assert node_conditions(node.status) is None
 
     def test_parse_conditions_no_conditions(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
-        node_with_conditions = {"items": [{"status": {"conditions": []}}]}  # type: ignore
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/api/v1/nodes",
-            body=json.dumps(node_with_conditions),
-            headers={"content-type": "application/json"},
-        )
-        with Mocketizer():
-            node = list(core_client.list_node().items)[0]
+        node_with_conditions = {"status": {"conditions": []}}  # type: ignore
+        node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
         assert node_conditions(node.status) is None

@@ -18,7 +18,6 @@ freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
-mocket = "*"    # used for mocking kubernetes python client
 pylint = "==2.15.5"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target

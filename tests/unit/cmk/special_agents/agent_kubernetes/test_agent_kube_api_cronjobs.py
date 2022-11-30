@@ -1,9 +1,8 @@
 import datetime
-import json
 
 from kubernetes import client  # type: ignore[import]
-from mocket import Mocketizer  # type: ignore[import]
-from mocket.mockhttp import Entry  # type: ignore[import]
+
+from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import (
@@ -30,35 +29,27 @@ class TestAPICronJob:
 
     def test_parse_cron_job_spec(self, dummy_host: str, batch_client: client.BatchV1Api) -> None:
         cron_job_list_with_info = {
-            "items": [
-                {
+            "spec": {
+                "schedule": "*/5 * * * *",
+                "concurrencyPolicy": "Allow",
+                "failedJobsHistoryLimit": 10,
+                "successfulJobsHistoryLimit": 10,
+                "suspend": False,
+                "jobTemplate": {
+                    "metadata": {},
                     "spec": {
-                        "schedule": "*/5 * * * *",
-                        "concurrencyPolicy": "Allow",
-                        "failedJobsHistoryLimit": 10,
-                        "successfulJobsHistoryLimit": 10,
-                        "suspend": False,
-                        "jobTemplate": {
+                        "template": {
                             "metadata": {},
-                            "spec": {
-                                "template": {
-                                    "metadata": {},
-                                    "spec": {"containers": []},
-                                },
-                            },
+                            "spec": {"containers": []},
                         },
                     },
                 },
-            ],
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/batch/v1/cronjobs",
-            body=json.dumps(cron_job_list_with_info),
-            headers={"content-type": "application/json"},
+        cron_job = batch_client.api_client.deserialize(
+            FakeResponse(cron_job_list_with_info),
+            "V1CronJob",
         )
-        with Mocketizer():
-            cron_job = list(batch_client.list_cron_job_for_all_namespaces().items)[0]
         spec = parse_cron_job_spec(cron_job.spec)
         assert isinstance(spec.concurrency_policy, api.ConcurrencyPolicy)
         assert spec.schedule is not None
@@ -66,24 +57,16 @@ class TestAPICronJob:
 
     def test_parse_cron_job_status(self, dummy_host: str, batch_client: client.BatchV1Api) -> None:
         cron_job_list_with_info = {
-            "items": [
-                {
-                    "status": {
-                        "active": None,
-                        "last_schedule_time": None,
-                        "last_successful_time": None,
-                    }
-                },
-            ],
+            "status": {
+                "active": None,
+                "last_schedule_time": None,
+                "last_successful_time": None,
+            }
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/batch/v1/cronjobs",
-            body=json.dumps(cron_job_list_with_info),
-            headers={"content-type": "application/json"},
+        cron_job = batch_client.api_client.deserialize(
+            FakeResponse(cron_job_list_with_info),
+            "V1CronJob",
         )
-        with Mocketizer():
-            cron_job = list(batch_client.list_cron_job_for_all_namespaces().items)[0]
         status = parse_cron_job_status(cron_job.status)
         assert status == api.CronJobStatus(
             active=None, last_schedule_time=None, last_successful_time=None

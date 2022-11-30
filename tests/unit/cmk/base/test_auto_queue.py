@@ -8,7 +8,9 @@ from collections.abc import Generator, Iterator
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
+import cmk.base.auto_queue
 from cmk.base.auto_queue import AutoQueue, TimeLimitFilter
 
 
@@ -65,6 +67,15 @@ class TestAutoQueue:
         auto_queue = AutoQueue(tmpdir / "dir2")
         auto_queue.add("most")
         assert list(auto_queue.queued_hosts()) == ["most"]
+
+    def test_add_existing(self, tmpdir: Path, auto_queue: AutoQueue, mocker: MockerFixture) -> None:
+        auto_queue = AutoQueue(tmpdir / "dir2")
+        auto_queue.add("most")
+
+        mock_touch = mocker.patch.object(cmk.base.auto_queue.Path, "touch")
+        auto_queue.add("most")
+
+        mock_touch.assert_not_called()
 
     def test_remove(self, auto_queue: AutoQueue) -> None:
         auto_queue.remove("lost")

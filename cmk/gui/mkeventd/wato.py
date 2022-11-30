@@ -2873,7 +2873,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         super().__init__()
 
         self._default_values = ConfigDomainEventConsole().default_globals()
-        self._current_settings = load_configuration_settings()
+        self._current_settings = dict(load_configuration_settings())
 
     @staticmethod
     def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:

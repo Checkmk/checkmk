@@ -653,3 +653,6 @@ class Key(BaseModel):
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.
     not_downloaded: bool = False
+
+
+GlobalSettings = Mapping[str, Any]

@@ -43,7 +43,7 @@ from cmk.gui.plugins.watolib.utils import (
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -69,7 +69,7 @@ class ABCGlobalSettingsMode(WatoMode):
         super().__init__()
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
-        self._global_settings: dict[str, Any] = {}
+        self._global_settings: GlobalSettings = {}
         self._current_settings: dict[str, Any] = {}
 
     def _from_vars(self):
@@ -263,8 +263,8 @@ class ABCEditGlobalSettingMode(WatoMode):
         if not self._may_edit_configvar(self._varname):
             raise MKAuthException(_("You are not permitted to edit this global setting."))
 
-        self._current_settings = load_configuration_settings()
-        self._global_settings = {}
+        self._current_settings = dict(load_configuration_settings())
+        self._global_settings: GlobalSettings = {}
 
     def _may_edit_configvar(self, varname):
         if varname in ["actions"]:
@@ -423,7 +423,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._current_settings = load_configuration_settings()
+        self._current_settings = dict(load_configuration_settings())
 
     def title(self) -> str:
         if self._search:

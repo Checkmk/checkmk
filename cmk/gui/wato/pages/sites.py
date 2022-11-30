@@ -1094,7 +1094,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         # 3. Site specific global settings
 
         if is_wato_slave_site():
-            self._current_settings = load_site_global_settings()
+            self._current_settings = dict(load_site_global_settings())
         else:
             self._current_settings = self._site.get("globals", {})
 
@@ -1315,7 +1315,6 @@ class ModeSiteLivestatusEncryption(WatoMode):
             )
 
         trusted_cas.append(cert_str)
-        global_settings["trusted_certificate_authorities"] = trusted
 
         _changes.add_change(
             "edit-configvar",
@@ -1323,7 +1322,12 @@ class ModeSiteLivestatusEncryption(WatoMode):
             domains=[config_variable.domain()],
             need_restart=config_variable.need_restart(),
         )
-        save_global_settings(global_settings)
+        save_global_settings(
+            {
+                **global_settings,
+                "trusted_certificate_authorities": trusted,
+            }
+        )
 
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None

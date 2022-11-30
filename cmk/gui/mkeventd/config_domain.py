@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from typing import Any
 
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import ConfigurationWarnings
@@ -14,6 +12,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, SerializedSettings
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
 
@@ -44,5 +43,5 @@ class ConfigDomainEventConsole(ABCConfigDomain):
                 hooks.call("mkeventd-activate-changes")
         return []
 
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self) -> GlobalSettings:
         return ec.default_config()

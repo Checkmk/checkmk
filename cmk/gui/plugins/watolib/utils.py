@@ -20,6 +20,7 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
@@ -301,14 +302,8 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVaria
 config_variable_registry = ConfigVariableRegistry()
 
 
-def filter_unknown_settings(settings):
-    removals: list[str] = []
-    for varname in list(settings.keys()):
-        if varname not in config_variable_registry:
-            removals.append(varname)
-    for removal in removals:
-        del settings[removal]
-    return settings
+def filter_unknown_settings(settings: GlobalSettings) -> GlobalSettings:
+    return {k: v for k, v in settings.items() if k in config_variable_registry}
 
 
 def configvar_order() -> dict[str, int]:

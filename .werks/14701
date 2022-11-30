@@ -1,0 +1,17 @@
+Title: automatic discovery: Fix automatic configuration update
+Class: fix
+Compatible: compat
+Component: config
+Date: 1669809681
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+If 'Automatically update service configuration' option in rule
+'Periodic service discovery' was activated and 'Group discovery and activation'
+period was bigger than the discovery period, the configuration of the services
+would never be updated.
+
+The problem is now fixed and the service configuration is updated.
+

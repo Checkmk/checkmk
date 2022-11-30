@@ -766,7 +766,10 @@ class _AutodiscoveryQueue:
 
     def add(self, host_name: HostName) -> None:
         self._dir.mkdir(parents=True, exist_ok=True)
-        self._file_path(host_name).touch()
+
+        file_path = self._file_path(host_name)
+        if not file_path.exists():
+            file_path.touch()
 
     def remove(self, host_name: HostName) -> None:
         with suppress(FileNotFoundError):

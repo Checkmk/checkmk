@@ -40,6 +40,15 @@ class TestAutodiscoveryQueue:
         autodiscovery_queue.add("most")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 
+    def test_add_existing(self, autodiscovery_queue, mocker):
+        autodiscovery_queue = discovery._AutodiscoveryQueue()
+        autodiscovery_queue.add("most")
+
+        mock_touch = mocker.patch.object(discovery.Path, "touch")
+        autodiscovery_queue.add("most")
+
+        mock_touch.assert_not_called()
+
     def test_remove(self, autodiscovery_queue, monkeypatch):
         autodiscovery_queue.remove("lost")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]

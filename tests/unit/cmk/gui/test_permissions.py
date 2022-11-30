@@ -545,7 +545,6 @@ def test_registered_permissions() -> None:
             "wato.license_usage",
             "wato.licensing",
             "wato.influxdb_connections",
-            "wato.submit_license_usage",
             "wato.manage_mkps",
             "wato.mkps",
             "wato.sign_agents",

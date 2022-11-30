@@ -25,7 +25,6 @@ export function call_ajax(url, optional_args?) {
         method: "GET",
         post_data: null,
         sync: false,
-        for_license_usage: false,
         authorization: null,
     };
     var args = {
@@ -66,14 +65,10 @@ export function call_ajax(url, optional_args?) {
     }
 
     if (args.method == "POST") {
-        if (args.for_license_usage) {
-            AJAX.setRequestHeader("Content-type", "application/json");
-        } else {
-            AJAX.setRequestHeader(
-                "Content-type",
-                "application/x-www-form-urlencoded"
-            );
-        }
+        AJAX.setRequestHeader(
+            "Content-type",
+            "application/x-www-form-urlencoded"
+        );
     }
 
     if (!args.sync) {
@@ -112,8 +107,7 @@ export function call_ajax(url, optional_args?) {
     if (
         typeof args.post_data == "string" &&
         !args.post_data.includes("&csrf_token=") &&
-        !args.post_data.startsWith("csrf_token=") &&
-        !args.for_license_usage
+        !args.post_data.startsWith("csrf_token=")
     ) {
         args.post_data +=
             "&csrf_token=" + encodeURIComponent(global_csrf_token);

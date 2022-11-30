@@ -40,20 +40,21 @@ def packaging_usage() -> None:
         """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME         ...  Collect unpackaged files into new package NAME
-   pack NAME           ...  Create package file from installed package
-   release NAME        ...  Drop installed package NAME, release packaged files
-   find                ...  Find and display unpackaged files
-   list                ...  List all installed packages
-   list NAME           ...  List files of installed package
-   list PACK.mkp       ...  List files of uninstalled package file
-   show NAME           ...  Show information about installed package
-   show PACK.mkp       ...  Show information about uninstalled package file
-   install PACK.mkp    ...  Install or update package from file PACK.mkp
-   remove NAME VERSION ...  Uninstall and delete package NAME
-   disable NAME        ...  Disable package NAME
-   enable NAME VERSION ...  Enable previously disabled package NAME
-   disable-outdated    ...  Disable outdated packages
+   create NAME             ...  Collect unpackaged files into new package NAME
+   pack NAME               ...  Create package file from installed package
+   release NAME            ...  Drop installed package NAME, release packaged files
+   find                    ...  Find and display unpackaged files
+   list                    ...  List all installed packages
+   list NAME               ...  List files of installed package
+   list PACK.mkp           ...  List files of uninstalled package file
+   show NAME               ...  Show information about installed package
+   show PACK.mkp           ...  Show information about uninstalled package file
+   install PACK.mkp        ...  Install or update package from file PACK.mkp
+   remove NAME VERSION     ...  Uninstall and delete package NAME
+   disable NAME            ...  Disable package NAME
+   enable NAME VERSION     ...  Enable previously disabled package NAME
+   disable-outdated        ...  Disable outdated packages
+   update-active-packages  ...  Update the selection of active packages (according to Checkmk version)
 
    -v  enables verbose output
 

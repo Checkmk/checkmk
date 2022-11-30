@@ -17407,7 +17407,7 @@ msgid "Execute plugins in general"
 msgstr ""
 
 msgid ""
-"Execute the network scan in the Check_MK user context of the choosen user. "
+"Execute the network scan in the Check_MK user context of the chosen user. "
 "This user needs the permission to add new hosts to this folder."
 msgstr ""
 

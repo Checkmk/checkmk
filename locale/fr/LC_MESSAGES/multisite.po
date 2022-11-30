@@ -18087,8 +18087,9 @@ msgstr "Exécuter manuellement"
 msgid "Execute plugins in general"
 msgstr "Exécuter les plugins en général"
 
+#, fuzzy
 msgid ""
-"Execute the network scan in the Check_MK user context of the choosen user. "
+"Execute the network scan in the Check_MK user context of the chosen user. "
 "This user needs the permission to add new hosts to this folder."
 msgstr ""
 "Exécutez l'analyse du réseau dans le contexte utilisateur Check_MK de "

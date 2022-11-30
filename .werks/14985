@@ -1,0 +1,12 @@
+Title: Broken agent downloads: "This host has no Checkmk agents"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1669794623
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+In some circumstances the agent download page for a specific host wrongfully claimed
+"This host has no Checkmk agents".

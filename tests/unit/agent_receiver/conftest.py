@@ -7,7 +7,8 @@ from uuid import UUID, uuid4
 
 import pytest
 from agent_receiver import site_context
-from agent_receiver.apps import agent_receiver_app, main_app
+from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
+from agent_receiver.main import main_app
 from fastapi.testclient import TestClient
 
 
@@ -21,7 +22,7 @@ def setup_site_context() -> None:
 @pytest.fixture(name="client")
 def fixture_client() -> TestClient:
     main_app()
-    return TestClient(agent_receiver_app)
+    return TestClient(AGENT_RECEIVER_APP)
 
 
 @pytest.fixture(name="uuid")

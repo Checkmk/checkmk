@@ -187,6 +187,9 @@ def match_attribute(attribute, pattern):
     if not pattern:
         return True
 
+    if attribute is None:
+        return False
+
     if pattern.startswith("~"):
         return bool(regex(pattern[1:]).match(attribute))
 

@@ -93,6 +93,7 @@ def test_host_labels_ps_match() -> None:
         (["test", "ps"], "ps", "~.*t$", True),
         (["test", "ps"], "sp", "~.*t$", False),
         (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
+        ([None], None, "~.*y", False),
     ],
 )
 def test_process_matches(

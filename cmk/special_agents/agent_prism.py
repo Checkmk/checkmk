@@ -142,7 +142,7 @@ def output_storage_pools(requester: Requester) -> None:
         )
 
 
-def agent_prism_main(args: Args) -> None:
+def agent_prism_main(args: Args) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
     LOGGING.info("setup HTTPS connection..")
@@ -169,11 +169,13 @@ def agent_prism_main(args: Args) -> None:
 
     LOGGING.info("all done. bye.")
 
+    return 0
 
-def main() -> None:
+
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_prism_main)
+    return special_agent_main(parse_arguments, agent_prism_main)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

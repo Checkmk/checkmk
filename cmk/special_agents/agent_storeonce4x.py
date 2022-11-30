@@ -9,6 +9,7 @@
 
 import datetime as dt
 import logging
+import sys
 from collections.abc import Callable, Generator, Sequence
 from pathlib import Path
 from typing import Any
@@ -206,7 +207,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_storeonce4x_main(args: Args) -> None:
+def agent_storeonce4x_main(args: Args) -> int:
     if not args.verify_ssl:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -226,12 +227,15 @@ def agent_storeonce4x_main(args: Args) -> None:
                 if args.debug:
                     raise
                 LOGGER.error("Caught exception: %r", exc)
+                return 1
+
+    return 0
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_storeonce4x_main)
+    return special_agent_main(parse_arguments, agent_storeonce4x_main)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

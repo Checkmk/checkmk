@@ -1,0 +1,27 @@
+Title: Crash reporting for special agents
+Class: feature
+Compatible: comp
+Component: checks
+Date: 1670228901
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The following special agents now create a crash report if they encounter an unforeseen exception:
+
+LI: <i>Apache ActiveMQ queues</i>
+LI: <i>Cisco Meraki</i>
+LI: <i>Datadog</i>
+LI: <i>Elasticsearch</i>
+LI: <i>Google Cloud Platform (GCP)</i>
+LI: <i>HPE StoreOnce via REST API 4.x</i>
+LI: <i>IPMI Sensors via Freeipmi or IPMItool</i>
+LI: <i>Microsoft Azure Status</i>
+LI: <i>MobileIron API</i>
+LI: <i>MQTT broker statistics</i>
+LI: <i>Nutanix Prism</i>
+LI: <i>Proxmox VE</i>
+LI: <i>SMB Share fileinfo</i>
+
+If a crash occurs, the Check_MK and Check_MK Discovery services will become CRIT as before, but now display a message with the Crash-ID.

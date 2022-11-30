@@ -21,12 +21,12 @@ import livestatus
 import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import EventContext, EventRule, HostName, Labels, ServiceName
+from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
+from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this
 
@@ -410,7 +410,8 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             raw_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
         raw_context["HOSTFORURL"] = quote(raw_context["HOSTNAME"])
 
-        update_raw_contect_with_labels(raw_context)
+        _update_raw_context_with_labels(raw_context)
+
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
 
@@ -427,35 +428,15 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         logger.info("Computed variables:\n%s", log_context)
 
 
-def update_raw_contect_with_labels(raw_context: EventContext) -> None:
-    config_cache = config.get_config_cache()
-    ruleset_matcher = config_cache.ruleset_matcher
-    for k, v in _get_host_labels(
-        ruleset_matcher,
-        raw_context["HOSTNAME"],
-    ).items():
+def _update_raw_context_with_labels(raw_context: EventContext) -> None:
+    labels = read_notify_host_file(raw_context["HOSTNAME"])
+    for k, v in labels.host_labels.items():
         # Dynamically added keys...
         raw_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
     if raw_context["WHAT"] == "SERVICE":
-        for k, v in _get_service_labels(
-            ruleset_matcher,
-            raw_context["HOSTNAME"],
-            raw_context["SERVICEDESC"],
-        ).items():
+        for k, v in labels.service_labels.get(raw_context["SERVICEDESC"], {}).items():
             # Dynamically added keys...
             raw_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
-
-
-def _get_host_labels(ruleset_matcher: RulesetMatcher, host_name: HostName) -> Labels:
-    return ruleset_matcher.labels_of_host(host_name)
-
-
-def _get_service_labels(
-    ruleset_matcher: RulesetMatcher,
-    host_name: HostName,
-    service_desc: str,
-) -> Labels:
-    return ruleset_matcher.labels_of_service(host_name, service_desc)
 
 
 # TODO: Use cmk.utils.render.*?

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.0.0p31"
+$CMK_VERSION = "2.0.0p32"
 ## MS Exchange Database counters
 
 ## localize counter name

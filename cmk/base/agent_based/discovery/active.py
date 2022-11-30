@@ -32,7 +32,7 @@ def active_check_discovery(
     keepalive: bool,
 ) -> ServiceState:
     return error_handling.check_result(
-        partial(execute_check_discovery, host_name, fetched=fetched),
+        partial(execute_check_discovery, host_name, config_cache=config_cache, fetched=fetched),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",

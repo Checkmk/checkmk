@@ -914,8 +914,8 @@ def _install_applicable_inactive_packages(
 
 def _sort_enabled_packages_for_installation(
     log: logging.Logger,
-) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
-    packages_by_name: dict[str, dict[str, Path]] = {}
+) -> Iterable[tuple[PackageName, Iterable[tuple[PackageVersion, Path]]]]:
+    packages_by_name: dict[PackageName, dict[PackageVersion, Path]] = {}
     for pkg_path in _get_enabled_package_paths():
         if (package_info := extract_package_info_optionally(pkg_path, logger)) is None:
             continue
@@ -925,63 +925,26 @@ def _sort_enabled_packages_for_installation(
 
 
 def _sort_by_name_then_newest_version(
-    packages_by_name: Mapping[str, Mapping[str, Path]]
-) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
-    """
-    >>> from pprint import pprint
-    >>> pprint(_sort_by_name_then_newest_version({
-    ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
-    ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
-    ... }))
-    [('argl_extension',
-      [('dling', 'lexically_later'), ('canoo', 'lexically_first')]),
-     ('boo_package', [('1.3', 'new_boo'), ('1.2', 'old_boo')])]
-    """
-
-    def sortkey(item: tuple[str, Path]) -> tuple[tuple[float, str], ...]:
-        return _version_sort_key(item[0])
-
+    packages_by_name: Mapping[PackageName, Mapping[PackageVersion, Path]]
+) -> Iterable[tuple[PackageName, Iterable[tuple[PackageVersion, Path]]]]:
+    # TODO: bring this back in the unit tests once we have moved it
+    # """
+    # >>> from pprint import pprint
+    # >>> pprint(_sort_by_name_then_newest_version({
+    # ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
+    # ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
+    # ... }))
+    # [('argl_extension',
+    #  [('dling', 'lexically_later'), ('canoo', 'lexically_first')]),
+    # ('boo_package', [('1.3', 'new_boo'), ('1.2', 'old_boo')])]
+    # """
     return [
         (
             name,
-            sorted(paths_by_version.items(), key=sortkey, reverse=True),
+            sorted(paths_by_version.items(), key=lambda item: item[0].sort_key, reverse=True),
         )
         for name, paths_by_version in sorted(packages_by_name.items())
     ]
-
-
-def _version_sort_key(raw: str) -> tuple[tuple[float, str], ...]:
-    """Try our best to sort version strings
-
-    They should only consist of dots and digits, but we try not to ever crash.
-    This does the right thing for reasonable versions:
-
-    >>> _version_sort_key("12.3")
-    ((12, ''), (3, ''))
-    >>> _version_sort_key("2022.09.03") < _version_sort_key("2022.8.21")
-    False
-
-    And it does not crash for nonsense values (which our GUI does not allow).
-    Obviously that's not a meaningful result.
-
-    >>> _version_sort_key("12.0-alpha")
-    ((12, ''), (-inf, '0-alpha'))
-    >>> _version_sort_key("12.0-alpha") >= _version_sort_key("käsebrot 3.0")
-    True
-
-    Reasonable ones are "newer":
-
-    >>> _version_sort_key("wurstsalat") < _version_sort_key("0.1")
-    True
-    """
-    key_elements: list[tuple[float, str]] = []
-    for s in raw.split("."):
-        try:
-            key_elements.append((int(s), ""))
-        except ValueError:
-            key_elements.append((float("-Inf"), s))
-
-    return tuple(key_elements)
 
 
 def disable_outdated() -> None:

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import re
-from typing import NewType
+from functools import cached_property
 
 from pydantic import BaseModel
 
@@ -16,7 +16,42 @@ class PackageException(MKException):
     pass
 
 
-PackageVersion = NewType("PackageVersion", str)
+class PackageVersion(str):
+    # one fine day we might remove the inheritance, but for now this'll have to do.
+
+    @cached_property
+    def sort_key(self) -> tuple[tuple[float, str], ...]:
+        """Try our best to sort version strings
+
+        They should only consist of dots and digits, but we try not to ever crash.
+        This does the right thing for reasonable versions:
+
+        >>> PackageVersion("12.3").sort_key()
+        ((12, ''), (3, ''))
+        >>> PackageVersion("2022.09.03").sort_key() < PackageVersion("2022.8.21").sort_key()
+        False
+
+        And it does not crash for nonsense values (which our GUI does not allow).
+        Obviously that's not a meaningful result.
+
+        >>> PackageVersion("12.0-alpha").sort_key()
+        ((12, ''), (-inf, '0-alpha'))
+        >>> PackageVersion("12.0-alpha").sort_key() >= PackageVersion("käsebrot 3.0").sort_key()
+        True
+
+        Reasonable ones are "newer":
+
+        >>> PackageVersion("wurstsalat").sort_key() < PackageVersion("0.1").sort_key()
+        True
+        """
+        key_elements: list[tuple[float, str]] = []
+        for s in self.split("."):
+            try:
+                key_elements.append((int(s), ""))
+            except ValueError:
+                key_elements.append((float("-Inf"), s))
+
+        return tuple(key_elements)
 
 
 class PackageName(str):

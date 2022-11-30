@@ -39,7 +39,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.store import save_object_to_file
+from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ConfigurationWarnings,
@@ -992,6 +992,18 @@ def write_notify_host_file(
                 )
             ),
         )
+
+
+def read_notify_host_file(
+    host_name: HostName,
+) -> CollectedHostLabels:
+    notify_labels_path: Path = Path("latest") / "notify" / "labels" / host_name
+    return CollectedHostLabels(
+        **load_object_from_file(
+            path=notify_labels_path,
+            default={"host_labels": {}, "service_labels": {}},
+        )
+    )
 
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:

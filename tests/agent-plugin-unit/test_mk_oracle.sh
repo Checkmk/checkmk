@@ -82,6 +82,30 @@ tearDown () {
 
 # .
 
+#   ---helpers-------------------------------------------------------------
+
+test_mk_oracle_set_ora_version() {
+    # Get version via sqlplus
+    ORACLE_VERSION="19.2"
+    set_ora_version "${ORACLE_VERSION}"
+    assertEquals "192" "${NUMERIC_ORACLE_VERSION}"
+
+    # Get version with remote instances
+    REMOTE_INSTANCE="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:12.3:<tnsalias>"
+    set_ora_version $( echo "${REMOTE_INSTANCE}" | cut -d":" -f8)
+    assertEquals "123" "${NUMERIC_ORACLE_VERSION}"
+
+    REMOTE_INSTANCE="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:12.3.4.5:<tnsalias>"
+    set_ora_version $( echo "${REMOTE_INSTANCE}" | cut -d":" -f8)
+    assertEquals "12345" "${NUMERIC_ORACLE_VERSION}"
+
+    # Get version from env test variable
+    MK_ORA_TESTVERSION="18.1"
+    set_ora_version "${ORACLE_VERSION}"
+    assertEquals "181" "${NUMERIC_ORACLE_VERSION}"
+
+}
+
 #   ---load_config----------------------------------------------------------
 
 test_mk_oracle_default_config () {

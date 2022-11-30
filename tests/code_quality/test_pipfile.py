@@ -271,6 +271,7 @@ CEE_UNUSED_PACKAGES = [
     "pymssql",
     "pyprof2calltree",
     "pyrsistent",
+    "pysaml2",  # TODO (lisa): coming soon...
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",

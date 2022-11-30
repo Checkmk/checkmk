@@ -178,6 +178,7 @@ setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
 black = {version = "==22.10.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
 meraki = "==1.24.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
+pysaml2 = "==7.2.1"  # used by SSO via SAML2.0
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

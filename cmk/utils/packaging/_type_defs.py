@@ -18,6 +18,13 @@ class PackageException(MKException):
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
+    _REGEX = re.compile("[0-9.]+")
+    _MISMATCH_MSG = "Only digits and dots are allowed in the version number."
+
+    def __new__(cls, value: str) -> PackageVersion:
+        if not cls._REGEX.match(value):
+            raise ValueError(cls._MISMATCH_MSG)
+        return super().__new__(cls, value)
 
     @cached_property
     def sort_key(self) -> tuple[tuple[float, str], ...]:

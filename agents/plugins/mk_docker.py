@@ -258,11 +258,11 @@ class MKDockerClient(docker.DockerClient):
     _DEVICE_MAP_LOCK = multiprocessing.Lock()
 
     def __init__(self, config):
-        super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
-        all_containers = self.containers.list(all=True, ignore_removed=True)
-        if config['container_id'] == "name":
-            self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
-        elif config['container_id'] == "long":
+        super(MKDockerClient, self).__init__(config["base_url"], version=MKDockerClient.API_VERSION)
+        all_containers = _robust_inspect_containers(self)
+        if config["container_id"] == "name":
+            self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
+        elif config["container_id"] == "long":
             self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         else:
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
@@ -447,6 +447,17 @@ def section_node_disk_usage(client):
     section.append(row)
 
     section.write()
+
+
+def _robust_inspect_containers(client):
+    # workaround instead of calling client.containers.list() directly to be able to
+    # ignore errors when container was removed in between listing available containers
+    # and getting detailed information about them
+    for response in client.api.containers(all=True):
+        try:
+            yield client.containers.get(response["Id"])
+        except docker.errors.NotFound:
+            pass
 
 
 def _robust_inspect_images(client):

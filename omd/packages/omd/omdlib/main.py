@@ -43,6 +43,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Callable, Iterable
+from enum import auto, Enum
 from pathlib import Path
 from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn
 
@@ -191,6 +192,32 @@ def stop_logging() -> None:
     global g_stdout_log, g_stderr_log
     g_stdout_log = None
     g_stderr_log = None
+
+
+class CommandType(Enum):
+    create = auto()
+    move = auto()
+    copy = auto()
+
+    # reuse in options or not:
+    restore_existing_site = auto()
+    restore_as_new_site = auto()
+
+    @property
+    def short(self) -> str:
+        if self is CommandType.create:
+            return "create"
+
+        if self is CommandType.move:
+            return "mv"
+
+        if self is CommandType.copy:
+            return "cp"
+
+        if self in [CommandType.restore_as_new_site, CommandType.restore_existing_site]:
+            return "restore"
+
+        raise TypeError()
 
 
 # .
@@ -2151,14 +2178,10 @@ def init_site(
             site.conf[hook_name] = value
     create_config_environment(site)
 
-    # 'init'/'create' are only-root opts, thus the instance ID is saved with the wrong
-    # permissions which get fixed with chown_tree
-    save_instance_id(site)
-
     # Change the few files that config save as created as root
     chown_tree(site.dir, site.name)
 
-    finalize_site(version_info, site, "create", apache_reload)
+    finalize_site(version_info, site, CommandType.create, apache_reload)
 
     return admin_password
 
@@ -2167,7 +2190,7 @@ def init_site(
 # What is "create", "mv" or "cp". It is used for
 # running the appropriate hooks.
 def finalize_site(
-    version_info: VersionInfo, site: SiteContext, what: str, apache_reload: bool
+    version_info: VersionInfo, site: SiteContext, command_type: CommandType, apache_reload: bool
 ) -> None:
 
     # Now we need to do a few things as site user. Note:
@@ -2185,7 +2208,7 @@ def finalize_site(
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_site_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
+            finalize_site_as_user(version_info, site, command_type, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
             bail_out("Failed to finalize site: %s" % e)
@@ -2204,7 +2227,7 @@ def finalize_site(
 def finalize_site_as_user(
     version_info: VersionInfo,
     site: SiteContext,
-    what: str,
+    command_type: CommandType,
     ignored_hooks: list[str] | None = None,
 ) -> None:
     # Mount and create contents of tmpfs. This must be done as normal
@@ -2220,7 +2243,10 @@ def finalize_site_as_user(
     initialize_site_ca(site)
     save_site_conf(site)
 
-    call_scripts(site, "post-" + what)
+    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
+        save_instance_id(site)
+
+    call_scripts(site, "post-" + command_type.short)
 
 
 def main_rm(
@@ -2346,16 +2372,16 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     old_site: SiteContext,
     global_opts: "GlobalOptions",
-    what: str,
+    command_type: CommandType,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
 
     conflict_mode = _get_conflict_mode(options)
-    action = "rename" if what == "mv" else "copy"
+    action = "rename" if command_type is CommandType.move else "copy"
 
     if len(args) != 1:
-        bail_out("omd: Usage: omd %s oldname newname" % what)
+        bail_out("omd: Usage: omd %s oldname newname" % command_type.short)
     new_site = SiteContext(args[0])
 
     reuse = False
@@ -2377,14 +2403,14 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
             "PIDs: %s" % (action, old_site.name, old_site.name, " ".join(pids))
         )
 
-    if what == "mv":
+    if command_type is CommandType.move:
         unmount_tmpfs(old_site, kill="kill" in options)
         if not reuse:
             remove_from_fstab(old_site)
 
     sys.stdout.write(
         "{}ing site {} to {}...".format(
-            what == "mv" and "Mov" or "Copy", old_site.name, new_site.name
+            command_type is CommandType.move and "Mov" or "Copy", old_site.name, new_site.name
         )
     )
     sys.stdout.flush()
@@ -2396,7 +2422,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
-    if what == "mv" and not reuse:
+    if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
         delete_apache_hook(old_site.name)
@@ -2422,11 +2448,6 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
         if not os.path.exists(rrdcacheddir):
             os.mkdir(rrdcacheddir)
 
-    if what == "cp":
-        # 'cp' is an only-root opt, thus the instance ID is saved with the wrong
-        # permissions which get fixed with chown_tree
-        save_instance_id(new_site)
-
     # give new user all files
     chown_tree(new_site.dir, new_site.name)
 
@@ -2434,11 +2455,11 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     patch_skeleton_files(conflict_mode, old_site, new_site)
 
     # In case of mv now delete old user
-    if what == "mv" and not reuse:
+    if command_type is CommandType.move and not reuse:
         userdel(old_site.name)
 
     # clean up old site
-    if what == "mv" and reuse:
+    if command_type is CommandType.move and reuse:
         main_rm(version_info, old_site, global_opts, [], {"reuse": None})
 
     sys.stdout.write("OK\n")
@@ -2454,7 +2475,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
 
-    finalize_site(version_info, new_site, what, "apache-reload" in options)
+    finalize_site(version_info, new_site, command_type, "apache-reload" in options)
 
 
 def main_diff(
@@ -3347,9 +3368,6 @@ def main_restore(
     except tarfile.ReadError as e:
         bail_out("Failed to open the backup: %s" % e)
 
-    if "reuse" not in options:
-        save_instance_id(site)
-
 
 def prepare_restore_as_root(
     version_info: VersionInfo, site: SiteContext, options: CommandOptions
@@ -3529,10 +3547,13 @@ def postprocess_restore_as_root(
     version_info: VersionInfo, site: SiteContext, options: CommandOptions
 ) -> None:
     # Entry for tmps in /etc/fstab
-    if "reuse" not in options:
+    if "reuse" in options:
+        command_type = CommandType.restore_existing_site
+    else:
+        command_type = CommandType.restore_as_new_site
         add_to_fstab(site, tmpfs_size=options.get("tmpfs-size"))
 
-    finalize_site(version_info, site, "restore", "apache-reload" in options)
+    finalize_site(version_info, site, command_type, "apache-reload" in options)
 
 
 def postprocess_restore_as_site_user(
@@ -3543,7 +3564,15 @@ def postprocess_restore_as_site_user(
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf(site)
 
-    finalize_site_as_user(version_info, site, "restore")
+    finalize_site_as_user(
+        version_info,
+        site,
+        (
+            CommandType.restore_existing_site
+            if "reuse" in options
+            else CommandType.restore_as_new_site
+        ),
+    )
 
 
 def main_cleanup(
@@ -3958,7 +3987,7 @@ COMMANDS: Final = [
         confirm=False,
         args_text="NEWNAME",
         handler=lambda version_info, site, global_opts, args_text, opts: main_mv_or_cp(
-            version_info, site, global_opts, "mv", args_text, opts
+            version_info, site, global_opts, CommandType.move, args_text, opts
         ),
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -3995,7 +4024,7 @@ COMMANDS: Final = [
         confirm=False,
         args_text="NEWNAME",
         handler=lambda version_info, site, global_opts, args_text, opts: main_mv_or_cp(
-            version_info, site, global_opts, "cp", args_text, opts
+            version_info, site, global_opts, CommandType.copy, args_text, opts
         ),
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),

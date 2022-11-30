@@ -1,0 +1,17 @@
+Title: check_mk_agent.linux: increase refresh interval for chrony section
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1669820175
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Prior to this werk, the chrony cached section had the same value for both age validity
+and the refresh interval. This led to an occasional CRIT status on the associating service
+as this was influenced by the timing of the refresh mechanism, the cache file writeout duration
+as well as the section processing duration on Checkmk's side. This werk, therefore, increases
+the age validity of the cached section.
+

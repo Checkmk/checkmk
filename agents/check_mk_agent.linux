@@ -1387,7 +1387,7 @@ section_fileinfo() {
 
 get_ntpq() {
     inpath ntpq || return 1
-    run_cached "ntp" 30 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true" | sed 's/\(<<<ntp:cached(.*,\)30)>>>/\1120)>>>/'
+    run_cached "ntp" 120 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 }
 
 section_timesyncd() {

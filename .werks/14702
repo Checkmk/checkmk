@@ -1,0 +1,15 @@
+Title: ps: Fix crash if user or cgroup are empty
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669819221
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Discovery previously crashed in case of a process with
+an empty user or cgroup.
+
+

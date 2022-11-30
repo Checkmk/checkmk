@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
+import itertools
 import logging
 from collections import defaultdict
 from collections.abc import Container, Iterable, Mapping, Sequence
@@ -123,24 +124,28 @@ def execute_checkmk_checks(
                 params=config_cache.hwsw_inventory_parameters(hostname),
                 parsed_sections_broker=broker,
             )
-        timed_results = [
-            *summarize_host_sections(
-                source_results=source_results,
-                include_ok_results=True,
-                exit_spec_cb=config_cache.exit_code_spec,
-                time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=hostname,
-                ),
-                is_piggyback=config_cache.is_piggyback_host(hostname),
+        timed_results = itertools.chain(
+            *(
+                summarize_host_sections(
+                    host_sections,
+                    source,
+                    include_ok_results=True,
+                    exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                    time_settings=config_cache.get_piggybacked_hosts_time_settings(
+                        piggybacked_hostname=source.hostname,
+                    ),
+                    is_piggyback=config_cache.is_piggyback_host(hostname),
+                )
+                for source, host_sections in source_results
             ),
-            *check_parsing_errors(
+            check_parsing_errors(
                 errors=broker.parsing_errors(),
             ),
-            *_check_plugins_missing_data(
+            _check_plugins_missing_data(
                 service_results,
                 exit_spec,
             ),
-        ]
+        )
     return ActiveCheckResult.from_subresults(
         *timed_results,
         _timing_results(tracker.duration, tuple((f[0], f[2]) for f in fetched)),

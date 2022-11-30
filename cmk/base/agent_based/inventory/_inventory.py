@@ -13,6 +13,7 @@ CL:
 
 from __future__ import annotations
 
+import itertools
 import logging
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Sequence
@@ -143,28 +144,34 @@ def check_inventory_tree(
         processing_failed=fetched_data_result.processing_failed,
         no_data_or_files=fetched_data_result.no_data_or_files,
         check_result=ActiveCheckResult.from_subresults(
-            *_check_fetched_data_or_trees(
-                parameters=parameters,
-                fetched_data_result=fetched_data_result,
-                inventory_tree=trees.inventory,
-                status_data_tree=trees.status_data,
-                old_tree=old_tree,
-            ),
-            *summarize_host_sections(
-                source_results=fetched_data_result.source_results,
-                # Do not use source states which would overwrite "State when inventory fails" in the
-                # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-                override_non_ok_state=parameters.fail_status,
-                exit_spec_cb=config_cache.exit_code_spec,
-                time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=hostname,
+            *itertools.chain(
+                _check_fetched_data_or_trees(
+                    parameters=parameters,
+                    fetched_data_result=fetched_data_result,
+                    inventory_tree=trees.inventory,
+                    status_data_tree=trees.status_data,
+                    old_tree=old_tree,
                 ),
-                is_piggyback=config_cache.is_piggyback_host(host_name),
-            ),
-            *check_parsing_errors(
-                errors=fetched_data_result.parsing_errors,
-                error_state=parameters.fail_status,
-            ),
+                *(
+                    summarize_host_sections(
+                        host_sections,
+                        source,
+                        # Do not use source states which would overwrite "State when inventory fails" in the
+                        # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
+                        override_non_ok_state=parameters.fail_status,
+                        exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                        time_settings=config_cache.get_piggybacked_hosts_time_settings(
+                            piggybacked_hostname=source.hostname,
+                        ),
+                        is_piggyback=config_cache.is_piggyback_host(host_name),
+                    )
+                    for source, host_sections in fetched_data_result.source_results
+                ),
+                check_parsing_errors(
+                    errors=fetched_data_result.parsing_errors,
+                    error_state=parameters.fail_status,
+                ),
+            )
         ),
         inventory_tree=trees.inventory,
         update_result=update_result,

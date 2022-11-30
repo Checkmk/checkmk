@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 from collections import Counter
 from collections.abc import Sequence
@@ -93,23 +94,31 @@ def execute_check_discovery(
     parsing_errors_results = check_parsing_errors(parsed_sections_broker.parsing_errors())
 
     return ActiveCheckResult.from_subresults(
-        *services_result,
-        host_labels_result,
-        *summarize_host_sections(
-            source_results=source_results,
-            exit_spec_cb=config_cache.exit_code_spec,
-            time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
-                piggybacked_hostname=hostname,
+        *itertools.chain(
+            services_result,
+            [host_labels_result],
+            *(
+                summarize_host_sections(
+                    host_sections,
+                    source,
+                    exit_spec=config_cache.exit_code_spec(source.hostname),
+                    time_settings=config_cache.get_piggybacked_hosts_time_settings(
+                        piggybacked_hostname=source.hostname,
+                    ),
+                    is_piggyback=config_cache.is_piggyback_host(host_name),
+                )
+                for source, host_sections in source_results
             ),
-            is_piggyback=config_cache.is_piggyback_host(host_name),
-        ),
-        *parsing_errors_results,
-        _schedule_rediscovery(
-            host_name,
-            config_cache=config_cache,
-            need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
-            and all(r.state == 0 for r in parsing_errors_results),
-        ),
+            parsing_errors_results,
+            [
+                _schedule_rediscovery(
+                    host_name,
+                    config_cache=config_cache,
+                    need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
+                    and all(r.state == 0 for r in parsing_errors_results),
+                )
+            ],
+        )
     )
 
 

@@ -10,7 +10,7 @@ from contextlib import suppress
 from pathlib import Path
 from uuid import UUID
 
-from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
+from agent_receiver.apps import agent_receiver_app, uuid_validation_router
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
     get_root_cert,
@@ -40,7 +40,7 @@ from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_N
 security = HTTPBasic()
 
 
-@AGENT_RECEIVER_APP.post("/pairing", response_model=PairingResponse)
+@agent_receiver_app.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
@@ -102,7 +102,7 @@ def _validate_registration_request(host_config: HostConfiguration) -> None:
         )
 
 
-@AGENT_RECEIVER_APP.post(
+@agent_receiver_app.post(
     "/register_with_hostname",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -155,7 +155,7 @@ def _write_registration_file(
     )
 
 
-@AGENT_RECEIVER_APP.post(
+@agent_receiver_app.post(
     "/register_with_labels",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -203,7 +203,7 @@ def _move_ready_file(uuid: UUID) -> None:
         )
 
 
-@UUID_VALIDATION_ROUTER.post(
+@uuid_validation_router.post(
     "/agent_data/{uuid}",
     status_code=HTTP_204_NO_CONTENT,
 )
@@ -285,7 +285,7 @@ async def agent_data(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-@UUID_VALIDATION_ROUTER.get(
+@uuid_validation_router.get(
     "/registration_status/{uuid}",
     response_model=RegistrationStatus,
 )

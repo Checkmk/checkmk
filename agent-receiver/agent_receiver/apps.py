@@ -6,6 +6,8 @@
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+from agent_receiver.log import configure_logger
+from agent_receiver.site_context import log_path, site_name
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -39,5 +41,23 @@ class _UUIDValidationRoute(APIRoute):
         return custom_route_handler
 
 
-AGENT_RECEIVER_APP = FastAPI(title="Checkmk Agent Receiver")
-UUID_VALIDATION_ROUTER = APIRouter(route_class=_UUIDValidationRoute)
+agent_receiver_app = FastAPI(title="Checkmk Agent Receiver")
+uuid_validation_router = APIRouter(route_class=_UUIDValidationRoute)
+
+
+def main_app() -> FastAPI:
+    configure_logger(log_path())
+
+    # register endpoints
+    from agent_receiver import endpoints  # pylint: disable=unused-import
+
+    # this must happen *after* registering the endpoints
+    agent_receiver_app.include_router(uuid_validation_router)
+
+    main_app_ = FastAPI(
+        openapi_url=None,
+        docs_url=None,
+        redoc_url=None,
+    )
+    main_app_.mount(f"/{site_name()}/agent-receiver", agent_receiver_app)
+    return main_app_

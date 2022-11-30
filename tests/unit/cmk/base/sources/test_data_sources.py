@@ -91,15 +91,15 @@ def test_host_config_creates_passing_source_sources(
     sources,
 ):
     ts = make_scenario(hostname, tags)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     assert [
         type(fetcher)
         for _meta, _file_cache, fetcher in make_sources(
             hostname,
             "127.0.0.1",
+            config_cache=config_cache,
             simulation_mode=True,
-            missing_sys_description=False,
             file_cache_max_age=file_cache.MaxAge.none(),
         )
     ] == sources

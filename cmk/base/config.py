@@ -3284,6 +3284,9 @@ class ConfigCache:
             return "ok"
         return default_host_check_command
 
+    def missing_sys_description(self, host_name: HostName) -> bool:
+        return self.in_binary_hostlist(host_name, snmp_without_sys_descr)
+
     def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
         """Return the fetch interval of SNMP sections in seconds
 

@@ -240,11 +240,9 @@ def _fetch_real_host_data(
             make_sources(
                 host_name_,
                 ipaddress_,
+                config_cache=config_cache,
                 force_snmp_cache_refresh=False,
                 on_scan_error=OnError.RAISE,
-                missing_sys_description=config_cache.in_binary_hostlist(
-                    host_name, config.snmp_without_sys_descr
-                ),
                 simulation_mode=config.simulation_mode,
                 file_cache_max_age=config_cache.max_cachefile_age(host_name),
             )

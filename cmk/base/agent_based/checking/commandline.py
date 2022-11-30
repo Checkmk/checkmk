@@ -83,13 +83,11 @@ def _commandline_checking(
             make_sources(
                 host_name_,
                 ipaddress_,
+                config_cache=config_cache,
                 force_snmp_cache_refresh=False,
                 selected_sections=selected_sections if nodes is None else NO_SELECTION,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
-                missing_sys_description=config_cache.in_binary_hostlist(
-                    host_name, config.snmp_without_sys_descr
-                ),
                 file_cache_max_age=config_cache.max_cachefile_age(host_name),
             )
             for host_name_, ipaddress_ in hosts

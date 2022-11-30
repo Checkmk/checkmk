@@ -1373,10 +1373,8 @@ class AutomationDiagHost(Automation):
         for source, file_cache, fetcher in sources.make_sources(
             host_name,
             ipaddress,
+            config_cache=config.get_config_cache(),
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name, config.snmp_without_sys_descr
-            ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
             if source.fetcher_type is FetcherType.SNMP:
@@ -1712,10 +1710,8 @@ class AutomationGetAgentOutput(Automation):
                 for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,
+                    config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
-                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        hostname, config.snmp_without_sys_descr
-                    ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
                     if source.fetcher_type is FetcherType.SNMP:

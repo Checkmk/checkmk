@@ -86,14 +86,11 @@ def commandline_discovery(
                     make_sources(
                         host_name_,
                         ip_address_,
+                        config_cache=config_cache,
                         force_snmp_cache_refresh=False,
                         selected_sections=selected_sections if nodes is None else NO_SELECTION,
                         on_scan_error=on_error if nodes is None else OnError.RAISE,
                         simulation_mode=config.simulation_mode,
-                        missing_sys_description=config_cache.in_binary_hostlist(
-                            host_name,
-                            config.snmp_without_sys_descr,
-                        ),
                         file_cache_max_age=config.max_cachefile_age(),
                     )
                     for host_name_, ip_address_ in hosts
@@ -260,14 +257,11 @@ def _commandline_check_discovery(
             make_sources(
                 host_name_,
                 ipaddress_,
+                config_cache=config_cache,
                 force_snmp_cache_refresh=False,
                 selected_sections=NO_SELECTION,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
-                missing_sys_description=config_cache.in_binary_hostlist(
-                    host_name,
-                    config.snmp_without_sys_descr,
-                ),
                 file_cache_max_age=config.max_cachefile_age(
                     discovery=(None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0)
                 ),

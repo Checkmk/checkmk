@@ -251,23 +251,22 @@ class _Builder:
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
+        config_cache: ConfigCache,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
         simulation_mode: bool,
-        missing_sys_description: bool,
         file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
-        self.config_cache: Final = config.get_config_cache()
+        self.config_cache: Final = config_cache
         self.host_config: Final = self.config_cache.make_host_config(self.host_name)
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.simulation_mode: Final = simulation_mode
-        self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
         self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
 
@@ -384,7 +383,7 @@ class _Builder:
                     selected_sections=self.selected_sections,
                 ),
                 on_error=self.on_scan_error,
-                missing_sys_description=self.missing_sys_description,
+                missing_sys_description=self.config_cache.missing_sys_description(self.host_name),
                 do_status_data_inventory=(
                     self.config_cache.hwsw_inventory_parameters(
                         self.host_name
@@ -440,7 +439,9 @@ class _Builder:
                         selected_sections=self.selected_sections,
                     ),
                     on_error=self.on_scan_error,
-                    missing_sys_description=self.missing_sys_description,
+                    missing_sys_description=self.config_cache.missing_sys_description(
+                        self.host_name
+                    ),
                     do_status_data_inventory=(
                         self.config_cache.hwsw_inventory_parameters(
                             self.host_name
@@ -650,22 +651,22 @@ def make_sources(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
-    missing_sys_description: bool,
     file_cache_max_age: MaxAge,
 ) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
         host_name,
         ipaddress,
+        config_cache=config_cache,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
-        missing_sys_description=missing_sys_description,
         file_cache_max_age=file_cache_max_age,
     ).sources
 

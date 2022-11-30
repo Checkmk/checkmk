@@ -87,8 +87,13 @@ powershell Write-Host "Building MSI..." -Foreground White
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
+pushd ..\cmk-agent-ctl
+call cargo_build.cmd
+if not %errorlevel% == 0 powershell Write-Host "Failed Cargo Build" -Foreground Red && popd && exit /b 72
+popd
+
 call build_ohm.cmd
-if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red && exit /b 71
+if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red exit /b 71
 
 ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8

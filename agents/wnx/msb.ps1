@@ -96,9 +96,9 @@ else {
 # disabled as unstable
 # $j_make = start-job -Init ([ScriptBlock]::Create("Set-Location '$pwd'")) -scriptblock $mk -argumentlist "-w", "-j", "2", "frozen_binaries"
 
-$j_r = @()
-Write-Host "Starting Rust Job" -foreground White
-$j_r += start-job -name Other -scriptblock $cargo_b
+#$j_r = @()
+#Write-Host "Starting Rust Job" -foreground White
+#$j_r += start-job -name Other -scriptblock $cargo_b
 
 # Write-Host "Starting Ohm Job" -foreground Blue
 # $j_r += start-job -scriptblock $msb -argumentlist ".\ohm\ohm.sln", "/p:Configuration=Release"
@@ -151,15 +151,15 @@ foreach ($job in $j_w) {
     RcvJob $job $job.Name
 }
 
-Write-Host "Job rust/ohm waiting... This may take few minutes" -foreground White
-do {
-    Wait-Job -Job $j_r -Timeout 5 | Out-Null
-} while(RunningCount($j_r) -eq 0 )
+#Write-Host "Job rust/ohm waiting... This may take few minutes" -foreground White
+#do {
+#    Wait-Job -Job $j_r -Timeout 5 | Out-Null
+#} while(RunningCount($j_r) -eq 0 )
 
-Write-Host "Job rust/ohm ready" -foreground Blue
-foreach ($job in $j_r) {
-    RcvJob $job Other
-}
+#Write-Host "Job rust/ohm ready" -foreground Blue
+#foreach ($job in $j_r) {
+#    RcvJob $job Other
+#}
 
 
 # disabled as unstable ###############

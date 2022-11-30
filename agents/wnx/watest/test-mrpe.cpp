@@ -257,19 +257,18 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_FALSE(me.caching_.has_value());
+        ASSERT_FALSE(me.caching_interval_.has_value());
     }
 
     {
         std::string base =
-            "Codepage (123456:yes) 'c:\\windows\\system32\\chcp.com' x d f";
+            "Codepage (interval=123456) 'c:\\windows\\system32\\chcp.com' x d f";
         MrpeEntry me("", base);
         EXPECT_EQ(me.exe_name_, "chcp.com");
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.caching_->add_age, true);
-        ASSERT_EQ(me.caching_->max_age, 123456);
+        ASSERT_EQ(*me.caching_interval_, 123456);
     }
 }
 
@@ -375,17 +374,16 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
         groups::kMrpe, vars::kMrpeConfig,
         {
             R"(check = Time 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
-            R"(check = CachedTime (10:no) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
-            R"(check = CachedTimeWithAge (10:yes) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = CachedTime (interval=10) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
         });
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(strings.size(), 3);
+    EXPECT_EQ(strings.size(), 2);
     mrpe.loadConfig();
     ASSERT_EQ(mrpe.includes().size(), 0);
-    ASSERT_EQ(mrpe.checks().size(), 3);
+    ASSERT_EQ(mrpe.checks().size(), 2);
 
-    EXPECT_EQ(mrpe.entries().size(), 3);
+    EXPECT_EQ(mrpe.entries().size(), 2);
     mrpe.updateSectionStatus();
 
     yaml[groups::kMrpe][vars::kMrpeParallel] = false;
@@ -404,26 +402,17 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto &time_1 = result_1[3];
     std::cout << time_1 << std::endl;
 
-    // expect "(powershell.exe) CachedTime 0 TIMESTAMP"
+    // expect "cached(TIME_SINCE_EPOCH,10) (powershell.exe) CachedTime 0
+    // TIMESTAMP"
     auto result_2 = cma::tools::SplitString(table[2], " ");
     auto mrpe_2 = mrpe.entries()[1];
-    EXPECT_EQ(result_2.size(), 4);
-    EXPECT_EQ(result_2[0], fmt::format("({})", mrpe_2.exe_name_));
-    EXPECT_EQ(result_2[1], mrpe_2.description_);
-    EXPECT_EQ(result_2[2], "0");
-    auto &time_2 = result_2[3];
-
-    // expect "cached(TIME_SINCE_EPOCH;10) (powershell.exe) CachedTimeWithAge 0
-    // TIMESTAMP"
-    auto result_3 = cma::tools::SplitString(table[3], " ");
-    auto mrpe_3 = mrpe.entries()[2];
-    EXPECT_EQ(result_3.size(), 5);
-    EXPECT_EQ(result_3[0].find("cached("), 0);
-    EXPECT_EQ(result_3[0].find(",10)"), result_3[0].size() - 4);
-    EXPECT_EQ(result_3[1], fmt::format("({})", mrpe_3.exe_name_));
-    EXPECT_EQ(result_3[2], mrpe_3.description_);
-    EXPECT_EQ(result_3[3], "0");
-    auto &time_3 = result_3[4];
+    EXPECT_EQ(result_2.size(), 5);
+    EXPECT_EQ(result_2[0].find("cached("), 0);
+    EXPECT_EQ(result_2[0].find(",10)"), result_2[0].size() - 4);
+    EXPECT_EQ(result_2[1], fmt::format("({})", mrpe_2.exe_name_));
+    EXPECT_EQ(result_2[2], mrpe_2.description_);
+    EXPECT_EQ(result_2[3], "0");
+    auto &time_2 = result_2[4];
 
     cma::tools::sleep(10);
 
@@ -432,8 +421,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto second_run = mrpe.generateContent();
     auto second_table = cma::tools::SplitString(second_run, "\n");
     EXPECT_TRUE(time_1 != cma::tools::SplitString(second_table[1], " ")[3]);
-    EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[3]);
-    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[4]);
+    EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[4]);
 }
 
 }  // namespace cma::provider

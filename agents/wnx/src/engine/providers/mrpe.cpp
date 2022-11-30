@@ -42,23 +42,25 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
 }
 
 namespace {
-std::optional<MrpeCachingInfo> ParseCacheAgeToken(std::string_view text) {
+std::optional<int> ParseCacheAgeToken(std::string_view text) {
     if (text.size() < 3 || text[0] != '(' || text[text.size() - 1] != ')') {
+        // Seems to be no interval spec, hence no caching.
         return {};
     }
 
-    auto tokens = tools::SplitString(std::string(text), ":");
+    auto tokens = tools::SplitString(std::string(text), "=");
     if (tokens.size() != 2) {
         return {};
     }
-
-    auto add_age = tokens[1] == "yes)";
+    if (tokens[0] != "(interval") {
+        XLOG::l(
+            "mrpe entry malformed: Unknown directive '{}', expected '(interval=SECONDS)'",
+            text);
+        return {};
+    }
 
     try {
-        auto cache_age = std::stoi(tokens[0].c_str() + 1);
-
-        return MrpeCachingInfo{cache_age, add_age};
-
+        return std::stoi(tokens[1]);
     } catch (std::invalid_argument const &e) {
         XLOG::l("mrpe entry malformed '{}'", e.what());
     } catch (std::out_of_range const &e) {
@@ -87,9 +89,9 @@ void MrpeEntry::loadFromString(const std::string &value) {
 
     int position_exe = 1;
 
-    caching_ = ParseCacheAgeToken(tokens[1]);
+    caching_interval_ = ParseCacheAgeToken(tokens[1]);
 
-    if (caching_) {
+    if (caching_interval_) {
         position_exe++;
     }
 
@@ -226,12 +228,7 @@ void MrpeProvider::addParsedIncludes() {
 }
 
 bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
-    auto table = tools::SplitString(entry, "=");
-    if (table.size() != 2) {
-        XLOG::t("Strange entry {} in {}", entry,
-                cfg::GetPathOfLoadedConfigAsString());
-        return false;
-    }
+    auto table = tools::SplitString(entry, "=", 1);
 
     // include entry determined when type is 'include' the type
     auto type = table.at(0);
@@ -356,12 +353,12 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
 
 std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
                             std::chrono::milliseconds timeout) {
-    if (!entry.caching_) {
+    if (!entry.caching_interval_) {
         return ExecMrpeEntry(entry, timeout);
     }
 
     const auto &[cached_result, cached_state] =
-        cache.getLineData(entry.description_, entry.caching_->max_age);
+        cache.getLineData(entry.description_, *entry.caching_interval_);
 
     switch (cached_state) {
         case MrpeCache::LineState::ready: {
@@ -372,12 +369,10 @@ std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
         }
             [[fallthrough]];
         case MrpeCache::LineState::old: {
-            auto result = ExecMrpeEntry(entry, timeout);
-            if (entry.caching_->add_age) {
-                result = std::format("cached({},{}) {}",
-                                     cma::tools::SecondsSinceEpoch(),
-                                     entry.caching_->max_age, result);
-            }
+            auto result =
+                std::format("cached({},{}) {}", cma::tools::SecondsSinceEpoch(),
+                            *entry.caching_interval_,
+                            ExecMrpeEntry(entry, timeout));
             cache.updateLine(entry.description_, result);
             return result;
         }

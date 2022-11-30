@@ -245,12 +245,9 @@ class PackageStore:
 
         return package
 
-    def remove(self, package_name: str | Path) -> None:
-        """Remove a local optional package file
-
-        If the input is a `Path` (or `str` representing a path) only the base name is considered.
-        """
-        (self.local_packages / Path(package_name).name).unlink()
+    def remove(self, package_id: PackageID) -> None:
+        """Remove a local optional package file"""
+        (self.local_packages / format_file_name(package_id)).unlink()
 
     def list_local_packages(self) -> list[Path]:
         try:
@@ -266,8 +263,8 @@ class PackageStore:
 
 
 # TODO: this can go
-def read_package(package_store: PackageStore, package_file_base_name: str) -> bytes:
-    return _get_full_package_path(package_store, package_file_base_name).read_bytes()
+def read_package(package_store: PackageStore, package_id: PackageID) -> bytes:
+    return _get_full_package_path(package_store, package_id).read_bytes()
 
 
 def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
@@ -361,18 +358,17 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
 
 
 # TODO: this belongs to PackageStore.
-def _get_full_package_path(package_store: PackageStore, package_file_name: str) -> Path:
+def _get_full_package_path(package_store: PackageStore, package_id: PackageID) -> Path:
+    package_file_name = format_file_name(package_id)
     for package in package_store.list_local_packages() + package_store.list_shipped_packages():
         if package_file_name == package.name:
             return package
     raise PackageException("Optional package %s does not exist" % package_file_name)
 
 
-def install_optional_package(
-    package_store: PackageStore, package_file_base_name: str
-) -> PackageInfo:
+def install_optional_package(package_store: PackageStore, package_id: PackageID) -> PackageInfo:
     return install(
-        _get_full_package_path(package_store, package_file_base_name),
+        _get_full_package_path(package_store, package_id),
         allow_outdated=True,
     )
 
@@ -691,9 +687,9 @@ def get_unpackaged_files() -> dict[str, list[str]]:
     return {part.ident: files for part, files in unpackaged_files().items()}
 
 
-def get_installed_package_infos() -> Mapping[PackageName, PackageInfo]:
+def get_installed_package_infos() -> Mapping[PackageID, PackageInfo]:
     return {
-        name: manifest
+        manifest.id: manifest
         for name in installed_names()
         if (manifest := get_installed_package_info(name)) is not None
     }
@@ -701,7 +697,7 @@ def get_installed_package_infos() -> Mapping[PackageName, PackageInfo]:
 
 def get_optional_package_infos(
     package_store: PackageStore,
-) -> Mapping[str, tuple[PackageInfo, bool]]:
+) -> Mapping[PackageID, tuple[PackageInfo, bool]]:
     local_packages = package_store.list_local_packages()
     local_names = {p.name for p in local_packages}
     shipped_packages = (
@@ -713,13 +709,13 @@ def get_optional_package_infos(
     }
 
 
-def get_enabled_package_infos() -> Mapping[str, PackageInfo]:
+def get_enabled_package_infos() -> Mapping[PackageID, PackageInfo]:
     return _get_package_infos(_get_enabled_package_paths())
 
 
-def _get_package_infos(paths: Iterable[Path]) -> Mapping[str, PackageInfo]:
+def _get_package_infos(paths: Iterable[Path]) -> Mapping[PackageID, PackageInfo]:
     return {
-        pkg_path.name: package_info
+        package_info.id: package_info
         for pkg_path in paths
         if (package_info := extract_package_info_optionally(pkg_path, logger)) is not None
     }
@@ -830,9 +826,9 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
 
     def mkp_of(rule_pack_file: str) -> PackageName | None:
         """Find the MKP for the given file"""
-        for package_name, package_info in get_installed_package_infos().items():
+        for package_id, package_info in get_installed_package_infos().items():
             if rule_pack_file in package_info.files.get("ec_rule_packs", []):
-                return package_name
+                return package_id.name
         return None
 
     exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]

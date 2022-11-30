@@ -207,7 +207,6 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
         }
 
         packaging.create(package_info)
-
         return package_info
 
     packaging.package_dir().mkdir(parents=True, exist_ok=True)

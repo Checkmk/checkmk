@@ -284,7 +284,7 @@ def package_remove(args: list[str]) -> None:
         raise PackageException("This package is enabled! Please disable it first.")
 
     logger.log(VERBOSE, "Removing package %s...", package_id.name)
-    PackageStore().remove(format_file_name(package_id))
+    PackageStore().remove(package_id)
     logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
 
 
@@ -299,7 +299,7 @@ def package_install(args: list[str]) -> None:
     with Path(path).open("rb") as fh:
         package = store.store(fh.read())
 
-    install_optional_package(store, format_file_name(package.id))
+    install_optional_package(store, package.id)
 
 
 def package_disable(args: list[str]) -> None:
@@ -312,7 +312,7 @@ def package_enable(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
     package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    install_optional_package(PackageStore(), format_file_name(package_id))
+    install_optional_package(PackageStore(), package_id)
 
 
 def package_disable_outdated(args: list[str]) -> None:

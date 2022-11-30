@@ -318,7 +318,10 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     expected_package_info = _read_package_info(packaging.PackageName("optional"))
 
     assert packaging.get_optional_package_infos(packaging.PackageStore()) == {
-        "optional-1.0.0.mkp": (expected_package_info, True)
+        packaging.PackageID(  # pylint: disable=unhashable-member  # you're wrong, pylint.
+            name=packaging.PackageName("optional"),
+            version=packaging.PackageVersion("1.0.0"),
+        ): (expected_package_info, True)
     }
 
 

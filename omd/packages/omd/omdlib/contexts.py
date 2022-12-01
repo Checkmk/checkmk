@@ -30,7 +30,6 @@ from typing import cast
 
 import omdlib
 import omdlib.utils
-from omdlib.config_hooks import call_hook, sort_hooks
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
 from omdlib.type_defs import Config, Replacements
@@ -89,7 +88,7 @@ class AbstractSiteContext(abc.ABC):
         return self._config
 
     @abc.abstractmethod
-    def load_config(self) -> None:
+    def load_config(self, defaults: dict[str, str]) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -151,23 +150,13 @@ class SiteContext(AbstractSiteContext):
             "###ROOT###": self.dir,
         }
 
-    def load_config(self) -> None:
+    def load_config(self, defaults: dict[str, str]) -> None:
         """Load all variables from omd/sites.conf. These variables always begin with
         CONFIG_. The reason is that this file can be sources with the shell.
 
         Puts these variables into the config dict without the CONFIG_. Also
         puts the variables into the process environment."""
-        self._config = self.read_site_config()
-
-        # Get the default values of all config hooks that are not contained
-        # in the site configuration. This can happen if there are new hooks
-        # after an update or when a site is being created.
-        if self.hook_dir and os.path.exists(self.hook_dir):
-            for hook_name in sort_hooks(os.listdir(self.hook_dir)):
-                if hook_name[0] != "." and hook_name not in self._config:
-                    content = call_hook(self, hook_name, ["default"])[1]
-                    self._config[hook_name] = content
-
+        self._config = {**defaults, **self.read_site_config()}
         self._config_loaded = True
 
     def read_site_config(self) -> Config:
@@ -287,7 +276,7 @@ class RootContext(AbstractSiteContext):
     def version(self) -> str:
         return omdlib.__version__
 
-    def load_config(self) -> None:
+    def load_config(self, defaults: dict[str, str]) -> None:
         pass
 
     def exists(self) -> bool:

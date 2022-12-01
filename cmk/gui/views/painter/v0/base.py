@@ -389,7 +389,7 @@ class Cell:
     def painter_options(self) -> list[str]:
         return self.painter().painter_options
 
-    def painter_parameters(self) -> Any:
+    def painter_parameters(self) -> PainterParameters | None:
         """The parameters configured in the view for this painter. In case the
         painter has params, it defaults to the valuespec default value and
         in case the painter has no params, it returns None."""
@@ -697,9 +697,9 @@ class PainterAdapter(Painter):
 
     def dynamic_columns(self, cell: Cell) -> list[ColumnName]:
         # TODO: the dynamic columns/derive functionality is added, once we migrate painters using it
-        if self._painter.dynamic_columns is None:
+        if self._painter.dynamic_columns is None or (params := cell.painter_parameters()) is None:
             return []
-        return list(self._painter.dynamic_columns(cell.painter_parameters()))
+        return list(self._painter.dynamic_columns(params))
 
     @property
     def painter_options(self) -> list[str]:
@@ -715,5 +715,5 @@ class PainterAdapter(Painter):
         )
         return self._painter.formatters.html(
             list(self._painter.computer([row], config))[0],
-            cell.painter_parameters(),
+            config,
         )

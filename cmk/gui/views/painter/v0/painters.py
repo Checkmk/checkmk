@@ -8,7 +8,6 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any
 
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
@@ -28,7 +27,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, Row, SorterName, VisualLinkSpec
+from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -596,7 +595,9 @@ class PainterSvcLongPluginOutput(Painter):
         )
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        params = cell.painter_parameters()
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+
         max_len = params.get("max_len", 0)
         long_output = row["service_long_plugin_output"]
 
@@ -1692,9 +1693,11 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         return self._dynamic_title(cell.painter_parameters())
 
     def export_title(self, cell: Cell) -> str:
-        return "{}_{}".format(self.ident, cell.painter_parameters()["ident"])
+        if (params := cell.painter_parameters()) is None:
+            return self.ident
+        return f"{self.ident}_{params['ident']}"
 
-    def _dynamic_title(self, params: dict[str, Any] | None = None) -> str:
+    def _dynamic_title(self, params: PainterParameters | None = None) -> str:
         if params is None:
             # Happens in view editor when adding a painter
             return self._default_title
@@ -1739,8 +1742,9 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
         )
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        params = cell.painter_parameters()
-        return _paint_custom_var(self._object_type, params["ident"].upper(), row)
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+        return _paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
 
 
 class PainterServiceCustomVariable(ABCPainterCustomVariable):
@@ -1777,9 +1781,9 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def group_by(self, row: Row, cell: Cell) -> str | tuple[str, ...]:
-        parameters: dict[str, str] | None = cell.painter_parameters()
-        if parameters is None:
+        if (parameters := cell.painter_parameters()) is None:
             return ""
+
         custom_variable_name = parameters["ident"]
         try:
             index = row["host_custom_variable_names"].index(custom_variable_name.upper())
@@ -2421,8 +2425,10 @@ class PainterHost(Painter):
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        params = cell.painter_parameters()
-        color_choices = params["color_choices"]
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+
+        color_choices = params.get("color_choices", [])
 
         if row["host_has_been_checked"]:
             state = row["host_state"]
@@ -2890,7 +2896,9 @@ class PainterHostServices(Painter):
         return Dictionary(elements=elements, title=_("Options"))
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        params = cell.painter_parameters()
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+
         render_states = params.get("render_states", [0, 1, 2, 3, "p"])
         render_pend = [1]
         if "p" in render_states:
@@ -4225,7 +4233,9 @@ class PainterLogDetailsHistory(Painter):
         )
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        params = cell.painter_parameters()
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+
         max_len = params.get("max_len", 0)
         long_output = row["log_long_plugin_output"]
 

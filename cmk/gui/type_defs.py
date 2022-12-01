@@ -224,7 +224,20 @@ PainterName = str
 SorterName = str
 ViewName = str
 ColumnName = str
-PainterParameters = dict  # TODO: Improve this type
+
+
+class PainterParameters(TypedDict, total=False):
+    # TODO Improve:
+    # First step was: make painter's param a typed dict with ALL possible keys.
+    aggregation: tuple[str, str]
+    color_choices: list[str]
+    column_title: str
+    ident: str
+    max_len: int
+    metric: str
+    render_states: list[int | str]
+    use_short: bool
+    uuid: str
 
 
 @dataclass(frozen=True)
@@ -242,6 +255,7 @@ class PainterSpec:
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
 
+        parameters: PainterParameters | None
         if isinstance(value[0], tuple):
             name, parameters = value[0]
         else:
@@ -284,13 +298,13 @@ class PainterSpec:
 @dataclass(frozen=True)
 class SorterSpec:
     # The sorter parameters should be moved to a separate attribute instead
-    sorter: SorterName | tuple[SorterName, Mapping[str, str]]
+    sorter: SorterName | tuple[SorterName, PainterParameters]
     negate: bool
     join_key: str | None = None
 
     def to_raw(
         self,
-    ) -> tuple[SorterName | tuple[SorterName, Mapping[str, str]], bool, str | None]:
+    ) -> tuple[SorterName | tuple[SorterName, PainterParameters], bool, str | None]:
         return (
             self.sorter,
             self.negate,

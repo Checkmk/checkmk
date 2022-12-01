@@ -39,7 +39,15 @@ from cmk.gui.inventory import (
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, Row, Rows, SorterName, SorterSpec, ViewSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    PainterParameters,
+    Row,
+    Rows,
+    SorterName,
+    SorterSpec,
+    ViewSpec,
+)
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
@@ -660,7 +668,7 @@ def _parse_url_sorters(
     config_sorters: Sequence[SorterSpec], cells: Sequence[Cell], sort: str | None
 ) -> list[SorterSpec]:
     sorters: list[SorterSpec] = []
-    sorter: SorterName | tuple[SorterName, Mapping[str, Any]]
+    sorter: SorterName | tuple[SorterName, PainterParameters]
     if not sort:
         return sorters
     for s in sort.split(","):
@@ -687,7 +695,7 @@ def _parse_url_sorters(
 
 def _sorter_parameters_by_ident(
     sorters: Sequence[SorterSpec], cells: Sequence[Cell], sorter_name: str, ident: str
-) -> Mapping[str, Any] | None:
+) -> PainterParameters | None:
     """Resolve sorter reference to configured parameters
 
     We can not transport the sorter parameters through the URL of a view. So only a reference in the
@@ -705,9 +713,11 @@ def _sorter_parameters_by_ident(
             return sorter[1]
 
     for cell in cells:
-        parameters = cell.painter_parameters()
-        if cell.painter_name() == sorter_name and parameters.get("ident", parameters.get("uuid")):
-            return parameters
+        if (params := cell.painter_parameters()) is None:
+            params = {}
+
+        if cell.painter_name() == sorter_name and params.get("ident", params.get("uuid")):
+            return params
 
     return None
 

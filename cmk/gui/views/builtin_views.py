@@ -10,7 +10,14 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import PainterSpec, SorterSpec, ViewName, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import (
+    PainterParameters,
+    PainterSpec,
+    SorterSpec,
+    ViewName,
+    ViewSpec,
+    VisualLinkSpec,
+)
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -4887,29 +4894,29 @@ builtin_views["cmk_servers"] = {
     "painters": [
         PainterSpec(
             name="host",
-            parameters={
-                "color_choices": [
+            parameters=PainterParameters(
+                color_choices=[
                     "colorize_up",
                     "colorize_down",
                     "colorize_unreachable",
                     "colorize_pending",
                     "colorize_downtime",
                 ]
-            },
+            ),
             link_spec=VisualLinkSpec(type_name="views", name="host"),
             tooltip="host_addresses",
         ),
         PainterSpec(
             name="inv_software_os_name",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="inv_hardware_cpu_cores",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="inv_hardware_memory_total_ram_usable",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="perfometer",

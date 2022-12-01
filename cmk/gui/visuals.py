@@ -76,6 +76,7 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.utils import unique_default_name_suggestion, validate_id
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import (
@@ -2123,9 +2124,13 @@ def _encode_page_context(page_context: VisualContext) -> VisualContext:
 
 @cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual() -> None:
+    check_csrf_token()
     visual_type_name = html.request.get_str_input_mandatory(
         'visual_type')  # dashboards / views / ...
-    visual_type = visual_type_registry[visual_type_name]()
+    try:
+        visual_type = visual_type_registry[visual_type_name]()
+    except KeyError:
+        raise MKUserError('visual_type', _('Invalid visual type'))
 
     visual_name = html.request.get_str_input_mandatory("visual_name")  # add to this visual
 

@@ -78,7 +78,7 @@ if(run_clang_tidy_path)
   add_custom_target(
     tidy
     COMMAND
-      "echo" "${PYTHON_EXECUTABLE}" "${run_clang_tidy_path}"
+      "${PYTHON_EXECUTABLE}" "${run_clang_tidy_path}"
       -clang-tidy-binary=clang-tidy-${CLANG_VERSION}
       -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}
       $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 -p=${CMAKE_BINARY_DIR}

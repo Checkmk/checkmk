@@ -1,0 +1,22 @@
+Title: Distributed configuration: Fix active Setup menu on remote site
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1670005147
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+On remote sites with enabled configuration replication which were one major version ahead of the
+central site, the Setup menu was always active, even if <i>Disable remote configuration</i> was
+selected in the central site. Hence, users could actively change the configuration, which was
+however overwritten upon the next configuration synchronization with the central site.
+
+Note that this issue also occured if a remote site running on the same major version as the central
+site was updated to the next higher major version. In case the central site was updated as well (st.
+both sites ran on the same major version again), the issue could be solved by activating changes
+for the remote site in the central site for the first time after updating both sites.
+
+This issue was present since 2.0.0p6 / 2.1.0.

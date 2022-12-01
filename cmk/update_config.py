@@ -116,7 +116,7 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.plugins.views.utils import get_all_views
 from cmk.gui.plugins.wato.utils import config_variable_registry
-from cmk.gui.plugins.watolib.utils import filter_unknown_settings
+from cmk.gui.plugins.watolib.utils import filter_unknown_settings, UNREGISTERED_SETTINGS
 from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.logged_in import SuperUserContext
@@ -483,6 +483,7 @@ class UpdateConfig:
             {
                 config_var: self._transform_global_config_value(config_var, config_val)
                 for config_var, config_val in global_config.items()
+                if config_var not in UNREGISTERED_SETTINGS
             }
         )
         return global_config

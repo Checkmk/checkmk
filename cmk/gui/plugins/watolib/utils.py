@@ -302,8 +302,19 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVaria
 config_variable_registry = ConfigVariableRegistry()
 
 
+# Some settings are handed over from the central site but are not registered in the
+# configuration domains since the user must not change it directly. They all belong
+# to the GUI config domain.
+UNREGISTERED_SETTINGS = {
+    "wato_enabled",
+    "userdb_automatic_sync",
+    "user_login",
+}
+
+
 def filter_unknown_settings(settings: GlobalSettings) -> GlobalSettings:
-    return {k: v for k, v in settings.items() if k in config_variable_registry}
+    known_settings = set(config_variable_registry) | UNREGISTERED_SETTINGS
+    return {k: v for k, v in settings.items() if k in known_settings}
 
 
 def configvar_order() -> dict[str, int]:

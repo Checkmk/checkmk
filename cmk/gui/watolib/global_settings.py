@@ -6,7 +6,11 @@
 from typing import Any
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    UNREGISTERED_SETTINGS,
+)
 from cmk.gui.type_defs import GlobalSettings
 
 
@@ -43,11 +47,7 @@ def save_global_settings(
 
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
-    for varname in [
-        "wato_enabled",
-        "userdb_automatic_sync",
-        "user_login",
-    ]:
+    for varname in UNREGISTERED_SETTINGS:
         if varname in vars_:
             per_domain.setdefault(config_domain_name.GUI, {})[varname] = vars_[varname]
 

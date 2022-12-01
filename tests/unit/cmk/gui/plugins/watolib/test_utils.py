@@ -12,8 +12,10 @@ def test_filter_unknown_settings() -> None:
             "default_language": "en",
             "snmp_backend_default": "Inline",
             "unknown": "filtered_out",
+            "wato_enabled": False,
         }
     ) == {
         "default_language": "en",
         "snmp_backend_default": "Inline",
+        "wato_enabled": False,
     }

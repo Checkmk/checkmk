@@ -10,7 +10,11 @@ from cmk.utils.log import VERBOSE
 
 from cmk.gui.i18n import is_community_translation
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
-from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
+from cmk.gui.plugins.watolib.utils import (
+    config_variable_registry,
+    filter_unknown_settings,
+    UNREGISTERED_SETTINGS,
+)
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_users
@@ -130,6 +134,7 @@ def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSett
         **{
             config_var: _transform_global_config_value(config_var, config_val)
             for config_var, config_val in global_config.items()
+            if config_var not in UNREGISTERED_SETTINGS
         },
     }
 

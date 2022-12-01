@@ -12,6 +12,7 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName, ServiceState
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -28,6 +29,7 @@ def active_check_inventory(
     options: dict,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -36,6 +38,7 @@ def active_check_inventory(
             execute_active_check_inventory,
             hostname,
             config_cache=config_cache,
+            file_cache_options=file_cache_options,
             inventory_parameters=config_cache.inventory_parameters,
             parameters=HWSWInventoryParameters.from_raw(options),
         ),
@@ -53,6 +56,7 @@ def active_check_inventory(
 def execute_active_check_inventory(
     host_name: HostName,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
 ) -> ActiveCheckResult:
@@ -65,6 +69,7 @@ def execute_active_check_inventory(
     result = check_inventory_tree(
         host_name,
         config_cache=config_cache,
+        file_cache_options=file_cache_options,
         inventory_parameters=inventory_parameters,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,

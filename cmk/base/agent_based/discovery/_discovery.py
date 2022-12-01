@@ -44,6 +44,7 @@ def execute_check_discovery(
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
+    keep_outdated: bool,
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -57,6 +58,7 @@ def execute_check_discovery(
     host_sections, source_results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
+        keep_outdated=keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     store_piggybacked_sections(host_sections)

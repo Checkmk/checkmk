@@ -32,6 +32,7 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.core_helpers.agent import AgentRawDataSection
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
 
@@ -879,6 +880,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         config_cache=config_cache,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
+        file_cache_options=FileCacheOptions(),
         arg_only_new=False,
     )
 

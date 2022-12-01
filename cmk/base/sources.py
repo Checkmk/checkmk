@@ -25,7 +25,7 @@ from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, 
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
 from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
-from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
+from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.ipmi import IPMIFetcher
@@ -62,25 +62,26 @@ def parse(
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
+    keep_outdated: bool,
     logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    parser = _make_parser(source, logger=logger)
+    parser = _make_parser(source, keep_outdated=keep_outdated, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(source: SourceInfo, *, logger: logging.Logger) -> Parser:
+def _make_parser(source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger) -> Parser:
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             source.hostname,
             SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
-            **_make_snmp_parser_config(source.hostname)._asdict(),
+            **_make_snmp_parser_config(source.hostname, keep_outdated=keep_outdated)._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(source.hostname)
+    agent_parser_config = _make_agent_parser_config(source.hostname, keep_outdated=keep_outdated)
     return AgentParser(
         source.hostname,
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
@@ -131,7 +132,7 @@ def make_file_cache_path_template(
     }[fetcher_type]
 
 
-def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
+def _make_agent_parser_config(hostname: HostName, *, keep_outdated: bool) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
@@ -139,13 +140,13 @@ def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     return AgentParserConfig(
         check_interval=config_cache.check_mk_check_interval(hostname),
         encoding_fallback=config.fallback_agent_output_encoding,
-        keep_outdated=FileCacheGlobals.keep_outdated,
+        keep_outdated=keep_outdated,
         translation=config.get_piggyback_translations(hostname),
         agent_simulator=config.agent_simulator,
     )
 
 
-def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
+def _make_snmp_parser_config(hostname: HostName, *, keep_outdated: bool) -> SNMPParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
@@ -154,7 +155,7 @@ def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
         check_intervals=make_check_intervals(
             config_cache, hostname, selected_sections=NO_SELECTION
         ),
-        keep_outdated=FileCacheGlobals.keep_outdated,
+        keep_outdated=keep_outdated,
     )
 
 
@@ -256,6 +257,7 @@ class _Builder:
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
         simulation_mode: bool,
+        file_cache_options: FileCacheOptions,
         file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
@@ -267,6 +269,7 @@ class _Builder:
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.simulation_mode: Final = simulation_mode
+        self.file_cache_options: Final = file_cache_options
         self.file_cache_max_age: Final = file_cache_max_age
         self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
 
@@ -340,7 +343,7 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=FileCacheGlobals.use_outdated,
+                    use_outdated=self.file_cache_options.use_outdated,
                     simulation=False,  # TODO Quickfix for SUP-9912
                     use_only_cache=False,
                     file_cache_mode=FileCacheMode.DISABLED,
@@ -402,11 +405,15 @@ class _Builder:
                 ),
                 use_outdated=(
                     self.simulation_mode
-                    or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated)
+                    or (
+                        False
+                        if self.force_snmp_cache_refresh
+                        else self.file_cache_options.use_outdated
+                    )
                 ),
                 simulation=self.simulation_mode,
                 use_only_cache=False,
-                file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                file_cache_mode=self.file_cache_options.file_cache_mode(),
             ),
         )
 
@@ -465,12 +472,12 @@ class _Builder:
                         or (
                             False
                             if self.force_snmp_cache_refresh
-                            else FileCacheGlobals.use_outdated
+                            else self.file_cache_options.use_outdated
                         )
                     ),
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         elif protocol == "ipmi":
@@ -495,10 +502,10 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         else:
@@ -536,10 +543,10 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
 
@@ -563,13 +570,13 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=MaxAge(interval, interval, interval),
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=True,
                     file_cache_mode=(
                         # Careful: at most read-only!
                         FileCacheMode.DISABLED
-                        if FileCacheGlobals.disabled
+                        if self.file_cache_options.disabled
                         else FileCacheMode.READ
                     ),
                 ),
@@ -598,10 +605,10 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
-                    use_only_cache=FileCacheGlobals.tcp_use_only_cache,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    use_only_cache=self.file_cache_options.tcp_use_only_cache,
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
@@ -639,10 +646,10 @@ class _Builder:
                     fetcher_type=source.fetcher_type, ident=source.ident
                 ),
                 max_age=self.file_cache_max_age,
-                use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                 simulation=self.simulation_mode,
                 use_only_cache=False,
-                file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                file_cache_mode=self.file_cache_options.file_cache_mode(),
             )
             yield source, fetcher, file_cache
 
@@ -656,6 +663,7 @@ def make_sources(
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
+    file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
 ) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
@@ -667,6 +675,7 @@ def make_sources(
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
+        file_cache_options=file_cache_options,
         file_cache_max_age=file_cache_max_age,
     ).sources
 

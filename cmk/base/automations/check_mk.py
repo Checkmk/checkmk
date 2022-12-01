@@ -68,7 +68,7 @@ from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentia
 
 import cmk.core_helpers.cache
 from cmk.core_helpers import factory, FetcherType, get_raw_data
-from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.tcp import TCPFetcher
@@ -145,6 +145,9 @@ class AutomationDiscovery(DiscoveryAutomation):
         else:
             use_cached_snmp_data = True
 
+        # Handle @scan here
+        file_cache_options = FileCacheOptions()
+
         if len(args) < 2:
             raise MKAutomationError(
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
@@ -165,6 +168,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters=None,
                 on_error=on_error,
                 use_cached_snmp_data=use_cached_snmp_data,
+                file_cache_options=file_cache_options,
                 max_cachefile_age=config.max_cachefile_age(),
             )
 
@@ -224,7 +228,6 @@ class AutomationTryDiscovery(Automation):
     ) -> tuple[
         Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
     ]:
-
         use_cached_snmp_data = False
         if args[0] == "@noscan":
             args = args[1:]
@@ -233,6 +236,9 @@ class AutomationTryDiscovery(Automation):
         elif args[0] == "@scan":
             # Do a full service scan
             args = args[1:]
+
+        # Handle @scan here.
+        file_cache_options = FileCacheOptions()
 
         if args[0] == "@raiseerrors":
             on_error = OnError.RAISE
@@ -243,6 +249,7 @@ class AutomationTryDiscovery(Automation):
         return discovery.get_check_preview(
             host_name=HostName(args[0]),
             config_cache=config.get_config_cache(),
+            file_cache_options=file_cache_options,
             max_cachefile_age=config.max_cachefile_age(),
             use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
@@ -1279,6 +1286,9 @@ class AutomationDiagHost(Automation):
             if snmpv3_use == "authPriv":
                 snmpv3_privacy_proto, snmpv3_privacy_password = args[13:15]
 
+        # No caching option over commandline here.
+        file_cache_options = FileCacheOptions()
+
         if not ipaddress:
             try:
                 resolved_address = config.lookup_ip_address(hostname)
@@ -1304,6 +1314,7 @@ class AutomationDiagHost(Automation):
                         agent_port=agent_port,
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
+                        file_cache_options=file_cache_options,
                     )
                 )
 
@@ -1365,9 +1376,11 @@ class AutomationDiagHost(Automation):
         self,
         host_name: HostName,
         ipaddress: HostAddress,
+        *,
         agent_port: int,
         cmd: str,
         tcp_connect_timeout: float | None,
+        file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
         state, output = 0, ""
         for source, file_cache, fetcher in sources.make_sources(
@@ -1375,6 +1388,7 @@ class AutomationDiagHost(Automation):
             ipaddress,
             config_cache=config.get_config_cache(),
             simulation_mode=config.simulation_mode,
+            file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
             if source.fetcher_type is FetcherType.SNMP:
@@ -1699,6 +1713,9 @@ class AutomationGetAgentOutput(Automation):
         ty = args[1]
         config_cache = config.get_config_cache()
 
+        # No caching option over commandline here.
+        file_cache_options = FileCacheOptions()
+
         success = True
         output = ""
         info = b""
@@ -1706,12 +1723,16 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(hostname)
             if ty == "agent":
-                FileCacheGlobals.maybe = not FileCacheGlobals.disabled
+                # Where would the `disabled` option come from?
+                file_cache_options = file_cache_options._replace(
+                    maybe=not file_cache_options.disabled
+                )
                 for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,
                     config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
+                    file_cache_options=file_cache_options,
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
                     if source.fetcher_type is FetcherType.SNMP:
@@ -1722,6 +1743,7 @@ class AutomationGetAgentOutput(Automation):
                         source,
                         raw_data,
                         selection=NO_SELECTION,
+                        keep_outdated=file_cache_options.keep_outdated,
                         logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(

@@ -88,6 +88,7 @@ def execute_checkmk_checks(
     config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
+    keep_outdated: bool,
     selected_sections: SectionNameCollection,
     submitter: Submitter,
 ) -> ActiveCheckResult:
@@ -103,6 +104,7 @@ def execute_checkmk_checks(
     host_sections, source_results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
+        keep_outdated=keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
     )
     store_piggybacked_sections(host_sections)

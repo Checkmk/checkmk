@@ -35,6 +35,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.autochecks as autochecks
@@ -109,6 +110,7 @@ def automation_discovery(
     service_filters: _ServiceFilters | None,
     on_error: OnError,
     use_cached_snmp_data: bool,
+    file_cache_options: FileCacheOptions,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -117,8 +119,8 @@ def automation_discovery(
         result.error_text = ""
         return result
 
-    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
-    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
+    # TODO(ml): Move that to caller(s)
+    file_cache_options = file_cache_options._replace(use_outdated=True, maybe=use_cached_snmp_data)
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -150,6 +152,7 @@ def automation_discovery(
                     selected_sections=NO_SELECTION,
                     on_scan_error=on_error if nodes is None else OnError.RAISE,
                     simulation_mode=config.simulation_mode,
+                    file_cache_options=file_cache_options,
                     file_cache_max_age=max_cachefile_age,
                 )
                 for host_name_, ipaddress_ in hosts
@@ -159,6 +162,7 @@ def automation_discovery(
         host_sections, _results = parse_messages(
             ((f[0], f[1]) for f in fetched),
             selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
         store_piggybacked_sections(host_sections)
@@ -366,6 +370,7 @@ def discover_marked_hosts(
     core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
     *,
+    file_cache_options: FileCacheOptions,
     config_cache: ConfigCache,
 ) -> None:
     """Autodiscovery"""
@@ -392,6 +397,7 @@ def discover_marked_hosts(
             activation_required |= _discover_marked_host(
                 host_name,
                 config_cache=config_cache,
+                file_cache_options=file_cache_options,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -410,8 +416,6 @@ def discover_marked_hosts(
             config_cache.initialize()
 
             # reset these to their original value to create a correct config
-            cmk.core_helpers.cache.FileCacheGlobals.use_outdated = False
-            cmk.core_helpers.cache.FileCacheGlobals.maybe = True
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     core,
@@ -433,6 +437,7 @@ def _discover_marked_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
@@ -459,6 +464,7 @@ def _discover_marked_host(
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,
         use_cached_snmp_data=True,
+        file_cache_options=file_cache_options,
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
         # make sure we may use the file the active discovery check left behind:

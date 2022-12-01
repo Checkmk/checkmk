@@ -23,6 +23,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -54,6 +55,7 @@ def commandline_discovery(
     *,
     config_cache: ConfigCache,
     selected_sections: SectionNameCollection,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -91,6 +93,7 @@ def commandline_discovery(
                         selected_sections=selected_sections if nodes is None else NO_SELECTION,
                         on_scan_error=on_error if nodes is None else OnError.RAISE,
                         simulation_mode=config.simulation_mode,
+                        file_cache_options=file_cache_options,
                         file_cache_max_age=config.max_cachefile_age(),
                     )
                     for host_name_, ip_address_ in hosts
@@ -100,6 +103,7 @@ def commandline_discovery(
             host_sections, _results = parse_messages(
                 ((f[0], f[1]) for f in fetched),
                 selected_sections=selected_sections,
+                keep_outdated=file_cache_options.keep_outdated,
                 logger=logging.getLogger("cmk.base.discovery"),
             )
             store_piggybacked_sections(host_sections)
@@ -220,10 +224,17 @@ def commandline_check_discovery(
     *,
     config_cache: ConfigCache,
     active_check_handler: Callable[[HostName, str], object],
+    file_cache_options: FileCacheOptions,
     keepalive: bool,
 ) -> ServiceState:
     return error_handling.check_result(
-        partial(_commandline_check_discovery, host_name, ipaddress, config_cache=config_cache),
+        partial(
+            _commandline_check_discovery,
+            host_name,
+            ipaddress,
+            file_cache_options=file_cache_options,
+            config_cache=config_cache,
+        ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",
@@ -239,6 +250,7 @@ def _commandline_check_discovery(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    file_cache_options: FileCacheOptions,
     config_cache: ConfigCache,
 ) -> ActiveCheckResult:
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
@@ -262,8 +274,9 @@ def _commandline_check_discovery(
                 selected_sections=NO_SELECTION,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
                 file_cache_max_age=config.max_cachefile_age(
-                    discovery=(None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0)
+                    discovery=(None if file_cache_options.maybe else 0)
                 ),
             )
             for host_name_, ipaddress_ in hosts
@@ -271,4 +284,9 @@ def _commandline_check_discovery(
         mode=Mode.DISCOVERY,
     )
 
-    return execute_check_discovery(host_name, config_cache=config_cache, fetched=fetched)
+    return execute_check_discovery(
+        host_name,
+        config_cache=config_cache,
+        fetched=fetched,
+        keep_outdated=file_cache_options.keep_outdated,
+    )

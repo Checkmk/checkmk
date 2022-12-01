@@ -30,9 +30,16 @@ def active_check_discovery(
     ],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    keep_outdated: bool,
 ) -> ServiceState:
     return error_handling.check_result(
-        partial(execute_check_discovery, host_name, config_cache=config_cache, fetched=fetched),
+        partial(
+            execute_check_discovery,
+            host_name,
+            config_cache=config_cache,
+            fetched=fetched,
+            keep_outdated=keep_outdated,
+        ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",

@@ -41,6 +41,7 @@ def active_check_checking(
     selected_sections: SectionNameCollection = NO_SELECTION,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    keep_outdated: bool,
 ) -> ServiceState:
     """
     See Also:
@@ -55,6 +56,7 @@ def active_check_checking(
             config_cache=config_cache,
             fetched=fetched,
             run_plugin_names=run_plugin_names,
+            keep_outdated=keep_outdated,
             selected_sections=selected_sections,
             submitter=submitter,
         ),

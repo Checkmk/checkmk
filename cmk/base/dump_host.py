@@ -24,6 +24,7 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.check_table as check_table
@@ -169,6 +170,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         for source, _file_cache, fetcher in sources.make_sources(
             hostname,
             ipaddress,
+            file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=file_cache.MaxAge.none(),

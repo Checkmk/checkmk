@@ -43,6 +43,8 @@ Cache hierarchy
 
 """
 
+from __future__ import annotations
+
 import abc
 import copy
 import enum
@@ -64,7 +66,7 @@ from .type_defs import AgentRawDataSection, Mode
 __all__ = [
     "ABCRawDataSection",
     "FileCache",
-    "FileCacheGlobals",
+    "FileCacheOptions",
     "PersistedSections",
     "SectionStore",
     "TRawDataSection",
@@ -445,7 +447,10 @@ class FileCache(Generic[TRawData], abc.ABC):
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
 
-class FileCacheGlobals:
+class FileCacheOptions(NamedTuple):
+    # TODO(ml): Split between fetcher and checker options; maybe also find
+    # better names.
+
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
@@ -453,16 +458,15 @@ class FileCacheGlobals:
     # It's used to 'transport' caching opt between modules, eg:
     # - modes: FileCacheGlobals.maybe = use_caches
     # - discovery: use_caches = FileCacheGlobals.maybe
-    maybe = False
+    maybe: bool = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
-    use_outdated = False
+    use_outdated: bool = False
     # Set by the --no-tcp option from discovery, inventory, inventory as check,
     # and dump agent.
-    tcp_use_only_cache = False
+    tcp_use_only_cache: bool = False
     # Set by the --force option from inventory.
-    keep_outdated = False
+    keep_outdated: bool = False
 
-    @staticmethod
-    def file_cache_mode() -> FileCacheMode:
-        return FileCacheMode.DISABLED if FileCacheGlobals.disabled else FileCacheMode.READ_WRITE
+    def file_cache_mode(self) -> FileCacheMode:
+        return FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE

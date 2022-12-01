@@ -51,6 +51,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
@@ -99,6 +100,7 @@ def check_inventory_tree(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
@@ -123,7 +125,10 @@ def check_inventory_tree(
         )
 
     fetched_data_result = _fetch_real_host_data(
-        host_name, config_cache=config_cache, selected_sections=selected_sections
+        host_name,
+        config_cache=config_cache,
+        file_cache_options=file_cache_options,
+        selected_sections=selected_sections,
     )
 
     trees, update_result = _inventorize_real_host(
@@ -225,6 +230,7 @@ def _fetch_real_host_data(
     *,
     selected_sections: SectionNameCollection,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
 ) -> FetchedDataResult:
     ipaddress = config.lookup_ip_address(host_name)
     nodes = config_cache.nodes_of(host_name)
@@ -244,6 +250,7 @@ def _fetch_real_host_data(
                 force_snmp_cache_refresh=False,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
                 file_cache_max_age=config_cache.max_cachefile_age(host_name),
             )
             for host_name_, ipaddress_ in hosts
@@ -253,6 +260,7 @@ def _fetch_real_host_data(
     host_sections, results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
     store_piggybacked_sections(host_sections)

@@ -9,6 +9,7 @@ from tests.testlib.base import Scenario
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.core_helpers.cache import FileCacheOptions
 
 from cmk.base.sources import make_sources
 
@@ -100,6 +101,7 @@ def test_host_config_creates_passing_source_sources(
             "127.0.0.1",
             config_cache=config_cache,
             simulation_mode=True,
+            file_cache_options=FileCacheOptions(),
             file_cache_max_age=file_cache.MaxAge.none(),
         )
     ] == sources

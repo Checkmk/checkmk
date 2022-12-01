@@ -13,6 +13,7 @@ import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import EVERYTHING
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
@@ -1236,6 +1237,7 @@ def test_check_inventory_tree(
         parameters=config.HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
+        file_cache_options=FileCacheOptions(),
         old_tree=StructuredDataNode(),
     ).check_result
 
@@ -1284,6 +1286,7 @@ def test_check_inventory_tree_no_data_or_files(
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
         parameters=config.HWSWInventoryParameters.from_raw({}),
+        file_cache_options=FileCacheOptions(),
         old_tree=StructuredDataNode(),
     ).check_result
 

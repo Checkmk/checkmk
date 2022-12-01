@@ -12,6 +12,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -28,6 +29,7 @@ def commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
@@ -41,6 +43,7 @@ def commandline_checking(
             host_name,
             ipaddress,
             config_cache=config_cache,
+            file_cache_options=file_cache_options,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
             submitter=submitter,
@@ -61,6 +64,7 @@ def _commandline_checking(
     ipaddress: HostAddress | None,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
@@ -88,6 +92,7 @@ def _commandline_checking(
                 selected_sections=selected_sections if nodes is None else NO_SELECTION,
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
                 file_cache_max_age=config_cache.max_cachefile_age(host_name),
             )
             for host_name_, ipaddress_ in hosts
@@ -100,5 +105,6 @@ def _commandline_checking(
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
         submitter=submitter,
     )

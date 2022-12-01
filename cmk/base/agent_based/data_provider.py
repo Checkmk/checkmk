@@ -282,6 +282,7 @@ def parse_messages(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
+    keep_outdated: bool,
     logger: logging.Logger,
 ) -> tuple[
     Mapping[HostKey, HostSections],
@@ -310,6 +311,7 @@ def parse_messages(
             source,
             raw_data,
             selection=selected_sections,
+            keep_outdated=keep_outdated,
             logger=logger,
         )
         results.append((source, source_result))

@@ -44,7 +44,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.core_helpers.factory as snmp_factory
 from cmk.core_helpers import FetcherType, get_raw_data
-from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.type_defs import Mode as FetchMode
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
@@ -174,21 +174,23 @@ modes.register_general_option(
 # .
 
 
-def _handle_fetcher_options(options: Mapping[str, object]) -> None:
+def _handle_fetcher_options(options: Mapping[str, object]) -> FileCacheOptions:
+    file_cache_options = FileCacheOptions()
 
     if options.get("cache", False):
-        FileCacheGlobals.maybe = True
-        FileCacheGlobals.use_outdated = True
+        file_cache_options = file_cache_options._replace(maybe=True, use_outdated=True)
 
     if options.get("no-cache", False):
-        FileCacheGlobals.disabled = True
+        file_cache_options = file_cache_options._replace(disabled=True)
 
     if options.get("no-tcp", False):
-        FileCacheGlobals.tcp_use_only_cache = True
+        file_cache_options = file_cache_options._replace(tcp_use_only_cache=True)
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()
         ip_lookup.enforce_localhost()
+
+    return file_cache_options
 
 
 _FETCHER_OPTIONS: Final = [
@@ -417,7 +419,7 @@ modes.register(
 
 
 def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) -> None:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
         if config_cache.is_cluster(hostname):
@@ -433,6 +435,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             ipaddress,
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
+            file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
             if source.fetcher_type is FetcherType.SNMP:
@@ -440,7 +443,11 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
 
             raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
-                source, raw_data, selection=NO_SELECTION, logger=log.logger
+                source,
+                raw_data,
+                keep_outdated=file_cache_options.keep_outdated,
+                selection=NO_SELECTION,
+                logger=log.logger,
             )
             source_results = summarize(
                 source.hostname,
@@ -1459,7 +1466,7 @@ modes.register(
 
 
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
 
     if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
@@ -1468,7 +1475,10 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     config.load()
     config_cache = config.get_config_cache()
     discovery.discover_marked_hosts(
-        create_core(config.monitoring_core), queue, config_cache=config_cache
+        create_core(config.monitoring_core),
+        queue,
+        config_cache=config_cache,
+        file_cache_options=file_cache_options,
     )
 
 
@@ -1506,12 +1516,13 @@ def mode_check_discovery(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> int:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
     return discovery.commandline_check_discovery(
         hostname,
         config_cache=config.get_config_cache(),
         ipaddress=None,
         active_check_handler=active_check_handler,
+        file_cache_options=file_cache_options,
         keepalive=keepalive,
     )
 
@@ -1696,13 +1707,13 @@ _DiscoveryOptions = TypedDict(
 
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
-    FileCacheGlobals.maybe = True
+    file_cache_options = file_cache_options._replace(maybe=True)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        FileCacheGlobals.use_outdated = True
+        file_cache_options = file_cache_options._replace(use_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1710,6 +1721,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         config_cache=config.get_config_cache(),
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
+        file_cache_options=file_cache_options,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
     )
@@ -1809,7 +1821,7 @@ def mode_check(
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
 
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
 
     if "no-submit" in options:
         # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
@@ -1826,6 +1838,7 @@ def mode_check(
     checking.commandline_checking(
         hostname,
         ipaddress,
+        file_cache_options=file_cache_options,
         config_cache=config.get_config_cache(),
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
@@ -1925,7 +1938,7 @@ _InventoryOptions = TypedDict(
 
 
 def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
 
     config_cache = config.get_config_cache()
 
@@ -1935,16 +1948,17 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        FileCacheGlobals.maybe = not FileCacheGlobals.disabled
+        file_cache_options = file_cache_options._replace(maybe=not file_cache_options.disabled)
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        FileCacheGlobals.keep_outdated = True
+        file_cache_options = file_cache_options._replace(keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     inventory.commandline_inventory(
         hostnames,
         config_cache=config_cache,
+        file_cache_options=file_cache_options,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
     )
@@ -1997,11 +2011,12 @@ def mode_inventory_as_check(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> int:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
     return inventory.active_check_inventory(
         hostname,
         options,
         config_cache=config_cache,
+        file_cache_options=file_cache_options,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -2083,7 +2098,7 @@ if cmk_version.edition() is cmk_version.Edition.CRE:
 
 
 def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
-    _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)
 
     if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check\n")
@@ -2093,6 +2108,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     inventory.inventorize_marked_hosts(
         config.get_config_cache(),
         queue,
+        file_cache_options=file_cache_options,
     )
 
 

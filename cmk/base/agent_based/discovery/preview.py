@@ -22,6 +22,7 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.agent_based.checking as checking
@@ -60,22 +61,18 @@ def get_check_preview(
     *,
     host_name: HostName,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     use_cached_snmp_data: bool,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    # Careful:  The order of the next four lines is important.  Most likely, this
-    # is due to the interplay between the IP address and the global variables.
-    # Changing that reproducibly fails the `test_automation_try_discovery_not_existing_host`
-    # integration test.
     ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     host_attrs = get_host_attributes(host_name, config_cache)
-    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
-    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
-    ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
+    # TODO(ml): Move to caller and get rid of use_cached_snmp_data
+    file_cache_options._replace(use_outdated=True, maybe=use_cached_snmp_data)
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ip_address)]
@@ -94,6 +91,7 @@ def get_check_preview(
                 selected_sections=NO_SELECTION,
                 on_scan_error=on_error if nodes is None else OnError.RAISE,
                 simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
                 file_cache_max_age=max_cachefile_age,
             )
             for host_name_, ip_address_ in hosts
@@ -103,6 +101,7 @@ def get_check_preview(
     host_sections, _source_results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     store_piggybacked_sections(host_sections)

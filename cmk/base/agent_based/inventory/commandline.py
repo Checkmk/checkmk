@@ -14,6 +14,7 @@ import cmk.utils.store as store
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, RuleSetName
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import SectionNameCollection
 
 import cmk.base.section as section
@@ -28,6 +29,7 @@ def commandline_inventory(
     hostnames: list[HostName],
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
@@ -39,6 +41,7 @@ def commandline_inventory(
             _commandline_inventory_on_host(
                 hostname,
                 config_cache=config_cache,
+                file_cache_options=file_cache_options,
                 inventory_parameters=config_cache.inventory_parameters,
                 parameters=config_cache.hwsw_inventory_parameters(hostname),
                 selected_sections=selected_sections,
@@ -57,6 +60,7 @@ def _commandline_inventory_on_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parameters: HWSWInventoryParameters,
     selected_sections: SectionNameCollection,
@@ -69,6 +73,7 @@ def _commandline_inventory_on_host(
     check_result = check_inventory_tree(
         host_name,
         config_cache=config_cache,
+        file_cache_options=file_cache_options,
         inventory_parameters=inventory_parameters,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,

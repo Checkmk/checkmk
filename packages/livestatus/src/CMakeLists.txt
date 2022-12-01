@@ -81,7 +81,7 @@ if(run_clang_tidy_path)
       "echo" "${PYTHON_EXECUTABLE}" "${run_clang_tidy_path}"
       -clang-tidy-binary=clang-tidy-${CLANG_VERSION}
       -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}
-      ${CLANG_TIDY_EXTRA_ARGS} -quiet -j6 -p=${CMAKE_BINARY_DIR}
+      $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 -p=${CMAKE_BINARY_DIR}
       ${livestatus_sources}
     COMMENT "Running clang-tidy tool"
     VERBATIM)

@@ -1,0 +1,22 @@
+Title: Fix CSRF in add-visual endpoint
+Class: security
+Compatible: compat
+Component: wato
+Date: 1669886032
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Previously to this Werk an attacker could utilize a cross site request forgery vulnerability in Checkmk to add elements to visuals (e.g. dashboards, reports, etc.).
+
+<b>Mitigations:</b>
+If you are unable to update in a timely manner you could remove the permission <tt>Customize dashboards and use them</tt> and <tt>Customize reports and use them</tt> from the used roles. So the users and admins cannot edit dashboards and reports anymore.
+Adding a <tt>Custom url</tt> with a malicious URL is blocked by the Content-Security-Policy.
+
+All versions of Checkmk including (1.6) are subject to this vulnerability.
+
+This vulnerability was found through a self commissioned Penetration test.
+
+We have rated the issue with a CVSS Score of 5.4 (Medium) with the following CVSS vector: <tt>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:L</tt> A CVE has been requested.

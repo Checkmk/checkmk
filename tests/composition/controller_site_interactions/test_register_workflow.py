@@ -31,7 +31,7 @@ def _test_register_workflow(
     site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
     site.openapi.activate_changes_and_wait_for_completion()
 
-    registration_proc = execute(
+    execute(
         [
             "sudo",
             agent_ctl.as_posix(),
@@ -49,7 +49,6 @@ def _test_register_workflow(
             "--trust-cert",
         ]
     )
-    registration_proc.check_returncode()
 
     LOGGER.info("Sleeping 60s to give controller time to open TCP socket or push data")
     time.sleep(60)

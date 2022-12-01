@@ -23,5 +23,4 @@ def test_agent_controller_installed(agent_ctl: Path) -> None:
 
 def test_dump(agent_ctl: Path) -> None:
     res = execute(["sudo", agent_ctl.as_posix(), "dump"])
-    res.check_returncode()
     assert res.stdout.startswith("<<<check_mk>>>")

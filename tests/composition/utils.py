@@ -66,33 +66,31 @@ def get_package_extension() -> str:
 
 
 def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
-    proc = subprocess.run(
-        command,
-        encoding="utf-8",
-        stdin=subprocess.DEVNULL,
-        capture_output=True,
-        close_fds=True,
-        check=False,
-    )
+    try:
+        proc = subprocess.run(
+            command,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            close_fds=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
+        ) from e
     return proc
 
 
 def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
-    try:
-        if package_type == "linux_deb":
-            execute(["sudo", "dpkg", "-i", package_path.as_posix()]).check_returncode()
-            return installed_ctl_path
-        if package_type == "linux_rpm":
-            execute(
-                ["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()]
-            ).check_returncode()
-            return installed_ctl_path
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Error while installing cmk agent:\nstderr:\n{e.stderr}" f"\nstdout:\n{e.stdout}"
-        ) from e
+    if package_type == "linux_deb":
+        execute(["sudo", "dpkg", "-i", package_path.as_posix()])
+        return installed_ctl_path
+    if package_type == "linux_rpm":
+        execute(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
+        return installed_ctl_path
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
     )
@@ -143,7 +141,7 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 def _clear_controller_connections(ctl_path: Path) -> None:
-    execute(["sudo", ctl_path.as_posix(), "delete-all"]).check_returncode()
+    execute(["sudo", ctl_path.as_posix(), "delete-all"])
 
 
 @contextlib.contextmanager

@@ -42,29 +42,43 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
 }
 
 namespace {
+std::optional<std::string> ExtractInterval(std::string_view text) {
+    auto tokens = tools::SplitString(std::string(text), "=");
+    if (tokens.size() == 2) {
+        if (tokens[0] != "(interval") {
+            XLOG::l(
+                "mrpe entry malformed: Unknown directive '{}', expected '(interval=SECONDS)'",
+                text);
+            return {};
+        }
+        return tokens[1];
+    }
+
+    tokens = tools::SplitString(std::string(text), ":");
+    if (tokens.size() == 2) {
+        XLOG::l("Parsing legacy caching directive '{}', ignoring ADD_AGE flag.",
+                text);
+
+        return tokens[0].substr(1);
+    }
+
+    return {};
+}
+
 std::optional<int> ParseCacheAgeToken(std::string_view text) {
     if (text.size() < 3 || text[0] != '(' || text[text.size() - 1] != ')') {
         // Seems to be no interval spec, hence no caching.
         return {};
     }
 
-    auto tokens = tools::SplitString(std::string(text), "=");
-    if (tokens.size() != 2) {
-        return {};
-    }
-    if (tokens[0] != "(interval") {
-        XLOG::l(
-            "mrpe entry malformed: Unknown directive '{}', expected '(interval=SECONDS)'",
-            text);
-        return {};
-    }
-
-    try {
-        return std::stoi(tokens[1]);
-    } catch (std::invalid_argument const &e) {
-        XLOG::l("mrpe entry malformed '{}'", e.what());
-    } catch (std::out_of_range const &e) {
-        XLOG::l("mrpe entry malformed '{}'", e.what());
+    if (auto interval_token = ExtractInterval(text)) {
+        try {
+            return std::stoi(*interval_token);
+        } catch (std::invalid_argument const &e) {
+            XLOG::l("mrpe entry malformed '{}'", e.what());
+        } catch (std::out_of_range const &e) {
+            XLOG::l("mrpe entry malformed '{}'", e.what());
+        }
     }
 
     return {};

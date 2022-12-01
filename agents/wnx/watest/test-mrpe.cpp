@@ -375,15 +375,16 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
         {
             R"(check = Time 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
             R"(check = CachedTime (interval=10) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = LegacyCachedTime (20:no) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
         });
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
-    EXPECT_EQ(strings.size(), 2);
+    EXPECT_EQ(strings.size(), 3);
     mrpe.loadConfig();
     ASSERT_EQ(mrpe.includes().size(), 0);
-    ASSERT_EQ(mrpe.checks().size(), 2);
+    ASSERT_EQ(mrpe.checks().size(), 3);
 
-    EXPECT_EQ(mrpe.entries().size(), 2);
+    EXPECT_EQ(mrpe.entries().size(), 3);
     mrpe.updateSectionStatus();
 
     yaml[groups::kMrpe][vars::kMrpeParallel] = false;
@@ -414,6 +415,18 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     EXPECT_EQ(result_2[3], "0");
     auto &time_2 = result_2[4];
 
+    // expect "cached(TIME_SINCE_EPOCH,10) (powershell.exe) LegacyCachedTime 0
+    // TIMESTAMP"
+    auto result_3 = cma::tools::SplitString(table[3], " ");
+    auto mrpe_3 = mrpe.entries()[2];
+    EXPECT_EQ(result_3.size(), 5);
+    EXPECT_EQ(result_3[0].find("cached("), 0);
+    EXPECT_EQ(result_3[0].find(",20)"), result_3[0].size() - 4);
+    EXPECT_EQ(result_3[1], fmt::format("({})", mrpe_3.exe_name_));
+    EXPECT_EQ(result_3[2], mrpe_3.description_);
+    EXPECT_EQ(result_3[3], "0");
+    auto &time_3 = result_3[4];
+
     cma::tools::sleep(10);
 
     // expect TIMESTAMP to change for first check, while the other two are
@@ -422,6 +435,7 @@ TEST(SectionProviderMrpe, RunCachedIntegration) {
     auto second_table = cma::tools::SplitString(second_run, "\n");
     EXPECT_TRUE(time_1 != cma::tools::SplitString(second_table[1], " ")[3]);
     EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[4]);
+    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[4]);
 }
 
 }  // namespace cma::provider

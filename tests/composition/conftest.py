@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from tests.composition.utils import (
     agent_controller_daemon,
     bake_agent,
     clean_agent_controller,
+    execute,
     get_cre_agent_path,
     install_agent_package,
 )
@@ -54,7 +56,18 @@ def _site_factory() -> Iterator[SiteFactory]:
 
 @pytest.fixture(name="central_site", scope="module")
 def _central_site(site_factory: SiteFactory) -> Site:
-    return site_factory.get_site("central")
+    return _create_site_and_restart_httpd(site_factory, "central")
+
+
+def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) -> Site:
+    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
+    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
+    eg. the controller from querying the agent receiver port."""
+    site = site_factory.get_site(site_name)
+    if not shutil.which("httpd"):
+        return site
+    execute(["sudo", "httpd", "-k", "restart"])
+    return site
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")

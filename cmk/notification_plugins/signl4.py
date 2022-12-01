@@ -22,7 +22,7 @@ def signl4_url() -> str:
     return f"https://connect.signl4.com/webhook/{password}"
 
 
-def signl4_msg(context: dict[str, str]) -> dict[str, str]:
+def signl4_msg(context: dict[str, str]) -> dict[str, object]:
     host_name = context["HOSTNAME"]
     notification_type = context["NOTIFICATIONTYPE"]
     host_problem_id = context.get("HOSTPROBLEMID", "")
@@ -35,7 +35,7 @@ def signl4_msg(context: dict[str, str]) -> dict[str, str]:
     # Check if this is a new problem or a recovery
     s4_status = "new" if notification_type != "RECOVERY" else "resolved"
 
-    message = {
+    return {
         "Title": f"{notification_type} on {host_name}",
         "HostName": host_name,
         "NotificationType": notification_type,
@@ -60,5 +60,3 @@ def signl4_msg(context: dict[str, str]) -> dict[str, str]:
         + service_problem_id,
         "X-S4-Status": s4_status,
     }
-
-    return message

@@ -21,7 +21,7 @@ COLORS = {
 }
 
 
-def slack_msg(context: dict) -> dict:
+def slack_msg(context: dict) -> dict[str, object]:
     """Build the message for slack"""
 
     if context.get("WHAT", None) == "SERVICE":
@@ -47,6 +47,8 @@ def slack_msg(context: dict) -> dict:
             **context,
         )
         output = context["HOSTOUTPUT"]
+
+    assert color is not None
 
     return {
         "attachments": [

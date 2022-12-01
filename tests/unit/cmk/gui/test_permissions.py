@@ -211,6 +211,7 @@ def test_registered_permissions() -> None:
         "notification_plugin.jira_issues",
         "notification_plugin.mail",
         "notification_plugin.mkeventd",
+        "notification_plugin.msteams",
         "notification_plugin.opsgenie_issues",
         "notification_plugin.pagerduty",
         "notification_plugin.pushover",

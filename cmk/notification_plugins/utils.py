@@ -320,7 +320,7 @@ def retrieve_from_passwordstore(parameter: str) -> str:
 
 
 def post_request(
-    message_constructor: Callable[[dict[str, str]], dict[str, str]],
+    message_constructor: Callable[[dict[str, str]], dict[str, object]],
     url: str | None = None,
     headers: dict[str, str] | None = None,
 ) -> requests.Response:

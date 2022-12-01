@@ -17,6 +17,7 @@ expected_plugins = [
     "jira_issues",
     "mail",
     "mkeventd",
+    "msteams",
     "opsgenie_issues",
     "pagerduty",
     "pushover",

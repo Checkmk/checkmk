@@ -22,7 +22,7 @@ def translate_states(state: str) -> str:
     return state  # This is WARNING
 
 
-def victorops_msg(context: dict[str, str]) -> dict[str, str]:
+def victorops_msg(context: dict[str, str]) -> dict[str, object]:
     """Build the message for VictorOps"""
 
     if context.get("WHAT") == "SERVICE":

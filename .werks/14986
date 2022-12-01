@@ -1,0 +1,22 @@
+Title: FileNotFoundError in update-pre-hooks script "01_mkp-disable-outdated"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669880484
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+This fixes the 'FileNotFoundError' that was encountered upon upgrade from Checkmk 2.1.0p16 to p17 or 2.0.0p30 to p31.
+
+While this bug produces a nasty traceback during update, it is unlikely that users suffer any consequences.
+
+You can safely ignore this issue, <b>unless</b> you have a distributed setup with deviating remote site versions and you want to have a different set of MKPs installed on them (depending on the remote sites version).
+
+Since this feature is very new, it is unlikely that you are using it.
+
+If it is the case however, you have to disable and re-enable the affected MKP on the central site.
+You might still see this traceback during the sync to a remote sites with a higher version than the central site, but you can ignore it.
+
+After upgrading to 2.0.0p32 or 2.1.0p17 there is nothing to be done.

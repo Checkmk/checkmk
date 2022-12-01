@@ -11,19 +11,19 @@
     },
     "plugins": ["compat", "prettier"],
     "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
         "strict": 1,
-        "indent": [
-            "error",
-            4,
-            { "SwitchCase": 1 }
-        ],
+        "indent": "off",
         "linebreak-style": [
             "error",
             "unix"
         ],
         "quotes": [
             "error",
-            "double"
+            "double",
+            {"avoidEscape": true }
         ],
         "semi": [
             "error",

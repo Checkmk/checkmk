@@ -412,6 +412,10 @@ def mark_as_enabled(package_path: Path) -> None:
     """
     destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
 
+    # hack: we might be installing from the path to an already enabled package :-(
+    if destination == package_path:
+        return
+
     destination.parent.mkdir(parents=True, exist_ok=True)
 
     # linking fails if the destination exists

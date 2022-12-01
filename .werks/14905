@@ -1,0 +1,14 @@
+Title: REST API: Allow single item lists for the sites parameter on the host/service status endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1669877311
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+This werk fixes an issue with the host/service status endpoints when using a single
+item list for the sites parameter.
+

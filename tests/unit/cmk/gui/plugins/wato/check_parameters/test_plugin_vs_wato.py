@@ -504,7 +504,6 @@ class ErrorReporter:
         ("check", "ups_in_freq", "checkgroup_parameters:efreq"),
         ("check", "ups_in_voltage", "checkgroup_parameters:evolt"),
         ("check", "ups_out_voltage", "checkgroup_parameters:evolt"),
-        ("check", "ups_power", "checkgroup_parameters:epower"),
         ("check", "ups_socomec_in_voltage", "checkgroup_parameters:evolt"),
         ("check", "ups_socomec_out_voltage", "checkgroup_parameters:evolt"),
         ("check", "veeam_tapejobs", "checkgroup_parameters:veeam_tapejobs"),

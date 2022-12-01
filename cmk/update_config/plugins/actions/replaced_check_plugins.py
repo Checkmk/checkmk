@@ -67,4 +67,5 @@ REPLACED_CHECK_PLUGINS = {
     CheckPluginName("fjdarye60_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
     CheckPluginName("fjdarye60_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
     CheckPluginName("hpux_lunstats"): CheckPluginName("diskstat_io"),
+    CheckPluginName("ups_power"): CheckPluginName("epower"),
 }

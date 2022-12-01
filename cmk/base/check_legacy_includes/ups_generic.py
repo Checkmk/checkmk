@@ -5,12 +5,16 @@
 
 
 def ups_generic_scan_function(oid):
+    # migration in progress: if you want to port this function in the new
+    # checkapi use the existing one in
+    # cmk/base/plugins/agent_based/utils/ups.py
     return (
         oid(".1.3.6.1.2.1.1.2.0")
         in [
             ".1.3.6.1.4.1.232.165.3",
             ".1.3.6.1.4.1.476.1.42",
             ".1.3.6.1.4.1.534.1",
+            ".1.3.6.1.4.1.935",
             ".1.3.6.1.4.1.8072.3.2.10",
             ".1.3.6.1.4.1.2254.2.5",
             ".1.3.6.1.4.1.12551.4.0",

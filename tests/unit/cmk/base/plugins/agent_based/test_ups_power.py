@@ -32,13 +32,13 @@ def test_ups_power_detect() -> None:
 
 
 def test_ups_power_discover(fix_register: FixRegister) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("ups_power")]
+    plugin = fix_register.check_plugins[CheckPluginName("epower")]
     parsed = get_parsed_snmp_section(SectionName("ups_power"), DATA0)
 
     assert list(plugin.discovery_function(parsed)) == [
-        Service(item="1", parameters={"levels_lower": (20, 1)}),
-        Service(item="2", parameters={"levels_lower": (20, 1)}),
-        Service(item="3", parameters={"levels_lower": (20, 1)}),
+        Service(item="1"),
+        Service(item="2"),
+        Service(item="3"),
     ]
 
 
@@ -48,28 +48,28 @@ def test_ups_power_discover(fix_register: FixRegister) -> None:
         (
             {"levels_lower": (20, 1)},
             [
-                Result(state=State.OK, summary="power: 3500W (warn/crit at 20W/1W)"),
-                Metric("power", 3500.0, levels=(20.0, 1.0), boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Power: 3500 W"),
+                Metric("power", 3500.0),
             ],
         ),
         (
             {"levels_lower": (4000, 3000)},
             [
-                Result(state=State.WARN, summary="power: 3500W (warn/crit at 4000W/3000W)"),
-                Metric("power", 3500.0, levels=(4000.0, 3000.0), boundaries=(0.0, None)),
+                Result(state=State.WARN, summary="Power: 3500 W (warn/crit below 4000 W/3000 W)"),
+                Metric("power", 3500.0),
             ],
         ),
         (
             {"levels_lower": (6000, 4000)},
             [
-                Result(state=State.CRIT, summary="power: 3500W (warn/crit at 6000W/4000W)"),
-                Metric("power", 3500.0, levels=(6000.0, 4000.0), boundaries=(0.0, None)),
+                Result(state=State.CRIT, summary="Power: 3500 W (warn/crit below 6000 W/4000 W)"),
+                Metric("power", 3500.0),
             ],
         ),
     ],
 )
 def test_ups_power_check(fix_register: FixRegister, params: dict, result: CheckResult) -> None:
-    plugin = fix_register.check_plugins[CheckPluginName("ups_power")]
+    plugin = fix_register.check_plugins[CheckPluginName("epower")]
     parsed = get_parsed_snmp_section(SectionName("ups_power"), DATA0)
 
     assert list(plugin.check_function(item="2", params=params, section=parsed)) == result

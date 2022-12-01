@@ -290,13 +290,42 @@ def _view_editor_spec(
     allow_empty: bool,
     empty_text: str | None,
 ) -> Dictionary:
+    def _from_vs(value: tuple) -> PainterSpec:
+        if isinstance(name_or_parameters := value[0], tuple):
+            name, parameters = name_or_parameters
+        else:
+            name = name_or_parameters
+            parameters = None
+        return PainterSpec(
+            name=name,
+            parameters=parameters,
+            join_index=value[1],
+            column_title=value[2],
+            link_spec=value[3],
+            tooltip=value[4],
+        )
+
+    def _to_vs(painter_spec: PainterSpec | None) -> tuple | None:
+        if painter_spec is None:
+            return None
+        return (
+            (
+                painter_spec.name
+                if painter_spec.parameters is None
+                else (painter_spec.name, painter_spec.parameters)
+            ),
+            painter_spec.join_index,
+            painter_spec.column_title,
+            painter_spec.link_spec,
+            painter_spec.tooltip,
+        )
+
     vs_column = Transform(
         valuespec=vs_column,
-        from_valuespec=lambda value: (value[0], value[3], value[4], value[1], value[2]),
-        to_valuespec=lambda value: (
-            None if value is None else (value[0], value[3], value[4], value[1], value[2])
-        ),
+        from_valuespec=_from_vs,
+        to_valuespec=_to_vs,
     )
+
     return Dictionary(
         title=title,
         render="form",
@@ -436,9 +465,7 @@ def render_view_config(
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", value["columns"])
 
-    vs_sorting = view_editor_sorter_specs(
-        "sorting", ds_name, [PainterSpec.from_raw(v) for v in value["columns"]["columns"]]
-    )
+    vs_sorting = view_editor_sorter_specs("sorting", ds_name, value["columns"]["columns"])
     vs_sorting.render_input("sorting", value["sorting"])
 
     vs_grouping = view_editor_grouping_spec("grouping", ds_name)
@@ -470,17 +497,13 @@ def _transform_view_to_valuespec_value(view: ViewDashletConfig | ViewSpec) -> di
         if value.get(key):
             value["visibility"][key] = value[key]
 
-    value["grouping"] = {
-        "grouping": [painter_spec.to_raw() for painter_spec in value.get("group_painters", [])]
-    }
+    value["grouping"] = {"grouping": value.get("group_painters", [])}
 
     value["sorting"] = {
         "sorters": [sorter_spec.to_raw() for sorter_spec in value.get("sorters", {})]
     }
 
-    value["columns"] = {
-        "columns": [painter_spec.to_raw() for painter_spec in value.get("painters", [])]
-    }
+    value["columns"] = {"columns": value.get("painters", [])}
     return value
 
 
@@ -500,10 +523,10 @@ def _transform_valuespec_value_to_view(ident, attrs):
         return {"sorters": [SorterSpec(*s) for s in attrs["sorters"]]}
 
     if ident == "grouping":
-        return {"group_painters": [PainterSpec.from_raw(v) for v in attrs["grouping"]]}
+        return {"group_painters": attrs["grouping"]}
 
     if ident == "columns":
-        return {"painters": [PainterSpec.from_raw(v) for v in attrs["columns"]]}
+        return {"painters": attrs["columns"]}
 
     return {ident: attrs}
 

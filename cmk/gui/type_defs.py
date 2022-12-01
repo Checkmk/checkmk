@@ -240,6 +240,15 @@ class PainterParameters(TypedDict, total=False):
     uuid: str
 
 
+class RawPainterSpec(TypedDict):
+    name: PainterName
+    parameters: PainterParameters | None
+    link_spec: tuple[VisualTypeName, VisualName] | None
+    tooltip: ColumnName | None
+    join_index: ColumnName | None
+    column_title: str | None
+
+
 @dataclass(frozen=True)
 class PainterSpec:
     name: PainterName
@@ -250,7 +259,24 @@ class PainterSpec:
     column_title: str | None = None
 
     @classmethod
-    def from_raw(cls, value: tuple) -> PainterSpec:
+    def from_raw(cls, value: tuple | RawPainterSpec) -> PainterSpec:
+        # TODO The tuple-case can be remove with Checkmk 2.4.
+        # The transformation is done via update_config/plugins/actions/cre_visuals.py
+
+        if isinstance(value, dict):
+            return cls(
+                name=value["name"],
+                parameters=value["parameters"],
+                link_spec=(
+                    None
+                    if (link_spec := value["link_spec"]) is None
+                    else VisualLinkSpec.from_raw(link_spec)
+                ),
+                tooltip=value["tooltip"],
+                join_index=value["join_index"],
+                column_title=value["column_title"],
+            )
+
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
@@ -271,22 +297,15 @@ class PainterSpec:
             column_title=value[4],
         )
 
-    def to_raw(
-        self,
-    ) -> tuple[
-        PainterName | tuple[PainterName, PainterParameters],
-        tuple[VisualTypeName, VisualName] | None,
-        ColumnName | None,
-        ColumnName | None,
-        str | None,
-    ]:
-        return (
-            self.name if self.parameters is None else (self.name, self.parameters),
-            None if self.link_spec is None else self.link_spec.to_raw(),
-            self.tooltip,
-            self.join_index,
-            self.column_title,
-        )
+    def to_raw(self) -> RawPainterSpec:
+        return {
+            "name": self.name,
+            "parameters": self.parameters,
+            "link_spec": None if self.link_spec is None else self.link_spec.to_raw(),
+            "tooltip": self.tooltip,
+            "join_index": self.join_index,
+            "column_title": self.column_title,
+        }
 
     def __repr__(self) -> str:
         """

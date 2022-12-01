@@ -248,7 +248,7 @@ def all_sites() -> Iterable[str]:
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     prepare_and_populate_tmpfs(version_info, site)
-    call_init_scripts(site, "start")
+    call_init_scripts(site.dir, "start")
     if not has_instance_id(site):
         # Existing sites may not have an instance ID yet. After an update we create a new one.
         save_instance_id(site)
@@ -260,7 +260,7 @@ def stop_if_not_stopped(site: SiteContext) -> None:
 
 
 def stop_site(site: SiteContext) -> None:
-    call_init_scripts(site, "stop")
+    call_init_scripts(site.dir, "stop")
 
 
 def get_skel_permissions(skel_path: str, perms: Permissions, relpath: str) -> int:
@@ -1605,8 +1605,8 @@ def init_action(
     # OMD guarantees that we are in OMD_ROOT
     with chdir(site.dir):
         if command == "status":
-            return check_status(site, display=True, daemon=daemon, bare="bare" in options)
-        return call_init_scripts(site, command, daemon)
+            return check_status(site.dir, display=True, daemon=daemon, bare="bare" in options)
+        return call_init_scripts(site.dir, command, daemon)
 
 
 # .

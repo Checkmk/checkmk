@@ -221,7 +221,7 @@ class SiteContext(AbstractSiteContext):
 
     def is_stopped(self) -> bool:
         """Check if site is completely stopped"""
-        return check_status(self, display=False) == 1
+        return check_status(self.dir, display=False) == 1
 
     @staticmethod
     def is_site_context() -> bool:

@@ -27,10 +27,6 @@ import logging
 import os
 import subprocess
 import sys
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from omdlib.contexts import SiteContext
 
 from omdlib.utils import chdir
 
@@ -41,7 +37,7 @@ logger = logging.getLogger("cmk.omd")
 
 
 def call_init_scripts(
-    site: "SiteContext",
+    site_dir: str,
     command: str,
     daemon: str | None = None,
     exclude_daemons: list[str] | None = None,
@@ -51,19 +47,19 @@ def call_init_scripts(
     # preserves the order.
     if command == "restart":
         # TODO: Why is the result of call_init_scripts not returned?
-        call_init_scripts(site, "stop", daemon)
-        call_init_scripts(site, "start", daemon)
+        call_init_scripts(site_dir, "stop", daemon)
+        call_init_scripts(site_dir, "start", daemon)
         return 0
 
     # OMD guarantees OMD_ROOT to be the current directory
-    with chdir(site.dir):
+    with chdir(site_dir):
         if daemon:
-            success = _call_init_script(f"{site.dir}/etc/init.d/{daemon}", command)
+            success = _call_init_script(f"{site_dir}/etc/init.d/{daemon}", command)
 
         else:
             # Call stop scripts in reverse order. If daemon is set,
             # then only that start script will be affected
-            rc_dir, scripts = _init_scripts(site.name)
+            rc_dir, scripts = _init_scripts(site_dir)
             if command == "stop":
                 scripts.reverse()
             success = True
@@ -81,12 +77,12 @@ def call_init_scripts(
 
 
 def check_status(  # pylint: disable=too-many-branches
-    site: "SiteContext", display: bool = True, daemon: str | None = None, bare: bool = False
+    site_dir: str, display: bool = True, daemon: str | None = None, bare: bool = False
 ) -> int:
     num_running = 0
     num_unused = 0
     num_stopped = 0
-    rc_dir, scripts = _init_scripts(site.name)
+    rc_dir, scripts = _init_scripts(site_dir)
     components = [s.split("-", 1)[-1] for s in scripts]
     if daemon and daemon not in components:
         if not bare:
@@ -151,9 +147,8 @@ def check_status(  # pylint: disable=too-many-branches
     return exit_code
 
 
-# TODO: Use site context
-def _init_scripts(sitename: str) -> tuple[str, list[str]]:
-    rc_dir = "/omd/sites/%s/etc/rc.d" % sitename
+def _init_scripts(site_dir: str) -> tuple[str, list[str]]:
+    rc_dir = f"{site_dir}/etc/rc.d"
     try:
         scripts = sorted(os.listdir(rc_dir))
         return rc_dir, scripts

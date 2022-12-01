@@ -71,8 +71,8 @@ if(run_clang_tidy_path)
   if(${CLANG_VERSION})
     message("CLANG_VERSION is set to ${CLANG_VERSION}")
   else()
-    message("CLANG_VERSION is not set, falling back to 14")
-    set(CLANG_VERSION 14)
+    message("CLANG_VERSION is not set, falling back to 12")
+    set(CLANG_VERSION 12)
   endif()
 
   add_custom_target(

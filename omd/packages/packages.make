@@ -52,6 +52,7 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 		tar cf - -C "$$PACKAGE_PATH/skel" \
 		    --exclude="*~" \
 		    --exclude=".gitignore" \
+		    --exclude=".f12" \
 		    . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi
 

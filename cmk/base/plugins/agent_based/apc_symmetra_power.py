@@ -32,8 +32,8 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.1.9.3.3.1",
             oids=[
-                "2.1.1",  # PowerNet-MIB::upsPhaseOutputPhaseIndex
-                "7.1.1",  # PowerNet-MIB::upsPhaseOutputLoad
+                "2.1",  # PowerNet-MIB::upsPhaseOutputPhaseIndex
+                "7.1",  # PowerNet-MIB::upsPhaseOutputLoad
             ],
         )
     ],

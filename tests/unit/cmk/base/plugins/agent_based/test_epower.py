@@ -61,7 +61,8 @@ UPS_POWER_0 = """
             SectionName("apc_symmetra_power"),
             [
                 Service(item="1"),
-                # XXX: this is wrong, and should include the other two phases
+                Service(item="2"),
+                Service(item="3"),
             ],
             id="apc-symmetra-0",
         ),

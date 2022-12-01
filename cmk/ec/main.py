@@ -1547,19 +1547,7 @@ class EventServer(ECServerThread):
         """
         self._perfcounters.count("rule_tries")
         with self._lock_configuration:
-            result = self._rule_matcher.event_rule_matches_non_inverted(rule, event)
-            if rule.get("invert_matching"):
-                if isinstance(result, MatchFailure):
-                    result = MatchSuccess(cancelling=False, match_groups={})
-                    self._rule_matcher._log_rule_matching(
-                        "Rule would not match, but due to inverted matching does."
-                    )
-                else:
-                    result = MatchFailure(
-                        "Rule would match, but due to inverted matching does not."
-                    )
-                    self._rule_matcher._log_rule_matching(result.reason)
-            return result
+            return self._rule_matcher.event_rule_matches(rule, event)
 
     # Rewrite texts and compute other fields in the event
     def rewrite_event(  # pylint: disable=too-many-branches
@@ -1961,6 +1949,20 @@ class RuleMatcher:
             return match_groups_result
 
         return self._check_match_outcome(rule, match_groups, match_priority)
+
+    def event_rule_matches(self, rule: Rule, event: Event) -> MatchResult:
+        """
+        Matches the rule and inverts the match if invert_matching is true
+        """
+        result = self.event_rule_matches_non_inverted(rule, event)
+        if rule.get("invert_matching"):
+            if isinstance(result, MatchFailure):
+                result = MatchSuccess(cancelling=False, match_groups={})
+                self._log_rule_matching("Rule would not match, but due to inverted matching does.")
+            else:
+                result = MatchFailure("Rule would match, but due to inverted matching does not.")
+                self._log_rule_matching(result.reason)
+        return result
 
     def _check_match_outcome(  # pylint: disable=too-many-branches
         self, rule: Rule, match_groups: MatchGroups, match_priority: MatchPriority

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -62,11 +61,13 @@ def _central_site(site_factory: SiteFactory) -> Site:
 def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) -> Site:
     """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
     creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
-    eg. the controller from querying the agent receiver port."""
+    eg. the controller from querying the agent receiver port.
+    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
+    see eg. sles-15sp4.
+    """
     site = site_factory.get_site(site_name)
-    if not shutil.which("httpd"):
-        return site
-    execute(["sudo", "httpd", "-k", "restart"])
+    if os.environ["DISTRO"] in {"centos-7", "centos-8", "almalinux-9"}:
+        execute(["sudo", "httpd", "-k", "restart"])
     return site
 
 

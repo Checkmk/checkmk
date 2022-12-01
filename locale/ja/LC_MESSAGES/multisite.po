@@ -4574,7 +4574,9 @@ msgstr "TCP経由のアクセスを許可する"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr ""
 
-msgid "Allow challenge-response authentication"
+#, fuzzy
+msgid ""
+"Allow keyboard-interactive (previously challenge-response) authentication"
 msgstr "チャレンジ/レスポンス認証を許可する"
 
 msgid "Allow password authentication"
@@ -4624,7 +4626,8 @@ msgstr "許可されたライセンスの状態"
 msgid "Allowed operational states:"
 msgstr "許可される動作状態:"
 
-msgid "Allowed protocols"
+#, fuzzy
+msgid "Allowed protocols (deprecated)"
 msgstr "許可されたプロトコル"
 
 msgid "Allowed states (otherwise check will be critical)"
@@ -7811,14 +7814,6 @@ msgstr ""
 "追加する必要があります。"
 
 #, python-format
-msgid ""
-"Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings</a>."
-msgstr ""
-"ライセンス使用状況レポートをダウンロードできません。<br>サブスクリプションの"
-"詳細を追加してください<a href= \"%s\">サブスクリプション設定</a>。"
-
-#, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr "存在しないレポート %s のスケジュールエントリを編集できません"
 
@@ -7961,16 +7956,6 @@ msgstr "ntop REST APIからデータを取得できません: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Nagiosコアで履歴データを取得できません"
-
-#, python-format
-msgid ""
-"Cannot submit license usage report to the Checkmk license server '%s'."
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings</a>."
-msgstr ""
-"Checkmkライセンスサーバー '%s' にライセンス使用レポートを送信できません。"
-"<br> <a href=\"%s\">サブスクリプション設定</a>にカスタマーポータルの資格情報"
-"とサブスクリプションの詳細を追加してください。"
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "テストできません。ターゲットシステムのCPU数を判別できません。"
@@ -15262,12 +15247,6 @@ msgstr "ファイル名をダウンロード"
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
 
-msgid "Download license usage report"
-msgstr "ライセンス使用状況レポートをダウンロードする"
-
-msgid "Download report"
-msgstr "レポートをダウンロード"
-
 msgid "Download snmp walk"
 msgstr "snmpwalkをダウンロードする"
 
@@ -17859,18 +17838,6 @@ msgid "Failed to start the job: %s"
 msgstr "ジョブの開始に失敗しました: %s"
 
 #, python-format
-msgid ""
-"Failed to submit the license usage report to the Checkmk license server "
-"'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
-"please open a support ticket or send an email to sales@tribe29.com."
-msgstr ""
-"ライセンス使用状況レポートをCheckmkライセンスサーバー '%s'に送信できませんで"
-"した。手動でダウンロードして、<a href=\"https://customer.checkmk.com\"> "
-"Checkmkユーザーポータル</a>にアップロードしてください。うまくいかない場合、 "
-"sales@tribe29.com にメールで送信してください。"
-
-#, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "サイトとの同期に失敗しました: %s"
 
@@ -18646,19 +18613,6 @@ msgid "For devices that measure smoke in percent"
 msgstr "スモークをパーセントで測定するデバイスの場合"
 
 msgid ""
-"For downloading and submitting license usage reports you must add "
-"subscription details."
-msgstr ""
-"ライセンス使用状況レポートをダウンロードして送信するには、サブスクリプション"
-"の詳細を追加する必要があります。"
-
-msgid ""
-"For downloading license usage reports you must add subscription details."
-msgstr ""
-"ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細を"
-"追加する必要があります。"
-
-msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -18714,13 +18668,6 @@ msgstr ""
 
 msgid "For specific SIDs"
 msgstr "特定のSIDの場合"
-
-msgid ""
-"For submitting license usage reports you must add customer portal "
-"credentials."
-msgstr ""
-"ライセンス使用状況レポートを送信するには、カスタマーポータルの資格情報を追加"
-"する必要があります。"
 
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
@@ -25500,6 +25447,13 @@ msgstr "キーパスフレーズ"
 msgid "Key to sign with"
 msgstr "署名するための鍵"
 
+msgid ""
+"Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
+"was previously called challenge-response authentication "
+"(<tt>ChallengeResponseAuthentication</tt>). If you active this option, "
+"Checkmk will check for both configuration settings."
+msgstr ""
+
 msgid "Keyfile"
 msgstr "キーファイル"
 
@@ -31649,6 +31603,11 @@ msgstr "サポートされていません"
 msgid "Not yet monitored"
 msgstr "まだ監視されていません"
 
+msgid ""
+"Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
+"versions neither use nor report this configuration variable anymore."
+msgstr ""
+
 msgid "Note while closing"
 msgstr "閉じている間注意してください"
 
@@ -37458,9 +37417,6 @@ msgstr "作成するレポート"
 
 msgid "Report to schedule"
 msgstr "スケジュールに報告する"
-
-msgid "Report usage"
-msgstr "使用状況を報告する"
 
 msgid "Reporting"
 msgstr "報告"
@@ -43516,23 +43472,8 @@ msgstr "サブミット"
 msgid "Submit Report"
 msgstr "レポートを送信する"
 
-msgid "Submit license usage report"
-msgstr "ライセンス使用状況レポートを送信する"
-
-msgid "Submit or download"
-msgstr "サブミットまたはダウンロード"
-
-msgid "Submit or download license usage report"
-msgstr "ライセンス使用状況レポートを送信またはダウンロードする"
-
-msgid "Submit report"
-msgstr "レポートを送信する"
-
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
-
-msgid "Submitting license usage report..."
-msgstr "ライセンス使用状況レポートの送信..."
 
 #, fuzzy
 msgid "Subnet groups per region"
@@ -43608,9 +43549,6 @@ msgstr "%dコマンドを正常に送信しました。"
 
 msgid "Successfully stored the report"
 msgstr "レポートが正常に保存されました"
-
-msgid "Successfully submitted the license usage report."
-msgstr "ライセンス使用状況レポートを正常に送信しました。"
 
 #, python-format
 msgid "Successfully updated IP addresses of %d hosts."
@@ -45561,9 +45499,6 @@ msgid ""
 msgstr ""
 "構成されたLDAPユーザーフィルターグループが見つかりませんでした。<a href = "
 "\"%s\">構成</a>を確認してください。"
-
-msgid "The configured password does not exist"
-msgstr "設定されたパスワードが存在しません"
 
 msgid ""
 "The configured password has either be removed or you are not permitted to "
@@ -48666,13 +48601,6 @@ msgid ""
 msgstr ""
 "これらのテキストは、ユーザーの言語に応じてローカライズされる場合があります。"
 "ローカライズは<a href='%s'>グローバル設定</a>で設定できます。"
-
-#, python-format
-msgid ""
-"These values can be configured in the <a href=\"%s\">subscription settings</"
-"a>."
-msgstr ""
-"これらの値は、 <a href=\"%s\">サブスクリプション設定</a>で構成できます。"
 
 msgid "They appear to be new to this node, but may still be already monitored."
 msgstr ""
@@ -61915,6 +61843,93 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot download license usage report.<br>Please add subscription details "
+#~ "in the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをダウンロードできません。<br>サブスクリプション"
+#~ "の詳細を追加してください<a href= \"%s\">サブスクリプション設定</a>。"
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ "<br>Please add customer portal credentials and subscription details in "
+#~ "the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "Checkmkライセンスサーバー '%s' にライセンス使用レポートを送信できません。"
+#~ "<br> <a href=\"%s\">サブスクリプション設定</a>にカスタマーポータルの資格情"
+#~ "報とサブスクリプションの詳細を追加してください。"
+
+#~ msgid "Download license usage report"
+#~ msgstr "ライセンス使用状況レポートをダウンロードする"
+
+#~ msgid "Download report"
+#~ msgstr "レポートをダウンロード"
+
+#, python-format
+#~ msgid ""
+#~ "Failed to submit the license usage report to the Checkmk license server "
+#~ "'%s'. Please download it manually and upload it in the <a href=\"https://"
+#~ "customer.checkmk.com\">Checkmk user portal</a>. If this also does not "
+#~ "work, please open a support ticket or send an email to sales@tribe29.com."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをCheckmkライセンスサーバー '%s'に送信できません"
+#~ "でした。手動でダウンロードして、<a href=\"https://customer.checkmk.com\"> "
+#~ "Checkmkユーザーポータル</a>にアップロードしてください。うまくいかない場"
+#~ "合、 sales@tribe29.com にメールで送信してください。"
+
+#~ msgid ""
+#~ "For downloading and submitting license usage reports you must add "
+#~ "subscription details."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをダウンロードして送信するには、サブスクリプショ"
+#~ "ンの詳細を追加する必要があります。"
+
+#~ msgid ""
+#~ "For downloading license usage reports you must add subscription details."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細"
+#~ "を追加する必要があります。"
+
+#~ msgid ""
+#~ "For submitting license usage reports you must add customer portal "
+#~ "credentials."
+#~ msgstr ""
+#~ "ライセンス使用状況レポートを送信するには、カスタマーポータルの資格情報を追"
+#~ "加する必要があります。"
+
+#~ msgid "Report usage"
+#~ msgstr "使用状況を報告する"
+
+#~ msgid "Submit license usage report"
+#~ msgstr "ライセンス使用状況レポートを送信する"
+
+#~ msgid "Submit or download"
+#~ msgstr "サブミットまたはダウンロード"
+
+#~ msgid "Submit or download license usage report"
+#~ msgstr "ライセンス使用状況レポートを送信またはダウンロードする"
+
+#~ msgid "Submit report"
+#~ msgstr "レポートを送信する"
+
+#~ msgid "Submitting license usage report..."
+#~ msgstr "ライセンス使用状況レポートの送信..."
+
+#~ msgid "Successfully submitted the license usage report."
+#~ msgstr "ライセンス使用状況レポートを正常に送信しました。"
+
+#~ msgid "The configured password does not exist"
+#~ msgstr "設定されたパスワードが存在しません"
+
+#, python-format
+#~ msgid ""
+#~ "These values can be configured in the <a href=\"%s\">subscription "
+#~ "settings</a>."
+#~ msgstr ""
+#~ "これらの値は、 <a href=\"%s\">サブスクリプション設定</a>で構成できます。"
 
 #~ msgid "API server endpoint"
 #~ msgstr "APIサーバーエンドポイント"

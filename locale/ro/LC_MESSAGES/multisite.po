@@ -4539,7 +4539,8 @@ msgstr "Acces prin TCP"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr ""
 
-msgid "Allow challenge-response authentication"
+msgid ""
+"Allow keyboard-interactive (previously challenge-response) authentication"
 msgstr ""
 
 #, fuzzy
@@ -4596,8 +4597,9 @@ msgstr ""
 msgid "Allowed operational states:"
 msgstr "Optiuni tabel"
 
-msgid "Allowed protocols"
-msgstr ""
+#, fuzzy
+msgid "Allowed protocols (deprecated)"
+msgstr "Adresă"
 
 msgid "Allowed states (otherwise check will be critical)"
 msgstr ""
@@ -7705,12 +7707,6 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid ""
-"Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings</a>."
-msgstr ""
-
-#, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
 
@@ -7838,13 +7834,6 @@ msgid "Cannot retrieve data from ntop REST API: %s"
 msgstr ""
 
 msgid "Cannot retrieve historic data with Nagios core"
-msgstr ""
-
-#, python-format
-msgid ""
-"Cannot submit license usage report to the Checkmk license server '%s'."
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings</a>."
 msgstr ""
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
@@ -15406,14 +15395,6 @@ msgid "Download generic Checkmk Agent for folder %s"
 msgstr ""
 
 #, fuzzy
-msgid "Download license usage report"
-msgstr "% utilizare"
-
-#, fuzzy
-msgid "Download report"
-msgstr "Descarca"
-
-#, fuzzy
 msgid "Download snmp walk"
 msgstr "Descarca"
 
@@ -18076,14 +18057,6 @@ msgid "Failed to start the job: %s"
 msgstr ""
 
 #, python-format
-msgid ""
-"Failed to submit the license usage report to the Checkmk license server "
-"'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
-"please open a support ticket or send an email to sales@tribe29.com."
-msgstr ""
-
-#, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr ""
 
@@ -18877,15 +18850,6 @@ msgid "For devices that measure smoke in percent"
 msgstr ""
 
 msgid ""
-"For downloading and submitting license usage reports you must add "
-"subscription details."
-msgstr ""
-
-msgid ""
-"For downloading license usage reports you must add subscription details."
-msgstr ""
-
-msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -18930,11 +18894,6 @@ msgid ""
 msgstr ""
 
 msgid "For specific SIDs"
-msgstr ""
-
-msgid ""
-"For submitting license usage reports you must add customer portal "
-"credentials."
 msgstr ""
 
 msgid ""
@@ -25196,6 +25155,13 @@ msgid "Key passphrase"
 msgstr ""
 
 msgid "Key to sign with"
+msgstr ""
+
+msgid ""
+"Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
+"was previously called challenge-response authentication "
+"(<tt>ChallengeResponseAuthentication</tt>). If you active this option, "
+"Checkmk will check for both configuration settings."
 msgstr ""
 
 msgid "Keyfile"
@@ -31809,6 +31775,11 @@ msgstr ""
 msgid "Not yet monitored"
 msgstr "nemonitorizat"
 
+msgid ""
+"Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
+"versions neither use nor report this configuration variable anymore."
+msgstr ""
+
 msgid "Note while closing"
 msgstr ""
 
@@ -37803,10 +37774,6 @@ msgstr ""
 
 msgid "Report to schedule"
 msgstr ""
-
-#, fuzzy
-msgid "Report usage"
-msgstr "% utilizare"
 
 msgid "Reporting"
 msgstr ""
@@ -43947,25 +43914,7 @@ msgstr ""
 msgid "Submit Report"
 msgstr ""
 
-#, fuzzy
-msgid "Submit license usage report"
-msgstr "% utilizare"
-
-msgid "Submit or download"
-msgstr ""
-
-#, fuzzy
-msgid "Submit or download license usage report"
-msgstr "% utilizare"
-
-#, fuzzy
-msgid "Submit report"
-msgstr "Adaugă element"
-
 msgid "Submitting crash report..."
-msgstr ""
-
-msgid "Submitting license usage report..."
 msgstr ""
 
 #, fuzzy
@@ -44049,10 +43998,6 @@ msgstr ""
 
 msgid "Successfully stored the report"
 msgstr ""
-
-#, fuzzy
-msgid "Successfully submitted the license usage report."
-msgstr "urca snapshot-uri nesigure"
 
 #, python-format
 msgid "Successfully updated IP addresses of %d hosts."
@@ -45837,10 +45782,6 @@ msgid ""
 "The configured ldap user filter group could not be found. Please check <a "
 "href=\"%s\">your configuration</a>."
 msgstr ""
-
-#, fuzzy
-msgid "The configured password does not exist"
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "The configured password has either be removed or you are not permitted to "
@@ -48527,12 +48468,6 @@ msgstr ""
 msgid ""
 "These texts may be localized depending on the users' language. You can "
 "configure the localizations <a href='%s'>in the global settings</a>."
-msgstr ""
-
-#, python-format
-msgid ""
-"These values can be configured in the <a href=\"%s\">subscription settings</"
-"a>."
 msgstr ""
 
 msgid "They appear to be new to this node, but may still be already monitored."
@@ -60767,6 +60702,38 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Download license usage report"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Download report"
+#~ msgstr "Descarca"
+
+#, fuzzy
+#~ msgid "Report usage"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Submit license usage report"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Submit or download license usage report"
+#~ msgstr "% utilizare"
+
+#, fuzzy
+#~ msgid "Submit report"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "Successfully submitted the license usage report."
+#~ msgstr "urca snapshot-uri nesigure"
+
+#, fuzzy
+#~ msgid "The configured password does not exist"
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
 #~ msgid "Absolute levels for error rates"
 #~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -60780,10 +60747,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Ingresses"
-#~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "Kubernetes (deprecated)"
 #~ msgstr "Adresă"
 
 #, fuzzy

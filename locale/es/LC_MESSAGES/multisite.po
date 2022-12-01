@@ -4799,7 +4799,9 @@ msgstr ""
 "Permitir a todos los usuarios referirse a las reglas contenidas en este "
 "paquete"
 
-msgid "Allow challenge-response authentication"
+#, fuzzy
+msgid ""
+"Allow keyboard-interactive (previously challenge-response) authentication"
 msgstr "Permitir la autenticación de reto-respuesta"
 
 msgid "Allow password authentication"
@@ -4850,7 +4852,8 @@ msgstr "Estados de licencia permitidos"
 msgid "Allowed operational states:"
 msgstr "Estados operativos permitidos:"
 
-msgid "Allowed protocols"
+#, fuzzy
+msgid "Allowed protocols (deprecated)"
 msgstr "Protocolos permitidos"
 
 msgid "Allowed states (otherwise check will be critical)"
@@ -8220,15 +8223,6 @@ msgstr ""
 "de la suscripción."
 
 #, python-format
-msgid ""
-"Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings</a>."
-msgstr ""
-"No se puede descargar el informe de uso de la licencia.<br>Por favor, añada "
-"los detalles de la suscripción en la <a href=\"%s\">configuración de la "
-"suscripción</a>."
-
-#, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr ""
 "No se puede editar la entrada del programa para un informe no existente %s"
@@ -8381,17 +8375,6 @@ msgstr "No se pueden recuperar datos de la API REST de ntop: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "No se pueden recuperar datos históricos con el núcleo de Nagios"
-
-#, python-format
-msgid ""
-"Cannot submit license usage report to the Checkmk license server '%s'."
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings</a>."
-msgstr ""
-"No se puede enviar el informe de uso de la licencia al servidor de licencias "
-"de Checkmk '%s'.<br>Por favor, añada las credenciales del portal del cliente "
-"y los detalles de la suscripción en la <a href=\"%s\"configuración de la "
-"suscripción</a>."
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr ""
@@ -15997,12 +15980,6 @@ msgstr "Descargar nombre de archivo"
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "Descargar el agente Checkmk para el host %s"
 
-msgid "Download license usage report"
-msgstr "Descargar el informe de uso de licencias"
-
-msgid "Download report"
-msgstr "Descargar el informe"
-
 msgid "Download snmp walk"
 msgstr "Descargar snmp walk"
 
@@ -18678,19 +18655,6 @@ msgid "Failed to start the job: %s"
 msgstr "Fallo al iniciar el trabajo: %s"
 
 #, python-format
-msgid ""
-"Failed to submit the license usage report to the Checkmk license server "
-"'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
-"please open a support ticket or send an email to sales@tribe29.com."
-msgstr ""
-"Ha fallado el envío del informe de uso de licencias al servidor de licencias "
-"de Checkmk '%s'. Por favor, descárguelo manualmente y cárguelo en el <a href="
-"\"https://customer.checkmk.com\">Portal de usuario de Checkmk</a>. Si esto "
-"tampoco funciona, abra un ticket de soporte o envíe un correo electrónico a "
-"sales@tribe29.com."
-
-#, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "Fallo en la sincronización con el sitio: %s"
 
@@ -19494,19 +19458,6 @@ msgid "For devices that measure smoke in percent"
 msgstr "Para los dispositivos que miden el humo en porcentaje"
 
 msgid ""
-"For downloading and submitting license usage reports you must add "
-"subscription details."
-msgstr ""
-"Para descargar y enviar los informes de uso de las licencias debe añadir los "
-"detalles de la suscripción."
-
-msgid ""
-"For downloading license usage reports you must add subscription details."
-msgstr ""
-"Para descargar los informes de uso de las licencias debe añadir los detalles "
-"de la suscripción."
-
-msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -19578,13 +19529,6 @@ msgstr ""
 
 msgid "For specific SIDs"
 msgstr "Para las DIM específicas"
-
-msgid ""
-"For submitting license usage reports you must add customer portal "
-"credentials."
-msgstr ""
-"Para enviar los informes de uso de licencias debe añadir las credenciales "
-"del portal del cliente."
 
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
@@ -26870,6 +26814,13 @@ msgstr "Frase clave"
 msgid "Key to sign with"
 msgstr "Clave para firmar con"
 
+msgid ""
+"Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
+"was previously called challenge-response authentication "
+"(<tt>ChallengeResponseAuthentication</tt>). If you active this option, "
+"Checkmk will check for both configuration settings."
+msgstr ""
+
 msgid "Keyfile"
 msgstr "Archivo de claves"
 
@@ -33217,6 +33168,11 @@ msgstr "No se admite"
 msgid "Not yet monitored"
 msgstr "Todavía no se ha supervisado"
 
+msgid ""
+"Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
+"versions neither use nor report this configuration variable anymore."
+msgstr ""
+
 msgid "Note while closing"
 msgstr "Nota al cerrar"
 
@@ -39276,9 +39232,6 @@ msgstr "Informe para crear"
 
 msgid "Report to schedule"
 msgstr "Informe para programar"
-
-msgid "Report usage"
-msgstr "Informe de uso"
 
 msgid "Reporting"
 msgstr "Informar"
@@ -45663,23 +45616,8 @@ msgstr "Enviar"
 msgid "Submit Report"
 msgstr "Enviar informe"
 
-msgid "Submit license usage report"
-msgstr "Presentar el informe de uso de la licencia"
-
-msgid "Submit or download"
-msgstr "Enviar o descargar"
-
-msgid "Submit or download license usage report"
-msgstr "Envíe o descargue el informe de uso de la licencia"
-
-msgid "Submit report"
-msgstr "Enviar informe"
-
 msgid "Submitting crash report..."
 msgstr "Presentar el informe del accidente..."
-
-msgid "Submitting license usage report..."
-msgstr "Presentar el informe de uso de la licencia..."
 
 #, fuzzy
 msgid "Subnet groups per region"
@@ -45761,9 +45699,6 @@ msgstr "Se han enviado con éxito %d comandos."
 
 msgid "Successfully stored the report"
 msgstr "Se ha almacenado con éxito el informe"
-
-msgid "Successfully submitted the license usage report."
-msgstr "Presentado con éxito el informe de uso de la licencia."
 
 #, python-format
 msgid "Successfully updated IP addresses of %d hosts."
@@ -47892,9 +47827,6 @@ msgid ""
 msgstr ""
 "No se ha podido encontrar el grupo de filtros de usuarios ldap configurado. "
 "Por favor, compruebe <a href=\"%s\">su configuración</a>."
-
-msgid "The configured password does not exist"
-msgstr "La contraseña configurada no existe"
 
 msgid ""
 "The configured password has either be removed or you are not permitted to "
@@ -51373,14 +51305,6 @@ msgstr ""
 "Estos textos pueden estar localizados en función del idioma de los usuarios. "
 "Puede configurar las localizaciones <a href='%s'> en los ajustes globales</"
 "a>."
-
-#, python-format
-msgid ""
-"These values can be configured in the <a href=\"%s\">subscription settings</"
-"a>."
-msgstr ""
-"Estos valores se pueden configurar en la <a href=\"%s\">configuración de la "
-"suscripción</a>."
 
 msgid "They appear to be new to this node, but may still be already monitored."
 msgstr ""
@@ -65798,6 +65722,97 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot download license usage report.<br>Please add subscription details "
+#~ "in the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "No se puede descargar el informe de uso de la licencia.<br>Por favor, "
+#~ "añada los detalles de la suscripción en la <a href=\"%s\">configuración "
+#~ "de la suscripción</a>."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ "<br>Please add customer portal credentials and subscription details in "
+#~ "the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "No se puede enviar el informe de uso de la licencia al servidor de "
+#~ "licencias de Checkmk '%s'.<br>Por favor, añada las credenciales del "
+#~ "portal del cliente y los detalles de la suscripción en la <a href=\"%s"
+#~ "\"configuración de la suscripción</a>."
+
+#~ msgid "Download license usage report"
+#~ msgstr "Descargar el informe de uso de licencias"
+
+#~ msgid "Download report"
+#~ msgstr "Descargar el informe"
+
+#, python-format
+#~ msgid ""
+#~ "Failed to submit the license usage report to the Checkmk license server "
+#~ "'%s'. Please download it manually and upload it in the <a href=\"https://"
+#~ "customer.checkmk.com\">Checkmk user portal</a>. If this also does not "
+#~ "work, please open a support ticket or send an email to sales@tribe29.com."
+#~ msgstr ""
+#~ "Ha fallado el envío del informe de uso de licencias al servidor de "
+#~ "licencias de Checkmk '%s'. Por favor, descárguelo manualmente y cárguelo "
+#~ "en el <a href=\"https://customer.checkmk.com\">Portal de usuario de "
+#~ "Checkmk</a>. Si esto tampoco funciona, abra un ticket de soporte o envíe "
+#~ "un correo electrónico a sales@tribe29.com."
+
+#~ msgid ""
+#~ "For downloading and submitting license usage reports you must add "
+#~ "subscription details."
+#~ msgstr ""
+#~ "Para descargar y enviar los informes de uso de las licencias debe añadir "
+#~ "los detalles de la suscripción."
+
+#~ msgid ""
+#~ "For downloading license usage reports you must add subscription details."
+#~ msgstr ""
+#~ "Para descargar los informes de uso de las licencias debe añadir los "
+#~ "detalles de la suscripción."
+
+#~ msgid ""
+#~ "For submitting license usage reports you must add customer portal "
+#~ "credentials."
+#~ msgstr ""
+#~ "Para enviar los informes de uso de licencias debe añadir las credenciales "
+#~ "del portal del cliente."
+
+#~ msgid "Report usage"
+#~ msgstr "Informe de uso"
+
+#~ msgid "Submit license usage report"
+#~ msgstr "Presentar el informe de uso de la licencia"
+
+#~ msgid "Submit or download"
+#~ msgstr "Enviar o descargar"
+
+#~ msgid "Submit or download license usage report"
+#~ msgstr "Envíe o descargue el informe de uso de la licencia"
+
+#~ msgid "Submit report"
+#~ msgstr "Enviar informe"
+
+#~ msgid "Submitting license usage report..."
+#~ msgstr "Presentar el informe de uso de la licencia..."
+
+#~ msgid "Successfully submitted the license usage report."
+#~ msgstr "Presentado con éxito el informe de uso de la licencia."
+
+#~ msgid "The configured password does not exist"
+#~ msgstr "La contraseña configurada no existe"
+
+#, python-format
+#~ msgid ""
+#~ "These values can be configured in the <a href=\"%s\">subscription "
+#~ "settings</a>."
+#~ msgstr ""
+#~ "Estos valores se pueden configurar en la <a href=\"%s\">configuración de "
+#~ "la suscripción</a>."
 
 #~ msgid "API server endpoint"
 #~ msgstr "Punto final del servidor API"

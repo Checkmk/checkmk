@@ -4771,7 +4771,9 @@ msgstr "Toegang toestaan via TCP"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Sta alle gebruikers toe om te verwijzen naar regels in dit pakket"
 
-msgid "Allow challenge-response authentication"
+#, fuzzy
+msgid ""
+"Allow keyboard-interactive (previously challenge-response) authentication"
 msgstr "Sta challenge-response authenticatie toe"
 
 msgid "Allow password authentication"
@@ -4821,7 +4823,8 @@ msgstr "Toegestane licentie staten"
 msgid "Allowed operational states:"
 msgstr "Toegestane operationele toestanden:"
 
-msgid "Allowed protocols"
+#, fuzzy
+msgid "Allowed protocols (deprecated)"
 msgstr "Toegestane protocollen"
 
 msgid "Allowed states (otherwise check will be critical)"
@@ -8180,14 +8183,6 @@ msgstr ""
 "abonnementsgegevens toevoegen."
 
 #, python-format
-msgid ""
-"Cannot download license usage report.<br>Please add subscription details in "
-"the <a href=\"%s\">subscription settings</a>."
-msgstr ""
-"Kan licentie gebruiksrapport niet downloaden.<br>Gelieve abonnementsgegevens "
-"toe te voegen in de <a href=\"%s\">abonnementsinstellingen</a>."
-
-#, python-format
 msgid "Cannot edit schedule entry for non-existing report %s"
 msgstr "Kan schema-item voor niet-bestaand rapport %s niet bewerken"
 
@@ -8331,16 +8326,6 @@ msgstr "Kan geen gegevens ophalen van ntop REST API: %s"
 
 msgid "Cannot retrieve historic data with Nagios core"
 msgstr "Kan geen historische gegevens ophalen met Nagios core"
-
-#, python-format
-msgid ""
-"Cannot submit license usage report to the Checkmk license server '%s'."
-"<br>Please add customer portal credentials and subscription details in the "
-"<a href=\"%s\">subscription settings</a>."
-msgstr ""
-"Kan geen licentie gebruiksrapport indienen bij de Checkmk licentie server "
-"'%s'.<br>Voeg klant portal credentials en abonnement details toe in de <a "
-"href=\"%s\">abonnement instellingen</a>."
 
 msgid "Cannot test. Unable to determine the number of CPUs on target system."
 msgstr "Kan niet testen. Kan het aantal CPU's op het doelsysteem niet bepalen."
@@ -15872,12 +15857,6 @@ msgstr "Bestandsnaam downloaden"
 msgid "Download generic Checkmk Agent for folder %s"
 msgstr "Download Checkmk Agent voor host %s"
 
-msgid "Download license usage report"
-msgstr "Licentie gebruiksrapport downloaden"
-
-msgid "Download report"
-msgstr "Verslag downloaden"
-
 msgid "Download snmp walk"
 msgstr "Download snmp wandeling"
 
@@ -18528,19 +18507,6 @@ msgid "Failed to start the job: %s"
 msgstr "Het starten van de opdracht is mislukt: %s"
 
 #, python-format
-msgid ""
-"Failed to submit the license usage report to the Checkmk license server "
-"'%s'. Please download it manually and upload it in the <a href=\"https://"
-"customer.checkmk.com\">Checkmk user portal</a>. If this also does not work, "
-"please open a support ticket or send an email to sales@tribe29.com."
-msgstr ""
-"Het is niet gelukt om het licentiegebruiksrapport in te dienen bij de "
-"Checkmk licentieserver '%s'. Gelieve het manueel te downloaden en te "
-"uploaden in het <a href=\"https://customer.checkmk.com\">Checkmk "
-"gebruikersportaal</a>. Als dit ook niet werkt, open dan een support ticket "
-"of stuur een e-mail naar sales@tribe29.com."
-
-#, python-format
 msgid "Failed to synchronize with site: %s"
 msgstr "Synchronisatie met site mislukt: %s"
 
@@ -19342,19 +19308,6 @@ msgid "For devices that measure smoke in percent"
 msgstr "Voor apparaten die rook meten in procenten"
 
 msgid ""
-"For downloading and submitting license usage reports you must add "
-"subscription details."
-msgstr ""
-"Voor het downloaden en indienen van licentie gebruiksrapporten moet u "
-"abonnementsgegevens toevoegen."
-
-msgid ""
-"For downloading license usage reports you must add subscription details."
-msgstr ""
-"Voor het downloaden van licentie gebruiksrapporten moet u "
-"abonnementsgegevens toevoegen."
-
-msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -19427,13 +19380,6 @@ msgstr ""
 
 msgid "For specific SIDs"
 msgstr "Voor specifieke SID's"
-
-msgid ""
-"For submitting license usage reports you must add customer portal "
-"credentials."
-msgstr ""
-"Voor het indienen van licentiegebruiksrapporten moet u klantportaalgegevens "
-"toevoegen."
 
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
@@ -26664,6 +26610,13 @@ msgstr "Sleutel passphrase"
 msgid "Key to sign with"
 msgstr "Sleutel om te tekenen met"
 
+msgid ""
+"Keyboard-interactive authentication (<tt>KbdInteractiveAuthentication</tt>) "
+"was previously called challenge-response authentication "
+"(<tt>ChallengeResponseAuthentication</tt>). If you active this option, "
+"Checkmk will check for both configuration settings."
+msgstr ""
+
 msgid "Keyfile"
 msgstr "Sleutelbestand"
 
@@ -32952,6 +32905,11 @@ msgstr "Niet ondersteund"
 msgid "Not yet monitored"
 msgstr "Nog niet gecontroleerd"
 
+msgid ""
+"Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
+"versions neither use nor report this configuration variable anymore."
+msgstr ""
+
 msgid "Note while closing"
 msgstr "Opmerking bij het sluiten"
 
@@ -38949,9 +38907,6 @@ msgstr "Verslag te maken"
 
 msgid "Report to schedule"
 msgstr "Rapport aan schema"
-
-msgid "Report usage"
-msgstr "Gebruik rapporteren"
 
 msgid "Reporting"
 msgstr "Melding"
@@ -45261,23 +45216,8 @@ msgstr "Indienen"
 msgid "Submit Report"
 msgstr "Verslag indienen"
 
-msgid "Submit license usage report"
-msgstr "Rapportage licentiegebruik indienen"
-
-msgid "Submit or download"
-msgstr "Verzenden of downloaden"
-
-msgid "Submit or download license usage report"
-msgstr "Licentie gebruiksrapport indienen of downloaden"
-
-msgid "Submit report"
-msgstr "Verslag indienen"
-
 msgid "Submitting crash report..."
 msgstr "Het indienen van een crash rapport..."
-
-msgid "Submitting license usage report..."
-msgstr "Het indienen van licentie gebruiksrapport..."
 
 #, fuzzy
 msgid "Subnet groups per region"
@@ -45356,9 +45296,6 @@ msgstr "Met succes %d commando's verzonden."
 
 msgid "Successfully stored the report"
 msgstr "Het rapport is succesvol opgeslagen"
-
-msgid "Successfully submitted the license usage report."
-msgstr "Met succes het licentie gebruiksrapport ingediend."
 
 #, python-format
 msgid "Successfully updated IP addresses of %d hosts."
@@ -47477,9 +47414,6 @@ msgid ""
 msgstr ""
 "De geconfigureerde ldap-gebruikersfiltergroep kon niet worden gevonden. "
 "Controleer <a href=\"%s\">uw configuratie</a>."
-
-msgid "The configured password does not exist"
-msgstr "Het geconfigureerde wachtwoord bestaat niet"
 
 msgid ""
 "The configured password has either be removed or you are not permitted to "
@@ -50945,14 +50879,6 @@ msgstr ""
 "Deze teksten kunnen gelokaliseerd worden afhankelijk van de gebruikers' "
 "taal. U kunt de localisaties <a href='%s'> configureren in de globale "
 "instellingen</a>."
-
-#, python-format
-msgid ""
-"These values can be configured in the <a href=\"%s\">subscription settings</"
-"a>."
-msgstr ""
-"Deze waarden kunnen worden geconfigureerd in de <a href=\"%s\">-instellingen "
-"van het abonnement</a>."
 
 msgid "They appear to be new to this node, but may still be already monitored."
 msgstr ""
@@ -65268,6 +65194,96 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot download license usage report.<br>Please add subscription details "
+#~ "in the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "Kan licentie gebruiksrapport niet downloaden.<br>Gelieve "
+#~ "abonnementsgegevens toe te voegen in de <a href=\"%s"
+#~ "\">abonnementsinstellingen</a>."
+
+#, python-format
+#~ msgid ""
+#~ "Cannot submit license usage report to the Checkmk license server '%s'."
+#~ "<br>Please add customer portal credentials and subscription details in "
+#~ "the <a href=\"%s\">subscription settings</a>."
+#~ msgstr ""
+#~ "Kan geen licentie gebruiksrapport indienen bij de Checkmk licentie server "
+#~ "'%s'.<br>Voeg klant portal credentials en abonnement details toe in de <a "
+#~ "href=\"%s\">abonnement instellingen</a>."
+
+#~ msgid "Download license usage report"
+#~ msgstr "Licentie gebruiksrapport downloaden"
+
+#~ msgid "Download report"
+#~ msgstr "Verslag downloaden"
+
+#, python-format
+#~ msgid ""
+#~ "Failed to submit the license usage report to the Checkmk license server "
+#~ "'%s'. Please download it manually and upload it in the <a href=\"https://"
+#~ "customer.checkmk.com\">Checkmk user portal</a>. If this also does not "
+#~ "work, please open a support ticket or send an email to sales@tribe29.com."
+#~ msgstr ""
+#~ "Het is niet gelukt om het licentiegebruiksrapport in te dienen bij de "
+#~ "Checkmk licentieserver '%s'. Gelieve het manueel te downloaden en te "
+#~ "uploaden in het <a href=\"https://customer.checkmk.com\">Checkmk "
+#~ "gebruikersportaal</a>. Als dit ook niet werkt, open dan een support "
+#~ "ticket of stuur een e-mail naar sales@tribe29.com."
+
+#~ msgid ""
+#~ "For downloading and submitting license usage reports you must add "
+#~ "subscription details."
+#~ msgstr ""
+#~ "Voor het downloaden en indienen van licentie gebruiksrapporten moet u "
+#~ "abonnementsgegevens toevoegen."
+
+#~ msgid ""
+#~ "For downloading license usage reports you must add subscription details."
+#~ msgstr ""
+#~ "Voor het downloaden van licentie gebruiksrapporten moet u "
+#~ "abonnementsgegevens toevoegen."
+
+#~ msgid ""
+#~ "For submitting license usage reports you must add customer portal "
+#~ "credentials."
+#~ msgstr ""
+#~ "Voor het indienen van licentiegebruiksrapporten moet u "
+#~ "klantportaalgegevens toevoegen."
+
+#~ msgid "Report usage"
+#~ msgstr "Gebruik rapporteren"
+
+#~ msgid "Submit license usage report"
+#~ msgstr "Rapportage licentiegebruik indienen"
+
+#~ msgid "Submit or download"
+#~ msgstr "Verzenden of downloaden"
+
+#~ msgid "Submit or download license usage report"
+#~ msgstr "Licentie gebruiksrapport indienen of downloaden"
+
+#~ msgid "Submit report"
+#~ msgstr "Verslag indienen"
+
+#~ msgid "Submitting license usage report..."
+#~ msgstr "Het indienen van licentie gebruiksrapport..."
+
+#~ msgid "Successfully submitted the license usage report."
+#~ msgstr "Met succes het licentie gebruiksrapport ingediend."
+
+#~ msgid "The configured password does not exist"
+#~ msgstr "Het geconfigureerde wachtwoord bestaat niet"
+
+#, python-format
+#~ msgid ""
+#~ "These values can be configured in the <a href=\"%s\">subscription "
+#~ "settings</a>."
+#~ msgstr ""
+#~ "Deze waarden kunnen worden geconfigureerd in de <a href=\"%s\">-"
+#~ "instellingen van het abonnement</a>."
 
 #~ msgid "API server endpoint"
 #~ msgstr "API-server eindpunt"

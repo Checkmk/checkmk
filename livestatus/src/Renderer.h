@@ -98,8 +98,8 @@ protected:
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
-    void outputUnicodeString(const std::string &prefix, const char *start,
-                             const char *end, Encoding data_encoding);
+    void outputUnicodeString(const char *start, const char *end,
+                             Encoding data_encoding);
 
 private:
     Logger *const _logger;

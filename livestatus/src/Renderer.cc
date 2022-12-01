@@ -111,9 +111,9 @@ void Renderer::outputByteString(const std::string &prefix,
     _os << R"(")";  // "
 }
 
-void Renderer::outputUnicodeString(const std::string &prefix, const char *start,
-                                   const char *end, Encoding data_encoding) {
-    _os << prefix << R"(")";  // "
+void Renderer::outputUnicodeString(const char *start, const char *end,
+                                   Encoding data_encoding) {
+    _os << R"(")";  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {

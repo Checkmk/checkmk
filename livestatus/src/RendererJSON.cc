@@ -51,10 +51,9 @@ void RendererJSON::endDict() { _os << "}"; }
 void RendererJSON::outputNull() { _os << "null"; }
 
 void RendererJSON::outputBlob(const std::vector<char> &value) {
-    outputUnicodeString("", value.data(), &value[value.size()],
-                        Encoding::latin1);
+    outputUnicodeString(value.data(), &value[value.size()], Encoding::latin1);
 }
 
 void RendererJSON::outputString(const std::string &value) {
-    outputUnicodeString("", value.data(), &value[value.size()], _data_encoding);
+    outputUnicodeString(value.data(), &value[value.size()], _data_encoding);
 }

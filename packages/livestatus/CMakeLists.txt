@@ -13,7 +13,8 @@ project(
   LANGUAGES CXX)
 
 # TOOLING:
-find_package(PythonInterp REQUIRED)
+find_package(Python3 REQUIRED)
+message("Found python3: ${Python3_EXECUTABLE}")
 
 find_program(
   iwyu_tool_path

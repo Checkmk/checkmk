@@ -60,7 +60,7 @@ if(iwyu_tool_path)
   add_custom_target(
     iwyu
     COMMAND
-      "${PYTHON_EXECUTABLE}" "${iwyu_tool_path}" -j4 --output-format=clang -p
+      "${Python3_EXECUTABLE}" "${iwyu_tool_path}" -j4 --output-format=clang -p
       "${CMAKE_BINARY_DIR}" -- ${IWYU_EXTRA_ARGS} -Xiwyu
       --mapping_file=${root_repo_dir}/livestatus/iwyu-mappings/check_mk.imp
     COMMENT "Running include-what-you-use tool"
@@ -78,7 +78,7 @@ if(run_clang_tidy_path)
   add_custom_target(
     tidy
     COMMAND
-      "echo" "${PYTHON_EXECUTABLE}" "${run_clang_tidy_path}"
+      "${Python3_EXECUTABLE}" "${run_clang_tidy_path}"
       -clang-tidy-binary=clang-tidy-${CLANG_VERSION}
       -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}
       $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 -p=${CMAKE_BINARY_DIR}

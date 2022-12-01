@@ -72,7 +72,9 @@ def handle_graylog_messages(messages, params):
         diff,
         "graylog_diff",
         diff_levels_upper + diff_levels_lower,
-        infoname="Total number of messages last %s" % get_age_human_readable(timespan),
+        human_readable_func=int,
+        infoname="Total number of messages since last check (within %s)"
+        % get_age_human_readable(timespan),
     )
 
 

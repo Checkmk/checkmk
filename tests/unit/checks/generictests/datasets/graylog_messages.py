@@ -26,7 +26,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Total number of messages last 30 minutes 0 seconds: 0.00', [
+                    0, 'Total number of messages since last check (within 30 minutes 0 seconds): 0', [
                         ('graylog_diff', 0, None, None, None, None)
                     ]
                 )

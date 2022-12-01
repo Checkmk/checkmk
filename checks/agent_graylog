@@ -42,6 +42,9 @@ def agent_graylog_arguments(
     if "port" in params:
         args += ["-p", params["port"]]
 
+    if "source_since" in params:
+        args += ["--source_since", params["source_since"]]
+
     args.append(params["instance"])
 
     return args

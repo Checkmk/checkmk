@@ -126,19 +126,42 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
                     handle_output(sidecar_list, section.name, args)
 
         if section.name == "sources":
-            sources = value.get("sources")
-            if sources is not None:
-                source_list = []
-                if args.display_source_details == "source":
-                    for source, messages in sources.items():
-                        value = {"sources": {source: messages}}
-                        handle_piggyback(value, args, source, section.name)
-                        continue
-                else:
-                    source_list.append(value)
+            sources_in_range = {}
+            source_since_argument = args.source_since
 
-                if source_list:
-                    handle_output(source_list, section.name, args)
+            if source_since_argument:
+                url_sources_in_range = f"{url_base}/sources?range={str(source_since_argument)}"
+                sources_in_range = (
+                    handle_response(url_sources_in_range, args).json().get("sources", {})
+                )
+
+            if (sources := value.get("sources")) is None:
+                continue
+
+            value = {"sources": {}}
+            for source, messages in sources.items():
+                value["sources"].setdefault(
+                    source,
+                    {
+                        "messages": messages,
+                        "has_since_argument": bool(source_since_argument),
+                        "source_since": source_since_argument if source_since_argument else None,
+                    },
+                )
+
+                if source in sources_in_range:
+                    value["sources"][source].update(
+                        {
+                            "messages_since": sources_in_range[source],
+                        }
+                    )
+
+                if args.display_source_details == "source":
+                    handle_piggyback(value, args, source, section.name)
+                    value = {"sources": {}}
+
+            if args.display_source_details == "host":
+                handle_output([value], section.name, args)
 
         if section.name not in ["nodes", "sidecars", "sources"]:
             handle_output(value, section.name, args)
@@ -214,6 +237,12 @@ def parse_arguments(argv):
         default=1800,
         type=int,
         help="The time in seconds, since when failures should be covered",
+    )
+    parser.add_argument(
+        "--source_since",
+        default=None,
+        type=int,
+        help="The time in seconds, since when source messages should be covered",
     )
     parser.add_argument(
         "-m",

@@ -32,8 +32,6 @@ def test_init_scripts(site: Site) -> None:
             "mknotifyd",
         ]
 
-    installed_scripts = [
-        _ for _ in os.listdir(os.path.join(site.root, "etc/init.d")) if _ != ".f12"
-    ]
+    installed_scripts = os.listdir(os.path.join(site.root, "etc/init.d"))
 
     assert sorted(scripts) == sorted(installed_scripts)

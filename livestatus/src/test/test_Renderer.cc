@@ -192,23 +192,15 @@ TEST_P(Fixture, Chars) {
     EXPECT_EQ("\\xe4", result());
 
     clear_result();
-    renderer->output(char16_t{0x57});
+    renderer->outputUnicodeChar(0x57U);
     EXPECT_EQ("\\u0057", result());
 
     clear_result();
-    renderer->output(char16_t{0x3b5});
+    renderer->outputUnicodeChar(0x3b5U);
     EXPECT_EQ("\\u03b5", result());
 
     clear_result();
-    renderer->output(char32_t{0x57});
-    EXPECT_EQ("\\u0057", result());
-
-    clear_result();
-    renderer->output(char32_t{0x3b5});
-    EXPECT_EQ("\\u03b5", result());
-
-    clear_result();
-    renderer->output(char32_t{0x1f60b});
+    renderer->outputUnicodeChar(0x1f60bU);
     EXPECT_EQ("\\U0001f60b", result());
 }
 

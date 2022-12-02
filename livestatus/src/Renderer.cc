@@ -46,12 +46,6 @@ void Renderer::output(double value) {
     }
 }
 
-void Renderer::output(HexEscape value) {
-    OStreamStateSaver s(_os);
-    _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
-        << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
-}
-
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::outputUnicodeChar(char32_t value) {
@@ -99,7 +93,9 @@ void Renderer::outputByteString(const std::string &prefix,
         if (isBoringChar(ch)) {
             _os.put(ch);
         } else {
-            output(HexEscape{ch});
+            OStreamStateSaver s(_os);
+            _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
+                << static_cast<unsigned>(static_cast<unsigned char>(ch));
         }
     }
     _os << R"(")";  // "

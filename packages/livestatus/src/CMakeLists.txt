@@ -46,15 +46,6 @@ target_include_directories(livestatus PUBLIC ../include/livestatus
                                              ${asio_ext_include})
 target_link_libraries(livestatus PRIVATE pthread ${asio_ext_lib})
 target_compile_features(livestatus PUBLIC cxx_std_17)
-target_compile_options(
-  livestatus
-  PUBLIC -Wall
-         -Wextra
-         -Werror
-         -fPIC
-         -O3
-         -gdwarf-4
-         -std=c++17)
 
 if(iwyu_tool_path)
   add_custom_target(

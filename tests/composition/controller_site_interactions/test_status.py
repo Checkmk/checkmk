@@ -61,12 +61,11 @@ def test_status_pull(
     assert remote_status["connection_type"] == "pull-agent"
 
 
+@pytest.mark.usefixtures("skip_if_not_plus_edition")
 def test_status_push(
     central_site: Site,
     agent_ctl: Path,
 ) -> None:
-    if not central_site.version.is_plus_edition():
-        pytest.skip("Skipping since we are not testing with a plus edition")
     remote_status = _get_status_output_json(
         site=central_site,
         agent_ctl=agent_ctl,

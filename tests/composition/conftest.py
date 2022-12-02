@@ -27,6 +27,15 @@ from cmk.utils.version import Edition
 site_number = 0
 
 
+@pytest.fixture(name="version", scope="session")
+def _version() -> CMKVersion:
+    return version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        fallback_branch=current_branch_name(),
+    )
+
+
 # Disable this. We have a site_factory instead.
 @pytest.fixture(name="site", scope="module")
 def _site(request):
@@ -36,17 +45,13 @@ def _site(request):
 # The scope of the site factory is "module" to avoid that changing the site properties in a module
 # may result in a test failing in another one
 @pytest.fixture(name="site_factory", scope="module")
-def _site_factory() -> Iterator[SiteFactory]:
+def _site_factory(version: CMKVersion) -> Iterator[SiteFactory]:
     # Using a different site for every module to avoid having issues when saving the results for the
     # tests: if you call SiteFactory.save_results() twice with the same site_id, it will crash
     # because the results are already there.
     global site_number
     sf = SiteFactory(
-        version=version_from_env(
-            fallback_version_spec=CMKVersion.DAILY,
-            fallback_edition=Edition.CEE,
-            fallback_branch=current_branch_name(),
-        ),
+        version=version,
         prefix=f"comp_{site_number}_",
     )
     site_number += 1

@@ -35,6 +35,7 @@
         "DISTROS": [
             "ubuntu-20.04",
             "ubuntu-22.04",
+            "ubuntu-22.10",
             "debian-10"
         ]
     },
@@ -50,6 +51,7 @@
         "DISTROS": [
             "ubuntu-20.04",
             "ubuntu-22.04",
+            "ubuntu-22.10",
             "debian-10"
         ]
     }

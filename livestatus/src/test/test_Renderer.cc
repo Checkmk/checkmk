@@ -53,6 +53,7 @@ struct Param {
     std::string list;
     std::string sublist;
     std::string dict;
+    std::string unicode;
     std::string null;
     Blob blob;
     std::string string;
@@ -185,7 +186,7 @@ TEST_P(Fixture, UnicodeChar) {
 
     clear_result();
     renderer->outputUnicodeChar(0x1f60bU);
-    EXPECT_EQ("\\U0001f60b", result());
+    EXPECT_EQ(GetParam().unicode, result());
 }
 
 TEST_P(Fixture, RowFragment) {
@@ -209,11 +210,6 @@ TEST_P(Fixture, Blob) {
 TEST_P(Fixture, String) {
     auto renderer = make_renderer(GetParam().format);
     renderer->output(std::string{"A small\nt\u03b5st...\U0001f60b"});
-    // TODO(sp) The JSON renderer is buggy, the current test expectation just
-    // record the status quo.
-    if (GetParam().format == OutputFormat::json) {
-        GTEST_SKIP();
-    }
     EXPECT_EQ(GetParam().string, result());
 }
 
@@ -232,6 +228,7 @@ INSTANTIATE_TEST_SUITE_P(
               .list = "1,2",
               .sublist = "1|2",
               .dict = "1|2,3|4",
+              .unicode = "\\U0001f60b",
               .null = "",
               .blob = {"p\\\n\xFF\xE"},
               .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
@@ -241,6 +238,7 @@ INSTANTIATE_TEST_SUITE_P(
               .list = "1,2",
               .sublist = "1|2",
               .dict = "1|2,3|4",
+              .unicode = "\\U0001f60b",
               .null = "",
               .blob = {"p\\\n\xFF\xE"},
               .string = "A small\nt\xCE\xB5st...\xF0\x9F\x98\x8B"},
@@ -250,15 +248,17 @@ INSTANTIATE_TEST_SUITE_P(
               .list = "[1,2]",
               .sublist = "[1,2]",
               .dict = "{1:2,3:4}",
+              .unicode = "\\ud83d\\ude0b",
               .null = "null",
               .blob = {"\"p\\u005c\\u000a\\u00ff\\u000e\""},
-              .string = "\"A small\\u000at\\u03b5st...\\U0001f60b\""},
+              .string = "\"A small\\u000at\\u03b5st...\\ud83d\\ude0b\""},
         Param{.format = OutputFormat::python3,
               .query = "[1,\n2]\n",
               .row = "[1,2]",
               .list = "[1,2]",
               .sublist = "[1,2]",
               .dict = "{1:2,3:4}",
+              .unicode = "\\U0001f60b",
               .null = "None",
               .blob = {"b\"p\\x5c\\x0a\\xff\\x0e\""},
               .string = "u\"A small\\u000at\\u03b5st...\\U0001f60b\""}));

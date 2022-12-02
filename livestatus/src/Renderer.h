@@ -103,11 +103,12 @@ private:
     void truncatedUTF8();
     void invalidUTF8(unsigned char ch);
 
+    [[nodiscard]] virtual bool useSurrogatePairs() const = 0;
     virtual void outputNull() = 0;
     virtual void outputBlob(const std::vector<char> &value) = 0;
     virtual void outputString(const std::string &value) = 0;
-    template <class T>
 
+    template <class T>
     std::ostream &outputHex(char prefix, int width, T value) {
         OStreamStateSaver s(_os);
         return _os << '\\' << prefix << std::hex << std::setw(width)

@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_branch_name, edition_from_env
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import current_branch_name
+from tests.testlib.version import CMKVersion, version_from_env
 
 from tests.composition.utils import (
     agent_controller_daemon,
@@ -42,9 +42,11 @@ def _site_factory() -> Iterator[SiteFactory]:
     # because the results are already there.
     global site_number
     sf = SiteFactory(
-        version=os.environ.get("VERSION", CMKVersion.DAILY),
-        edition=edition_from_env(Edition.CEE),
-        branch=os.environ.get("BRANCH") or current_branch_name(),
+        version=version_from_env(
+            fallback_version_spec=CMKVersion.DAILY,
+            fallback_edition=Edition.CEE,
+            fallback_branch=current_branch_name(),
+        ),
         prefix=f"comp_{site_number}_",
     )
     site_number += 1

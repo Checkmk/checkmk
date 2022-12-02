@@ -7,6 +7,8 @@ import os
 
 import pytest
 
+from tests.testlib.utils import version_spec_from_env
+
 
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
@@ -22,7 +24,4 @@ def package_path() -> str:
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
 def cmk_version() -> str:
-    version = os.environ.get("VERSION")
-    if not version:
-        raise Exception("VERSION environment variable, e.g. 2016.12.22, is missing")
-    return version
+    return version_spec_from_env()

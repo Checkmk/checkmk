@@ -22,11 +22,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from tests.testlib.utils import (
     add_python_paths,
     current_base_branch_name,
-    edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
 )
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
@@ -38,18 +37,20 @@ PackageUrl = NewType("PackageUrl", str)
 
 def main():
     add_python_paths()
-
-    version_spec = os.environ.get("VERSION", CMKVersion.DAILY)
-    edition = edition_from_env(Edition.CEE)
-    branch = os.environ.get("BRANCH")
-    if branch is None:
-        branch = current_base_branch_name()
-
-    logger.info("Version: %s, Edition: %s, Branch: %s", version_spec, edition.name, branch)
-    version = CMKVersion(version_spec, edition, branch)
+    version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        fallback_branch=current_base_branch_name(),
+    )
+    logger.info(
+        "Version: %s, Edition: %s, Branch: %s",
+        version.version,
+        version.edition.name,
+        version.branch,
+    )
 
     if version.is_installed():
-        logger.info("Version %s is already installed. Terminating.", version_spec)
+        logger.info("Already installed. Terminating.")
         return 0
 
     manager = ABCPackageManager.factory()

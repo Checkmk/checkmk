@@ -26,8 +26,7 @@ script_path = Path(__file__).resolve()
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import cmk_path, is_running_as_site_user
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import cmk_path, current_base_branch_name, is_running_as_site_user
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
@@ -41,9 +40,10 @@ def main(args):
     logger.info("Setting up site")
     logger.info("===============================================")
 
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
     sf = get_site_factory(
-        prefix="int_", update_from_git=version == "git", install_test_python_modules=True
+        prefix="int_",
+        install_test_python_modules=True,
+        fallback_branch=current_base_branch_name(),
     )
 
     site = sf.get_existing_site("test")
@@ -81,7 +81,7 @@ def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
         "VERSION": site.version.version_spec,
         "EDITION": site.version.edition.name,
         "REUSE": "1" if site.reuse else "0",
-        "BRANCH": site.version._branch,
+        "BRANCH": site.version.branch,
     }
     for varname in [
         "WORKSPACE",

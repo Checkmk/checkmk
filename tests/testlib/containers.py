@@ -233,7 +233,7 @@ def _create_cmk_image(
             "org.tribe29.base_image_hash": base_image.short_id,
             "org.tribe29.cmk_edition_short": version.edition.short,
             "org.tribe29.cmk_version": version.version,
-            "org.tribe29.cmk_branch": version.branch(),
+            "org.tribe29.cmk_branch": version.branch,
             # override the base image label
             "com.tribe29.image_type": "cmk-image",
         },
@@ -438,7 +438,7 @@ def _container_env(version: CMKVersion) -> dict[str, str]:
         "PIPENV_VENV_IN_PROJECT": "true",
         "VERSION": version.version_spec,
         "EDITION": version.edition.short,
-        "BRANCH": version.branch(),
+        "BRANCH": version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)

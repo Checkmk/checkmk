@@ -18,21 +18,13 @@ import urllib.parse
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal
+from typing import Final, Literal
 
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import (
-    cmc_path,
-    cme_path,
-    cmk_path,
-    current_base_branch_name,
-    edition_from_env,
-    is_containerized,
-    virtualenv_path,
-)
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized, virtualenv_path
+from tests.testlib.version import CMKVersion, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -47,11 +39,9 @@ PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version
 class Site:
     def __init__(
         self,
+        version: CMKVersion,
         site_id: str,
         reuse: bool = True,
-        version: str = CMKVersion.DEFAULT,
-        edition: Edition = Edition.CEE,
-        branch: str = "master",
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
         admin_password: str = "cmk",
@@ -59,7 +49,7 @@ class Site:
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
-        self.version = CMKVersion(version, edition, branch)
+        self.version: Final = version
 
         self.update_from_git = update_from_git
         self.install_test_python_modules = install_test_python_modules
@@ -1094,17 +1084,13 @@ class Site:
 class SiteFactory:
     def __init__(
         self,
-        version: str,
-        edition: Edition,
-        branch: str,
+        version: CMKVersion,
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
         prefix: str | None = None,
     ) -> None:
-        self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
-        self._edition = edition
-        self._branch = branch
+        self._base_ident = prefix or "s_%s_" % version.branch[:6]
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
         self._update_from_git = update_from_git
@@ -1150,11 +1136,9 @@ class SiteFactory:
     def _site_obj(self, name: str) -> Site:
         site_id = f"{self._base_ident}{name}"
         return Site(
+            version=self._version,
             site_id=site_id,
             reuse=False,
-            version=self._version,
-            edition=self._edition,
-            branch=self._branch,
             update_from_git=self._update_from_git,
             install_test_python_modules=self._install_test_python_modules,
         )
@@ -1186,20 +1170,30 @@ class SiteFactory:
 
 
 def get_site_factory(
-    prefix: str, update_from_git: bool, install_test_python_modules: bool
+    *,
+    prefix: str,
+    install_test_python_modules: bool,
+    update_from_git: bool | None = None,
+    fallback_branch: str | None = None,
 ) -> SiteFactory:
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
-    edition = edition_from_env(Edition.CEE)
-    branch = os.environ.get("BRANCH")
-    if branch is None:
-        branch = current_base_branch_name()
-
-    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition.name, branch)
+    version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        # Note: we cannot specify a fallback branch here by querying git we because we might not be
+        # inside a git repository (integration tests run as site user)
+        fallback_branch=fallback_branch,
+    )
+    logger.info(
+        "Version: %s, Edition: %s, Branch: %s",
+        version.version,
+        version.edition.name,
+        version.branch,
+    )
     return SiteFactory(
         version=version,
-        edition=edition,
-        branch=branch,
         prefix=prefix,
-        update_from_git=update_from_git,
+        update_from_git=version.version_spec == CMKVersion.GIT
+        if update_from_git is None
+        else update_from_git,
         install_test_python_modules=install_test_python_modules,
     )

@@ -25,8 +25,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
 
 from tests.testlib.containers import execute_tests_in_container
-from tests.testlib.utils import current_base_branch_name, edition_from_env
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import current_base_branch_name
+from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
 
@@ -39,17 +39,17 @@ def main(raw_args):
 
     distro_name = _os_environ_get("DISTRO", "ubuntu-20.04")
     docker_tag = _os_environ_get("DOCKER_TAG", "%s-latest" % current_base_branch_name())
-    version_spec = _os_environ_get("VERSION", CMKVersion.GIT)
-    edition = edition_from_env(Edition.CEE)
-    branch = _os_environ_get("BRANCH", current_base_branch_name())
-
-    version = CMKVersion(version_spec, edition, branch)
+    version = version_from_env(
+        fallback_version_spec=CMKVersion.GIT,
+        fallback_edition=Edition.CEE,
+        fallback_branch=current_base_branch_name(),
+    )
     logger.info(
         "Version: %s (%s), Edition: %s, Branch: %s",
         version.version,
         version.version_spec,
         version.edition.name,
-        branch,
+        version.branch,
     )
 
     result_path_str = _os_environ_get("RESULT_PATH", "")

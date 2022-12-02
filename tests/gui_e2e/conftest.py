@@ -14,7 +14,7 @@ from playwright.sync_api import BrowserContext, Page
 
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import current_base_branch_name
 
 logger = logging.getLogger(__name__)
 username = "cmkadmin"
@@ -24,13 +24,14 @@ password = "cmk"
 @pytest.fixture(name="test_site", scope="session", autouse=True)
 def site() -> Iterator[Site]:
     logger.info("Setting up testsite")
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
     reuse = os.environ.get("REUSE")
     # if REUSE is undefined, a site will neither be reused nor be dropped
     reuse_site = reuse == "1"
     drop_site = reuse == "0"
     sf = get_site_factory(
-        prefix="gui_e2e_", update_from_git=version == "git", install_test_python_modules=False
+        prefix="gui_e2e_",
+        install_test_python_modules=False,
+        fallback_branch=current_base_branch_name(),
     )
 
     site_to_return = sf.get_existing_site("central")

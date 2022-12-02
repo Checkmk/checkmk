@@ -8,6 +8,8 @@ import os
 import time
 from typing import Final
 
+from tests.testlib.utils import branch_from_env, edition_from_env, version_spec_from_env
+
 from cmk.utils.version import Edition
 
 logger = logging.getLogger()
@@ -20,37 +22,31 @@ class CMKVersion:
     GIT = "git"
 
     def __init__(self, version_spec: str, edition: Edition, branch: str) -> None:
-        self.version_spec = version_spec
-        self._branch = branch
-
+        self.version_spec: Final = version_spec
+        self.version: Final = self._version(version_spec, branch)
         self.edition: Final = edition
-        self.set_version(version_spec, branch)
+        self.branch: Final = branch
 
-    def get_default_version(self) -> str:
+    def _get_default_version(self) -> str:
         if os.path.exists("/etc/alternatives/omd"):
             path = os.readlink("/etc/alternatives/omd")
         else:
             path = os.readlink("/omd/versions/default")
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
-    def set_version(self, version: str, branch: str) -> None:
-        if version in [CMKVersion.DAILY, CMKVersion.GIT]:
+    def _version(self, version_spec: str, branch: str) -> str:
+        if version_spec in (self.DAILY, self.GIT):
             date_part = time.strftime("%Y.%m.%d")
             if branch != "master":
-                self.version = f"{branch}-{date_part}"
-            else:
-                self.version = date_part
+                return f"{branch}-{date_part}"
+            return date_part
 
-        elif version == CMKVersion.DEFAULT:
-            self.version = self.get_default_version()
+        if version_spec == self.DEFAULT:
+            return self._get_default_version()
 
-        else:
-            if ".cee" in version or ".cre" in version:
-                raise Exception("Invalid version. Remove the edition suffix!")
-            self.version = version
-
-    def branch(self) -> str:
-        return self._branch
+        if ".cee" in version_spec or ".cre" in version_spec:
+            raise Exception("Invalid version. Remove the edition suffix!")
+        return version_spec
 
     def is_managed_edition(self) -> bool:
         return self.edition is Edition.CME
@@ -75,3 +71,16 @@ class CMKVersion:
 
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
+
+
+def version_from_env(
+    *,
+    fallback_version_spec: str | None = None,
+    fallback_edition: Edition | None = None,
+    fallback_branch: str | None = None,
+) -> CMKVersion:
+    return CMKVersion(
+        version_spec_from_env(fallback_version_spec),
+        edition_from_env(fallback_edition),
+        branch_from_env(fallback_branch),
+    )

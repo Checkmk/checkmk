@@ -54,12 +54,12 @@ public:
     void output(PlainChar value);
     void output(HexEscape value);
     void output(const RowFragment &value);
-    void output(char16_t value);
-    void output(char32_t value);
     void output(Null value);
     void output(const std::vector<char> &value);
     void output(const std::string &value);
     void output(std::chrono::system_clock::time_point value);
+
+    void outputUnicodeChar(char32_t value);
 
     // A whole query.
     virtual void beginQuery() = 0;

@@ -56,15 +56,11 @@ void Renderer::output(HexEscape value) {
 
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
-void Renderer::output(char16_t value) {
-    OStreamStateSaver s(_os);
-    _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
-        << static_cast<uint16_t>(value);
-}
-
-void Renderer::output(char32_t value) {
+void Renderer::outputUnicodeChar(char32_t value) {
     if (value < 0x10000) {
-        output(static_cast<char16_t>(value));
+        OStreamStateSaver s(_os);
+        _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
+            << static_cast<uint16_t>(value);
     } else {
         OStreamStateSaver s(_os);
         _os << R"(\U)" << std::hex << std::setw(8) << std::setfill('0')
@@ -137,7 +133,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if (isBoringChar(ch0)) {
                 output(PlainChar{*p});
             } else {
-                output(char32_t{ch0});
+                outputUnicodeChar(ch0);
             }
         } else if ((ch0 & 0xE0) == 0xC0) {
             // 2 byte encoding
@@ -152,8 +148,8 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
-                                         ((ch1 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x1F) << 6) |  //
+                              ((ch1 & 0x3F) << 0));
         } else if ((ch0 & 0xF0) == 0xE0) {
             // 3 byte encoding
             if (end <= &p[2]) {
@@ -167,9 +163,9 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            output(static_cast<char32_t>(((ch0 & 0x0F) << 12) |  //
-                                         ((ch1 & 0x3F) << 6) |   //
-                                         ((ch2 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x0F) << 12) |  //
+                              ((ch1 & 0x3F) << 6) |   //
+                              ((ch2 & 0x3F) << 0));
         } else if ((ch0 & 0xF8) == 0xF0) {
             // 4 byte encoding
             if (ch0 == 0xF5 || ch0 == 0xF6 || ch0 == 0xF7) {
@@ -191,10 +187,10 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
-            output(static_cast<char32_t>(((ch0 & 0x07) << 18) |  //
-                                         ((ch1 & 0x3F) << 12) |  //
-                                         ((ch2 & 0x3f) << 6) |   //
-                                         ((ch3 & 0x3f) << 0)));
+            outputUnicodeChar(((ch0 & 0x07) << 18) |  //
+                              ((ch1 & 0x3F) << 12) |  //
+                              ((ch2 & 0x3f) << 6) |   //
+                              ((ch3 & 0x3f) << 0));
         } else {
             return invalidUTF8(ch0);
         }
@@ -207,7 +203,7 @@ void Renderer::outputLatin1(const char *start, const char *end) {
         if (isBoringChar(ch)) {
             output(PlainChar{*p});
         } else {
-            output(char32_t{ch});
+            outputUnicodeChar(ch);
         }
     }
 }
@@ -227,11 +223,11 @@ void Renderer::outputMixed(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
-                                         ((ch1 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x1F) << 6) |  //
+                              ((ch1 & 0x3F) << 0));
         } else {
             // Assume Latin1.
-            output(char32_t{ch0});
+            outputUnicodeChar(ch0);
         }
     }
 }

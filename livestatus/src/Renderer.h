@@ -22,10 +22,6 @@ enum class OutputFormat { csv, broken_csv, json, python3 };
 
 struct Null {};
 
-struct PlainChar {
-    char _ch;
-};
-
 struct HexEscape {
     char _ch;
 };
@@ -51,7 +47,6 @@ public:
     }
 
     void output(double value);
-    void output(PlainChar value);
     void output(HexEscape value);
     void output(const RowFragment &value);
     void output(Null value);

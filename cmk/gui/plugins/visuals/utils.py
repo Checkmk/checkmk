@@ -16,7 +16,7 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.query_filters as query_filters  # pylint: disable=cyclic-import
+import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html

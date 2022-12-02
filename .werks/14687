@@ -1,0 +1,15 @@
+Title: Fixed JSON encoding outside the BMP for Livestatus
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1669992480
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Livestatus used an incorrect way of encoding Unicode characters outside of
+the Basic Multilingual Plane (BMP) for the JSON output format.  This
+affected characters like e.g. emojis, various symbols, characters from
+ancient languages, etc.

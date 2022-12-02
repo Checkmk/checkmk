@@ -7,7 +7,7 @@ from typing import NamedTuple
 
 import pytest
 
-import cmk.gui.views.icon.mkeventd as mkeventd_icon
+import cmk.gui.mkeventd.icon as mkeventd_icon
 from cmk.gui.views.icon import icon_and_action_registry
 
 

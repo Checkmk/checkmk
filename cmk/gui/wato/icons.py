@@ -10,8 +10,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
-
-from .base import Icon
+from cmk.gui.views.icon import Icon
 
 
 class WatoIcon(Icon):

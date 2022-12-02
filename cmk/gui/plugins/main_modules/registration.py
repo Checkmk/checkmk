@@ -33,6 +33,7 @@ from cmk.gui.views.command import (
 )
 from cmk.gui.views.data_source import data_source_registry, register_data_sources
 from cmk.gui.views.host_tag_plugins import register_tag_plugins
+from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.icon.page_ajax_popup_action_menu import ajax_popup_action_menu
 from cmk.gui.views.layout import layout_registry, register_layouts
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
@@ -91,6 +92,7 @@ mkeventd.register(
     permission_registry,
     data_source_registry,
     painter_registry,
+    icon_and_action_registry,
     config_domain_registry,
     sample_config_generator_registry,
     mode_registry,
@@ -101,7 +103,7 @@ mkeventd.register(
     rulespec_registry,
 )
 mobile.register(layout_registry)
-wato.register(painter_registry, sorter_registry)
+wato.register(painter_registry, sorter_registry, icon_and_action_registry)
 inventory.register()
 bi.register(
     permission_section_registry,

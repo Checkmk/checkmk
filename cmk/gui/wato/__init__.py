@@ -254,9 +254,11 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
     register_modules,
     WatoModule,
 )
+from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.sorter import SorterRegistry
 
+from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (
     PainterHostFilename,
     PainterWatoFolderAbs,
@@ -268,7 +270,9 @@ from .views import (
 )
 
 
-def register(painter_registry: PainterRegistry, sorter_registry: SorterRegistry) -> None:
+def register(
+    painter_registry: PainterRegistry, sorter_registry: SorterRegistry, icon_registry: IconRegistry
+) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
     painter_registry.register(PainterWatoFolderRel)
@@ -276,6 +280,10 @@ def register(painter_registry: PainterRegistry, sorter_registry: SorterRegistry)
     sorter_registry.register(SorterWatoFolderAbs)
     sorter_registry.register(SorterWatoFolderRel)
     sorter_registry.register(SorterWatoFolderPlain)
+
+    icon_registry.register(DownloadAgentOutputIcon)
+    icon_registry.register(DownloadSnmpWalkIcon)
+    icon_registry.register(WatoIcon)
 
 
 # .

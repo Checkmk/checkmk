@@ -13,8 +13,7 @@ from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.urls import urlencode_vars
-
-from .base import Icon
+from cmk.gui.views.icon import Icon
 
 
 class MkeventdIcon(Icon):

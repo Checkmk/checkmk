@@ -12,6 +12,7 @@ from cmk.gui.plugins.watolib.utils import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.views.data_source import DataSourceRegistry
+from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
@@ -20,6 +21,7 @@ from . import views, wato
 from .config_domain import ConfigDomainEventConsole
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices, service_levels
+from .icon import MkeventdIcon
 from .livestatus import execute_command
 from .permission_section import PermissionSectionEventConsole
 from .rule_matching import event_rule_matches
@@ -30,6 +32,7 @@ def register(
     permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
+    icon_registry: IconRegistry,
     config_domain_registry: ConfigDomainRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     mode_registry: ModeRegistry,
@@ -40,6 +43,7 @@ def register(
     rulespec_registry: RulespecRegistry,
 ) -> None:
     views.register(data_source_registry, painter_registry)
+    icon_registry.register(MkeventdIcon)
     wato.register(
         permission_registry,
         sample_config_generator_registry,

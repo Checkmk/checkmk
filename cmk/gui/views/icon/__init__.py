@@ -38,13 +38,11 @@ from .builtin import (
 )
 from .config_icons import update_icons_from_configuration
 from .inventory import InventoryIcon
-from .mkeventd import MkeventdIcon
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
 from .painter import PainterHostIcons, PainterServiceIcons
 from .permission_section import PermissionSectionIconsAndActions
 from .registry import icon_and_action_registry, IconRegistry
 from .topology import ShowParentChildTopology
-from .wato import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 
 
 def register(
@@ -82,10 +80,6 @@ def register(
     icon_registry.register(CrashdumpsIcon)
     icon_registry.register(CheckPeriodIcon)
     # Better move these implementations & registrations to the feature related modules
-    icon_registry.register(WatoIcon)
-    icon_registry.register(DownloadAgentOutputIcon)
-    icon_registry.register(DownloadSnmpWalkIcon)
-    icon_registry.register(MkeventdIcon)
     icon_registry.register(InventoryIcon)
     icon_registry.register(RobotmkIcon)
     icon_registry.register(RobotmkErrorIcon)

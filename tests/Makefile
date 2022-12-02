@@ -343,8 +343,7 @@ test-pipenv-deps:
 	$(PIPENV) check
 
 test-pylint: prepare-protobuf-files sync-legacy-checks
-	cd .. && $(FIND_PYTHON_FILES) --omit-legacy-checks | xargs --max-procs 10 --no-run-if-empty \
-	$(PIPENV) run pylint --score=n $(PYLINT_ARGS) --jobs=1
+	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint

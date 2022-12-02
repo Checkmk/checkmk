@@ -13,8 +13,6 @@ from typing import Literal
 
 import livestatus
 
-import cmk.utils.version as cmk_version
-
 import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
@@ -967,7 +965,6 @@ def if_oper_status_filter_table(ident: str, context: VisualContext, rows: Rows) 
 
 
 def cre_sites_options() -> SitesOptions:
-
     return sorted(
         [
             (sitename, site_config.get_site_config(sitename)["alias"])
@@ -976,13 +973,3 @@ def cre_sites_options() -> SitesOptions:
         ],
         key=lambda a: a[1].lower(),
     )
-
-
-def sites_options() -> SitesOptions:
-    if cmk_version.is_managed_edition():
-        from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
-            filter_cme_choices,
-        )
-
-        return filter_cme_choices()
-    return cre_sites_options()

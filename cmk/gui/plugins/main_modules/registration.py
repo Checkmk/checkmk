@@ -6,11 +6,14 @@
 """Central module for common (non-edition specific) registrations"""
 
 
+from functools import partial
+
 import cmk.gui.pages
-from cmk.gui import bi, crash_reporting, mkeventd, mobile, wato
+from cmk.gui import autocompleters, bi, crash_reporting, mkeventd, mobile, wato
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.watolib.utils import (
@@ -19,6 +22,8 @@ from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     sample_config_generator_registry,
 )
+from cmk.gui.query_filters import cre_sites_options
+from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import datasource_selection, icon, inventory, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
@@ -42,6 +47,15 @@ from cmk.gui.views.sorter import register_sorters, sorter_registry
 from cmk.gui.views.visual_type import VisualTypeViews
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+
+
+def register_sites_options() -> None:
+    filters.MultipleSitesFilter.sites_options = cre_sites_options
+
+    autocompleter_registry.register_expression("sites")(
+        partial(autocompleters.sites_autocompleter, cre_sites_options)
+    )
+
 
 cmk.gui.pages.register("view")(page_show_view)
 cmk.gui.pages.register("create_view")(datasource_selection.page_create_view)
@@ -96,3 +110,4 @@ bi.register(
     painter_registry,
     painter_option_registry,
 )
+register_sites_options()

@@ -354,7 +354,7 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--threshold 1 \
+		--threshold 0 \
 		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \

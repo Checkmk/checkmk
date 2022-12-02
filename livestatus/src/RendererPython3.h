@@ -19,6 +19,7 @@ class RendererPython3 : public Renderer {
 public:
     RendererPython3(std::ostream &os, Logger *logger, Encoding data_encoding);
 
+    [[nodiscard]] bool useSurrogatePairs() const override;
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
     void outputString(const std::string &value) override;

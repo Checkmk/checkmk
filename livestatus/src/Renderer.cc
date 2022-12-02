@@ -45,8 +45,11 @@ void Renderer::output(double value) {
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::outputUnicodeChar(char32_t value) {
-    if (value < 0x10000) {
+    if (value < 0x10000U) {
         outputHex('u', 4, value);
+    } else if (useSurrogatePairs()) {
+        outputHex('u', 4, 0xd800U | (((value - 0x10000U) >> 10) & 0x3ffU));
+        outputHex('u', 4, 0xdc00U | ((value - 0x10000U) & 0x3ffU));
     } else {
         outputHex('U', 8, value);
     }

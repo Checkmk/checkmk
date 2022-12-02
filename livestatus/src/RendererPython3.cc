@@ -47,6 +47,8 @@ void RendererPython3::endDict() { _os << "}"; }
 
 // --------------------------------------------------------------------------
 
+bool RendererPython3::useSurrogatePairs() const { return false; };
+
 void RendererPython3::outputNull() { _os << "None"; }
 
 void RendererPython3::outputBlob(const std::vector<char> &value) {

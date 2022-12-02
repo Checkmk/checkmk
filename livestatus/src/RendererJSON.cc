@@ -48,6 +48,8 @@ void RendererJSON::endDict() { _os << "}"; }
 
 // --------------------------------------------------------------------------
 
+bool RendererJSON::useSurrogatePairs() const { return true; };
+
 void RendererJSON::outputNull() { _os << "null"; }
 
 void RendererJSON::outputBlob(const std::vector<char> &value) {

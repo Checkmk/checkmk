@@ -44,6 +44,8 @@ HistoryWhat = Literal[
     "CHANGESTATE",
 ]
 
+Columns = Sequence[tuple[str, float | int | str | list]]
+
 
 class History:
     def __init__(
@@ -51,8 +53,8 @@ class History:
         settings: Settings,
         config: Config,
         logger: Logger,
-        event_columns: list[tuple[str, Any]],
-        history_columns: list[tuple[str, Any]],
+        event_columns: Columns,
+        history_columns: Columns,
     ) -> None:
         super().__init__()
         self._settings = settings

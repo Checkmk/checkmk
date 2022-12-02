@@ -16,6 +16,7 @@ import abc
 import ast
 import contextlib
 import errno
+import itertools
 import json
 import os
 import pprint
@@ -65,7 +66,15 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
 from .helpers import ECLock
-from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, scrub_string
+from .history import (
+    ActiveHistoryPeriod,
+    Columns,
+    get_logfile,
+    History,
+    HistoryWhat,
+    quote_tab,
+    scrub_string,
+)
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
@@ -102,7 +111,7 @@ Response = Iterable[list[Any]] | dict[str, Any] | None
 
 
 class SyslogPriority:
-    NAMES = {
+    NAMES: Mapping[int, str] = {
         0: "emerg",
         1: "alert",
         2: "crit",
@@ -128,7 +137,7 @@ class SyslogPriority:
 
 
 class SyslogFacility:
-    NAMES = {
+    NAMES: Mapping[int, str] = {
         0: "kern",
         1: "user",
         2: "mail",
@@ -446,7 +455,7 @@ class EventServer(ECServerThread):
         lock_configuration: ECLock,
         history: History,
         event_status: EventStatus,
-        event_columns: list[tuple[str, Any]],
+        event_columns: Columns,
         create_pipes_and_sockets: bool = True,
     ) -> None:
         super().__init__(
@@ -492,15 +501,18 @@ class EventServer(ECServerThread):
         )
 
     @classmethod
-    def status_columns(cls) -> list[tuple[str, Any]]:
-        columns = cls._general_columns()
-        columns += Perfcounters.status_columns()
-        columns += cls._replication_columns()
-        columns += cls._event_limit_columns()
-        return columns
+    def status_columns(cls) -> Columns:
+        return list(
+            itertools.chain(
+                cls._general_columns(),
+                Perfcounters.status_columns(),
+                cls._replication_columns(),
+                cls._event_limit_columns(),
+            )
+        )
 
     @classmethod
-    def _general_columns(cls) -> list[tuple[str, Any]]:
+    def _general_columns(cls) -> Columns:
         return [
             ("status_config_load_time", 0),
             ("status_num_open_events", 0),
@@ -508,7 +520,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _replication_columns(cls) -> list[tuple[str, Any]]:
+    def _replication_columns(cls) -> Columns:
         return [
             ("status_replication_slavemode", ""),
             ("status_replication_last_sync", 0.0),
@@ -516,7 +528,7 @@ class EventServer(ECServerThread):
         ]
 
     @classmethod
-    def _event_limit_columns(cls) -> list[tuple[str, Any]]:
+    def _event_limit_columns(cls) -> Columns:
         return [
             ("status_event_limit_host", 0),
             ("status_event_limit_rule", 0),
@@ -2271,7 +2283,7 @@ class StatusTable:
     """Common functionality for the event/history/rule/status tables."""
 
     prefix: str | None = None
-    columns: list[tuple[str, Any]] = []
+    columns: Columns = []
 
     @abc.abstractmethod
     def _enumerate(self, query: QueryGET) -> Iterable[list[Any]]:
@@ -2313,8 +2325,8 @@ class StatusTable:
 
 
 class StatusTableEvents(StatusTable):
-    prefix = "event"
-    columns = [
+    prefix: str = "event"
+    columns: Columns = [
         ("event_id", 1),
         ("event_count", 1),
         ("event_text", ""),
@@ -2365,14 +2377,19 @@ class StatusTableEvents(StatusTable):
 
 
 class StatusTableHistory(StatusTable):
-    prefix = "history"
-    columns = [
-        ("history_line", 0),  # Line number in event history file
-        ("history_time", 0.0),
-        ("history_what", ""),
-        ("history_who", ""),
-        ("history_addinfo", ""),
-    ] + StatusTableEvents.columns
+    prefix: str = "history"
+    columns: Columns = list(
+        itertools.chain(
+            [
+                ("history_line", 0),  # Line number in event history file
+                ("history_time", 0.0),
+                ("history_what", ""),
+                ("history_who", ""),
+                ("history_addinfo", ""),
+            ],
+            StatusTableEvents.columns,
+        )
+    )
 
     def __init__(self, logger: Logger, history: History) -> None:
         super().__init__(logger)
@@ -2383,8 +2400,8 @@ class StatusTableHistory(StatusTable):
 
 
 class StatusTableRules(StatusTable):
-    prefix = "rule"
-    columns = [
+    prefix: str = "rule"
+    columns: Columns = [
         ("rule_id", ""),
         ("rule_hits", 0),
     ]
@@ -2398,8 +2415,8 @@ class StatusTableRules(StatusTable):
 
 
 class StatusTableStatus(StatusTable):
-    prefix = "status"
-    columns = EventServer.status_columns()
+    prefix: str = "status"
+    columns: Columns = EventServer.status_columns()
 
     def __init__(self, logger: Logger, event_server: EventServer) -> None:
         super().__init__(logger)

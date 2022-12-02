@@ -22,10 +22,6 @@ enum class OutputFormat { csv, broken_csv, json, python3 };
 
 struct Null {};
 
-struct HexEscape {
-    char _ch;
-};
-
 struct RowFragment {
     std::string _str;
     bool operator<(const RowFragment &other) const { return _str < other._str; }
@@ -47,7 +43,6 @@ public:
     }
 
     void output(double value);
-    void output(HexEscape value);
     void output(const RowFragment &value);
     void output(Null value);
     void output(const std::vector<char> &value);

@@ -172,16 +172,8 @@ TEST_P(Fixture, Double) {
     EXPECT_EQ(GetParam().null, result());
 }
 
-TEST_P(Fixture, Chars) {
+TEST_P(Fixture, UnicodeChar) {
     auto renderer = make_renderer(GetParam().format);
-
-    clear_result();
-    renderer->output(HexEscape{'x'});
-    EXPECT_EQ("\\x78", result());
-
-    clear_result();
-    renderer->output(HexEscape{'\xe4'});
-    EXPECT_EQ("\\xe4", result());
 
     clear_result();
     renderer->outputUnicodeChar(0x57U);

@@ -47,8 +47,6 @@ void Renderer::output(double value) {
     }
 }
 
-void Renderer::output(PlainChar value) { _os.put(value._ch); }
-
 void Renderer::output(HexEscape value) {
     OStreamStateSaver s(_os);
     _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
@@ -99,7 +97,7 @@ void Renderer::outputByteString(const std::string &prefix,
     _os << prefix << R"(")";  // "
     for (auto ch : value) {
         if (isBoringChar(ch)) {
-            output(PlainChar{ch});
+            _os.put(ch);
         } else {
             output(HexEscape{ch});
         }
@@ -131,7 +129,7 @@ void Renderer::outputUTF8(const char *start, const char *end) {
         unsigned char ch0 = *p;
         if ((ch0 & 0x80) == 0x00) {
             if (isBoringChar(ch0)) {
-                output(PlainChar{*p});
+                _os.put(*p);
             } else {
                 outputUnicodeChar(ch0);
             }
@@ -201,7 +199,7 @@ void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch = *p;
         if (isBoringChar(ch)) {
-            output(PlainChar{*p});
+            _os.put(*p);
         } else {
             outputUnicodeChar(ch);
         }
@@ -212,7 +210,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
-            output(PlainChar{*p});
+            _os.put(*p);
         } else if ((ch0 & 0xE0) == 0xC0) {
             // Possible 2 byte encoding? => Assume UTF-8, ignore overlong
             // encodings

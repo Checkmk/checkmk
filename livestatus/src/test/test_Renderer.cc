@@ -176,14 +176,6 @@ TEST_P(Fixture, Chars) {
     auto renderer = make_renderer(GetParam().format);
 
     clear_result();
-    renderer->output(PlainChar{'x'});
-    EXPECT_EQ("x", result());
-
-    clear_result();
-    renderer->output(PlainChar{'\xe4'});
-    EXPECT_EQ("\xe4", result());
-
-    clear_result();
     renderer->output(HexEscape{'x'});
     EXPECT_EQ("\\x78", result());
 

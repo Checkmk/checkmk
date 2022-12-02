@@ -6,13 +6,9 @@
 #include "Renderer.h"
 
 #include <cmath>
-#include <cstdint>
 #include <ctime>
-#include <iomanip>
-#include <ostream>
 
 #include "Logger.h"
-#include "OStreamStateSaver.h"
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
@@ -51,13 +47,9 @@ void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::outputUnicodeChar(char32_t value) {
     if (value < 0x10000) {
-        OStreamStateSaver s(_os);
-        _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
-            << static_cast<uint16_t>(value);
+        outputHex('u', 4, value);
     } else {
-        OStreamStateSaver s(_os);
-        _os << R"(\U)" << std::hex << std::setw(8) << std::setfill('0')
-            << static_cast<uint32_t>(value);
+        outputHex('U', 8, value);
     }
 }
 
@@ -93,9 +85,8 @@ void Renderer::outputByteString(const std::string &prefix,
         if (isBoringChar(ch)) {
             _os.put(ch);
         } else {
-            OStreamStateSaver s(_os);
-            _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
-                << static_cast<unsigned>(static_cast<unsigned char>(ch));
+            outputHex('x', 2,
+                      static_cast<unsigned>(static_cast<unsigned char>(ch)));
         }
     }
     _os << R"(")";  // "

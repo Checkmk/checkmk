@@ -178,8 +178,8 @@ def package_create(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P create NAME")
 
     pacname = PackageName(args[0])
-    if get_installed_package_info(pacname):
-        raise PackageException("Package %s already existing." % pacname)
+    if pacname in packaging.installed_names():
+        raise PackageException(f"Package {pacname} already existing.")
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = package_info_template(pacname)

@@ -166,8 +166,6 @@ def test_match_message(
         (2, (1, 1), None, None),
         (2, (3, 5), None, None),
         (2, (10, 0), None, MatchPriority(has_match=True, has_canceling_match=False)),
-        (2, (2, 2), None, MatchPriority(has_match=True, has_canceling_match=False)),
-        (2, (1, 1), None, None),
         (2, (5, 3), None, None),
         # cancel
         (2, None, (2, 2), MatchPriority(has_match=True, has_canceling_match=True)),
@@ -176,10 +174,8 @@ def test_match_message(
         (2, None, (1, 1), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, None, (3, 5), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (3, 5), (3, 5), None),
-        (2, None, (2, 2), MatchPriority(has_match=True, has_canceling_match=True)),
         (2, (5, 3), (2, 2), MatchPriority(has_match=False, has_canceling_match=True)),
         (2, None, (10, 0), MatchPriority(has_match=True, has_canceling_match=True)),
-        (2, None, (1, 1), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, None, (5, 3), MatchPriority(has_match=True, has_canceling_match=False)),
         (2, (5, 3), (5, 3), None),
         # positive + cancel

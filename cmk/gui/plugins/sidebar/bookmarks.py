@@ -26,7 +26,7 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.utils import is_allowed_url
-from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.valuespec import (
     Alternative,
     FixedValue,
@@ -309,7 +309,7 @@ class Bookmarks(SidebarSnapin):
         link(
             _("Add Bookmark"),
             "javascript:void(0)",
-            onclick="cmk.sidebar.add_bookmark('%s')" % transactions.get(),
+            onclick="cmk.sidebar.add_bookmark()",
         )
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()
@@ -327,9 +327,10 @@ class Bookmarks(SidebarSnapin):
         return sorted(topics.items())
 
     def _ajax_add_bookmark(self) -> None:
+        check_csrf_token()
         title = request.var("title")
         url = request.var("url")
-        if title and url and transactions.transaction_valid():
+        if title and url:
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url)
         self.show()

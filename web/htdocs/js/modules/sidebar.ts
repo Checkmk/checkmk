@@ -934,7 +934,7 @@ export function fetch_nagvis_snapin_contents() {
  * Bookmark snapin
  *************************************************/
 
-export function add_bookmark(trans_id: null | string = null) {
+export function add_bookmark() {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
     ajax.call_ajax("add_bookmark.py", {
@@ -946,9 +946,7 @@ export function add_bookmark(trans_id: null | string = null) {
             "title=" +
             encodeURIComponent(title) +
             "&url=" +
-            encodeURIComponent(url.toString()) +
-            "&_transid=" +
-            encodeURIComponent(trans_id as string),
+            encodeURIComponent(url.toString()),
     });
 }
 

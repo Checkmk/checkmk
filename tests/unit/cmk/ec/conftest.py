@@ -28,7 +28,7 @@ from cmk.ec.main import (
 from cmk.ec.settings import Settings
 
 
-@pytest.fixture(name="settings", scope="function")
+@pytest.fixture(name="settings")
 def fixture_settings() -> Settings:
     return ec.settings(
         "1.2.3i45",
@@ -38,22 +38,22 @@ def fixture_settings() -> Settings:
     )
 
 
-@pytest.fixture(name="lock_configuration", scope="function")
+@pytest.fixture(name="lock_configuration")
 def fixture_lock_configuration() -> ECLock:
     return ECLock(logging.getLogger("cmk.mkeventd.configuration"))
 
 
-@pytest.fixture(name="slave_status", scope="function")
+@pytest.fixture(name="slave_status")
 def fixture_slave_status() -> SlaveStatus:
     return default_slave_status_master()
 
 
-@pytest.fixture(name="config", scope="function")
+@pytest.fixture(name="config")
 def fixture_config() -> ConfigFromWATO:
     return ec.default_config()
 
 
-@pytest.fixture(name="history", scope="function")
+@pytest.fixture(name="history")
 def fixture_history(settings: Settings, config: Config) -> History:
     return History(
         settings,
@@ -64,12 +64,12 @@ def fixture_history(settings: Settings, config: Config) -> History:
     )
 
 
-@pytest.fixture(name="perfcounters", scope="function")
+@pytest.fixture(name="perfcounters")
 def fixture_perfcounters() -> Perfcounters:
     return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
 
 
-@pytest.fixture(name="event_status", scope="function")
+@pytest.fixture(name="event_status")
 def fixture_event_status(
     settings: Settings, config: Config, perfcounters: Perfcounters, history: History
 ) -> EventStatus:
@@ -78,7 +78,7 @@ def fixture_event_status(
     )
 
 
-@pytest.fixture(name="event_server", scope="function")
+@pytest.fixture(name="event_server")
 def fixture_event_server(
     settings: Settings,
     config: Config,
@@ -102,7 +102,7 @@ def fixture_event_server(
     )
 
 
-@pytest.fixture(name="status_server", scope="function")
+@pytest.fixture(name="status_server")
 def fixture_status_server(
     settings: Settings,
     config: Config,

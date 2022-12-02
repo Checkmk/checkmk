@@ -27,20 +27,72 @@ EXCEPTIONS = [
             section=_ExceptionSection(
                 type="PermissionDenied",
                 message="""403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [links {  description: "Google developers console API activation"  url: "https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578"}, reason: "SERVICE_DISABLED"domain: "googleapis.com"metadata {  key: "consumer"  value: "projects/1074106860578"}metadata {  key: "service"  value: "cloudasset.googleapis.com"}]""",
+                gcp_source="Cloud Asset",
             ),
             results=[
                 Result(
                     state=State.CRIT,
-                    notice="The Google Cloud API reported an error. Please read the error message on how to fix it:, PermissionDenied: 403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
-                    details="The Google Cloud API reported an error. Please read the error message on how to fix it:\nPermissionDenied: 403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="PermissionDenied when trying to access Cloud Asset: 403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
                 )
             ],
         ),
-        id="permission denied",
+        id="permission denied asset API",
     ),
     pytest.param(
         GCPException(
-            section=_ExceptionSection(type=None, message=None),
+            section=_ExceptionSection(
+                type="PermissionDenied",
+                message="""403 Request denied by Cloud IAM. [links {  description: "To check permissions required for this RPC:"  url: "https://cloud.google.com/asset-inventory/docs/access-control#required_permissions"}links {  description: "To get a valid organization id:"  url: "https://cloud.google.com/resource-manager/docs/creating-managing-organization#retrieving_your_organization_id"}links {  description: "To get a valid folder or project id:"  url: "https://cloud.google.com/resource-manager/docs/creating-managing-folders#viewing_or_listing_folders_and_projects"}]""",
+                gcp_source="Cloud Asset",
+            ),
+            results=[
+                Result(
+                    state=State.CRIT,
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="PermissionDenied when trying to access Cloud Asset: 403 Request denied by Cloud IAM. To check permissions required for this RPC: https://cloud.google.com/asset-inventory/docs/access-control#required_permissions. To get a valid organization id: https://cloud.google.com/resource-manager/docs/creating-managing-organization#retrieving_your_organization_id. To get a valid folder or project id: https://cloud.google.com/resource-manager/docs/creating-managing-folders#viewing_or_listing_folders_and_projects",
+                )
+            ],
+        ),
+        id="permission denied cloud IAM",
+    ),
+    pytest.param(
+        GCPException(
+            section=_ExceptionSection(
+                type="HttpError",
+                message="""<HttpError 403 when requesting https://bigquery.googleapis.com/bigquery/v2/projects/tribe29-cost-analytics/queries?alt=json returned "Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.". Details: "[{'message': 'Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.', 'domain': 'global', 'reason': 'accessDenied'}]">""",
+                gcp_source="BigQuery",
+            ),
+            results=[
+                Result(
+                    state=State.CRIT,
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="HttpError when trying to access BigQuery: Access Denied: Project tribe29-cost-analytics: User does not have bigquery.jobs.create permission in project tribe29-cost-analytics.",
+                )
+            ],
+        ),
+        id="access denied BigQuery",
+    ),
+    pytest.param(
+        GCPException(
+            section=_ExceptionSection(
+                type="PermissionDenied",
+                message="""403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [links {  description: "Google developers console API activation"  url: "https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578"}, reason: "SERVICE_DISABLED"domain: "googleapis.com"metadata {  key: "consumer"  value: "projects/1074106860578"}metadata {  key: "service"  value: "cloudasset.googleapis.com"}]""",
+                gcp_source=None,
+            ),
+            results=[
+                Result(
+                    state=State.CRIT,
+                    summary="The Google Cloud API reported an error. Please read the error message on how to fix it:",
+                    details="PermissionDenied: 403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+                )
+            ],
+        ),
+        id="no source",
+    ),
+    pytest.param(
+        GCPException(
+            section=_ExceptionSection(type=None, message=None, gcp_source=None),
             results=[Result(state=State.OK, notice="No exceptions")],
         ),
         id="no exceptions",
@@ -52,11 +104,29 @@ EXCEPTIONS = [
     "string_table,expected_section",
     [
         pytest.param(
-            [["ExceptionType: ExceptionMessage"]],
-            _ExceptionSection(type="ExceptionType", message="ExceptionMessage"),
+            [["ExceptionType:Source:ExceptionMessage"]],
+            _ExceptionSection(
+                type="ExceptionType", message="ExceptionMessage", gcp_source="Source"
+            ),
             id="exception exists",
         ),
-        pytest.param([], _ExceptionSection(type=None, message=None), id="no exceptions"),
+        pytest.param(
+            [["ExceptionType::ExceptionMessage"]],
+            _ExceptionSection(type="ExceptionType", message="ExceptionMessage", gcp_source=None),
+            id="exception without source",
+        ),
+        pytest.param(
+            [["ExceptionType:Source:ExceptionMessagePart1:ExceptionMessagePart2"]],
+            _ExceptionSection(
+                type="ExceptionType",
+                message="ExceptionMessagePart1:ExceptionMessagePart2",
+                gcp_source="Source",
+            ),
+            id="exception message with split char",
+        ),
+        pytest.param(
+            [], _ExceptionSection(type=None, message=None, gcp_source=None), id="no exceptions"
+        ),
     ],
 )
 def test_parse_exception(string_table: StringTable, expected_section: _ExceptionSection) -> None:

@@ -21,7 +21,7 @@ from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account  # type: ignore[import]
 from googleapiclient.discovery import build, Resource  # type: ignore[import]
-from googleapiclient.http import HttpRequest  # type: ignore[import]
+from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = gAggregation.Aligner
@@ -315,11 +315,12 @@ class ExceptionSection:
     exception: BaseException | None
     traceback: TracebackType | None
     name: str = "exception"
+    source: str | None = ""
 
     def serialize(self) -> str | None:
         if self.exc_type is None:
             return None
-        return f"{self.exc_type.__name__}: {self.exception}".replace("\n", "")
+        return f"{self.exc_type.__name__}:{self.source}:{self.exception}".replace("\n", "")
 
 
 Section = (
@@ -551,15 +552,26 @@ def run(
         assets = run_assets(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
-        serializer([assets])
-        serializer(run_metrics(client, services))
-        serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-        serializer(run_cost(client, cost))
-        if monitor_health:
-            serializer(run_health(client))
-        serializer([ExceptionSection(None, None, None)])
     except PermissionDenied:
-        serializer([ExceptionSection(*sys.exc_info())])
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
+        return
+
+    serializer([assets])
+    serializer(run_metrics(client, services))
+    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
+
+    try:
+        serializer(run_cost(client, cost))
+    except HttpError:
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="BigQuery")])
+        return
+
+    if monitor_health:
+        serializer(run_health(client))
+
+    serializer([ExceptionSection(None, None, None)])
 
 
 #######################################################################

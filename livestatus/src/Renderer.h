@@ -9,11 +9,14 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
+#include "OStreamStateSaver.h"
 enum class Encoding;
 class CSVSeparators;
 class Logger;
@@ -103,6 +106,13 @@ private:
     virtual void outputNull() = 0;
     virtual void outputBlob(const std::vector<char> &value) = 0;
     virtual void outputString(const std::string &value) = 0;
+    template <class T>
+
+    std::ostream &outputHex(char prefix, int width, T value) {
+        OStreamStateSaver s(_os);
+        return _os << '\\' << prefix << std::hex << std::setw(width)
+                   << std::setfill('0') << value;
+    }
 };
 
 enum class EmitBeginEnd { on, off };

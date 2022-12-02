@@ -52317,9 +52317,6 @@ msgstr "Dit pakket bestaat niet."
 msgid "This package does not yet contain any rules."
 msgstr "Dit pakket bevat nog geen regels."
 
-msgid "This package is missing or broken."
-msgstr "Dit pakket ontbreekt of is kapot."
-
 #, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
@@ -65194,6 +65191,9 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "This package is missing or broken."
+#~ msgstr "Dit pakket ontbreekt of is kapot."
 
 #, python-format
 #~ msgid ""

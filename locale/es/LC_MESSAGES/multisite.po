@@ -52756,9 +52756,6 @@ msgstr "Este paquete no existe."
 msgid "This package does not yet contain any rules."
 msgstr "Este paquete aún no contiene ninguna norma."
 
-msgid "This package is missing or broken."
-msgstr "Este paquete está perdido o roto."
-
 #, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
@@ -65722,6 +65719,9 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "This package is missing or broken."
+#~ msgstr "Este paquete está perdido o roto."
 
 #, python-format
 #~ msgid ""

@@ -49860,9 +49860,6 @@ msgstr "このパッケージは存在しません。"
 msgid "This package does not yet contain any rules."
 msgstr "このパッケージにはまだルールが含まれていません。"
 
-msgid "This package is missing or broken."
-msgstr "このパッケージは存在しない、または破損しています。"
-
 #, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
@@ -61843,6 +61840,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "This package is missing or broken."
+#~ msgstr "このパッケージは存在しない、または破損しています。"
 
 #, python-format
 #~ msgid ""

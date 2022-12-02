@@ -53122,10 +53122,6 @@ msgid "This package does not yet contain any rules."
 msgstr "Questo pacchetto non contiene ancora alcuna regola."
 
 #, fuzzy
-msgid "This package is missing or broken."
-msgstr "Questo pacchetto non esiste."
-
-#, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
@@ -66140,6 +66136,11 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#, fuzzy
+#~| msgid "This package does not exist."
+#~ msgid "This package is missing or broken."
+#~ msgstr "Questo pacchetto non esiste."
 
 #, fuzzy, python-format
 #~| msgid ""

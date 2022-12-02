@@ -49487,9 +49487,6 @@ msgstr ""
 msgid "This package does not yet contain any rules."
 msgstr ""
 
-msgid "This package is missing or broken."
-msgstr ""
-
 msgid ""
 "This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "

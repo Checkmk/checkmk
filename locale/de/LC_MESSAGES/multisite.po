@@ -52393,9 +52393,6 @@ msgstr "Dieses Paket existiert nicht."
 msgid "This package does not yet contain any rules."
 msgstr "Dieses Paket enthält noch keine Regeln."
 
-msgid "This package is missing or broken."
-msgstr "Dieses Paket fehlt oder ist kaputt."
-
 #, fuzzy
 msgid ""
 "This page can be used to generate a new time period definition based on the "
@@ -65262,6 +65259,9 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "This package is missing or broken."
+#~ msgstr "Dieses Paket fehlt oder ist kaputt."
 
 #, python-format
 #~ msgid ""

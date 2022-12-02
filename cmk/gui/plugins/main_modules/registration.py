@@ -53,7 +53,7 @@ def register_sites_options() -> None:
     filters.MultipleSitesFilter.sites_options = cre_sites_options
 
     autocompleter_registry.register_expression("sites")(
-        partial(autocompleters.sites_autocompleter, cre_sites_options)
+        partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
     )
 
 

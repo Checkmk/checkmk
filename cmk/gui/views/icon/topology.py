@@ -6,7 +6,8 @@
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.views.icon import Icon
+
+from .base import Icon
 
 
 class ShowParentChildTopology(Icon):

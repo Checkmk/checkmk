@@ -62,9 +62,9 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.visual_link import url_to_visual
 
 from ..graph import cmk_graph_url
-from ..icon import Icon
 from ..painter.v0.helpers import render_cache_info
 from ..painter.v1.helpers import is_stale
+from .base import Icon
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |

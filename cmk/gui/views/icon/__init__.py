@@ -7,7 +7,7 @@ from cmk.gui.permissions import PermissionSectionRegistry
 
 from ..painter.v0.base import PainterRegistry
 from .base import Icon
-from .builtin import (  # pylint: disable=cyclic-import
+from .builtin import (
     AcknowledgeIcon,
     ActionMenuIcon,
     ActiveChecksIcon,
@@ -37,18 +37,14 @@ from .builtin import (  # pylint: disable=cyclic-import
     StarsIcon,
 )
 from .config_icons import update_icons_from_configuration
-from .inventory import InventoryIcon  # pylint: disable=cyclic-import
-from .mkeventd import MkeventdIcon  # pylint: disable=cyclic-import
+from .inventory import InventoryIcon
+from .mkeventd import MkeventdIcon
 from .page_ajax_popup_action_menu import ajax_popup_action_menu
 from .painter import PainterHostIcons, PainterServiceIcons
 from .permission_section import PermissionSectionIconsAndActions
 from .registry import icon_and_action_registry, IconRegistry
-from .topology import ShowParentChildTopology  # pylint: disable=cyclic-import
-from .wato import (  # pylint: disable=cyclic-import
-    DownloadAgentOutputIcon,
-    DownloadSnmpWalkIcon,
-    WatoIcon,
-)
+from .topology import ShowParentChildTopology
+from .wato import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 
 
 def register(

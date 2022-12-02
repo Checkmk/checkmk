@@ -319,7 +319,7 @@ class ExceptionSection:
     def serialize(self) -> str | None:
         if self.exc_type is None:
             return None
-        return f"{self.exc_type.__name__}: {self.exception}"
+        return f"{self.exc_type.__name__}: {self.exception}".replace("\n", "")
 
 
 Section = (

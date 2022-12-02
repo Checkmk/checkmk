@@ -26,21 +26,7 @@ EXCEPTIONS = [
         GCPException(
             section=_ExceptionSection(
                 type="PermissionDenied",
-                message="""403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [links {
-  description: "Google developers console API activation"
-  url: "https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578"
-}
-, reason: "SERVICE_DISABLED"
-domain: "googleapis.com"
-metadata {
-  key: "consumer"
-  value: "projects/1074106860578"
-}
-metadata {
-  key: "service"
-  value: "cloudasset.googleapis.com"
-}
-]""",
+                message="""403 Cloud Asset API has not been used in project 1074106860578 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [links {  description: "Google developers console API activation"  url: "https://console.developers.google.com/apis/api/cloudasset.googleapis.com/overview?project=1074106860578"}, reason: "SERVICE_DISABLED"domain: "googleapis.com"metadata {  key: "consumer"  value: "projects/1074106860578"}metadata {  key: "service"  value: "cloudasset.googleapis.com"}]""",
             ),
             results=[
                 Result(

@@ -105,11 +105,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.exporter as exporter
-    import cmk.gui.painter_options as painter_options
     import cmk.gui.plugins.views as api_module
     import cmk.gui.views.painter.v0.base as painter_base
     import cmk.gui.views.painter.v0.helpers as painter_helpers
     import cmk.gui.views.painter.v1.helpers as painter_v1_helpers
+    import cmk.gui.views.painter_options as painter_options
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
     from cmk.gui.plugins.views.icons import utils as icon_utils

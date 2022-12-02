@@ -53,7 +53,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter_options import paint_age
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
@@ -64,6 +63,7 @@ from cmk.gui.visual_link import url_to_visual
 from ..graph import cmk_graph_url
 from ..painter.v0.helpers import render_cache_info
 from ..painter.v1.helpers import is_stale
+from ..painter_options import paint_age
 from .base import Icon
 
 #   .--Action Menu---------------------------------------------------------.

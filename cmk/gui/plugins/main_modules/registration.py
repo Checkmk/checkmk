@@ -11,7 +11,6 @@ from functools import partial
 import cmk.gui.pages
 from cmk.gui import autocompleters, bi, crash_reporting, mkeventd, mobile, wato
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
@@ -44,6 +43,7 @@ from cmk.gui.views.page_edit_views import page_edit_views
 from cmk.gui.views.page_show_view import page_show_view
 from cmk.gui.views.painter.v0 import painters
 from cmk.gui.views.painter.v0.base import painter_registry
+from cmk.gui.views.painter_options import painter_option_registry
 from cmk.gui.views.sorter import register_sorters, sorter_registry
 from cmk.gui.views.visual_type import VisualTypeViews
 from cmk.gui.watolib.main_menu import main_module_registry

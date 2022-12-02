@@ -89,7 +89,7 @@ metric_info["docker_reclaimable"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["docker_containers"] = {
-    "title": _("Docker Containers"),
+    "title": _("Docker containers"),
     "metrics": [
         ("docker_running_containers", "area"),
         ("docker_paused_containers", "stack"),
@@ -99,7 +99,7 @@ graph_info["docker_containers"] = {
 }
 
 graph_info["docker_df"] = {
-    "title": _("Docker Disk Usage"),
+    "title": _("Disk usage"),
     "metrics": [
         ("docker_size", "area"),
         ("docker_reclaimable", "area"),
@@ -107,7 +107,7 @@ graph_info["docker_df"] = {
 }
 
 graph_info["docker_df_count"] = {
-    "title": _("Docker Disk Usage Count"),
+    "title": _("Number of objects"),
     "metrics": [
         ("docker_count", "area"),
         ("docker_active", "area"),

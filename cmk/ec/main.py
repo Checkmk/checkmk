@@ -379,6 +379,8 @@ class MKSignalException(MKException):
 
 
 class TimePeriods:
+    """Time Periods are used in rule conditions"""
+
     def __init__(self, logger: Logger) -> None:
         super().__init__()
         self._logger = logger
@@ -432,6 +434,8 @@ MatchResult = MatchFailure | MatchSuccess
 
 
 class EventServer(ECServerThread):
+    """Processing and classification of incoming events."""
+
     def __init__(
         self,
         logger: Logger,
@@ -821,9 +825,11 @@ class EventServer(ECServerThread):
             except StopIteration:
                 select_timeout = 1  # restore default select timeout
 
-    # Processes incoming data, just a wrapper between the real data and the
-    # handler function to record some statistics etc.
     def process_raw_data(self, handler: Callable[[], None]) -> None:
+        """
+        Processes incoming data, just a wrapper between the real data and the
+        handler function to record some statistics etc.
+        """
         self._perfcounters.count("messages")
         before = time.time()
         # In replication slave mode (when not took over), ignore all events
@@ -834,8 +840,8 @@ class EventServer(ECServerThread):
         elapsed = time.time() - before
         self._perfcounters.count_time("processing", elapsed)
 
-    # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data: bytes, address: tuple[str, int] | None) -> None:
+        """Takes several lines of messages, handles encoding and processes them separated."""
         for line_bytes in data.splitlines():
             if line := scrub_string(line_bytes.rstrip().decode("utf-8")):
                 try:
@@ -856,10 +862,12 @@ class EventServer(ECServerThread):
             self.hk_cleanup_downtime_events()
         self._history.housekeeping()
 
-    # For all events that have been created in a host downtime check the host
-    # whether or not it is still in downtime. In case the downtime has ended
-    # archive the events that have been created in a downtime.
     def hk_cleanup_downtime_events(self) -> None:
+        """
+        For all events that have been created in a host downtime check the host
+        whether or not it is still in downtime. In case the downtime has ended
+        archive the events that have been created in a downtime.
+        """
         host_downtimes: dict[str, bool] = {}
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
@@ -878,11 +886,13 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(event, "AUTODELETE")
 
     def hk_handle_event_timeouts(self) -> None:  # pylint: disable=too-many-branches
-        # 1. Automatically delete all events that are in state "counting"
-        #    and have not reached the required number of hits and whose
-        #    time is elapsed.
-        # 2. Automatically delete all events that are in state "open"
-        #    and whose lifetime is elapsed.
+        """
+        1. Automatically delete all events that are in state "counting"
+           and have not reached the required number of hits and whose
+           time is elapsed.
+        2. Automatically delete all events that are in state "open"
+           and whose lifetime is elapsed.
+        """
         events_to_delete: list[tuple[Event, HistoryWhat]] = []
         events = self._event_status.events()
         now = time.time()
@@ -1008,18 +1018,20 @@ class EventServer(ECServerThread):
             self._event_status.remove_event(event, reason)
 
     def hk_check_expected_messages(self) -> None:
+        """
+        "Expecting"-rules are rules that require one or several
+        occurrences of a message within a defined time period.
+        Whenever one period of time has elapsed, we need to check
+        how many messages have been seen for that rule. If these
+        are too few, we open an event.
+        We need to handle to cases:
+        1. An event for such a rule already exists and is
+           in the state "counting" -> this can only be the case if
+           more than one occurrence is required.
+        2. No event at all exists.
+           in that case.
+        """
         now = time.time()
-        # "Expecting"-rules are rules that require one or several
-        # occurrences of a message within a defined time period.
-        # Whenever one period of time has elapsed, we need to check
-        # how many messages have been seen for that rule. If these
-        # are too few, we open an event.
-        # We need to handle to cases:
-        # 1. An event for such a rule already exists and is
-        #    in the state "counting" -> this can only be the case if
-        #    more than one occurrence is required.
-        # 2. No event at all exists.
-        #    in that case.
         for rule in self._rules:
             if "expect" in rule:
 
@@ -1177,10 +1189,10 @@ class EventServer(ECServerThread):
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
 
-    # Precompile regular expressions and similar stuff.
     def compile_rules(  # pylint: disable=too-many-branches
         self, rule_packs: Sequence[ECRulePack]
     ) -> None:
+        """Precompile regular expressions and similar stuff."""
         self._rules = []
         self._rule_by_id = {}
         # Speedup-Hash for rule execution
@@ -1292,7 +1304,7 @@ class EventServer(ECServerThread):
         return val.lower()
 
     def hash_rule(self, rule: Rule) -> None:
-        # Construct rule hash for faster execution.
+        """Construct rule hash for faster execution."""
         facility = rule.get("match_facility")
         if facility and not rule.get("invert_matching"):
             self.hash_rule_facility(rule, facility)
@@ -1549,10 +1561,10 @@ class EventServer(ECServerThread):
         with self._lock_configuration:
             return self._rule_matcher.event_rule_matches(rule, event)
 
-    # Rewrite texts and compute other fields in the event
     def rewrite_event(  # pylint: disable=too-many-branches
         self, rule: Rule, event: Event, groups: MatchGroups, set_first: bool = True
     ) -> None:
+        """Rewrite texts and compute other fields in the event."""
         if rule["state"] == -1:
             prio = event["priority"]
             if prio <= 3:
@@ -1594,11 +1606,11 @@ class EventServer(ECServerThread):
         if "set_contact" in rule and "contact" not in event:
             event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
 
-    # Translate a hostname if this is configured. We are
-    # *really* sorry: this code snipped is copied from modules/check_mk_base.py.
-    # There is still no common library. Please keep this in sync with the
-    # original code
     def translate_hostname(self, backedhost: str) -> str:
+        """Translate a hostname if this is configured."""
+        # We are *really* sorry: this code snippet is copied from modules/check_mk_base.py.
+        # There is still no common library. Please keep this in sync with the
+        # original code
 
         # Here comes the original code from modules/check_mk_base.py
         if translation := self._config["hostname_translation"]:
@@ -1721,13 +1733,12 @@ class EventServer(ECServerThread):
     # The following actions can be configured:
     # stop                 Stop creating new events
     # stop_overflow        Stop creating new events, create overflow event
-    # stop_overflow_notify Stop creating new events, create overflow event, notfy
+    # stop_overflow_notify Stop creating new events, create overflow event, notify
     # delete_oldest        Delete oldest event, create new event
     # protected by self._event_status.lock
 
-    # Returns False if the event has been created and actions should be
-    # performed on that event
     def _handle_event_limit(self, ty: str, event: Event, host_config: HostInfo | None) -> bool:
+        """Returns False if the event has been created and actions should be performed on that event."""
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
@@ -2191,6 +2202,8 @@ class RuleMatcher:
 
 
 class Queries:
+    """Parsing and processing of status queries."""
+
     def __init__(self, status_server: StatusServer, sock: socket.socket, logger: Logger) -> None:
         super().__init__()
         self._status_server = status_server
@@ -2227,7 +2240,7 @@ class Queries:
 #   |    |____/ \__\__,_|\__|\__,_|___/   |_|\__,_|_.__/|_|\___||___/      |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Definitions of the tables available for status queries               |
+#   | Common functionality for the event/history/rule/status tables        |
 #   '----------------------------------------------------------------------'
 # If you need a new column here, then these are the places to change:
 # bin/mkeventd:
@@ -2255,6 +2268,8 @@ class Queries:
 
 
 class StatusTable:
+    """Common functionality for the event/history/rule/status tables."""
+
     prefix: str | None = None
     columns: list[tuple[str, Any]] = []
 
@@ -2408,6 +2423,8 @@ class StatusTableStatus(StatusTable):
 
 
 class StatusServer(ECServerThread):
+    """Responding to status and command requests via the UNIX/TCP sockets."""
+
     def __init__(
         self,
         logger: Logger,
@@ -2869,6 +2886,7 @@ def run_eventd(  # pylint: disable=too-many-branches
     slave_status: SlaveStatus,
     logger: Logger,
 ) -> None:
+    """Dispatching: starting and managing the two threads."""
     status_server.start()
     event_server.start()
     now = time.time()
@@ -2965,6 +2983,11 @@ def run_eventd(  # pylint: disable=too-many-branches
 
 
 class EventStatus:
+    """
+    Keeps the current Event-Status.
+    This protects itself by a lock from simultaneous accesses by the threads.
+    """
+
     def __init__(
         self,
         settings: Settings,
@@ -3522,15 +3545,17 @@ def replication_pull(  # pylint: disable=too-many-branches
     slave_status: SlaveStatus,
     logger: Logger,
 ) -> None:
-    # We distinguish two modes:
-    # 1. slave mode: just pull the current state from the master.
-    #    if the master is not reachable then decide whether to
-    #    switch to takeover mode.
-    # 2. takeover mode: if automatic fallback is enabled and the
-    #    time frame for that has not yet elapsed, then try to
-    #    pull the current state from the master. If that is successful
-    #    then switch back to slave mode. If not automatic fallback
-    #    is enabled then simply do nothing.
+    """
+    We distinguish two modes:
+    1. slave mode: just pull the current state from the master.
+       if the master is not reachable then decide whether to
+       switch to takeover mode.
+    2. takeover mode: if automatic fallback is enabled and the
+       time frame for that has not yet elapsed, then try to
+       pull the current state from the master. If that is successful
+       then switch back to slave mode. If not automatic fallback
+       is enabled then simply do nothing.
+    """
     now = time.time()
     repl_settings = config["replication"]
     if repl_settings is None:
@@ -3804,6 +3829,7 @@ def reload_configuration(
 
 
 def main() -> None:  # pylint: disable=too-many-branches
+    """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
     settings = create_settings(
@@ -3890,7 +3916,6 @@ def main() -> None:  # pylint: disable=too-many-branches
 
         cmk.utils.daemon.lock_with_pid_file(pid_path)
 
-        # Install signal handler
         def signal_handler(signum: int, stack_frame: FrameType | None) -> None:
             logger.log(VERBOSE, "Got signal %d.", signum)
             raise MKSignalException(signum)

@@ -146,11 +146,11 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
 def _mongodb_local_connection_opts(settings: Settings) -> tuple[str | None, int | None]:
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding="utf-8") as f:
-        for l in f:
-            if l.startswith("bind_ip"):
-                ip = l.split("=")[1].strip()
-            elif l.startswith("port"):
-                port = int(l.split("=")[1].strip())
+        for entry in f:
+            if entry.startswith("bind_ip"):
+                ip = entry.split("=")[1].strip()
+            elif entry.startswith("port"):
+                port = int(entry.split("=")[1].strip())
     return ip, port
 
 

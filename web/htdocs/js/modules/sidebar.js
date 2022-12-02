@@ -860,7 +860,7 @@ export function fetch_nagvis_snapin_contents() {
  * Bookmark snapin
  *************************************************/
 
-export function add_bookmark(trans_id = null) {
+export function add_bookmark() {
     const url = parent.frames[0].location;
     const title = parent.frames[0].document.title;
     ajax.call_ajax("add_bookmark.py", {
@@ -868,13 +868,7 @@ export function add_bookmark(trans_id = null) {
         response_handler: utils.update_contents,
         handler_data: "snapin_bookmarks",
         method: "POST",
-        post_data:
-            "title=" +
-            encodeURIComponent(title) +
-            "&url=" +
-            encodeURIComponent(url) +
-            "&_transid=" +
-            encodeURIComponent(trans_id),
+        post_data: "title=" + encodeURIComponent(title) + "&url=" + encodeURIComponent(url),
     });
 }
 

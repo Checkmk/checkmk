@@ -6,6 +6,9 @@
 import logging
 import os
 import time
+from typing import Final
+
+from cmk.utils.version import Edition
 
 logger = logging.getLogger()
 
@@ -16,40 +19,12 @@ class CMKVersion:
     DAILY = "daily"
     GIT = "git"
 
-    CEE = "cee"
-    CRE = "cre"
-    CPE = "cpe"
-    CME = "cme"
-
-    def __init__(self, version_spec: str, edition: str, branch: str) -> None:
+    def __init__(self, version_spec: str, edition: Edition, branch: str) -> None:
         self.version_spec = version_spec
         self._branch = branch
 
-        self._set_edition(edition)
+        self.edition: Final = edition
         self.set_version(version_spec, branch)
-
-    def _set_edition(self, edition: str) -> None:
-        # Allow short (cre) and long (raw) notation as input
-        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
-            edition_short = self._get_short_edition(edition)
-        else:
-            edition_short = edition
-
-        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
-            raise NotImplementedError("Unknown short edition: %s" % edition_short)
-
-        self.edition_short = edition_short
-
-    def _get_short_edition(self, edition: str) -> str:
-        if edition == "raw":
-            return "cre"
-        if edition == "enterprise":
-            return "cee"
-        if edition == "managed":
-            return "cme"
-        if edition == "plus":
-            return "cpe"
-        raise NotImplementedError("Unknown edition: %s" % edition)
 
     def get_default_version(self) -> str:
         if os.path.exists("/etc/alternatives/omd"):
@@ -77,34 +52,23 @@ class CMKVersion:
     def branch(self) -> str:
         return self._branch
 
-    def edition(self) -> str:
-        if self.edition_short == CMKVersion.CRE:
-            return "raw"
-        if self.edition_short == CMKVersion.CEE:
-            return "enterprise"
-        if self.edition_short == CMKVersion.CME:
-            return "managed"
-        if self.edition_short == CMKVersion.CPE:
-            return "plus"
-        raise NotImplementedError()
-
     def is_managed_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CME
+        return self.edition is Edition.CME
 
     def is_enterprise_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CEE
+        return self.edition is Edition.CEE
 
     def is_raw_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CRE
+        return self.edition is Edition.CRE
 
     def is_plus_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CPE
+        return self.edition is Edition.CPE
 
     def version_directory(self) -> str:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return f"{self.version}.{self.edition_short}"
+        return f"{self.version}.{self.edition.short}"
 
     def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()

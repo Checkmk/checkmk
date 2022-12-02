@@ -24,7 +24,7 @@ def test_init_scripts(site: Site) -> None:
         "agent-receiver",
     ]
 
-    if site.version.edition() in ("enterprise", "plus"):
+    if site.version.is_enterprise_edition() or site.version.is_plus_edition():
         scripts += [
             "cmc",
             "dcd",

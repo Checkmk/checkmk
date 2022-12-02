@@ -20,7 +20,9 @@ from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
-from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
+from tests.testlib.utils import cmk_path, edition_from_env, get_cmk_download_credentials_file
+
+from cmk.utils.version import Edition
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
@@ -33,7 +35,7 @@ logger = logging.getLogger()
 def build_version() -> testlib.CMKVersion:
     return testlib.CMKVersion(
         version_spec=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
-        edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
+        edition=edition_from_env(Edition.CEE),
         branch=branch_name,
     )
 
@@ -49,11 +51,11 @@ def client() -> docker.DockerClient:
 
 
 def _image_name(version: testlib.CMKVersion) -> str:
-    return f"docker-tests/check-mk-{version.edition()}-{branch_name}-{version.version}"
+    return f"docker-tests/check-mk-{version.edition.name}-{branch_name}-{version.version}"
 
 
 def _package_name(version: testlib.CMKVersion) -> str:
-    return f"check-mk-{version.edition()}-{version.version}_0.{distro_codename}_amd64.deb"
+    return f"check-mk-{version.edition.name}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build() -> None:
@@ -136,7 +138,7 @@ def _build(
             network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition(),
+                "CMK_EDITION": version.edition.name,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -212,7 +214,7 @@ def _build(
 
 
 def _pull(client: docker.DockerClient, version: testlib.CMKVersion) -> Image:
-    if version.edition() != "raw":
+    if not version.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
 
     logger.info("Downloading docker image: checkmk/check-mk-raw:%s", version.version)
@@ -421,7 +423,7 @@ def test_build_using_package_from_download_server(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
 ) -> None:
     if not (
-        version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
+        version.is_enterprise_edition() and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
     ):
         pytest.skip("only enterprise daily packages are available on the download server")
     package_path = Path(build_path, _package_name(version))
@@ -643,7 +645,7 @@ def test_update(
     old_version = testlib.CMKVersion(
         version_spec="2.1.0b3",
         branch="2.1.0",
-        edition=testlib.CMKVersion.CRE,
+        edition=Edition.CRE,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

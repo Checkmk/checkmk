@@ -48,7 +48,7 @@ def test_enterprise_werks(site: Site) -> None:
 
     enterprise_werks = [werk for werk in werks.values() if werk["edition"] == "cee"]
 
-    if site.version.edition() == "raw":
+    if site.version.is_raw_edition():
         assert not enterprise_werks
     else:
         assert enterprise_werks
@@ -59,10 +59,10 @@ def test_managed_werks(site: Site) -> None:
 
     managed_werks = [werk for werk in werks.values() if werk["edition"] == "cme"]
 
-    if site.version.edition() != "managed":
-        assert not managed_werks
-    else:
+    if site.version.is_managed_edition():
         assert managed_werks
+    else:
+        assert not managed_werks
 
 
 def test_plus_werks(site: Site) -> None:
@@ -70,7 +70,7 @@ def test_plus_werks(site: Site) -> None:
 
     plus_werks = [werk for werk in werks.values() if werk["edition"] == "cpe"]
 
-    if site.version.edition() != "plus":
-        assert not plus_werks
-    else:
+    if site.version.is_plus_edition():
         assert plus_werks
+    else:
+        assert not plus_werks

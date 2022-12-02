@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from cmk.utils.version import Edition
+
 logger = logging.getLogger()
 
 
@@ -199,5 +201,23 @@ def add_python_paths() -> None:
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
-def package_hash_path(version: str, edition: str) -> Path:
-    return Path(f"/tmp/cmk_package_hash_{version}_{edition}")
+def package_hash_path(version: str, edition: Edition) -> Path:
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition.name}")
+
+
+def _parse_raw_edition(raw_edition: str) -> Edition:
+    try:
+        return Edition[raw_edition.upper()]
+    except KeyError:
+        for edition in Edition:
+            if edition.name == raw_edition:
+                return edition
+    raise ValueError(f"Unknown edition: {raw_edition}")
+
+
+def edition_from_env(fallback: Edition | None = None) -> Edition:
+    if raw_editon := os.environ.get("EDITION"):
+        return _parse_raw_edition(raw_editon)
+    if fallback:
+        return fallback
+    raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")

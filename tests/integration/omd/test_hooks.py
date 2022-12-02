@@ -33,7 +33,7 @@ def test_hooks(site: Site) -> None:
         "TMPFS",
     ]
 
-    if site.version.edition() in ("enterprise", "plus"):
+    if site.version.is_enterprise_edition() or site.version.is_plus_edition():
         hooks += [
             "LIVEPROXYD",
         ]

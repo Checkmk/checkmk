@@ -22,10 +22,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from tests.testlib.utils import (
     add_python_paths,
     current_base_branch_name,
+    edition_from_env,
     get_cmk_download_credentials,
     package_hash_path,
 )
 from tests.testlib.version import CMKVersion
+
+from cmk.utils.version import Edition
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
@@ -37,12 +40,12 @@ def main():
     add_python_paths()
 
     version_spec = os.environ.get("VERSION", CMKVersion.DAILY)
-    edition = os.environ.get("EDITION", CMKVersion.CEE)
+    edition = edition_from_env(Edition.CEE)
     branch = os.environ.get("BRANCH")
     if branch is None:
         branch = current_base_branch_name()
 
-    logger.info("Version: %s, Edition: %s, Branch: %s", version_spec, edition, branch)
+    logger.info("Version: %s, Edition: %s, Branch: %s", version_spec, edition.name, branch)
     version = CMKVersion(version_spec, edition, branch)
 
     if version.is_installed():
@@ -50,7 +53,7 @@ def main():
         return 0
 
     manager = ABCPackageManager.factory()
-    manager.install(version.version, version.edition())
+    manager.install(version.version, version.edition)
 
     if not version.is_installed():
         logger.error("Failed not install version")
@@ -129,7 +132,7 @@ class ABCPackageManager(abc.ABC):
     def _is_debuntu(cls) -> bool:
         return Path("/etc/debian_version").exists()
 
-    def install(self, version: str, edition: str) -> None:
+    def install(self, version: str, edition: Edition) -> None:
         package_name = self._package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
 
@@ -156,12 +159,12 @@ class ABCPackageManager(abc.ABC):
             self._install_package(package_path)
             os.unlink(package_path)
 
-    def _write_package_hash(self, version: str, edition: str, package_path: Path) -> None:
+    def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:
         pkg_hash = sha256_file(package_path)
         package_hash_path(version, edition).write_text(f"{pkg_hash}  {package_path.name}\n")
 
     @abc.abstractmethod
-    def _package_name(self, edition: str, version: str) -> str:
+    def _package_name(self, edition: Edition, version: str) -> str:
         raise NotImplementedError()
 
     def _build_system_package_path(self, version: str, package_name: str) -> Path:
@@ -222,8 +225,8 @@ def sha256_file(path: Path) -> str:
 
 
 class PackageManagerDEB(ABCPackageManager):
-    def _package_name(self, edition, version):
-        return f"check-mk-{edition}-{version}_0.{self.distro_name}_amd64.deb"
+    def _package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.name}-{version}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path):
         # As long as we do not have all dependencies preinstalled, we need to ensure that the
@@ -233,8 +236,8 @@ class PackageManagerDEB(ABCPackageManager):
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
-    def _package_name(self, edition, version):
-        return f"check-mk-{edition}-{version}-{self.distro_name}-38.x86_64.rpm"
+    def _package_name(self, edition: Edition, version: str) -> str:
+        return f"check-mk-{edition.name}-{version}-{self.distro_name}-38.x86_64.rpm"
 
 
 class PackageManagerSuSE(ABCPackageManagerRPM):

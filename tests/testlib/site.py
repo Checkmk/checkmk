@@ -28,6 +28,7 @@ from tests.testlib.utils import (
     cme_path,
     cmk_path,
     current_base_branch_name,
+    edition_from_env,
     is_containerized,
     virtualenv_path,
 )
@@ -35,6 +36,8 @@ from tests.testlib.version import CMKVersion
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
+
+from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +50,7 @@ class Site:
         site_id: str,
         reuse: bool = True,
         version: str = CMKVersion.DEFAULT,
-        edition: str = CMKVersion.CEE,
+        edition: Edition = Edition.CEE,
         branch: str = "master",
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
@@ -1092,7 +1095,7 @@ class SiteFactory:
     def __init__(
         self,
         version: str,
-        edition: str,
+        edition: Edition,
         branch: str,
         update_from_git: bool = False,
         install_test_python_modules: bool = True,
@@ -1186,12 +1189,12 @@ def get_site_factory(
     prefix: str, update_from_git: bool, install_test_python_modules: bool
 ) -> SiteFactory:
     version = os.environ.get("VERSION", CMKVersion.DAILY)
-    edition = os.environ.get("EDITION", CMKVersion.CEE)
+    edition = edition_from_env(Edition.CEE)
     branch = os.environ.get("BRANCH")
     if branch is None:
         branch = current_base_branch_name()
 
-    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition, branch)
+    logger.info("Version: %s, Edition: %s, Branch: %s", version, edition.name, branch)
     return SiteFactory(
         version=version,
         edition=edition,

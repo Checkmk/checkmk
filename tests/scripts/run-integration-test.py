@@ -79,7 +79,7 @@ def main(args):
 def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
     env_vars = {
         "VERSION": site.version.version_spec,
-        "EDITION": site.version.edition(),
+        "EDITION": site.version.edition.name,
         "REUSE": "1" if site.reuse else "0",
         "BRANCH": site.version._branch,
     }

@@ -199,7 +199,7 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name = f"{base_image_name}-{version.edition_short}-{version.version}"
+    image_name = f"{base_image_name}-{version.edition.short}-{version.version}"
     image_name_with_tag = f"{image_name}:{docker_tag}"
 
     logger.info("Preparing image [%s]", image_name_with_tag)
@@ -231,7 +231,7 @@ def _create_cmk_image(
             "org.tribe29.build_id": base_image.short_id,
             "org.tribe29.base_image": base_image_name_with_tag,
             "org.tribe29.base_image_hash": base_image.short_id,
-            "org.tribe29.cmk_edition_short": version.edition_short,
+            "org.tribe29.cmk_edition_short": version.edition.short,
             "org.tribe29.cmk_version": version.version,
             "org.tribe29.cmk_branch": version.branch(),
             # override the base image label
@@ -276,7 +276,7 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         exit_code, output = container.exec_run(
-            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition()))],
+            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
         )
         assert exit_code == 0
         hash_entry = output.decode("ascii").strip()
@@ -437,7 +437,7 @@ def _container_env(version: CMKVersion) -> dict[str, str]:
         "PIPENV_PIPFILE": "/git/Pipfile",
         "PIPENV_VENV_IN_PROJECT": "true",
         "VERSION": version.version_spec,
-        "EDITION": version.edition_short,
+        "EDITION": version.edition.short,
         "BRANCH": version.branch(),
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),

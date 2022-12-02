@@ -1,0 +1,14 @@
+Title: sap_hana: Fix agent plugin crash when querying fileinfo
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1669971437
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+The mk_sap_hana agent plugin crashed when querying fileinfo if there are
+multiple hosts in the system.
+The error returned by the agent was:
+"single-row query returns more than one row SQLSTATE".

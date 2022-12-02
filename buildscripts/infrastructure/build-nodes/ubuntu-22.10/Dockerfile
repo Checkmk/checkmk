@@ -124,8 +124,6 @@ RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-pipenv.sh link-only
 
-RUN /opt/install-nodejs.sh
-
 # Install non cached dependencies
 RUN /opt/install-cmk-dependencies.sh
 

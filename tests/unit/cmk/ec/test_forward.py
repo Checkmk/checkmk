@@ -17,7 +17,7 @@ from cmk.ec.forward import (
 
 class TestStructuredDataName:
     def test_validation_on_init(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not an RFC 5425-conform SD-NAME."):
             StructuredDataName("cool Name")
 
     def test_repr(self) -> None:
@@ -26,7 +26,7 @@ class TestStructuredDataName:
 
 class TestStructuredDataID:
     def test_validation_on_init(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="is not an RFC 5425-conform SD-ID."):
             StructuredDataID("a@b")
 
     def test_repr(self) -> None:
@@ -72,7 +72,7 @@ class TestStructuredDataID:
 
 class TestStructuredDataValue:
     def test_validation_on_init(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Structured data values must not contain linebreaks."):
             StructuredDataValue("x\ny")
 
     @pytest.mark.parametrize(
@@ -234,7 +234,7 @@ class TestSyslogMessage:
         severity: int,
         stuctured_data: StructuredData,
     ) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="must"):
             SyslogMessage(
                 facility=facility,
                 severity=severity,

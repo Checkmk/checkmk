@@ -77,7 +77,7 @@ def test_match_ipv4_network(pattern: str, ip: str, expected: bool) -> None:
 )
 def test_match_ipv4_network_exceptions(pattern: str, ip: str) -> None:
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="invalid literal for int"):
         match_ipv4_network(pattern, ip)
 
 

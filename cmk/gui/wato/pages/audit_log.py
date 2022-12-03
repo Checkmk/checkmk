@@ -66,6 +66,8 @@ class ModeAuditLog(WatoMode):
         super().__init__()
         self._store = AuditLogStore(AuditLogStore.make_path())
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
+        self._show_object_type = request.get_integer_input_mandatory("show_object_type", 1) == 1
+        self._show_object = request.get_integer_input_mandatory("show_object", 1) == 1
 
     def title(self) -> str:
         return _("Audit log")
@@ -288,12 +290,14 @@ class ModeAuditLog(WatoMode):
                 user_txt = ("<i>%s</i>" % _("internal")) if entry.user_id == "-" else entry.user_id
                 table.cell(_("User"), user_txt, css=["nobreak narrow"])
 
-                table.cell(
-                    _("Object type"),
-                    entry.object_ref.object_type.name if entry.object_ref else "",
-                    css=["narrow"],
-                )
-                table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"])
+                if self._show_object_type:
+                   table.cell(_("Object type"),
+                      entry.object_ref.object_type.name if entry.object_ref else "",
+                      css=["narrow"])
+
+                if self._show_object:
+                    table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"])
+
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
                 table.cell(_("Summary"), text)

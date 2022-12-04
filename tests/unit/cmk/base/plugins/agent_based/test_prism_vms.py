@@ -8,10 +8,7 @@ from typing import Any, Dict
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.prism_vms import (
-    check_prism_vms,
-    discovery_prism_vms,
-)
+from cmk.base.plugins.agent_based.prism_vms import check_prism_vms, discovery_prism_vms
 
 SECTION = {
     "SRV-EX-03-restore": {

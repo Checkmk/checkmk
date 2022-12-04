@@ -76,8 +76,11 @@ def test_discovery_prism_vms(
             {"system_state": "on"},
             SECTION,
             [
-                Result(state=State.WARN, summary='with status off - on Host None'),
-                Result(state=State.OK, notice='Memory 32.0 GiB,\nDescription None,\nProtetion Domain None'),
+                Result(state=State.WARN, summary="with status off - on Host None"),
+                Result(
+                    state=State.OK,
+                    notice="Memory 32.0 GiB,\nDescription None,\nProtetion Domain None",
+                ),
             ],
             id="If the VM is not in expected state, the check result is WARN.",
         ),
@@ -86,8 +89,11 @@ def test_discovery_prism_vms(
             {"system_state": "on"},
             SECTION,
             [
-                Result(state=State.OK, summary='with status on - on Host SRV-AHV-01'),
-                Result(state=State.OK, notice='Memory 16.0 GiB,\nDescription None,\nProtetion Domain None'),
+                Result(state=State.OK, summary="with status on - on Host SRV-AHV-01"),
+                Result(
+                    state=State.OK,
+                    notice="Memory 16.0 GiB,\nDescription None,\nProtetion Domain None",
+                ),
             ],
             id="If the VM is in expected state, the check result is OK.",
         ),

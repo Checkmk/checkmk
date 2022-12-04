@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.prism_remote_support import (
     discovery_prism_remote_support,
 )
 
-SECTION = {'enable': {'duration': 0, 'enabled': False}}
+SECTION = {"enable": {"duration": 0, "enabled": False}}
 
 
 @pytest.mark.parametrize(
@@ -26,11 +26,7 @@ SECTION = {'enable': {'duration': 0, 'enabled': False}}
             ],
             id="The service is discovered if data exists.",
         ),
-        pytest.param(
-            {},
-            [],
-            id="No services is discovered if no data exists."
-        ),
+        pytest.param({}, [], id="No services is discovered if no data exists."),
     ],
 )
 def test_discovery_prism_remote_support(
@@ -44,18 +40,18 @@ def test_discovery_prism_remote_support(
     ["params", "section", "expected_check_result"],
     [
         pytest.param(
-            {'tunnel_state': False},
+            {"tunnel_state": False},
             SECTION,
             [
-                Result(state=State.OK, summary='Remote Tunnel is disabled'),
+                Result(state=State.OK, summary="Remote Tunnel is disabled"),
             ],
             id="If tunnel is not active the service is OK.",
         ),
         pytest.param(
-            {'tunnel_state': True},
+            {"tunnel_state": True},
             SECTION,
             [
-                Result(state=State.WARN, summary='Remote Tunnel is disabled'),
+                Result(state=State.WARN, summary="Remote Tunnel is disabled"),
             ],
             id="If tunnel state is different from expected state the check is WARN.",
         ),

@@ -61,20 +61,22 @@ def test_discovery_prism_vm_tools(
     ["params", "section", "expected_check_result"],
     [
         pytest.param(
-            {'tools_enabled': 'enabled', 'tools_install': 'installed'},
+            {"tools_enabled": "enabled", "tools_install": "installed"},
             SECTION,
             [
-                Result(state=State.OK, summary='Tools with version 2.1.5 installed'),
-                Result(state=State.OK, summary='Tools enabled'),
+                Result(state=State.OK, summary="Tools with version 2.1.5 installed"),
+                Result(state=State.OK, summary="Tools enabled"),
             ],
             id="If GuestTools installed and enabled the state is OK.",
         ),
         pytest.param(
-            {'tools_enabled': 'disabled', 'tools_install': 'not_installed'},
+            {"tools_enabled": "disabled", "tools_install": "not_installed"},
             SECTION,
             [
-                Result(state=State.WARN, summary='Tools with version 2.1.5 installed but should not be'),
-                Result(state=State.WARN, summary='Tools enabled, but should be disabled'),
+                Result(
+                    state=State.WARN, summary="Tools with version 2.1.5 installed but should not be"
+                ),
+                Result(state=State.WARN, summary="Tools enabled, but should be disabled"),
             ],
             id="Tools installed but should not be.",
         ),

@@ -80,11 +80,7 @@ SECTION_OFFLINE = {
             ],
             id="One service if VM data is available.",
         ),
-        pytest.param(
-            {},
-            [],
-            id="No service if no data."
-        )
+        pytest.param({}, [], id="No service if no data."),
     ],
 )
 def test_discovery_prism_vm_status(
@@ -98,32 +94,41 @@ def test_discovery_prism_vm_status(
     ["params", "section", "expected_check_result"],
     [
         pytest.param(
-            {'system_state': 'on'},
+            {"system_state": "on"},
             SECTION_ONLINE,
             [
-                Result(state=State.OK, summary='is in state on, defined on SRV-AHV-02'),
-                Result(state=State.OK, summary='CPUs: 8, Memory: 16.0 GiB'),
-                Result(state=State.OK, notice='Protection Domain: undefined, Protection State: unprotected'),
+                Result(state=State.OK, summary="is in state on, defined on SRV-AHV-02"),
+                Result(state=State.OK, summary="CPUs: 8, Memory: 16.0 GiB"),
+                Result(
+                    state=State.OK,
+                    notice="Protection Domain: undefined, Protection State: unprotected",
+                ),
             ],
             id="If VM is running the state is OK.",
         ),
         pytest.param(
-            {'system_state': 'off'},
+            {"system_state": "off"},
             SECTION_OFFLINE,
             [
-                Result(state=State.OK, summary='is in state off, defined on None'),
-                Result(state=State.OK, summary='CPUs: 8, Memory: 16.0 GiB'),
-                Result(state=State.OK, notice='Protection Domain: undefined, Protection State: unprotected'),
+                Result(state=State.OK, summary="is in state off, defined on None"),
+                Result(state=State.OK, summary="CPUs: 8, Memory: 16.0 GiB"),
+                Result(
+                    state=State.OK,
+                    notice="Protection Domain: undefined, Protection State: unprotected",
+                ),
             ],
             id="If VM is offline and should be offline, the state is OK.",
         ),
         pytest.param(
-            {'system_state': 'on'},
+            {"system_state": "on"},
             SECTION_OFFLINE,
             [
-                Result(state=State.WARN, summary='is in state off, defined on None'),
-                Result(state=State.OK, summary='CPUs: 8, Memory: 16.0 GiB'),
-                Result(state=State.OK, notice='Protection Domain: undefined, Protection State: unprotected'),
+                Result(state=State.WARN, summary="is in state off, defined on None"),
+                Result(state=State.OK, summary="CPUs: 8, Memory: 16.0 GiB"),
+                Result(
+                    state=State.OK,
+                    notice="Protection Domain: undefined, Protection State: unprotected",
+                ),
             ],
             id="If VM is offline but should be running, the state is WARN.",
         ),

@@ -46,7 +46,6 @@ SECTION = {
 }
 
 
-
 @pytest.mark.parametrize(
     ["section", "expected_discovery_result"],
     [
@@ -79,12 +78,22 @@ def test_discovery_prism_storage_pools(
             FILESYSTEM_DEFAULT_PARAMS,
             SECTION,
             [
-                Metric('fs_used', 8919718.1640625, levels=(31824821.157380104, 35802923.8020525), boundaries=(0.0, 39781026.446725845)),
-                Metric('fs_free', 30861308.282663345, boundaries=(0.0, None)),
-                Metric('fs_used_percent', 22.422041261322537, levels=(79.99999999999856, 89.99999999999808), boundaries=(0.0, 100.0)),
-                Result(state=State.OK, summary='Used: 22.42% - 8.51 TiB of 37.9 TiB'),
-                Metric('fs_size', 39781026.446725845, boundaries=(0.0, None)),
-                Result(state=State.OK, summary='SSD capacity: 37.9 TiB, SSD free: 29.4 TiB'),
+                Metric(
+                    "fs_used",
+                    8919718.1640625,
+                    levels=(31824821.157380104, 35802923.8020525),
+                    boundaries=(0.0, 39781026.446725845),
+                ),
+                Metric("fs_free", 30861308.282663345, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    22.422041261322537,
+                    levels=(79.99999999999856, 89.99999999999808),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 22.42% - 8.51 TiB of 37.9 TiB"),
+                Metric("fs_size", 39781026.446725845, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="SSD capacity: 37.9 TiB, SSD free: 29.4 TiB"),
             ],
             id="If the disk is in expected mount state and healthy, the check result is OK.",
         ),

@@ -302,7 +302,7 @@ def _create_cmk_image(
         logger.info("Finalizing image")
         labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
         image = labeled_container.commit(image_name_with_tag)
-        labeled_container.remove(force=True)
+        labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
@@ -477,7 +477,8 @@ def _start(client, **kwargs):
     try:
         yield c
     finally:
-        c.remove(force=True)
+        # Do not leave inactive containers and anonymous volumes behind
+        c.remove(v=True, force=True)
 
 
 def _exec_run(c, cmd, **kwargs):

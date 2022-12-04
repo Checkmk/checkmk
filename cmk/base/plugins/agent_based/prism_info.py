@@ -29,10 +29,11 @@ def discovery_prism_info(section: Section) -> DiscoveryResult:
 
 
 def check_prism_info(section: Section) -> CheckResult:
-    yield Result(
-        state=State.OK,
-        summary="Name: %s, Version: %s" % (section.get("name"), section.get("version")),
-    )
+    if section:
+        yield Result(
+            state=State.OK,
+            summary="Name: %s, Version: %s" % (section.get("name"), section.get("version")),
+        )
 
 
 register.check_plugin(

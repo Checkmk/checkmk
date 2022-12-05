@@ -7,7 +7,7 @@ set(livestatus_headers
     ${header_location}/Poller.h)
 set(livestatus_sources Logger.cc POSIXUtils.cc)
 
-add_library(livestatus STATIC ${livestatus_headers} ${livestatus_sources})
+add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 
 include(FetchContent)
 

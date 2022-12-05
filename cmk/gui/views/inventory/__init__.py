@@ -1327,17 +1327,13 @@ def _register_attribute_column(
     )
 
     # Declare sorter. It will detect numbers automatically
-    register_sorter(
-        name,
-        {
-            "title": long_inventory_title,
-            "columns": ["host_inventory", "host_structured_status"],
-            "load_inv": True,
-            "cmp": lambda self, a, b: hint.sort_function(
-                inventory.get_attribute(a["host_inventory"], inventory_path),
-                inventory.get_attribute(b["host_inventory"], inventory_path),
-            ),
-        },
+    _register_sorter(
+        ident=name,
+        long_inventory_title=long_inventory_title,
+        load_inv=True,
+        columns=["host_inventory", "host_structured_status"],
+        hint=hint,
+        value_extractor=lambda v: inventory.get_attribute(v["host_inventory"], inventory_path),
     )
 
     # Declare filter. Sync this with _register_table_column()
@@ -1418,12 +1414,35 @@ def _register_table_column(
         },
     )
 
+    _register_sorter(
+        ident=column,
+        long_inventory_title=long_inventory_title,
+        load_inv=False,
+        columns=[column],
+        hint=hint,
+        value_extractor=lambda v: v.get(column),
+    )
+
+
+def _register_sorter(
+    *,
+    ident: str,
+    long_inventory_title: str,
+    load_inv: bool,
+    columns: list[str],
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+    value_extractor: Callable,
+) -> None:
     register_sorter(
-        column,
+        ident,
         {
             "title": long_inventory_title,
-            "columns": [column],
-            "cmp": lambda self, a, b: hint.sort_function(a.get(column), b.get(column)),
+            "columns": columns,
+            "load_inv": load_inv,
+            "cmp": lambda a, b: hint.sort_function(
+                value_extractor(a),
+                value_extractor(b),
+            ),
         },
     )
 

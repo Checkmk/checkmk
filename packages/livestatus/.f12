@@ -1,0 +1,22 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: Check_MK Enterprise License
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+# TODO(sk): replace with run_ci --build
+test -f build/Makefile || cmake -S . -B build
+cmake --build build -t livestatus test
+
+SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+if [ -d "$ROOT" ]; then
+    sudo install -v -m 755 build/src/liblivestatus.so "$ROOT/lib"
+    test -z "$ONLY_COPY" && sudo su - "$SITE" -c "omd restart"
+fi

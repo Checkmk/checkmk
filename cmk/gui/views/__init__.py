@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, Callable
 
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
@@ -20,12 +20,22 @@ from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 
+from . import icon, inventory, perfometer
 from .builtin_views import builtin_views
-from .command import register_legacy_command
+from .command import (
+    command_group_registry,
+    command_registry,
+    register_command_groups,
+    register_commands,
+    register_legacy_command,
+)
+from .data_source import data_source_registry, register_data_sources
 from .datasource_selection import page_select_datasource
+from .host_tag_plugins import register_tag_plugins
 from .icon import Icon, icon_and_action_registry
 from .icon.page_ajax_popup_action_menu import ajax_popup_action_menu
 from .inventory import register_table_views_and_columns, update_paint_functions
+from .layout import layout_registry, register_layouts
 from .page_ajax_filters import AjaxInitialViewFilters
 from .page_ajax_reschedule import PageRescheduleCheck
 from .page_create_view import page_create_view
@@ -36,8 +46,10 @@ from .page_edit_view import (
 )
 from .page_edit_views import page_edit_views
 from .page_show_view import page_show_view
-from .painter.v0.base import register_painter
-from .sorter import register_sorter
+from .painter.v0 import painters
+from .painter.v0.base import painter_registry, register_painter
+from .painter_options import painter_option_registry
+from .sorter import register_sorter, register_sorters, sorter_registry
 from .store import multisite_builtin_views
 from .visual_type import VisualTypeViews
 
@@ -53,7 +65,10 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     page_registry: PageRegistry,
     visual_type_registry: VisualTypeRegistry,
+    register_post_config_load_hook: Callable[[Callable[[], None]], None],
 ) -> None:
+    register_post_config_load_hook(register_tag_plugins)
+
     permission_section_registry.register(PermissionSectionViews)
 
     page_registry.register_page("ajax_cascading_render_painer_parameters")(
@@ -69,6 +84,16 @@ def register(
     page_registry.register_page_handler("ajax_popup_action_menu", ajax_popup_action_menu)
 
     visual_type_registry.register(VisualTypeViews)
+
+    register_layouts(layout_registry)
+    painters.register(painter_option_registry, painter_registry)
+    register_sorters(sorter_registry)
+    register_command_groups(command_group_registry)
+    register_commands(command_registry)
+    register_data_sources(data_source_registry)
+    perfometer.register(sorter_registry, painter_registry)
+    icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
+    inventory.register()
 
 
 class PermissionSectionViews(PermissionSection):
@@ -150,7 +175,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     from cmk.gui import display_options
     from cmk.gui.plugins.views.icons import utils as icon_utils
 
-    from . import command, data_source, icon, inventory, layout, sorter, store
+    from . import command, data_source, layout, sorter, store
 
     for name in (
         "ABCDataSource",
@@ -287,13 +312,13 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.
 def register_legacy_icons() -> None:
-    for icon_id, icon in multisite_icons_and_actions.items():
+    for icon_id, icon_spec in multisite_icons_and_actions.items():
         icon_class = type(
             "LegacyIcon%s" % icon_id.title(),
             (Icon,),
             {
                 "_ident": icon_id,
-                "_icon_spec": icon,
+                "_icon_spec": icon_spec,
                 "ident": classmethod(lambda cls: cls._ident),
                 "title": classmethod(lambda cls: cls._title),
                 "sort_index": lambda self: self._icon_spec.get("sort_index", 30),

@@ -23,21 +23,13 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.valuespec import autocompleter_registry
-from cmk.gui.views import icon, inventory, perfometer
-from cmk.gui.views.command import (
-    command_group_registry,
-    command_registry,
-    register_command_groups,
-    register_commands,
-)
-from cmk.gui.views.data_source import data_source_registry, register_data_sources
-from cmk.gui.views.host_tag_plugins import register_tag_plugins
+from cmk.gui.views.command import command_registry
+from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.views.layout import layout_registry, register_layouts
-from cmk.gui.views.painter.v0 import painters
+from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
-from cmk.gui.views.sorter import register_sorters, sorter_registry
+from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
@@ -50,8 +42,12 @@ def register_sites_options() -> None:
     )
 
 
-views.register(permission_section_registry, cmk.gui.pages.page_registry, visual_type_registry)
-
+views.register(
+    permission_section_registry,
+    cmk.gui.pages.page_registry,
+    visual_type_registry,
+    register_post_config_load_hook,
+)
 crash_reporting.register(
     cmk.gui.pages.page_registry,
     data_source_registry,
@@ -59,15 +55,6 @@ crash_reporting.register(
     sorter_registry,
     command_registry,
 )
-register_post_config_load_hook(register_tag_plugins)
-register_layouts(layout_registry)
-painters.register(painter_option_registry, painter_registry)
-register_sorters(sorter_registry)
-register_command_groups(command_group_registry)
-register_commands(command_registry)
-register_data_sources(data_source_registry)
-perfometer.register(sorter_registry, painter_registry)
-icon.register(icon.icon_and_action_registry, painter_registry, permission_section_registry)
 mkeventd.register(
     permission_section_registry,
     permission_registry,
@@ -85,7 +72,6 @@ mkeventd.register(
 )
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry, icon_and_action_registry)
-inventory.register()
 bi.register(
     permission_section_registry,
     permission_registry,

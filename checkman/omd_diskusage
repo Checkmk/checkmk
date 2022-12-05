@@ -1,0 +1,15 @@
+title: Checkmk: Site disk usage
+agents: linux
+catalog: app/cmk
+license: GPLv2
+distribution: check_mk
+description:
+ Monitors the disk usage of a site. We currently monitor the following directories:
+
+ logs, rrd
+
+item:
+ The name of the site.
+
+discovery:
+ One service is create for each site.

@@ -1071,6 +1071,15 @@ section_omd() {
             fi
         done
 
+        echo '<<<omd_diskusage:sep(0)>>>'
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            echo "[site ${site}]"
+            du -bs "$sitedir"
+            du -bs "$sitedir/var/log"
+            du -bs "$sitedir/var/check_mk/rrd"
+        done
+
         echo '<<<omd_info:sep(59)>>>'
         echo '[versions]'
         echo 'version;number;edition;demo'

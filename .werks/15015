@@ -1,0 +1,12 @@
+Title: Add OMD disk usage check plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1670511418
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Adds new check plugin 'omd_diskusage' to monitor the disk usage of various omd components.
+

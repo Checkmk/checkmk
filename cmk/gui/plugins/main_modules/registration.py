@@ -56,12 +56,14 @@ def register_sites_options() -> None:
 
 
 views.register(permission_section_registry, cmk.gui.pages.page_registry, visual_type_registry)
-cmk.gui.pages.register("view")(page_show_view)
-cmk.gui.pages.register("create_view")(datasource_selection.page_create_view)
-cmk.gui.pages.register("edit_view")(page_edit_view)
-cmk.gui.pages.register("edit_views")(page_edit_views)
-cmk.gui.pages.register("create_view_infos")(page_create_view)
-cmk.gui.pages.register("ajax_popup_action_menu")(ajax_popup_action_menu)
+cmk.gui.pages.page_registry.register_page_handler("view", page_show_view)
+cmk.gui.pages.page_registry.register_page_handler(
+    "create_view", datasource_selection.page_create_view
+)
+cmk.gui.pages.page_registry.register_page_handler("edit_view", page_edit_view)
+cmk.gui.pages.page_registry.register_page_handler("edit_views", page_edit_views)
+cmk.gui.pages.page_registry.register_page_handler("create_view_infos", page_create_view)
+cmk.gui.pages.page_registry.register_page_handler("ajax_popup_action_menu", ajax_popup_action_menu)
 
 crash_reporting.register(
     cmk.gui.pages.page_registry,

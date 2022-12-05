@@ -1847,7 +1847,7 @@ def declare(page_ty: type[Overridable]) -> None:
     page_types[page_ty.type_name()] = page_ty
 
     for path, page_func in page_ty.page_handlers().items():
-        cmk.gui.pages.register_page_handler(path, page_func)
+        cmk.gui.pages.page_registry.register_page_handler(path, page_func)
 
 
 def page_type(page_type_name: str) -> type[Overridable]:

@@ -159,7 +159,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[type[SidebarSnapin]]):
             )
 
         for path, page_func in instance().page_handlers().items():
-            cmk.gui.pages.register_page_handler(path, page_func)
+            cmk.gui.pages.page_registry.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self) -> list[tuple[str, type[CustomizableSidebarSnapin]]]:
         return [

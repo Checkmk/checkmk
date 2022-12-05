@@ -1834,3 +1834,7 @@ def main(argv=None):
         sys.stderr.write("%s\n" % e)
         return 1
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

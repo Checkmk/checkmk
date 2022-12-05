@@ -544,6 +544,7 @@ export function switch_customer(customer_id, switch_state) {
 
 export function switch_site(url) {
     ajax.call_ajax(url, {
+        method: "POST",
         response_handler: utils.reload_whole_page,
         handler_data: null,
     });

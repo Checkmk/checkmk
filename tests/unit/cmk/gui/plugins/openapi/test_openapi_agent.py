@@ -11,7 +11,6 @@ from pytest_mock import MockerFixture
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
@@ -24,8 +23,7 @@ def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
 
 
 def test_download_agent_shipped_with_checkmk(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: tuple[UserId, str],
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mocker: MockerFixture,
     tmp_path: Path,
 ) -> None:
@@ -39,10 +37,7 @@ def test_download_agent_shipped_with_checkmk(
         return_value=mocked_agent_path,
     )
 
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         "/NO_SITE/check_mk/api/1.0/domain-types/agent/actions/download/invoke?os_type=linux_deb",
         headers={"Accept": "application/octet-stream"},

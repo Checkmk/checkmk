@@ -5,6 +5,7 @@
 
 import subprocess
 import time
+from collections.abc import MutableSequence
 from datetime import datetime
 from typing import Any
 
@@ -13,6 +14,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.notify import ensure_utf8
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.pages
 import cmk.gui.userdb as userdb
@@ -44,16 +46,19 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
     Dictionary,
+    DictionaryModel,
     DualListChoice,
     ListChoice,
     Optional,
     TextAreaUnicode,
 )
 
+Message = DictionaryModel
 
-def get_gui_messages(user_id=None):
+
+def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
     if user_id is None:
-        user_id = user.id
+        user_id = user.ident
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     messages = store.load_object_from_file(path, default=[])
 
@@ -72,7 +77,7 @@ def get_gui_messages(user_id=None):
     return messages
 
 
-def delete_gui_message(msg_id):
+def delete_gui_message(msg_id: str) -> None:
     messages = get_gui_messages()
     for index, msg in enumerate(messages):
         if msg["id"] == msg_id:
@@ -80,9 +85,9 @@ def delete_gui_message(msg_id):
     save_gui_messages(messages)
 
 
-def save_gui_messages(messages, user_id=None):
+def save_gui_messages(messages: MutableSequence[Message], user_id: UserId | None = None) -> None:
     if user_id is None:
-        user_id = user.id
+        user_id = user.ident
     path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     store.mkdir(path.parent)
     store.save_object_to_file(path, messages)
@@ -128,7 +133,7 @@ permission_registry.register(
 
 
 @cmk.gui.pages.register("message")
-def page_message():
+def page_message() -> None:
     if not user.may("general.message"):
         raise MKAuthException(_("You are not allowed to use the message module."))
 
@@ -187,7 +192,7 @@ def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     return menu
 
 
-def _vs_message():
+def _vs_message() -> Dictionary:
     dest_choices: list[CascadingDropdownChoice] = [
         ("all_users", _("All users")),
         (
@@ -264,7 +269,7 @@ def _vs_message():
     )
 
 
-def _validate_msg(msg, varprefix):
+def _validate_msg(msg: Message, _varprefix: str) -> None:
     if not msg.get("methods"):
         raise MKUserError("methods", _("Please select at least one messaging method."))
 
@@ -281,7 +286,7 @@ def _validate_msg(msg, varprefix):
                 raise MKUserError("dest", _('A user with the id "%s" does not exist.') % user_id)
 
 
-def _process_message_message(msg):  # pylint: disable=too-many-branches
+def _process_message_message(msg: Message) -> None:  # pylint: disable=too-many-branches
     msg["id"] = utils.gen_id()
     msg["time"] = time.time()
 
@@ -291,11 +296,11 @@ def _process_message_message(msg):  # pylint: disable=too-many-branches
         dest_what = msg["dest"][0]
 
     if dest_what == "all_users":
-        recipients = list(active_config.multisite_users.keys())
+        recipients = list(map(UserId, active_config.multisite_users.keys()))
     elif dest_what == "online":
         recipients = userdb.get_online_user_ids(datetime.now())
     elif dest_what == "list":
-        recipients = msg["dest"][1]
+        recipients = list(map(UserId, msg["dest"][1]))
     else:
         recipients = []
 
@@ -353,7 +358,7 @@ def _process_message_message(msg):  # pylint: disable=too-many-branches
 #   ---Message Plugins-------------------------------------------------------
 
 
-def message_gui(user_id, msg):
+def message_gui(user_id: UserId, msg: Message) -> bool:
     messages = get_gui_messages(user_id)
     if msg not in messages:
         messages.append(msg)
@@ -361,7 +366,7 @@ def message_gui(user_id, msg):
     return True
 
 
-def message_mail(user_id, msg):
+def message_mail(user_id: UserId, msg: Message) -> bool:
     users = userdb.load_users(lock=False)
     user_spec = users.get(user_id)
 

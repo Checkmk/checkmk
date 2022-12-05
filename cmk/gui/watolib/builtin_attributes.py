@@ -7,8 +7,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 import cmk.utils.tags
-from cmk.utils.type_defs import HostName
-from cmk.utils.type_defs._misc import UserId
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb

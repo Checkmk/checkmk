@@ -557,14 +557,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     # automatically initialize the missing data structures
     assert userdb.user_exists(user_id)
     assert not userdb._user_exists_according_to_profile(user_id)
-    assert str(user_id) in _load_users_uncached(lock=False)
+    assert user_id in _load_users_uncached(lock=False)
 
     assert userdb.check_credentials(user_id, Password("cmk"), datetime.now()) == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
     assert not userdb._user_exists_according_to_profile(user_id)
-    assert str(user_id) in _load_users_uncached(lock=False)
+    assert user_id in _load_users_uncached(lock=False)
 
 
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:

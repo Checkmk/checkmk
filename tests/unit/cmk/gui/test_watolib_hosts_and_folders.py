@@ -11,6 +11,8 @@ import pytest
 
 from tests.testlib import on_time
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui.watolib.hosts_and_folders import Folder
 
 
@@ -36,7 +38,7 @@ def test_next_network_scan_at(allowed, last_end, next_time) -> None:  # type:ign
             "network_scan": {
                 "exclude_ranges": [],
                 "ip_ranges": [("ip_range", ("10.3.1.1", "10.3.1.100"))],
-                "run_as": "cmkadmin",
+                "run_as": UserId("cmkadmin"),
                 "scan_interval": 300,
                 "set_ipaddress": True,
                 "tag_criticality": "offline",

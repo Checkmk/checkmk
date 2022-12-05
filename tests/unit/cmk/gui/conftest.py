@@ -257,10 +257,10 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kw)
-        self.username: str | None = None
+        self.username: UserId | None = None
         self.password: str | None = None
 
-    def set_credentials(self, username: str | None, password: str | None) -> None:
+    def set_credentials(self, username: UserId | None, password: str | None) -> None:
         self.username = username
         self.password = password
 
@@ -332,14 +332,28 @@ def avoid_search_index_update_background(monkeypatch):
 
 
 @pytest.fixture()
-def logged_in_wsgi_app(wsgi_app, with_user):
+def logged_in_wsgi_app(
+    wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
+) -> WebTestAppForCMK:
     _ = wsgi_app.login(with_user[0], with_user[1])
     return wsgi_app
 
 
 @pytest.fixture()
-def logged_in_admin_wsgi_app(wsgi_app, with_admin):
+def logged_in_admin_wsgi_app(
+    wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
+) -> WebTestAppForCMK:
     _ = wsgi_app.login(with_admin[0], with_admin[1])
+    return wsgi_app
+
+
+@pytest.fixture()
+def aut_user_auth_wsgi_app(
+    wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+) -> WebTestAppForCMK:
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", f"{username} {secret}"))
     return wsgi_app
 
 

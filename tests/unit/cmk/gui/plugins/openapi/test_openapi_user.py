@@ -180,7 +180,7 @@ def test_openapi_user_minimal_password_settings(
     assert "last_pw_change" not in extensions
     assert "password" not in extensions
 
-    user_from_db = userdb.load_user(resp.json["id"])
+    user_from_db = userdb.load_user(UserId(resp.json["id"]))
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
@@ -207,19 +207,15 @@ def test_openapi_user_minimal_password_settings(
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 
-    user_from_db = userdb.load_user(resp.json["id"])
+    user_from_db = userdb.load_user(UserId(resp.json["id"]))
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
 
-def test_openapi_all_users(
-    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
-) -> None:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_all_users(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
         status=200,
@@ -228,7 +224,7 @@ def test_openapi_all_users(
     users = resp.json_body["value"]
     assert len(users) == 1
 
-    _user_resp = wsgi_app.call_method(
+    _user_resp = aut_user_auth_wsgi_app.call_method(
         "get", users[0]["links"][0]["href"], status=200, headers={"Accept": "application/json"}
     )
 

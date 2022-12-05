@@ -43,11 +43,11 @@ class LoggedInUser:
 
     def __init__(
         self,
-        user_id: str | None,
+        user_id: UserId | None,
         *,
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
-        self.id = UserId(user_id) if user_id else None
+        self.id = user_id
         self.transactions = TransactionManager(self.transids, self.save_transids)
 
         self.confdir = _confdir_for_user_id(self.id)
@@ -66,14 +66,10 @@ class LoggedInUser:
 
     @property
     def ident(self) -> UserId:
-        """Return the user-id as a string, or crash.
-
-        Returns:
-            The user_id as a string.
+        """Return the user ID or crash
 
         Raises:
             ValueError: whenever there is no user_id.
-
         """
         if self.id is None:
             raise AttributeError("No user_id on this instance.")

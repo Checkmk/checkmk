@@ -241,7 +241,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
 
 def test_openapi_host_tag_with_only_one_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host: None,
+    with_host: list[str],
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     wsgi_app = aut_user_auth_wsgi_app

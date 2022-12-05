@@ -154,7 +154,7 @@ def test_parse_auth_cookie_allow_current(
     current_cookie: str, with_user: tuple[UserId, str], session_id: str
 ) -> None:
     assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (
-        UserId(with_user[0]),
+        with_user[0],
         session_id,
         login._generate_auth_hash(with_user[0], session_id),
     )
@@ -187,7 +187,11 @@ def test_web_server_auth_session(user_id: UserId) -> None:
         assert user.id is None
 
 
-def test_ignore_transaction_ids(request_context, monkeypatch, with_automation_user):
+def test_ignore_transaction_ids(
+    request_context: Iterator[None],
+    monkeypatch: pytest.MonkeyPatch,
+    with_automation_user: tuple[UserId, str],
+) -> None:
     user_id, password = with_automation_user
     request.set_var("_secret", password)
     request.set_var("_username", user_id)

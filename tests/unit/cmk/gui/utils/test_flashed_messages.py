@@ -17,8 +17,8 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="user_id")
-def fixture_user_id(with_user):
-    return UserId(with_user[0])
+def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
+    return with_user[0]
 
 
 def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]

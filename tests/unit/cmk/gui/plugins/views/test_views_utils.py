@@ -7,6 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import PainterSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.views.layout import group_value
@@ -84,7 +86,7 @@ def test_replace_action_url_macros(
     monkeypatch.setattr(
         user,
         "id",
-        "user",
+        UserId("user"),
     )
     assert replace_action_url_macros(url, what, row) == result
 

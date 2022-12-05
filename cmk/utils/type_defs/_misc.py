@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import re
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
@@ -244,48 +243,6 @@ class DiscoveryResult:
 
     # An optional text to describe the services changed by the operation
     diff_text: str | None = None
-
-
-class UserId(str):
-    USER_ID_REGEX = re.compile(r"^[\w_$][-\w.@_$]*$")
-
-    @classmethod
-    def validate(cls, text: str) -> None:
-        """Check if it is a valid UserId
-
-        We use the userid to create file paths, so we we need to be strict...
-
-        >>> UserId.validate("cmkadmin")
-        >>> UserId.validate("")
-        >>> UserId.validate("foo/../")
-        Traceback (most recent call last):
-        ...
-        ValueError: Invalid username: 'foo/../'
-        """
-        if text == "":
-            # For legacy reasons (e.g. cmk.gui.visuals)
-            return
-
-        if not cls.USER_ID_REGEX.match(text):
-            raise ValueError(f"Invalid username: {text!r}")
-
-    @classmethod
-    def builtin(cls) -> UserId:
-        """A special UserId signifying something is owned or created not by a real user but shipped
-        as a built in functionality.
-
-        This is mostly used in cmk.gui.visuals.
-
-        Note that, unfortunately, the UserId "" will sometimes also be constructed via regular
-        initialization, so this method is not the only source for them.
-        Moreover, be aware that it is very possible that some parts of the code use the UserId ""
-        with a different meaning.
-        """
-        return UserId("")
-
-    def __new__(cls, text: str) -> UserId:
-        cls.validate(text)
-        return super().__new__(cls, text)
 
 
 # This def is used to keep the API-exposed object in sync with our

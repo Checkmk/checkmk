@@ -87,7 +87,7 @@ def _run_cmkpasswd(
     username: str, get_password: Callable[[], Password[str]], dst_file: Path | None
 ) -> None:
     try:
-        username = UserId(username)
+        user_id = UserId(username)
     except ValueError as e:
         raise InvalidUsernameError(e)
 
@@ -98,9 +98,9 @@ def _run_cmkpasswd(
         raise InvalidPasswordError(e)
 
     if dst_file is not None:
-        Htpasswd(dst_file).save(username, pw_hash)
+        Htpasswd(dst_file).save(user_id, pw_hash)
     else:
-        print(f"{username}:{pw_hash}")
+        print(Htpasswd.serialize_entries([(user_id, pw_hash)]))
 
 
 def main(args: Sequence[str]) -> int:

@@ -257,11 +257,11 @@ class ModeUsers(WatoMode):
         users = userdb.load_users()
         for varname, _value in request.itervars(prefix="_c_user_"):
             if html.get_checkbox(varname):
-                user_id = base64.b64decode(varname.split("_c_user_")[-1].encode("utf-8")).decode(
-                    "utf-8"
+                user_id = UserId(
+                    base64.b64decode(varname.split("_c_user_")[-1].encode("utf-8")).decode("utf-8")
                 )
                 if user_id in users:
-                    selected_users.append(UserId(user_id))
+                    selected_users.append(user_id)
 
         if selected_users:
             delete_users(selected_users)
@@ -726,11 +726,11 @@ class ModeEditUser(WatoMode):
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
-            self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
+            self._user_id = request.get_validated_type_input_mandatory(UserId, "user_id")
             user_attrs: UserSpec = {}
         else:
-            self._user_id = UserId(request.get_str_input_mandatory("edit").strip())
-            user_attrs = self._users[UserId(self._user_id)].copy()
+            self._user_id = request.get_validated_type_input_mandatory(UserId, "edit")
+            user_attrs = self._users[self._user_id].copy()
 
         # Full name
         user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()

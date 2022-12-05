@@ -312,31 +312,41 @@ def _check_auth(req: Request) -> UserId | None:
             return None
         user_id = check_auth_by_cookie()
 
-    if (user_id is not None and not isinstance(user_id, str)) or user_id == "":
+    # This was the last chance to obtain a user ID; if we don't have any yet, we can give up.
+    # After that we'll do some extra checks.
+    if user_id is None:
+        return None
+
+    if user_id == UserId.builtin():
         raise MKInternalError(_("Invalid user authentication"))
 
-    if user_id and not userdb.is_customer_user_allowed_to_login(user_id):
+    if not userdb.is_customer_user_allowed_to_login(user_id):
         # A CME not assigned with the current sites customer
         # is not allowed to login
         auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer" % user_id)
         return None
 
-    if user_id and auth_type in ("http_header", "web_server"):
+    if auth_type in ("http_header", "web_server"):
         _check_auth_cookie_for_web_server_auth(user_id)
 
     return user_id
 
 
 def verify_automation_secret(user_id: UserId, secret: str) -> bool:
-    if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
-        if not path.is_file():
-            return False
+    if not secret:
+        return False
 
-        with path.open(encoding="utf-8") as f:
-            return f.read().strip() == secret
+    if user_id == "" or "/" in user_id:
+        # Note: the intention here is not to check for UserId.builtin() but to ensure the UserId
+        # plays nicely in the path below.
+        return False
 
-    return False
+    path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
+    if not path.is_file():
+        return False
+
+    with path.open(encoding="utf-8") as f:
+        return f.read().strip() == secret
 
 
 def _check_auth_automation() -> UserId:
@@ -346,22 +356,19 @@ def _check_auth_automation() -> UserId:
     request.del_var_from_env("_username")
     request.del_var_from_env("_secret")
 
-    if verify_automation_secret(user_id, secret):
-        set_auth_type("automation")
-        return user_id
-    raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
+    if not verify_automation_secret(user_id, secret):
+        raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
+
+    set_auth_type("automation")
+    return user_id
 
 
 def _check_auth_http_header(auth_by_http_header: str) -> UserId | None:
     """When http header auth is enabled, try to read the user_id from the var"""
-    user_id = request.get_request_header(auth_by_http_header)
-    if not user_id:
-        return None
-
-    user_id = UserId(user_id)
-    set_auth_type("http_header")
-
-    return user_id
+    if user_id := request.get_request_header(auth_by_http_header):
+        set_auth_type("http_header")
+        return UserId(user_id)
+    return None
 
 
 def _check_auth_web_server(req: Request) -> UserId | None:
@@ -371,8 +378,7 @@ def _check_auth_web_server(req: Request) -> UserId | None:
     case a user is provided, we trust that user.
     """
     # ? type of Request.remote_user attribute is unclear
-    user_id = req.remote_user
-    if user_id is not None:
+    if user_id := req.remote_user:
         set_auth_type("web_server")
         return UserId(user_id)
     return None

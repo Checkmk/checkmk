@@ -12,15 +12,6 @@ from tests.testlib.rest_api_client import RequestHandler, Response, RestApiClien
 from tests.unit.cmk.gui.conftest import HTTPMethod, WebTestAppForCMK
 
 
-@pytest.fixture(name="aut_user_auth_wsgi_app")
-def fixture_aut_user_auth_wsgi_app(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: tuple[str, str],
-) -> WebTestAppForCMK:
-    wsgi_app.set_authorization(("Bearer", " ".join(with_automation_user)))
-    return wsgi_app
-
-
 @pytest.fixture(name="base")
 def fixture_base() -> str:
     return "/NO_SITE/check_mk/api/1.0"

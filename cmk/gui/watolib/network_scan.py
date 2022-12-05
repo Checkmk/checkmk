@@ -14,7 +14,7 @@ from typing import Any, NamedTuple
 
 from cmk.utils import store
 from cmk.utils.translations import translate_hostname
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, UserId
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import userdb
@@ -47,7 +47,7 @@ def execute_network_scan_job() -> None:
     if not folder:
         return  # Nothing to do.
 
-    run_as = folder.attribute("network_scan")["run_as"]
+    run_as = UserId(folder.attribute("network_scan")["run_as"])
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
             _("The user %s used by the network scan of the folder %s does not exist.")

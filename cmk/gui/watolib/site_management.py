@@ -26,7 +26,7 @@ from livestatus import (
 )
 
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs._misc import UserId
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain

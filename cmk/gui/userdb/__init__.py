@@ -791,33 +791,36 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
     # Now read the user specific files
     directory = cmk.utils.paths.var_dir + "/web/"
-    for uid in os.listdir(directory):
-        if uid[0] != ".":
+    for user_dir in os.listdir(directory):
+        if user_dir[0] == ".":
+            continue
 
-            # read special values from own files
+        uid = UserId(user_dir)
+
+        # read special values from own files
+        if uid in result:
+            for attr, conv_func in attributes:
+                val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
+                if val is not None:
+                    result[uid][attr] = val
+
+        # read automation secrets and add them to existing
+        # users or create new users automatically
+        try:
+            user_secret_path = Path(directory) / user_dir / "automation.secret"
+            with user_secret_path.open(encoding="utf-8") as f:
+                secret: str | None = f.read().strip()
+        except OSError:
+            secret = None
+
+        if secret:
             if uid in result:
-                for attr, conv_func in attributes:
-                    val = load_custom_attr(user_id=uid, key=attr, parser=conv_func)
-                    if val is not None:
-                        result[uid][attr] = val
-
-            # read automation secrets and add them to existing
-            # users or create new users automatically
-            try:
-                user_secret_path = Path(directory) / uid / "automation.secret"
-                with user_secret_path.open(encoding="utf-8") as f:
-                    secret: str | None = f.read().strip()
-            except OSError:
-                secret = None
-
-            if secret:
-                if uid in result:
-                    result[uid]["automation_secret"] = secret
-                else:
-                    result[uid] = {
-                        "roles": ["guest"],
-                        "automation_secret": secret,
-                    }
+                result[uid]["automation_secret"] = secret
+            else:
+                result[uid] = {
+                    "roles": ["guest"],
+                    "automation_secret": secret,
+                }
 
     return result
 
@@ -987,15 +990,17 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
         "serial.mk",
     ]
     directory = cmk.utils.paths.var_dir + "/web"
-    for user_dir in os.listdir(cmk.utils.paths.var_dir + "/web"):
-        if user_dir not in [".", ".."] and user_dir not in updated_profiles:
-            entry = directory + "/" + user_dir
-            if not os.path.isdir(entry):
-                continue
+    for user_dir in os.listdir(directory):
+        if user_dir in [".", ".."] or user_dir in updated_profiles:
+            continue
 
-            for to_delete in profile_files_to_delete:
-                if os.path.exists(entry + "/" + to_delete):
-                    os.unlink(entry + "/" + to_delete)
+        entry = directory + "/" + user_dir
+        if not os.path.isdir(entry):
+            continue
+
+        for to_delete in profile_files_to_delete:
+            if os.path.exists(entry + "/" + to_delete):
+                os.unlink(entry + "/" + to_delete)
 
 
 def write_contacts_and_users_file(

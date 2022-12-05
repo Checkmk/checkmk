@@ -10,7 +10,6 @@ from pytest_mock import MockerFixture
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
 
 mocked_phase_one_result = {
     "class_name": "Phase1Result",
@@ -33,8 +32,7 @@ mocked_phase_one_result = {
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="DCD not available in raw edition")
 def test_dcd_fetch_phase_one_result(
-    wsgi_app: WebTestAppForCMK,
-    with_automation_user: tuple[UserId, str],
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mocker: MockerFixture,
 ) -> None:
     automation_patch = mocker.patch(
@@ -42,10 +40,7 @@ def test_dcd_fetch_phase_one_result(
         return_value=mocked_phase_one_result,
     )
 
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/dcd/actions/fetch_phase_one/invoke",
         params=json.dumps(

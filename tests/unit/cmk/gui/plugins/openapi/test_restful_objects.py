@@ -91,8 +91,7 @@ def test_status_codes_match() -> None:
 
 
 def test_no_config_generation_on_get(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app,
     with_host,
     monkeypatch,
     mocker,
@@ -100,8 +99,6 @@ def test_no_config_generation_on_get(
     """
     update_config_generation should only be called on posts, not on gets: SUP-8793
     """
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     mock = mocker.Mock()
@@ -111,7 +108,7 @@ def test_no_config_generation_on_get(
         mock,
     )
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/objects/host_config/heute",
         status=200,
@@ -120,7 +117,7 @@ def test_no_config_generation_on_get(
     # we have a get request, so we expect update_config not to be called
     mock.assert_not_called()
 
-    wsgi_app.call_method(
+    aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "foobar", "folder": "/"}',
@@ -133,8 +130,7 @@ def test_no_config_generation_on_get(
 
 
 def test_no_config_generation_on_certain_posts(
-    wsgi_app,
-    with_automation_user,
+    aut_user_auth_wsgi_app,
     mock_livestatus,
     with_host,
     monkeypatch,
@@ -144,8 +140,6 @@ def test_no_config_generation_on_certain_posts(
     update_config_generation should not be called on certain posts: SUP-8793
     """
     live: MockLiveStatusConnection = mock_livestatus
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.add_table(
@@ -175,7 +169,7 @@ def test_no_config_generation_on_certain_posts(
     )
 
     with live:
-        wsgi_app.call_method(
+        aut_user_auth_wsgi_app.call_method(
             "post",
             base + "/domain-types/acknowledge/collections/host",
             content_type="application/json",

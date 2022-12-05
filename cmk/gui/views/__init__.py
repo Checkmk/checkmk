@@ -22,11 +22,20 @@ from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 
 from .builtin_views import builtin_views
 from .command import register_legacy_command
+from .datasource_selection import page_select_datasource
 from .icon import Icon, icon_and_action_registry
+from .icon.page_ajax_popup_action_menu import ajax_popup_action_menu
 from .inventory import register_table_views_and_columns, update_paint_functions
 from .page_ajax_filters import AjaxInitialViewFilters
 from .page_ajax_reschedule import PageRescheduleCheck
-from .page_edit_view import format_view_title, PageAjaxCascadingRenderPainterParameters
+from .page_create_view import page_create_view
+from .page_edit_view import (
+    format_view_title,
+    page_edit_view,
+    PageAjaxCascadingRenderPainterParameters,
+)
+from .page_edit_views import page_edit_views
+from .page_show_view import page_show_view
 from .painter.v0.base import register_painter
 from .sorter import register_sorter
 from .store import multisite_builtin_views
@@ -52,6 +61,12 @@ def register(
     )
     page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
     page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
+    page_registry.register_page_handler("view", page_show_view)
+    page_registry.register_page_handler("create_view", page_select_datasource)
+    page_registry.register_page_handler("edit_view", page_edit_view)
+    page_registry.register_page_handler("edit_views", page_edit_views)
+    page_registry.register_page_handler("create_view_infos", page_create_view)
+    page_registry.register_page_handler("ajax_popup_action_menu", ajax_popup_action_menu)
 
     visual_type_registry.register(VisualTypeViews)
 

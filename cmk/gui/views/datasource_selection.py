@@ -28,11 +28,11 @@ def DatasourceSelection() -> DropdownChoice[str]:
     )
 
 
-def page_create_view():
+def page_select_datasource() -> None:
     show_create_view_dialog()
 
 
-def show_create_view_dialog(next_url=None):
+def show_create_view_dialog(next_url: str | None = None) -> None:
     vs_ds = DatasourceSelection()
 
     ds: str | None = "services"  # Default selection

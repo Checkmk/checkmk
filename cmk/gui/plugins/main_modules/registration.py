@@ -23,7 +23,7 @@ from cmk.gui.plugins.watolib.utils import (
 )
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.valuespec import autocompleter_registry
-from cmk.gui.views import datasource_selection, icon, inventory, perfometer
+from cmk.gui.views import icon, inventory, perfometer
 from cmk.gui.views.command import (
     command_group_registry,
     command_registry,
@@ -33,12 +33,7 @@ from cmk.gui.views.command import (
 from cmk.gui.views.data_source import data_source_registry, register_data_sources
 from cmk.gui.views.host_tag_plugins import register_tag_plugins
 from cmk.gui.views.icon import icon_and_action_registry
-from cmk.gui.views.icon.page_ajax_popup_action_menu import ajax_popup_action_menu
 from cmk.gui.views.layout import layout_registry, register_layouts
-from cmk.gui.views.page_create_view import page_create_view
-from cmk.gui.views.page_edit_view import page_edit_view
-from cmk.gui.views.page_edit_views import page_edit_views
-from cmk.gui.views.page_show_view import page_show_view
 from cmk.gui.views.painter.v0 import painters
 from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
@@ -56,14 +51,6 @@ def register_sites_options() -> None:
 
 
 views.register(permission_section_registry, cmk.gui.pages.page_registry, visual_type_registry)
-cmk.gui.pages.page_registry.register_page_handler("view", page_show_view)
-cmk.gui.pages.page_registry.register_page_handler(
-    "create_view", datasource_selection.page_create_view
-)
-cmk.gui.pages.page_registry.register_page_handler("edit_view", page_edit_view)
-cmk.gui.pages.page_registry.register_page_handler("edit_views", page_edit_views)
-cmk.gui.pages.page_registry.register_page_handler("create_view_infos", page_create_view)
-cmk.gui.pages.page_registry.register_page_handler("ajax_popup_action_menu", ajax_popup_action_menu)
 
 crash_reporting.register(
     cmk.gui.pages.page_registry,

@@ -9,22 +9,28 @@ import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _, _u
+from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
-    permission_section_registry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
+from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
-from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.views.command import register_legacy_command
-from cmk.gui.views.icon import Icon, icon_and_action_registry
-from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
-from cmk.gui.views.page_edit_view import format_view_title
-from cmk.gui.views.painter.v0.base import register_painter
-from cmk.gui.views.sorter import register_sorter
-from cmk.gui.views.store import multisite_builtin_views
+
+from .builtin_views import builtin_views
+from .command import register_legacy_command
+from .icon import Icon, icon_and_action_registry
+from .inventory import register_table_views_and_columns, update_paint_functions
+from .page_ajax_filters import AjaxInitialViewFilters
+from .page_ajax_reschedule import PageRescheduleCheck
+from .page_edit_view import format_view_title, PageAjaxCascadingRenderPainterParameters
+from .painter.v0.base import register_painter
+from .sorter import register_sorter
+from .store import multisite_builtin_views
+from .visual_type import VisualTypeViews
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
@@ -34,7 +40,22 @@ multisite_sorters: dict[str, Any] = {}
 multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
-@permission_section_registry.register
+def register(
+    permission_section_registry: PermissionSectionRegistry,
+    page_registry: PageRegistry,
+    visual_type_registry: VisualTypeRegistry,
+) -> None:
+    permission_section_registry.register(PermissionSectionViews)
+
+    page_registry.register_page("ajax_cascading_render_painer_parameters")(
+        PageAjaxCascadingRenderPainterParameters
+    )
+    page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
+    page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
+
+    visual_type_registry.register(VisualTypeViews)
+
+
 class PermissionSectionViews(PermissionSection):
     @property
     def name(self) -> str:

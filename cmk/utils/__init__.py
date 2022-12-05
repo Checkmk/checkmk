@@ -5,4 +5,4 @@
 
 # TODO: Kept for compatibility. Clean up call sites.
 # Or even better: move the functions from misc to a better place
-from cmk.utils.misc import cachefile_age, key_config_paths, pnp_cleanup, quote_shell_string
+from cmk.utils.misc import cachefile_age, key_config_paths, pnp_cleanup

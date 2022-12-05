@@ -20,11 +20,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
 
 
-def quote_shell_string(s: str) -> str:
-    """Quote string for use as arguments on the shell"""
-    return "'" + s.replace("'", "'\"'\"'") + "'"
-
-
 # TODO: Change to better name like: quote_pnp_string()
 def pnp_cleanup(s: str) -> str:
     """Quote a string (host name or service description) in PNP4Nagios format

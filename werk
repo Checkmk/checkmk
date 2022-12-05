@@ -8,6 +8,7 @@ import argparse
 import ast
 import fcntl
 import os
+import shlex
 import shutil
 import struct
 import subprocess
@@ -436,7 +437,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
         os.chdir(g_base_dir)
         cmd = "git commit {} -m {}".format(
             " ".join(files_to_commit),
-            quote_shell_string(title + "\n\n" + werk["description"]),
+            shlex.quote(title + "\n\n" + werk["description"]),
         )
         os.system(cmd)  # nosec
 
@@ -449,7 +450,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
 
         cmd = "git commit {} -m {}".format(
             dash_a,
-            quote_shell_string(title + "\n\n" + werk["description"]),
+            shlex.quote(title + "\n\n" + werk["description"]),
         )
         os.system(cmd)  # nosec
 
@@ -464,10 +465,6 @@ def something_in_git_index() -> bool:
         if line[0] == "M":
             return True
     return False
-
-
-def quote_shell_string(s: str) -> str:
-    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 def next_werk_id() -> int:

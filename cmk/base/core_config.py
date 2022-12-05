@@ -7,6 +7,7 @@ import abc
 import dataclasses
 import numbers
 import os
+import shlex
 import shutil
 import socket
 import sys
@@ -509,18 +510,18 @@ def _prepare_check_command(
 ) -> str:
     """Prepares a check command for execution by Checkmk
 
-    In case a list is given it quotes the single elements. It also prepares password store entries
+    In case a list is given it quotes element if necessary. It also prepares password store entries
     for the command line. These entries will be completed by the executed program later to get the
     password from the password store.
     """
     passwords: list[tuple[str, str, str]] = []
-    formated: list[str] = []
+    formatted: list[str] = []
     for arg in command_spec:
         if isinstance(arg, (int, float)):
-            formated.append("%s" % arg)
+            formatted.append("%s" % arg)
 
         elif isinstance(arg, str):
-            formated.append(cmk.utils.quote_shell_string(arg))
+            formatted.append(shlex.quote(arg))
 
         elif isinstance(arg, tuple) and len(arg) == 3:
             pw_ident, preformated_arg = arg[1:]
@@ -540,16 +541,16 @@ def _prepare_check_command(
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
-            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formated)), pw_start_index, pw_ident))
+            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
+            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
 
         else:
             raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
 
     if passwords:
-        formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
+        formatted = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formatted
 
-    return " ".join(formated)
+    return " ".join(formatted)
 
 
 def get_active_check_descriptions(

@@ -349,9 +349,6 @@ def get_number_with_precision(
     return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
 
 
-quote_shell_string = _cmk_utils.quote_shell_string
-
-
 def get_checkgroup_parameters(group: str, deflt: _Ruleset) -> _Ruleset:
     return _config.checkgroup_parameters.get(group, deflt)
 

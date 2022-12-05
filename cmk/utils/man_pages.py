@@ -293,6 +293,7 @@ CATALOG_TITLES: Final = {
     "smb_share": "SMB Share",
     "gcp": "Google Cloud Platform",
     "mobileiron": "Mobileiron",
+    "azure_status": "Microsoft Azure Status",
     "virtual": "Virtualization",
 }
 

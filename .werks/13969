@@ -1,0 +1,14 @@
+Title: ETag for root folder is not correctly generated
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1670573500
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+The ETag header for the root folder has been generated incorrectly, making it impossible to edit it through the REST API.
+This is no longer the case.
+

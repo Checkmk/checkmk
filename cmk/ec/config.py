@@ -16,6 +16,7 @@ from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
 from cmk.utils.exceptions import MKException
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str] | None
@@ -69,13 +70,6 @@ class EventLimits(TypedDict):
     by_host: EventLimit
     by_rule: EventLimit
     overall: EventLimit
-
-
-class HostnameTranslation(TypedDict, total=False):
-    case: Literal["lower", "upper"]
-    drop_domain: bool
-    mapping: Iterable[tuple[str, str]]
-    regex: Iterable[tuple[str, str]]
 
 
 LogLevel = int
@@ -307,7 +301,7 @@ class ConfigFromWATO(TypedDict):
     eventsocket_queue_len: int
     history_lifetime: int
     history_rotation: Literal["daily", "weekly"]
-    hostname_translation: HostnameTranslation  # TODO: Mutable???
+    hostname_translation: TranslationOptions  # TODO: Mutable???
     housekeeping_interval: int
     log_level: LogConfig  # TODO: Mutable???
     log_messages: bool

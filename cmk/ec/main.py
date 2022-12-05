@@ -50,6 +50,7 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
+from cmk.utils.translations import translate_hostname
 from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
@@ -1618,54 +1619,9 @@ class EventServer(ECServerThread):
         if "set_contact" in rule and "contact" not in event:
             event["contact"] = replace_groups(rule["set_contact"], event.get("contact", ""), groups)
 
-    def translate_hostname(self, backedhost: str) -> str:
-        """Translate a hostname if this is configured."""
-        # We are *really* sorry: this code snippet is copied from modules/check_mk_base.py.
-        # There is still no common library. Please keep this in sync with the
-        # original code
-
-        # Here comes the original code from modules/check_mk_base.py
-        if translation := self._config["hostname_translation"]:
-            # 1. Case conversion
-            caseconf = translation.get("case")
-            if caseconf == "upper":
-                backedhost = backedhost.upper()
-            elif caseconf == "lower":
-                backedhost = backedhost.lower()
-
-            # 2. Drop domain part (not applied to IP addresses!)
-            if translation.get("drop_domain") and backedhost:
-                # only apply if first part does not convert successfully into an int
-                firstpart = backedhost.split(".", 1)[0]
-                try:
-                    int(firstpart)
-                except Exception:
-                    backedhost = firstpart
-
-            # 3. Regular expression conversion
-            if "regex" in translation:
-                for regex, subst in translation["regex"]:
-                    if not regex.endswith("$"):
-                        regex += "$"
-                    rcomp = cmk.utils.regex.regex(regex)
-                    mo = rcomp.match(backedhost)
-                    if mo:
-                        backedhost = subst
-                        for nr, text in enumerate(mo.groups()):
-                            backedhost = backedhost.replace(f"\\{nr + 1}", text)
-                        break
-
-            # 4. Explicit mapping
-            for from_host, to_host in translation.get("mapping", []):
-                if from_host == backedhost:
-                    backedhost = to_host
-                    break
-
-        return backedhost
-
     def do_translate_hostname(self, event: Event) -> None:
         try:
-            event["host"] = self.translate_hostname(event["host"])
+            event["host"] = translate_hostname(self._config["hostname_translation"], event["host"])
         except Exception as e:
             if self._config["debug_rules"]:
                 self._logger.exception('Unable to parse host "%s" (%s)', event.get("host"), e)

@@ -414,8 +414,7 @@ def _serve_folder(
 ):
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
-    if not folder.is_root():
-        response.headers.add("ETag", etag_of_folder(folder).to_header())
+    response.headers.add("ETag", etag_of_folder(folder).to_header())
     return response
 
 

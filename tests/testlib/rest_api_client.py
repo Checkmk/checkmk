@@ -218,6 +218,31 @@ class RestApiClient:
             del kwargs["body"]
         return self._request(**kwargs, url_is_complete=True, expect_ok=expect_ok)
 
+    def get_folder(self, folder_name: str, expect_ok: bool = True) -> Response:
+        return self._request(
+            "get",
+            url=f"/objects/folder_config/{folder_name}",
+            expect_ok=expect_ok,
+        )
+
+    def edit_folder(
+        self,
+        folder_name: str,
+        title: str,
+        attributes: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        etag = self.get_folder(folder_name).headers["ETag"]
+        headers = {"IF-Match": etag}
+        body = {"title": title, "attributes": attributes}
+        return self._request(
+            "put",
+            url=f"/objects/folder_config/{folder_name}",
+            headers=headers,
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
     def create_host(
         self,
         host_name: str,
@@ -282,7 +307,7 @@ class RestApiClient:
         attributes: Mapping[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
-        etag = self.get_host(host_name).headers["E-Tag"]
+        etag = self.get_host(host_name).headers["ETag"]
         headers = {"IF-Match": etag}
         body = {"host_name": host_name, "folder": folder, "attributes": attributes}
         return self._request(

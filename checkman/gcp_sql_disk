@@ -1,4 +1,4 @@
-title: GCP Cloud Run: Disk
+title: GCP Cloud SQL: Disk
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2

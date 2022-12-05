@@ -7,7 +7,7 @@
 import json
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.globals import html, request, response, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import (
     begin_footnote_links,
@@ -17,8 +17,9 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
-from cmk.gui.utils.urls import makeactionuri_contextless
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @snapin_registry.register
@@ -73,9 +74,8 @@ class SiteStatus(SidebarSnapin):
             if switch == "missing":
                 html.status_label(content=state, status=state, title=_("Site is missing"))
             else:
-                url = makeactionuri_contextless(
+                url = makeuri_contextless(
                     request,
-                    transactions,
                     [
                         ("_site_switch", "%s:%s" % (sitename, switch)),
                     ],
@@ -90,17 +90,15 @@ class SiteStatus(SidebarSnapin):
             html.close_tr()
         html.close_table()
 
-        enable_all_url = makeactionuri_contextless(
+        enable_all_url = makeuri_contextless(
             request,
-            transactions,
             [
                 ("_new_state", "online"),
             ],
             filename="set_all_sites.py",
         )
-        disable_all_url = makeactionuri_contextless(
+        disable_all_url = makeuri_contextless(
             request,
-            transactions,
             [
                 ("_new_state", "disabled"),
             ],
@@ -131,12 +129,10 @@ class SiteStatus(SidebarSnapin):
         }
 
     def _ajax_switch_site(self):
+        check_csrf_token()
         response.set_content_type("application/json")
         # _site_switch=sitename1:on,sitename2:off,...
         if not user.may("sidesnap.sitestatus"):
-            return
-
-        if not transactions.check_transaction():
             return
 
         switch_var = request.var("_site_switch")

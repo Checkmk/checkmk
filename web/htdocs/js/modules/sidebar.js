@@ -523,7 +523,10 @@ export function switch_customer(customer_id, switch_state) {
 }
 
 export function switch_site(url) {
-    ajax.get_url(url, utils.reload_whole_page, null);
+    ajax.call_ajax(url, {
+        method: "POST",
+        response_handler: utils.reload_whole_page,
+    });
 }
 
 function bulk_update_contents(ids, codes) {

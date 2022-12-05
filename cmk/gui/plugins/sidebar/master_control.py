@@ -9,7 +9,7 @@ from contextlib import nullcontext
 from typing import ContextManager, Dict, List, Tuple
 
 import cmk.gui.sites as sites
-from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.globals import html, request, response, user
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -19,7 +19,8 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
     write_snapin_exception,
 )
-from cmk.gui.utils.urls import makeactionuri_contextless
+from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @snapin_registry.register
@@ -132,9 +133,8 @@ class MasterControlSnapin(SidebarSnapin):
                 continue
 
             colvalue = site_info[i]
-            url = makeactionuri_contextless(
+            url = makeuri_contextless(
                 request,
-                transactions,
                 [
                     ("site", site_id),
                     ("switch", colname),
@@ -143,7 +143,12 @@ class MasterControlSnapin(SidebarSnapin):
                 filename="switch_master_state.py",
             )
             onclick = (
-                "cmk.ajax.get_url('%s', cmk.utils.update_contents, 'snapin_master_control')" % url
+                """cmk.ajax.call_ajax('%s', {
+            method: "POST",
+            response_handler: cmk.utils.update_contents,
+            handler_data: 'snapin_master_control',
+            })"""
+                % url
             )
 
             html.open_tr()
@@ -169,12 +174,10 @@ class MasterControlSnapin(SidebarSnapin):
         }
 
     def _ajax_switch_masterstate(self) -> None:
+        check_csrf_token()
         response.set_content_type("text/plain")
 
         if not user.may("sidesnap.master_control"):
-            return
-
-        if not transactions.check_transaction():
             return
 
         site = request.get_ascii_input_mandatory("site")

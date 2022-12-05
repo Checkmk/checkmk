@@ -55,7 +55,7 @@ class TransactionManager:
     def store_new(self) -> None:
         """All generated transids are saved per user.
 
-        They are stored in the transids.mk.  Per user only up to 20 transids of
+        They are stored in the transids.mk. Per user only up to 30 transids of
         the already existing ones are kept. The transids generated on the
         current page are all kept. IDs older than one day are deleted."""
         if not self._new_transids:
@@ -68,7 +68,7 @@ class TransactionManager:
             timestamp = valid_id.split("/")[0]
             if now - int(timestamp) < 86400:  # one day
                 cleared_ids.append(valid_id)
-        self._user.save_transids((cleared_ids[-20:] + self._new_transids))
+        self._user.save_transids((cleared_ids[-30:] + self._new_transids))
 
     def transaction_valid(self) -> bool:
         """Checks if the current transaction is valid

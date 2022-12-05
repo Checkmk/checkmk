@@ -1,0 +1,23 @@
+Title: Fix possibility that changes made by form dialogs were not persisted
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1670247356
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+If a user saved a form dialog, it was possible, that this change was
+not applied correctly. This situation could happen if a user had to many
+browser tabs open or spent a lot of time for one configuration step on a page
+before saving.
+
+Background:
+The maximal number of transaction IDs for a user was limited to 20 before this
+werk. Also, the sidebar snapins "Site status", "Master control" and "Bookmarks"
+used a new transaction ID on each reload of the sidebar.
+
+The number of IDs per user is now increased to 30 and the sidebar initial uses
+just one transaction ID. The mentioned sidebar snapins no longer use
+transaction IDs.

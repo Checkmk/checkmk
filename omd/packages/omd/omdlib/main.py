@@ -324,6 +324,9 @@ def create_skeleton_files(site: SiteContext, directory: str) -> None:
 def save_version_meta_data(site: SiteContext, version: str) -> None:
     """Make meta information from the version available in the site directory
 
+    the prurpose of this metadir is to be able to upgrade without the old
+    version and the symlinks
+
     Currently it holds the following information
     A) A copy of the versions skel/ directory
     B) A copy of the skel.permissions file
@@ -366,9 +369,9 @@ def create_skeleton_file(
         mode = read_skel_permissions().get(relpath)
         if mode is None:
             if skel_path.is_dir():
-                mode = 0o755
+                mode = 0o750
             else:
-                mode = 0o644
+                mode = 0o640
         user_path.chmod(mode)
 
 

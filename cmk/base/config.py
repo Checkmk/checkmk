@@ -1884,6 +1884,8 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         console.vverbose(f"Precompile {path} to {precompiled_path}\n")
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
+        # The original file is from the version so the calculated mode is world readable...
+        os.chmod(precompiled_path, 0o640)
 
     exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)
 

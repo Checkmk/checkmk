@@ -8,7 +8,6 @@ import pprint
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.dashboard as dashboard
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
@@ -18,6 +17,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.plugins.dashboard.utils import get_permitted_dashboards
 from cmk.gui.plugins.sidebar import search
 from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
@@ -100,9 +100,7 @@ def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
     visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
         ("views", (k, v)) for k, v in views_to_show
     ]
-    visuals_to_show += [
-        ("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()
-    ]
+    visuals_to_show += [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 

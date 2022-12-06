@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.dashboard as dashboard
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.dashboard.utils import get_permitted_dashboards
 from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
     make_topic_menu,
@@ -43,5 +43,5 @@ class Dashboards(SidebarSnapin):
 
     def _get_dashboard_menu_items(self) -> list[TopicMenuTopic]:
         return make_topic_menu(
-            [("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()]
+            [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
         )

@@ -63,6 +63,8 @@ BRANCH_VERSION     := 2.2.0
 SHELL              := /bin/bash
 CLANG_VERSION      := 14
 
+PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
+
 # In our CI we use this compiler, but we are not restricted to this exact version
 GCC_VERSION_MAJOR      := 12
 GCC_VERSION_MINOR      := 2

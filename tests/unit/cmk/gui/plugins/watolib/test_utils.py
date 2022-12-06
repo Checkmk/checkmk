@@ -9,7 +9,6 @@ from cmk.gui.plugins.watolib.utils import filter_unknown_settings
 def test_filter_unknown_settings() -> None:
     assert filter_unknown_settings(
         {
-            "default_language": "en",
             "snmp_backend_default": "Inline",
             "unknown": "filtered_out",
             "wato_enabled": False,

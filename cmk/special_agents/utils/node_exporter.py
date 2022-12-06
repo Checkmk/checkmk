@@ -3,6 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+import typing
+
+from typing_extensions import NotRequired
+
+
+class PromQLMetric(typing.TypedDict):
+    value: float
+    labels: dict[str, str]
+    host_selection_label: NotRequired[str]
+
+
+class PromQLGetter(typing.Protocol):
+    def __call__(self, promql_expression: str) -> list[PromQLMetric]:
+        ...
 
 
 class FilesystemInfo:
@@ -27,8 +41,8 @@ class FilesystemInfo:
 
 
 class NodeExporter:
-    def __init__(self, api_client) -> None:  # type:ignore[no-untyped-def]
-        self.api_client = api_client
+    def __init__(self, get_promql: PromQLGetter) -> None:
+        self.get_promql = get_promql
 
     def df_summary(self) -> dict[str, list[str]]:
 
@@ -72,9 +86,7 @@ class NodeExporter:
         result: dict[str, dict[str, FilesystemInfo]] = {}
 
         for entity_name, promql_query in promql_list:
-            for mountpoint_info in self.api_client.perform_multi_result_promql(
-                promql_query
-            ).promql_metrics:
+            for mountpoint_info in self.get_promql(promql_query):
                 labels = mountpoint_info["labels"]
                 node = result.setdefault(labels["instance"], {})
                 if labels["device"] not in node:
@@ -139,9 +151,7 @@ class NodeExporter:
     ) -> dict[str, dict[str, dict[str, int | str]]]:
         result: dict[str, dict[str, dict[str, int | str]]] = {}
         for entity_name, promql_query in diskstat_list:
-            for node_info in self.api_client.perform_multi_result_promql(
-                promql_query
-            ).promql_metrics:
+            for node_info in self.get_promql(promql_query):
                 node = result.setdefault(node_info["labels"]["instance"], {})
                 device = node.setdefault(node_info["labels"]["device"], {})
                 if "device" not in device:
@@ -208,8 +218,7 @@ class NodeExporter:
     def _generate_memory_stats(self, promql_list: list[tuple[str, str]]) -> dict[str, list[str]]:
         result: dict[str, list[str]] = {}
         for entity_name, promql_query in promql_list:
-            promql_result = self.api_client.perform_multi_result_promql(promql_query).promql_metrics
-            for node_element in promql_result:
+            for node_element in self.get_promql(promql_query):
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
                 node_mem.append("{}: {} kB".format(entity_name, node_element["value"]))
         return result
@@ -255,9 +264,7 @@ class NodeExporter:
         result: dict[str, dict[str, dict[str, int]]] = {}
 
         for entity_name, promql_query in kernel_list:
-            for device_info in self.api_client.perform_multi_result_promql(
-                promql_query
-            ).promql_metrics:
+            for device_info in self.get_promql(promql_query):
                 metric_value = int(float(device_info["value"]))
                 labels = device_info["labels"]
                 node = result.setdefault(labels["instance"], {})

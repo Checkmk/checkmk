@@ -18,10 +18,8 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.utils.node_exporter import NodeExporter
+from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric
 from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
-
-PromQLMetric = dict[str, Any]
 
 LOGGER = logging.getLogger()  # root logger for now
 
@@ -806,8 +804,8 @@ class PromQLResponse:
         Returns: The queried PromQL metric for entity_name, entity_promql in entity_info.items()
 
         """
-        if len(self.response) == 1 and "value" in self.response[0]:
-            return PromQLResponse._extract_metric_value(self.response[0])
+        if len(self.response) == 1 and (value := self.response[0].get("value")) is not None:
+            return {"value": value[1]}
 
         # different cases for invalid/failed query expression
         inv_info = {
@@ -815,13 +813,6 @@ class PromQLResponse:
             1: "no value",
         }.get(len(self.response), "unsupported query")
         return {"invalid_info": inv_info}
-
-    @staticmethod
-    def _extract_metric_value(promql_metric: dict[str, Any]) -> dict[str, float]:
-
-        if "value" in promql_metric:
-            return {"value": promql_metric["value"][1]}
-        return {}
 
     @staticmethod
     def _identify_metric_scrape_target(promql_metric_info: PromQLMetric) -> str:
@@ -1052,12 +1043,10 @@ class PromQLMultiResponse(PromQLResponse):
         if not self.response:
             return result
         for metric in self.response:
-            metric_info = PromQLResponse._extract_metric_value(metric)
-            if not metric_info:
+            if (value := metric.get("value")) is None:
                 continue
-            metric_info.update({"labels": metric["metric"]})
             self._update_labels_overall_frequencies(metric["metric"])
-            result.append(metric_info)
+            result.append({"value": value[1], "labels": metric["metric"]})
         return result
 
     def _update_labels_overall_frequencies(self, metric_labels: dict[str, str]) -> None:
@@ -1489,7 +1478,11 @@ class ApiData:
             )
 
         if "node_exporter" in exporter_options:
-            self.node_exporter = NodeExporter(api_client)
+
+            def get_promql(promql_expression: str) -> list[PromQLMetric]:
+                return api_client.perform_multi_result_promql(promql_expression).promql_metrics
+
+            self.node_exporter = NodeExporter(get_promql)
 
     def prometheus_build_section(self) -> str:
         e = PiggybackHost()

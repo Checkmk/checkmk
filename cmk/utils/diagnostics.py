@@ -258,7 +258,7 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
 
 
 class AllPackageInfos(TypedDict):
-    installed: Mapping[packaging.PackageName, packaging.PackageInfo | None]
+    installed: Mapping[packaging.PackageName, packaging.PackageInfo]
     unpackaged: Mapping[str, list[str]]
     parts: packaging.PackagePartInfo
     optional_packages: Mapping[str, tuple[packaging.PackageInfo, bool]]
@@ -344,13 +344,10 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
             files = _deep_update(
                 files, _parse_mkp_files(items, module, contents, "optional_packages", package)
             )
-    for package, opt_contents in infos["installed"].items():
-        if opt_contents is None:
-            # skip corrupt packages. TODO: rather create dummy package info and report the issue!
-            continue
-        for (module, items) in opt_contents.files.items():
+    for package, contents in infos["installed"].items():
+        for (module, items) in contents.files.items():
             files = _deep_update(
-                files, _parse_mkp_files(items, module, opt_contents, "installed", package)
+                files, _parse_mkp_files(items, module, contents, "installed", package)
             )
     for (module, data) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(data))

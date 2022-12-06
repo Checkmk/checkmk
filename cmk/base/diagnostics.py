@@ -591,9 +591,7 @@ class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         all_infos = get_all_package_infos()
         return {
-            "installed": {
-                str(k): None if v is None else v.dict() for k, v in all_infos["installed"].items()
-            },
+            "installed": {str(k): v.dict() for k, v in all_infos["installed"].items()},
             "unpackaged": all_infos["unpackaged"],
             "parts": all_infos["parts"],
             "optional_packages": {

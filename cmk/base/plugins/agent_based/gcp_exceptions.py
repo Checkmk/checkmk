@@ -57,21 +57,27 @@ def _parse_gcp_links(links_message: str) -> Sequence[str]:
     ]
 
 
+def _parse_error_message(exc_type: str, exc_message: str) -> str:
+    match exc_type:
+        case "PermissionDenied" if exc_message.startswith("403 Cloud Asset API"):
+            return exc_message.split(" [links {")[0]
+        case "PermissionDenied" if exc_message.startswith("403 Request denied by Cloud IAM"):
+            main_message = exc_message.split(" [links {")[0]
+            link_infos = _parse_gcp_links(exc_message.removeprefix(main_message))
+            return f"{main_message} {'. '.join(link_infos)}"
+        case "PermissionDenied" if exc_message.startswith("403 Permission monitoring"):
+            return exc_message
+        case "HttpError":
+            return exc_message.split('returned "')[1].split('". Details')[0]
+    return exc_message
+
+
 def check(section: _ExceptionSection) -> CheckResult:
     if section.type is None or section.message is None:
         yield Result(state=State.OK, notice="No exceptions")
     else:
         general_msg = "The Google Cloud API reported an error. Please read the error message on how to fix it:"
-        error_msg = section.message
-        if section.type == "PermissionDenied":
-            if section.message.startswith("403 Cloud Asset API"):
-                error_msg = section.message.split(" [links {")[0]
-            elif section.message.startswith("403 Request denied by Cloud IAM"):
-                main_message = section.message.split(" [links {")[0]
-                link_infos = _parse_gcp_links(section.message.removeprefix(main_message))
-                error_msg = f"{main_message} {'. '.join(link_infos)}"
-        elif section.type == "HttpError":
-            error_msg = section.message.split('returned "')[1].split('". Details')[0]
+        error_msg = _parse_error_message(section.type, section.message)
 
         if section.gcp_source is not None:
             details = f"{section.type} when trying to access {section.gcp_source}: {error_msg}"

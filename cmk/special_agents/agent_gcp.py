@@ -424,6 +424,8 @@ def time_series(
         request = metric.request(interval, groupby=service.default_groupby, project=client.project)
         try:
             results = client.list_time_series(request=request)
+        except PermissionDenied:
+            raise
         except Exception as e:
             raise RuntimeError(metric.name) from e
         for ts in results:
@@ -552,14 +554,19 @@ def run(
         assets = run_assets(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
+        serializer([assets])
     except PermissionDenied:
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
         return
 
-    serializer([assets])
-    serializer(run_metrics(client, services))
-    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
+    try:
+        serializer(run_metrics(client, services))
+        serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
+    except PermissionDenied:
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="Monitoring")])
+        return
 
     try:
         serializer(run_cost(client, cost))

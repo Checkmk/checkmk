@@ -77,8 +77,6 @@ agent-receiver/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/
-omd/bazel-*
-omd/pkgs_by_bzl/
 pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements.txt

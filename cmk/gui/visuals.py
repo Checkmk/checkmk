@@ -17,6 +17,8 @@ from itertools import chain, starmap
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
+from pydantic import BaseModel
+
 from livestatus import LivestatusTestingError
 
 import cmk.utils.paths
@@ -2394,9 +2396,12 @@ def ajax_add_visual() -> None:
     # type of the visual to add (e.g. view)
     element_type = request.get_str_input_mandatory("type")
 
-    create_info_raw = request.get_str_input_mandatory("create_info")
+    class CreateInfo(BaseModel):
+        context: VisualContext
+        params: dict
 
-    create_info = json.loads(create_info_raw)
+    create_info = request.get_model_mandatory(CreateInfo, "create_info")
+
     visual_type.add_visual_handler(
-        visual_name, element_type, create_info["context"], create_info["params"]
+        visual_name, element_type, create_info.context, create_info.params
     )

@@ -23,6 +23,7 @@ from cmk.utils.packaging import (
     format_file_name,
     get_enabled_package_infos,
     get_installed_package_info,
+    get_unpackaged_files,
     install_optional_package,
     installed_names,
     package_dir,
@@ -36,7 +37,6 @@ from cmk.utils.packaging import (
     PackageStore,
     PackageVersion,
     release,
-    unpackaged_files,
     unpackaged_files_in_dir,
     update_active_packages,
     write_package_info,
@@ -218,7 +218,7 @@ def package_create(args: list[str]) -> None:
 
 def package_find(_no_args: list[str]) -> None:
     visited: AbstractSet[Path] = set()
-    for part, files in unpackaged_files().items():
+    for part, files in get_unpackaged_files().items():
         if files:
             if not visited:
                 logger.log(VERBOSE, "Unpackaged files:")

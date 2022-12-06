@@ -683,10 +683,6 @@ def _normalize_daily_version(version: str) -> str:
     return version
 
 
-def get_unpackaged_files() -> dict[str, list[str]]:
-    return {part.ident: files for part, files in unpackaged_files().items()}
-
-
 def get_installed_package_infos() -> Mapping[PackageID, PackageInfo]:
     return {
         manifest.id: manifest
@@ -728,11 +724,11 @@ def _get_enabled_package_paths():
         return []
 
 
-def unpackaged_files() -> dict[PackagePart, list[str]]:
-    unpackaged = {}
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        unpackaged[part] = unpackaged_files_in_dir(part.ident, part.path)
-    return unpackaged
+def get_unpackaged_files() -> dict[PackagePart, list[str]]:
+    return {
+        part: unpackaged_files_in_dir(part.ident, part.path)
+        for part in PACKAGE_PARTS + CONFIG_PARTS
+    }
 
 
 def package_part_info() -> PackagePartInfo:

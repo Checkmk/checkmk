@@ -249,7 +249,7 @@ def test_uninstall(build_setup_search_index: Mock) -> None:
 
 
 def test_unpackaged_files_none() -> None:
-    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
+    assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
         "agent_based": [],
         "agents": [],
         "alert_handlers": [],
@@ -280,7 +280,7 @@ def test_unpackaged_files() -> None:
     with p.open("w", encoding="utf-8") as f:
         f.write("huhu\n")
 
-    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
+    assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
         "agent_based": ["dada"],
         "agents": [],
         "alert_handlers": [],

@@ -2,7 +2,7 @@ title: Fujitsu Storage Systems: Disks
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
-distribution: none
+distribution: check_mk
 description:
  This check monitors the reported status of one of a physical disk
  in storage systems from Fujitsu.

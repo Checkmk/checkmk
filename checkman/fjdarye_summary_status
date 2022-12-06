@@ -2,7 +2,7 @@ title: Fujitsu Storage Systems: Summary Status
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
-distribution: none
+distribution: check_mk
 description:
  This check monitors the reported summary status of storage systems from Fujitsu.
  Supported devices:

@@ -2,7 +2,7 @@ title: Checkmk Notification Spooler: Connection
 agents: linux
 catalog: app/cmk
 license: GPLv2
-distribution: checkmk
+distribution: check_mk
 description:
  This check checks the status of indiviual TCP connections from a
  Checkmk Notification Spooler to a remote spooler. For each incoming

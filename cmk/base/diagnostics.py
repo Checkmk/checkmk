@@ -20,6 +20,7 @@ import urllib.parse
 import uuid
 from collections.abc import Mapping
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -209,15 +210,13 @@ class DiagnosticsDump:
     def _get_filepaths(self, tmp_dump_folder: Path) -> list[Path]:
         section.section_step("Collect diagnostics information", verbose=False)
 
-        collectors = Collectors()
-
         filepaths = []
         for element in self.elements:
             console.info("%s\n", _format_title(element.title))
             console.info("%s\n", _format_description(element.description))
 
             try:
-                for filepath in element.add_or_get_files(tmp_dump_folder, collectors):
+                for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
@@ -266,54 +265,20 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------
 
 
-class Collectors:
-    def __init__(self) -> None:
-        self._omd_config_collector = OMDConfigCollector()
-        self._checkmk_server_name_collector = CheckmkServerNameCollector()
-
-    def get_omd_config(self) -> site.OMDConfig:
-        return self._omd_config_collector.get_infos()
-
-    def get_checkmk_server_name(self) -> HostName | None:
-        return self._checkmk_server_name_collector.get_infos()
+@lru_cache
+def get_omd_config() -> site.OMDConfig:
+    return site.get_omd_config()
 
 
-class ABCCollector(abc.ABC):
-    """Collects information which are used by several elements"""
-
-    def __init__(self) -> None:
-        self._has_collected = False
-        self._infos = None
-
-    def get_infos(self) -> Any:
-        if not self._has_collected:
-            self._infos = self._collect_infos()
-            self._has_collected = True
-        return self._infos
-
-    @abc.abstractmethod
-    def _collect_infos(self) -> Any:
-        raise NotImplementedError()
-
-
-class OMDConfigCollector(ABCCollector):
-    def _collect_infos(self) -> site.OMDConfig:
-        return site.get_omd_config()
-
-
-class CheckmkServerNameCollector(ABCCollector):
-    def _collect_infos(self) -> HostName | None:
-        query = (
-            "GET services\nColumns: host_name\nFilter: service_description ~ OMD %s performance\n"
-            % omd_site()
-        )
-        result = livestatus.LocalConnection().query(query)
-
-        result = livestatus.LocalConnection().query(query)
-        try:
-            return HostName(result[0][0])
-        except IndexError:
-            return None
+@lru_cache
+def get_checkmk_server_name() -> HostName | None:
+    result = livestatus.LocalConnection().query(
+        f"GET services\nColumns: host_name\nFilter: service_description ~ OMD {omd_site()} performance\n"
+    )
+    try:
+        return HostName(result[0][0])
+    except IndexError:
+        return None
 
 
 # .
@@ -348,9 +313,7 @@ class ABCDiagnosticsElement(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         # Please note the case if there are more than one filepath results. A Python generator
         # is executed until the first raise. Then it will be stopped and all generator states
         # are gone. Correctly calculated filepaths till then are yielded.
@@ -359,10 +322,8 @@ class ABCDiagnosticsElement(abc.ABC):
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos(collectors)
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        infos = self._collect_infos()
         if not infos:
             raise DiagnosticsElementError("No information")
 
@@ -371,15 +332,13 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         raise NotImplementedError()
 
 
 class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos(collectors)
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        infos = self._collect_infos()
         if not infos:
             raise DiagnosticsElementError("No information")
 
@@ -388,7 +347,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
         raise NotImplementedError()
 
 
@@ -411,7 +370,7 @@ class LocalFilesCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
             "This also includes information about installed MKPs."
         )
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
         package_infos = get_all_package_infos()
         return get_local_files_csv(package_infos)
 
@@ -429,7 +388,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("List of all files in the site including their size")
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self) -> DiagnosticsElementCSVResult:
         csv_data = []
         csv_data.append("size;path")
         for path, _dirs, files in os.walk(cmk.utils.paths.omd_root):
@@ -458,7 +417,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         version_infos = cmk_version.get_general_version_infos()
         version_infos["arch"] = platform.machine()
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0))
@@ -479,7 +438,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Performance Data related to sizing, e.g. number of helpers, hosts, services")
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus
         query = "GET status\nColumnHeaders: on"
         result = livestatus.LocalConnection().query(query)
@@ -507,7 +466,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Hardware information of the Checkmk Server")
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the information from the proc files
 
         hw_info: DiagnosticsElementJSONResult = {}
@@ -607,7 +566,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Variables set in the site user's environment")
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the environment variables
 
         return dict(os.environ)
@@ -629,7 +588,7 @@ class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "This also includes information about installed MKPs."
         )
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
         all_infos = get_all_package_infos()
         return {
             "installed": {
@@ -663,8 +622,8 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "NSCA mode, TMP filesystem mode"
         )
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
-        return collectors.get_omd_config()
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return get_omd_config()
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -686,8 +645,8 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "(Agent plugin mk_inventory needs to be installed)"
         )
 
-    def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
-        checkmk_server_name = collectors.get_checkmk_server_name()
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        checkmk_server_name = get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
 
@@ -726,9 +685,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         checkmk_files_map = self._checkmk_files_map
         unknown_files = []
         for rel_filepath in self.rel_checkmk_files:
@@ -838,14 +795,12 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             "25 hours and 35 days"
         )
 
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
-        checkmk_server_name = collectors.get_checkmk_server_name()
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        checkmk_server_name = get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
 
-        response = self._get_response(checkmk_server_name, collectors)
+        response = self._get_response(checkmk_server_name, get_omd_config())
 
         if response.status_code != 200:
             raise DiagnosticsElementError(
@@ -866,10 +821,11 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         yield filepath
 
-    def _get_response(self, checkmk_server_name: str, collectors: Collectors) -> requests.Response:
+    def _get_response(
+        self, checkmk_server_name: str, omd_config: site.OMDConfig
+    ) -> requests.Response:
         automation_secret = self._get_automation_secret()
 
-        omd_config = collectors.get_omd_config()
         url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
@@ -909,9 +865,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
             "cmcdump output of the status and config."
         )
 
-    def add_or_get_files(
-        self, tmp_dump_folder: Path, collectors: Collectors
-    ) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
 
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 

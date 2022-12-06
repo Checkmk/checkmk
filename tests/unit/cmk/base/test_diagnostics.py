@@ -20,6 +20,12 @@ import cmk.utils.paths
 import cmk.base.diagnostics as diagnostics
 
 
+@pytest.fixture(autouse=True)
+def reset_collector_caches():
+    diagnostics.get_omd_config.cache_clear()
+    diagnostics.get_checkmk_server_name.cache_clear()
+
+
 @pytest.fixture()
 def _fake_local_connection(host_list):
     def _wrapper(host_list):
@@ -30,11 +36,6 @@ def _fake_local_connection(host_list):
         return FakeLocalConnection
 
     return _wrapper
-
-
-@pytest.fixture()
-def _collectors():
-    return diagnostics.Collectors()
 
 
 #   .--dump----------------------------------------------------------------.
@@ -108,11 +109,11 @@ def test_diagnostics_element_general() -> None:
 
 
 def test_diagnostics_element_general_content(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors
+    tmp_path,
 ) -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(tmp_path, Path)
     assert isinstance(filepath, Path)
@@ -151,11 +152,11 @@ def test_diagnostics_element_hw_info() -> None:
 
 
 def test_diagnostics_element_hw_info_content(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors
+    tmp_path,
 ) -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("hwinfo.json")
@@ -181,7 +182,7 @@ def test_diagnostics_element_local_files_json() -> None:
 
 
 def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped-def]
-    monkeypatch: pytest.MonkeyPatch, tmp_path, _collectors
+    monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
 
     monkeypatch.setattr(
@@ -212,7 +213,7 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
     create_test_package(name)
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("local_files.json")
@@ -305,7 +306,7 @@ def test_diagnostics_element_local_files_csv() -> None:
 
 
 def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-def]
-    monkeypatch: pytest.MonkeyPatch, tmp_path, _collectors
+    monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
 
     monkeypatch.setattr(
@@ -336,7 +337,7 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
     create_test_package(name)
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("local_files.csv")
@@ -388,7 +389,7 @@ def test_diagnostics_element_environment() -> None:
 
 
 def test_diagnostics_element_environment_content(  # type:ignore[no-untyped-def]
-    monkeypatch, tmp_path, _collectors
+    monkeypatch, tmp_path
 ) -> None:
 
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
@@ -399,7 +400,7 @@ def test_diagnostics_element_environment_content(  # type:ignore[no-untyped-def]
 
         diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
         tmppath = Path(tmp_path).joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+        filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
         assert isinstance(filepath, Path)
         assert filepath == tmppath.joinpath("environment.json")
@@ -421,7 +422,7 @@ def test_diagnostics_element_filesize() -> None:
 
 
 def test_diagnostics_element_filesize_content(  # type:ignore[no-untyped-def]
-    monkeypatch, tmp_path, _collectors
+    monkeypatch, tmp_path
 ) -> None:
 
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
@@ -434,7 +435,7 @@ def test_diagnostics_element_filesize_content(  # type:ignore[no-untyped-def]
         f.write(test_content)
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("file_size.csv")
@@ -469,7 +470,7 @@ def test_diagnostics_element_omd_config() -> None:
 
 
 def test_diagnostics_element_omd_config_content(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors
+    tmp_path,
 ) -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
@@ -503,7 +504,7 @@ CONFIG_TMPFS='on'"""
         )
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("omd_config.json")
@@ -599,7 +600,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
     ],
 )
 def test_diagnostics_element_checkmk_overview_error(
-    monkeypatch, tmp_path, _fake_local_connection, _collectors, host_list, host_tree, error
+    monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree, error
 ):
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
@@ -615,7 +616,7 @@ def test_diagnostics_element_checkmk_overview_error(
     tmppath = Path(tmp_path).joinpath("tmp")
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+        next(diagnostics_element.add_or_get_files(tmppath))
         assert error == str(e)
 
     if host_tree:
@@ -668,7 +669,7 @@ def test_diagnostics_element_checkmk_overview_error(
     ],
 )
 def test_diagnostics_element_checkmk_overview_content(
-    monkeypatch, tmp_path, _fake_local_connection, _collectors, host_list, host_tree
+    monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
 
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
@@ -683,7 +684,7 @@ def test_diagnostics_element_checkmk_overview_content(
             f.write(repr(host_tree))
 
     tmppath = Path(tmp_path).joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("checkmk_overview.json")
@@ -757,14 +758,14 @@ def test_diagnostics_element_checkmk_files(  # type:ignore[no-untyped-def]
     ],
 )
 def test_diagnostics_element_checkmk_files_error(  # type:ignore[no-untyped-def]
-    tmp_path, _collectors, diag_elem
+    tmp_path, diag_elem
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+        next(diagnostics_element.add_or_get_files(tmppath))
         assert "No such files %s" % short_test_conf_filepath == str(e)
 
 
@@ -779,9 +780,7 @@ def test_diagnostics_element_checkmk_files_error(  # type:ignore[no-untyped-def]
         (diagnostics.CheckmkLogFilesDiagnosticsElement, cmk.utils.paths.log_dir, "test.log"),
     ],
 )
-def test_diagnostics_element_checkmk_files_content(
-    tmp_path, _collectors, diag_elem, test_dir, test_filename
-):
+def test_diagnostics_element_checkmk_files_content(tmp_path, diag_elem, test_dir, test_filename):
     test_conf_dir = Path(test_dir) / "test"
     test_conf_dir.mkdir(parents=True, exist_ok=True)
     test_conf_filepath = test_conf_dir.joinpath(test_filename)
@@ -793,7 +792,7 @@ def test_diagnostics_element_checkmk_files_content(
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert filepath == tmppath.joinpath(f"{relative_path}/test/{test_filename}")
 
@@ -838,7 +837,6 @@ def test_diagnostics_element_performance_graphs_error(
     monkeypatch,
     tmp_path,
     _fake_local_connection,
-    _collectors,
     host_list,
     status_code,
     text,
@@ -876,7 +874,7 @@ CONFIG_APACHE_TCP_PORT='5000'"""
     tmppath.mkdir(parents=True, exist_ok=True)
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+        next(diagnostics_element.add_or_get_files(tmppath))
         assert error == str(e)
 
     shutil.rmtree(str(automation_dir))
@@ -893,7 +891,6 @@ def test_diagnostics_element_performance_graphs_content(
     monkeypatch,
     tmp_path,
     _fake_local_connection,
-    _collectors,
     host_list,
     status_code,
     text,
@@ -928,7 +925,7 @@ CONFIG_APACHE_TCP_PORT='5000'"""
 
     tmppath = Path(tmp_path).joinpath("tmp")
     tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = next(diagnostics_element.add_or_get_files(tmppath, _collectors))
+    filepath = next(diagnostics_element.add_or_get_files(tmppath))
 
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("performance_graphs.pdf")

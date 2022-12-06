@@ -258,23 +258,23 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
 
 
 class AllPackageInfos(TypedDict):
-    installed: Mapping[packaging.PackageID, packaging.PackageInfo]
+    installed: Mapping[packaging.PackageID, packaging.Manifest]
     unpackaged: Mapping[str, list[str]]
     parts: packaging.PackagePartInfo
-    optional_packages: Mapping[packaging.PackageID, tuple[packaging.PackageInfo, bool]]
-    enabled_packages: Mapping[packaging.PackageID, packaging.PackageInfo]
+    optional_packages: Mapping[packaging.PackageID, tuple[packaging.Manifest, bool]]
+    enabled_packages: Mapping[packaging.PackageID, packaging.Manifest]
 
 
 def get_all_package_infos() -> AllPackageInfos:
     store = packaging.PackageStore()
     return {
-        "installed": packaging.get_installed_package_infos(),
+        "installed": packaging.get_installed_manifests(),
         "unpackaged": {
             part.ident: files for part, files in packaging.get_unpackaged_files().items()
         },
         "parts": packaging.package_part_info(),
-        "optional_packages": packaging.get_optional_package_infos(store),
-        "enabled_packages": packaging.get_enabled_package_infos(),
+        "optional_packages": packaging.get_optional_manifests(store),
+        "enabled_packages": packaging.get_enabled_manifests(),
     }
 
 
@@ -287,7 +287,7 @@ def _parse_mkp_file_parts(contents: packaging.PackagePartInfoElement) -> dict[st
 
 
 def _parse_mkp_files(
-    items: list[str], module: str, contents: packaging.PackageInfo | None, state: str, package: str
+    items: list[str], module: str, contents: packaging.Manifest | None, state: str, package: str
 ) -> dict[str, dict[str, str]]:
     file_list: dict[str, dict[str, str]] = {}
     columns = (

@@ -19,7 +19,7 @@ from cmk.utils import version as cmk_version
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 
-class PackageInfo(BaseModel):
+class Manifest(BaseModel):
     title: str
     name: PackageName
     description: str
@@ -41,7 +41,7 @@ class PackageInfo(BaseModel):
         return self.json(by_alias=True)
 
     @classmethod
-    def parse_python_string(cls, raw: str) -> PackageInfo:
+    def parse_python_string(cls, raw: str) -> Manifest:
         return cls.parse_obj(ast.literal_eval(raw))
 
     @property
@@ -49,8 +49,8 @@ class PackageInfo(BaseModel):
         return PackageID(name=self.name, version=self.version)
 
 
-def package_info_template(pacname: PackageName) -> PackageInfo:
-    return PackageInfo(
+def manifest_template(pacname: PackageName) -> Manifest:
+    return Manifest(
         title=f"Title of {pacname}",
         name=pacname,
         description="Please add a description here",
@@ -64,15 +64,15 @@ def package_info_template(pacname: PackageName) -> PackageInfo:
     )
 
 
-def read_package_info_optionally(pkg_info_path: Path, logger: Logger) -> PackageInfo | None:
+def read_manifest_optionally(manifest_path: Path, logger: Logger) -> Manifest | None:
     try:
-        return PackageInfo.parse_python_string(pkg_info_path.read_text())
+        return Manifest.parse_python_string(manifest_path.read_text())
     except Exception:
-        logger.error("[%s]: Failed to read package info", pkg_info_path, exc_info=True)
+        logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 
 
-def extract_package_info(file_content: bytes) -> PackageInfo:
+def extract_manifest(file_content: bytes) -> Manifest:
     with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:
             if (extracted_file := tar.extractfile("info")) is None:
@@ -80,13 +80,13 @@ def extract_package_info(file_content: bytes) -> PackageInfo:
             raw_info = extracted_file.read()
         except KeyError:
             raise PackageException("'info' not contained in MKP")
-    return PackageInfo.parse_python_string(raw_info.decode())
+    return Manifest.parse_python_string(raw_info.decode())
 
 
-def extract_package_info_optionally(pkg_path: Path, logger: Logger) -> PackageInfo | None:
+def extract_manifest_optionally(pkg_path: Path, logger: Logger) -> Manifest | None:
     try:
-        return extract_package_info(pkg_path.read_bytes())
+        return extract_manifest(pkg_path.read_bytes())
     except Exception:
         # Do not make broken files / packages fail the whole mechanism
-        logger.error("[%s]: Failed to read package info", pkg_path, exc_info=True)
+        logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None

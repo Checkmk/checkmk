@@ -194,23 +194,23 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
 
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
-    def create_test_package(name: packaging.PackageName) -> packaging.PackageInfo:
+    def create_test_package(name: packaging.PackageName) -> packaging.Manifest:
         check_dir = cmk.utils.paths.local_checks_dir
         check_dir.mkdir(parents=True, exist_ok=True)
 
         with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
             f.write("test-check\n")
 
-        package_info = packaging.package_info_template(name)
-        package_info.files = {
+        manifest = packaging.manifest_template(name)
+        manifest.files = {
             "checks": [name],
         }
 
-        packaging.create(package_info)
-        return package_info
+        packaging.create(manifest)
+        return manifest
 
     packaging.package_dir().mkdir(parents=True, exist_ok=True)
-    package_info = create_test_package(packaging.PackageName("test-package-json"))
+    manifest = create_test_package(packaging.PackageName("test-package-json"))
 
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath))
@@ -229,7 +229,7 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
         "enabled_packages",
     }
 
-    assert content["installed"] == [package_info.json()]
+    assert content["installed"] == [manifest.json()]
 
     unpackaged_keys = [
         "agent_based",
@@ -281,13 +281,13 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
     for key in parts_keys:
         assert sorted(content["parts"][key].keys()) == sorted(part_keys)
         if key == "checks":
-            assert content["parts"][key]["files"] == [str(package_info.name)]
+            assert content["parts"][key]["files"] == [str(manifest.name)]
             assert content["parts"][key]["permissions"] == [420]
         else:
             assert content["parts"][key]["files"] == []
             assert content["parts"][key]["permissions"] == []
 
-    assert content["optional_packages"] == [[package_info.json(), True]]
+    assert content["optional_packages"] == [[manifest.json(), True]]
 
     shutil.rmtree(str(packaging.package_dir()))
     shutil.rmtree(str(cmk.utils.paths.local_share_dir))
@@ -323,12 +323,12 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
         with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
             f.write("test-check\n")
 
-        package_info = packaging.package_info_template(name)
-        package_info.files = {
+        manifest = packaging.manifest_template(name)
+        manifest.files = {
             "checks": [name],
         }
 
-        packaging.create(package_info)
+        packaging.create(manifest)
 
     packaging.package_dir().mkdir(parents=True, exist_ok=True)
     name = "test-package-csv"

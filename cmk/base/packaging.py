@@ -19,16 +19,16 @@ from cmk.utils.packaging import (
     create_mkp_object,
     disable,
     disable_outdated,
-    extract_package_info,
+    extract_manifest,
     format_file_name,
-    get_enabled_package_infos,
-    get_installed_package_info,
+    get_enabled_manifests,
+    get_installed_manifest,
     get_unpackaged_files,
     install_optional_package,
     installed_names,
+    manifest_template,
     package_dir,
     PACKAGE_EXTENSION,
-    package_info_template,
     package_num_files,
     PACKAGE_PARTS,
     PackageException,
@@ -39,7 +39,7 @@ from cmk.utils.packaging import (
     release,
     unpackaged_files_in_dir,
     update_active_packages,
-    write_package_info,
+    write_manifest,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -119,10 +119,10 @@ def package_list(args: list[str]) -> None:
         if logger.isEnabledFor(VERBOSE):
             table = []
             for pacname in installed_names():
-                if (package := get_installed_package_info(pacname)) is None:
+                if (manifest := get_installed_manifest(pacname)) is None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
-                    table.append([pacname, package.title, str(package_num_files(package))])
+                    table.append([pacname, manifest.title, str(package_num_files(manifest))])
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
             for pacname in installed_names():
@@ -146,9 +146,9 @@ def show_package_info(name: str) -> None:
 
 def show_package(name: str, show_info: bool = False) -> None:
     if name.endswith(PACKAGE_EXTENSION):
-        package = extract_package_info(Path(name).read_bytes())
+        package = extract_manifest(Path(name).read_bytes())
     else:
-        if (this_package := get_installed_package_info(PackageName(name))) is None:
+        if (this_package := get_installed_manifest(PackageName(name))) is None:
             raise PackageException("No such package: %s" % name)
         package = this_package
         if show_info:
@@ -190,7 +190,7 @@ def package_create(args: list[str]) -> None:
         raise PackageException(f"Package {pacname} already existing.")
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
-    package = package_info_template(pacname)
+    package = manifest_template(pacname)
     filelists = package.files
     for part in PACKAGE_PARTS:
         files = unpackaged_files_in_dir(part.ident, part.path)
@@ -200,7 +200,7 @@ def package_create(args: list[str]) -> None:
             for f in files:
                 logger.log(VERBOSE, "    %s", f)
 
-    write_package_info(package)
+    write_manifest(package)
     logger.log(
         VERBOSE,
         "New package %s created with %d files.",
@@ -260,7 +260,7 @@ def package_pack(args: list[str]) -> None:
             )
 
     pacname = PackageName(args[0])
-    if (package := get_installed_package_info(pacname)) is None:
+    if (package := get_installed_manifest(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
 
     try:
@@ -280,7 +280,7 @@ def package_remove(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P remove NAME VERSION")
 
     package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    if any(package_id == package.id for package in get_enabled_package_infos().values()):
+    if any(package_id == package.id for package in get_enabled_manifests().values()):
         raise PackageException("This package is enabled! Please disable it first.")
 
     logger.log(VERBOSE, "Removing package %s...", package_id.name)

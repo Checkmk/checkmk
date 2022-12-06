@@ -38,4 +38,3 @@ message("run-clang-tidy: ${run_clang_tidy_path} in ${root_repo_dir}/scripts")
 # SUB-DIRS:
 add_subdirectory(src)
 add_subdirectory(test)
-add_subdirectory(doc)

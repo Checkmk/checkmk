@@ -5938,7 +5938,7 @@ def _valuespec_snmpv3_contexts():
             Transform(
                 DropdownChoice(
                     title=_("Section name"),
-                    choices=get_snmp_section_names,
+                    choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
                 ),
                 # Legacy plugins had dots in their names, but sections have only ever been
                 # associated with the part left of the dot.

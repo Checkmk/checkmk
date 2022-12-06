@@ -4,12 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import suppress
+from itertools import chain
 from pathlib import Path
+from stat import filemode
+from typing import TypedDict
 
 from cmk.utils.paths import local_root
 
+from ._installed import get_installed_manifests
 from ._parts import get_package_part, PackagePart
 
 
@@ -56,3 +60,52 @@ def all_rule_pack_files() -> set[Path]:
             for f in PackagePart.EC_RULE_PACKS.path.iterdir()
         }
     return set()
+
+
+class FileMetaInfo(TypedDict):
+    file: str
+    package: str
+    version: str
+    part_id: str
+    part_title: str
+    mode: str
+
+
+def files_inventory() -> Sequence[FileMetaInfo]:
+    """return an overview of all relevant files found on disk"""
+    package_map = {
+        (part / file): manifest.id
+        for manifest in get_installed_manifests()
+        for part, files in manifest.files.items()
+        for file in files
+    }
+
+    files_and_packages = sorted(
+        (
+            (part, file, package_map.get((part / file) if part else file))
+            for part, files in chain(
+                all_local_files().items(),
+                ((PackagePart.EC_RULE_PACKS, all_rule_pack_files()),),
+            )
+            for file in files
+        ),
+        key=lambda item: ("",) if item[2] is None else (item[2].name, item[2].version.sort_key),
+    )
+    return [
+        FileMetaInfo(
+            file=str(file),
+            package=package_id.name if package_id else "",
+            version=package_id.version if package_id else "",
+            part_id=part.ident if part else "",
+            part_title=part.ui_title if part else "",
+            mode=_get_mode((part.path / file) if part else file),
+        )
+        for part, file, package_id in files_and_packages
+    ]
+
+
+def _get_mode(path: Path) -> str:
+    try:
+        return filemode(path.stat().st_mode)
+    except OSError as exc:
+        return f"<cannot stat: {exc}>"

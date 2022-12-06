@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import AbstractSet
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -16,6 +15,7 @@ import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     add_installed_manifest,
+    cli,
     CONFIG_PARTS,
     create_mkp_object,
     disable,
@@ -54,7 +54,7 @@ Available commands are:
    create NAME             ...  Collect unpackaged files into new package NAME
    pack NAME               ...  Create package file from installed package
    release NAME            ...  Drop installed package NAME, release packaged files
-   find                    ...  Find and display unpackaged files
+   find [-h] [-a] [--json] ...  Find and display unpackaged files
    list                    ...  List all installed packages
    list NAME               ...  List files of installed package
    list PACK.mkp           ...  List files of uninstalled package file
@@ -85,7 +85,7 @@ def do_packaging(args: list[str]) -> None:
         "create": package_create,
         "release": package_release,
         "list": package_list,
-        "find": package_find,
+        "find": lambda args: cli.main(["find", *args], logger),
         "show": package_show,
         "pack": package_pack,
         "remove": package_remove,
@@ -202,29 +202,6 @@ def package_create(args: list[str]) -> None:
         PACKAGES_DIR / pacname,
         tty.normal,
     )
-
-
-def package_find(_no_args: list[str]) -> None:
-    visited: AbstractSet[Path] = set()
-    for part, files in get_unpackaged_files().items():
-        if files:
-            if not visited:
-                logger.log(VERBOSE, "Unpackaged files:")
-
-            found = frozenset(
-                Path(part.path) / f for f in files if (Path(part.path) / f).resolve() not in visited
-            )
-            if found:
-                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-            for p in found:
-                if logger.isEnabledFor(VERBOSE):
-                    logger.log(VERBOSE, "    %s", p.relative_to(part.path))
-                else:
-                    logger.info("%s", p)
-            visited |= {p.resolve() for p in found}
-
-    if not visited:
-        logger.log(VERBOSE, "No unpackaged files found.")
 
 
 def package_release(args: list[str]) -> None:

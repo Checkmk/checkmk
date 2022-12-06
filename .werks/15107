@@ -1,0 +1,21 @@
+Title: Extension packages: modernise command line interface
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1672613558
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+We recently added new features to the <i>extension packages</i> (a.k.a. <i>MKPs</i>) manager.
+
+These changes require some adjustments and modernisations of the commandline interface to get a consistent user experience.
+
+The following changes are made to the commandline interface <tt>mkp [COMMAND]</tt>:
+
+<tt>find</tt>:
+The find command now reports some details for each file.
+If you are using the command in a script, we recommend setting the new <tt>--json</tt> flag, and pipe the output through the commandline tool "<tt>jq</tt>".
+To get a list of all local files, for instance, use "<tt>mkp find --json --all | jq .[].file </tt>".
+

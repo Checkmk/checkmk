@@ -56,14 +56,14 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry, PageResult
+from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
     permission_registry,
-    permission_section_registry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
 from cmk.gui.plugins.dashboard.utils import (
     ABCFigureDashlet,
@@ -82,6 +82,7 @@ from cmk.gui.plugins.dashboard.utils import (
     DashletInputFunc,
     DashletRefreshAction,
     DashletRefreshInterval,
+    DashletRegistry,
     get_all_dashboards,
     get_permitted_dashboards,
     GROW,
@@ -94,8 +95,8 @@ from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_opt
 from cmk.gui.plugins.visuals.utils import (
     Filter,
     visual_info_registry,
-    visual_type_registry,
     VisualType,
+    VisualTypeRegistry,
 )
 from cmk.gui.type_defs import InfoName, SingleInfos, ViewName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -122,7 +123,33 @@ dashlet_padding = (
 raster = 10  # Raster the dashlet coords are measured in (px)
 
 
-@visual_type_registry.register
+def register(
+    permission_section_registry: PermissionSectionRegistry,
+    page_registry: PageRegistry,
+    visual_type_registry: VisualTypeRegistry,
+    dashlet_registry_: DashletRegistry,
+) -> None:
+    visual_type_registry.register(VisualTypeDashboards)
+    permission_section_registry.register(PermissionSectionDashboard)
+
+    page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
+    page_registry.register_page("edit_dashlet")(EditDashletPage)
+    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
+    page_registry.register_page_handler("dashboard", page_dashboard)
+    page_registry.register_page_handler("dashboard_dashlet", ajax_dashlet)
+    page_registry.register_page_handler("edit_dashboards", page_edit_dashboards)
+    page_registry.register_page_handler("create_dashboard", page_create_dashboard)
+    page_registry.register_page_handler("edit_dashboard", page_edit_dashboard)
+    page_registry.register_page_handler("create_link_view_dashlet", page_create_link_view_dashlet)
+    page_registry.register_page_handler("create_view_dashlet", page_create_view_dashlet)
+    page_registry.register_page_handler("create_view_dashlet_infos", page_create_view_dashlet_infos)
+    page_registry.register_page_handler("clone_dashlet", page_clone_dashlet)
+    page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
+    page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
+
+    dashlet_registry_.register(StaticTextDashlet)
+
+
 class VisualTypeDashboards(VisualType):
     @property
     def ident(self) -> str:
@@ -270,7 +297,6 @@ class VisualTypeDashboards(VisualType):
         return get_permitted_dashboards()
 
 
-@permission_section_registry.register
 class PermissionSectionDashboard(PermissionSection):
     @property
     def name(self) -> str:
@@ -351,7 +377,6 @@ def _register_pre_21_plugin_api() -> None:
 
 # HTML page handler for generating the (a) dashboard. The name
 # of the dashboard to render is given in the HTML variable 'name'.
-@cmk.gui.pages.register("dashboard")
 def page_dashboard() -> None:
     name = request.get_ascii_input_mandatory("name", "")
     if not name:
@@ -697,7 +722,6 @@ class StaticTextDashletConfig(DashletConfig):
     text: str
 
 
-@dashlet_registry.register
 class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     """Dashlet that displays a static text"""
 
@@ -1045,7 +1069,6 @@ def _extend_display_dropdown(
     )
 
 
-@page_registry.register_page("ajax_initial_dashboard_filters")
 class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> VisualContext:
         dashboard_name = page_name
@@ -1484,7 +1507,6 @@ def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: str | HTML) -> Non
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("dashboard_dashlet")
 def ajax_dashlet() -> None:
     name = request.get_ascii_input_mandatory("name", "")
     if not name:
@@ -1546,7 +1568,6 @@ def _add_context_to_dashboard(board: DashboardConfig) -> DashboardConfig:
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("edit_dashboards")
 def page_edit_dashboards() -> None:
     visuals.page_list(
         what="dashboards",
@@ -1593,7 +1614,6 @@ def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: Dashboar
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("create_dashboard")
 def page_create_dashboard() -> None:
     visuals.page_create_visual("dashboards", list(visual_info_registry.keys()))
 
@@ -1611,7 +1631,6 @@ def page_create_dashboard() -> None:
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard() -> None:
     visuals.page_edit_visual(
         "dashboards",
@@ -1707,7 +1726,6 @@ def _vs_dashboard() -> Dictionary:
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("create_link_view_dashlet")
 def page_create_link_view_dashlet() -> None:
     """Choose an existing view from the list of available views"""
     name = request.get_str_input_mandatory("name")
@@ -1726,7 +1744,6 @@ def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedV
     )
 
 
-@cmk.gui.pages.register("create_view_dashlet")
 def page_create_view_dashlet() -> None:
     create = request.var("create", "1") == "1"
     name = request.get_str_input_mandatory("name")
@@ -1779,7 +1796,6 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
     return dashlet_spec
 
 
-@cmk.gui.pages.register("create_view_dashlet_infos")
 def page_create_view_dashlet_infos() -> None:
     ds_name = request.get_str_input_mandatory("datasource")
     if ds_name not in data_source_registry:
@@ -1881,7 +1897,6 @@ def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     )
 
 
-@page_registry.register_page("edit_dashlet")
 class EditDashletPage(Page):
     def __init__(self) -> None:
         if not user.may("general.edit_dashboards"):
@@ -2083,7 +2098,6 @@ def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) ->
     return breadcrumb
 
 
-@cmk.gui.pages.register("clone_dashlet")
 def page_clone_dashlet() -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -2115,7 +2129,6 @@ def page_clone_dashlet() -> None:
     raise HTTPRedirect(request.get_url_input("back"))
 
 
-@cmk.gui.pages.register("delete_dashlet")
 def page_delete_dashlet() -> None:
     if not user.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -2176,7 +2189,6 @@ def check_ajax_update() -> tuple[DashletConfig, DashboardConfig]:
     return dashlet_spec, dashboard
 
 
-@cmk.gui.pages.register("ajax_dashlet_pos")
 def ajax_dashlet_pos() -> None:
     dashlet_spec, board = check_ajax_update()
 

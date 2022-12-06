@@ -634,6 +634,23 @@ def _prepare_git_overlay(container, lower_path, target_path):
         == 0
     )
 
+    # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
+    # that by default, so we explicitly say that this is ok.
+    assert (
+        _exec_run(
+            container,
+            [
+                "git",
+                "config",
+                "--global",
+                "--add",
+                "safe.directory",
+                target_path,
+            ],
+        )
+        == 0
+    )
+
 
 def _prepare_virtual_environment(container, version):
     """Ensure the virtual environment is ready for use

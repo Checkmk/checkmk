@@ -8,7 +8,7 @@ import abc
 import os
 import pprint
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union, Mapping
 
 from six import ensure_str
 
@@ -261,15 +261,19 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVaria
 
 config_variable_registry = ConfigVariableRegistry()
 
+# Some settings are handed over from the central site but are not registered in the
+# configuration domains since the user must not change it directly. They all belong
+# to the GUI config domain.
+UNREGISTERED_SETTINGS = {
+    "wato_enabled",
+    "userdb_automatic_sync",
+    "user_login",
+}
 
-def filter_unknown_settings(settings):
-    removals: List[str] = []
-    for varname in list(settings.keys()):
-        if varname not in config_variable_registry:
-            removals.append(varname)
-    for removal in removals:
-        del settings[removal]
-    return settings
+
+def filter_unknown_settings(settings: Mapping[str, object]) -> Dict[str, object]:
+    known_settings = set(config_variable_registry) | UNREGISTERED_SETTINGS
+    return {k: v for k, v in settings.items() if k in known_settings}
 
 
 def configvar_order():

@@ -1942,17 +1942,21 @@ def verify_remote_site_config(site_id: SiteId) -> None:
 
 
 def _save_pre_17_site_globals_on_slave_site(tarcontent: bytes) -> None:
-    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(object)
+    tmp_dir = Path(cmk.utils.paths.tmp_dir) / ("sitespecific-%s" % id(object))
     try:
         if not os.path.exists(tmp_dir):
             store.mkdir(tmp_dir)
 
         extract_from_buffer(
-            tarcontent, Path(tmp_dir),
-            [ReplicationPath("dir", "sitespecific", "site_globals/sitespecific.mk", [])])
+            tarcontent,
+            tmp_dir,
+            [ReplicationPath("dir", "sitespecific", "site_globals", [])],
+        )
 
-        site_globals = store.load_object_from_file(tmp_dir + "site_globals/sitespecific.mk",
-                                                   default={})
+        site_globals = store.load_object_from_file(
+            tmp_dir / "site_globals/sitespecific.mk",
+            default={},
+        )
         save_site_global_settings(site_globals)
     finally:
         shutil.rmtree(tmp_dir)

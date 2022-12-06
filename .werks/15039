@@ -1,0 +1,21 @@
+Title: Distributed setup with 1.6 central site: Fix configuration connection
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1670309488
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p32
+
+This issue only affects distributed setups with enabled configuration replication where the central
+site still runs on Checkmk 1.6.
+
+In such setups, the configuration synchronization was not fully functional. For example, even if
+<i>Disable remote configuration</i> was selected in the central site, the Setup menu was still
+active in the remote site. Hence, users could change the configuration, which was however
+overwritten by the next configuration synchronization. Also the setting <i>Sync with LDAP
+connections</i> was not applied correctly.
+
+Note that this werks describes a different issue than the one described in <a href="https://checkmk.com/werk/11239">werk 15038</a>,
+with the same effects however.

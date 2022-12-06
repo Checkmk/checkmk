@@ -591,14 +591,13 @@ class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         all_infos = get_all_package_infos()
         return {
-            "installed": {str(k): v.dict() for k, v in all_infos["installed"].items()},
+            "installed": [v.json() for v in all_infos["installed"].values()],
             "unpackaged": all_infos["unpackaged"],
             "parts": all_infos["parts"],
-            "optional_packages": {
-                k: (v.dict(), is_local)
-                for k, (v, is_local) in all_infos["optional_packages"].items()
-            },
-            "enabled_packages": {k: v.dict() for k, v in all_infos["enabled_packages"].items()},
+            "optional_packages": [
+                (v.json(), is_local) for v, is_local in all_infos["optional_packages"].values()
+            ],
+            "enabled_packages": [v.json() for v in all_infos["enabled_packages"].values()],
         }
 
 

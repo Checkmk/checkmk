@@ -2147,6 +2147,11 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 common.write_sections(
                     common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
                 )
+                write_machine_sections(
+                    composed_entities,
+                    machine_sections=prometheus_section.machine_sections(usage_config),
+                    piggyback_formatter=piggyback_formatter,
+                )
                 return 0
 
             assert isinstance(usage_config, query.CollectorSessionConfig)

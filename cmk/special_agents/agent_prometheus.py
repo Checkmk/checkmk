@@ -830,7 +830,7 @@ class PromQLResponse:
 
     @staticmethod
     def _extract_metric_labels(
-        metric_labels_dict: dict[str, str], promql_labels_subset: list[str]
+        metric_labels_dict: Mapping[str, str], promql_labels_subset: list[str]
     ) -> str:
 
         metric_labels_holder = ""

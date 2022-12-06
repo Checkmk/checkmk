@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 import typing
+from collections.abc import Mapping
 
 from typing_extensions import NotRequired
 
 
 class PromQLMetric(typing.TypedDict):
     value: float
-    labels: dict[str, str]
+    labels: Mapping[str, str]
     host_selection_label: NotRequired[str]
 
 

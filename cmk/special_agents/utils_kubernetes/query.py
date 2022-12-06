@@ -23,7 +23,13 @@ from pydantic import BaseModel, parse_obj_as, ValidationError
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
-from cmk.special_agents.utils_kubernetes.prometheus_api import parse_raw_response, Response
+from cmk.special_agents.utils import node_exporter
+from cmk.special_agents.utils_kubernetes.prometheus_api import (
+    parse_raw_response,
+    Response,
+    ResponseSuccess,
+    Vector,
+)
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 
@@ -145,3 +151,14 @@ def _send_query_request_get(
     except requests.exceptions.RequestException as e:
         return query, e
     return query, parse_raw_response(response.content)
+
+
+def node_exporter_getter(
+    config: PrometheusSessionConfig, logger: logging.Logger, promql_expression: str
+) -> list[node_exporter.PromQLMetric]:
+    _query, result = next(send_requests(config=config, queries=[promql_expression], logger=logger))  # type: ignore[list-item] # NodeExporter passes queries as str
+    if isinstance(result, ResponseSuccess) and isinstance(result.data, Vector):
+        return [
+            {"value": sample.value[1], "labels": sample.metric} for sample in result.data.result
+        ]
+    return []

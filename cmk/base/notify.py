@@ -340,26 +340,13 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAna
 def locally_deliver_raw_context(
     raw_context: EventContext, analyse: bool = False
 ) -> NotifyAnalysisInfo | None:
-    contactname = raw_context.get("CONTACTNAME")
     try:
 
-        # If rule based notifications are enabled then the Micro Core does not set the
-        # variable CONTACTNAME. In the other cores the CONTACTNAME is being set to
-        # check-mk-notify.
-        # We do we not simply check the config variable enable_rulebased_notifications?
-        # -> Because the core needs are restart in order to reflect this while the
-        #    notification mode of Checkmk not. There are thus situations where the
-        #    setting of the core is different from our global variable. The core must
-        #    have precedence in this situation!
-        if not contactname or contactname == "check-mk-notify":
-            # 1. RULE BASE NOTIFICATIONS
-            logger.debug("Preparing rule based notifications")
-            return notify_rulebased(raw_context, analyse=analyse)
-
         if analyse:
-            return None  # Analysis only possible when rule based notifications are enabled
+            return None
 
-        raise Exception(f"Got invalid notification context: {raw_context!r}")
+        logger.debug("Preparing rule based notifications")
+        return notify_rulebased(raw_context, analyse=analyse)
 
     except Exception:
         if cmk.utils.debug.enabled():

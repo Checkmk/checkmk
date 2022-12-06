@@ -212,3 +212,17 @@ def _livestatus_cmd(command: str) -> None:
     except Exception:
         logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
         logger.info("Command was: %s", command)
+
+
+def transform_flexible_and_plain_context(context: NotificationContext) -> NotificationContext:
+    if "CONTACTS" not in context:
+        context["CONTACTS"] = context.get("CONTACTNAME", "?")
+        context["PARAMETER_GRAPHS_PER_NOTIFICATION"] = "5"
+        context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"] = "5"
+    return context
+
+
+def transform_flexible_and_plain_plugin(
+    plugin: NotificationPluginName | None,
+) -> NotificationPluginName:
+    return plugin or NotificationPluginName("mail")

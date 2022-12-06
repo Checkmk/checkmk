@@ -348,10 +348,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         if (value := raw_context.get("LASTSERVICEOK")) is not None:
             raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        # Rule based notifications enabled? We might need to complete a few macros
-        contact = raw_context.get("CONTACTNAME")
-        if not contact or contact == "check-mk-notify":
-            add_rulebased_macros(raw_context)
+        add_rulebased_macros(raw_context)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)

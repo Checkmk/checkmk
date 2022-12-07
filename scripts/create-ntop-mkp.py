@@ -44,7 +44,6 @@ TARFILENAME = packaging.format_file_name(NTOP_PACKAGE_INFO.id)
 Path(TARFILENAME).write_bytes(
     packaging.create_mkp_object(
         NTOP_PACKAGE_INFO,
-        package_parts=packaging.get_repo_ntop_parts,
-        config_parts=lambda: [],
+        packed_parts=packaging.get_repo_ntop_parts(),
     )
 )

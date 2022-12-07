@@ -220,9 +220,11 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
 
 def create_mkp_object(
     package: PackageInfo,
-    package_parts: Callable = get_package_parts,
-    config_parts: Callable = get_config_parts,
+    packed_parts: Iterable[PackagePart] | None = None,
 ) -> bytes:
+    if packed_parts is None:
+        packed_parts = get_package_parts() + get_config_parts()
+
     package.version_packaged = cmk_version.__version__
 
     buffer = BytesIO()
@@ -239,7 +241,7 @@ def create_mkp_object(
         add_file("info.json", package.json_file_content().encode())
 
         # Now pack the actual files into sub tars
-        for part in package_parts() + config_parts():
+        for part in packed_parts:
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 

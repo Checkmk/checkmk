@@ -1,0 +1,17 @@
+Title: Fix "Base on role" default while cloning roles
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1670416511
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+If you cloned a rule multiple times, from the second clone on, the "Based on
+role" property had the default "Administrator", no matter what initial builtin
+role was cloned.
+
+The property will now always show the builtin role of the source role that was cloned.
+E.g. if you clone "guest" multiple times, the clones will always show "Guest
+user".

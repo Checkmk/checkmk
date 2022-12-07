@@ -42,7 +42,7 @@ def main(raw_args):
     version = version_from_env(
         fallback_version_spec=CMKVersion.GIT,
         fallback_edition=Edition.CEE,
-        fallback_branch=current_base_branch_name(),
+        fallback_branch=current_base_branch_name,
     )
     logger.info(
         "Version: %s (%s), Edition: %s, Branch: %s",

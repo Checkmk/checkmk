@@ -650,7 +650,7 @@ def site() -> Site:
     sf = get_site_factory(
         prefix="crawl_",
         install_test_python_modules=False,
-        fallback_branch=current_base_branch_name(),
+        fallback_branch=current_base_branch_name,
     )
 
     site = sf.get_existing_site("central")

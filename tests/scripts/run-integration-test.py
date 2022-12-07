@@ -43,7 +43,7 @@ def main(args):
     sf = get_site_factory(
         prefix="int_",
         install_test_python_modules=True,
-        fallback_branch=current_base_branch_name(),
+        fallback_branch=current_base_branch_name,
     )
 
     site = sf.get_existing_site("test")

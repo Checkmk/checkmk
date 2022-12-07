@@ -6,6 +6,7 @@
 import logging
 import os
 import time
+from collections.abc import Callable
 from typing import Final
 
 from tests.testlib.utils import branch_from_env, edition_from_env, version_spec_from_env
@@ -77,7 +78,7 @@ def version_from_env(
     *,
     fallback_version_spec: str | None = None,
     fallback_edition: Edition | None = None,
-    fallback_branch: str | None = None,
+    fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
         version_spec_from_env(fallback_version_spec),

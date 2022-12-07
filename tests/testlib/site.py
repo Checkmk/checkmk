@@ -15,7 +15,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from contextlib import suppress
 from pathlib import Path
 from typing import Final, Literal
@@ -1174,7 +1174,7 @@ def get_site_factory(
     prefix: str,
     install_test_python_modules: bool,
     update_from_git: bool | None = None,
-    fallback_branch: str | None = None,
+    fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
     version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,

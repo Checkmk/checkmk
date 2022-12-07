@@ -34,7 +34,7 @@ def _version() -> CMKVersion:
     return version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
-        fallback_branch=current_branch_name(),
+        fallback_branch=current_branch_name,
     )
 
 

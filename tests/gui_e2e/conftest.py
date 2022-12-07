@@ -31,7 +31,7 @@ def site() -> Iterator[Site]:
     sf = get_site_factory(
         prefix="gui_e2e_",
         install_test_python_modules=False,
-        fallback_branch=current_base_branch_name(),
+        fallback_branch=current_base_branch_name,
     )
 
     site_to_return = sf.get_existing_site("central")

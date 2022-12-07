@@ -11,6 +11,7 @@ import pwd
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from cmk.utils.version import Edition
@@ -168,7 +169,7 @@ def site_id() -> str:
     if site_id is not None:
         return site_id
 
-    branch_name = branch_from_env(current_branch_name())
+    branch_name = branch_from_env(current_branch_name)
 
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
@@ -229,9 +230,9 @@ def edition_from_env(fallback: Edition | None = None) -> Edition:
     raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
 
 
-def branch_from_env(fallback: str | None = None) -> str:
+def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
     if branch := os.environ.get("BRANCH"):
         return branch
     if fallback:
-        return fallback
+        return fallback if isinstance(fallback, str) else fallback()
     raise RuntimeError("BRANCH environment variable, e.g. master, is missing")

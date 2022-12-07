@@ -339,7 +339,7 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     )
 
 
-def agent_cisco_meraki_main(args: Args) -> int:
+def agent_cisco_meraki_main(args: Args) -> None:
     config = MerakiConfig(
         dashboard=_configure_meraki_dashboard(
             args.apikey,
@@ -358,8 +358,7 @@ def agent_cisco_meraki_main(args: Args) -> int:
     )
 
     _write_sections(sections)
-    return 0
 
 
-def main() -> int:
-    return special_agent_main(parse_arguments, agent_cisco_meraki_main)
+def main() -> None:
+    special_agent_main(parse_arguments, agent_cisco_meraki_main)

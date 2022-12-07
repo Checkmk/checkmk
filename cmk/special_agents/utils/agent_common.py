@@ -23,8 +23,6 @@ import urllib3
 
 import cmk.utils.password_store
 
-from cmk.special_agents.utils.crash_reporting import create_agent_crash_dump
-
 
 class SectionManager:
     def __init__(self) -> None:
@@ -111,9 +109,9 @@ class SectionWriter(SectionManager):
 
 def _special_agent_main_core(
     parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
-    main_fn: Callable[[argparse.Namespace], int],
+    main_fn: Callable[[argparse.Namespace], None],
     argv: Sequence[str],
-) -> int:
+) -> None:
     """Main logic special agents"""
     args = parse_arguments(argv)
     logging.basicConfig(
@@ -134,18 +132,25 @@ def _special_agent_main_core(
     logging.debug("args: %r", args.__dict__)
 
     try:
-        return main_fn(args)
+        main_fn(args)
     except Exception:
-        crash_dump = create_agent_crash_dump()
-        sys.stderr.write(crash_dump)
-        return 1
+        if args.debug:
+            raise
+        exctype, value, tb = sys.exc_info()
+        assert exctype is not None and tb is not None
+        print(
+            f"Caught unhandled {exctype.__name__}({value})"
+            f" in {tb.tb_frame.f_code.co_filename}:{tb.tb_lineno}",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
 
 def special_agent_main(
     parse_arguments: Callable[[Sequence[str] | None], argparse.Namespace],
-    main_fn: Callable[[argparse.Namespace], int],
+    main_fn: Callable[[argparse.Namespace], None],
     argv: Sequence[str] | None = None,
-) -> int:
+) -> None:
     """
     Because it modifies sys.argv and part of the functionality is terminating the process with
     the correct return code it's hard to test in unit tests.
@@ -153,4 +158,4 @@ def special_agent_main(
     they are not meant to modify the system environment or terminate the process.
     """
     cmk.utils.password_store.replace_passwords()
-    return _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])
+    _special_agent_main_core(parse_arguments, main_fn, argv or sys.argv[1:])

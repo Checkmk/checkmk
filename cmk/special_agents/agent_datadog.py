@@ -725,7 +725,7 @@ def _logs_section(datadog_api: DatadogAPI, args: Args) -> None:
         writer.append(len(logs))
 
 
-def agent_datadog_main(args: Args) -> int:
+def agent_datadog_main(args: Args) -> None:
     datadog_api = ImplDatadogAPI(
         args.api_host,
         args.api_key,
@@ -737,9 +737,8 @@ def agent_datadog_main(args: Args) -> int:
             datadog_api,
             args,
         )
-    return 0
 
 
-def main() -> int:
+def main() -> None:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_datadog_main)
+    special_agent_main(parse_arguments, agent_datadog_main)

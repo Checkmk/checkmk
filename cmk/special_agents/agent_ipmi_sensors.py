@@ -245,7 +245,7 @@ def parse_data(
             sys.stdout.write("%s\n" % line)
 
 
-def _main(args: Args) -> int:
+def _main(args: Args) -> None:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
     ipmi_cmd, queries = {"freeipmi": _prepare_freeipmi_call, "ipmitool": _prepare_ipmitool_call,}[
@@ -287,10 +287,10 @@ def _main(args: Args) -> int:
 
     if errors:
         sys.stderr.write("ERROR: '%s'.\n" % ", ".join(errors))
-        return 1
-    return 0
+        return
+    return
 
 
-def main() -> int:
+def main() -> None:
     """Main entry point to be used"""
-    return special_agent_main(_parse_arguments, _main)
+    special_agent_main(_parse_arguments, _main)

@@ -159,7 +159,7 @@ def connect(
         conn.close()
 
 
-def smb_share_agent(args: Args) -> int:
+def smb_share_agent(args: Args) -> None:
     with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
         all_files = get_all_shared_files(conn, args.hostname, args.patterns)
         try:
@@ -169,9 +169,9 @@ def smb_share_agent(args: Args) -> int:
             raise RuntimeError(err.args[0])
 
     logging.debug("Agent finished successfully")
-    return 0
 
 
 def main() -> int:
     """Main entry point"""
-    return special_agent_main(parse_arguments, smb_share_agent)
+    special_agent_main(parse_arguments, smb_share_agent)
+    return 0

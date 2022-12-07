@@ -1131,7 +1131,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_gcp_main(args: Args) -> int:
+def agent_gcp_main(args: Args) -> None:
     client = Client(json.loads(args.credentials), args.project, args.date)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
@@ -1147,9 +1147,8 @@ def agent_gcp_main(args: Args) -> int:
         monitor_health=monitor_health,
         piggy_back_prefix=piggy_back_prefix,
     )
-    return 0
 
 
-def main() -> int:
+def main() -> None:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_gcp_main)
+    special_agent_main(parse_arguments, agent_gcp_main)

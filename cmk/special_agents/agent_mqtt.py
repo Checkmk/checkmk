@@ -132,18 +132,18 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_mqtt_main(args: Args) -> int:
+def agent_mqtt_main(args: Args) -> None:
     try:
         received = receive_from_mqtt(args)
     except RuntimeError as e:
         if args.debug:
             raise
         print(str(e), file=sys.stderr)
-        return 1
+        sys.exit(1)
 
     with SectionWriter("mqtt_statistics") as writer:
         writer.append_json({args.instance_id: received.topics})
-    return 0
+    sys.exit(0)
 
 
 def receive_from_mqtt(args: Args) -> ReceivedData:
@@ -223,5 +223,5 @@ def on_message(mqttc: mqtt.Client, received: ReceivedData, msg: mqtt.MQTTMessage
     received.topics[msg.topic] = msg.payload.decode()
 
 
-def main() -> int:
-    return special_agent_main(parse_arguments, agent_mqtt_main)
+def main() -> None:
+    special_agent_main(parse_arguments, agent_mqtt_main)

@@ -15,7 +15,6 @@ import enum
 import itertools
 import logging
 import re
-import sys
 from collections import defaultdict, UserDict
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import Any, Final
@@ -256,7 +255,7 @@ class MobileironAPI:
         return self._all_devices
 
 
-def agent_mobileiron_main(args: Args) -> int:
+def agent_mobileiron_main(args: Args) -> None:
     """Fetches and writes selected information formatted as agent output to stdout.
     Standard out with sections and piggyback example:
     <<<mobileiron_statistics>>>
@@ -309,13 +308,11 @@ def agent_mobileiron_main(args: Args) -> int:
                     }
                 )
 
-    return 0
 
-
-def main() -> int:
+def main() -> None:
     """Main entry point to be used"""
-    return special_agent_main(parse_arguments, agent_mobileiron_main)
+    special_agent_main(parse_arguments, agent_mobileiron_main)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

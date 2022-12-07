@@ -65,6 +65,7 @@ def test_registered_background_jobs() -> None:
             "BakeAgentsBackgroundJob",
             "SignAgentsBackgroundJob",
             "ReportingBackgroundJob",
+            "LicensingOnlineVerificationBackgroundJob",
         ]
 
     assert sorted(job_registry.keys()) == sorted(expected_jobs)

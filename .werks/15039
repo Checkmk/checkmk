@@ -17,5 +17,5 @@ active in the remote site. Hence, users could change the configuration, which wa
 overwritten by the next configuration synchronization. Also the setting <i>Sync with LDAP
 connections</i> was not applied correctly.
 
-Note that this werks describes a different issue than the one described in <a href="https://checkmk.com/werk/11239">werk 15038</a>,
+Note that this werks describes a different issue than the one described in <a href="https://checkmk.com/werk/15038">werk 15038</a>,
 with the same effects however.

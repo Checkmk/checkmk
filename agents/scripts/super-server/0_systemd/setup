@@ -73,13 +73,11 @@ _systemd_sufficient() {
 
     _destination >/dev/null || return 1
 
-    if [ "$(_systemd_version)" -lt 220 ]; then
-        # REMOTE_ADDR is only available from 220 onwards
-        # ExecStopPost is buggy in 219: https://github.com/systemd/systemd/issues/1742
-        # => we just support 220 onwards.
+    # version 219 is used on RHEL7 -- if we use the controller, that's sufficient.
+    if [ "$(_systemd_version)" -lt 219 ]; then
         cat >&2 <<HERE
 The Checkmk agent may require features that are either buggy,
-or not even supported in systemd versions prior to 220.
+or not even supported in systemd versions prior to 219.
 We recommend using xinetd on such old systems.
 HERE
         return 1
@@ -87,7 +85,19 @@ HERE
 
     _is_controller_setup && return 0
 
-    # We're in the TCP socket fallback situation.
+    # Setup w/o controller.
+    # (We're in the TCP socket fallback situation.)
+
+    # We need version 220 (REMOTE_ADDR is only available from 220 onwards)
+    if [ "$(_systemd_version)" -lt 220 ]; then
+        cat >&2 <<HERE
+The Checkmk agent may need to know the IP address of the querying site.
+The 'REMOTE_ADDR' environment variable is only available in systemd versions from 220 onwards.
+We recommend using xinetd on such old systems.
+HERE
+        return 1
+    fi
+
     # If we need "only from", make sure we have at least version 235.
     if _need_ip_access_list && [ "$(_systemd_version)" -lt 235 ]; then
         cat <<HERE

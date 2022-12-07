@@ -53,8 +53,8 @@ HERE
     assertEquals "245" "$(_systemd_version)"
 }
 
-test_systemd_sufficient_fail_for_219() {
-    systemctl() { echo "systemd 219 (foobar)"; }
+test_systemd_sufficient_fail_for_218() {
+    systemctl() { echo "systemd 218 (foobar)"; }
     _systemd_present() { :; }
     _destination() { :; }
 
@@ -62,6 +62,28 @@ test_systemd_sufficient_fail_for_219() {
 
     assertFalse "$?"
     assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
+}
+
+test_systemd_sufficient_fail_for_219() {
+    systemctl() { echo "systemd 219 (foobar)"; }
+    _systemd_present() { :; }
+    _destination() { :; }
+    _is_controller_setup() { false; }
+
+    ERRMSG=$(_systemd_sufficient 2>&1)
+
+    assertFalse "$?"
+    assertContains "${ERRMSG}" $'The Checkmk agent may need to know the IP address of the querying site.'
+}
+
+test_systemd_sufficient_ok_for_219() {
+    systemctl() { echo "systemd 219 (foobar)"; }
+    _systemd_present() { :; }
+    _destination() { :; }
+    _is_controller_setup() { true; }
+
+    _systemd_sufficient 2>&1
+    assertTrue "$?"
 }
 
 test__unit_deployed() {

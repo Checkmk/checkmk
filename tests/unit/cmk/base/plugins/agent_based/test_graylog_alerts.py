@@ -48,6 +48,7 @@ def test_check_graylog_alerts(
     assert (
         list(
             check_graylog_alerts(
+                params={},
                 section=parse_graylog_alerts(section),
             )
         )

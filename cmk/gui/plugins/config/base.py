@@ -476,7 +476,6 @@ wato_use_git = False
 wato_hidden_users: _List = []
 wato_user_attrs: _List = []
 wato_host_attrs: _List = []
-wato_legacy_eval = False
 wato_read_only: _Dict = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False

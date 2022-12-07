@@ -1677,30 +1677,6 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableWATOLegacyEval(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupWATO
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "wato_legacy_eval"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Use unsafe legacy encoding for distributed WATO"),
-            help=
-            _("The current implementation of WATO uses a Python module called <tt>ast</tt> for the "
-              "communication between sites. Previous versions of Check_MK used an insecure encoding "
-              "named <tt>pickle</tt>. Even in the current version WATO falls back to <tt>pickle</tt> "
-              "if your Python version is not recent enough. This is at least the case for RedHat/CentOS 5.X "
-              "and Debian 5.0. In a mixed environment you can force using the legacy <tt>pickle</tt> format "
-              "in order to create compatibility."),
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableWATOHideFilenames(ConfigVariable):
     def group(self):
         return ConfigVariableGroupWATO

@@ -188,7 +188,6 @@ def test_registered_configvars():
         'wato_hide_hosttags',
         'wato_hide_varnames',
         'wato_icon_categories',
-        'wato_legacy_eval',
         'wato_max_snapshots',
         'wato_pprint_config',
         'wato_upload_insecure_snapshots',

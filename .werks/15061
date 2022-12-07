@@ -1,0 +1,26 @@
+Title: Remove global rule wato_legacy_eval
+Class: security
+Compatible: compat
+Component: wato
+Date: 1670404421
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p32
+
+With Werk #984 the serialization protocol in the communication of WATO (central to remote site) was changed from <tt>pickle</tt> to <tt>ast</tt>.
+For legacy reasons a global config option was created to keep the unsafe pickle protocol.
+
+These reasons resulted from Checkmk relying on system python versions, which was changed with Werk #7590, since then Checkmk brings its own Python.
+
+If an administrator sets this rule <i>Use unsafe legacy encoding for distributed WATO</i> the data coming from other monitoring sites are deserialized with pickle.
+So the wato automation user or a compromised site could send malicious data which leads to code execution.
+
+Since Checkmk comes with Python versions which support the <tt>ast</tt> protocol the rule is now ignored and no pickle serialization takes place in this communication.
+In Checkmk 2.1 this was removed with Werk #12284, unfortunately it was not backported to 2.0. This is now done.
+
+To check if this setting was enabled in the past, you can check the <i>Audit log</i> for <tt>Changed global configuration variable wato_legacy_eval to on.</tt>.
+
+We do not consider this a vulnerability, since the option works as intended. The risk is described in the Werk (#984) also the title of the setting contains "unsafe".
+Therefore we assigned the following CVSS score to this: CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:N/I:N/A:N 0.0 (None).
+This CVSS score is mostly meant for automatic scrapers.

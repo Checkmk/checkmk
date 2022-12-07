@@ -8,7 +8,6 @@ import ast
 import re
 import pprint
 import base64
-import pickle
 from typing import Any, Union, List, TypedDict, Tuple
 
 from six import ensure_binary, ensure_str
@@ -111,15 +110,12 @@ def format_config_value(value: Any) -> str:
 
 
 def mk_repr(x: Any) -> bytes:
-    r = pickle.dumps(x) if config.wato_legacy_eval else ensure_binary(repr(x))
-    return base64.b64encode(r)
+    return base64.b64encode(ensure_binary(repr(x)))
 
 
-# TODO: Deprecate this legacy format with 1.4.0 or later?!
 def mk_eval(s: Union[bytes, str]) -> Any:
     try:
-        d = base64.b64decode(s)
-        return pickle.loads(d) if config.wato_legacy_eval else ast.literal_eval(ensure_str(d))
+        return ast.literal_eval(ensure_str(base64.b64decode(s)))
     except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 

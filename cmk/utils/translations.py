@@ -11,9 +11,7 @@ from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
 
 
-# This can probably improved further by making it total and removing the None,
-# but that would need some tweaking of "interesting" code. :-/
-class TranslationOptions(TypedDict, total=False):
+class TranslationOptions(TypedDict):
     case: Literal["lower", "upper"] | None
     drop_domain: bool
     mapping: Iterable[tuple[str, str]]

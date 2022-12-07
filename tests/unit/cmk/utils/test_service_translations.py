@@ -19,17 +19,17 @@ from cmk.utils.translations import (
     [
         (
             "host123.foobar.de",
-            TranslationOptions(drop_domain=False),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "host123.foobar.de",
         ),
         (
             "host123.foobar.de",
-            TranslationOptions(drop_domain=True),
+            TranslationOptions(case=None, drop_domain=True, mapping=[], regex=[]),
             "host123",
         ),
         (
             "127.0.0.1",
-            TranslationOptions(drop_domain=True),
+            TranslationOptions(case=None, drop_domain=True, mapping=[], regex=[]),
             "127.0.0.1",
         ),
     ],
@@ -44,52 +44,27 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
         # Fixed names
         (
             " Check_MK ",
-            TranslationOptions(),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "Check_MK",
         ),
         (
             " Check_MK Agent ",
-            TranslationOptions(),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "Check_MK Agent",
         ),
         (
             " Check_MK Discovery ",
-            TranslationOptions(),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "Check_MK Discovery",
         ),
         (
             " Check_MK inventory ",
-            TranslationOptions(),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "Check_MK inventory",
         ),
         (
             " Check_MK HW/SW Inventory ",
-            TranslationOptions(),
-            "Check_MK HW/SW Inventory",
-        ),
-        (
-            " Check_MK ",
-            TranslationOptions(case="upper"),
-            "Check_MK",
-        ),
-        (
-            " Check_MK Agent ",
-            TranslationOptions(case="upper"),
-            "Check_MK Agent",
-        ),
-        (
-            " Check_MK Discovery ",
-            TranslationOptions(case="upper"),
-            "Check_MK Discovery",
-        ),
-        (
-            " Check_MK inventory ",
-            TranslationOptions(case="upper"),
-            "Check_MK inventory",
-        ),
-        (
-            " Check_MK HW/SW Inventory ",
-            TranslationOptions(case="upper"),
+            TranslationOptions(case=None, drop_domain=False, mapping=[], regex=[]),
             "Check_MK HW/SW Inventory",
         ),
         (
@@ -124,44 +99,63 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
         ),
         (
             " Check_MK ",
-            TranslationOptions(mapping=[(" Check_MK ", "Foo Bar")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[(" Check_MK ", "Foo Bar")],
+                regex=[],
+            ),
             "Check_MK",
         ),
         (
             " Check_MK Agent ",
-            TranslationOptions(mapping=[(" Check_MK Agent ", "Foo Bar")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[(" Check_MK Agent ", "Foo Bar")],
+                regex=[],
+            ),
             "Check_MK Agent",
         ),
         (
             " Check_MK Discovery ",
-            TranslationOptions(mapping=[(" Check_MK Discovery ", "Foo Bar")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[(" Check_MK Discovery ", "Foo Bar")],
+                regex=[],
+            ),
             "Check_MK Discovery",
         ),
         (
             " Check_MK inventory ",
-            TranslationOptions(mapping=[(" Check_MK inventory ", "Foo Bar")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[(" Check_MK inventory ", "Foo Bar")],
+                regex=[],
+            ),
             "Check_MK inventory",
         ),
         (
             " Check_MK HW/SW Inventory ",
-            TranslationOptions(mapping=[(" Check_MK HW/SW Inventory ", "Foo Bar")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[(" Check_MK HW/SW Inventory ", "Foo Bar")],
+                regex=[],
+            ),
             "Check_MK HW/SW Inventory",
         ),
         # Case
         (
-            " Foo Bar ",
-            # This can never happen when we are fully typed
-            TranslationOptions(case="unknown"),  # type: ignore[typeddict-item]
-            "Foo Bar",
-        ),
-        (
             " foo bar ",
-            TranslationOptions(case="upper"),
+            TranslationOptions(case="upper", drop_domain=False, mapping=[], regex=[]),
             "FOO BAR",
         ),
         (
             " FOO BAR ",
-            TranslationOptions(case="lower"),
+            TranslationOptions(case="lower", drop_domain=False, mapping=[], regex=[]),
             "foo bar",
         ),
         # Regex
@@ -185,52 +179,73 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
         ),
         (
             " Foo Bar ",
-            TranslationOptions(regex=[(" F[o]+", " Föö Bar ")]),
+            TranslationOptions(
+                case=None, drop_domain=False, mapping=[], regex=[(" F[o]+", " Föö Bar ")]
+            ),
             "Foo Bar",
         ),
         (
             " Foo Bar ",
-            TranslationOptions(regex=[(" F[o]+.*", " Föö Bar ")]),
+            TranslationOptions(
+                case=None, drop_domain=False, mapping=[], regex=[(" F[o]+.*", " Föö Bar ")]
+            ),
             "Föö Bar",
         ),
         (
             " Foo Bar ",
-            TranslationOptions(regex=[(" F([o]+) Bar ", " l\\1l ")]),
+            TranslationOptions(
+                case=None, drop_domain=False, mapping=[], regex=[(" F([o]+) Bar ", " l\\1l ")]
+            ),
             "lool",
         ),
         (
             " Foo Bar ",
-            TranslationOptions(regex=[(" F([o]+) B([a])r ", " l\\2\\1l\\2 ")]),
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[(" F([o]+) B([a])r ", " l\\2\\1l\\2 ")],
+            ),
             "laoola",
         ),
         (
             " Foo Bar ",
             TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
                 regex=[
                     (" F[o]+", " FOO Bar "),
                     (" F[o]+.*", " Foo BAR "),
-                ]
+                ],
             ),
             "Foo BAR",
         ),
         # Mapping
         (
             " Foo Bar ",
-            TranslationOptions(mapping=[("Foo Bar", " Bar Baz ")]),
+            TranslationOptions(
+                case=None, drop_domain=False, mapping=[("Foo Bar", " Bar Baz ")], regex=[]
+            ),
             "Foo Bar",
         ),
         (
             " Foo Bar ",
-            TranslationOptions(mapping=[(" Foo Bar ", " Bar Baz ")]),
+            TranslationOptions(
+                case=None, drop_domain=False, mapping=[(" Foo Bar ", " Bar Baz ")], regex=[]
+            ),
             "Bar Baz",
         ),
         (
             " Foo Bar ",
             TranslationOptions(
+                case=None,
+                drop_domain=False,
                 mapping=[
                     (" FOO Bar ", " Foo Bar "),
                     (" Foo Bar ", " Bar Baz "),
-                ]
+                ],
+                regex=[],
             ),
             "Bar Baz",
         ),
@@ -239,9 +254,10 @@ def test_translate_hostname(hostname: str, translation: TranslationOptions, resu
             " Foo Bar ",
             TranslationOptions(
                 case="upper",
+                drop_domain=False,
+                mapping=[(" foo bar ", " fOO bAR ")],
                 # Legacy format, should be transformed
                 regex=(" FOO.*", " foo bar "),  # type: ignore[typeddict-item]
-                mapping=[(" foo bar ", " fOO bAR ")],
             ),
             "fOO bAR",
         ),

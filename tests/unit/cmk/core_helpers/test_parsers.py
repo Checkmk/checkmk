@@ -15,6 +15,7 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.utils.debug
+from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
@@ -57,7 +58,12 @@ class TestAgentParser:
             store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -820,7 +826,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -850,7 +861,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -880,7 +896,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -910,7 +931,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -948,7 +974,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -987,7 +1018,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=0,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -1021,7 +1057,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=42,
             keep_outdated=False,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,
@@ -1051,7 +1092,12 @@ class TestAgentPersistentSectionHandling:
             section_store,
             check_interval=42,
             keep_outdated=True,
-            translation={},
+            translation=TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[],
+            ),
             encoding_fallback="ascii",
             simulation=False,
             logger=logger,

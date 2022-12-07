@@ -1351,7 +1351,12 @@ def is_cmc() -> bool:
 def get_piggyback_translations(hostname: HostName) -> cmk.utils.translations.TranslationOptions:
     """Get a dict that specifies the actions to be done during the hostname translation"""
     rules = get_config_cache().host_extra_conf(hostname, piggyback_translation)
-    translations: cmk.utils.translations.TranslationOptions = {}
+    translations = cmk.utils.translations.TranslationOptions(
+        case=None,
+        drop_domain=False,
+        mapping=[],
+        regex=[],
+    )
     for rule in rules[::-1]:
         translations.update(rule)
     return translations
@@ -1363,7 +1368,12 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
         return translations_cache[hostname]
 
     rules = get_config_cache().host_extra_conf(hostname, service_description_translation)
-    translations: cmk.utils.translations.TranslationOptions = {}
+    translations = cmk.utils.translations.TranslationOptions(
+        case=None,
+        drop_domain=False,
+        mapping=[],
+        regex=[],
+    )
     for rule in rules[::-1]:
         for k, v in rule.items():
             # TODO: Fix this typing chaos below, the actual values are much more restricted than the code below thinks.

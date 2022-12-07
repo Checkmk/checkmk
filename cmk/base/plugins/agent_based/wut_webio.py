@@ -3,6 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Check plugin for W&T WebIO device
+
+Knowledge:
+* a device can potentially be in an Unknown state for different reasons such as an occasional
+firmware problem
+"""
 from typing import Any, List, Literal, Mapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import (
@@ -27,7 +33,7 @@ _OIDS_TO_FETCH = [
     "1.3.1.4",  # the state of the input
 ]
 
-_DeviceStates = Literal["On", "Off"]
+_DeviceStates = Literal["On", "Off", "Unknown"]
 
 
 class Input(NamedTuple):
@@ -40,11 +46,13 @@ Section = Mapping[str, Input]
 STATE_TRANSLATION: Mapping[str, _DeviceStates] = {
     "0": "Off",
     "1": "On",
+    "": "Unknown",
 }
 
 DEFAULT_STATE_EVALUATION = {
     "Off": int(State.CRIT),
     "On": int(State.OK),
+    "Unknown": int(State.UNKNOWN),
 }
 
 STATE_EVAL_KEY = "evaluation_mode"
@@ -84,7 +92,7 @@ register.snmp_section(
 
 
 def _get_state_evaluation_from_state(state: str) -> Mapping[str, int]:
-    return {state_key: 0 if state == state_key else 2 for state_key in ("Off", "On")}
+    return {state_key: 0 if state == state_key else 2 for state_key in ("Off", "On", "Unknown")}
 
 
 def discover_wut_webio(section: Section) -> type_defs.DiscoveryResult:

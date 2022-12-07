@@ -1,0 +1,14 @@
+Title: wut_webio: handling of case when state is empty
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1670406971
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+It is possible that a device occasionally returns an empty string for different reasons such as
+a firmware problem. Prior to this werk, this case was left unhandled. This werk resolves this issue.
+

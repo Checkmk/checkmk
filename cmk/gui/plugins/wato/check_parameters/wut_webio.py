@@ -68,6 +68,12 @@ def _valuespec_wut_webio_check():
                                         title=_("State if input is ON"), default_value=0
                                     ),
                                 ),
+                                (
+                                    "Unknown",
+                                    MonitoringState(
+                                        title=_("State if input is Unknown"), default_value=3
+                                    ),
+                                ),
                             ],
                         ),
                     ],

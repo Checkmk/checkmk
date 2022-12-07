@@ -20,7 +20,12 @@ from cmk.base.plugins.agent_based.wut_webio import (
 
 STRING_TABLE = [
     [],
-    [["WEBIO-094849", "", "", ""], ["", "1", "Input 0", "1"], ["", "2", "Input 1", "0"]],
+    [
+        ["WEBIO-094849", "", "", ""],
+        ["", "1", "Input 0", "1"],
+        ["", "2", "Input 1", "0"],
+        ["", "2", "Input 2", ""],
+    ],
     [],
 ]
 
@@ -37,6 +42,7 @@ def test_discovery():
     assert list(discover_wut_webio(_parse_mandatory(STRING_TABLE))) == [
         Service(item=ITEM, parameters={"states_during_discovery": "On"}),
         Service(item="WEBIO-094849 Input 1", parameters={"states_during_discovery": "Off"}),
+        Service(item="WEBIO-094849 Input 2", parameters={"states_during_discovery": "Unknown"}),
     ]
 
 
@@ -55,3 +61,13 @@ def test_discovery():
 )
 def test_check(params, expected):
     assert list(check_wut_webio(ITEM, params, _parse_mandatory(STRING_TABLE))) == expected
+
+
+def test_check_unknown() -> None:
+    assert list(
+        check_wut_webio(
+            "WEBIO-094849 Input 2",
+            params={STATE_EVAL_KEY: DEFAULT_STATE_EVALUATION, STATES_DURING_DISC_KEY: "Unknown"},
+            section=_parse_mandatory(STRING_TABLE),
+        )
+    ) == [Result(state=State.UNKNOWN, summary="Input (Index: 2) is in state: Unknown")]

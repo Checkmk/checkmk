@@ -9,11 +9,11 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Final, NamedTuple
+from typing import Final, NamedTuple, TypedDict
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -92,7 +92,16 @@ class PackagePart(NamedTuple):
 
 
 Packages = dict[PackageName, PackageInfo]
-PackagePartInfo = dict[PartName, Any]
+
+
+class _PackagePartInfoElement(TypedDict):
+    title: str
+    permissions: Sequence[int]
+    path: PartPath
+    files: Sequence[str]
+
+
+PackagePartInfo = dict[PartName, _PackagePartInfoElement]
 
 package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],
@@ -776,7 +785,7 @@ def package_part_info() -> PackagePartInfo:
 
         part_info[part.ident] = {
             "title": part.title,
-            "permissions": list(map(_get_permissions, [os.path.join(part.path, f) for f in files])),
+            "permissions": [_get_permissions(os.path.join(part.path, f)) for f in files],
             "path": part.path,
             "files": files,
         }
@@ -848,17 +857,17 @@ def _remove_package_info(pacname: PackageName) -> None:
     (package_dir() / pacname).unlink()
 
 
-def rule_pack_id_to_mkp() -> dict[str, Any]:
+def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     """
     Returns a dictionary of rule pack ID to MKP package for a given package_info.
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
 
-    def mkp_of(rule_pack_file: str) -> Any:
+    def mkp_of(rule_pack_file: str) -> PackageName | None:
         """Find the MKP for the given file"""
-        for package_name, package in get_installed_package_infos().items():
-            if package and rule_pack_file in package.files.get("ec_rule_packs", []):
+        for package_name, package_info in get_installed_package_infos().items():
+            if rule_pack_file in package_info.files.get("ec_rule_packs", []):
                 return package_name
         return None
 

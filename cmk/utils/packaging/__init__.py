@@ -12,6 +12,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
+from itertools import groupby
 from pathlib import Path
 from typing import Final, TypedDict
 
@@ -847,7 +848,7 @@ def _install_applicable_inactive_packages(
     log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
     for name, package_paths in _sort_enabled_packages_for_installation(log):
-        for version, path in package_paths:
+        for package_info, path in package_paths:
             try:
                 install(
                     path,
@@ -855,9 +856,11 @@ def _install_applicable_inactive_packages(
                     post_package_change_actions=post_package_change_actions,
                 )
             except PackageException as exc:
-                log.log(VERBOSE, "[%s]: Version %s not installed (%s)", name, version, exc)
+                log.log(
+                    VERBOSE, "[%s]: Version %s not installed (%s)", name, package_info.version, exc
+                )
             else:
-                log.log(VERBOSE, "[%s]: Version %s installed", name, version)
+                log.log(VERBOSE, "[%s]: Version %s installed", name, package_info.version)
                 # We're done with this package.
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
@@ -866,37 +869,19 @@ def _install_applicable_inactive_packages(
 
 def _sort_enabled_packages_for_installation(
     log: logging.Logger,
-) -> Iterable[tuple[PackageName, Iterable[tuple[PackageVersion, Path]]]]:
-    packages_by_name: dict[PackageName, dict[PackageVersion, Path]] = {}
-    for pkg_path in _get_enabled_package_paths():
-        if (package_info := extract_package_info_optionally(pkg_path, logger)) is None:
-            continue
-        packages_by_name.setdefault(package_info.name, {})[package_info.version] = pkg_path
-
-    return _sort_by_name_then_newest_version(packages_by_name)
-
-
-def _sort_by_name_then_newest_version(
-    packages_by_name: Mapping[PackageName, Mapping[PackageVersion, Path]]
-) -> Iterable[tuple[PackageName, Iterable[tuple[PackageVersion, Path]]]]:
-    # TODO: bring this back in the unit tests once we have moved it
-    # """
-    # >>> from pprint import pprint
-    # >>> pprint(_sort_by_name_then_newest_version({
-    # ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
-    # ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
-    # ... }))
-    # [('argl_extension',
-    #  [('dling', 'lexically_later'), ('canoo', 'lexically_first')]),
-    # ('boo_package', [('1.3', 'new_boo'), ('1.2', 'old_boo')])]
-    # """
-    return [
-        (
-            name,
-            sorted(paths_by_version.items(), key=lambda item: item[0].sort_key, reverse=True),
-        )
-        for name, paths_by_version in sorted(packages_by_name.items())
+) -> Iterable[tuple[PackageName, Iterable[tuple[PackageInfo, Path]]]]:
+    packages = [
+        (package_info, package_path)
+        for package_path in _get_enabled_package_paths()
+        if (package_info := extract_package_info_optionally(package_path, log)) is not None
     ]
+    return groupby(
+        sorted(
+            sorted(packages, key=lambda x: x[0].version.sort_key, reverse=True),
+            key=lambda x: x[0].name,
+        ),
+        key=lambda x: x[0].name,
+    )
 
 
 def disable_outdated() -> None:

@@ -918,9 +918,9 @@ def _install_applicable_inactive_packages(
                     post_package_change_actions=post_package_change_actions,
                 )
             except PackageException as exc:
-                logger.log(VERBOSE, "[%s]: Verison %s not installed (%s)", name, version, exc)
+                log.log(VERBOSE, "[%s]: Version %s not installed (%s)", name, version, exc)
             else:
-                logger.log(VERBOSE, "[%s]: Version %s installed", name, version)
+                log.log(VERBOSE, "[%s]: Version %s installed", name, version)
                 # We're done with this package.
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.

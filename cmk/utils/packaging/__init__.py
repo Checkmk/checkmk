@@ -324,9 +324,11 @@ def create(manifest: Manifest) -> None:
     if _package_exists(manifest.name):
         raise PackageException("Packet already exists.")
 
+    package_store = PackageStore()
+
     _validate_package_files(manifest.name, manifest.files)
     write_manifest(manifest)
-    _create_enabled_mkp_from_installed_package(manifest)
+    _create_enabled_mkp_from_installed_package(package_store, manifest)
 
 
 def edit(pacname: PackageName, new_manifest: Manifest) -> None:
@@ -339,15 +341,18 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
             raise PackageException(
                 "Cannot rename package: a package with that name already exists."
             )
+    package_store = PackageStore()
 
     _validate_package_files(pacname, new_manifest.files)
 
-    _create_enabled_mkp_from_installed_package(new_manifest)
+    _create_enabled_mkp_from_installed_package(package_store, new_manifest)
     _remove_manifest(pacname)
     write_manifest(new_manifest)
 
 
-def _create_enabled_mkp_from_installed_package(manifest: Manifest) -> None:
+def _create_enabled_mkp_from_installed_package(
+    package_store: PackageStore, manifest: Manifest
+) -> None:
     """Creates an MKP, saves it on disk and enables it
 
     After we changed and or created an MKP, we must make sure it is present on disk as
@@ -361,27 +366,25 @@ def _create_enabled_mkp_from_installed_package(manifest: Manifest) -> None:
     mkp = create_mkp_object(manifest)
     file_path.write_bytes(mkp)
 
-    mark_as_enabled(file_path)
+    mark_as_enabled(package_store, manifest.id)
 
 
 def install_optional_package(package_store: PackageStore, package_id: PackageID) -> Manifest:
     return install(
-        package_store.get_existing_package_path(package_id),
+        package_store,
+        package_id,
         allow_outdated=True,
     )
 
 
-def mark_as_enabled(package_path: Path) -> None:
+def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
     """Mark the package as one of the enabled ones
 
     Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
     be synchronized with the remote sites.
     """
+    package_path = package_store.get_existing_package_path(package_id)
     destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
-
-    # hack: we might be installing from the path to an already enabled package :-(
-    if destination == package_path:
-        return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
 
@@ -404,19 +407,20 @@ def remove_enabled_mark(manifest: Manifest) -> None:
 
 
 def install(
-    package_path: Path,
+    package_store: PackageStore,
+    package_id: PackageID,
     allow_outdated: bool = True,
     post_package_change_actions: bool = True,
 ) -> Manifest:
     try:
         return _install(
-            package_path.read_bytes(),
+            package_store.get_existing_package_path(package_id).read_bytes(),
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
         )
     finally:
         # it is enabled, even if installing failed
-        mark_as_enabled(package_path)
+        mark_as_enabled(package_store, package_id)
 
 
 def _install(  # pylint: disable=too-many-branches
@@ -832,8 +836,9 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
 
 def update_active_packages(log: logging.Logger) -> None:
     """Update which of the enabled packages are actually active (installed)"""
+    package_store = PackageStore()
     _deinstall_inapplicable_active_packages(log, post_package_change_actions=False)
-    _install_applicable_inactive_packages(log, post_package_change_actions=False)
+    _install_applicable_inactive_packages(package_store, log, post_package_change_actions=False)
     _execute_post_package_change_actions(None)
 
 
@@ -859,13 +864,14 @@ def _deinstall_inapplicable_active_packages(
 
 
 def _install_applicable_inactive_packages(
-    log: logging.Logger, *, post_package_change_actions: bool
+    package_store: PackageStore, log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
     for name, package_paths in _sort_enabled_packages_for_installation(log):
-        for manifest, path in package_paths:
+        for manifest, _path in package_paths:  # TODO: drop this
             try:
                 install(
-                    path,
+                    package_store,
+                    manifest.id,
                     allow_outdated=False,
                     post_package_change_actions=post_package_change_actions,
                 )

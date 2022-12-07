@@ -125,6 +125,27 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
                 if sidecar_list:
                     handle_output(sidecar_list, section.name, args)
 
+        if section.name == "alerts":
+            num_of_alerts = value.get("total", 0)
+            num_of_alerts_in_range = 0
+            alerts_since_argument = args.alerts_since
+
+            if alerts_since_argument:
+                url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
+                num_of_alerts_in_range = (
+                    handle_response(url_alerts_in_range, args).json().get("total", 0)
+                )
+
+            alerts = {
+                "alerts": {
+                    "num_of_alerts": num_of_alerts,
+                    "has_since_argument": bool(alerts_since_argument),
+                    "alerts_since": alerts_since_argument if alerts_since_argument else None,
+                    "num_of_alerts_in_range": num_of_alerts_in_range,
+                }
+            }
+            handle_output([alerts], section.name, args)
+
         if section.name == "sources":
             sources_in_range = {}
             source_since_argument = args.source_since
@@ -163,7 +184,7 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
             if args.display_source_details == "host":
                 handle_output([value], section.name, args)
 
-        if section.name not in ["nodes", "sidecars", "sources"]:
+        if section.name not in ["nodes", "sidecars", "sources", "alerts"]:
             handle_output(value, section.name, args)
 
 
@@ -243,6 +264,12 @@ def parse_arguments(argv):
         default=None,
         type=int,
         help="The time in seconds, since when source messages should be covered",
+    )
+    parser.add_argument(
+        "--alerts_since",
+        default=None,
+        type=int,
+        help="The time in seconds, since when alerts should be covered",
     )
     parser.add_argument(
         "-m",

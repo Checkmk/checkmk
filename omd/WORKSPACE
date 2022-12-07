@@ -15,6 +15,3 @@ bzlws_deps()
 
 load("//packages/patch:patch_http.bzl", "patch")
 patch()
-
-load("//packages/redis:redis_http.bzl", "redis")
-redis()

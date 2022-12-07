@@ -10,25 +10,35 @@ from pathlib import Path
 from typing import AbstractSet
 
 import cmk.utils.debug
-import cmk.utils.packaging as packaging
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     CONFIG_PARTS,
+    create_mkp_object,
+    disable,
+    disable_outdated,
+    extract_package_info,
     format_file_name,
     get_enabled_package_infos,
     get_installed_package_info,
+    install_optional_package,
+    installed_names,
     package_dir,
     PACKAGE_EXTENSION,
     package_info_template,
+    package_num_files,
     PACKAGE_PARTS,
     PackageException,
+    PackageID,
     PackageName,
+    PackageStore,
     PackageVersion,
+    release,
     unpackaged_files,
     unpackaged_files_in_dir,
+    update_active_packages,
     write_package_info,
 )
 
@@ -108,16 +118,14 @@ def package_list(args: list[str]) -> None:
     else:
         if logger.isEnabledFor(VERBOSE):
             table = []
-            for pacname in packaging.installed_names():
+            for pacname in installed_names():
                 if (package := get_installed_package_info(pacname)) is None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
-                    table.append(
-                        [pacname, package.title, str(packaging.package_num_files(package))]
-                    )
+                    table.append([pacname, package.title, str(package_num_files(package))])
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
-            for pacname in packaging.installed_names():
+            for pacname in installed_names():
                 sys.stdout.write("%s\n" % pacname)
 
 
@@ -138,7 +146,7 @@ def show_package_info(name: str) -> None:
 
 def show_package(name: str, show_info: bool = False) -> None:
     if name.endswith(PACKAGE_EXTENSION):
-        package = packaging.extract_package_info(Path(name).read_bytes())
+        package = extract_package_info(Path(name).read_bytes())
     else:
         if (this_package := get_installed_package_info(PackageName(name))) is None:
             raise PackageException("No such package: %s" % name)
@@ -178,7 +186,7 @@ def package_create(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P create NAME")
 
     pacname = PackageName(args[0])
-    if pacname in packaging.installed_names():
+    if pacname in installed_names():
         raise PackageException(f"Package {pacname} already existing.")
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
@@ -197,7 +205,7 @@ def package_create(args: list[str]) -> None:
         VERBOSE,
         "New package %s created with %d files.",
         pacname,
-        packaging.package_num_files(package),
+        package_num_files(package),
     )
     logger.log(
         VERBOSE,
@@ -234,7 +242,7 @@ def package_find(_no_args: list[str]) -> None:
 def package_release(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
-    packaging.release(PackageName(args[0]))
+    release(PackageName(args[0]))
 
 
 def package_pack(args: list[str]) -> None:
@@ -254,10 +262,10 @@ def package_pack(args: list[str]) -> None:
     pacname = PackageName(args[0])
     if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = packaging.format_file_name(package.id)
+    tarfilename = format_file_name(package.id)
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
-    Path(tarfilename).write_bytes(packaging.create_mkp_object(package))
+    Path(tarfilename).write_bytes(create_mkp_object(package))
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 
@@ -265,12 +273,12 @@ def package_remove(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P remove NAME VERSION")
 
-    package_id = packaging.PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
+    package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
     if any(package_id == package.id for package in get_enabled_package_infos().values()):
         raise PackageException("This package is enabled! Please disable it first.")
 
     logger.log(VERBOSE, "Removing package %s...", package_id.name)
-    packaging.PackageStore().remove(format_file_name(package_id))
+    PackageStore().remove(format_file_name(package_id))
     logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
 
 
@@ -281,26 +289,24 @@ def package_install(args: list[str]) -> None:
     if not path.exists():
         raise PackageException("No such file %s." % path)
 
-    store = packaging.PackageStore()
+    store = PackageStore()
     with Path(path).open("rb") as fh:
         package = store.store(fh.read())
 
-    packaging.install_optional_package(store, packaging.format_file_name(package.id))
+    install_optional_package(store, format_file_name(package.id))
 
 
 def package_disable(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P disable NAME")
-    packaging.disable(PackageName(args[0]))
+    disable(PackageName(args[0]))
 
 
 def package_enable(args: list[str]) -> None:
     if len(args) != 2:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
-    package_id = packaging.PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    packaging.install_optional_package(
-        packaging.PackageStore(), packaging.format_file_name(package_id)
-    )
+    package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
+    install_optional_package(PackageStore(), format_file_name(package_id))
 
 
 def package_disable_outdated(args: list[str]) -> None:
@@ -313,7 +319,7 @@ def package_disable_outdated(args: list[str]) -> None:
     """
     if args:
         raise PackageException("Usage: check_mk -P disable-outdated")
-    packaging.disable_outdated()
+    disable_outdated()
 
 
 def package_update_active(args: list[str]) -> None:
@@ -326,4 +332,4 @@ def package_update_active(args: list[str]) -> None:
     """
     if args:
         raise PackageException("Usage: check_mk -P update-active")
-    packaging.update_active_packages(logger)
+    update_active_packages(logger)

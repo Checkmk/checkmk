@@ -40595,7 +40595,7 @@ msgid "Set absolute levels"
 msgstr "Setze absolute Schwellwerte"
 
 msgid "Set an individual idle timeout"
-msgstr "Einen indiviellen Timeout festlegen"
+msgstr "Einen individuellen Timeout festlegen"
 
 msgid "Set as start URL"
 msgstr "Als Start-URL einstellen"

@@ -4,11 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ipaddress
+from collections.abc import Iterable
+from typing import cast, Literal, TypedDict
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
 
-TranslationOptions = dict  # TODO: Improve this type
+
+# This can probably improved further by making it total and removing the None,
+# but that would need some tweaking of "interesting" code. :-/
+class TranslationOptions(TypedDict, total=False):
+    case: Literal["lower", "upper"] | None
+    drop_domain: bool
+    mapping: Iterable[tuple[str, str]]
+    regex: Iterable[tuple[str, str]]
 
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> str:
@@ -46,10 +55,9 @@ def _translate(translation: TranslationOptions, name: str) -> str:
             name = name.split(".", 1)[0]
 
     # 3. Multiple regular expression conversion
-    if isinstance(translation.get("regex"), tuple):
-        translations = [translation["regex"]]
-    else:
-        translations = translation.get("regex", [])
+    r = translation.get("regex", [])
+    # TODO: The corresponding ValueSpec should really be a Migrate
+    translations = [cast(tuple[str, str], r)] if isinstance(r, tuple) else r
 
     for expr, subst in translations:
         if not expr.endswith("$"):

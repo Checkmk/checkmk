@@ -1366,11 +1366,12 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         for k, v in rule.items():
+            # TODO: Fix this typing chaos below, the actual values are much more restricted than the code below thinks.
             if isinstance(v, list):
-                translations.setdefault(k, set())
-                translations[k] |= set(v)
+                translations.setdefault(k, set())  # type: ignore[misc]
+                translations[k] |= set(v)  # type: ignore[literal-required]
             else:
-                translations[k] = v
+                translations[k] = v  # type: ignore[literal-required]
 
     return translations_cache.setdefault(hostname, translations)
 

@@ -11,7 +11,7 @@ simplicity. In case we have such a generic thing, it will be easy to switch to i
 
 
 from cmk.gui.ctx_stack import request_stack
-from cmk.gui.userdb import session
+from cmk.gui.userdb import active_user_session
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
@@ -26,7 +26,7 @@ def flash(message: str | HTML | LazyString) -> None:
         normalized = escape_text(message)
     else:
         normalized = str(message)
-    session.session_info.flashes.append(normalized)
+    active_user_session.session_info.flashes.append(normalized)
 
 
 def get_flashed_messages() -> list[HTML]:
@@ -41,10 +41,13 @@ def get_flashed_messages() -> list[HTML]:
 
     flashes = top.flashes
     if flashes is None:
-        if not hasattr(session, "session_info") or not session.session_info.flashes:
+        if (
+            not hasattr(active_user_session, "session_info")
+            or not active_user_session.session_info.flashes
+        ):
             top.flashes = []
         else:
-            top.flashes = session.session_info.flashes
-            session.session_info.flashes = []
+            top.flashes = active_user_session.session_info.flashes
+            active_user_session.session_info.flashes = []
 
     return [HTML(s) for s in top.flashes]

@@ -12,20 +12,25 @@ import os
 import shutil
 import time
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
-from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 
 from six import ensure_str
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.store import (
+    aquire_lock,
+    load_from_mk_file,
+    mkdir,
+    save_text_to_file,
+    save_to_mk_file,
+)
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.hooks as hooks
@@ -39,7 +44,6 @@ from cmk.gui.background_job import (
     job_registry,
 )
 from cmk.gui.config import active_config
-from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -62,10 +66,21 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
+from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
 from cmk.gui.userdb import user_attributes
 from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.userdb.ldap_connector import MKLDAPException
+from cmk.gui.userdb.session import (
+    active_user_session,
+    convert_session_info,
+    invalidate_session,
+    is_valid_user_session,
+    load_session_infos,
+    refresh_session,
+    save_session_infos,
+    set_session,
+)
+from cmk.gui.userdb.store import custom_attr_path, load_custom_attr, save_custom_attr
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -200,22 +215,6 @@ def _check_login_timeout(username: UserId, idle_time: float) -> None:
         raise MKAuthException(f"{username} login timed out (Inactivity exceeded {idle_timeout})")
 
 
-def _reset_failed_logins(username: UserId) -> None:
-    """Login succeeded: Set failed login counter to 0"""
-    num_failed_logins = _load_failed_logins(username)
-    if num_failed_logins != 0:
-        _save_failed_logins(username, 0)
-
-
-def _load_failed_logins(username: UserId) -> int:
-    num = load_custom_attr(user_id=username, key="num_failed_logins", parser=utils.saveint)
-    return 0 if num is None else num
-
-
-def _save_failed_logins(username: UserId, count: int) -> None:
-    save_custom_attr(username, "num_failed_logins", str(count))
-
-
 # userdb.need_to_change_pw returns either None or the reason description why the
 # password needs to be changed
 def need_to_change_pw(username: UserId, now: datetime) -> str | None:
@@ -252,11 +251,11 @@ def disable_two_factor_authentication(user_id: UserId) -> None:
 
 def is_two_factor_completed() -> bool:
     """Whether or not the user has completed the 2FA challenge"""
-    return session.session_info.two_factor_completed
+    return active_user_session.session_info.two_factor_completed
 
 
 def set_two_factor_completed() -> None:
-    session.session_info.two_factor_completed = True
+    active_user_session.session_info.two_factor_completed = True
 
 
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
@@ -383,12 +382,6 @@ class UserSelection(DropdownChoice[UserId]):
         return str(super().value_to_html(value)).rsplit(" - ", 1)[-1]
 
 
-def on_succeeded_login(username: UserId, now: datetime) -> str:
-    _ensure_user_can_init_session(username, now)
-    _reset_failed_logins(username)
-    return _initialize_session(username, now)
-
-
 def on_failed_login(username: UserId, now: datetime) -> None:
     users = load_users(lock=True)
     if user := users.get(username):
@@ -425,207 +418,34 @@ def on_failed_login(username: UserId, now: datetime) -> None:
 
 
 def on_logout(username: UserId, session_id: str) -> None:
-    _invalidate_session(username, session_id)
+    invalidate_session(username, session_id)
 
 
 def on_access(username: UserId, session_id: str, now: datetime) -> None:
-    session_infos = _load_session_infos(username)
-    if not _is_valid_user_session(username, session_infos, session_id):
+    session_infos = load_session_infos(username)
+    if not is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
 
     # Check whether or not there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
     session_info = session_infos[session_id]
     _check_login_timeout(username, now.timestamp() - session_info.last_activity)
-    _set_session(username, session_info)
+    set_session(username, session_info)
 
 
 def on_end_of_request(user_id: UserId, now: datetime) -> None:
-    if not session:
+    if not active_user_session:
         return  # Nothing to be done in case there is no session
 
-    assert user_id == session.user_id
-    session_infos = _load_session_infos(user_id, lock=True)
+    assert user_id == active_user_session.user_id
+    session_infos = load_session_infos(user_id, lock=True)
     if session_infos:
-        _refresh_session(session.session_info, now)
-        session_infos[session.session_info.session_id] = session.session_info
+        refresh_session(active_user_session.session_info, now)
+        session_infos[
+            active_user_session.session_info.session_id
+        ] = active_user_session.session_info
 
-    _save_session_infos(user_id, session_infos)
-
-
-# .
-#   .--User Session--------------------------------------------------------.
-#   |       _   _                 ____                _                    |
-#   |      | | | |___  ___ _ __  / ___|  ___  ___ ___(_) ___  _ __         |
-#   |      | | | / __|/ _ \ '__| \___ \ / _ \/ __/ __| |/ _ \| '_ \        |
-#   |      | |_| \__ \  __/ |     ___) |  __/\__ \__ \ | (_) | | | |       |
-#   |       \___/|___/\___|_|    |____/ \___||___/___/_|\___/|_| |_|       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | When single users sessions are activated, a user an only login once  |
-#   | a time. In case a user tries to login a second time, an error is     |
-#   | shown to the later login.                                            |
-#   |                                                                      |
-#   | To make this feature possible a session ID is computed during login, |
-#   | saved in the users cookie and stored in the user profile together    |
-#   | with the current time as "last activity" timestamp. This timestamp   |
-#   | is updated during each user activity in the GUI.                     |
-#   |                                                                      |
-#   | Once a user logs out or the "last activity" is older than the        |
-#   | configured session timeout, the session is invalidated. The user     |
-#   | can then login again from the same client or another one.            |
-#   '----------------------------------------------------------------------'
-
-
-@dataclass
-class Session:
-    """Container object for encapsulating the session of the currently logged in user"""
-
-    user_id: UserId
-    session_info: SessionInfo
-
-
-session: Session = request_local_attr("session")
-
-
-def _is_valid_user_session(
-    username: UserId, session_infos: dict[str, SessionInfo], session_id: str
-) -> bool:
-    """Return True in case this request is done with a currently valid user session"""
-    if not session_infos:
-        return False  # no session active
-
-    if session_id not in session_infos:
-        auth_logger.debug(
-            "%s session_id %s not valid (logged out or timed out?)", username, session_id
-        )
-        return False
-
-    return True
-
-
-def _ensure_user_can_init_session(username: UserId, now: datetime) -> None:
-    """When single user session mode is enabled, check that there is not another active session"""
-    session_timeout = active_config.single_user_session
-    if session_timeout is None:
-        return  # No login session limitation enabled, no validation
-    for session_info in _load_session_infos(username).values():
-        idle_time = now.timestamp() - session_info.last_activity
-        if idle_time <= session_timeout:
-            auth_logger.debug(
-                f"{username} another session is active (inactive for: {idle_time} seconds)"
-            )
-            raise MKUserError(None, _("Another session is active"))
-
-
-def _initialize_session(username: UserId, now: datetime) -> str:
-    """Creates a new user login session (if single user session mode is enabled) and
-    returns the session_id of the new session."""
-    session_infos = _cleanup_old_sessions(_load_session_infos(username, lock=True), now)
-
-    session_id = _create_session_id()
-    now_ts = int(now.timestamp())
-    session_info = SessionInfo(
-        session_id=session_id,
-        started_at=now_ts,
-        last_activity=now_ts,
-        flashes=[],
-    )
-
-    _set_session(username, session_info)
-    session_infos[session_id] = session_info
-
-    # Save once right after initialization. It may be saved another time later, in case something
-    # was modified during the request (e.g. flashes were added)
-    _save_session_infos(username, session_infos)
-
-    return session_id
-
-
-def _set_session(user_id: UserId, session_info: SessionInfo) -> None:
-    request_local_attr().session = Session(user_id=user_id, session_info=session_info)
-
-
-def _cleanup_old_sessions(
-    session_infos: Mapping[str, SessionInfo], now: datetime
-) -> dict[str, SessionInfo]:
-    """Remove invalid / outdated sessions
-
-    In single user session mode all sessions are removed. In regular mode, the sessions are limited
-    to 20 per user. Sessions with an inactivity > 7 days are also removed.
-    """
-    if active_config.single_user_session:
-        # In single user session mode there is only one session allowed at a time. Once we
-        # reach this place, we can be sure that we are allowed to remove all existing ones.
-        return {}
-
-    return {
-        s.session_id: s
-        for s in sorted(session_infos.values(), key=lambda s: s.last_activity, reverse=True)[:20]
-        if now.timestamp() - s.last_activity < 86400 * 7
-    }
-
-
-def _create_session_id() -> str:
-    """Creates a random session id for the user and returns it."""
-    return utils.gen_id()
-
-
-def _refresh_session(session_info: SessionInfo, now: datetime) -> None:
-    """Updates the current session of the user"""
-    session_info.last_activity = int(now.timestamp())
-
-
-def _invalidate_session(username: UserId, session_id: str) -> None:
-    session_infos = _load_session_infos(username, lock=True)
-    with suppress(KeyError):
-        del session_infos[session_id]
-        _save_session_infos(username, session_infos)
-
-
-def _save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) -> None:
-    """Saves the sessions for the current user"""
-    save_custom_attr(
-        username, "session_info", repr({k: asdict(v) for k, v in session_infos.items()})
-    )
-
-
-def _load_session_infos(username: UserId, lock: bool = False) -> dict[str, SessionInfo]:
-    """Returns the stored sessions of the given user"""
-    return (
-        load_custom_attr(
-            user_id=username, key="session_info", parser=_convert_session_info, lock=lock
-        )
-        or {}
-    )
-
-
-def _convert_session_info(value: str) -> dict[str, SessionInfo]:
-    if value == "":
-        return {}
-
-    if value.startswith("{"):
-        return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
-
-    # Transform pre 2.0 values
-    session_id, last_activity = value.split("|", 1)
-    return {
-        session_id: SessionInfo(
-            session_id=session_id,
-            # We don't have that information. The best guess is to use the last activitiy
-            started_at=int(last_activity),
-            last_activity=int(last_activity),
-            flashes=[],
-        ),
-    }
-
-
-def _convert_start_url(value: str) -> str:
-    # TODO in Version 2.0.0 and 2.0.0p1 the value was written without repr(),
-    # remove the if condition one day
-    if value.startswith("'") and value.endswith("'"):
-        return ast.literal_eval(value)
-    return value
+    save_session_infos(user_id, session_infos)
 
 
 # .
@@ -681,11 +501,19 @@ class GenericUserAttribute(UserAttribute):
 
 
 def load_contacts() -> dict[str, Any]:
-    return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
+    return load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
 def _contacts_filepath() -> str:
     return _root_dir() + "contacts.mk"
+
+
+def _convert_start_url(value: str) -> str:
+    # TODO in Version 2.0.0 and 2.0.0p1 the value was written without repr(),
+    # remove the if condition one day
+    if value.startswith("'") and value.endswith("'"):
+        return ast.literal_eval(value)
+    return value
 
 
 @request_memoize()
@@ -693,7 +521,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        store.aquire_lock(_contacts_filepath())
+        aquire_lock(_contacts_filepath())
 
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -703,7 +531,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
 
     # Now load information about users from the GUI config world
     # ? can users dict be modified in load_mk_file function call and the type of keys str be changed?
-    users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
+    users = load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -782,7 +610,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
         ("last_pw_change", utils.saveint),
         ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
         ("idle_timeout", _convert_idle_timeout),
-        ("session_info", _convert_session_info),
+        ("session_info", convert_session_info),
         ("start_url", _convert_start_url),
         ("ui_theme", lambda x: x),
         ("two_factor_credentials", ast.literal_eval),
@@ -823,30 +651,6 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 }
 
     return result
-
-
-def custom_attr_path(userid: UserId, key: str) -> str:
-    return cmk.utils.paths.var_dir + "/web/" + userid + "/" + key + ".mk"
-
-
-T = TypeVar("T")
-
-
-def load_custom_attr(
-    *,
-    user_id: UserId,
-    key: str,
-    parser: Callable[[str], T],
-    lock: bool = False,
-) -> T | None:
-    result = store.load_text_from_file(Path(custom_attr_path(user_id, key)), lock=lock)
-    return None if result == "" else parser(result.strip())
-
-
-def save_custom_attr(userid: UserId, key: str, val: Any) -> None:
-    path = custom_attr_path(userid, key)
-    store.mkdir(os.path.dirname(path))
-    store.save_text_to_file(path, "%s\n" % val)
 
 
 def remove_custom_attr(userid: UserId, key: str) -> None:
@@ -927,12 +731,12 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
 
     for user_id, user in updated_profiles.items():
         user_dir = cmk.utils.paths.var_dir + "/web/" + user_id
-        store.mkdir(user_dir)
+        mkdir(user_dir)
 
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
-            store.save_text_to_file(auth_file, "%s\n" % user["automation_secret"])
+            save_text_to_file(auth_file, "%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
             os.unlink(auth_file)
 
@@ -1053,7 +857,7 @@ def write_contacts_and_users_file(
         }
 
     # Checkmk's monitoring contacts
-    store.save_to_mk_file(
+    save_to_mk_file(
         "{}/{}".format(check_mk_config_dir, "contacts.mk"),
         "contacts",
         contacts,
@@ -1061,7 +865,7 @@ def write_contacts_and_users_file(
     )
 
     # GUI specific user configuration
-    store.save_to_mk_file(
+    save_to_mk_file(
         "{}/{}".format(multisite_config_dir, "users.mk"),
         "multisite_users",
         users,
@@ -1115,9 +919,7 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     serials = ""
     for user_id, user in updated_profiles.items():
         serials += "%s:%d\n" % (user_id, user.get("serial", 0))
-    store.save_text_to_file(
-        "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials
-    )
+    save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
 def rewrite_users(now: datetime) -> None:

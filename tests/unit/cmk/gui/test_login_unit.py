@@ -17,13 +17,18 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.login as login
-import cmk.gui.userdb as userdb
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import UserSpec, WebAuthnCredential
-from cmk.gui.userdb import session
+from cmk.gui.userdb import active_user_session
+from cmk.gui.userdb.session import (
+    _initialize_session,
+    auth_cookie_name,
+    auth_cookie_value,
+    generate_auth_hash,
+)
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -124,14 +129,14 @@ def fixture_pre_20_cookie() -> Iterator[str]:
 def fixture_session_id(with_user: tuple[UserId, str]) -> str:
     now = datetime.now()
     user_id = with_user[0]
-    return userdb._initialize_session(user_id, now)
+    return _initialize_session(user_id, now)
 
 
 @pytest.fixture(name="current_cookie")
 def fixture_current_cookie(with_user: tuple[UserId, str], session_id: str) -> Iterator[str]:
     user_id = with_user[0]
-    cookie_name = login.auth_cookie_name()
-    cookie_value = login._auth_cookie_value(user_id, session_id)
+    cookie_name = auth_cookie_name()
+    cookie_value = auth_cookie_value(user_id, session_id)
 
     environ = dict(create_environ(), HTTP_COOKIE=f"{cookie_name}={cookie_value}".encode())
 
@@ -156,7 +161,7 @@ def test_parse_auth_cookie_allow_current(
     assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (
         with_user[0],
         session_id,
-        login._generate_auth_hash(with_user[0], session_id),
+        generate_auth_hash(with_user[0], session_id),
     )
 
 
@@ -183,7 +188,7 @@ def test_web_server_auth_session(user_id: UserId) -> None:
         with login.authenticate(request) as authenticated:
             assert authenticated is True
             assert user.id == user_id
-            assert session.user_id == user.id
+            assert active_user_session.user_id == user.id
         assert user.id is None
 
 

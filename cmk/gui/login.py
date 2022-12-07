@@ -10,7 +10,6 @@ import traceback
 from collections.abc import Iterator
 from contextlib import suppress
 from datetime import datetime
-from hashlib import sha256
 from pathlib import Path
 
 from werkzeug.local import LocalProxy
@@ -23,7 +22,6 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
@@ -44,6 +42,13 @@ from cmk.gui.logged_in import user, UserContext
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.type_defs import AuthType
+from cmk.gui.userdb.session import (
+    auth_cookie_name,
+    create_auth_session,
+    generate_auth_hash,
+    on_succeeded_login,
+    set_auth_cookie,
+)
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.language_cookie import del_language_cookie
@@ -94,63 +99,6 @@ def UserSessionContext(user_id: UserId) -> Iterator[None]:
             userdb.on_end_of_request(user_id, datetime.now())
 
 
-def auth_cookie_name() -> str:
-    return f"auth_{omd_site()}"
-
-
-def _load_secret() -> bytes:
-    """Reads the sites auth secret from a file
-
-    Creates the files if it does not exist. Having access to the secret means that one can issue
-    valid cookies for the cookie auth.
-    """
-    htpasswd_path = Path(cmk.utils.paths.htpasswd_file)
-    secret_path = htpasswd_path.parent.joinpath("auth.secret")
-
-    secret = ""
-    if secret_path.exists():
-        with secret_path.open(encoding="utf-8") as f:
-            secret = f.read().strip()
-
-    # Create new secret when this installation has no secret
-    #
-    # In past versions we used another bad approach to generate a secret. This
-    # checks for such secrets and creates a new one. This will invalidate all
-    # current auth cookies which means that all logged in users will need to
-    # renew their login after update.
-    if secret == "" or len(secret) == 32:
-        secret = _generate_secret()
-        with secret_path.open("w", encoding="utf-8") as f:
-            f.write(secret)
-
-    return secret.encode("utf-8")
-
-
-def _generate_secret() -> str:
-    return utils.get_random_string(256)
-
-
-def _load_serial(username: UserId) -> int:
-    """Load the password serial of the user
-
-    This serial identifies the current config state of the user account. If either the password is
-    changed or the account gets locked the serial is increased and all cookies get invalidated.
-    Better use the value from the "serials.mk" file, instead of loading the whole user database via
-    load_users() for performance reasons.
-    """
-    serial = userdb.load_custom_attr(user_id=username, key="serial", parser=int)
-    return 0 if serial is None else serial
-
-
-def _generate_auth_hash(username: UserId, session_id: str) -> str:
-    """Generates a hash to be added into the cookie value"""
-    secret = _load_secret()
-    serial = _load_serial(username)
-    return hmac.new(
-        key=secret, msg=(username + session_id + str(serial)).encode("utf-8"), digestmod=sha256
-    ).hexdigest()
-
-
 def del_auth_cookie() -> None:
     cookie_name = auth_cookie_name()
     if not request.has_cookie(cookie_name):
@@ -159,17 +107,9 @@ def del_auth_cookie() -> None:
     response.unset_http_cookie(cookie_name)
 
 
-def _auth_cookie_value(username: UserId, session_id: str) -> str:
-    return ":".join([username, session_id, _generate_auth_hash(username, session_id)])
-
-
 def _invalidate_auth_session() -> None:
     del_auth_cookie()
     del_language_cookie(response)
-
-
-def _create_auth_session(username: UserId, session_id: str) -> None:
-    _set_auth_cookie(username, session_id)
 
 
 def update_auth_cookie(username: UserId) -> None:
@@ -179,13 +119,7 @@ def update_auth_cookie(username: UserId) -> None:
     on the server side. Skip validation in this case, this is fine. The cookie was valdiated
     before accessing this page.
     """
-    _set_auth_cookie(username, _get_session_id_from_cookie(username, revalidate_cookie=False))
-
-
-def _set_auth_cookie(username: UserId, session_id: str) -> None:
-    response.set_http_cookie(
-        auth_cookie_name(), _auth_cookie_value(username, session_id), secure=request.is_secure
-    )
+    set_auth_cookie(username, _get_session_id_from_cookie(username, revalidate_cookie=False))
 
 
 def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
@@ -274,7 +208,7 @@ def check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str
     if not userdb.user_exists(username):
         raise MKAuthException(_("Username is unknown"))
 
-    if not hmac.compare_digest(cookie_hash, _generate_auth_hash(username, session_id)):
+    if not hmac.compare_digest(cookie_hash, generate_auth_hash(username, session_id)):
         raise MKAuthException(_("Invalid credentials"))
 
 
@@ -417,8 +351,8 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId) -> None:
     """
     now = datetime.now()
     if auth_cookie_name() not in request.cookies:
-        session_id = userdb.on_succeeded_login(user_id, now)
-        _create_auth_session(user_id, session_id)
+        session_id = on_succeeded_login(user_id, now)
+        create_auth_session(user_id, session_id)
         return
 
     # Refresh the existing auth cookie and update the session info
@@ -505,13 +439,13 @@ class LoginPage(Page):
                 # from mixed case to lower case.
                 username = result
 
-                session_id = userdb.on_succeeded_login(username, now)
+                session_id = on_succeeded_login(username, now)
 
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                _create_auth_session(username, session_id)
+                create_auth_session(username, session_id)
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...

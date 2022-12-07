@@ -6,7 +6,6 @@
 """The user profile mega menu and related AJAX endpoints"""
 
 
-import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -15,6 +14,8 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.userdb.utils import validate_start_url
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.userdb import remove_custom_attr
+from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -26,7 +27,7 @@ def _get_current_theme_title() -> str:
 
 def _get_sidebar_position() -> str:
     assert user.id is not None
-    sidebar_position = userdb.load_custom_attr(
+    sidebar_position = load_custom_attr(
         user_id=user.id, key="ui_sidebar_position", parser=lambda x: None if x == "None" else "left"
     )
 
@@ -190,6 +191,6 @@ def _set_user_attribute(key: str, value: str | None):  # type:ignore[no-untyped-
     user_id = user.id
 
     if value is None:
-        userdb.remove_custom_attr(user_id, key)
+        remove_custom_attr(user_id, key)
     else:
-        userdb.save_custom_attr(user_id, key, value)
+        save_custom_attr(user_id, key, value)

@@ -10,7 +10,8 @@ import pytest
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.login as login
-from cmk.gui.userdb import on_access, on_succeeded_login, session
+from cmk.gui.userdb import active_user_session, on_access
+from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context
@@ -26,30 +27,30 @@ def test_flash(user_id) -> None:  # type:ignore[no-untyped-def]
     now = datetime.now()
     with application_and_request_context(), login.UserSessionContext(user_id):
         session_id = on_succeeded_login(user_id, now)  # Create and activate session
-        assert session is not None
+        assert active_user_session is not None
 
         flash("abc")
-        assert session.session_info.flashes == ["abc"]
+        assert active_user_session.session_info.flashes == ["abc"]
 
     # Now create the second request to get the previously flashed message
     with application_and_request_context(), login.UserSessionContext(user_id):
         on_access(user_id, session_id, now)
-        assert session is not None
-        assert session.session_info.flashes == ["abc"]
+        assert active_user_session is not None
+        assert active_user_session.session_info.flashes == ["abc"]
 
         # Get the flashed messages removes the messages from the session
         # and subsequent calls to get_flashed_messages return the messages
         # over and over.
         assert get_flashed_messages() == [HTML("abc")]
         assert get_flashed_messages() == [HTML("abc")]
-        assert session.session_info.flashes == []
+        assert active_user_session.session_info.flashes == []
 
     # Now create the third request that should not have access to the flashed messages since the
     # second one consumed them.
     with application_and_request_context(), login.UserSessionContext(user_id):
         on_access(user_id, session_id, now)
-        assert session is not None
-        assert session.session_info.flashes == []
+        assert active_user_session is not None
+        assert active_user_session.session_info.flashes == []
         assert get_flashed_messages() == []
 
 

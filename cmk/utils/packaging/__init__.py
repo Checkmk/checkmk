@@ -707,15 +707,18 @@ def get_optional_manifests(
     }
 
 
-def get_enabled_manifests() -> Mapping[PackageID, Manifest]:
-    return _get_manifests(_get_enabled_package_paths())
+def get_enabled_manifests(log: logging.Logger | None = None) -> Mapping[PackageID, Manifest]:
+    return _get_manifests(_get_enabled_package_paths(), log)
 
 
-def _get_manifests(paths: Iterable[Path]) -> Mapping[PackageID, Manifest]:
+def _get_manifests(
+    paths: Iterable[Path], log: logging.Logger | None = None
+) -> Mapping[PackageID, Manifest]:
     return {
         manifest.id: manifest
         for pkg_path in paths
-        if (manifest := extract_manifest_optionally(pkg_path, logger)) is not None
+        if (manifest := extract_manifest_optionally(pkg_path, logger if log is None else log))
+        is not None
     }
 
 
@@ -866,8 +869,8 @@ def _deinstall_inapplicable_active_packages(
 def _install_applicable_inactive_packages(
     package_store: PackageStore, log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
-    for name, package_paths in _sort_enabled_packages_for_installation(log):
-        for manifest, _path in package_paths:  # TODO: drop this
+    for name, manifests in _sort_enabled_packages_for_installation(log):
+        for manifest in manifests:
             try:
                 install(
                     package_store,
@@ -887,18 +890,15 @@ def _install_applicable_inactive_packages(
 
 def _sort_enabled_packages_for_installation(
     log: logging.Logger,
-) -> Iterable[tuple[PackageName, Iterable[tuple[Manifest, Path]]]]:
-    packages = [
-        (manifest, package_path)
-        for package_path in _get_enabled_package_paths()
-        if (manifest := extract_manifest_optionally(package_path, log)) is not None
-    ]
+) -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
     return groupby(
         sorted(
-            sorted(packages, key=lambda x: x[0].version.sort_key, reverse=True),
-            key=lambda x: x[0].name,
+            sorted(
+                get_enabled_manifests(log).values(), key=lambda m: m.version.sort_key, reverse=True
+            ),
+            key=lambda m: m.name,
         ),
-        key=lambda x: x[0].name,
+        key=lambda m: m.name,
     )
 
 

@@ -109,7 +109,6 @@ def automation_discovery(
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
-    use_cached_snmp_data: bool,
     file_cache_options: FileCacheOptions,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
@@ -118,9 +117,6 @@ def automation_discovery(
     if host_name not in config_cache.all_active_hosts():
         result.error_text = ""
         return result
-
-    # TODO(ml): Move that to caller(s)
-    file_cache_options = file_cache_options._replace(use_outdated=True, maybe=use_cached_snmp_data)
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -134,6 +130,8 @@ def automation_discovery(
         ipaddress = (
             None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
         )
+
+        # The code below this line is duplicated in get_check_preview().
         nodes = config_cache.nodes_of(host_name)
         if nodes is None:
             hosts = [(host_name, ipaddress)]
@@ -148,7 +146,9 @@ def automation_discovery(
                     host_name_,
                     ipaddress_,
                     config_cache=config_cache,
-                    force_snmp_cache_refresh=not use_cached_snmp_data if nodes is None else False,
+                    force_snmp_cache_refresh=not file_cache_options.maybe
+                    if nodes is None
+                    else False,
                     selected_sections=NO_SELECTION,
                     on_scan_error=on_error if nodes is None else OnError.RAISE,
                     simulation_mode=config.simulation_mode,
@@ -167,6 +167,7 @@ def automation_discovery(
         )
         store_piggybacked_sections(host_sections)
         parsed_sections_broker = make_broker(host_sections)
+        # end of code duplication
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
@@ -463,7 +464,6 @@ def _discover_marked_host(
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,
-        use_cached_snmp_data=True,
         file_cache_options=file_cache_options,
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)

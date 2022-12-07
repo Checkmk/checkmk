@@ -63,7 +63,6 @@ def get_check_preview(
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
-    use_cached_snmp_data: bool,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
@@ -71,8 +70,7 @@ def get_check_preview(
     ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     host_attrs = get_host_attributes(host_name, config_cache)
 
-    # TODO(ml): Move to caller and get rid of use_cached_snmp_data
-    file_cache_options._replace(use_outdated=True, maybe=use_cached_snmp_data)
+    # The code below this line is duplicated in automation_discovery()
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ip_address)]
@@ -87,7 +85,7 @@ def get_check_preview(
                 host_name_,
                 ip_address_,
                 config_cache=config_cache,
-                force_snmp_cache_refresh=not use_cached_snmp_data if nodes is None else False,
+                force_snmp_cache_refresh=not file_cache_options.maybe if nodes is None else False,
                 selected_sections=NO_SELECTION,
                 on_scan_error=on_error if nodes is None else OnError.RAISE,
                 simulation_mode=config.simulation_mode,
@@ -106,6 +104,7 @@ def get_check_preview(
     )
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
+    # end of code duplication
 
     host_labels = analyse_host_labels(
         host_name=host_name,

@@ -145,8 +145,10 @@ class AutomationDiscovery(DiscoveryAutomation):
         else:
             use_cached_snmp_data = True
 
-        # Handle @scan here
-        file_cache_options = FileCacheOptions()
+        file_cache_options = FileCacheOptions(
+            use_outdated=True,
+            maybe=use_cached_snmp_data,
+        )
 
         if len(args) < 2:
             raise MKAutomationError(
@@ -167,7 +169,6 @@ class AutomationDiscovery(DiscoveryAutomation):
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
-                use_cached_snmp_data=use_cached_snmp_data,
                 file_cache_options=file_cache_options,
                 max_cachefile_age=config.max_cachefile_age(),
             )
@@ -237,8 +238,7 @@ class AutomationTryDiscovery(Automation):
             # Do a full service scan
             args = args[1:]
 
-        # Handle @scan here.
-        file_cache_options = FileCacheOptions()
+        file_cache_options = FileCacheOptions(use_outdated=True, maybe=use_cached_snmp_data)
 
         if args[0] == "@raiseerrors":
             on_error = OnError.RAISE
@@ -251,7 +251,6 @@ class AutomationTryDiscovery(Automation):
             config_cache=config.get_config_cache(),
             file_cache_options=file_cache_options,
             max_cachefile_age=config.max_cachefile_age(),
-            use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )
 
@@ -1714,7 +1713,7 @@ class AutomationGetAgentOutput(Automation):
         config_cache = config.get_config_cache()
 
         # No caching option over commandline here.
-        file_cache_options = FileCacheOptions()
+        file_cache_options = FileCacheOptions(maybe=True)
 
         success = True
         output = ""
@@ -1723,10 +1722,6 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(hostname)
             if ty == "agent":
-                # Where would the `disabled` option come from?
-                file_cache_options = file_cache_options._replace(
-                    maybe=not file_cache_options.disabled
-                )
                 for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,

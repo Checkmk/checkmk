@@ -1466,7 +1466,7 @@ modes.register(
 
 
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
-    file_cache_options = _handle_fetcher_options(options)
+    file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True, maybe=True)
 
     if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")

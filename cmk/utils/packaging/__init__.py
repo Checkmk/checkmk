@@ -9,11 +9,13 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Final, NamedTuple, TypedDict
+from typing import Final, TypedDict
+
+from typing_extensions import assert_never
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -36,6 +38,7 @@ from ._package import (
     PackageInfo,
     read_package_info_optionally,
 )
+from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName, PartPath
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 logger = logging.getLogger("cmk.utils.packaging")
@@ -79,16 +82,7 @@ def _get_permissions(path: str) -> int:
     raise PackageException("could not determine permissions for %r" % path)
 
 
-PartName = str
-PartPath = str
-PartFiles = list[str]
 PackageFiles = dict[PartName, PartFiles]
-
-
-class PackagePart(NamedTuple):
-    ident: PartName
-    title: str
-    path: PartPath
 
 
 Packages = dict[PackageName, PackageInfo]
@@ -122,50 +116,6 @@ def get_installed_package_info(
     )
 
 
-def get_config_parts() -> list[PackagePart]:
-    return [
-        PackagePart("ec_rule_packs", _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())),
-    ]
-
-
-def get_package_parts() -> list[PackagePart]:
-    return [
-        PackagePart(
-            "agent_based",
-            _("Agent based plugins (Checks, Inventory)"),
-            str(cmk.utils.paths.local_agent_based_plugins_dir),
-        ),
-        PackagePart("checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)),
-        PackagePart(
-            "inventory", _("Legacy inventory plugins"), str(cmk.utils.paths.local_inventory_dir)
-        ),
-        PackagePart(
-            "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
-        ),
-        PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
-        PackagePart(
-            "notifications", _("Notification scripts"), str(cmk.utils.paths.local_notifications_dir)
-        ),
-        PackagePart("gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)),
-        PackagePart("web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)),
-        PackagePart(
-            "pnp-templates",
-            _("PNP4Nagios templates (deprecated)"),
-            str(cmk.utils.paths.local_pnp_templates_dir),
-        ),
-        PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
-        PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
-        PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
-        PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
-        PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
-        PackagePart(
-            "alert_handlers",
-            _("Alert handlers"),
-            str(cmk.utils.paths.local_share_dir / "alert_handlers"),
-        ),
-    ]
-
-
 def format_file_name(package_id: PackageID) -> str:
     """
     >>> package_id = PackageID(
@@ -185,7 +135,7 @@ def release(pacname: PackageName) -> None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := package.files.get(part.ident, [])):
             continue
 
@@ -228,7 +178,7 @@ def create_mkp_object(package: PackageInfo) -> bytes:
         add_file("info.json", package.json_file_content().encode())
 
         # Now pack the actual files into sub tars
-        for part in get_package_parts() + get_config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 
@@ -244,7 +194,7 @@ def create_mkp_object(package: PackageInfo) -> bytes:
 
 
 def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := package.files.get(part.ident, [])):
             continue
 
@@ -477,7 +427,7 @@ def _install(  # pylint: disable=too-many-branches
 
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
-        for part in get_package_parts() + get_config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 
@@ -531,7 +481,7 @@ def _install(  # pylint: disable=too-many-branches
 
     # In case of an update remove files from old_package not present in new one
     if old_package is not None:
-        for part in get_package_parts() + get_config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             new_files = set(package.files.get(part.ident, []))
             old_files = set(old_package.files.get(part.ident, []))
             remove_files = old_files - new_files
@@ -587,7 +537,7 @@ def _conflicting_files(
     old_package: PackageInfo | None,
 ) -> Iterable[tuple[str, str]]:
     # Before installing check for conflicts
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         packaged = _packaged_files_in_dir(part.ident)
 
         old_files = set(old_package.files.get(part.ident, [])) if old_package else set()
@@ -633,7 +583,7 @@ def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
         if (package_info := get_installed_package_info(package_name)) is not None
     }
 
-    for part in get_package_parts():
+    for part in PACKAGE_PARTS:
         _validate_package_files_part(
             packages, pacname, part.ident, part.path, files.get(part.ident, [])
         )
@@ -759,14 +709,14 @@ def _get_enabled_package_paths():
 
 def unpackaged_files() -> dict[PackagePart, list[str]]:
     unpackaged = {}
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         unpackaged[part] = unpackaged_files_in_dir(part.ident, part.path)
     return unpackaged
 
 
 def package_part_info() -> PackagePartInfo:
     part_info: PackagePartInfo = {}
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         try:
             files = os.listdir(part.path)
         except OSError:
@@ -791,7 +741,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
         return []
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = {p.path for p in get_package_parts() + get_config_parts() if p.ident != part}
+    taboo_dirs = {p.path for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
     # os.path.realpath would resolve /omd to /opt/omd ...
     taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
     if directory in taboo_dirs:

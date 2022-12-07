@@ -16,14 +16,14 @@ import cmk.utils.tty as tty
 import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
+    CONFIG_PARTS,
     format_file_name,
-    get_config_parts,
     get_enabled_package_infos,
     get_installed_package_info,
-    get_package_parts,
     package_dir,
     PACKAGE_EXTENSION,
     package_info_template,
+    PACKAGE_PARTS,
     PackageException,
     PackageName,
     PackageVersion,
@@ -162,13 +162,13 @@ def show_package(name: str, show_info: bool = False) -> None:
     else:
         if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
-            for part in get_package_parts():
+            for part in PACKAGE_PARTS:
                 if part_files := package.files.get(part.ident, []):
                     sys.stdout.write(f"  {tty.bold}{part.title}{tty.normal}:\n")
                     for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
-            for part in get_package_parts():
+            for part in PACKAGE_PARTS:
                 for fn in package.files.get(part.ident, []):
                     sys.stdout.write(part.path + "/" + fn + "\n")
 
@@ -184,7 +184,7 @@ def package_create(args: list[str]) -> None:
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = package_info_template(pacname)
     filelists = package.files
-    for part in get_package_parts():
+    for part in PACKAGE_PARTS:
         files = unpackaged_files_in_dir(part.ident, part.path)
         filelists[part.ident] = files
         if len(files) > 0:
@@ -243,9 +243,7 @@ def package_pack(args: list[str]) -> None:
 
     # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.utils.paths.var_dir] + [
-        p.path for p in get_package_parts() + get_config_parts()
-    ]:
+    for directory in [cmk.utils.paths.var_dir] + [p.path for p in PACKAGE_PARTS + CONFIG_PARTS]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException(
                 "You are in %s!\n"

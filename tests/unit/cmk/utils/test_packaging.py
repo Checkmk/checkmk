@@ -18,7 +18,6 @@ from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
-from cmk.utils.i18n import _
 
 
 def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:
@@ -38,7 +37,7 @@ def package_dir() -> Iterable[None]:
 
 @pytest.fixture(autouse=True)
 def clean_dirs() -> Iterable[None]:
-    paths = [Path(p.path) for p in packaging.get_package_parts()] + [
+    paths = [Path(p.path) for p in packaging.PACKAGE_PARTS] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
     ]
@@ -85,68 +84,6 @@ def fixture_reload_apache(mocker: MockerFixture) -> Callable[[], None]:
     )
 
 
-def test_package_parts() -> None:
-    assert sorted(packaging.get_package_parts()) == sorted(
-        [
-            packaging.PackagePart(
-                "agent_based",
-                _("Agent based plugins (Checks, Inventory)"),
-                str(cmk.utils.paths.local_agent_based_plugins_dir),
-            ),
-            packaging.PackagePart(
-                "checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)
-            ),
-            packaging.PackagePart(
-                "notifications",
-                _("Notification scripts"),
-                str(cmk.utils.paths.local_notifications_dir),
-            ),
-            packaging.PackagePart(
-                "inventory", _("Legacy inventory plugins"), str(cmk.utils.paths.local_inventory_dir)
-            ),
-            packaging.PackagePart(
-                "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
-            ),
-            packaging.PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
-            packaging.PackagePart(
-                "gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)
-            ),
-            packaging.PackagePart(
-                "web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)
-            ),
-            packaging.PackagePart(
-                "pnp-templates",
-                _("PNP4Nagios templates (deprecated)"),
-                str(cmk.utils.paths.local_pnp_templates_dir),
-            ),
-            packaging.PackagePart(
-                "doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)
-            ),
-            packaging.PackagePart(
-                "locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)
-            ),
-            packaging.PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
-            packaging.PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
-            packaging.PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
-            packaging.PackagePart(
-                "alert_handlers",
-                _("Alert handlers"),
-                str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers")),
-            ),
-        ]
-    )
-
-
-def test_config_parts() -> None:
-    assert packaging.get_config_parts() == [
-        packaging.PackagePart(
-            "ec_rule_packs",
-            "Event Console rule packs",
-            "%s/mkeventd.d/mkp/rule_packs" % cmk.utils.paths.default_config_dir,
-        )
-    ]
-
-
 def test_get_permissions_unknown_path() -> None:
     with pytest.raises(packaging.PackageException):
         assert packaging._get_permissions("lala")
@@ -165,32 +102,6 @@ def test_get_permissions(path, expected) -> None:  # type:ignore[no-untyped-def]
 
 def test_package_dir() -> None:
     assert isinstance(packaging.package_dir(), Path)
-
-
-def test_get_config_parts() -> None:
-    assert [p.ident for p in packaging.get_config_parts()] == ["ec_rule_packs"]
-
-
-def test_get_package_parts() -> None:
-    assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted(
-        [
-            "agent_based",
-            "agents",
-            "alert_handlers",
-            "bin",
-            "checkman",
-            "checks",
-            "doc",
-            "inventory",
-            "lib",
-            "locales",
-            "mibs",
-            "notifications",
-            "pnp-templates",
-            "web",
-            "gui",
-        ]
-    )
 
 
 def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.PackageInfo:

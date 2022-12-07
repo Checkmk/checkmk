@@ -1,0 +1,16 @@
+Title: Agent controller: add support for systemd version 219
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1670413956
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p20
+
+This Werk brings support for systemd version 219 in case the agent controller is used.
+
+The limitation of the systemd version is due to the featureset required by the agent.
+In case the agent controller is used, the agent does not need the <tt>REMOTE_ADDR</tt> variable, in which case we can lower the required version from 220 to 219.
+

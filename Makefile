@@ -47,7 +47,7 @@ FILES_TO_FORMAT_LINUX := \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
 
 CMAKE_FORMAT       := cmake-format
-CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/_deps/*')
+CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/*')
 
 
 WERKS              := $(wildcard .werks/[0-9]*)

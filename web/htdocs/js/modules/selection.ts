@@ -284,21 +284,34 @@ export function toggle_all_rows(obj, name_select, name_deselect) {
         )
             some_failed = true;
     }
-    var span: ChildNode | null = null;
+
+    var entry = document.getElementById("menu_entry_checkbox_selection")!;
+    var span: HTMLSpanElement | null = null;
+    var img: HTMLImageElement | null = null;
     // Toggle the state
     if (name_select || name_deselect) {
-        var span = document.getElementById("menu_entry_checkbox_selection")!
-            .childNodes[0].lastChild;
+        span = entry.getElementsByTagName("span")[0];
+        img = entry.getElementsByTagName("img")[0];
     }
     if (all_selected) {
         remove_selected_rows(checkboxes);
-        if (name_select && span) {
-            span.textContent = name_select;
+        if (name_select) {
+            if (span) {
+                span.textContent = name_select;
+            }
+            if (img) {
+                img.src = img.src.replace("toggle_on", "toggle_off");
+            }
         }
     } else {
         select_all_rows(checkboxes, some_failed && none_selected);
-        if (name_deselect && span) {
-            span.textContent = name_deselect;
+        if (name_deselect) {
+            if (span) {
+                span.textContent = name_deselect;
+            }
+            if (img) {
+                img.src = img.src.replace("toggle_off", "toggle_on");
+            }
         }
     }
 }

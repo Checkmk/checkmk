@@ -1593,8 +1593,8 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 
 def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show check parameters"),
-        icon_name="checked_checkbox" if options.show_parameters else "checkbox",
+        title=_("Hide check parameters") if options.show_parameters else _("Show check parameters"),
+        icon_name="toggle_on" if options.show_parameters else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1608,8 +1608,8 @@ def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -
 
 def _page_menu_entry_show_checkboxes(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show checkboxes"),
-        icon_name="checked_checkbox" if options.show_checkboxes else "checkbox",
+        title=_("Hide checkboxes") if options.show_checkboxes else _("Show checkboxes"),
+        icon_name="toggle_on" if options.show_checkboxes else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1629,8 +1629,10 @@ def _page_menu_entry_show_discovered_labels(
     host: CREHost, options: DiscoveryOptions
 ) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show discovered service labels"),
-        icon_name="checked_checkbox" if options.show_discovered_labels else "checkbox",
+        title=_("Hide discovered service labels")
+        if options.show_discovered_labels
+        else _("Show discovered service labels"),
+        icon_name="toggle_on" if options.show_discovered_labels else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1644,8 +1646,8 @@ def _page_menu_entry_show_discovered_labels(
 
 def _page_menu_entry_show_plugin_names(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show plugin names"),
-        icon_name="checked_checkbox" if options.show_plugin_names else "checkbox",
+        title=_("Hide plugin names") if options.show_plugin_names else _("Show plugin names"),
+        icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
                 host,

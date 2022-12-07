@@ -13,16 +13,7 @@ import queue
 from collections.abc import Mapping
 from typing import Any, NoReturn
 
-from pydantic import BaseModel, StrictStr
-
 from cmk.utils.type_defs import HTTPMethod
-
-
-class AuxTagJSON(BaseModel):
-    aux_tag_id: StrictStr
-    title: StrictStr
-    topic: StrictStr
-
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -151,7 +142,6 @@ class RestApiClient:
         method: HTTPMethod,
         url: str,
         body: JSON | None = None,
-        pydantic_basemodel_body: BaseModel | None = None,
         query_params: Mapping[str, str] | None = None,
         headers: Mapping[str, str] | None = None,
         expect_ok: bool = True,
@@ -164,13 +154,10 @@ class RestApiClient:
         if not url_is_complete:
             url = self._url_prefix + url
 
-        if pydantic_basemodel_body is not None:
-            request_body = pydantic_basemodel_body.json()
+        if body is not None:
+            request_body = json.dumps(body)
         else:
-            if body is not None:
-                request_body = json.dumps(body)
-            else:
-                request_body = ""
+            request_body = ""
 
         resp = self._request_handler.request(
             method=method,
@@ -384,39 +371,3 @@ class RestApiClient:
             p.join()
 
         return result
-
-    def get_aux_tag(self, tag_id: str, expect_ok: bool = True) -> Response:
-        return self._request(
-            "get",
-            url=f"/objects/aux_tag/{tag_id}",
-            expect_ok=expect_ok,
-        )
-
-    def get_aux_tags(self, expect_ok: bool = True) -> Response:
-        return self._request(
-            "get",
-            url="/domain-types/aux_tag/collections/all",
-            expect_ok=expect_ok,
-        )
-
-    def create_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
-        return self._request(
-            "post",
-            url="/domain-types/aux_tag/collections/all",
-            pydantic_basemodel_body=tag_data,
-            expect_ok=expect_ok,
-        )
-
-    def edit_aux_tag(self, tag_data: AuxTagJSON, expect_ok: bool = True) -> Response:
-        return self._request(
-            "put",
-            url=f"/objects/aux_tag/{tag_data.aux_tag_id}",
-            body={"title": tag_data.title, "topic": tag_data.topic},
-            expect_ok=expect_ok,
-        )
-
-    def delete_aux_tag(self, tag_id: str) -> Response:
-        return self._request(
-            "post",
-            url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
-        )

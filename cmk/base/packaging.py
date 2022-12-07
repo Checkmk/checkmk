@@ -262,6 +262,12 @@ def package_pack(args: list[str]) -> None:
     pacname = PackageName(args[0])
     if (package := get_installed_package_info(pacname)) is None:
         raise PackageException("Package %s not existing or corrupt." % pacname)
+
+    try:
+        _ = PackageVersion.parse_semver(package.version)
+    except ValueError as exc:
+        raise PackageException from exc
+
     tarfilename = format_file_name(package.id)
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)

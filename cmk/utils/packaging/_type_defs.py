@@ -10,6 +10,7 @@ from functools import cached_property
 from typing import Literal, Union
 
 from pydantic import BaseModel
+from semver import VersionInfo
 
 from cmk.utils.exceptions import MKException
 
@@ -31,13 +32,10 @@ _SortKeyElement = Union[
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
-    _REGEX = re.compile("[0-9.]+")
-    _MISMATCH_MSG = "Only digits and dots are allowed in the version number."
 
-    def __new__(cls, value: str) -> PackageVersion:
-        if not cls._REGEX.match(value):
-            raise ValueError(cls._MISMATCH_MSG)
-        return super().__new__(cls, value)
+    @staticmethod
+    def parse_semver(raw: str) -> VersionInfo:
+        return VersionInfo.parse(raw)
 
     @cached_property
     def sort_key(self) -> tuple[_SortKeyElement, ...]:

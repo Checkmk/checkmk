@@ -138,7 +138,7 @@ def test_create_twice() -> None:
 def test_read_package_info() -> None:
     _create_simple_test_package(packaging.PackageName("aaa"))
     package_info = _read_package_info(packaging.PackageName("aaa"))
-    assert package_info.version == "1.0"
+    assert package_info.version == "1.0.0"
     assert packaging.package_num_files(package_info) == 1
 
 
@@ -151,7 +151,7 @@ def test_read_package_info_not_existing() -> None:
 
 def test_edit_not_existing() -> None:
     new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
-    new_package_info.version = packaging.PackageVersion("2.0")
+    new_package_info.version = packaging.PackageVersion("2.0.0")
 
     with pytest.raises(packaging.PackageException):
         packaging.edit(packaging.PackageName("aaa"), new_package_info)
@@ -159,15 +159,15 @@ def test_edit_not_existing() -> None:
 
 def test_edit() -> None:
     new_package_info = packaging.package_info_template(packaging.PackageName("aaa"))
-    new_package_info.version = packaging.PackageVersion("2.0")
+    new_package_info.version = packaging.PackageVersion("2.0.0")
 
     package_info = _create_simple_test_package(packaging.PackageName("aaa"))
-    assert package_info.version == packaging.PackageVersion("1.0")
+    assert package_info.version == packaging.PackageVersion("1.0.0")
 
     packaging.edit(packaging.PackageName("aaa"), new_package_info)
 
     assert _read_package_info(packaging.PackageName("aaa")).version == packaging.PackageVersion(
-        "2.0"
+        "2.0.0"
     )
 
 
@@ -200,7 +200,7 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
 
     assert packaging._package_exists(packaging.PackageName("aaa")) is True
     package_info = _read_package_info(packaging.PackageName("aaa"))
-    assert package_info.version == "1.0"
+    assert package_info.version == "1.0.0"
     assert package_info.files["checks"] == ["aaa"]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
@@ -318,7 +318,7 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     expected_package_info = _read_package_info(packaging.PackageName("optional"))
 
     assert packaging.get_optional_package_infos(packaging.PackageStore()) == {
-        "optional-1.0.mkp": (expected_package_info, True)
+        "optional-1.0.0.mkp": (expected_package_info, True)
     }
 
 

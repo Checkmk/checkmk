@@ -54,7 +54,7 @@ def package_info_template(pacname: PackageName) -> PackageInfo:
         title=f"Title of {pacname}",
         name=pacname,
         description="Please add a description here",
-        version=PackageVersion("1.0"),
+        version=PackageVersion("1.0.0"),
         version_packaged=cmk_version.__version__,
         version_min_required=cmk_version.__version__,
         version_usable_until=None,

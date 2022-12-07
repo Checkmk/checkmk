@@ -101,6 +101,13 @@ while true; do
     esac
 done
 
+# make sure our CMake artifacts are up-to-date  ################################
+
+if [ "CMakeLists.txt" -nt "build/compile_commands.json" ]; then
+    # This can take 3-4s, even when there is nothing to do, so we need the guard above.
+    cmake -S . -B build
+fi
+
 # calculate dependencies #######################################################
 
 # TODO: Just for debugging, remove later

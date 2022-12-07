@@ -6,7 +6,7 @@ Date: 1614862941
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b9
+Version: 2.1.0b1
 
 This setting has been deprecated before Checkmk 1.4 and has now been finally
 removed. It was only kept for compatibility with pre 1.4 sites in distributed

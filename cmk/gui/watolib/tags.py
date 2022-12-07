@@ -68,7 +68,18 @@ class TagConfigFile:
 
 def load_tag_config() -> TagConfig:
     """Load the tag config object based upon the most recently saved tag config file"""
-    tag_config = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_modification())
+    tag_config = TagConfig.from_config(TagConfigFile().load_for_modification())
+    return tag_config
+
+
+def load_tag_config_read_only() -> TagConfig:
+    return TagConfig.from_config(TagConfigFile().load_for_reading())
+
+
+def load_all_tag_config_read_only() -> TagConfig:
+    """Load the tag config + the built in tag config.  Read Only"""
+    tag_config = load_tag_config_read_only()
+    tag_config += BuiltinTagConfig()
     return tag_config
 
 
@@ -128,13 +139,6 @@ def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type:ignore
     if builtin_included:
         tag_config += BuiltinTagConfig()
     return tag_config.tag_group_exists(ident)
-
-
-def load_aux_tags() -> list[str]:
-    """Return the list available auxiliary tag ids (ID != GUI title)"""
-    tag_config = load_tag_config()
-    tag_config += cmk.utils.tags.BuiltinTagConfig()
-    return [entry[0] for entry in tag_config.aux_tag_list.get_choices()]
 
 
 def _update_tag_dependencies():

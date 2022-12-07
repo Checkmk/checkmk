@@ -1,0 +1,13 @@
+Title: Fix wrong results in view on combined host tag search
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1670419399
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+If you used a combined search with host tags, e.g. "s: MY_SERVICE tg:
+MY_AUX_TAG" in the monitoring search, the preview showed the correct result but
+the view that was opened on enter showed an incorrect result.

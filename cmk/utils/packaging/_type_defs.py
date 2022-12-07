@@ -5,7 +5,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from functools import cached_property
+from typing import Literal, Union
 
 from pydantic import BaseModel
 
@@ -14,6 +16,17 @@ from cmk.utils.exceptions import MKException
 
 class PackageException(MKException):
     pass
+
+
+_SortKeyElement = Union[
+    # First element makes sure
+    #  a) Never compare different types
+    #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
+    #  c) A larger set of fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
+    tuple[Literal[0], str],
+    tuple[Literal[1], int],
+    tuple[Literal[2], None],
+]
 
 
 class PackageVersion(str):
@@ -27,38 +40,31 @@ class PackageVersion(str):
         return super().__new__(cls, value)
 
     @cached_property
-    def sort_key(self) -> tuple[tuple[float, str], ...]:
+    def sort_key(self) -> tuple[_SortKeyElement, ...]:
         """Try our best to sort version strings
 
-        They should only consist of dots and digits, but we try not to ever crash.
-        This does the right thing for reasonable versions:
-
-        >>> PackageVersion("12.3").sort_key()
-        ((12, ''), (3, ''))
-        >>> PackageVersion("2022.09.03").sort_key() < PackageVersion("2022.8.21").sort_key()
-        False
-
-        And it does not crash for nonsense values (which our GUI does not allow).
-        Obviously that's not a meaningful result.
-
-        >>> PackageVersion("12.0-alpha").sort_key()
-        ((12, ''), (-inf, '0-alpha'))
-        >>> PackageVersion("12.0-alpha").sort_key() >= PackageVersion("käsebrot 3.0").sort_key()
-        True
-
-        Reasonable ones are "newer":
-
-        >>> PackageVersion("wurstsalat").sort_key() < PackageVersion("0.1").sort_key()
-        True
+        This should be compatible with the spec for semantic versioning (semver.org).
         """
-        key_elements: list[tuple[float, str]] = []
-        for s in self.split("."):
-            try:
-                key_elements.append((int(s), ""))
-            except ValueError:
-                key_elements.append((float("-Inf"), s))
 
-        return tuple(key_elements)
+        def convert_identifiers(ids: str) -> Iterable[_SortKeyElement]:
+            for i in ids.split("."):
+                try:
+                    yield (1, int(i))
+                except ValueError:
+                    yield (0, i)
+
+        without_build_metadata = self.split("+", 1)[0]
+
+        version, prerelease = (
+            without_build_metadata.split("-", 1)
+            if "-" in without_build_metadata
+            else (without_build_metadata, "")
+        )
+        return (
+            tuple(convert_identifiers(version))
+            + (tuple(convert_identifiers(prerelease)) if prerelease else ())
+            + ((2, None),)
+        )
 
 
 class PackageName(str):

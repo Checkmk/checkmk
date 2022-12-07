@@ -5,7 +5,34 @@
 
 import pytest
 
-from cmk.utils.packaging._type_defs import PackageName
+from cmk.utils.packaging._type_defs import PackageName, PackageVersion
+
+
+class TestPackageVersion:
+    def test_sort_key_semver_simple(self) -> None:
+        assert PackageVersion("1.2.3").sort_key < PackageVersion("1.2.4").sort_key
+
+    def test_sort_key_semver_prerelease(self) -> None:
+        # Pre-release versions have a lower precedence than the associated normal version.
+        assert PackageVersion("1.2.3-alpha").sort_key < PackageVersion("1.2.3").sort_key
+        # Identifiers consisting of only digits are compared numerically.
+        assert PackageVersion("1.2.3-3").sort_key < PackageVersion("1.2.3-12").sort_key
+        # Identifiers with letters or hyphens are compared lexically in ASCII sort order.
+        assert PackageVersion("1.2.3-alpha").sort_key < PackageVersion("1.2.3-beta").sort_key
+        # Numeric identifiers always have lower precedence than non-numeric identifiers.
+        assert PackageVersion("1.2.3-alpha").sort_key < PackageVersion("1.2.3-1").sort_key
+        # A larger set of pre-release fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
+        assert (
+            PackageVersion("1.2.3-alpha.beta.wurstbrot").sort_key
+            < PackageVersion("1.2.3-alpha.beta").sort_key
+        )
+
+    def test_sort_key_semver_ignores_build_metadata(self) -> None:
+        # Build metadata MUST be ignored when determining version precedence.
+        assert (
+            PackageVersion("1.2.3-kaese+x64").sort_key
+            == PackageVersion("1.2.3-kaese+sparc").sort_key
+        )
 
 
 class TestPackageName:

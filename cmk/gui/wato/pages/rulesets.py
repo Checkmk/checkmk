@@ -522,6 +522,7 @@ def _page_menu_entries_predefined_searches(group: str | None) -> Iterable[PageMe
                 "icon": "rulesets",
                 "emblem": search_emblem,
             },
+            is_shortcut=search_term == "ruleset_used",
             item=make_simple_link(folder_preserving_link(uri_params)),
         )
 

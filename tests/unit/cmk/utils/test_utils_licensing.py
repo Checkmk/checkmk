@@ -14,11 +14,11 @@ import livestatus
 
 import cmk.utils.licensing as licensing
 from cmk.utils.licensing import (
-    _load_history_dump,
     _serialize_dump,
     LicenseUsageHistory,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
+    load_history_dump,
     update_license_usage,
 )
 from cmk.utils.licensing.export import (
@@ -59,7 +59,7 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
 
     assert update_license_usage() == 0
-    assert len(_load_history_dump().history) == 1
+    assert len(load_history_dump().history) == 1
 
 
 def test_update_license_usage_livestatus_socket_error(
@@ -89,7 +89,7 @@ def test_update_license_usage_livestatus_socket_error(
     monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
 
     assert update_license_usage() == 1
-    assert len(_load_history_dump().history) == 0
+    assert len(load_history_dump().history) == 0
 
 
 def test_update_license_usage_livestatus_not_found_error(
@@ -119,7 +119,7 @@ def test_update_license_usage_livestatus_not_found_error(
     monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 0)
 
     assert update_license_usage() == 1
-    assert len(_load_history_dump().history) == 0
+    assert len(load_history_dump().history) == 0
 
 
 def test_update_license_usage_next_run_ts_not_reached(
@@ -151,7 +151,7 @@ def test_update_license_usage_next_run_ts_not_reached(
     monkeypatch.setattr(licensing, "_get_next_run_ts", lambda fp: 2 * time.time())
 
     assert update_license_usage() == 0
-    assert len(_load_history_dump().history) == 0
+    assert len(load_history_dump().history) == 0
 
 
 def test_serialize_history_dump() -> None:

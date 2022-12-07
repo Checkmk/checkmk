@@ -91,7 +91,7 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         if now.timestamp() < _get_next_run_ts(next_run_filepath):
             return 0
 
-        history_dump = _load_history_dump()
+        history_dump = load_history_dump()
         history_dump.history.add_sample(sample)
         _save_history_dump(history_dump)
 
@@ -243,7 +243,7 @@ def _save_history_dump(history_dump: LicenseUsageHistoryDump) -> None:
     store.save_bytes_to_file(history_dump_filepath, _serialize_dump(history_dump.for_report()))
 
 
-def _load_history_dump() -> LicenseUsageHistoryDump:
+def load_history_dump() -> LicenseUsageHistoryDump:
     history_dump_filepath = _get_history_dump_filepath()
     raw_history_dump = deserialize_dump(
         store.load_bytes_from_file(

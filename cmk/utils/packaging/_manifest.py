@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 import pprint
 import tarfile
+from functools import lru_cache
 from io import BytesIO
 from logging import Logger
 from pathlib import Path
@@ -85,8 +86,13 @@ def extract_manifest(file_content: bytes) -> Manifest:
 
 def extract_manifest_optionally(pkg_path: Path, logger: Logger) -> Manifest | None:
     try:
-        return extract_manifest(pkg_path.read_bytes())
+        return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
     except Exception:
         # Do not make broken files / packages fail the whole mechanism
         logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None
+
+
+@lru_cache
+def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
+    return extract_manifest(package_path.read_bytes())

@@ -52,7 +52,8 @@ PACKAGES := \
     heirloom-mailx \
     snap7 \
     heirloom-pkgtools \
-    livestatus
+    livestatus \
+    xmlsec1
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

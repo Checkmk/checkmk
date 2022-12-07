@@ -150,8 +150,8 @@ include \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \
-    packages/livestatus/livestatus.make
-
+    packages/livestatus/livestatus.make \
+    packages/xmlsec1/xmlsec1.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make

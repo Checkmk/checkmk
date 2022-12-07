@@ -25,3 +25,6 @@ redis()
 load("//packages/openssl:openssl_http.bzl", "openssl")
 openssl()
 
+load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
+xmlsec1()
+

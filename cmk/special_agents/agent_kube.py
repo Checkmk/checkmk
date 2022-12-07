@@ -2161,7 +2161,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     api_cron_jobs=api_data.cron_jobs,
                     monitored_api_namespaces=monitored_api_namespaces,
                     piggyback_formatter=piggyback_formatter,
-                    piggyback_formatter_node=piggyback_formatter_node,
                 )
                 common.write_sections(
                     common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)

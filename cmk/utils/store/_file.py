@@ -13,6 +13,8 @@ from pathlib import Path
 from stat import S_IMODE, S_IWOTH
 from typing import Any, Final, Generic, Protocol, Type, TypeVar
 
+from pydantic import BaseModel
+
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
@@ -24,6 +26,7 @@ __all__ = [
     "DimSerializer",
     "ObjectStore",
     "PickleSerializer",
+    "PydanticStore",
     "TextSerializer",
     "RealIo",
     "FileIo",
@@ -209,3 +212,18 @@ class ObjectStore(Generic[TObject]):
     def read_obj(self, *, default: TObject) -> TObject:
         raw = self._io.read()
         return self._serializer.deserialize(raw) if raw else default
+
+
+Model_T = TypeVar("Model_T", bound=BaseModel)
+
+
+class PydanticStore(ObjectStore[Model_T]):
+    def __init__(self, path: Path, model: Type[Model_T]) -> None:
+        class PydanticSerializer:
+            def serialize(self, data: Model_T) -> bytes:
+                return data.json().encode("utf-8")
+
+            def deserialize(self, raw: bytes) -> Model_T:
+                return model.parse_raw(raw.decode("utf-8"))
+
+        super().__init__(path, serializer=PydanticSerializer())

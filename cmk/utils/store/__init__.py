@@ -22,6 +22,7 @@ from cmk.utils.store._file import (
     DimSerializer,
     ObjectStore,
     PickleSerializer,
+    PydanticStore,
     Serializer,
     TextSerializer,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "ObjectStore",
     "PickleSerializer",
     "Serializer",
+    "PydanticStore",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",

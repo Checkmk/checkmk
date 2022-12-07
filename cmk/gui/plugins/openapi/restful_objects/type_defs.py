@@ -29,6 +29,7 @@ DomainType = Literal[
     "activation_run",
     "agent",
     "agent_binary",
+    "aux_tag",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
@@ -70,6 +71,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/create",
+    "cmk/create_aux_tag",
     "cmk/create_host",
     "cmk/create_service",
     "cmk/create_cluster",
@@ -112,6 +114,7 @@ CmkEndpointName = Literal[
     "cmk/link_uuid",
     "cmk/update_and_acknowledge",
     "cmk/change_state",
+    "cmk/update",
 ]
 
 RestfulEndpointName = Literal[

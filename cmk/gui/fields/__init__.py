@@ -25,6 +25,7 @@ from cmk.gui.fields.attributes import (
     NetworkScanResult,
     SNMPCredentials,
 )
+from cmk.gui.fields.custom_fields import AuxTagIDField
 from cmk.gui.fields.definitions import (
     attributes_field,
     column_field,
@@ -54,6 +55,7 @@ from cmk.gui.fields.validators import (
 
 __all__ = [
     "attributes_field",
+    "AuxTagIDField",
     "column_field",
     "customer_field",
     "CustomAttributes",

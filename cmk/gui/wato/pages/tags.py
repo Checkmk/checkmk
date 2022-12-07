@@ -693,7 +693,7 @@ class ModeEditAuxtag(ABCEditTagMode):
     def page(self):
         html.begin_form("aux_tag")
 
-        self._valuespec().render_input("aux_tag", self._aux_tag.get_dict_format())
+        self._valuespec().render_input("aux_tag", self._aux_tag.to_config())
 
         forms.end()
         html.show_localization_hint()
@@ -948,7 +948,7 @@ def _rename_tags_after_confirmation(
         with output_funnel.plugged():
             html.write_text(
                 _(
-                    "Hosts where this tag group is explicitely set "
+                    "Hosts where this tag group is explicitly set "
                     "and that are effected by the change"
                 )
                 + ":"

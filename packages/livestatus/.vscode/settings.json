@@ -116,5 +116,8 @@
     "C_Cpp.clang_format_fallbackStyle": "Google",
     "clang-format.executable": "/usr/bin/clang-format-12",
     "clang-format.fallbackStyle": "Google",
-    "window.title": "${dirty}${activeEditorShort}${separator}\"LIB-LIVE\"${separator}"
+    "window.title": "${dirty}${activeEditorShort}${separator}\"LIB-LIVE\"${separator}",
+    "search.exclude": {
+        "**/build": true
+    }
 }

@@ -1,4 +1,3 @@
-set(CMAKE_VERBOSE_MAKEFILE ON)
 enable_testing()
 
 add_executable(test test.cc)

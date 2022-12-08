@@ -1,5 +1,3 @@
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 set(header_location ${Livestatus_SOURCE_DIR}/include/livestatus)
 set(livestatus_headers
     ${header_location}/BitMask.h ${header_location}/ChronoUtils.h

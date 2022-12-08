@@ -35,8 +35,7 @@ def test_pull_host_registered(tmp_path: Path, uuid: UUID) -> None:
 
 def test_push_host_registered(tmp_path: Path, uuid: UUID) -> None:
     source = site_context.agent_output_dir() / str(uuid)
-    target_dir = tmp_path / "hostname"
-    target_dir.touch()
+    target_dir = tmp_path / "push-agent" / "hostname"
     source.symlink_to(target_dir)
 
     host = Host(uuid)

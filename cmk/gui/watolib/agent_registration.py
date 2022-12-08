@@ -59,4 +59,4 @@ class AutomationRemoveTLSRegistration(AutomationCommand):
 
 
 def _remove_tls_registration(host_names: Sequence[HostName]) -> None:
-    get_uuid_link_manager().unlink_sources(host_names)
+    get_uuid_link_manager().unlink(host_names)

@@ -133,7 +133,7 @@ if [ ${RUN_CHECK_FORMAT} = yes ]; then
 fi
 
 if [ ${RUN_BUILD} = yes ]; then
-    echo "running build..." # TODO
+    cmake --build build --target livestatus test
 fi
 
 if [ ${RUN_UNIT_TESTS} = yes ]; then

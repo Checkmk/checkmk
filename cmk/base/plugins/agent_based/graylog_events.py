@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -55,12 +57,14 @@ def discover_graylog_events(section: EventsInfoSection) -> DiscoveryResult:
         yield Service(item=None)
 
 
-def check_graylog_events(section: EventsInfoSection) -> CheckResult:
+def check_graylog_events(params: Mapping[str, Any], section: EventsInfoSection) -> CheckResult:
     if not section:
         return
 
     yield from check_levels(
         value=section.num_of_events,
+        levels_upper=params.get("events_upper", (None, None)),
+        levels_lower=params.get("events_lower", (None, None)),
         render_func=str,
         label="Total number of events in the last 24 hours",
     )
@@ -68,6 +72,8 @@ def check_graylog_events(section: EventsInfoSection) -> CheckResult:
     if section.has_since_argument and section.events_since:
         yield from check_levels(
             value=section.num_of_events_in_range,
+            levels_upper=params.get("events_in_range_upper", (None, None)),
+            levels_lower=params.get("events_in_range_lower", (None, None)),
             render_func=str,
             label=f"Total number of events in the last {render.timespan(section.events_since)}",
         )
@@ -78,4 +84,6 @@ register.check_plugin(
     check_function=check_graylog_events,
     discovery_function=discover_graylog_events,
     service_name="Graylog Events",
+    check_default_parameters={},
+    check_ruleset_name="graylog_events",
 )

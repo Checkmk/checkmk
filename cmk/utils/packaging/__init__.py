@@ -94,14 +94,14 @@ class PackagePart(NamedTuple):
 Packages = dict[PackageName, PackageInfo]
 
 
-class _PackagePartInfoElement(TypedDict):
+class PackagePartInfoElement(TypedDict):
     title: str
     permissions: Sequence[int]
     path: PartPath
     files: Sequence[str]
 
 
-PackagePartInfo = dict[PartName, _PackagePartInfoElement]
+PackagePartInfo = dict[PartName, PackagePartInfoElement]
 
 package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],

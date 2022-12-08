@@ -42,12 +42,23 @@ APC_SYMMETRA_1 = """
 .1.3.6.1.4.1.318.1.1.1.9.3.3.1.7.1.1.6 -1
 """
 
+# walks/usv-liebert
+UPS_POWER_0 = """
+.1.3.6.1.2.1.33.1.4.4.1.2.1  230
+.1.3.6.1.2.1.33.1.4.4.1.2.2  230
+.1.3.6.1.2.1.33.1.4.4.1.2.3  229
+.1.3.6.1.2.1.33.1.4.4.1.4.1  2300
+.1.3.6.1.2.1.33.1.4.4.1.4.2  3500
+.1.3.6.1.2.1.33.1.4.4.1.4.3  4800
+"""
+
 
 @pytest.mark.parametrize(
-    "walk, result",
+    "walk, section_name, result",
     [
         pytest.param(
             APC_SYMMETRA_0,
+            SectionName("apc_symmetra_power"),
             [
                 Service(item="1"),
                 # XXX: this is wrong, and should include the other two phases
@@ -56,6 +67,7 @@ APC_SYMMETRA_1 = """
         ),
         pytest.param(
             APC_SYMMETRA_1,
+            SectionName("apc_symmetra_power"),
             [
                 Service(item="1"),
                 Service(item="2"),
@@ -63,20 +75,31 @@ APC_SYMMETRA_1 = """
             ],
             id="apc-symmetra-1",
         ),
+        pytest.param(
+            UPS_POWER_0,
+            SectionName("ups_power"),
+            [
+                Service(item="1"),
+                Service(item="2"),
+                Service(item="3"),
+            ],
+            id="ups-power-0",
+        ),
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_power_discover(walk: str, result: DiscoveryResult) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(SectionName("apc_symmetra_power"), walk))
+def test_power_discover(walk: str, section_name: SectionName, result: DiscoveryResult) -> None:
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
 
     assert list(discover_epower(parsed)) == result
 
 
 @pytest.mark.parametrize(
-    "walk, item, params, result",
+    "walk, section_name, item, params, result",
     [
         pytest.param(
             APC_SYMMETRA_0,
+            SectionName("apc_symmetra_power"),
             "1",
             {"levels_lower": (20, 1)},
             [
@@ -87,6 +110,7 @@ def test_power_discover(walk: str, result: DiscoveryResult) -> None:
         ),
         pytest.param(
             APC_SYMMETRA_1,
+            SectionName("apc_symmetra_power"),
             "2",
             {"levels_lower": (20, 1)},
             [
@@ -97,6 +121,7 @@ def test_power_discover(walk: str, result: DiscoveryResult) -> None:
         ),
         pytest.param(
             APC_SYMMETRA_1,
+            SectionName("apc_symmetra_power"),
             "2",
             {"levels_lower": (3000, 2000)},
             [
@@ -107,6 +132,7 @@ def test_power_discover(walk: str, result: DiscoveryResult) -> None:
         ),
         pytest.param(
             APC_SYMMETRA_1,
+            SectionName("apc_symmetra_power"),
             "2",
             {"levels_lower": (6000, 3000)},
             [
@@ -115,10 +141,45 @@ def test_power_discover(walk: str, result: DiscoveryResult) -> None:
             ],
             id="apc-symmetra-1-crit",
         ),
+        pytest.param(
+            UPS_POWER_0,
+            SectionName("ups_power"),
+            "2",
+            {"levels_lower": (20, 1)},
+            [
+                Result(state=State.OK, summary="Power: 3500 W"),
+                Metric("power", 3500.0),
+            ],
+            id="ups-power-2-ok",
+        ),
+        pytest.param(
+            UPS_POWER_0,
+            SectionName("ups_power"),
+            "2",
+            {"levels_lower": (4000, 3000)},
+            [
+                Result(state=State.WARN, summary="Power: 3500 W (warn/crit below 4000 W/3000 W)"),
+                Metric("power", 3500.0),
+            ],
+            id="ups-power-2-warn",
+        ),
+        pytest.param(
+            UPS_POWER_0,
+            SectionName("ups_power"),
+            "2",
+            {"levels_lower": (6000, 4000)},
+            [
+                Result(state=State.CRIT, summary="Power: 3500 W (warn/crit below 6000 W/4000 W)"),
+                Metric("power", 3500.0),
+            ],
+            id="ups-power-2-crit",
+        ),
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_epower_check(walk: str, item: str, params: Any, result: CheckResult) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(SectionName("apc_symmetra_power"), walk))
+def test_epower_check(
+    walk: str, section_name: SectionName, item: str, params: Any, result: CheckResult
+) -> None:
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
 
     assert list(check_epower(item=item, params=params, section=parsed)) == result

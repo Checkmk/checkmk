@@ -20,6 +20,7 @@ from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
+    ColumnTypes,
     PainterName,
     PainterParameters,
     PainterSpec,
@@ -217,7 +218,7 @@ def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
 
 
 class _VSColumnChoice(NamedTuple):
-    column_type: Literal["column", "join_column"]
+    column_type: ColumnTypes
     title: str
     vs: Tuple
 
@@ -230,8 +231,6 @@ def _get_common_vs_column_choice(ds_name: str) -> _VSColumnChoice:
         vs=Tuple(
             elements=[
                 _get_vs_column_dropdown(ds_name, "painter", painters),
-                FixedValue(value=None, totext=""),
-                FixedValue(value=None, totext=""),
             ]
             + _get_vs_link_or_tooltip_elements(painters),
         ),
@@ -295,8 +294,6 @@ def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[Va
 
 _RawColumnPainterSpec = tuple[
     PainterName | tuple[PainterName, PainterParameters],
-    None,
-    None,
     VisualLinkSpec | None,
     ColumnName | None,
 ]
@@ -304,8 +301,8 @@ _RawColumnPainterSpec = tuple[
 
 _RawJoinColumnPainterSpec = tuple[
     PainterName | tuple[PainterName, PainterParameters],
-    ColumnName | None,
-    str | None,
+    ColumnName,
+    str,
     VisualLinkSpec | None,
     ColumnName | None,
 ]
@@ -329,20 +326,42 @@ def _view_editor_spec(
             | tuple[Literal["join_column"], _RawJoinColumnPainterSpec]
         )
     ) -> PainterSpec:
-        _column_type, inner_value = value
+        column_type, inner_value = value
+
         if isinstance(name_or_parameters := inner_value[0], tuple):
             name, parameters = name_or_parameters
         else:
             name = name_or_parameters
             parameters = None
-        return PainterSpec(
-            name=name,
-            parameters=parameters,
-            join_index=inner_value[1],
-            column_title=inner_value[2],
-            link_spec=inner_value[3],
-            tooltip=inner_value[4],
-        )
+
+        link_spec = inner_value[-2]
+        tooltip = inner_value[-1]
+
+        if column_type == "column":
+            return PainterSpec(
+                _column_type=column_type,
+                name=name,
+                parameters=parameters,
+                link_spec=link_spec,
+                tooltip=tooltip,
+            )
+
+        if (
+            column_type == "join_column"
+            and isinstance(join_index := inner_value[1], str)
+            and isinstance(column_title := inner_value[2], str)
+        ):
+            return PainterSpec(
+                _column_type=column_type,
+                name=name,
+                parameters=parameters,
+                join_index=join_index,
+                column_title=column_title,
+                link_spec=link_spec,
+                tooltip=tooltip,
+            )
+
+        raise ValueError()
 
     def _to_vs(
         painter_spec: PainterSpec | None,
@@ -354,28 +373,33 @@ def _view_editor_spec(
         if painter_spec is None:
             return None
 
-        if painter_spec.join_index is None:
+        if painter_spec.column_type == "column" and painter_spec.join_index is None:
             return (
-                "column",
+                painter_spec.column_type,
                 (
                     _get_name_or_params(painter_spec),
-                    None,
-                    None,
                     painter_spec.link_spec,
                     painter_spec.tooltip,
                 ),
             )
 
-        return (
-            "join_column",
-            (
-                _get_name_or_params(painter_spec),
-                painter_spec.join_index,
-                painter_spec.column_title,
-                painter_spec.link_spec,
-                painter_spec.tooltip,
-            ),
-        )
+        if (
+            painter_spec.column_type == "join_column"
+            and isinstance(painter_spec.join_index, str)
+            and isinstance(painter_spec.column_title, str)
+        ):
+            return (
+                painter_spec.column_type,
+                (
+                    _get_name_or_params(painter_spec),
+                    painter_spec.join_index,
+                    painter_spec.column_title,
+                    painter_spec.link_spec,
+                    painter_spec.tooltip,
+                ),
+            )
+
+        raise ValueError()
 
     def _get_name_or_params(
         painter_spec: PainterSpec,

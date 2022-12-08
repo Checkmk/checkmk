@@ -240,6 +240,9 @@ class PainterParameters(TypedDict, total=False):
     uuid: str
 
 
+ColumnTypes = Literal["column", "join_column"]
+
+
 class RawPainterSpec(TypedDict):
     name: PainterName
     parameters: PainterParameters | None
@@ -247,6 +250,7 @@ class RawPainterSpec(TypedDict):
     tooltip: ColumnName | None
     join_index: ColumnName | None
     column_title: str | None
+    column_type: ColumnTypes | None
 
 
 @dataclass(frozen=True)
@@ -257,6 +261,13 @@ class PainterSpec:
     tooltip: ColumnName | None = None
     join_index: ColumnName | None = None
     column_title: str | None = None
+    _column_type: ColumnTypes | None = None
+
+    @property
+    def column_type(self) -> ColumnTypes:
+        if self._column_type in ["column", "join_column"]:
+            return self._column_type
+        return "column" if self.join_index is None else "join_column"
 
     @classmethod
     def from_raw(cls, value: tuple | RawPainterSpec) -> PainterSpec:
@@ -264,6 +275,7 @@ class PainterSpec:
         # The transformation is done via update_config/plugins/actions/cre_visuals.py
 
         if isinstance(value, dict):
+            join_index = value["join_index"]
             return cls(
                 name=value["name"],
                 parameters=value["parameters"],
@@ -273,8 +285,9 @@ class PainterSpec:
                     else VisualLinkSpec.from_raw(link_spec)
                 ),
                 tooltip=value["tooltip"],
-                join_index=value["join_index"],
+                join_index=join_index,
                 column_title=value["column_title"],
+                _column_type=value.get("column_type"),
             )
 
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
@@ -288,13 +301,15 @@ class PainterSpec:
             name = value[0]
             parameters = None
 
+        join_index = value[3]
         return cls(
             name=name,
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_index=value[3],
+            join_index=join_index,
             column_title=value[4],
+            _column_type=None,
         )
 
     def to_raw(self) -> RawPainterSpec:
@@ -305,6 +320,7 @@ class PainterSpec:
             "tooltip": self.tooltip,
             "join_index": self.join_index,
             "column_title": self.column_title,
+            "column_type": self.column_type,
         }
 
     def __repr__(self) -> str:

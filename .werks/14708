@@ -1,0 +1,17 @@
+Title: fileinfo: Fix crash with negative file age
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1671196526
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Previously, fileinfo and fileinfo group services would crash
+if the file's creation timestamp was from the future.
+
+Now, the service state is UNKNOWN and there is a message indicating
+the problem.
+
+

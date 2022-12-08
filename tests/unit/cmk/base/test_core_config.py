@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
@@ -16,15 +17,21 @@ import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import password_store
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import CheckPluginName, HostName, Labels
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 from cmk.base.check_utils import ConfiguredService
+from cmk.base.core_config import (
+    CollectedHostLabels,
+    get_labels_from_attributes,
+    read_notify_host_file,
+    write_notify_host_file,
+)
 from cmk.base.core_factory import create_core
 
 
@@ -479,3 +486,80 @@ class TestMakeSpecialAgentCmdline:
         assert core_config.make_special_agent_cmdline(hostname, ipaddress, agentname, params) == (
             str(agent_dir / "special" / ("agent_%s" % agentname)) + " " + expected_args
         )
+
+
+@pytest.mark.parametrize(
+    "attributes, expected",
+    [
+        pytest.param(
+            {
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__LABEL_ding": "dong",
+                "__LABEL_cmk/site": "NO_SITE",
+                "__LABELSOURCE_cmk/site": "discovered",
+                "__LABELSOURCE_ding": "explicit",
+                "address": "0.0.0.0",
+                "alias": "test-host",
+            },
+            {
+                "cmk/site": "NO_SITE",
+                "ding": "dong",
+            },
+        ),
+    ],
+)
+def test_get_labels_from_attributes(attributes: dict[str, str], expected: Labels) -> None:
+    assert get_labels_from_attributes(list(attributes.items())) == expected
+
+
+@pytest.mark.parametrize(
+    "versioned_config_path, host_name, host_labels, expected",
+    [
+        pytest.param(
+            VersionedConfigPath(1),
+            "horsthost",
+            CollectedHostLabels(
+                host_labels={"owe": "owe"},
+                service_labels={
+                    "svc": {"lbl": "blub"},
+                    "svc2": {},
+                },
+            ),
+            CollectedHostLabels(
+                host_labels={"owe": "owe"},
+                service_labels={"svc": {"lbl": "blub"}},
+            ),
+        )
+    ],
+)
+def test_write_and_read_notify_host_file(
+    versioned_config_path: VersionedConfigPath,
+    host_name: HostName,
+    host_labels: CollectedHostLabels,
+    expected: CollectedHostLabels,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    notify_labels_path: Path = Path(versioned_config_path) / "notify" / "labels"
+    monkeypatch.setattr(
+        cmk.base.core_config,
+        "_get_host_file_path",
+        lambda config_path: notify_labels_path,
+    )
+
+    write_notify_host_file(
+        versioned_config_path,
+        {host_name: host_labels},
+    )
+
+    assert notify_labels_path.exists()
+
+    monkeypatch.setattr(
+        cmk.base.core_config,
+        "_get_host_file_path",
+        lambda host_name: notify_labels_path / host_name,
+    )
+    assert read_notify_host_file(host_name) == expected

@@ -70,7 +70,7 @@ warn_unreachable = false  # 240 errors in 133 files
 module = [
     "cmk.gui.mobile.views",
     "cmk.gui.views.layout",
-    "cmk.gui.views.painters",
+    "cmk.gui.views.painter",
     "cmk.gui.background_job",
     "cmk.notification_plugins.*",
     "tests.gui_e2e.*",

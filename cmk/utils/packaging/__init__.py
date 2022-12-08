@@ -32,13 +32,15 @@ from cmk.utils.version import parse_check_mk_version
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from ._manifest import (
-    extract_manifest,
-    extract_manifest_optionally,
-    Manifest,
-    manifest_template,
-    read_manifest_optionally,
+from ._installed import (
+    add_installed_manifest,
+    get_installed_manifest,
+    get_installed_manifests,
+    is_installed,
+    PACKAGES_DIR,
+    remove_installed_manifest,
 )
+from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
 from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName, PartPath
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -105,16 +107,6 @@ package_ignored_files = {
 PACKAGE_EXTENSION: Final[str] = ".mkp"
 
 
-def package_dir() -> Path:
-    return cmk.utils.paths.omd_root / "var/check_mk/packages"
-
-
-def get_installed_manifest(
-    package_name: PackageName, log: logging.Logger | None = None
-) -> Manifest | None:
-    return read_manifest_optionally(package_dir() / package_name, logger if log is None else log)
-
-
 def format_file_name(package_id: PackageID) -> str:
     """
     >>> package_id = PackageID(
@@ -144,7 +136,7 @@ def release(pacname: PackageName) -> None:
         if part.ident == "ec_rule_packs":
             ec.release_packaged_rule_packs(filenames)
 
-    _remove_manifest(pacname)
+    remove_installed_manifest(pacname)
 
 
 def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
@@ -211,7 +203,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
                     raise
                 raise Exception(f"Cannot uninstall {file_path}: {e}\n")
 
-    (package_dir() / manifest.name).unlink()
+    remove_installed_manifest(manifest.name)
 
     if post_package_change_actions:
         _execute_post_package_change_actions(manifest)
@@ -321,23 +313,23 @@ def _find_path_and_package_info(
 
 
 def create(manifest: Manifest) -> None:
-    if _package_exists(manifest.name):
+    if is_installed(manifest.name):
         raise PackageException("Packet already exists.")
 
     package_store = PackageStore()
 
     _validate_package_files(manifest.name, manifest.files)
-    write_manifest(manifest)
+    add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest)
 
 
 def edit(pacname: PackageName, new_manifest: Manifest) -> None:
-    if not _package_exists(pacname):
+    if not is_installed(pacname):
         raise PackageException("No such package")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:
-        if _package_exists(new_manifest.name):
+        if is_installed(new_manifest.name):
             raise PackageException(
                 "Cannot rename package: a package with that name already exists."
             )
@@ -346,8 +338,8 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
     _validate_package_files(pacname, new_manifest.files)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest)
-    _remove_manifest(pacname)
-    write_manifest(new_manifest)
+    remove_installed_manifest(pacname)
+    add_installed_manifest(new_manifest)
 
 
 def _create_enabled_mkp_from_installed_package(
@@ -523,7 +515,7 @@ def _install(  # pylint: disable=too-many-branches
         remove_enabled_mark(old_manifest)
 
     # Last but not least install package file
-    write_manifest(manifest)
+    add_installed_manifest(manifest)
 
     if post_package_change_actions:
         _execute_post_package_change_actions(manifest)
@@ -600,11 +592,7 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
-    packages = {
-        package_name: manifest
-        for package_name in installed_names()
-        if (manifest := get_installed_manifest(package_name)) is not None
-    }
+    packages = {manifest.name: manifest for manifest in get_installed_manifests()}
 
     for part in PACKAGE_PARTS:
         _validate_package_files_part(
@@ -683,14 +671,6 @@ def _normalize_daily_version(version: str) -> str:
     if cmk.utils.misc.is_daily_build_version(version):
         return cmk.utils.misc.branch_of_daily_build(version)
     return version
-
-
-def get_installed_manifests() -> Mapping[PackageID, Manifest]:
-    return {
-        manifest.id: manifest
-        for name in installed_names()
-        if (manifest := get_installed_manifest(name)) is not None
-    }
 
 
 def get_optional_manifests(
@@ -794,28 +774,7 @@ def unpackaged_files_in_dir(part: PartName, directory: str) -> list[str]:
 
 
 def _packaged_files_in_dir(part: PartName) -> list[str]:
-    result: list[str] = []
-    for package_name in installed_names():
-        if (manifest := get_installed_manifest(package_name)) is not None:
-            result += manifest.files.get(part, [])
-    return result
-
-
-def installed_names() -> list[PackageName]:
-    return sorted(PackageName(p.name) for p in package_dir().iterdir())
-
-
-def _package_exists(pacname: PackageName) -> bool:
-    return (package_dir() / pacname).exists()
-
-
-def write_manifest(package: Manifest) -> None:
-    pkg_info_path = package_dir() / package.name
-    pkg_info_path.write_text(package.file_content())
-
-
-def _remove_manifest(pacname: PackageName) -> None:
-    (package_dir() / pacname).unlink()
+    return [file for manifest in get_installed_manifests() for file in manifest.files.get(part, [])]
 
 
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
@@ -827,10 +786,14 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
 
     def mkp_of(rule_pack_file: str) -> PackageName | None:
         """Find the MKP for the given file"""
-        for package_id, manifest in get_installed_manifests().items():
-            if rule_pack_file in manifest.files.get("ec_rule_packs", []):
-                return package_id.name
-        return None
+        return next(
+            (
+                manifest.name
+                for manifest in get_installed_manifests()
+                if rule_pack_file in manifest.files.get("ec_rule_packs", [])
+            ),
+            None,
+        )
 
     exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]
 
@@ -848,10 +811,7 @@ def update_active_packages(log: logging.Logger) -> None:
 def _deinstall_inapplicable_active_packages(
     log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
-    for package_name in sorted(installed_names()):
-        if (manifest := get_installed_manifest(package_name, log)) is None:
-            continue  # leave broken/corrupt packages alone.
-
+    for manifest in get_installed_manifests(log):
         try:
             _raise_for_installability(
                 manifest,
@@ -860,10 +820,10 @@ def _deinstall_inapplicable_active_packages(
                 allow_outdated=False,
             )
         except PackageException as exc:
-            log.log(VERBOSE, "[%s]: Uninstalling (%s)", package_name, exc)
+            log.log(VERBOSE, "[%s %s]: Uninstalling (%s)", manifest.name, manifest.version, exc)
             uninstall(manifest, post_package_change_actions=post_package_change_actions)
         else:
-            log.log(VERBOSE, "[%s]: Kept", package_name)
+            log.log(VERBOSE, "[%s %s]: Kept", manifest.name, manifest.version)
 
 
 def _install_applicable_inactive_packages(
@@ -908,18 +868,22 @@ def disable_outdated() -> None:
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
-    for package_name in installed_names():
-        logger.log(VERBOSE, "[%s]: Is it outdated?", package_name)
-        if (manifest := get_installed_manifest(package_name)) is None:
-            continue
+    for manifest in get_installed_manifests(logger):
+        logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
 
         try:
             _raise_for_too_new_cmk_version(manifest, cmk_version.__version__)
         except PackageException as exc:
-            logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
-            disable(package_name, manifest.version)
+            logger.log(
+                VERBOSE,
+                "[%s %s]: Disable outdated package: %s",
+                manifest.name,
+                manifest.version,
+                exc,
+            )
+            disable(manifest.name, manifest.version)
         else:
-            logger.log(VERBOSE, "[%s]: Not disabling", package_name)
+            logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
 def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:

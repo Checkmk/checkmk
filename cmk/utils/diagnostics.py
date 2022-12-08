@@ -258,7 +258,7 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
 
 
 class AllPackageInfos(TypedDict):
-    installed: Mapping[packaging.PackageID, packaging.Manifest]
+    installed: Sequence[packaging.Manifest]
     unpackaged: Mapping[str, list[str]]
     parts: packaging.PackagePartInfo
     optional_packages: Mapping[packaging.PackageID, tuple[packaging.Manifest, bool]]
@@ -346,10 +346,10 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
             files = _deep_update(
                 files, _parse_mkp_files(items, module, contents, "optional_packages", package.name)
             )
-    for package, contents in infos["installed"].items():
-        for (module, items) in contents.files.items():
+    for manifest in infos["installed"]:
+        for (part, files_list) in manifest.files.items():
             files = _deep_update(
-                files, _parse_mkp_files(items, module, contents, "installed", package.name)
+                files, _parse_mkp_files(files_list, part, manifest, "installed", manifest.name)
             )
     for (module, data) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(data))

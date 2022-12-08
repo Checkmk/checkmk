@@ -209,7 +209,7 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
         packaging.create(manifest)
         return manifest
 
-    packaging.package_dir().mkdir(parents=True, exist_ok=True)
+    packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
     manifest = create_test_package(packaging.PackageName("test-package-json"))
 
     tmppath = Path(tmp_path).joinpath("tmp")
@@ -289,7 +289,7 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
 
     assert content["optional_packages"] == [[manifest.json(), True]]
 
-    shutil.rmtree(str(packaging.package_dir()))
+    shutil.rmtree(str(packaging._installed.PACKAGES_DIR))
     shutil.rmtree(str(cmk.utils.paths.local_share_dir))
 
 
@@ -330,7 +330,7 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
 
         packaging.create(manifest)
 
-    packaging.package_dir().mkdir(parents=True, exist_ok=True)
+    packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
     name = "test-package-csv"
     create_test_package(name)
 
@@ -376,7 +376,7 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
     assert csvdata[str(path)]["exists"] == "file"
     assert csvdata[str(path)]["installed"] == "YES"
 
-    shutil.rmtree(str(packaging.package_dir()))
+    shutil.rmtree(str(packaging._installed.PACKAGES_DIR))
 
 
 def test_diagnostics_element_environment() -> None:

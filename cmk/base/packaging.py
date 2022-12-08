@@ -15,6 +15,7 @@ import cmk.utils.tty as tty
 import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
+    add_installed_manifest,
     CONFIG_PARTS,
     create_mkp_object,
     disable,
@@ -23,23 +24,24 @@ from cmk.utils.packaging import (
     format_file_name,
     get_enabled_manifests,
     get_installed_manifest,
+    get_installed_manifests,
     get_unpackaged_files,
     install_optional_package,
-    installed_names,
+    is_installed,
+    Manifest,
     manifest_template,
-    package_dir,
     PACKAGE_EXTENSION,
     package_num_files,
     PACKAGE_PARTS,
     PackageException,
     PackageID,
     PackageName,
+    PACKAGES_DIR,
     PackageStore,
     PackageVersion,
     release,
     unpackaged_files_in_dir,
     update_active_packages,
-    write_manifest,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -70,7 +72,7 @@ Available commands are:
 
 Package files are located in %s.
 """
-        % package_dir()
+        % PACKAGES_DIR
     )
 
 
@@ -115,18 +117,24 @@ def package_list(args: list[str]) -> None:
     if len(args) > 0:
         for name in args:
             show_package_contents(PackageName(name))
+            return
+
+    table = []
+    for manifest in get_installed_manifests():
+        table.append(
+            [
+                manifest.name,
+                manifest.version,
+                manifest.title,
+                str(package_num_files(manifest)),
+            ]
+        )
+
+    if logger.isEnabledFor(VERBOSE):
+        tty.print_table(["Name", "Version", "Title", "Files"], [tty.bold, "", ""], table)
     else:
-        if logger.isEnabledFor(VERBOSE):
-            table = []
-            for pacname in installed_names():
-                if (manifest := get_installed_manifest(pacname)) is None:
-                    table.append([pacname, "package info is missing or broken", "0"])
-                else:
-                    table.append([pacname, manifest.title, str(package_num_files(manifest))])
-            tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
-        else:
-            for pacname in installed_names():
-                sys.stdout.write("%s\n" % pacname)
+        for name, *_omitted in table:
+            sys.stdout.write("%s\n" % name)
 
 
 def package_info(args: list[str]) -> None:
@@ -145,14 +153,13 @@ def show_package_info(name: str) -> None:
 
 
 def show_package(name: str, show_info: bool = False) -> None:
-    if name.endswith(PACKAGE_EXTENSION):
-        package = extract_manifest(Path(name).read_bytes())
-    else:
-        if (this_package := get_installed_manifest(PackageName(name))) is None:
-            raise PackageException("No such package: %s" % name)
-        package = this_package
-        if show_info:
-            sys.stdout.write("Package file:                  %s\n" % (package_dir() / name))
+    package: Manifest | None = (
+        extract_manifest(Path(name).read_bytes())
+        if name.endswith(PACKAGE_EXTENSION)
+        else get_installed_manifest(PackageName(name))
+    )
+    if package is None:
+        raise PackageException("No such package: %s" % name)
 
     if show_info:
         sys.stdout.write("Name:                          %s\n" % package.name)
@@ -186,7 +193,7 @@ def package_create(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P create NAME")
 
     pacname = PackageName(args[0])
-    if pacname in installed_names():
+    if is_installed(pacname):
         raise PackageException(f"Package {pacname} already existing.")
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
@@ -200,7 +207,7 @@ def package_create(args: list[str]) -> None:
             for f in files:
                 logger.log(VERBOSE, "    %s", f)
 
-    write_manifest(package)
+    add_installed_manifest(package)
     logger.log(
         VERBOSE,
         "New package %s created with %d files.",
@@ -211,7 +218,7 @@ def package_create(args: list[str]) -> None:
         VERBOSE,
         "Please edit package details in %s%s%s",
         tty.bold,
-        package_dir() / pacname,
+        PACKAGES_DIR / pacname,
         tty.normal,
     )
 

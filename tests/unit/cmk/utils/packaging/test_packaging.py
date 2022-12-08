@@ -17,22 +17,21 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
+import cmk.utils.packaging._installed
 import cmk.utils.paths
 
 
 def _read_manifest(pacname: packaging.PackageName) -> packaging.Manifest:
-    manifest = packaging.read_manifest_optionally(
-        packaging.package_dir() / pacname, logging.getLogger()
-    )
+    manifest = packaging.get_installed_manifest(pacname)
     assert manifest is not None
     return manifest
 
 
 @pytest.fixture(autouse=True)
-def package_dir() -> Iterable[None]:
-    packaging.package_dir().mkdir(parents=True, exist_ok=True)
+def _packages_dir() -> Iterable[None]:
+    cmk.utils.packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
     yield
-    shutil.rmtree(str(packaging.package_dir()))
+    shutil.rmtree(cmk.utils.packaging._installed.PACKAGES_DIR)
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +62,7 @@ def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
     packaging.uninstall(manifest)
     build_setup_search_index.assert_called_once()
     build_setup_search_index.reset_mock()
-    assert packaging._package_exists(packaging.PackageName("aaa")) is False
+    assert packaging.is_installed(packaging.PackageName("aaa")) is False
 
     return mkp
 
@@ -100,10 +99,6 @@ def test_get_permissions(path, expected) -> None:  # type:ignore[no-untyped-def]
     assert packaging._get_permissions(path) == expected
 
 
-def test_package_dir() -> None:
-    assert isinstance(packaging.package_dir(), Path)
-
-
 def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Manifest:
     _create_test_file(pacname)
     manifest = packaging.manifest_template(pacname)
@@ -123,9 +118,10 @@ def _create_test_file(name):
 
 
 def test_create() -> None:
-    assert packaging.installed_names() == []
-    _create_simple_test_package(packaging.PackageName("aaa"))
-    assert packaging.installed_names() == ["aaa"]
+    name = packaging.PackageName("aaa")
+    assert not packaging.is_installed(name)
+    _create_simple_test_package(name)
+    assert packaging.is_installed(name)
 
 
 def test_create_twice() -> None:
@@ -138,14 +134,13 @@ def test_create_twice() -> None:
 def test_read_manifest() -> None:
     _create_simple_test_package(packaging.PackageName("aaa"))
     manifest = _read_manifest(packaging.PackageName("aaa"))
-    assert manifest.version == "1.0.0"
+    assert manifest.version == packaging.PackageVersion("1.0.0")
     assert packaging.package_num_files(manifest) == 1
 
 
 def test_read_manifest_not_existing() -> None:
     assert (
-        packaging.read_manifest_optionally(packaging.package_dir() / "aaa", logging.getLogger())
-        is None
+        packaging.get_installed_manifest(packaging.PackageName("aaa"), logging.getLogger()) is None
     )
 
 
@@ -178,8 +173,7 @@ def test_edit_rename() -> None:
 
     assert _read_manifest(packaging.PackageName("bbb")).name == packaging.PackageName("bbb")
     assert (
-        packaging.read_manifest_optionally(packaging.package_dir() / "aaa", logging.getLogger())
-        is None
+        packaging.get_installed_manifest(packaging.PackageName("aaa"), logging.getLogger()) is None
     )
 
 
@@ -196,7 +190,7 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
     packaging._install(mkp_bytes, allow_outdated=False, post_package_change_actions=True)
     build_setup_search_index.assert_called_once()
 
-    assert packaging._package_exists(packaging.PackageName("aaa")) is True
+    assert packaging.is_installed(packaging.PackageName("aaa")) is True
     manifest = _read_manifest(packaging.PackageName("aaa"))
     assert manifest.version == "1.0.0"
     assert manifest.files["checks"] == ["aaa"]
@@ -210,12 +204,12 @@ def test_release_not_existing() -> None:
 
 def test_release() -> None:
     _create_simple_test_package(packaging.PackageName("aaa"))
-    assert packaging._package_exists(packaging.PackageName("aaa")) is True
+    assert packaging.is_installed(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
     packaging.release(packaging.PackageName("aaa"))
 
-    assert packaging._package_exists(packaging.PackageName("aaa")) is False
+    assert packaging.is_installed(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
@@ -243,7 +237,7 @@ def test_uninstall(build_setup_search_index: Mock) -> None:
     manifest = _create_simple_test_package(packaging.PackageName("aaa"))
     packaging.uninstall(manifest)
     build_setup_search_index.assert_called_once()
-    assert packaging._package_exists(packaging.PackageName("aaa")) is False
+    assert not packaging.is_installed(packaging.PackageName("aaa"))
 
 
 def test_unpackaged_files_none() -> None:

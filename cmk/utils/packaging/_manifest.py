@@ -65,11 +65,12 @@ def manifest_template(pacname: PackageName) -> Manifest:
     )
 
 
-def read_manifest_optionally(manifest_path: Path, logger: Logger) -> Manifest | None:
+def read_manifest_optionally(manifest_path: Path, logger: Logger | None) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
     except Exception:
-        logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
+        if logger is not None:
+            logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 
 

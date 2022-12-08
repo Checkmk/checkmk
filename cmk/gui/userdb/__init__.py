@@ -70,6 +70,7 @@ from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
 from cmk.gui.userdb import user_attributes
 from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.userdb.ldap_connector import MKLDAPException
+from cmk.gui.userdb.saml2.pages import AssertionConsumerService, Metadata, SingleSignOn
 from cmk.gui.userdb.session import (
     active_user_session,
     convert_session_info,

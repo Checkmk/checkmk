@@ -359,7 +359,6 @@ class UserConnector(abc.ABC):
     #     '<user_id>' -> Login succeeded
     #     False       -> Login failed
     #     None        -> Unknown user
-    @abc.abstractmethod
     def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
         return None
 

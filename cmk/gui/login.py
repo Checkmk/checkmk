@@ -527,6 +527,8 @@ class LoginPage(Page):
         html.open_div(id_="button_text")
         html.button("_login", _("Login"), cssclass="hot")
         html.close_div()
+        # TODO (CMK-11847): add a button to click for SAML2 auth that shows
+        # when it is configured
         html.close_div()
 
         html.open_div(id_="foot")

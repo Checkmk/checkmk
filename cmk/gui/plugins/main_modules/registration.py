@@ -13,6 +13,7 @@ from cmk.gui import autocompleters, bi, crash_reporting, dashboard, mkeventd, mo
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.dashboard.utils import dashlet_registry
+from cmk.gui.plugins.userdb.utils import user_connector_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
@@ -23,6 +24,7 @@ from cmk.gui.plugins.watolib.utils import (
     sample_config_generator_registry,
 )
 from cmk.gui.query_filters import cre_sites_options
+from cmk.gui.userdb import saml2
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views.command import command_registry
 from cmk.gui.views.data_source import data_source_registry
@@ -90,3 +92,5 @@ bi.register(
 )
 register_sites_options()
 register_row_post_processor(inventory_row_post_processor)
+saml2.connector.register(user_connector_registry)
+saml2.pages.register(cmk.gui.pages.page_registry)

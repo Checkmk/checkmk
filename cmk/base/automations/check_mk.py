@@ -1713,7 +1713,7 @@ class AutomationGetAgentOutput(Automation):
         config_cache = config.get_config_cache()
 
         # No caching option over commandline here.
-        file_cache_options = FileCacheOptions(maybe=True)
+        file_cache_options = FileCacheOptions()
 
         success = True
         output = ""

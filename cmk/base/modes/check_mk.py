@@ -178,7 +178,7 @@ def _handle_fetcher_options(options: Mapping[str, object]) -> FileCacheOptions:
     file_cache_options = FileCacheOptions()
 
     if options.get("cache", False):
-        file_cache_options = file_cache_options._replace(maybe=True, use_outdated=True)
+        file_cache_options = file_cache_options._replace(use_outdated=True)
 
     if options.get("no-cache", False):
         file_cache_options = file_cache_options._replace(disabled=True)
@@ -1466,7 +1466,7 @@ modes.register(
 
 
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
-    file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True, maybe=True)
+    file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True)
 
     if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
@@ -1712,7 +1712,6 @@ _DiscoveryOptions = TypedDict(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     file_cache_options = _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
-    file_cache_options = file_cache_options._replace(maybe=True)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
@@ -1951,7 +1950,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        file_cache_options = file_cache_options._replace(maybe=not file_cache_options.disabled)
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:

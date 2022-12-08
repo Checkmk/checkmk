@@ -453,12 +453,6 @@ class FileCacheOptions(NamedTuple):
 
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False
-    # Set by the code in different situations where we recommend, but not enforce,
-    # to use the cache. The user can always use "--cache" to override this.
-    # It's used to 'transport' caching opt between modules, eg:
-    # - modes: FileCacheGlobals.maybe = use_caches
-    # - discovery: use_caches = FileCacheGlobals.maybe
-    maybe: bool = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated: bool = False

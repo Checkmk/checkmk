@@ -149,7 +149,9 @@ include \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
-    packages/appliance/appliance.make
+    packages/appliance/appliance.make \
+    $(REPO_PATH)/packages/livestatus/livestatus.make
+
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make

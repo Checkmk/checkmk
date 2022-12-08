@@ -47,6 +47,7 @@ def main(argv=None):
         GraylogSection(name="sidecars", uri="/sidecars/all"),
         GraylogSection(name="sources", uri="/sources"),
         GraylogSection(name="streams", uri="/streams"),
+        GraylogSection(name="events", uri="/events/search"),
     ]
 
     try:
@@ -67,7 +68,10 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 
         url = url_base + section.uri
 
-        value = handle_response(url, args).json()
+        if section.name == "events":
+            value = handle_response(url, args, "POST").json()
+        else:
+            value = handle_response(url, args).json()
 
         # add failure details
         if section.name == "failures":
@@ -124,6 +128,33 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 
                 if sidecar_list:
                     handle_output(sidecar_list, section.name, args)
+
+        if section.name == "events":
+            num_of_events = value.get("total_events", 0)
+            num_of_events_in_range = 0
+            events_since_argument = args.events_since
+
+            if events_since_argument:
+                num_of_events_in_range = (
+                    handle_response(
+                        url=url,
+                        args=args,
+                        method="POST",
+                        events_since=args.events_since,
+                    )
+                    .json()
+                    .get("total_events", 0)
+                )
+
+            events = {
+                "events": {
+                    "num_of_events": num_of_events,
+                    "has_since_argument": bool(events_since_argument),
+                    "events_since": events_since_argument if events_since_argument else None,
+                    "num_of_events_in_range": num_of_events_in_range,
+                }
+            }
+            handle_output([events], section.name, args)
 
         if section.name == "alerts":
             num_of_alerts = value.get("total", 0)
@@ -184,17 +215,34 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
             if args.display_source_details == "host":
                 handle_output([value], section.name, args)
 
-        if section.name not in ["nodes", "sidecars", "sources", "alerts"]:
+        if section.name not in ["nodes", "sidecars", "sources", "alerts", "events"]:
             handle_output(value, section.name, args)
 
 
-def handle_response(url, args):
-    try:
-        response = requests.get(url, auth=(args.user, args.password))
-    except requests.exceptions.RequestException as e:
-        sys.stderr.write("Error: %s\n" % e)
-        if args.debug:
-            raise
+def handle_response(url, args, method="GET", events_since=86400):
+    if method == "POST":
+        try:
+            response = requests.post(
+                url,
+                auth=(args.user, args.password),
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Requested-By": args.user,
+                },
+                json={"timerange": {"type": "relative", "range": events_since}},
+            )
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write("Error: %s\n" % e)
+            if args.debug:
+                raise
+
+    else:
+        try:
+            response = requests.get(url, auth=(args.user, args.password))
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write("Error: %s\n" % e)
+            if args.debug:
+                raise
 
     return response
 
@@ -237,6 +285,7 @@ def parse_arguments(argv):
         "sidecars",
         "sources",
         "streams",
+        "events",
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -270,6 +319,12 @@ def parse_arguments(argv):
         default=None,
         type=int,
         help="The time in seconds, since when alerts should be covered",
+    )
+    parser.add_argument(
+        "--events_since",
+        default=None,
+        type=int,
+        help="The time in seconds, since when events should be covered",
     )
     parser.add_argument(
         "-m",

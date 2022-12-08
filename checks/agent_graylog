@@ -48,6 +48,9 @@ def agent_graylog_arguments(
     if "alerts_since" in params:
         args += ["--alerts_since", params["alerts_since"]]
 
+    if "events_since" in params:
+        args += ["--events_since", params["events_since"]]
+
     args.append(params["instance"])
 
     return args

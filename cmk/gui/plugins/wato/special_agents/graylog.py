@@ -20,7 +20,7 @@ def _valuespec_special_agents_graylog():
     return Dictionary(
         title=_("Graylog"),
         help=_("Requests node, cluster and indice data from a Graylog instance."),
-        optional_keys=["port", "source_since", "alerts_since"],
+        optional_keys=["port", "source_since", "alerts_since", "events_since"],
         elements=[
             (
                 "instance",
@@ -114,6 +114,18 @@ def _valuespec_special_agents_graylog():
                 ),
             ),
             (
+                "events_since",
+                Age(
+                    title=_("Time for coverage of events"),
+                    help=_(
+                        "If you choose to query for the total number of events in a specific timeframe, use "
+                        "this option to set the timeframe. The check will output the total number of events received "
+                        "in this given timeframe."
+                    ),
+                    default_value=1800,
+                ),
+            ),
+            (
                 "sections",
                 ListChoice(
                     title=_("Information to query"),
@@ -130,6 +142,7 @@ def _valuespec_special_agents_graylog():
                         ("sidecars", _("Sidecars")),
                         ("sources", _("Sources")),
                         ("streams", _("Streams")),
+                        ("events", _("Events")),
                     ],
                     default_value=[
                         "alerts",
@@ -143,6 +156,7 @@ def _valuespec_special_agents_graylog():
                         "sidecars",
                         "sources",
                         "streams",
+                        "events",
                     ],
                     allow_empty=False,
                 ),

@@ -52,12 +52,6 @@ livestatus_status_default_levels = {
     "helper_usage_checker": (80.0, 90.0),
     "livestatus_usage": (60.0, 80.0),
     "livestatus_overflows_rate": (0.01, 0.02),
-    "carbon_overflows_rate": (0.01, 0.02),
-    "carbon_queue_usage": (60.0, 80.0),
-    "influxdb_overflows_rate": (0.01, 0.02),
-    "influxdb_queue_usage": (60.0, 80.0),
-    "rrdcached_overflows_rate": (0.01, 0.02),
-    "rrdcached_queue_usage": (60.0, 80.0),
 }
 
 
@@ -202,24 +196,11 @@ def _generate_livestatus_results(
         for conn, name in (("carbon", "Carbon"), ("influxdb", "InfluxDB"), ("rrdcached", "RRD")):
             metrics.extend(
                 (
-                    (100, render.percent, f"{conn}_queue_usage", f"{name} queue usage"),
                     (
                         100,
                         lambda x: "%d/s" % x,
                         f"{conn}_queue_usage_rate",
                         f"{name} queue usage rate",
-                    ),
-                    (
-                        1,
-                        lambda x: "%d" % x,
-                        f"{conn}_overflows",
-                        f"Performance data loss for {name}",
-                    ),
-                    (
-                        1,
-                        lambda x: "%d/s" % x,
-                        f"{conn}_overflows_rate",
-                        f"Rate of performance data loss for {name}",
                     ),
                     (1, render.bytes, f"{conn}_bytes_sent", f"Bytes sent to the {name} connection"),
                     (
@@ -252,8 +233,6 @@ def _generate_livestatus_results(
                     "influxdb_bytes_sent",
                     "influxdb_bytes_sent_rate",
                     "rrdcached_overflows",
-                    "rrdcached_overflows_rate",
-                    "rrdcached_queue_usage",
                     "rrdcached_queue_usage_rate",
                     "rrdcached_bytes_sent",
                     "rrdcached_bytes_sent_rate",

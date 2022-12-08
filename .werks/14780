@@ -1,0 +1,21 @@
+Title: Remove thresholds to new carbon/influxdb/RRD metrics
+Class: fix
+Compatible: incomp
+Component: metrics
+Date: 1670497191
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+The thresholds for the metrics Carbon Overflows Rate, Carbon
+Queue Usage, InfluxDB Overflows Rate, InfluxDB Queue Usage, RRD
+Overflows Rate, and RRD Queue Usage would unnecessarily set the
+OMD Performance service in WARN or CRIT. These metrics are used
+mostly internally and are of lesser importance to the end users.
+Therefore, the thresholds and their configuration are now
+removed entirely.
+
+These thresholds will be removed from the configuration after
+an update.

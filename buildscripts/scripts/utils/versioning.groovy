@@ -5,8 +5,6 @@
 // library for calculation of version numbers
 import groovy.transform.Field
 
-// TODO: Use ntop_rules.json as soon as we want to exclude ntop-mkp-able files from the enterprise build
-// as this logic is shared by the script to create the ntop mkp
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\

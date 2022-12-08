@@ -176,9 +176,6 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
-ntop-mkp:
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
-
 $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
 

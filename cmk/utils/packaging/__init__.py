@@ -128,14 +128,6 @@ def get_config_parts() -> list[PackagePart]:
     ]
 
 
-def get_repo_ntop_parts() -> list[PackagePart]:
-    # This function is meant to return the location of mkp-able ntop files within the git repository.
-    # It is used for building a mkp which enables the ntop integration
-    return [
-        PackagePart("web", _("ntop GUI extensions"), "enterprise/cmk/gui/cee/"),
-    ]
-
-
 def get_package_parts() -> list[PackagePart]:
     return [
         PackagePart(
@@ -218,12 +210,7 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
     return info
 
 
-def create_mkp_object(
-    package: PackageInfo,
-    packed_parts: Iterable[PackagePart] | None = None,
-) -> bytes:
-    if packed_parts is None:
-        packed_parts = get_package_parts() + get_config_parts()
+def create_mkp_object(package: PackageInfo) -> bytes:
 
     package.version_packaged = cmk_version.__version__
 
@@ -241,7 +228,7 @@ def create_mkp_object(
         add_file("info.json", package.json_file_content().encode())
 
         # Now pack the actual files into sub tars
-        for part in packed_parts:
+        for part in get_package_parts() + get_config_parts():
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 

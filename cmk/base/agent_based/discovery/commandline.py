@@ -225,6 +225,7 @@ def commandline_check_discovery(
     config_cache: ConfigCache,
     active_check_handler: Callable[[HostName, str], object],
     file_cache_options: FileCacheOptions,
+    discovery_file_cache_max_age: int | None,
     keepalive: bool,
 ) -> ServiceState:
     return error_handling.check_result(
@@ -233,6 +234,7 @@ def commandline_check_discovery(
             host_name,
             ipaddress,
             file_cache_options=file_cache_options,
+            discovery_file_cache_max_age=discovery_file_cache_max_age,
             config_cache=config_cache,
         ),
         exit_spec=config_cache.exit_code_spec(host_name),
@@ -251,6 +253,7 @@ def _commandline_check_discovery(
     ipaddress: HostAddress | None,
     *,
     file_cache_options: FileCacheOptions,
+    discovery_file_cache_max_age: int | None,
     config_cache: ConfigCache,
 ) -> ActiveCheckResult:
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
@@ -275,9 +278,7 @@ def _commandline_check_discovery(
                 on_scan_error=OnError.RAISE,
                 simulation_mode=config.simulation_mode,
                 file_cache_options=file_cache_options,
-                file_cache_max_age=config.max_cachefile_age(
-                    discovery=(None if file_cache_options.maybe else 0)
-                ),
+                file_cache_max_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
             )
             for host_name_, ipaddress_ in hosts
         ),

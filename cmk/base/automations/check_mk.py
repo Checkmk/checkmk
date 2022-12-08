@@ -140,15 +140,13 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         # Do a full service scan
         if args[0] == "@scan":
-            use_cached_snmp_data = False
+            force_snmp_cache_refresh = True
             args = args[1:]
         else:
-            use_cached_snmp_data = True
+            force_snmp_cache_refresh = False
 
-        file_cache_options = FileCacheOptions(
-            use_outdated=True,
-            maybe=use_cached_snmp_data,
-        )
+        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
+        file_cache_options = FileCacheOptions(use_outdated=True)
 
         if len(args) < 2:
             raise MKAutomationError(
@@ -170,6 +168,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 service_filters=None,
                 on_error=on_error,
                 file_cache_options=file_cache_options,
+                force_snmp_cache_refresh=force_snmp_cache_refresh,
                 max_cachefile_age=config.max_cachefile_age(),
             )
 
@@ -229,16 +228,16 @@ class AutomationTryDiscovery(Automation):
     ) -> tuple[
         Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
     ]:
-        use_cached_snmp_data = False
+        force_snmp_cache_refresh = True
         if args[0] == "@noscan":
             args = args[1:]
-            use_cached_snmp_data = True
-
+            force_snmp_cache_refresh = False
         elif args[0] == "@scan":
             # Do a full service scan
             args = args[1:]
 
-        file_cache_options = FileCacheOptions(use_outdated=True, maybe=use_cached_snmp_data)
+        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
+        file_cache_options = FileCacheOptions(use_outdated=True)
 
         if args[0] == "@raiseerrors":
             on_error = OnError.RAISE
@@ -250,6 +249,7 @@ class AutomationTryDiscovery(Automation):
             host_name=HostName(args[0]),
             config_cache=config.get_config_cache(),
             file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
             max_cachefile_age=config.max_cachefile_age(),
             on_error=on_error,
         )

@@ -62,6 +62,7 @@ def get_check_preview(
     host_name: HostName,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
@@ -85,7 +86,7 @@ def get_check_preview(
                 host_name_,
                 ip_address_,
                 config_cache=config_cache,
-                force_snmp_cache_refresh=not file_cache_options.maybe if nodes is None else False,
+                force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
                 selected_sections=NO_SELECTION,
                 on_scan_error=on_error if nodes is None else OnError.RAISE,
                 simulation_mode=config.simulation_mode,

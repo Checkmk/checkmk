@@ -110,6 +110,7 @@ def automation_discovery(
     service_filters: _ServiceFilters | None,
     on_error: OnError,
     file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -146,9 +147,7 @@ def automation_discovery(
                     host_name_,
                     ipaddress_,
                     config_cache=config_cache,
-                    force_snmp_cache_refresh=not file_cache_options.maybe
-                    if nodes is None
-                    else False,
+                    force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
                     selected_sections=NO_SELECTION,
                     on_scan_error=on_error if nodes is None else OnError.RAISE,
                     simulation_mode=config.simulation_mode,
@@ -372,6 +371,7 @@ def discover_marked_hosts(
     autodiscovery_queue: AutoQueue,
     *,
     file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     config_cache: ConfigCache,
 ) -> None:
     """Autodiscovery"""
@@ -399,6 +399,7 @@ def discover_marked_hosts(
                 host_name,
                 config_cache=config_cache,
                 file_cache_options=file_cache_options,
+                force_snmp_cache_refresh=force_snmp_cache_refresh,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -439,6 +440,7 @@ def _discover_marked_host(
     *,
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
@@ -465,6 +467,7 @@ def _discover_marked_host(
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,
         file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
         # make sure we may use the file the active discovery check left behind:

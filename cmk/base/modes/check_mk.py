@@ -1479,6 +1479,7 @@ def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         queue,
         config_cache=config_cache,
         file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=False,
     )
 
 
@@ -1517,12 +1518,14 @@ def mode_check_discovery(
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
+    discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     return discovery.commandline_check_discovery(
         hostname,
         config_cache=config.get_config_cache(),
         ipaddress=None,
         active_check_handler=active_check_handler,
         file_cache_options=file_cache_options,
+        discovery_file_cache_max_age=discovery_file_cache_max_age,
         keepalive=keepalive,
     )
 

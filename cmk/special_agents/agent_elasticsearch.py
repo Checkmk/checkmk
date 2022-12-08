@@ -13,7 +13,7 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
-def agent_elasticsearch_main(args: Args) -> None:
+def agent_elasticsearch_main(args: Args) -> int:
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
 
@@ -43,10 +43,12 @@ def agent_elasticsearch_main(args: Args) -> None:
 
                 handler(response.json())
 
-            return
         except Exception:
             if args.debug:
                 raise
+            return 1
+
+    return 0
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -149,6 +151,6 @@ def handle_stats(response: Mapping[str, object]) -> None:
         writer.append_json(response["indices"])
 
 
-def main():
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_elasticsearch_main)
+    return special_agent_main(parse_arguments, agent_elasticsearch_main)

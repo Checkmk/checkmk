@@ -432,6 +432,6 @@ def test_connect_error(mock_close, mock_connect) -> None:  # type:ignore[no-unty
     mock_close.assert_called_once()
 
 
-@mock.patch("cmk.special_agents.agent_smb_share.special_agent_main")
+@mock.patch("cmk.special_agents.agent_smb_share.special_agent_main", return_value=0)
 def test_main(mock_agent) -> None:  # type:ignore[no-untyped-def]
     assert main() == 0

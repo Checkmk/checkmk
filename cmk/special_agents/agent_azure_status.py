@@ -80,7 +80,7 @@ def get_azure_issues(
                 yield AzureIssue(region=region, title=entry.title, description=entry.summary)
 
 
-def write_section(args: Args) -> None:
+def write_section(args: Args) -> int:
     response = requests.get("https://status.azure.com/en-us/status/feed/")
     feed = feedparser.parse(response.text)
 
@@ -92,7 +92,8 @@ def write_section(args: Args) -> None:
 
     with SectionWriter("azure_status") as writer:
         writer.append_json(azure_status.dict())
+    return 0
 
 
-def main() -> None:
-    special_agent_main(parse_arguments, write_section)
+def main() -> int:
+    return special_agent_main(parse_arguments, write_section)

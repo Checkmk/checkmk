@@ -980,7 +980,7 @@ def write_notify_host_file(
     config_path: VersionedConfigPath,
     labels_per_host: dict[HostName, CollectedHostLabels],
 ) -> None:
-    notify_labels_path: Path = Path(config_path) / "notify" / "labels"
+    notify_labels_path: Path = _get_host_file_path(config_path)
     for host, labels in labels_per_host.items():
         host_path = notify_labels_path / host
         save_object_to_file(
@@ -997,13 +997,23 @@ def write_notify_host_file(
 def read_notify_host_file(
     host_name: HostName,
 ) -> CollectedHostLabels:
-    notify_labels_path: Path = Path("latest") / "notify" / "labels" / host_name
+    host_file_path: Path = _get_host_file_path(host_name=host_name)
     return CollectedHostLabels(
         **load_object_from_file(
-            path=notify_labels_path,
+            path=host_file_path,
             default={"host_labels": {}, "service_labels": {}},
         )
     )
+
+
+def _get_host_file_path(
+    config_path: Optional[VersionedConfigPath] = None,
+    host_name: Optional[HostName] = None,
+) -> Path:
+    root_path = Path(config_path) if config_path else Path("latest")
+    if host_name:
+        return root_path / "notify" / "labels" / host_name
+    return root_path / "notify" / "labels"
 
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:

@@ -1,0 +1,21 @@
+Title: mk_mysql: Support for multiple sockets and aliases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1670487171
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Until now, the mk_mysql agent plugin could handle multiple sockets,
+but without the possibility to specify one alias per socket.
+Specifying multiple sockets and one alias for the whole instance would
+lead to missing services in the discovery.
+The option to configure multiple sockets was missing from the bakery.
+
+Now, the mk_mysql agent plugin can handle multiple socket-alias pairs
+which can be configured through the bakery.
+The configuration example mysql.cfg has been added to Setup > Agents >
+Other operating systems > Example Configurations.

@@ -49,15 +49,21 @@ fi
 
 if type mysqladmin >/dev/null
 then
-  mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-  alias=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
-  if [ -z "$mysql_sockets" ] ; then
-    mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+  mysql_socket_string=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
+  alias_string=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*aliases=\([^ ]*\).*/\1/p')
+
+  if [ -z "$mysql_socket_string" ] ; then
+    mysql_socket_string=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   fi
-  if [ -z "$mysql_sockets" ] ; then
-    do_query "" "$alias"
+  if [ -z "$mysql_socket_string" ] ; then
+    do_query "" ""
   else
-    for socket in $mysql_sockets ; do
+    IFS=" " mapfile -t mysql_sockets <<< "$mysql_socket_string"
+    IFS="," read -r -a aliases <<< "$alias_string"
+
+    for i in "${!mysql_sockets[@]}"; do
+      socket="${mysql_sockets[i]}"
+      alias="${aliases[i]}"
       if [ -z "$alias" ] ; then
         do_query "$socket" "$socket"
       else

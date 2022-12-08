@@ -25,6 +25,7 @@ from typing import (
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
+    Metric,
     regex,
     render,
     Result,
@@ -306,6 +307,17 @@ def _fileinfo_check_function(
         if metric.value is None:
             continue
 
+        if "age" in metric.title.lower() and metric.value < 0:
+            age = metric.verbose_func(abs(metric.value))
+            message = (
+                "The timestamp of the file is in the future. Please investigate your host times"
+            )
+
+            yield Result(state=State.UNKNOWN, summary=f"{metric.title}: -{age}, {message}")
+            yield Metric(metric.key, metric.value)
+
+            continue
+
         max_levels = params.get("max" + metric.key, (None, None))
         min_levels = params.get("min" + metric.key, (None, None))
 
@@ -428,8 +440,15 @@ def _check_individual_files(
     if skip_ok_files and State(overall_state) == State.OK:
         return
 
-    age = render.timespan(file_age)
     size = render.filesize(file_size)
+    age = render.timespan(abs(file_age))
+
+    if file_age < 0:
+        message = "The timestamp of the file is in the future. Please investigate your host times"
+        yield Result(
+            state=State.UNKNOWN, summary=f"[{file_name}] Age: -{age}, Size: {size}, {message}"
+        )
+        return
 
     yield Result(
         state=State.OK,

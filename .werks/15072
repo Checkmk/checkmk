@@ -1,0 +1,12 @@
+Title: Inventory history crash upon sorting
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1670581911
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+The view "Inventory history of host" could result in a crash due to the comparison of differently typed values.
+This is now fixed and the inventory history is rendered as expected.

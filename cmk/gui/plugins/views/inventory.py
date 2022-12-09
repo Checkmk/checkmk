@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import abc
 import time
-from functools import partial
+from functools import partial, total_ordering
 from typing import (
     Any,
     Callable,
@@ -34,6 +34,7 @@ from cmk.utils.structured_data import (
     SDKeys,
     SDPath,
     SDRawPath,
+    SDValue,
     StructuredDataNode,
     Table,
 )
@@ -2033,11 +2034,45 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
     def _sort_table_rows(self, hint: InventoryHintSpec, table: Table) -> inventory.InventoryRows:
-        if (keyorder := hint.get("keyorder")) is None:
+        keyorder: Optional[List[str]] = hint.get("keyorder")
+        if keyorder is None:
             return table.rows
 
-        sorting_keys = tuple(k for k in keyorder if k in table.key_columns)
-        return sorted(table.rows, key=lambda r: tuple(r.get(k) or "" for k in sorting_keys))
+        sorting_keys: Tuple[str, ...] = tuple(k for k in keyorder if k in table.key_columns)
+
+        # The sorting of rows is overly complicated here, because of the type SDValue = Any and
+        # because the given values can be from both an inventory tree or from a delta tree.
+        # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
+        # in cmk.utils.structured_data.
+        @total_ordering
+        class _MinType:
+            def __le__(self, other: object) -> bool:
+                return True
+
+            def __eq__(self, other: object) -> bool:
+                return self is other
+
+        min_type = _MinType()
+
+        def _sanitize_value_for_sorting(
+            value: SDValue,
+        ) -> _MinType | SDValue | tuple[_MinType | SDValue, _MinType | SDValue]:
+            # Replace None values with min_type to enable comparison for type SDValue, i.e. Any.
+            if value is None:
+                return min_type
+
+            if isinstance(value, tuple):
+                return (
+                    min_type if value[0] is None else value[0],
+                    min_type if value[1] is None else value[1],
+                )
+
+            return value
+
+        return sorted(
+            table.rows,
+            key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in sorting_keys),
+        )
 
     @abc.abstractmethod
     def _show_table_value(

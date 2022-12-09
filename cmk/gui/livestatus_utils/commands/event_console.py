@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 from time import time
-from typing import get_args, Iterator, Literal
+from typing import get_args, Iterator, Literal, Mapping
 
 from livestatus import MultiSiteConnection, SiteId
 
@@ -167,34 +167,42 @@ def get_single_event_by_id(connection: MultiSiteConnection, event_id: int) -> EC
     return ev
 
 
+def map_sites_to_ids_from_query(
+    connection: MultiSiteConnection, query: Query
+) -> Mapping[str, list[str]]:
+    sites_with_ids: dict[str, list[str]] = {}
+    with detailed_connection(connection) as conn:
+        for row in query.iterate(conn):
+            event_id_list = sites_with_ids.setdefault(row["site"], [])
+            event_id_list.append(str(row["event_id"]))
+    return sites_with_ids
+
+
 def update_and_acknowledge(
     connection: MultiSiteConnection, change_comment: str, change_contact: str, query: Query
-) -> list:
-    with detailed_connection(connection) as conn:
-        results = [(row["event_id"], row["site"]) for row in query.iterate(conn)]
-
-    for event_id, site in results:
-        cmd = f"EC_UPDATE;{event_id};{user.ident};1;{change_comment};{change_contact}"
+) -> Mapping[str, list[str]]:
+    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+    for site, event_ids in sites_with_ids.items():
+        event_ids_joined = ",".join(event_ids)
+        cmd = f"EC_UPDATE;{event_ids_joined};{user.ident};1;{change_comment};{change_contact}"
         send_command(connection, cmd, site)
+    return sites_with_ids
 
-    return results
 
-
-def change_state(connection: MultiSiteConnection, state: str, query: Query) -> list:
-    with detailed_connection(connection) as conn:
-        results = [(row["event_id"], row["site"]) for row in query.iterate(conn)]
-
-    for event_id, site in results:
-        cmd = f"EC_CHANGESTATE;{event_id};{user.ident};{states_ints_reversed[state]}"
+def change_state(
+    connection: MultiSiteConnection, state: str, query: Query
+) -> Mapping[str, list[str]]:
+    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+    for site, event_ids in sites_with_ids.items():
+        event_ids_joined = ",".join(event_ids)
+        cmd = f"EC_CHANGESTATE;{event_ids_joined};{user.ident};{states_ints_reversed[state]}"
         send_command(connection, cmd, site)
-
-    return results
+    return sites_with_ids
 
 
 def archive_events(connection: MultiSiteConnection, query: Query) -> None:
-    with detailed_connection(connection) as conn:
-        results = [(row["event_id"], row["site"]) for row in query.iterate(conn)]
-
-    for event_id, site in results:
-        cmd = f"EC_DELETE;{event_id};{user.ident}"
+    sites_with_ids = map_sites_to_ids_from_query(connection, query)
+    for site, event_ids in sites_with_ids.items():
+        event_ids_joined = ",".join(event_ids)
+        cmd = f"EC_DELETE;{event_ids_joined};{user.ident}"
         send_command(connection, cmd, site)

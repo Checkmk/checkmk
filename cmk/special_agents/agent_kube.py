@@ -1020,6 +1020,17 @@ def _matches_quota_scope(pod: api.Pod, scope: api.QuotaScope) -> bool:
     raise NotImplementedError(f"Unsupported quota scope {scope}")
 
 
+def pod_attached_persistent_volume_claim_names(pod: api.Pod) -> Iterator[str]:
+    if (volumes := pod.spec.volumes) is None:
+        return
+
+    for volume in volumes:
+        if volume.persistent_volume_claim is None:
+            continue
+
+        yield volume.persistent_volume_claim.claim_name
+
+
 # Pod specific helpers
 
 
@@ -2123,6 +2134,13 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     piggyback_formatter=piggyback_formatter,
                 )
 
+            api_persistent_volume_claims = {
+                namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
+                    **pvc.dict()
+                )
+                for pvc in api_data.persistent_volume_claims
+            }
+
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 unmonitored_pods = (
@@ -2152,6 +2170,26 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                             )
                         ],
                     )
+
+                    attached_pvc_namespaced_names = [
+                        namespaced_name(namespace=pod_namespace(pod), name=pvc_name)
+                        for pvc_name in pod_attached_persistent_volume_claim_names(pod)
+                    ]
+                    attached_pvcs = {
+                        pvc_namespaced_name: api_persistent_volume_claims[pvc_namespaced_name]
+                        for pvc_namespaced_name in attached_pvc_namespaced_names
+                    }
+                    if len(attached_pvcs) > 0:
+                        sections = chain(
+                            sections,
+                            [
+                                WriteableSection(
+                                    piggyback_name=pod_piggyback_name,
+                                    section_name=SectionName("kube_pvc_v1"),
+                                    section=section.PersistentVolumeClaims(claims=attached_pvcs),
+                                )
+                            ],
+                        )
                     common.write_sections(sections)
 
             usage_config = query.parse_session_config(arguments)

@@ -68,6 +68,12 @@ class MetaDataFactory(ModelFactory[api.MetaData[str]]):
 
 
 # Pod related Factories
+class VolumePersistentVolumeClaimSourceFactory(ModelFactory):
+    __model__ = api.VolumePersistentVolumeClaimSource
+
+
+class PodVolumeFactory(ModelFactory):
+    __model__ = api.Volume
 
 
 class PodSpecFactory(ModelFactory):

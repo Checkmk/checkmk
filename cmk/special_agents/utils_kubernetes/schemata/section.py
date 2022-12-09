@@ -664,3 +664,28 @@ class OpenShiftEndpoint(Section):
 
     url: str
     results: Sequence[PrometheusResult]
+
+
+class StorageRequirement(BaseModel):
+    storage: float
+
+
+class PersistentVolumeClaimStatus(BaseModel):
+    phase: api.PersistentVolumeClaimPhase | None
+    capacity: StorageRequirement | None
+
+
+class PersistentVolumeClaimMetaData(BaseModel):
+    name: str
+    namespace: api.NamespaceName
+
+
+class PersistentVolumeClaim(BaseModel):
+    metadata: PersistentVolumeClaimMetaData
+    status: PersistentVolumeClaimStatus
+
+
+class PersistentVolumeClaims(Section):
+    """section: kube_pvc_v1"""
+
+    claims: Mapping[str, PersistentVolumeClaim]

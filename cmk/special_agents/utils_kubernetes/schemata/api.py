@@ -854,10 +854,10 @@ class PersistentVolumeClaimPhase(enum.Enum):
     pending:
         PVCs that are not yet bound
     bound:
-        for PVCs that are bound
+        PVCs that are bound
     lost:
-        for PVCs that lost their underlying PV. The claim was bound to a PV and this volume
-        does not exist any longer and all data on it was lost
+        PVCs that lost their underlying PV. The claim was bound to a PV which no longer exists,
+        and all data on it is lost
     """
 
     CLAIM_PENDING = "Pending"

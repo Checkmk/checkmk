@@ -886,6 +886,47 @@ class CronJobLatestJob(Section):
     pods: Sequence[JobPod]
 
 
+class PersistentVolumeClaimPhase(enum.Enum):
+    """
+    pending:
+        PVCs that are not yet bound
+    bound:
+        PVCs that are bound
+    lost:
+        PVCs that lost their underlying PV. The claim was bound to a PV which no longer exists,
+        and all data on it is lost
+    """
+
+    CLAIM_PENDING = "Pending"
+    CLAIM_BOUND = "Bound"
+    CLAIM_LOST = "Lost"
+
+
+class StorageRequirement(BaseModel):
+    storage: float
+
+
+class PersistentVolumeClaimStatus(BaseModel):
+    phase: PersistentVolumeClaimPhase | None
+    capacity: StorageRequirement | None
+
+
+class PersistentVolumeClaimMetaData(BaseModel):
+    name: str
+    namespace: NamespaceName
+
+
+class PersistentVolumeClaim(BaseModel):
+    metadata: PersistentVolumeClaimMetaData
+    status: PersistentVolumeClaimStatus
+
+
+class PersistentVolumeClaims(Section):
+    """section: kube_pvc_v1"""
+
+    claims: Mapping[str, PersistentVolumeClaim]
+
+
 class IdentificationError(BaseModel):
     """Errors due to incorrect labels set by the user."""
 

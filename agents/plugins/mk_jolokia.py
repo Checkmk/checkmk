@@ -679,6 +679,8 @@ def generate_values(inst, var_list):
 
         for item, title, value in _process_queries(inst, queries):
             if value_type:
+                if value_type == "rate":
+                    value = "{:f}".format(value)
                 yield item, title, value, value_type
             else:
                 yield item, title, value

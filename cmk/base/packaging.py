@@ -61,7 +61,7 @@ Available commands are:
    show PACK.mkp           ...  Show information about uninstalled package file
    install PACK.mkp        ...  Install or update package from file PACK.mkp
    remove NAME VERSION     ...  Uninstall and delete package NAME
-   disable NAME            ...  Disable package NAME
+   disable NAME [VERSION]  ...  Disable package NAME
    enable NAME VERSION     ...  Enable previously disabled package NAME
    disable-outdated        ...  Disable outdated packages
    update-active-packages  ...  Update the selection of active packages (according to Checkmk version)
@@ -303,9 +303,9 @@ def package_install(args: list[str]) -> None:
 
 
 def package_disable(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P disable NAME")
-    disable(PackageName(args[0]))
+    if len(args) not in {1, 2}:
+        raise PackageException("Usage: check_mk -P disable NAME [VERSION]")
+    disable(PackageName(args[0]), PackageVersion(args[1]) if len(args) == 2 else None)
 
 
 def package_enable(args: list[str]) -> None:

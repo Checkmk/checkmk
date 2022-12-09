@@ -270,23 +270,30 @@ def read_package(package_store: PackageStore, package_file_base_name: str) -> by
     return _get_full_package_path(package_store, package_file_base_name).read_bytes()
 
 
-def disable(package_name: PackageName) -> None:
-    package_path, package_meta_info = _find_path_and_package_info(package_name)
+def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
+    package_path, package_meta_info = _find_path_and_package_info(package_name, package_version)
 
-    if package_name in installed_names():
-        uninstall(package_meta_info)
+    if (installed := get_installed_package_info(package_name)) is not None:
+        if package_version is None or installed.version == package_version:
+            uninstall(package_meta_info)
 
     package_path.unlink()
 
 
-def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, PackageInfo]:
+def _find_path_and_package_info(
+    package_name: PackageName, package_version: PackageVersion | None
+) -> tuple[Path, PackageInfo]:
 
     # not sure if we need this, but better safe than sorry.
     def filename_matches(package: PackageInfo, name: str) -> bool:
         return format_file_name(package.id) == name
 
-    def package_matches(package: PackageInfo, package_name: PackageName) -> bool:
-        return package.name == package_name
+    def package_matches(
+        package: PackageInfo, package_name: PackageName, package_version: PackageVersion | None
+    ) -> bool:
+        return package.name == package_name and (
+            package_version is None or package.version == package_version
+        )
 
     enabled_packages = get_enabled_package_infos()
 
@@ -294,11 +301,17 @@ def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, Packag
         (package_path, package)
         for package_path in _get_enabled_package_paths()
         if (package := enabled_packages.get(package_path.name)) is not None
-        and (package_matches(package, package_name) or filename_matches(package, package_name))
+        and (
+            package_matches(package, package_name, package_version)
+            or filename_matches(package, package_name)
+        )
     ]
 
+    package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
     if not matching_packages:
-        raise PackageException("Package %s is not enabled" % package_name)
+        raise PackageException(f"Package {package_str} is not enabled")
+    if len(matching_packages) > 1:
+        raise PackageException(f"Package not unique: {package_str}")
 
     return matching_packages[0]
 
@@ -910,7 +923,7 @@ def disable_outdated() -> None:
             _raise_for_too_new_cmk_version(package_info, cmk_version.__version__)
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
-            disable(package_name)
+            disable(package_name, package_info.version)
         else:
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
 

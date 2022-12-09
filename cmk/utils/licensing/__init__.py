@@ -95,7 +95,7 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
         history_dump.history.add_sample(sample)
         _save_history_dump(history_dump)
 
-        store.save_text_to_file(next_run_filepath, _rot47(str(_create_next_run_ts(now))))
+        store.save_text_to_file(next_run_filepath, rot47(str(_create_next_run_ts(now))))
 
     return 0
 
@@ -180,7 +180,7 @@ def _get_stats_from_livestatus(query: str) -> tuple[int, int]:
 
 
 def _get_next_run_ts(next_run_filepath: Path) -> int:
-    return int(_rot47(store.load_text_from_file(next_run_filepath, default="_")))
+    return int(rot47(store.load_text_from_file(next_run_filepath, default="_")))
 
 
 def _create_next_run_ts(now: datetime) -> int:
@@ -362,11 +362,11 @@ def _load_extensions() -> LicenseUsageExtensions:
 
 def _serialize_dump(dump: RawLicenseUsageHistoryDump | Mapping[str, float]) -> bytes:
     dump_str = json.dumps(dump)
-    return _rot47(dump_str).encode("utf-8")
+    return rot47(dump_str).encode("utf-8")
 
 
 def deserialize_dump(raw_dump: bytes) -> object:
-    dump_str = _rot47(raw_dump.decode("utf-8"))
+    dump_str = rot47(raw_dump.decode("utf-8"))
 
     try:
         dump = json.loads(dump_str)
@@ -379,7 +379,7 @@ def deserialize_dump(raw_dump: bytes) -> object:
     return {}
 
 
-def _rot47(input_str: str) -> str:
+def rot47(input_str: str) -> str:
     return "".join(_rot47_char(c) for c in input_str)
 
 

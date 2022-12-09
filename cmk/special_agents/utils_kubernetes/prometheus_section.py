@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Iterable, Sequence, Type, TypeVar
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric
+from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -96,13 +96,12 @@ def machine_sections(config: query.PrometheusSessionConfig) -> dict[str, str]:
         return query.node_exporter_getter(config, common.LOGGER, promql_expression)
 
     node_exporter = NodeExporter(promql_getter)
-    result_list: dict[str, list[str]] = {}
-    for section_name, node_to_section in [
-        (common.SectionName("diskstats"), node_exporter.diskstat_summary()),
-        (common.SectionName("kernel"), node_exporter.kernel_summary()),
-        (common.SectionName("mem"), node_exporter.memory_summary()),
+    result_list: dict[str, list[SectionStr]] = {}
+    for node_to_section in [
+        node_exporter.diskstat_summary(),
+        node_exporter.kernel_summary(),
+        node_exporter.memory_summary(),
     ]:
-        for node, section_list in node_to_section.items():
-            sections_list = result_list.setdefault(node, [])
-            sections_list.extend([f"<<<{section_name}>>>", *section_list])
+        for node, section_str in node_to_section.items():
+            result_list.setdefault(node, []).append(section_str)
     return {node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()}

@@ -18,7 +18,7 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric
+from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
 
 LOGGER = logging.getLogger()  # root logger for now
@@ -1678,9 +1678,7 @@ class ApiData:
                 group.join(kube_state_service_info["service_name"], element)
         yield "\n".join(group.output(piggyback_prefix=piggyback_prefix))
 
-    def node_exporter_section(  # pylint: disable=too-many-branches
-        self, node_options: dict[str, list[str] | str]
-    ) -> Iterator[str]:
+    def node_exporter_section(self, node_options: dict[str, list[str] | str]) -> Iterator[str]:
         node_entities = node_options["entities"]
         if "host_mapping" in node_options:
             host_mapping = [node_options["host_mapping"]]
@@ -1689,54 +1687,30 @@ class ApiData:
 
         if "df" in node_entities:
             df_result = self.node_exporter.df_summary()
-            df_inodes_result = self.node_exporter.df_inodes_summary()
-
-            for node_name, node_df_info in df_result.items():
-                piggyback_host_name = self._get_node_piggyback_host_name(node_name)
-                if node_df_info and node_name in df_inodes_result:
-                    df_section = [
-                        "<<<df>>>",
-                        "\n".join(node_df_info),
-                        "<<<df>>>",
-                        "[df_inodes_start]",
-                        "\n".join(df_inodes_result[node_name]),
-                        "[df_inodes_end]\n",
-                    ]
-
-                    if piggyback_host_name not in host_mapping:
-                        df_section.insert(0, "<<<<%s>>>>" % piggyback_host_name)
-                        df_section.append("<<<<>>>>\n")
-                    else:
-                        df_section.append("\n")
-                    yield "\n".join(df_section)
+            yield from self._output_node_section(df_result, host_mapping)
 
         if "diskstat" in node_entities:
             diskstat_result = self.node_exporter.diskstat_summary()
-            if diskstat_result:
-                yield from self._output_node_section("diskstat", diskstat_result, host_mapping)
+            yield from self._output_node_section(diskstat_result, host_mapping)
 
         if "mem" in node_entities:
             mem_result = self.node_exporter.memory_summary()
-            if mem_result:
-                yield from self._output_node_section("mem", mem_result, host_mapping)
+            yield from self._output_node_section(mem_result, host_mapping)
 
         if "kernel" in node_entities:
             kernel_result = self.node_exporter.kernel_summary()
-            if kernel_result:
-                yield from self._output_node_section("kernel", kernel_result, host_mapping)
+            yield from self._output_node_section(kernel_result, host_mapping)
 
-    def _output_node_section(self, service_name, entity_result, host_mapping):
-        for node_name, node_entity_summary in entity_result.items():
-            if len(node_entity_summary) > 1:
-                piggyback_host_name = self._get_node_piggyback_host_name(node_name)
-                entity_section = ["<<<%s>>>" % service_name, "\n".join(node_entity_summary)]
-
+    def _output_node_section(
+        self, node_to_section_str: dict[str, SectionStr], host_mapping: list[list[str] | str]
+    ) -> Iterator[str]:
+        for node, section_str in node_to_section_str.items():
+            if section_str:
+                piggyback_host_name = self._get_node_piggyback_host_name(node)
                 if piggyback_host_name not in host_mapping:
-                    entity_section.insert(0, "<<<<%s>>>>" % piggyback_host_name)
-                    entity_section.append("<<<<>>>>\n")
+                    yield f"<<<<{piggyback_host_name}>>>>\n{section_str}\n<<<<>>>>\n"
                 else:
-                    entity_section.append("\n")
-                yield "\n".join(entity_section)
+                    yield f"{section_str}\n"
 
     @staticmethod
     def _get_node_piggyback_host_name(node_name):

@@ -8,6 +8,8 @@ from collections.abc import Mapping
 
 from typing_extensions import NotRequired
 
+SectionStr = typing.NewType("SectionStr", str)
+
 
 class PromQLMetric(typing.TypedDict):
     value: float
@@ -45,7 +47,25 @@ class NodeExporter:
     def __init__(self, get_promql: PromQLGetter) -> None:
         self.get_promql = get_promql
 
-    def df_summary(self) -> dict[str, list[str]]:
+    def df_summary(self) -> dict[str, SectionStr]:
+        df_result = self._df_summary()
+        df_inodes_result = self._df_inodes_summary()
+
+        return {
+            node_name: _create_section(
+                "df",
+                [
+                    *node_df_info,
+                    "[df_inodes_start]",
+                    *df_inodes_result[node_name],
+                    "[df_inodes_end]",
+                ],
+            )
+            for node_name, node_df_info in df_result.items()
+            if node_df_info and node_name in df_inodes_result
+        }
+
+    def _df_summary(self) -> dict[str, list[str]]:
 
         # value division by 1000 because of Prometheus format
         df_list = [
@@ -55,7 +75,7 @@ class NodeExporter:
         ]
         return self._process_filesystem_info(self._retrieve_filesystem_info(df_list))
 
-    def df_inodes_summary(self) -> dict[str, list[str]]:
+    def _df_inodes_summary(self) -> dict[str, list[str]]:
 
         # no value division for inodes as format already correct
         inodes_list = [
@@ -99,7 +119,7 @@ class NodeExporter:
                 device.set_entity(entity_name, int(float(mountpoint_info["value"])))
         return result
 
-    def diskstat_summary(self) -> dict[str, list[str]]:
+    def diskstat_summary(self) -> dict[str, SectionStr]:
 
         diskstat_list = [
             ("reads_completed", "node_disk_reads_completed_total"),
@@ -127,9 +147,9 @@ class NodeExporter:
         self,
         diskstat_list: list[tuple[str, str]],
         diskstat_node_dict: dict[str, dict[str, dict[str, int | str]]],
-    ) -> dict[str, list[str]]:
+    ) -> dict[str, SectionStr]:
 
-        result: dict[str, list[str]] = {}
+        result: dict[str, SectionStr] = {}
         diskstat_entities_list = [diskstat_info[0] for diskstat_info in diskstat_list]
         for node_name, diskstat_info_dict in diskstat_node_dict.items():
             temp_result = ["%d" % time.time()]
@@ -144,7 +164,7 @@ class NodeExporter:
                     )
                     temp_result.append(device_parsed)
             if temp_result:
-                result[node_name] = temp_result
+                result[node_name] = _create_section("diskstat", temp_result)
         return result
 
     def _retrieve_diskstat_info(
@@ -160,7 +180,7 @@ class NodeExporter:
                 device[entity_name] = int(float(node_info["value"]))
         return result
 
-    def memory_summary(self) -> dict[str, list[str]]:
+    def memory_summary(self) -> dict[str, SectionStr]:
         memory_list = [
             ("MemTotal", "node_memory_MemTotal_bytes/1024"),
             ("MemFree", "node_memory_MemFree_bytes/1024"),
@@ -216,15 +236,15 @@ class NodeExporter:
         ]
         return self._generate_memory_stats(memory_list)
 
-    def _generate_memory_stats(self, promql_list: list[tuple[str, str]]) -> dict[str, list[str]]:
+    def _generate_memory_stats(self, promql_list: list[tuple[str, str]]) -> dict[str, SectionStr]:
         result: dict[str, list[str]] = {}
         for entity_name, promql_query in promql_list:
             for node_element in self.get_promql(promql_query):
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
                 node_mem.append("{}: {} kB".format(entity_name, node_element["value"]))
-        return result
+        return {node: _create_section("mem", section_list) for node, section_list in result.items()}
 
-    def kernel_summary(self) -> dict[str, list[str]]:
+    def kernel_summary(self) -> dict[str, SectionStr]:
 
         kernel_list = [
             ("cpu", "sum by (mode, instance)(node_cpu_seconds_total*100)"),
@@ -241,8 +261,8 @@ class NodeExporter:
     @staticmethod
     def _process_kernel_info(
         temp_result: dict[str, dict[str, dict[str, int]]]
-    ) -> dict[str, list[str]]:
-        result: dict[str, list[str]] = {}
+    ) -> dict[str, SectionStr]:
+        result: dict[str, SectionStr] = {}
         for node_name, cpu_result in temp_result.items():
             temp: list[str] = ["%d" % time.time()]
             for entity_name, entity_info in cpu_result.items():
@@ -256,7 +276,7 @@ class NodeExporter:
                     temp.append(entity_parsed)
                 else:
                     temp.append("{} {}".format(entity_name, entity_info["value"]))
-            result[node_name] = temp
+            result[node_name] = _create_section("kernel", temp)
         return result
 
     def _retrieve_kernel_info(
@@ -280,3 +300,7 @@ class NodeExporter:
                 else:
                     node[entity_name] = {"value": metric_value}
         return result
+
+
+def _create_section(section_name: str, section_list: list[str]) -> SectionStr:
+    return SectionStr("\n".join([f"<<<{section_name}>>>", *section_list]))

@@ -43,20 +43,20 @@ def packaging_usage() -> None:
         """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME         ...  Collect unpackaged files into new package NAME
-   pack NAME           ...  Create package file from installed package
-   release NAME        ...  Drop installed package NAME, release packaged files
-   find                ...  Find and display unpackaged files
-   list                ...  List all installed packages
-   list NAME           ...  List files of installed package
-   list PACK.mkp       ...  List files of uninstalled package file
-   show NAME           ...  Show information about installed package
-   show PACK.mkp       ...  Show information about uninstalled package file
-   install PACK.mkp    ...  Install or update package from file PACK.mkp
-   remove NAME VERSION ...  Uninstall and delete package NAME
-   disable NAME        ...  Disable package NAME
-   enable NAME VERSION ...  Enable previously disabled package NAME
-   disable-outdated    ...  Disable outdated packages
+   create NAME             ...  Collect unpackaged files into new package NAME
+   pack NAME               ...  Create package file from installed package
+   release NAME            ...  Drop installed package NAME, release packaged files
+   find                    ...  Find and display unpackaged files
+   list                    ...  List all installed packages
+   list NAME               ...  List files of installed package
+   list PACK.mkp           ...  List files of uninstalled package file
+   show NAME               ...  Show information about installed package
+   show PACK.mkp           ...  Show information about uninstalled package file
+   install PACK.mkp        ...  Install or update package from file PACK.mkp
+   remove NAME VERSION     ...  Uninstall and delete package NAME
+   disable NAME [VERSION]  ...  Disable package NAME
+   enable NAME VERSION     ...  Enable previously disabled package NAME
+   disable-outdated        ...  Disable outdated packages
 
    -v  enables verbose output
 
@@ -308,10 +308,11 @@ def package_install(args: List[str]) -> None:
 
 
 def package_disable(args: List[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P disable NAME")
+    if len(args) not in {1, 2}:
+        raise PackageException("Usage: check_mk -P disable NAME [VERSION]")
     package_name = args[0]
-    packaging.disable(package_name)
+    package_version = args[1] if len(args) == 2 else None
+    packaging.disable(package_name, package_version)
 
 
 def package_enable(args: List[str]) -> None:

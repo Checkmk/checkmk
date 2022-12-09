@@ -1,0 +1,12 @@
+Title: Extension package: Disable right MKP after a version was changed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1670582678
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+This fixes the issue where sometimes a wrong package was disabled if multiple versions of the same package where enabled.

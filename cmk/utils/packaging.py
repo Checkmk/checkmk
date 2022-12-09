@@ -332,13 +332,16 @@ def _find_path_and_package_info(package_name: PackageName) -> Tuple[Path, Packag
 
     enabled_packages = get_enabled_package_infos()
 
-    for package_path in _get_enabled_package_paths():
-        if (package := enabled_packages.get(package_path.name)) is None:
-            continue
-        if filename_matches(package, package_name) or package_matches(package, package_name):
-            return package_path, package
+    matching_packages = [
+        (package_path, package)
+        for package_path in _get_enabled_package_paths()
+        if (package := enabled_packages.get(package_path.name)) is not None and
+        (filename_matches(package, package_name) or package_matches(package, package_name))
+    ]
+    if not matching_packages:
+        raise PackageException("Package %s is not enabled" % package_name)
 
-    raise PackageException("Package %s is not enabled" % package_name)
+    return matching_packages[0]
 
 
 def create(pkg_info: PackageInfo) -> None:

@@ -360,15 +360,19 @@ def disable(package_name: PackageName) -> None:
 
 def _find_path_and_package_info(package_name: PackageName) -> Tuple[Path, PackageInfo]:
 
+    # not sure if we need this, but better safe than sorry.
+    def filename_matches(package: PackageInfo, name: str) -> bool:
+        return format_file_name(name=package["name"], version=package["version"]) == name
+
+    def package_matches(package: PackageInfo, package_name: PackageName) -> bool:
+        return package["name"] == package_name
+
     enabled_packages = get_enabled_package_infos()
 
     for package_path in _get_enabled_package_paths():
         if (package := enabled_packages.get(package_path.name)) is None:
             continue
-        if (
-            package["name"] == package_name
-            or format_file_name(name=package["name"], version=package["version"]) == package_name
-        ):
+        if filename_matches(package, package_name) or package_matches(package, package_name):
             return package_path, package
 
     raise PackageException("Package %s is not enabled" % package_name)

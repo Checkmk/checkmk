@@ -1,0 +1,19 @@
+Title: Make <tt>curl</tt> command work as site user on SLES 15 SP4
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1670603495
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+On SUSE Linux Enterprise Server 15 SP4 systems, the <tt>curl</tt> command crashed with
+C+:
+curl: symbol lookup error: /usr/lib64/libssh.so.4: undefined symbol: EVP_KDF_CTX_new_id, version OPENSSL_1_1_1d
+C-:
+when executed as a site user.
+
+Note that this issue also prevented certain background tasks in Checkmk from being executed, such as
+LDAP and Active Directory synchronizations or internal cleanup jobs.

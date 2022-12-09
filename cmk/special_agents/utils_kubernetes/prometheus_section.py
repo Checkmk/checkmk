@@ -98,6 +98,7 @@ def machine_sections(config: query.PrometheusSessionConfig) -> dict[str, str]:
     node_exporter = NodeExporter(promql_getter)
     result_list: dict[str, list[SectionStr]] = {}
     for node_to_section in [
+        node_exporter.df_summary(),
         node_exporter.diskstat_summary(),
         node_exporter.kernel_summary(),
         node_exporter.memory_summary(),

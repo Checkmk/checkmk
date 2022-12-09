@@ -20,9 +20,9 @@ PartPath = str
 PartFiles = list[str]
 
 
+@enum.unique
 class PackagePart(enum.Enum):
     EC_RULE_PACKS = "ec_rule_packs"
-    WEB_NTOP = "web"
     AGENT_BASED = "agent_based"
     CHECKS = "checks"
     HASI = "inventory"
@@ -56,8 +56,6 @@ class PackagePart(enum.Enum):
         match self:
             case PackagePart.EC_RULE_PACKS:
                 return _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())
-            case PackagePart.WEB_NTOP:
-                return _("ntop GUI extensions"), "enterprise/cmk/gui/cee/"
             case PackagePart.AGENT_BASED:
                 return _("Agent based plugins (Checks, Inventory),"), str(
                     cmk.utils.paths.local_agent_based_plugins_dir

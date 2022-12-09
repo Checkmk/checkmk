@@ -13,7 +13,7 @@ from io import BytesIO
 from logging import Logger
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Extra, Field
 
 from cmk.utils import version as cmk_version
 
@@ -34,6 +34,7 @@ class Manifest(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+        extra = Extra.forbid
 
     def file_content(self) -> str:
         return f"{pprint.pformat(self.dict(by_alias=True))}\n"

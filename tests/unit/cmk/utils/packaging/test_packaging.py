@@ -131,19 +131,6 @@ def test_create_twice() -> None:
         _create_simple_test_package(packaging.PackageName("aaa"))
 
 
-def test_read_manifest() -> None:
-    _create_simple_test_package(packaging.PackageName("aaa"))
-    manifest = _read_manifest(packaging.PackageName("aaa"))
-    assert manifest.version == packaging.PackageVersion("1.0.0")
-    assert packaging.package_num_files(manifest) == 1
-
-
-def test_read_manifest_not_existing() -> None:
-    assert (
-        packaging.get_installed_manifest(packaging.PackageName("aaa"), logging.getLogger()) is None
-    )
-
-
 def test_edit_not_existing() -> None:
     new_manifest = packaging.manifest_template(packaging.PackageName("aaa"))
     new_manifest.version = packaging.PackageVersion("2.0.0")
@@ -315,23 +302,6 @@ def test_get_optional_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
             version=packaging.PackageVersion("1.0.0"),
         ): (expected_manifest, True)
     }
-
-
-def test_parse_manifest_pre_160() -> None:
-    # make sure we can read old packages without "usable until"
-    raw = {
-        k: v
-        for k, v in packaging.manifest_template(packaging.PackageName("testpackage"))
-        .dict(by_alias=True)
-        .items()
-        if k != "version.usable_until"
-    }
-    assert packaging.Manifest.parse_python_string(repr(raw)).version_usable_until is None
-
-
-def test_parse_manifest() -> None:
-    info_str = packaging.manifest_template(packaging.PackageName("pkgname")).file_content()
-    assert packaging.Manifest.parse_python_string(info_str).name == packaging.PackageName("pkgname")
 
 
 def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]

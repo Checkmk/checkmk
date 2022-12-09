@@ -10,6 +10,7 @@ import time
 from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from functools import total_ordering
 from typing import Any, Literal, NamedTuple, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
@@ -1127,7 +1128,39 @@ class DisplayHints:
 
     @staticmethod
     def sort_rows(rows: Sequence[SDRow], columns: Sequence[_Column]) -> Sequence[SDRow]:
-        return sorted(rows, key=lambda r: tuple(r.get(c.key) or "" for c in columns))
+        # The sorting of rows is overly complicated here, because of the type SDValue = Any and
+        # because the given values can be from both an inventory tree or from a delta tree.
+        # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
+        # in cmk.utils.structured_data.
+        # TODO: Improve SDValue
+        @total_ordering
+        class _MinType:
+            def __le__(self, other: object) -> bool:
+                return True
+
+            def __eq__(self, other: object) -> bool:
+                return self is other
+
+        min_type = _MinType()
+
+        def _sanitize_value_for_sorting(
+            value: SDValue,
+        ) -> _MinType | SDValue | tuple[_MinType | SDValue, _MinType | SDValue]:
+            # Replace None values with min_type to enable comparison for type SDValue, i.e. Any.
+            if value is None:
+                return min_type
+
+            if isinstance(value, tuple):
+                return (
+                    min_type if value[0] is None else value[0],
+                    min_type if value[1] is None else value[1],
+                )
+
+            return value
+
+        return sorted(
+            rows, key=lambda r: tuple(_sanitize_value_for_sorting(r.get(c.key)) for c in columns)
+        )
 
     def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[tuple[SDKey, SDValue]]:
         sorting_keys = list(self.attributes_hint.key_order) + sorted(

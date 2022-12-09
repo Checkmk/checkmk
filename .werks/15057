@@ -1,0 +1,16 @@
+Title: REST API: Implement event console endpoints
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1670573735
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+This werk introduces the event console endpoints. Previously, users could acknowledge event
+console events via the Web API but after some security changes, this is now not possible. The
+new event console endpoints add this feature to the REST API along with some other familiar
+event console commands.
+

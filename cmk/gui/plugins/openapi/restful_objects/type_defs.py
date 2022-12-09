@@ -36,6 +36,7 @@ DomainType = Literal[
     "dcd",
     "discovery_run",
     "downtime",
+    "event_console",
     "folder_config",
     "host",
     "host_config",
@@ -109,6 +110,8 @@ CmkEndpointName = Literal[
     "cmk/service.move-ignored",
     "cmk/service.bulk-acknowledge",
     "cmk/link_uuid",
+    "cmk/update_and_acknowledge",
+    "cmk/change_state",
 ]
 
 RestfulEndpointName = Literal[
@@ -126,6 +129,8 @@ RestfulEndpointName = Literal[
     ".../choice",  # takes params
     ".../clear",
     ".../collection",
+    ".../collection_update_and_acknowledge",
+    ".../collection_change_state",
     ".../default",
     ".../delete",
     ".../details",  # takes params

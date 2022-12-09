@@ -153,7 +153,7 @@ if [ ${RUN_CHECK_FORMAT} = yes ]; then
 fi
 
 if [ ${RUN_BUILD} = yes ]; then
-    cmake --build build --target livestatus test
+    cmake --build build --target test # "test" already depends on "livestatus"
 fi
 
 if [ ${RUN_UNIT_TESTS} = yes ]; then

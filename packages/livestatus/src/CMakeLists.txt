@@ -15,7 +15,8 @@ set(USE_ASIO_VERSION asio-1.24.0)
 if(${USE_ASIO_OMD})
   FetchContent_Declare(
     asio-omd
-    URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/${USE_ASIO_VERSION}.tar.gz)
+    URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/${USE_ASIO_VERSION}.tar.gz
+    DOWNLOAD_EXTRACT_TIMESTAMP no)
   FetchContent_MakeAvailable(asio-omd)
   FetchContent_GetProperties(
     asio-omd

@@ -7,7 +7,7 @@ set(googletest_version googletest-9c332145b7)
 FetchContent_Declare(
   googletest-omd
   URL ${CMAKE_SOURCE_DIR}/../../omd/packages/googletest/${googletest_version}.tar.gz
-)
+  DOWNLOAD_EXTRACT_TIMESTAMP no)
 FetchContent_MakeAvailable(googletest-omd)
 FetchContent_GetProperties(
   googletest-omd

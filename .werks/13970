@@ -1,0 +1,14 @@
+Title: Showing the config of an agent will no longer fail with a Permission Mismatch
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1670582236
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+Calling the "/objects/agent/" endpoint would always fail with a Permission Mismatch.
+This is no longer the case.
+

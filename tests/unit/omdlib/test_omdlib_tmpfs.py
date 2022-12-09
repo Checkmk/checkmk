@@ -33,7 +33,7 @@ def test_add_to_fstab(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=750,uid=unit,gid=unit 0 0\n"
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )
 
@@ -43,7 +43,7 @@ def test_add_to_fstab_with_size(tmp_path: Path, tmp_fstab: Path, site_context: S
     add_to_fstab(site_context, tmpfs_size="1G")
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=750,uid=unit,gid=unit,size=1G 0 0\n"
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit,size=1G 0 0\n"
         % tmp_path
     )
 
@@ -55,7 +55,7 @@ def test_add_to_fstab_no_newline_at_end(
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
         "# system fstab bla\n"
-        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=750,uid=unit,gid=unit 0 0\n"
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )
 
@@ -64,7 +64,7 @@ def test_add_to_fstab_empty(tmp_path: Path, tmp_fstab: Path, site_context: SiteC
     tmp_fstab.open("w", encoding="utf-8").write("")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
-        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=750,uid=unit,gid=unit 0 0\n"
+        "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )
 

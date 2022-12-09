@@ -85,9 +85,10 @@ def create_config_environment(site: "SiteContext") -> None:
 def save_site_conf(site: "SiteContext") -> None:
     confdir = Path(site.dir, "etc/omd")
     confdir.mkdir(exist_ok=True)
-    with Path(site.dir, "etc/omd/site.conf").open(mode="w") as f:
+    with (confdir / "site.conf").open(mode="w") as f:
         for hook_name, value in sorted(site.conf.items(), key=lambda x: x[0]):
             f.write(f"CONFIG_{hook_name}='{value}'\n")
+    (confdir / "site.conf").chmod(0o644)
 
 
 # Get information about all hooks. Just needed for

@@ -1,4 +1,6 @@
 etc/init.d/xinetd 750
 etc/init.d/systemd 750
 etc/htpasswd 600
-etc/omd/allocated_ports 666
+etc 751
+etc/omd 751
+etc/omd/allocated_ports 644

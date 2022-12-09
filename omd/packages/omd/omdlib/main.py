@@ -310,8 +310,7 @@ def create_skeleton_files(site: SiteContext, directory: str) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with chdir(skelroot):  # make relative paths
         for dirpath, dirnames, filenames in os.walk(directory):
-            if dirpath.startswith("./"):
-                dirpath = dirpath[2:]
+            dirpath = dirpath.removeprefix("./")
             for entry in dirnames + filenames:
                 if exclude_tmp:
                     if dirpath == "." and entry == "tmp":
@@ -366,7 +365,7 @@ def create_skeleton_file(
         user_path.write_bytes(replace_tags(skel_path.read_bytes(), replacements))
 
     if not skel_path.is_symlink():
-        mode = read_skel_permissions().get(relpath)
+        mode = read_skel_permissions().get(relpath.removeprefix("./"))
         if mode is None:
             if skel_path.is_dir():
                 mode = 0o750
@@ -2310,6 +2309,8 @@ def create_site_dir(site: SiteContext) -> None:
         if e.errno != errno.EEXIST:
             raise
     os.chown(site.dir, user_id(site.name), group_id(site.name))
+    # If the site-dir is not world executable files in the site are all not readable/writeable
+    os.chmod(site.dir, 0o751)
 
 
 def main_disable(

@@ -1,0 +1,14 @@
+Title: Set umask to 0077 for site user
+Class: feature
+Compatible: compat
+Component: core
+Date: 1670581390
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+With this Werk we set the umask for the site user to 0077.
+So by default newly created files and directories are not world or group accessible.
+
+Files which need to be accessible from other users and groups have explicitly set permissions.

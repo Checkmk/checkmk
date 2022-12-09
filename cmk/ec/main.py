@@ -3850,6 +3850,7 @@ def main() -> None:  # pylint: disable=too-many-branches
 
         # Make sure paths exist
         settings.paths.event_pipe.value.parent.mkdir(parents=True, exist_ok=True)
+        settings.paths.event_pipe.value.parent.chmod(0o751)
         settings.paths.status_file.value.parent.mkdir(parents=True, exist_ok=True)
 
         # First do all things that might fail, before daemonizing

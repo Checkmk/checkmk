@@ -27,7 +27,13 @@ from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.checkmk import CheckmkSection, ControllerSection, Plugin, PluginSection
+from .utils.checkmk import (
+    CheckmkSection,
+    CMKAgentUpdateSection,
+    ControllerSection,
+    Plugin,
+    PluginSection,
+)
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
@@ -38,6 +44,7 @@ def discover_checkmk_agent(
     section_check_mk: Optional[CheckmkSection],
     section_checkmk_agent_plugins: Optional[PluginSection],
     section_cmk_agent_ctl_status: Optional[ControllerSection],
+    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
@@ -228,22 +235,24 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
         yield Result(state=default_state, summary=f"Update error: {error}")
 
 
-def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) -> CheckResult:
-    if not (raw_string := section.get("agentupdate")):
+def _check_cmk_agent_update(
+    params: Mapping[str, Any],
+    section_check_mk: CheckmkSection | None,
+    section_cmk_update_agent_status: CMKAgentUpdateSection | None,
+) -> CheckResult:
+
+    if (
+        section := (
+            section_cmk_update_agent_status
+            or CMKAgentUpdateSection.parse_checkmk_section(section_check_mk)
+        )
+    ) is None:
         return
 
-    if "error" in raw_string:
-        non_error_part, error = raw_string.split("error", 1)
-        yield from _get_error_result(error.strip(), params)
-    else:
-        non_error_part = raw_string
+    if section.error is not None:
+        yield from _get_error_result(section.error, params)
 
-    parts = iter(non_error_part.split())
-    parsed = {k: v for k, v in zip(parts, parts) if v != "None"}
-
-    try:
-        last_check = float(parsed.get("last_check", ""))
-    except ValueError:
+    if (last_check := section.last_check) is None:
         yield Result(state=State.WARN, summary="No successful connect to server yet")
     else:
         if (age := time.time() - last_check) >= 0:
@@ -267,21 +276,21 @@ def _check_cmk_agent_update(params: Mapping[str, Any], section: CheckmkSection) 
             notice=f"Last update check: {render.datetime(last_check)}",
         )
 
-    if last_update := parsed.get("last_update"):
+    if last_update := section.last_update:
         yield Result(
             state=State.OK,
             summary=f"Last update: {render.datetime(float(last_update))}",
         )
 
-    if update_url := parsed.get("update_url"):
+    if update_url := section.update_url:
         # Note: Transformation of URLs from this check (check_mk-check_mk_agent) to icons
         # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
-    if aghash := parsed.get("aghash"):
+    if aghash := section.aghash:
         yield Result(state=State.OK, notice=f"Agent configuration: {aghash[:8]}")
 
-    if pending := parsed.get("pending_hash"):
+    if pending := section.pending_hash:
         yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
 
     return
@@ -403,12 +412,13 @@ def check_checkmk_agent(
     section_check_mk: Optional[CheckmkSection],
     section_checkmk_agent_plugins: Optional[PluginSection],
     section_cmk_agent_ctl_status: Optional[ControllerSection],
+    section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
 ) -> CheckResult:
     if section_check_mk is not None:
         yield from _check_cmk_agent_installation(
             params, section_check_mk, section_cmk_agent_ctl_status
         )
-        yield from _check_cmk_agent_update(params, section_check_mk)
+    yield from _check_cmk_agent_update(params, section_check_mk, section_cmk_update_agent_status)
 
     if section_checkmk_agent_plugins is not None:
         yield from _check_plugins(params, section_checkmk_agent_plugins)
@@ -420,7 +430,12 @@ def check_checkmk_agent(
 register.check_plugin(
     name="checkmk_agent",
     service_name="Check_MK Agent",
-    sections=["check_mk", "checkmk_agent_plugins", "cmk_agent_ctl_status"],
+    sections=[
+        "check_mk",
+        "checkmk_agent_plugins",
+        "cmk_agent_ctl_status",
+        "cmk_update_agent_status",
+    ],
     discovery_function=discover_checkmk_agent,
     check_function=check_checkmk_agent,
     # TODO: rename the ruleset?

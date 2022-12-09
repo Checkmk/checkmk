@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     discover_checkmk_agent,
 )
 from cmk.base.plugins.agent_based.utils.checkmk import (
+    CMKAgentUpdateSection,
     Connection,
     ControllerSection,
     Plugin,
@@ -33,11 +34,11 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
 
 
 def test_discovery_something() -> None:
-    assert [*discover_checkmk_agent({}, None, None)] == [Service()]
+    assert [*discover_checkmk_agent({}, None, None, None)] == [Service()]
 
 
 def test_check_no_data() -> None:
-    assert not [*check_checkmk_agent({}, None, None, None)]
+    assert not [*check_checkmk_agent({}, None, None, None, None)]
 
 
 def test_check_version_os_no_values() -> None:
@@ -240,8 +241,38 @@ def test_check_tranport_via_ssh(fail_state: State) -> None:
 
 
 def test_check_no_check_yet() -> None:
-    assert [*_check_cmk_agent_update({}, {"agentupdate": "last_check None error None"})] == [
+    """this is the pre 2.2 fromat"""
+    assert [
+        *_check_cmk_agent_update(
+            {},
+            {
+                "agentupdate": "aghash None last_update None pending_hash None update_url foo last_check None error None"
+            },
+            None,
+        )
+    ] == [
         Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Update URL: foo"),
+    ]
+
+
+def test_check_no_check_yet_pydantic() -> None:
+    assert [
+        *_check_cmk_agent_update(
+            {},
+            None,
+            CMKAgentUpdateSection(
+                aghash=None,
+                last_update=None,
+                pending_hash=None,
+                update_url="foo",
+                last_check=None,
+                error=None,
+            ),
+        )
+    ] == [
+        Result(state=State.WARN, summary="No successful connect to server yet"),
+        Result(state=State.OK, notice="Update URL: foo"),
     ]
 
 
@@ -264,6 +295,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                         )
                     )
                 },
+                None,
             )
         )
 
@@ -749,6 +781,7 @@ def test_check_plugins(
                 None,
                 section_plugins,
                 None,
+                None,
             )
         )
         == expected_result
@@ -824,4 +857,4 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    assert list(check_checkmk_agent({}, None, None, controller_section)) == expected_result
+    assert list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result

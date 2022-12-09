@@ -35,19 +35,16 @@ extensions = [
     "sphinxcontrib.spelling",
     "sphinxcontrib.plantuml",
 ]
-
-plantuml_path = os.getenv("PLANTUML_JAR_PATH")
-if not plantuml_path:
-    raise Exception("PLANTUML_JAR_PATH must be defined")
-
 plantuml = " ".join(
     [
         "java",
         "-Djava.awt.headless=true",
         "-jar",
-        os.path.join(
-            plantuml_path,
-            "plantuml.jar",
+        os.path.realpath(
+            os.path.join(
+                DOC_ROOT,
+                "plantuml.jar",
+            )
         ),
     ]
 )

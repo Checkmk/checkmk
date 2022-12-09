@@ -269,12 +269,15 @@ iwyu: compile_commands.json
 	@echo include-what-you-use information end ======================================
 	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
 
-documentation: compile_commands.json
-	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile
+documentation: compile_commands.json doc/plantuml.jar
+	$(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
 
-documentation-quick: compile_commands.json
-	( cat doc/Doxyfile; echo "CLANG_ASSISTED_PARSING=NO") | PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) -
+documentation-quick: compile_commands.json doc/plantuml.jar
+	( cat doc/Doxyfile; echo "CLANG_ASSISTED_PARSING=NO") | $(DOXYGEN) -
+
+doc/plantuml.jar:
+	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar --quiet --output-document=$@ || { $(RM) $@; exit 1; }
 
 all-local: livestatus.o
 

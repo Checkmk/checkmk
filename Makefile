@@ -326,7 +326,9 @@ EXCLUDE_PROPER= \
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
-	    --exclude="node_modules"
+	    --exclude="node_modules" \
+	    --exclude="livestatus/src/doc/plantuml.jar" \
+	    --exclude="enterprise/core/src/doc/plantuml.jar"
 
 AGENT_CTL_TARGET_PATH=agents/cmk-agent-ctl/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \

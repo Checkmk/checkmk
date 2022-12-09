@@ -1,0 +1,20 @@
+Title: mrpe: Fix missing output in agents if async execution enabled
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1670860331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+This is relevant for the users of AIX, FreeBSD, HPUX, MacOS,
+NetBSD and OpenBSD agents.
+
+In version 2.1.0, asynchronous execution of MRPE isn't supported
+for the above mentioned agents.
+Prevously, if the option 'Asynchronous execution' of the agent
+rule 'Execute MRPE checks' was enabled, the agents wouldn't output
+MRPE data at all.
+Now, the agents run the MRPE command synchronously and output the
+data correctly.

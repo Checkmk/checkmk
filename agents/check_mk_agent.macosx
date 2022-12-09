@@ -157,10 +157,10 @@ run_mrpe_plugins() {
         # SC2162: read without -r will mangle backslashes.
         # The following suppression was added when we enabled the corresponding shellcheck.
         # It may well be that "read -r" would be more appropriate.
-        # shellcheck disable=SC2162
+        # shellcheck disable=SC2162,SC2001
         grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" |
-            while read descr cmdline; do
-                PLUGIN=${cmdline%% *}
+            while read descr rest; do
+                cmdline=$(echo "$rest" | sed -e 's/^([a-zA-Z:=[0-9]*]*) //g')
                 OUTPUT=$(eval "$cmdline")
                 echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
                 echo

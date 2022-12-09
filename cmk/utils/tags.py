@@ -63,7 +63,9 @@ class AuxTag:
 
     @property
     def choice_title(self) -> str:
-        return f"{self.topic} / {self.title}"
+        if self.topic:
+            return f"{self.topic} / {self.title}"
+        return self.title
 
     def validate(self) -> None:
         if not self.id:

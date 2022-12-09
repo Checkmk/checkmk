@@ -20,6 +20,8 @@ from typing import (
 
 from marshmallow import fields, Schema
 
+from cmk.utils.type_defs import HTTPMethod
+
 URL = str
 
 DomainType = Literal[
@@ -146,8 +148,6 @@ RestfulEndpointName = Literal[
 ]  # yapf: disable
 
 LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
-
-HTTPMethod = Literal["get", "put", "post", "delete"]
 
 PropertyFormat = Literal[
     # String values

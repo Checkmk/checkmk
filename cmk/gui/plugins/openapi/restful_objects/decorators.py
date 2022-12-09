@@ -47,6 +47,7 @@ from werkzeug.http import parse_options_header
 from werkzeug.utils import import_string
 
 from cmk.utils import store
+from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import fields
 from cmk.gui import http as cmk_http
@@ -68,7 +69,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     EndpointTarget,
     ErrorStatusCodeInt,
     ETagBehaviour,
-    HTTPMethod,
     LinkRelation,
     LocationType,
     OpenAPIParameter,

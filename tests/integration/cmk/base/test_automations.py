@@ -11,10 +11,12 @@ from typing import Iterator
 
 import pytest
 
+from tests.testlib.rest_api_client import RestApiClient
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
+from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import DiscoveryResult, HostName, SetAutochecksTable
 
 from cmk.automations import results
@@ -328,15 +330,17 @@ def test_automation_set_autochecks(test_cfg, site: Site):
             site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
-def test_automation_update_dns_cache(test_cfg, site: Site):
+def test_automation_update_dns_cache(
+    test_cfg: TagConfig, site: Site, rest_api_client: RestApiClient
+) -> None:  # type:ignore[no-untyped-def]
     cache_path = "var/check_mk/ipaddresses.cache"
 
     if site.file_exists(cache_path):
         site.delete_file(cache_path)
 
     try:
-        site.openapi.create_host("update-dns-cache-host")
-        site.openapi.create_host("localhost")
+        rest_api_client.create_host(host_name="update-dns-cache-host")
+        rest_api_client.create_host(host_name="localhost")
 
         site.write_text_file(cache_path, "{('bla', 4): '127.0.0.1'}")
 
@@ -352,10 +356,10 @@ def test_automation_update_dns_cache(test_cfg, site: Site):
         assert isinstance(cache, dict)
         assert cache[("localhost", 4)] == "127.0.0.1"
         assert ("bla", 4) not in cache
-
     finally:
-        site.openapi.delete_host("localhost")
-        site.openapi.delete_host("update-dns-cache-host")
+        rest_api_client.delete_host("localhost")
+        rest_api_client.delete_host("update-dns-cache-host")
+        rest_api_client.call_activate_changes_and_wait_for_completion()
 
 
 # TODO: Test with the different cores

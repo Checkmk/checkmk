@@ -351,3 +351,5 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
+
+HTTPMethod = Literal["get", "put", "post", "delete"]

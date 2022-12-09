@@ -7,6 +7,8 @@
 import pytest
 
 from tests.testlib.event_console import CMKEventConsole
+from tests.testlib.openapi_session import RequestSessionRequestHandler
+from tests.testlib.rest_api_client import RestApiClient
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.web_session import CMKWebSession
 
@@ -29,3 +31,12 @@ def fixture_web(site: Site) -> CMKWebSession:
 @pytest.fixture(scope="session")
 def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)
+
+
+@pytest.fixture()
+def rest_api_client(site: Site) -> RestApiClient:
+    rq = RequestSessionRequestHandler()
+    rq.set_credentials("cmkadmin", site.admin_password)
+    return RestApiClient(
+        rq, f"{site.http_proto}://{site.http_address}:{site.apache_port}/{site.id}/check_mk/api/1.0"
+    )

@@ -18,6 +18,5 @@ The maximal number of transaction IDs for a user was limited to 20 before this
 werk. Also, the sidebar snapins "Site status", "Master control" and "Bookmarks"
 used a new transaction ID on each reload of the sidebar.
 
-The number of IDs per user is now increased to 30 and the sidebar initial uses
-just one transaction ID. The mentioned sidebar snapins no longer use
-transaction IDs.
+The number of IDs per user is now increased to 30 and the mentioned sidebar
+snapins no longer use transaction IDs.

@@ -64,9 +64,6 @@ msgstr ""
 msgid " (in relation to all successful packets)"
 msgstr ""
 
-msgid " (invalid)"
-msgstr " (invalid)"
-
 msgid " (outdated)"
 msgstr ""
 
@@ -535,6 +532,10 @@ msgstr "Adaugă instanță NGINX"
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s nu este o ștampilă de timp UNIX validă"
 
+#, fuzzy, python-format
+msgid "%s is not a valid version number."
+msgstr "%s nu este un număr întreg valid."
+
 #, python-format
 msgid "%s is not an allowed value"
 msgstr "%s nu este o valoare permisă"
@@ -863,9 +864,6 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ""
 
-msgid "-"
-msgstr ""
-
 msgid "-.-- %"
 msgstr ""
 
@@ -914,14 +912,6 @@ msgstr "randuri"
 msgid "1.0 - 2.0 ms"
 msgstr ""
 
-#, fuzzy
-msgid "1.000.000 Services"
-msgstr "servicii"
-
-#, fuzzy
-msgid "1.500.000 Services"
-msgstr "servicii"
-
 msgid "1/s"
 msgstr ""
 
@@ -942,10 +932,6 @@ msgstr ""
 msgid "100.0 - 200.0 ms"
 msgstr ""
 
-#, fuzzy
-msgid "100.000 Services"
-msgstr "servicii"
-
 msgid "10x14"
 msgstr ""
 
@@ -955,30 +941,14 @@ msgstr ""
 msgid "12 Volt Output Upper Levels"
 msgstr ""
 
-#, fuzzy
-msgid "12.000 Services"
-msgstr "servicii"
-
 msgid "15 minutes"
 msgstr "15 minute"
-
-#, fuzzy
-msgid "18.000 Services"
-msgstr "servicii"
 
 msgid "2 weeks back"
 msgstr ""
 
 msgid "2.0 - 5.0 ms"
 msgstr ""
-
-#, fuzzy
-msgid "2.000.000 Services"
-msgstr "servicii"
-
-#, fuzzy
-msgid "2.000.000+ Services"
-msgstr "servicii"
 
 msgid "20.0 - 50.0 ms"
 msgstr ""
@@ -987,16 +957,8 @@ msgid "200.0 - 500.0 ms"
 msgstr ""
 
 #, fuzzy
-msgid "200.000 Services"
-msgstr "servicii"
-
-#, fuzzy
 msgid "3 months"
 msgstr "2 ore"
-
-#, fuzzy
-msgid "3.000 Services"
-msgstr "servicii"
 
 msgid "3.3 Volt Output Lower Levels"
 msgstr ""
@@ -1007,14 +969,6 @@ msgstr ""
 #, fuzzy
 msgid "30 Minutes"
 msgstr "5 minute"
-
-#, fuzzy
-msgid "30.000 Services"
-msgstr "servicii"
-
-#, fuzzy
-msgid "300.000 Services"
-msgstr "servicii"
 
 msgid "32bit packaged binary"
 msgstr ""
@@ -1063,20 +1017,12 @@ msgid "500.0+ ms"
 msgstr ""
 
 #, fuzzy
-msgid "500.000 Services"
-msgstr "servicii"
-
-#, fuzzy
 msgid "50th percentile"
 msgstr "trei nivele"
 
 #, fuzzy
 msgid "6 months"
 msgstr "2 ore"
-
-#, fuzzy
-msgid "60.000 Services"
-msgstr "servicii"
 
 msgid "64bit packaged binary"
 msgstr ""
@@ -1092,10 +1038,6 @@ msgstr ""
 
 msgid "7-segment display uid"
 msgstr ""
-
-#, fuzzy
-msgid "7.000 Services"
-msgstr "servicii"
 
 msgid "8 days back"
 msgstr ""
@@ -1183,15 +1125,6 @@ msgstr ""
 
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
-msgstr ""
-
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>Rule based notifications are disabled in your global "
-"settings. The rules that you edit here will have affect only on "
-"notifications that are created by the Event Console. Normal monitoring "
-"alerts will <b>not</b> use the rule based notifications now.<br><br>You can "
-"change this setting <a href=\"%s\">here</a>."
 msgstr ""
 
 #, python-format
@@ -2543,15 +2476,9 @@ msgstr "Autorul Confirmației"
 msgid "Acknowledgement Comment"
 msgstr "Comentariul Confirmației"
 
-msgid "Acknowledgement of host problem"
-msgstr ""
-
 #, fuzzy
 msgid "Acknowledgement of problem"
 msgstr "Confirmă Problemele"
-
-msgid "Acknowledgement of service problem"
-msgstr ""
 
 msgid "Act."
 msgstr ""
@@ -3046,9 +2973,6 @@ msgstr "Adaugă Contoar"
 msgid "Add destination address"
 msgstr "Linii de header adiționale"
 
-msgid "Add details manually"
-msgstr ""
-
 msgid "Add diskstate rule"
 msgstr ""
 
@@ -3270,9 +3194,6 @@ msgstr "Adaugă o nouă mapare"
 
 msgid "Add new user configuration"
 msgstr "Adaugp o noua configurație de utilizator"
-
-msgid "Add notification"
-msgstr "Adaugă notificare"
 
 #, fuzzy
 msgid "Add notification rule"
@@ -3960,7 +3881,7 @@ msgstr ""
 msgid "Agent baking finished."
 msgstr ""
 
-msgid "Agent based plugins (Checks, Inventory)"
+msgid "Agent based plugins (Checks, Inventory),"
 msgstr ""
 
 #, fuzzy
@@ -5000,9 +4921,6 @@ msgstr ""
 msgid "Appearance of network interface"
 msgstr "Adresă"
 
-msgid "Append Age to output"
-msgstr ""
-
 msgid "Append descriptions of OIDs to message texts"
 msgstr ""
 
@@ -5017,6 +4935,10 @@ msgstr ""
 
 msgid "Application / Syslog-Tag"
 msgstr ""
+
+#, fuzzy
+msgid "Application ID"
+msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Application Key"
@@ -5355,9 +5277,6 @@ msgstr ""
 #, fuzzy
 msgid "Asynchronous closing connections"
 msgstr "Conexiuni Active"
-
-msgid "Asynchronous execution"
-msgstr ""
 
 msgid "Asynchronous execution of plugins"
 msgstr ""
@@ -6504,9 +6423,6 @@ msgid "Bits"
 msgstr ""
 
 msgid "Bits per second"
-msgstr ""
-
-msgid "Blacklist the following services"
 msgstr ""
 
 msgid "Block storage name"
@@ -9880,17 +9796,6 @@ msgstr "doua nivele"
 msgid "Configure proxy server usage"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here."
-msgstr ""
-
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> that "
-"service."
-msgstr ""
-
 msgid "Configure restrictions manually"
 msgstr ""
 
@@ -9972,11 +9877,6 @@ msgid ""
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
 "can eg. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
-msgstr ""
-
-msgid ""
-"Configure the hosts for this notification. Without prefix, only exact, case "
-"sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
 
 #, python-format
@@ -11533,9 +11433,6 @@ msgstr ""
 msgid "Currently disable this aggregation"
 msgstr ""
 
-msgid "Currently disable this notification"
-msgstr ""
-
 msgid "Currently in downtime"
 msgstr ""
 
@@ -11704,10 +11601,6 @@ msgstr "Atribute personalizate"
 msgid "Custom label"
 msgstr "Atribute personalizate"
 
-#, fuzzy
-msgid "Custom limit"
-msgstr "Atribute personalizate"
-
 msgid "Custom localizations"
 msgstr ""
 
@@ -11837,19 +11730,11 @@ msgid "Customer number of services in state WARN"
 msgstr ""
 
 #, fuzzy
-msgid "Customer portal credentials"
-msgstr "trei nivele"
-
-#, fuzzy
 msgid "Customer properties"
 msgstr "Proprietatile Folderului"
 
 #, fuzzy
 msgid "Customer report layout"
-msgstr "Proprietatile Folderului"
-
-#, fuzzy
-msgid "Customer shortcut"
 msgstr "Proprietatile Folderului"
 
 msgid "Customer specific report layout"
@@ -14958,9 +14843,6 @@ msgstr ""
 msgid "Do now show reserved space"
 msgstr ""
 
-msgid "Do only notifiy alerts within this time period"
-msgstr ""
-
 msgid "Do status data inventory"
 msgstr ""
 
@@ -15202,15 +15084,8 @@ msgid "Do you really want to switch the event daemon mode?"
 msgstr "O agregare legată de un singur element"
 
 #, fuzzy
-msgid "Docker Containers"
+msgid "Docker containers"
 msgstr "doua nivele"
-
-msgid "Docker Disk Usage"
-msgstr ""
-
-#, fuzzy
-msgid "Docker Disk Usage Count"
-msgstr "Mesajul Text"
 
 msgid "Docker node"
 msgstr ""
@@ -15515,7 +15390,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Duplicate tag ID \"%s\" in auxilary tags"
+msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr ""
 
 #, fuzzy
@@ -16428,9 +16303,6 @@ msgstr "Dimensiunea maxima pentru cel mai mare fisier"
 msgid "Enable login via GET requests"
 msgstr ""
 
-msgid "Enable new rule based notifications"
-msgstr ""
-
 #, fuzzy
 msgid "Enable notification logging"
 msgstr "<b>activează notficările</b> pentru"
@@ -16553,9 +16425,6 @@ msgid "Enabled sections (Windows agent)"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Enabled until disabling"
-msgstr ""
-
-msgid "Enabling"
 msgstr ""
 
 msgid ""
@@ -16739,9 +16608,6 @@ msgid "Engine IDs (only needed for SNMPv3)"
 msgstr ""
 
 msgid "English"
-msgstr ""
-
-msgid "Enrich with usage data from Checkmk Cluster Collector"
 msgstr ""
 
 msgid "Enter"
@@ -18651,25 +18517,10 @@ msgstr ""
 msgid "Flex. Duration"
 msgstr ""
 
-msgid "Flexible Custom Notifications"
-msgstr ""
-
-msgid "Flexible and plain email notifications"
-msgstr ""
-
-msgid ""
-"Flexible and plain email notifications are considered deprecated in version "
-"1.5.0 and  will be removed in Checkmk version 1.6.0. Please consider to "
-"switch to rulebased notifications."
-msgstr ""
-
 msgid "Flexible downtime"
 msgstr ""
 
 msgid "Flexible downtime duration:"
-msgstr ""
-
-msgid "Flexible notification rule"
 msgstr ""
 
 #, fuzzy
@@ -20026,6 +19877,9 @@ msgstr "Conexiune Noua"
 msgid "HAproxy Server State"
 msgstr "Statusul Serverului"
 
+msgid "HELP"
+msgstr ""
+
 msgid "HH:MM:SS"
 msgstr ""
 
@@ -20431,11 +20285,6 @@ msgid ""
 "Here you can configure global settings, that should just be applied on that "
 "site. <b>Note</b>: this only makes sense if the site is part of a "
 "distributed setup."
-msgstr ""
-
-msgid ""
-"Here you can configure how you want to be notified about host and service "
-"problems and other monitoring events."
 msgstr ""
 
 msgid ""
@@ -20913,12 +20762,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Here you specify which types of alerts will be notified to this contact. "
-"Note: these settings will only be saved and used if the user is member of a "
-"contact group."
-msgstr ""
-
-msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
 "example, you can make certain filters mandatory. This enables you to build "
@@ -20949,8 +20792,16 @@ msgstr ""
 msgid "Hidden"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Hide %s"
+msgstr "Arata in masa"
+
 msgid "Hide Checkmk version"
 msgstr ""
+
+#, fuzzy
+msgid "Hide all settings"
+msgstr "Scaneaza toate elementele"
 
 #, fuzzy
 msgid "Hide analysis"
@@ -20962,6 +20813,26 @@ msgstr ""
 #, fuzzy
 msgid "Hide bulks"
 msgstr "Arata in masa"
+
+#, fuzzy
+msgid "Hide check parameters"
+msgstr "(fără parametri)"
+
+#, fuzzy
+msgid "Hide checkboxes"
+msgstr "Verificări active"
+
+#, fuzzy
+msgid "Hide context"
+msgstr "cu context"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "Stare adiministrativă"
+
+#, fuzzy
+msgid "Hide discovered service labels"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Hide folders without read permissions"
@@ -20992,6 +20863,10 @@ msgstr ""
 
 msgid "Hide names of configuration variables"
 msgstr ""
+
+#, fuzzy
+msgid "Hide plugin names"
+msgstr "Numele Aplicatiei"
 
 msgid "Hide response from socket"
 msgstr ""
@@ -21306,9 +21181,6 @@ msgstr "de sus in jos"
 msgid "Host event limit"
 msgstr ""
 
-msgid "Host events"
-msgstr ""
-
 msgid "Host gets unreachble"
 msgstr ""
 
@@ -21447,10 +21319,6 @@ msgstr ""
 #, fuzzy
 msgid "Host or Disk"
 msgstr "Grup nou"
-
-msgid ""
-"Host or Service must be in the following service level to get notification"
-msgstr ""
 
 #, python-format
 msgid "Host or service %ss"
@@ -21788,7 +21656,7 @@ msgid "Hosts using a specific SNMP Backend (Enterprise Edition only)"
 msgstr ""
 
 msgid ""
-"Hosts where this tag group is explicitely set and that are effected by the "
+"Hosts where this tag group is explicitly set and that are effected by the "
 "change"
 msgstr ""
 
@@ -22859,13 +22727,6 @@ msgid ""
 "the connection to the remote sites. This brings a great speed up in high-"
 "latency situations but locks a number of threads in the Livestatus module of "
 "the target site."
-msgstr ""
-
-msgid ""
-"If you enable the new rule based notifications then the current plain text "
-"email and &quot;flexible notifications&quot; will become inactive. Instead "
-"notificatios will be configured with the WATO module <i>Notifications</i> on "
-"a global base."
 msgstr ""
 
 msgid ""
@@ -24572,18 +24433,6 @@ msgstr ""
 msgid "Invalid start time given"
 msgstr ""
 
-#, python-format
-msgid "Invalid subscription %s date"
-msgstr ""
-
-#, fuzzy
-msgid "Invalid subscription period. Must be at least one year"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Invalid subscription sizing"
-msgstr "foloseste descrierea"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 
@@ -25735,9 +25584,6 @@ msgstr ""
 msgid "Length of output queue"
 msgstr ""
 
-msgid "Let through notifications counting from this number"
-msgstr ""
-
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
@@ -26444,6 +26290,10 @@ msgid "License details"
 msgstr "Stare adiministrativă"
 
 #, fuzzy
+msgid "License key"
+msgstr "Stare adiministrativă"
+
+#, fuzzy
 msgid "License state"
 msgstr "Stare adiministrativă"
 
@@ -26452,11 +26302,19 @@ msgid "License usage"
 msgstr "% utilizare"
 
 #, fuzzy
+msgid "License verification"
+msgstr "Activare Configurare"
+
+#, fuzzy
 msgid "Licensing"
 msgstr "licente nefolosite"
 
 msgid "Licensing Status"
 msgstr ""
+
+#, fuzzy
+msgid "Licensing settings"
+msgstr "Conexiuni Active"
 
 msgid "Liebert UPS Device: Temperature sensor"
 msgstr ""
@@ -26542,12 +26400,6 @@ msgid "Limit the number of rows in View tables"
 msgstr ""
 
 msgid "Limit the number of rows shown in tables"
-msgstr ""
-
-msgid "Limit to the following hosts"
-msgstr ""
-
-msgid "Limit to the following services"
 msgstr ""
 
 #, fuzzy
@@ -27662,6 +27514,11 @@ msgid "MISSING '%s'"
 msgstr ""
 
 msgid "MK Remote Plugin Executor (MRPE)"
+msgstr ""
+
+#, python-format
+msgid ""
+"MKPs enforce semantic versioning. Please refer to %ssemver.org%s for details."
 msgstr ""
 
 #, fuzzy
@@ -31872,13 +31729,7 @@ msgstr "Adaugă notificare"
 msgid "Notification Method"
 msgstr ""
 
-msgid "Notification Options"
-msgstr ""
-
 msgid "Notification Period"
-msgstr ""
-
-msgid "Notification Plugin"
 msgstr ""
 
 #, fuzzy
@@ -31961,9 +31812,6 @@ msgstr "Activare Configurare"
 msgid "Notification system"
 msgstr "Notificari"
 
-msgid "Notification time period"
-msgstr ""
-
 msgid "Notifications"
 msgstr "Notificari"
 
@@ -31990,10 +31838,6 @@ msgstr ""
 msgid "Notifications are manually enabled for this %s"
 msgstr ""
 
-msgid ""
-"Notifications are sent out when the status of a host or service changes."
-msgstr ""
-
 msgid "Notified events for hosts"
 msgstr ""
 
@@ -32007,9 +31851,6 @@ msgid "Notify all users"
 msgstr ""
 
 msgid "Notify all users that have configured an email address in their profile"
-msgstr ""
-
-msgid "Notify by: "
 msgstr ""
 
 msgid "November"
@@ -32425,6 +32266,10 @@ msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr ""
+
+#, fuzzy
+msgid "Number of objects"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Number of ongoing shard info requests"
 msgstr ""
@@ -32921,6 +32766,10 @@ msgstr ""
 msgid "Offline to spare ratio"
 msgstr ""
 
+#, fuzzy
+msgid "Offline verification"
+msgstr "Activare Configurare"
+
 msgid "Offset"
 msgstr ""
 
@@ -33070,6 +32919,10 @@ msgstr ""
 msgid "Online (Version: %s, Edition: %s)"
 msgstr ""
 
+#, fuzzy
+msgid "Online verification"
+msgstr "Activare Configurare"
+
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr ""
 
@@ -33108,9 +32961,6 @@ msgid ""
 "matches one of these regular expressions."
 msgstr ""
 
-msgid "Only digits and dots are allowed in the version number."
-msgstr ""
-
 #, fuzzy
 msgid "Only discover monitors in the following states"
 msgstr ""
@@ -33121,11 +32971,6 @@ msgid "Only discover new host labels"
 msgstr "Nici o schimbare"
 
 msgid "Only display SLA Name"
-msgstr ""
-
-msgid ""
-"Only during this time period the user will get notifications about host or "
-"service alerts."
 msgstr ""
 
 msgid "Only execute manually"
@@ -34725,16 +34570,8 @@ msgstr ""
 msgid "Period"
 msgstr ""
 
-#, fuzzy
-msgid "Period end date"
-msgstr "foloseste descrierea"
-
 msgid "Period for outdated piggybacked host data"
 msgstr ""
-
-#, fuzzy
-msgid "Period start date"
-msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Periodic notification"
@@ -34976,9 +34813,6 @@ msgid "Placement"
 msgstr ""
 
 msgid "Plain Email"
-msgstr ""
-
-msgid "Plain Text Email (using configured templates)"
 msgstr ""
 
 msgid "Plain text (Unencrypted)"
@@ -35429,9 +35263,6 @@ msgid "Plug item number or name"
 msgstr ""
 
 msgid "Plugin"
-msgstr ""
-
-msgid "Plugin Arguments"
 msgstr ""
 
 msgid "Plugin Name"
@@ -36101,6 +35932,10 @@ msgstr ""
 #, fuzzy
 msgid "Prometheus"
 msgstr "Activare schimbări"
+
+#, fuzzy
+msgid "Prometheus API endpoint"
+msgstr "Conexiune Noua"
 
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
@@ -38168,9 +38003,6 @@ msgstr "Tagul Aplicatiei in syslog"
 msgid "Restrict to check attempt"
 msgstr ""
 
-msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
-msgstr ""
-
 #, fuzzy
 msgid "Restrict to notification number"
 msgstr "trimite notificare"
@@ -38443,9 +38275,6 @@ msgstr ""
 msgid "Rule activation"
 msgstr ""
 
-msgid "Rule based notifications"
-msgstr ""
-
 #, fuzzy
 msgid "Rule contact groups"
 msgstr "Eticheta de grup nou"
@@ -38529,10 +38358,6 @@ msgstr ""
 
 msgid "Rule:"
 msgstr ""
-
-#, fuzzy
-msgid "Rulebased notifications are activated"
-msgstr "Notificari"
 
 msgid "Rules"
 msgstr "Reguli"
@@ -39969,9 +39794,6 @@ msgstr ""
 msgid "Service Description"
 msgstr ""
 
-msgid "Service Events"
-msgstr ""
-
 # georgem ##############
 #, fuzzy
 msgid "Service Filters"
@@ -40142,9 +39964,6 @@ msgstr ""
 #, fuzzy
 msgid "Service discovery: State"
 msgstr "(fără Nivel de serviciu)"
-
-msgid "Service events"
-msgstr ""
 
 msgid "Service goes into critical state"
 msgstr ""
@@ -41754,10 +41573,6 @@ msgstr ""
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr ""
 
-#, fuzzy
-msgid "Sizing"
-msgstr "foloseste descrierea"
-
 msgid "Skip exceeding messages, create one critical message"
 msgstr ""
 
@@ -42780,9 +42595,6 @@ msgstr "Întreruperi adhoc"
 msgid "Start or end of a scheduled downtime"
 msgstr ""
 
-msgid "Start or end of a scheduled downtime "
-msgstr ""
-
 msgid "Start or end of flapping state"
 msgstr ""
 
@@ -43008,6 +42820,10 @@ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 msgid "State if input is ON"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "State if input is Unknown"
 msgstr "Numele elementului pentru eveniment"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
@@ -43934,14 +43750,6 @@ msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Subscription Status"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Subscription details"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Subscription settings"
 msgstr "foloseste descrierea"
 
 msgid "Substitution"
@@ -46255,6 +46063,12 @@ msgid ""
 "likely to result in an error."
 msgstr ""
 
+msgid ""
+"The full URL to the Prometheus API endpoint including the protocol (http or "
+"https). OpenShift exposes such endpoints via a route in the openshift-"
+"monitoring namespace called prometheus-k8s."
+msgstr ""
+
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr ""
@@ -46625,9 +46439,6 @@ msgstr ""
 
 #, python-format
 msgid "The list of host tags must only contain strings but also contains %r"
-msgstr ""
-
-msgid "The list of services will never match"
 msgstr ""
 
 msgid "The livestatus connection to this site configured not to be encrypted."
@@ -47791,18 +47602,6 @@ msgstr ""
 msgid ""
 "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs "
 "to customer <i>%s</i>. This violates the CME folder hierarchy."
-msgstr ""
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract."
-msgstr ""
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract. "
-"These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk</a>."
 msgstr ""
 
 msgid ""
@@ -54035,6 +53834,12 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr ""
 
+msgid "Use data from Checkmk Cluster Collector"
+msgstr ""
+
+msgid "Use data from OpenShift"
+msgstr ""
+
 #, fuzzy
 msgid "Use default layout"
 msgstr "Matrice"
@@ -57758,12 +57563,6 @@ msgid ""
 "will be assumed to be OK."
 msgstr ""
 
-msgid ""
-"You can specify arguments to the notification plugin here. Please refer to "
-"the documentation about the plugin for what parameters are allowed or "
-"required here."
-msgstr ""
-
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr ""
@@ -58105,18 +57904,6 @@ msgid ""
 "You have enabled the fallback notifications but missed to configure an email "
 "address. You need to configure your mail address in order to be able to "
 "receive fallback notifications."
-msgstr ""
-
-msgid ""
-"You have enabled the notifications but missed to configure a Email address. "
-"You need to configure your mail address in order to be able to receive "
-"emails."
-msgstr ""
-
-msgid ""
-"You have enabled the notifications but missed to make the user member of at "
-"least one contact group. You need to make the user member of a contact group "
-"which has hosts assigned in order to be able to receive emails."
 msgstr ""
 
 msgid ""
@@ -58578,9 +58365,6 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr ""
 
-msgid "Your user has no roles. Please assign at least one role."
-msgstr ""
-
 #, fuzzy
 msgid "ZFS filesystem usage"
 msgstr "Spațiu liber exact"
@@ -58703,9 +58487,6 @@ msgid "all agents"
 msgstr "Acces la Agenți"
 
 msgid "all contacts of the notified object"
-msgstr ""
-
-msgid "all events disabled"
 msgstr ""
 
 msgid "all graphs"
@@ -59144,9 +58925,6 @@ msgstr ""
 msgid "enable extensive rule logging"
 msgstr ""
 
-msgid "enable notifications"
-msgstr ""
-
 msgid "enable optimized rule execution"
 msgstr ""
 
@@ -59154,9 +58932,6 @@ msgid "enable pretty-printing of rules"
 msgstr ""
 
 msgid "enable sounds"
-msgstr ""
-
-msgid "end"
 msgstr ""
 
 msgid "entries"
@@ -59293,9 +59068,6 @@ msgid "free leases"
 msgstr "trei nivele"
 
 msgid "free space"
-msgstr ""
-
-msgid "from"
 msgstr ""
 
 msgid "from the beginning"
@@ -59889,10 +59661,6 @@ msgstr "Conexiuni Active"
 msgid "not OK states"
 msgstr "Conexiuni Active"
 
-#, fuzzy
-msgid "not a contact"
-msgstr "<i>nu este un contact</i>"
-
 msgid "not attempted"
 msgstr ""
 
@@ -60378,10 +60146,6 @@ msgid "specify manually ->"
 msgstr ""
 
 #, fuzzy
-msgid "start"
-msgstr "Setari"
-
-#, fuzzy
 msgid "status entries"
 msgstr "Cluster nou"
 
@@ -60697,6 +60461,124 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid " (invalid)"
+#~ msgstr " (invalid)"
+
+#, fuzzy
+#~ msgid "1.000.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "1.500.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "100.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "12.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "18.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "2.000.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "2.000.000+ Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "200.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "3.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "30.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "300.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "500.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "60.000 Services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "7.000 Services"
+#~ msgstr "servicii"
+
+#~ msgid "Add notification"
+#~ msgstr "Adaugă notificare"
+
+#, fuzzy
+#~ msgid "Custom limit"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Customer portal credentials"
+#~ msgstr "trei nivele"
+
+#, fuzzy
+#~ msgid "Customer shortcut"
+#~ msgstr "Proprietatile Folderului"
+
+#, fuzzy
+#~ msgid "Invalid subscription period. Must be at least one year"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Invalid subscription sizing"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Period end date"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Period start date"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Rulebased notifications are activated"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid "Sizing"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Subscription details"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Subscription settings"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "not a contact"
+#~ msgstr "<i>nu este un contact</i>"
+
+#, fuzzy
+#~ msgid "start"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Docker Disk Usage Count"
+#~ msgstr "Mesajul Text"
 
 #, fuzzy
 #~ msgid "Download license usage report"
@@ -62148,10 +62030,6 @@ msgstr ""
 #~ msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
-#~ msgid "Number of objects"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 #~ msgid "Number of problematic hosts"
 #~ msgstr "Numarul maxim de conexiuni"
 
@@ -62717,22 +62595,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Name - Use the containers' name"
 #~ msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-#~ msgid "Hide checkboxes"
-#~ msgstr "Verificări active"
-
-#, fuzzy
-#~ msgid "Hide context"
-#~ msgstr "cu context"
-
-#, fuzzy
-#~ msgid "Hide discovered service labels"
-#~ msgstr "spatiu utilizat"
-
-#, fuzzy
-#~ msgid "Hide plugin names"
-#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "End date"
@@ -63694,10 +63556,6 @@ msgstr ""
 #~ msgstr "Conexiuni Active"
 
 #, fuzzy
-#~ msgid "Livestatus settings"
-#~ msgstr "Conexiuni Active"
-
-#, fuzzy
 #~ msgid "Livestatus-data not found"
 #~ msgstr "Conexiuni Active"
 
@@ -64472,10 +64330,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "%d global notification rules"
 #~ msgstr "%d reguli de notificări globale"
-
-#, fuzzy
-#~ msgid "%s is not a valid integer number."
-#~ msgstr "%s nu este un număr întreg valid."
 
 #, fuzzy
 #~ msgid "%s rule %s"

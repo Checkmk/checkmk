@@ -60,9 +60,6 @@ msgstr " (すべてのパケットに関して(成功 + エラー))"
 msgid " (in relation to all successful packets)"
 msgstr " (成功したすべてのパケットに関して)"
 
-msgid " (invalid)"
-msgstr " (無効)"
-
 msgid " (outdated)"
 msgstr " 旧式"
 
@@ -538,6 +535,10 @@ msgstr "%s インスタンス"
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%sは有効なUNIXタイムスタンプではありません"
 
+#, fuzzy, python-format
+msgid "%s is not a valid version number."
+msgstr "これは有効なCheckmkバージョン番号ではありません"
+
 #, python-format
 msgid "%s is not an allowed value"
 msgstr "%sは許可された値ではありません"
@@ -856,9 +857,6 @@ msgstr "、最後の %.1f チェック期間内にデータが受信されてい
 msgid ", the first match skips this rule pack"
 msgstr ",最初の一致はこのルールパックをスキップします"
 
-msgid "-"
-msgstr "-"
-
 msgid "-.-- %"
 msgstr "-.--%"
 
@@ -905,12 +903,6 @@ msgstr "1行"
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
-msgid "1.000.000 Services"
-msgstr "1.000.000サービス"
-
-msgid "1.500.000 Services"
-msgstr "1.500.000サービス"
-
 msgid "1/s"
 msgstr "1/s"
 
@@ -930,9 +922,6 @@ msgstr "100%は全負荷時のすべてのコアです"
 msgid "100.0 - 200.0 ms"
 msgstr "100.0 - 200.0ミリ秒"
 
-msgid "100.000 Services"
-msgstr "100.000サービス"
-
 msgid "10x14"
 msgstr "10x14"
 
@@ -942,14 +931,8 @@ msgstr "12ボルト出力の下位レベル"
 msgid "12 Volt Output Upper Levels"
 msgstr "12ボルト出力の上位レベル"
 
-msgid "12.000 Services"
-msgstr "12.000サービス"
-
 msgid "15 minutes"
 msgstr "15分"
-
-msgid "18.000 Services"
-msgstr "18.000サービス"
 
 msgid "2 weeks back"
 msgstr "2週間前"
@@ -957,26 +940,14 @@ msgstr "2週間前"
 msgid "2.0 - 5.0 ms"
 msgstr "2.0〜5.0ミリ秒"
 
-msgid "2.000.000 Services"
-msgstr "2.000.000サービス"
-
-msgid "2.000.000+ Services"
-msgstr "2.000.000以上のサービス"
-
 msgid "20.0 - 50.0 ms"
 msgstr "20.0 - 50.0ミリ秒"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0ミリ秒"
 
-msgid "200.000 Services"
-msgstr "200.000サービス"
-
 msgid "3 months"
 msgstr "3ヶ月"
-
-msgid "3.000 Services"
-msgstr "3.000サービス"
 
 msgid "3.3 Volt Output Lower Levels"
 msgstr "3.3ボルト出力の低レベル"
@@ -986,12 +957,6 @@ msgstr "3.3ボルト出力の上位レベル"
 
 msgid "30 Minutes"
 msgstr "30分"
-
-msgid "30.000 Services"
-msgstr "30.000サービス"
-
-msgid "300.000 Services"
-msgstr "300.000サービス"
 
 msgid "32bit packaged binary"
 msgstr "32ビット パッケージ バイナリ"
@@ -1035,18 +1000,12 @@ msgstr "50.0 - 100.0ミリ秒"
 msgid "500.0+ ms"
 msgstr "500.0+ミリ秒"
 
-msgid "500.000 Services"
-msgstr "500.000サービス"
-
 #, fuzzy
 msgid "50th percentile"
 msgstr "パーセンタイル"
 
 msgid "6 months"
 msgstr "6ヶ月"
-
-msgid "60.000 Services"
-msgstr "60.000 サービス"
 
 msgid "64bit packaged binary"
 msgstr "64ビットパッケージバイナリ"
@@ -1062,9 +1021,6 @@ msgstr "7セグメントディスプレイの明るさ"
 
 msgid "7-segment display uid"
 msgstr "7セグメントディスプレイuid"
-
-msgid "7.000 Services"
-msgstr "7.000サービス"
 
 msgid "8 days back"
 msgstr "8日前"
@@ -1156,19 +1112,6 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>警告:</b>%dの未確認の互換性のないwerksがあります:"
-
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>Rule based notifications are disabled in your global "
-"settings. The rules that you edit here will have affect only on "
-"notifications that are created by the Event Console. Normal monitoring "
-"alerts will <b>not</b> use the rule based notifications now.<br><br>You can "
-"change this setting <a href=\"%s\">here</a>."
-msgstr ""
-"<b>警告</b><br><br>ルールベースの通知はグローバル設定で無効になっています。こ"
-"こで編集するルールは、イベントコンソールによって作成される通知にのみ影響しま"
-"す。通常の監視アラートは、現在、ルールベースの通知を<b>使用しません</b>。"
-"<br><br>この設定は<a href=\"%s\">ここ</a>で変更できます。"
 
 #, python-format
 msgid ""
@@ -2721,14 +2664,8 @@ msgstr "作者確認"
 msgid "Acknowledgement Comment"
 msgstr "承認コメント"
 
-msgid "Acknowledgement of host problem"
-msgstr "ホストの問題の確認"
-
 msgid "Acknowledgement of problem"
 msgstr "問題の確認"
-
-msgid "Acknowledgement of service problem"
-msgstr ""
 
 msgid "Act."
 msgstr "Act."
@@ -3159,9 +3096,6 @@ msgstr "カスタマーを追加する"
 msgid "Add destination address"
 msgstr "宛先アドレスを追加します"
 
-msgid "Add details manually"
-msgstr "詳細を手動で追加する"
-
 msgid "Add diskstate rule"
 msgstr "diskstateルールを追加します"
 
@@ -3341,9 +3275,6 @@ msgstr "新しいトピックを追加する"
 
 msgid "Add new user configuration"
 msgstr "新しいユーザー構成を追加する"
-
-msgid "Add notification"
-msgstr "通知を追加"
 
 msgid "Add notification rule"
 msgstr "通知ルールを追加する"
@@ -4009,7 +3940,8 @@ msgstr "エージェントのベーキングと署名"
 msgid "Agent baking finished."
 msgstr "エージェントのベーキングが終了しました。"
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (Checks, Inventory),"
 msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
 
 msgid "Agent controller"
@@ -5052,9 +4984,6 @@ msgstr "サービス出力でのグループメンバーの出現"
 msgid "Appearance of network interface"
 msgstr ""
 
-msgid "Append Age to output"
-msgstr "出力に期間を追加"
-
 msgid "Append descriptions of OIDs to message texts"
 msgstr "OIDの説明をメッセージテキストに追加します"
 
@@ -5069,6 +4998,10 @@ msgstr "アプリケーション(正規表現)"
 
 msgid "Application / Syslog-Tag"
 msgstr "アプリケーション/ Syslog-タグ"
+
+#, fuzzy
+msgid "Application ID"
+msgstr "アプリケーション"
 
 msgid "Application Key"
 msgstr "アプリケーションキー"
@@ -5404,9 +5337,6 @@ msgstr "非同期"
 
 msgid "Asynchronous closing connections"
 msgstr "非同期のクローズ接続"
-
-msgid "Asynchronous execution"
-msgstr "非同期実行"
 
 msgid "Asynchronous execution of plugins"
 msgstr "プラグインの非同期実行"
@@ -6508,9 +6438,6 @@ msgstr "ビット"
 
 msgid "Bits per second"
 msgstr "ビット/秒"
-
-msgid "Blacklist the following services"
-msgstr "次のサービスをブラックリストに登録する"
 
 msgid "Block storage name"
 msgstr "ブロックストレージ名"
@@ -9999,17 +9926,6 @@ msgstr "ポリシー違反レベル"
 msgid "Configure proxy server usage"
 msgstr "使用済みスペースのレベルを構成する"
 
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here."
-msgstr "ここで、サービス名の先頭に一致する正規表現を構成します。"
-
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> that "
-"service."
-msgstr ""
-
 msgid "Configure restrictions manually"
 msgstr "制限を手動で設定する"
 
@@ -10107,11 +10023,6 @@ msgid ""
 "target=\"_blank\">the documentation</a>. Via this grouping option, Checkmk "
 "can eg. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
-msgstr ""
-
-msgid ""
-"Configure the hosts for this notification. Without prefix, only exact, case "
-"sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
 
 #, python-format
@@ -11573,9 +11484,6 @@ msgstr "現在、このジョブのスケジュールされた実行を無効に
 msgid "Currently disable this aggregation"
 msgstr "現在、この集計を無効にします"
 
-msgid "Currently disable this notification"
-msgstr "現在、この通知を無効にしています"
-
 msgid "Currently in downtime"
 msgstr "現在ダウンタイム中"
 
@@ -11722,9 +11630,6 @@ msgstr "カスタム統合"
 msgid "Custom label"
 msgstr "カスタムラベル"
 
-msgid "Custom limit"
-msgstr "カスタム制限"
-
 msgid "Custom localizations"
 msgstr "カスタムローカリゼーション"
 
@@ -11837,17 +11742,11 @@ msgstr "ペンディング状態のサービスの顧客数"
 msgid "Customer number of services in state WARN"
 msgstr "警告状態のサービスの顧客数"
 
-msgid "Customer portal credentials"
-msgstr "カスタマーポータルの資格情報"
-
 msgid "Customer properties"
 msgstr "顧客のプロパティ"
 
 msgid "Customer report layout"
 msgstr "顧客レポートのレイアウト"
-
-msgid "Customer shortcut"
-msgstr "顧客のショートカット"
 
 msgid "Customer specific report layout"
 msgstr "顧客固有のレポートレイアウト"
@@ -14821,9 +14720,6 @@ msgstr ""
 msgid "Do now show reserved space"
 msgstr "予約済みのスペースを表示する"
 
-msgid "Do only notifiy alerts within this time period"
-msgstr "この期間内にのみアラートを通知してください"
-
 msgid "Do status data inventory"
 msgstr "ステータスデータのインベントリを行う"
 
@@ -15065,14 +14961,8 @@ msgstr ""
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "本当にイベントデーモンモードを切り替えますか？"
 
-msgid "Docker Containers"
+msgid "Docker containers"
 msgstr "Dockerコンテナ"
-
-msgid "Docker Disk Usage"
-msgstr "Dockerディスクの使用量"
-
-msgid "Docker Disk Usage Count"
-msgstr "Dockerディスク使用数"
 
 msgid "Docker node"
 msgstr "Dockerノード"
@@ -15366,8 +15256,8 @@ msgid ""
 "aggregation rule, like <tt>Host $HOST$</tt>."
 msgstr ""
 
-#, python-format
-msgid "Duplicate tag ID \"%s\" in auxilary tags"
+#, fuzzy, python-format
+msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "補助タグ内の重複タグID \"%s\""
 
 msgid "Duplicated messages management"
@@ -16276,9 +16166,6 @@ msgstr "ログオン失敗のロギングを有効にする"
 msgid "Enable login via GET requests"
 msgstr "リクエストによるプロファイリングを有効にする"
 
-msgid "Enable new rule based notifications"
-msgstr "新しいルールベースの通知を有効にする"
-
 msgid "Enable notification logging"
 msgstr "通知ログを有効にする"
 
@@ -16396,9 +16283,6 @@ msgstr "有効なセクション(Windowsエージェント)"
 
 msgid "Enabled until disabling"
 msgstr "無効にするまで有効"
-
-msgid "Enabling"
-msgstr "有効化"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -16583,9 +16467,6 @@ msgstr "エンジンIDs(SNMPv3にのみ必要)"
 
 msgid "English"
 msgstr "English"
-
-msgid "Enrich with usage data from Checkmk Cluster Collector"
-msgstr ""
 
 msgid "Enter"
 msgstr "入る"
@@ -18398,29 +18279,11 @@ msgstr "フラッシュスペースの使用量"
 msgid "Flex. Duration"
 msgstr "フレックスデュレーション"
 
-msgid "Flexible Custom Notifications"
-msgstr "柔軟なカスタム通知"
-
-msgid "Flexible and plain email notifications"
-msgstr "柔軟でわかりやすい電子メール通知"
-
-msgid ""
-"Flexible and plain email notifications are considered deprecated in version "
-"1.5.0 and  will be removed in Checkmk version 1.6.0. Please consider to "
-"switch to rulebased notifications."
-msgstr ""
-"柔軟でわかりやすいメール通知は、バージョン1.5.0で非推奨と見なされ、Checkmk"
-"バージョン1.6.0で削除されます。ルールベースの通知への切り替えを検討してくださ"
-"い。"
-
 msgid "Flexible downtime"
 msgstr "柔軟なダウンタイム"
 
 msgid "Flexible downtime duration:"
 msgstr "柔軟なダウンタイム期間:"
-
-msgid "Flexible notification rule"
-msgstr "柔軟な通知ルール"
 
 msgid "Floating point number"
 msgstr "浮動小数点数"
@@ -19772,6 +19635,9 @@ msgstr ""
 msgid "HAproxy Server State"
 msgstr ""
 
+msgid "HELP"
+msgstr ""
+
 msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
 
@@ -20196,13 +20062,6 @@ msgid ""
 msgstr ""
 "ここでは、そのサイトに適用する必要があるグローバル設定を構成できます。<b>注</"
 "b>: これは、サイトが分散セットアップの一部である場合にのみ意味があります。"
-
-msgid ""
-"Here you can configure how you want to be notified about host and service "
-"problems and other monitoring events."
-msgstr ""
-"ここでは、ホストとサービスの問題、およびその他の監視イベントについて通知する"
-"方法を構成できます。"
 
 msgid ""
 "Here you can configure levels for usage, requests utilization and limits "
@@ -20807,15 +20666,6 @@ msgstr ""
 "理する必要があります。"
 
 msgid ""
-"Here you specify which types of alerts will be notified to this contact. "
-"Note: these settings will only be saved and used if the user is member of a "
-"contact group."
-msgstr ""
-"ここでは、この連絡先に通知されるアラートのタイプを指定します。注意:これらの設"
-"定は、ユーザーが連絡先グループのメンバーである場合にのみ保存および使用されま"
-"す。"
-
-msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
 "example, you can make certain filters mandatory. This enables you to build "
@@ -20858,8 +20708,16 @@ msgstr ""
 msgid "Hidden"
 msgstr "隠し"
 
+#, fuzzy, python-format
+msgid "Hide %s"
+msgstr "サイト %s"
+
 msgid "Hide Checkmk version"
 msgstr "Checkmkバージョンを非表示"
+
+#, fuzzy
+msgid "Hide all settings"
+msgstr "すべての設定を表示"
 
 msgid "Hide analysis"
 msgstr "分析を隠す"
@@ -20869,6 +20727,26 @@ msgstr "レポートで注釈を非表示にする"
 
 msgid "Hide bulks"
 msgstr "バルクを非表示"
+
+#, fuzzy
+msgid "Hide check parameters"
+msgstr "チェックパラメータが無効です"
+
+#, fuzzy
+msgid "Hide checkboxes"
+msgstr "チェックボックスを表示する"
+
+#, fuzzy
+msgid "Hide context"
+msgstr "情報テキストを非表示"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "ライセンスの状態"
+
+#, fuzzy
+msgid "Hide discovered service labels"
+msgstr "発見されたラベル"
 
 msgid "Hide folders without read permissions"
 msgstr "読み取り権限なしでフォルダを非表示にする"
@@ -20896,6 +20774,10 @@ msgstr "WATOで内部フォルダ名を非表示にする"
 
 msgid "Hide names of configuration variables"
 msgstr "構成変数の名前を非表示にする"
+
+#, fuzzy
+msgid "Hide plugin names"
+msgstr "プラグイン名を表示する"
 
 msgid "Hide response from socket"
 msgstr "ソケットからの応答を非表示"
@@ -21193,9 +21075,6 @@ msgstr "ホストダウン"
 msgid "Host event limit"
 msgstr "ホストイベントの制限"
 
-msgid "Host events"
-msgstr "ホストイベント"
-
 msgid "Host gets unreachble"
 msgstr "ホストが到達不能になる"
 
@@ -21318,12 +21197,6 @@ msgstr "ホスト通知が有効"
 
 msgid "Host or Disk"
 msgstr "ホストまたはディスク"
-
-msgid ""
-"Host or Service must be in the following service level to get notification"
-msgstr ""
-"通知を受け取るには、ホストまたはサービスが次のサービスレベルにある必要があり"
-"ます"
 
 #, python-format
 msgid "Host or service %ss"
@@ -21653,10 +21526,11 @@ msgstr "各フォルダに作成するホスト"
 msgid "Hosts using a specific SNMP Backend (Enterprise Edition only)"
 msgstr "特定のSNMPバックエンドを使用するホスト(Enterprise Editionのみ)"
 
+#, fuzzy
 msgid ""
-"Hosts where this tag group is explicitely set and that are effected by the "
+"Hosts where this tag group is explicitly set and that are effected by the "
 "change"
-msgstr ""
+msgstr "このタググループへの明示的な参照があり、変更の影響を受けるフォルダ"
 
 msgid "Hosts whose last contact is more than 24 hours ago"
 msgstr "最後の連絡が24時間以上前のホスト"
@@ -22925,16 +22799,6 @@ msgid ""
 "latency situations but locks a number of threads in the Livestatus module of "
 "the target site."
 msgstr ""
-
-msgid ""
-"If you enable the new rule based notifications then the current plain text "
-"email and &quot;flexible notifications&quot; will become inactive. Instead "
-"notificatios will be configured with the WATO module <i>Notifications</i> on "
-"a global base."
-msgstr ""
-"新しいルールベースの通知を有効にすると、現在のプレーンテキストの電子メールと "
-"&quot;フレキシブル通知&quot; が非アクティブになります。代わりに、通知はグロー"
-"バルベースのWATOモジュール<i>通知</i>で構成されます。"
 
 msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
@@ -24864,16 +24728,6 @@ msgstr "スナップショットが無効です(小さすぎます)"
 msgid "Invalid start time given"
 msgstr "無効な開始時刻が指定されました"
 
-#, python-format
-msgid "Invalid subscription %s date"
-msgstr "サブスクリプション %s の日付が無効です"
-
-msgid "Invalid subscription period. Must be at least one year"
-msgstr ""
-
-msgid "Invalid subscription sizing"
-msgstr "無効なサブスクリプションのサイズ"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr "タグIDが無効です。文字a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
@@ -25982,9 +25836,6 @@ msgstr "受信メールキューの長さ"
 msgid "Length of output queue"
 msgstr "出力キューの長さ"
 
-msgid "Let through notifications counting from this number"
-msgstr "この数から数えて通知を通過させます"
-
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
@@ -26600,6 +26451,10 @@ msgstr "ライセンス契約"
 msgid "License details"
 msgstr "ライセンスの状態"
 
+#, fuzzy
+msgid "License key"
+msgstr "ライセンスの使用法"
+
 msgid "License state"
 msgstr "ライセンスの状態"
 
@@ -26607,10 +26462,18 @@ msgid "License usage"
 msgstr "ライセンスの使用法"
 
 #, fuzzy
+msgid "License verification"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
 msgid "Licensing"
 msgstr "ライセンスステータス"
 
 msgid "Licensing Status"
+msgstr "ライセンスステータス"
+
+#, fuzzy
+msgid "Licensing settings"
 msgstr "ライセンスステータス"
 
 msgid "Liebert UPS Device: Temperature sensor"
@@ -26694,12 +26557,6 @@ msgstr "ビューテーブルの行数を制限する"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "表に表示される行数を制限する"
-
-msgid "Limit to the following hosts"
-msgstr "次のホストに制限する"
-
-msgid "Limit to the following services"
-msgstr "以下のサービスに限定する"
 
 msgid "Limit width"
 msgstr "幅を制限する"
@@ -27749,6 +27606,11 @@ msgstr "%s' がありません"
 
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "MKリモートプラグインエグゼキュータ(MRPE)"
+
+#, python-format
+msgid ""
+"MKPs enforce semantic versioning. Please refer to %ssemver.org%s for details."
+msgstr ""
 
 msgid "MQTT broker statistics"
 msgstr "MQTTブローカー統計"
@@ -31711,14 +31573,8 @@ msgstr "通知コメントの一致"
 msgid "Notification Method"
 msgstr "通知方法"
 
-msgid "Notification Options"
-msgstr "通知オプション"
-
 msgid "Notification Period"
 msgstr "通知期間"
-
-msgid "Notification Plugin"
-msgstr "通知プラグイン"
 
 msgid "Notification Rules"
 msgstr "通知ルール"
@@ -31787,9 +31643,6 @@ msgstr "一括通知の通知の並べ替え順序"
 msgid "Notification system"
 msgstr "通知システム"
 
-msgid "Notification time period"
-msgstr "通知期間"
-
 msgid "Notifications"
 msgstr "通知"
 
@@ -31814,10 +31667,6 @@ msgstr "この%sの通知は手動で無効にされます"
 msgid "Notifications are manually enabled for this %s"
 msgstr "この %s の通知は手動で有効になります"
 
-msgid ""
-"Notifications are sent out when the status of a host or service changes."
-msgstr "ホストまたはサービスのステータスが変更されると、通知が送信されます。"
-
 msgid "Notified events for hosts"
 msgstr "ホストに通知されたイベント"
 
@@ -31832,9 +31681,6 @@ msgstr "すべてのユーザーに通知する"
 
 msgid "Notify all users that have configured an email address in their profile"
 msgstr "プロファイルにメールアドレスを設定したすべてのユーザーに通知する"
-
-msgid "Notify by: "
-msgstr "通知者: "
 
 msgid "November"
 msgstr "11月"
@@ -32208,6 +32054,9 @@ msgstr "テキストとしての通知の数"
 
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "通知の数が最大許容数を超えています"
+
+msgid "Number of objects"
+msgstr "オブジェクトの数"
 
 msgid "Number of ongoing shard info requests"
 msgstr "進行中の共有情報リクエストの数"
@@ -32669,6 +32518,10 @@ msgstr "オフラインシーケンスアウト"
 msgid "Offline to spare ratio"
 msgstr "オフラインとスペアの比率"
 
+#, fuzzy
+msgid "Offline verification"
+msgstr "SSL証明書の検証"
+
 msgid "Offset"
 msgstr "オフセット"
 
@@ -32815,6 +32668,10 @@ msgstr "オンライン"
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "オンライン(バージョン: %s、エディション: %s)"
 
+#, fuzzy
+msgid "Online verification"
+msgstr "SSL証明書の検証"
+
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "A-Z、a-z、0-9およびマイナス(-)のみが許可されます。"
 
@@ -32862,9 +32719,6 @@ msgstr ""
 "名前がこれらの正規表現の1つと一致するホストからピギーバックデータを受信するホ"
 "ストのみを対象とします。"
 
-msgid "Only digits and dots are allowed in the version number."
-msgstr "バージョン番号には数字とドットのみを使用できます。"
-
 msgid "Only discover monitors in the following states"
 msgstr "以下の状態のモニターのみ検出可能"
 
@@ -32873,13 +32727,6 @@ msgstr "新しいホストラベルを検出するだけです"
 
 msgid "Only display SLA Name"
 msgstr "SLA名を表示するだけ"
-
-msgid ""
-"Only during this time period the user will get notifications about host or "
-"service alerts."
-msgstr ""
-"この期間中のみ、ユーザーはホストまたはサービスのアラートに関する通知を受け取"
-"ります。"
 
 msgid "Only execute manually"
 msgstr "手動でのみ実行"
@@ -34450,14 +34297,8 @@ msgstr "パフォーマンスオプション"
 msgid "Period"
 msgstr "ピリオド"
 
-msgid "Period end date"
-msgstr "期末日"
-
 msgid "Period for outdated piggybacked host data"
 msgstr "古いピギーバックされたホストデータの期間"
-
-msgid "Period start date"
-msgstr "期間開始日"
 
 msgid "Periodic notification"
 msgstr "定期的な通知"
@@ -34686,9 +34527,6 @@ msgstr "配置"
 
 msgid "Plain Email"
 msgstr "プレーンメール"
-
-msgid "Plain Text Email (using configured templates)"
-msgstr ""
 
 msgid "Plain text (Unencrypted)"
 msgstr "プレーンテキスト(暗号化されていない)"
@@ -35198,9 +35036,6 @@ msgstr "プラグのアイテム番号または名前"
 
 msgid "Plugin"
 msgstr "プラグイン"
-
-msgid "Plugin Arguments"
-msgstr "プラグインの引数"
 
 msgid "Plugin Name"
 msgstr "プラグイン名"
@@ -35829,6 +35664,10 @@ msgstr "PromQLクエリ(単一の戻り値のみが許可されます)"
 
 msgid "Prometheus"
 msgstr "プロメテウス"
+
+#, fuzzy
+msgid "Prometheus API endpoint"
+msgstr "Prometheus Webポート"
 
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
@@ -37765,9 +37604,6 @@ msgstr "単一のホストに制限する"
 msgid "Restrict to check attempt"
 msgstr "チェック試行を制限する"
 
-msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
-msgstr "n<sup>th</sup>からm<sup>th</sup>の通知に制限(エスカレーション)"
-
 msgid "Restrict to notification number"
 msgstr "通知番号に制限する"
 
@@ -38032,9 +37868,6 @@ msgstr "ルールツリー"
 msgid "Rule activation"
 msgstr "ルールのアクティブ化"
 
-msgid "Rule based notifications"
-msgstr "ルールベースの通知"
-
 msgid "Rule contact groups"
 msgstr "ルール連絡先グループ"
 
@@ -38106,9 +37939,6 @@ msgstr "ルールID"
 
 msgid "Rule:"
 msgstr "ルール:"
-
-msgid "Rulebased notifications are activated"
-msgstr "ルールベースの通知がアクティブ化されます"
 
 msgid "Rules"
 msgstr "From"
@@ -39509,9 +39339,6 @@ msgstr "サービスコメント"
 msgid "Service Description"
 msgstr "サービスの説明"
 
-msgid "Service Events"
-msgstr "サービスイベント"
-
 msgid "Service Filters"
 msgstr "サービスフィルター"
 
@@ -39661,9 +39488,6 @@ msgstr "サービス検出:サービスの説明"
 
 msgid "Service discovery: State"
 msgstr "サービスディスカバリ:状態"
-
-msgid "Service events"
-msgstr "サービスイベント"
 
 msgid "Service goes into critical state"
 msgstr "サービスがクリティカル状態になります"
@@ -41192,9 +41016,6 @@ msgstr "ファイルグループのサイズ、経過時間、数"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "ファイルグループのサイズ、経過時間、および数(mk_filestats)"
 
-msgid "Sizing"
-msgstr "サイジング"
-
 msgid "Skip exceeding messages, create one critical message"
 msgstr ""
 
@@ -42358,9 +42179,6 @@ msgstr "来年の始まり"
 msgid "Start or end of a scheduled downtime"
 msgstr "スケジュールされたダウンタイムの開始または終了"
 
-msgid "Start or end of a scheduled downtime "
-msgstr "スケジュールされたダウンタイムの開始または終了 "
-
 msgid "Start or end of flapping state"
 msgstr "フラッピング状態の開始または終了"
 
@@ -42600,6 +42418,10 @@ msgstr ""
 
 msgid "State if input is ON"
 msgstr ""
+
+#, fuzzy
+msgid "State if input is Unknown"
+msgstr "チャネルステータスが不明な場合の状態"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
 msgstr ""
@@ -43490,12 +43312,6 @@ msgstr "サブスクリプションID"
 
 msgid "Subscription Status"
 msgstr "サブスクリプションステータス"
-
-msgid "Subscription details"
-msgstr "サブスクリプションの詳細"
-
-msgid "Subscription settings"
-msgstr "サブスクリプション設定"
 
 msgid "Substitution"
 msgstr "置換"
@@ -46044,6 +45860,12 @@ msgid ""
 "likely to result in an error."
 msgstr ""
 
+msgid ""
+"The full URL to the Prometheus API endpoint including the protocol (http or "
+"https). OpenShift exposes such endpoints via a route in the openshift-"
+"monitoring namespace called prometheus-k8s."
+msgstr ""
+
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "指定されたベースオブジェクト \"%s\"はLDAPに存在しません (%s))"
@@ -46447,9 +46269,6 @@ msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "ホストタグのリストには文字列のみが含まれている必要がありますが、 %r も含まれ"
 "ている必要があります"
-
-msgid "The list of services will never match"
-msgstr "サービスのリストが一致することはありません"
 
 msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr "このサイトへのlivestatus接続は、暗号化されないように構成されています。"
@@ -47803,18 +47622,6 @@ msgid ""
 msgstr ""
 "サブフォルダ <i>%s</i> には明示的なサイト <i>%s</i> が設定されていて、これは"
 "カスタマー <i>%s</i>に属します。これは、CMEフォルダー階層に違反します。"
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract."
-msgstr ""
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract. "
-"These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk</a>."
-msgstr ""
 
 msgid ""
 "The suffix .new is a reserved keyword an cannot be used as aggregation id"
@@ -54705,6 +54512,13 @@ msgstr "資格情報を使用する"
 msgid "Use custom connection parameters"
 msgstr "カスタム接続パラメータを使用する"
 
+msgid "Use data from Checkmk Cluster Collector"
+msgstr ""
+
+#, fuzzy
+msgid "Use data from OpenShift"
+msgstr "どのサイトからのデータもありません"
+
 msgid "Use default layout"
 msgstr "デフォルトのレイアウトを使用する"
 
@@ -58877,14 +58691,6 @@ msgstr ""
 "サービス状態の可能な組み合わせごとに、個別の監視状態を指定できます。このパラ"
 "メーターを使用しない場合、online/legacy_runのみがOKであると見なされます。"
 
-msgid ""
-"You can specify arguments to the notification plugin here. Please refer to "
-"the documentation about the plugin for what parameters are allowed or "
-"required here."
-msgstr ""
-"ここで通知プラグインへの引数を指定できます。ここで許可または必要なパラメー"
-"ターについては、プラグインに関するドキュメントを参照してください。"
-
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "最大 %d のエントリを指定できます"
@@ -59287,23 +59093,6 @@ msgstr ""
 "フォールバック通知を有効にしましたが、電子メールアドレスを構成できませんでし"
 "た。フォールバック通知を受信できるようにするには、メールアドレスを構成する必"
 "要があります。"
-
-msgid ""
-"You have enabled the notifications but missed to configure a Email address. "
-"You need to configure your mail address in order to be able to receive "
-"emails."
-msgstr ""
-"通知を有効にしましたが、電子メールアドレスを構成できませんでした。 メールを受"
-"信できるようにするには、メールアドレスを設定する必要があります。"
-
-msgid ""
-"You have enabled the notifications but missed to make the user member of at "
-"least one contact group. You need to make the user member of a contact group "
-"which has hosts assigned in order to be able to receive emails."
-msgstr ""
-"通知を有効にしましたが、ユーザーを少なくとも1つの連絡先グループのメンバーにす"
-"ることができませんでした。メールを受信できるようにするには、ホストが割り当て"
-"られている連絡先グループのユーザーメンバーにする必要があります。"
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -59835,9 +59624,6 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "工場出荷時の設定と同じです。"
 
-msgid "Your user has no roles. Please assign at least one role."
-msgstr ""
-
 msgid "ZFS filesystem usage"
 msgstr "ZFSファイルシステムの使用法"
 
@@ -59953,9 +59739,6 @@ msgstr "全てのエージェント"
 
 msgid "all contacts of the notified object"
 msgstr ""
-
-msgid "all events disabled"
-msgstr "すべてのイベントが無効になりました"
 
 msgid "all graphs"
 msgstr "すべてのグラフ"
@@ -60373,9 +60156,6 @@ msgstr "Livestatusクエリのデバッグを有効にする"
 msgid "enable extensive rule logging"
 msgstr "広範なルールロギングを有効にする"
 
-msgid "enable notifications"
-msgstr "通知を有効にします"
-
 msgid "enable optimized rule execution"
 msgstr "最適化されたルール実行を有効にする"
 
@@ -60384,9 +60164,6 @@ msgstr "ルールのプリティプリントを有効にする"
 
 msgid "enable sounds"
 msgstr "サウンドを有効にする"
-
-msgid "end"
-msgstr "終わり"
 
 msgid "entries"
 msgstr "エントリ"
@@ -60509,9 +60286,6 @@ msgstr "フリーリース"
 
 msgid "free space"
 msgstr "空き容量"
-
-msgid "from"
-msgstr "から"
 
 msgid "from the beginning"
 msgstr "最初から"
@@ -61062,9 +60836,6 @@ msgstr "%s以外の状態"
 msgid "not OK states"
 msgstr "OK以外の状態"
 
-msgid "not a contact"
-msgstr "連絡先ではありません"
-
 msgid "not attempted"
 msgstr "試みられなかった"
 
@@ -61528,9 +61299,6 @@ msgstr "ソケットは、ネットワークに残っているパケットを閉
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
 
-msgid "start"
-msgstr "開始"
-
 msgid "status entries"
 msgstr "ステータスエントリ"
 
@@ -61840,6 +61608,299 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid " (invalid)"
+#~ msgstr " (無効)"
+
+#~ msgid "-"
+#~ msgstr "-"
+
+#~ msgid "1.000.000 Services"
+#~ msgstr "1.000.000サービス"
+
+#~ msgid "1.500.000 Services"
+#~ msgstr "1.500.000サービス"
+
+#~ msgid "100.000 Services"
+#~ msgstr "100.000サービス"
+
+#~ msgid "12.000 Services"
+#~ msgstr "12.000サービス"
+
+#~ msgid "18.000 Services"
+#~ msgstr "18.000サービス"
+
+#~ msgid "2.000.000 Services"
+#~ msgstr "2.000.000サービス"
+
+#~ msgid "2.000.000+ Services"
+#~ msgstr "2.000.000以上のサービス"
+
+#~ msgid "200.000 Services"
+#~ msgstr "200.000サービス"
+
+#~ msgid "3.000 Services"
+#~ msgstr "3.000サービス"
+
+#~ msgid "30.000 Services"
+#~ msgstr "30.000サービス"
+
+#~ msgid "300.000 Services"
+#~ msgstr "300.000サービス"
+
+#~ msgid "500.000 Services"
+#~ msgstr "500.000サービス"
+
+#~ msgid "60.000 Services"
+#~ msgstr "60.000 サービス"
+
+#~ msgid "7.000 Services"
+#~ msgstr "7.000サービス"
+
+#, python-format
+#~ msgid ""
+#~ "<b>Warning</b><br><br>Rule based notifications are disabled in your "
+#~ "global settings. The rules that you edit here will have affect only on "
+#~ "notifications that are created by the Event Console. Normal monitoring "
+#~ "alerts will <b>not</b> use the rule based notifications now.<br><br>You "
+#~ "can change this setting <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "<b>警告</b><br><br>ルールベースの通知はグローバル設定で無効になっていま"
+#~ "す。ここで編集するルールは、イベントコンソールによって作成される通知にのみ"
+#~ "影響します。通常の監視アラートは、現在、ルールベースの通知を<b>使用しませ"
+#~ "ん</b>。<br><br>この設定は<a href=\"%s\">ここ</a>で変更できます。"
+
+#~ msgid "Acknowledgement of host problem"
+#~ msgstr "ホストの問題の確認"
+
+#~ msgid "Add details manually"
+#~ msgstr "詳細を手動で追加する"
+
+#~ msgid "Add notification"
+#~ msgstr "通知を追加"
+
+#~ msgid "Blacklist the following services"
+#~ msgstr "次のサービスをブラックリストに登録する"
+
+#~ msgid ""
+#~ "Configure regular expressions that match the beginning of the service "
+#~ "names here."
+#~ msgstr "ここで、サービス名の先頭に一致する正規表現を構成します。"
+
+#~ msgid "Currently disable this notification"
+#~ msgstr "現在、この通知を無効にしています"
+
+#~ msgid "Custom limit"
+#~ msgstr "カスタム制限"
+
+#~ msgid "Customer portal credentials"
+#~ msgstr "カスタマーポータルの資格情報"
+
+#~ msgid "Customer shortcut"
+#~ msgstr "顧客のショートカット"
+
+#~ msgid "Do only notifiy alerts within this time period"
+#~ msgstr "この期間内にのみアラートを通知してください"
+
+#~ msgid "Enable new rule based notifications"
+#~ msgstr "新しいルールベースの通知を有効にする"
+
+#~ msgid "Enabling"
+#~ msgstr "有効化"
+
+#~ msgid "Flexible Custom Notifications"
+#~ msgstr "柔軟なカスタム通知"
+
+#~ msgid "Flexible and plain email notifications"
+#~ msgstr "柔軟でわかりやすい電子メール通知"
+
+#~ msgid ""
+#~ "Flexible and plain email notifications are considered deprecated in "
+#~ "version 1.5.0 and  will be removed in Checkmk version 1.6.0. Please "
+#~ "consider to switch to rulebased notifications."
+#~ msgstr ""
+#~ "柔軟でわかりやすいメール通知は、バージョン1.5.0で非推奨と見なされ、Checkmk"
+#~ "バージョン1.6.0で削除されます。ルールベースの通知への切り替えを検討してく"
+#~ "ださい。"
+
+#~ msgid "Flexible notification rule"
+#~ msgstr "柔軟な通知ルール"
+
+#~ msgid ""
+#~ "Here you can configure how you want to be notified about host and service "
+#~ "problems and other monitoring events."
+#~ msgstr ""
+#~ "ここでは、ホストとサービスの問題、およびその他の監視イベントについて通知す"
+#~ "る方法を構成できます。"
+
+#~ msgid ""
+#~ "Here you specify which types of alerts will be notified to this contact. "
+#~ "Note: these settings will only be saved and used if the user is member of "
+#~ "a contact group."
+#~ msgstr ""
+#~ "ここでは、この連絡先に通知されるアラートのタイプを指定します。注意:これら"
+#~ "の設定は、ユーザーが連絡先グループのメンバーである場合にのみ保存および使用"
+#~ "されます。"
+
+#~ msgid "Host events"
+#~ msgstr "ホストイベント"
+
+#~ msgid ""
+#~ "Host or Service must be in the following service level to get notification"
+#~ msgstr ""
+#~ "通知を受け取るには、ホストまたはサービスが次のサービスレベルにある必要があ"
+#~ "ります"
+
+#~ msgid ""
+#~ "If you enable the new rule based notifications then the current plain "
+#~ "text email and &quot;flexible notifications&quot; will become inactive. "
+#~ "Instead notificatios will be configured with the WATO module "
+#~ "<i>Notifications</i> on a global base."
+#~ msgstr ""
+#~ "新しいルールベースの通知を有効にすると、現在のプレーンテキストの電子メール"
+#~ "と &quot;フレキシブル通知&quot; が非アクティブになります。代わりに、通知は"
+#~ "グローバルベースのWATOモジュール<i>通知</i>で構成されます。"
+
+#, python-format
+#~ msgid "Invalid subscription %s date"
+#~ msgstr "サブスクリプション %s の日付が無効です"
+
+#~ msgid "Invalid subscription sizing"
+#~ msgstr "無効なサブスクリプションのサイズ"
+
+#~ msgid "Let through notifications counting from this number"
+#~ msgstr "この数から数えて通知を通過させます"
+
+#~ msgid "Limit to the following hosts"
+#~ msgstr "次のホストに制限する"
+
+#~ msgid "Limit to the following services"
+#~ msgstr "以下のサービスに限定する"
+
+#~ msgid "Notification Options"
+#~ msgstr "通知オプション"
+
+#~ msgid "Notification Plugin"
+#~ msgstr "通知プラグイン"
+
+#~ msgid "Notification time period"
+#~ msgstr "通知期間"
+
+#~ msgid ""
+#~ "Notifications are sent out when the status of a host or service changes."
+#~ msgstr ""
+#~ "ホストまたはサービスのステータスが変更されると、通知が送信されます。"
+
+#~ msgid "Notify by: "
+#~ msgstr "通知者: "
+
+#~ msgid ""
+#~ "Only during this time period the user will get notifications about host "
+#~ "or service alerts."
+#~ msgstr ""
+#~ "この期間中のみ、ユーザーはホストまたはサービスのアラートに関する通知を受け"
+#~ "取ります。"
+
+#~ msgid "Period end date"
+#~ msgstr "期末日"
+
+#~ msgid "Period start date"
+#~ msgstr "期間開始日"
+
+#~ msgid "Plugin Arguments"
+#~ msgstr "プラグインの引数"
+
+#~ msgid ""
+#~ "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
+#~ msgstr "n<sup>th</sup>からm<sup>th</sup>の通知に制限(エスカレーション)"
+
+#~ msgid "Rule based notifications"
+#~ msgstr "ルールベースの通知"
+
+#~ msgid "Rulebased notifications are activated"
+#~ msgstr "ルールベースの通知がアクティブ化されます"
+
+#~ msgid "Service Events"
+#~ msgstr "サービスイベント"
+
+#~ msgid "Service events"
+#~ msgstr "サービスイベント"
+
+#~ msgid "Sizing"
+#~ msgstr "サイジング"
+
+#~ msgid "Start or end of a scheduled downtime "
+#~ msgstr "スケジュールされたダウンタイムの開始または終了 "
+
+#~ msgid "Subscription details"
+#~ msgstr "サブスクリプションの詳細"
+
+#~ msgid "Subscription settings"
+#~ msgstr "サブスクリプション設定"
+
+#~ msgid "The list of services will never match"
+#~ msgstr "サービスのリストが一致することはありません"
+
+#~ msgid ""
+#~ "You can specify arguments to the notification plugin here. Please refer "
+#~ "to the documentation about the plugin for what parameters are allowed or "
+#~ "required here."
+#~ msgstr ""
+#~ "ここで通知プラグインへの引数を指定できます。ここで許可または必要なパラメー"
+#~ "ターについては、プラグインに関するドキュメントを参照してください。"
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to configure a Email "
+#~ "address. You need to configure your mail address in order to be able to "
+#~ "receive emails."
+#~ msgstr ""
+#~ "通知を有効にしましたが、電子メールアドレスを構成できませんでした。 メール"
+#~ "を受信できるようにするには、メールアドレスを設定する必要があります。"
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to make the user member of "
+#~ "at least one contact group. You need to make the user member of a contact "
+#~ "group which has hosts assigned in order to be able to receive emails."
+#~ msgstr ""
+#~ "通知を有効にしましたが、ユーザーを少なくとも1つの連絡先グループのメンバー"
+#~ "にすることができませんでした。メールを受信できるようにするには、ホストが割"
+#~ "り当てられている連絡先グループのユーザーメンバーにする必要があります。"
+
+#~ msgid "all events disabled"
+#~ msgstr "すべてのイベントが無効になりました"
+
+#~ msgid "enable notifications"
+#~ msgstr "通知を有効にします"
+
+#~ msgid "end"
+#~ msgstr "終わり"
+
+#~ msgid "from"
+#~ msgstr "から"
+
+#~ msgid "not a contact"
+#~ msgstr "連絡先ではありません"
+
+#~ msgid "start"
+#~ msgstr "開始"
+
+#~ msgid "Append Age to output"
+#~ msgstr "出力に期間を追加"
+
+#~ msgid "Asynchronous execution"
+#~ msgstr "非同期実行"
+
+#~ msgid "Docker Containers"
+#~ msgstr "Dockerコンテナ"
+
+#~ msgid "Docker Disk Usage"
+#~ msgstr "Dockerディスクの使用量"
+
+#~ msgid "Docker Disk Usage Count"
+#~ msgstr "Dockerディスク使用数"
+
+#~ msgid "Only digits and dots are allowed in the version number."
+#~ msgstr "バージョン番号には数字とドットのみを使用できます。"
 
 #~ msgid "This package is missing or broken."
 #~ msgstr "このパッケージは存在しない、または破損しています。"
@@ -63012,9 +63073,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Checkmk versions"
 #~ msgstr "Checkmkバージョン"
-
-#~ msgid "Docker containers"
-#~ msgstr "Dockerコンテナ"
 
 #~ msgid "Docker images"
 #~ msgstr "Dockerイメージ"
@@ -65669,9 +65727,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Number of messages in defined timespan"
 #~ msgstr "定義された期間内のメッセージの数"
 
-#~ msgid "Number of objects"
-#~ msgstr "オブジェクトの数"
-
 #~ msgid "Number of physical CPUs"
 #~ msgstr "物理CPUの数"
 
@@ -66585,9 +66640,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "WATO is disabled."
 #~ msgstr "WATOは無効になっています。"
-
-#~ msgid "Prometheus web port"
-#~ msgstr "Prometheus Webポート"
 
 #~ msgid ""
 #~ "Define textfiles to be monitored. The full path is necessary. Glob "

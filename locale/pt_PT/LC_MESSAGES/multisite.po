@@ -60,9 +60,6 @@ msgstr " (em relação a todos os pacotes (sucesso+ erros))"
 msgid " (in relation to all successful packets)"
 msgstr " (em relação a todos os successful packets)"
 
-msgid " (invalid)"
-msgstr " (inválido)"
-
 msgid " (outdated)"
 msgstr " (Desatualizado)"
 
@@ -545,6 +542,10 @@ msgstr "instâncias do BD"
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s não é um UNIX timestamp válido"
 
+#, fuzzy, python-format
+msgid "%s is not a valid version number."
+msgstr "Este não é um número de versão Checkmk válido"
+
 #, python-format
 msgid "%s is not an allowed value"
 msgstr "%s não é um valor válido"
@@ -865,9 +866,6 @@ msgstr ""
 msgid ", the first match skips this rule pack"
 msgstr "o primeiro jogo salta este pacote de regras."
 
-msgid "-"
-msgstr "-"
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -914,12 +912,6 @@ msgstr "1 fila"
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
-msgid "1.000.000 Services"
-msgstr "1.000.000 Serviços"
-
-msgid "1.500.000 Services"
-msgstr "1.500.000 Serviços"
-
 msgid "1/s"
 msgstr "1/s"
 
@@ -939,9 +931,6 @@ msgstr "100% são todos os núcleos a plena carga"
 msgid "100.0 - 200.0 ms"
 msgstr "100,0 - 200,0 ms"
 
-msgid "100.000 Services"
-msgstr "100.000 Serviços"
-
 msgid "10x14"
 msgstr "10x14"
 
@@ -951,14 +940,8 @@ msgstr "12 Volts de saída Níveis inferiores"
 msgid "12 Volt Output Upper Levels"
 msgstr "Níveis superiores de saída de 12 Volts"
 
-msgid "12.000 Services"
-msgstr "12.000 Serviços"
-
 msgid "15 minutes"
 msgstr "15 minutos"
-
-msgid "18.000 Services"
-msgstr "18.000 Serviços"
 
 msgid "2 weeks back"
 msgstr "2 semanas atrás"
@@ -966,26 +949,14 @@ msgstr "2 semanas atrás"
 msgid "2.0 - 5.0 ms"
 msgstr "2.0 - 5.0 ms"
 
-msgid "2.000.000 Services"
-msgstr "2.000.000 Serviços"
-
-msgid "2.000.000+ Services"
-msgstr "2.000.000+ Serviços"
-
 msgid "20.0 - 50.0 ms"
 msgstr "20,0 - 50,0 ms"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200,0 - 500,0 ms"
 
-msgid "200.000 Services"
-msgstr "200.000 Serviços"
-
 msgid "3 months"
 msgstr "3 meses"
-
-msgid "3.000 Services"
-msgstr "3.000 Serviços"
 
 msgid "3.3 Volt Output Lower Levels"
 msgstr "3.3 Saída Volt Níveis inferiores"
@@ -995,12 +966,6 @@ msgstr "3.3 Níveis Superiores de Saída em Volts"
 
 msgid "30 Minutes"
 msgstr "30 Minutos"
-
-msgid "30.000 Services"
-msgstr "30.000 Serviços"
-
-msgid "300.000 Services"
-msgstr "300.000 Serviços"
 
 msgid "32bit packaged binary"
 msgstr "32bit binário embalado"
@@ -1044,18 +1009,12 @@ msgstr "50,0 - 100,0 ms"
 msgid "500.0+ ms"
 msgstr "500,0+ ms"
 
-msgid "500.000 Services"
-msgstr "500.000 Serviços"
-
 #, fuzzy
 msgid "50th percentile"
 msgstr "percentil"
 
 msgid "6 months"
 msgstr "6 meses"
-
-msgid "60.000 Services"
-msgstr "60.000 Serviços"
 
 msgid "64bit packaged binary"
 msgstr "binário embalado de 64 bits"
@@ -1071,9 +1030,6 @@ msgstr "Brilho de tela de 7 segmentos"
 
 msgid "7-segment display uid"
 msgstr "Display uid de 7 segmentos"
-
-msgid "7.000 Services"
-msgstr "7.000 Serviços"
 
 msgid "8 days back"
 msgstr "8 dias atrás"
@@ -1177,20 +1133,6 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Aviso:</b> Há %d werks incompatíveis não reconhecidos:"
-
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>Rule based notifications are disabled in your global "
-"settings. The rules that you edit here will have affect only on "
-"notifications that are created by the Event Console. Normal monitoring "
-"alerts will <b>not</b> use the rule based notifications now.<br><br>You can "
-"change this setting <a href=\"%s\">here</a>."
-msgstr ""
-"<b>Aviso</b>>>br>>br>Notificações baseadas em regras são desativadas em suas "
-"configurações globais. As regras que você editar aqui terão efeito apenas "
-"nas notificações que são criadas pelo Console de Eventos. Alertas de "
-"monitoramento normal irão <b>não</b> usar as notificações baseadas em regras "
-"agora.<br>>br>> você pode alterar esta configuração <a href=\"%s\">aqui</a>."
 
 #, python-format
 msgid ""
@@ -2827,14 +2769,8 @@ msgstr "Agradecimento Autor"
 msgid "Acknowledgement Comment"
 msgstr "Comentário de agradecimento"
 
-msgid "Acknowledgement of host problem"
-msgstr "Reconhecimento do problema do hospedeiro"
-
 msgid "Acknowledgement of problem"
 msgstr "Reconhecimento do problema"
-
-msgid "Acknowledgement of service problem"
-msgstr "Reconhecimento do problema de serviço"
 
 msgid "Act."
 msgstr "Agir."
@@ -3271,9 +3207,6 @@ msgstr "Adicionar cliente"
 msgid "Add destination address"
 msgstr "Adicionar endereço de destino"
 
-msgid "Add details manually"
-msgstr "Adicionar detalhes manualmente"
-
 msgid "Add diskstate rule"
 msgstr "Adicionar a regra do estado de disco"
 
@@ -3461,9 +3394,6 @@ msgstr "Adicionar novo tópico"
 
 msgid "Add new user configuration"
 msgstr "Adicionar nova configuração de usuário"
-
-msgid "Add notification"
-msgstr "Adicionar notificação"
 
 msgid "Add notification rule"
 msgstr "Adicionar regra de notificação"
@@ -4167,7 +4097,8 @@ msgstr "Agente de assar e assinar"
 msgid "Agent baking finished."
 msgstr "Agente a cozer acabou."
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (Checks, Inventory),"
 msgstr "Plugins baseados em agentes (Checks, Inventory)"
 
 #, fuzzy
@@ -5254,9 +5185,6 @@ msgstr "Aparência de membros do grupo na saída de serviço"
 msgid "Appearance of network interface"
 msgstr "Aspecto da interface de rede"
 
-msgid "Append Age to output"
-msgstr "Anexar Idade à saída"
-
 msgid "Append descriptions of OIDs to message texts"
 msgstr "Anexar descrições dos OIDs aos textos das mensagens"
 
@@ -5271,6 +5199,10 @@ msgstr "Aplicação (expressão regular)"
 
 msgid "Application / Syslog-Tag"
 msgstr "Aplicação / Syslog-Tag"
+
+#, fuzzy
+msgid "Application ID"
+msgstr "Aplicação"
 
 #, fuzzy
 msgid "Application Key"
@@ -5635,9 +5567,6 @@ msgstr "Assíncrono"
 
 msgid "Asynchronous closing connections"
 msgstr "Conexões de fechamento assíncrono"
-
-msgid "Asynchronous execution"
-msgstr "Execução assíncrona"
 
 msgid "Asynchronous execution of plugins"
 msgstr "Execução assíncrona de plugins"
@@ -6766,9 +6695,6 @@ msgstr "Bits"
 
 msgid "Bits per second"
 msgstr "Bits por segundo"
-
-msgid "Blacklist the following services"
-msgstr "Colocar na lista negra os seguintes serviços"
 
 msgid "Block storage name"
 msgstr "Nome do bloco de armazenamento"
@@ -10485,22 +10411,6 @@ msgstr "Níveis de visualização"
 msgid "Configure proxy server usage"
 msgstr "Configurar níveis para o espaço usado"
 
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here."
-msgstr ""
-"Configure aqui as expressões regulares que correspondem ao início dos nomes "
-"dos serviços."
-
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> that "
-"service."
-msgstr ""
-"Configure aqui as expressões regulares que correspondem ao início dos nomes "
-"dos serviços. Prefira uma entrada com <tt>!</tt> a fim de <i>excluir</i> "
-"esse serviço."
-
 msgid "Configure restrictions manually"
 msgstr "Configurar restrições manualmente"
 
@@ -10606,14 +10516,6 @@ msgid ""
 "can eg. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
-
-msgid ""
-"Configure the hosts for this notification. Without prefix, only exact, case "
-"sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
-msgstr ""
-"Configure os anfitriões para esta notificação. Sem prefixo, apenas exato, "
-"correspondências sensíveis a maiúsculas e minúsculas, <tt>!</tt> para "
-"negação e <tt>~~</tt> para correspondências regex."
 
 #, python-format
 msgid ""
@@ -12141,9 +12043,6 @@ msgstr "Atualmente desativar a execução programada deste trabalho"
 msgid "Currently disable this aggregation"
 msgstr "Actualmente desactivar esta agregação"
 
-msgid "Currently disable this notification"
-msgstr "Actualmente desactivar esta notificação"
-
 msgid "Currently in downtime"
 msgstr "Actualmente em inactividade"
 
@@ -12294,9 +12193,6 @@ msgstr "Integrações personalizadas"
 msgid "Custom label"
 msgstr "Título personalizado"
 
-msgid "Custom limit"
-msgstr "Limite personalizado"
-
 msgid "Custom localizations"
 msgstr "Localizações personalizadas"
 
@@ -12409,17 +12305,11 @@ msgstr "Número de clientes de serviços no estado PENDENTE"
 msgid "Customer number of services in state WARN"
 msgstr "Número de clientes de serviços no estado WARN"
 
-msgid "Customer portal credentials"
-msgstr "Credenciais do portal do cliente"
-
 msgid "Customer properties"
 msgstr "Propriedades do cliente"
 
 msgid "Customer report layout"
 msgstr "Layout do relatório do cliente"
-
-msgid "Customer shortcut"
-msgstr "Atalho do cliente"
 
 msgid "Customer specific report layout"
 msgstr "Layout do relatório específico do cliente"
@@ -15525,9 +15415,6 @@ msgstr ""
 msgid "Do now show reserved space"
 msgstr "Mostrar agora espaço reservado"
 
-msgid "Do only notifiy alerts within this time period"
-msgstr "Notifique apenas os alertas dentro deste período de tempo"
-
 msgid "Do status data inventory"
 msgstr "Fazer inventário de dados de status"
 
@@ -15777,14 +15664,8 @@ msgstr ""
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Você realmente quer mudar o modo de evento daemon?"
 
-msgid "Docker Containers"
-msgstr "Docker Containers"
-
-msgid "Docker Disk Usage"
-msgstr "Utilização do Disco de Docker"
-
-msgid "Docker Disk Usage Count"
-msgstr "Contagem de utilização do disco de doca"
+msgid "Docker containers"
+msgstr "Docker contentores"
 
 msgid "Docker node"
 msgstr "Nódulo de Docker"
@@ -16083,8 +15964,8 @@ msgstr ""
 "argumentos na regra de agregação de nível superior, como <tt>Host $HOST$</"
 "tt>."
 
-#, python-format
-msgid "Duplicate tag ID \"%s\" in auxilary tags"
+#, fuzzy, python-format
+msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "Duplicação do ID da etiqueta \"%s\" nas etiquetas auxiliares"
 
 #, fuzzy
@@ -17014,9 +16895,6 @@ msgstr "Tamanho total dos ficheiros de registo"
 msgid "Enable login via GET requests"
 msgstr "Habilitar a criação de perfis por pedido"
 
-msgid "Enable new rule based notifications"
-msgstr "Habilitar novas notificações baseadas em regras"
-
 msgid "Enable notification logging"
 msgstr "Habilitar registro de notificação"
 
@@ -17134,9 +17012,6 @@ msgstr "Seções ativadas (agente Windows)"
 
 msgid "Enabled until disabling"
 msgstr "Activado até desactivar"
-
-msgid "Enabling"
-msgstr "Habilitação"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -17334,9 +17209,6 @@ msgstr "IDs do motor (apenas necessário para SNMPv3)"
 
 msgid "English"
 msgstr "Inglês"
-
-msgid "Enrich with usage data from Checkmk Cluster Collector"
-msgstr ""
 
 msgid "Enter"
 msgstr "Entre"
@@ -19206,29 +19078,11 @@ msgstr "Uso do Espaço Flash"
 msgid "Flex. Duration"
 msgstr "Flex. Duração"
 
-msgid "Flexible Custom Notifications"
-msgstr "Notificações Personalizadas Flexíveis"
-
-msgid "Flexible and plain email notifications"
-msgstr "Notificações por e-mail flexíveis e simples"
-
-msgid ""
-"Flexible and plain email notifications are considered deprecated in version "
-"1.5.0 and  will be removed in Checkmk version 1.6.0. Please consider to "
-"switch to rulebased notifications."
-msgstr ""
-"Notificações por e-mail flexíveis e simples são consideradas depreciadas na "
-"versão 1.5.0 e serão removidas na Checkmk versão 1.6.0. Por favor, considere "
-"a possibilidade de mudar para notificações baseadas em regras."
-
 msgid "Flexible downtime"
 msgstr "Tempo de paragem flexível"
 
 msgid "Flexible downtime duration:"
 msgstr "Duração flexível do tempo de paragem:"
-
-msgid "Flexible notification rule"
-msgstr "Regra de notificação flexível"
 
 msgid "Floating point number"
 msgstr "Número do ponto flutuante"
@@ -20659,6 +20513,9 @@ msgstr "HAproxy Frontend State"
 msgid "HAproxy Server State"
 msgstr "Estado do Servidor HAproxy"
 
+msgid "HELP"
+msgstr ""
+
 msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
 
@@ -21105,13 +20962,6 @@ msgstr ""
 "Aqui você pode configurar configurações globais, que devem ser aplicadas "
 "apenas nesse site. <b>Nota</b>: isto só faz sentido se o site for parte de "
 "uma configuração distribuída."
-
-msgid ""
-"Here you can configure how you want to be notified about host and service "
-"problems and other monitoring events."
-msgstr ""
-"Aqui você pode configurar como deseja ser notificado sobre problemas de "
-"hospedagem e serviços e outros eventos de monitoramento."
 
 #, fuzzy
 msgid ""
@@ -21792,15 +21642,6 @@ msgstr ""
 "criar agentes para eles."
 
 msgid ""
-"Here you specify which types of alerts will be notified to this contact. "
-"Note: these settings will only be saved and used if the user is member of a "
-"contact group."
-msgstr ""
-"Aqui você especifica que tipos de alertas serão notificados a este contato. "
-"Nota: estas configurações só serão salvas e usadas se o usuário for membro "
-"de um grupo de contatos."
-
-msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
 "example, you can make certain filters mandatory. This enables you to build "
@@ -21852,8 +21693,16 @@ msgstr ""
 msgid "Hidden"
 msgstr "Escondido"
 
+#, fuzzy, python-format
+msgid "Hide %s"
+msgstr "Site %s"
+
 msgid "Hide Checkmk version"
 msgstr "Ocultar a versão Checkmk"
+
+#, fuzzy
+msgid "Hide all settings"
+msgstr "Mostrar todas as configurações"
 
 msgid "Hide analysis"
 msgstr "Análise de ocultação"
@@ -21863,6 +21712,26 @@ msgstr "Ocultar anotação no relatório"
 
 msgid "Hide bulks"
 msgstr "Esconder granéis"
+
+#, fuzzy
+msgid "Hide check parameters"
+msgstr "Parâmetro de verificação inválido"
+
+#, fuzzy
+msgid "Hide checkboxes"
+msgstr "Mostrar caixas de seleção"
+
+#, fuzzy
+msgid "Hide context"
+msgstr "Ocultar infotexto"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "Estado da licença"
+
+#, fuzzy
+msgid "Hide discovered service labels"
+msgstr "Mostrar as etiquetas de serviço descobertas"
 
 msgid "Hide folders without read permissions"
 msgstr "Ocultar pastas sem permissão de leitura"
@@ -21890,6 +21759,10 @@ msgstr "Ocultar nomes de pastas internas na WATO"
 
 msgid "Hide names of configuration variables"
 msgstr "Ocultar nomes de variáveis de configuração"
+
+#, fuzzy
+msgid "Hide plugin names"
+msgstr "Mostrar nomes de plugins"
 
 msgid "Hide response from socket"
 msgstr "Ocultar resposta da tomada"
@@ -22191,9 +22064,6 @@ msgstr "Hospedar"
 msgid "Host event limit"
 msgstr "Limite do evento anfitrião"
 
-msgid "Host events"
-msgstr "Acolher eventos"
-
 msgid "Host gets unreachble"
 msgstr "Hospedeiro fica sem reação"
 
@@ -22320,12 +22190,6 @@ msgstr "Notificações de anfitrião ativadas"
 
 msgid "Host or Disk"
 msgstr "Anfitrião ou Disco"
-
-msgid ""
-"Host or Service must be in the following service level to get notification"
-msgstr ""
-"O Host ou Serviço deve estar no seguinte nível de serviço para obter "
-"notificação"
 
 #, python-format
 msgid "Host or service %ss"
@@ -22678,8 +22542,9 @@ msgstr ""
 "Anfitriões que utilizam um Backend SNMP específico (apenas Enterprise "
 "Edition)"
 
+#, fuzzy
 msgid ""
-"Hosts where this tag group is explicitely set and that are effected by the "
+"Hosts where this tag group is explicitly set and that are effected by the "
 "change"
 msgstr ""
 "Anfitriões onde este grupo de tags é explícitamente definido e que são "
@@ -24076,17 +23941,6 @@ msgstr ""
 "aberta a conexão para os locais remotos. Isto traz uma grande velocidade em "
 "situações de alta latência, mas bloqueia uma série de tópicos no módulo "
 "Livestatus do site alvo."
-
-msgid ""
-"If you enable the new rule based notifications then the current plain text "
-"email and &quot;flexible notifications&quot; will become inactive. Instead "
-"notificatios will be configured with the WATO module <i>Notifications</i> on "
-"a global base."
-msgstr ""
-"Se você ativar as novas notificações baseadas em regras, o e-mail e &quot; "
-"notificações flexíveis&quot; ficarão inativos. Ao invés disso as "
-"notificatios serão configuradas com o módulo WATO <i>Notificações</i> em uma "
-"base global."
 
 msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
@@ -26140,16 +25994,6 @@ msgstr "Instantâneo inválido (muito pequeno)"
 msgid "Invalid start time given"
 msgstr "Hora de início inválida dada"
 
-#, python-format
-msgid "Invalid subscription %s date"
-msgstr "Data de subscrição inválida %s"
-
-msgid "Invalid subscription period. Must be at least one year"
-msgstr "Período de subscrição inválido. Deve ser de pelo menos um ano."
-
-msgid "Invalid subscription sizing"
-msgstr "Dimensionamento inválido de assinaturas"
-
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
 "Identificação da etiqueta inválida. Apenas os caracteres a-z, A-Z, 0-9, _ e "
@@ -27318,9 +27162,6 @@ msgstr "Comprimento da fila de entrada de correio"
 msgid "Length of output queue"
 msgstr "Comprimento da fila de saída"
 
-msgid "Let through notifications counting from this number"
-msgstr "Deixar passar notificações contando a partir deste número"
-
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
@@ -27966,6 +27807,10 @@ msgstr "Agregação de licenças"
 msgid "License details"
 msgstr "Estado da licença"
 
+#, fuzzy
+msgid "License key"
+msgstr "Licença de Uso"
+
 msgid "License state"
 msgstr "Estado da licença"
 
@@ -27973,10 +27818,18 @@ msgid "License usage"
 msgstr "Utilização da licença"
 
 #, fuzzy
+msgid "License verification"
+msgstr "verificação do certificado SSL"
+
+#, fuzzy
 msgid "Licensing"
 msgstr "Status do licenciamento"
 
 msgid "Licensing Status"
+msgstr "Status do licenciamento"
+
+#, fuzzy
+msgid "Licensing settings"
 msgstr "Status do licenciamento"
 
 msgid "Liebert UPS Device: Temperature sensor"
@@ -28065,12 +27918,6 @@ msgstr "Limitar o número de filas nas tabelas Ver"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitar o número de filas apresentadas nas tabelas"
-
-msgid "Limit to the following hosts"
-msgstr "Limite para os seguintes anfitriões"
-
-msgid "Limit to the following services"
-msgstr "Limite aos seguintes serviços"
 
 msgid "Limit width"
 msgstr "Largura limite"
@@ -29158,6 +29005,11 @@ msgstr "MISSING '%s"
 
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "Executor de Plugin Remoto MK (MRPE)"
+
+#, python-format
+msgid ""
+"MKPs enforce semantic versioning. Please refer to %ssemver.org%s for details."
+msgstr ""
 
 #, fuzzy
 msgid "MQTT broker statistics"
@@ -33289,14 +33141,8 @@ msgstr "Comentário de notificação de jogo"
 msgid "Notification Method"
 msgstr "Método de Notificação"
 
-msgid "Notification Options"
-msgstr "Opções de Notificação"
-
 msgid "Notification Period"
 msgstr "Período de Notificação"
-
-msgid "Notification Plugin"
-msgstr "Plugin de Notificação"
 
 msgid "Notification Rules"
 msgstr "Regras de Notificação"
@@ -33367,9 +33213,6 @@ msgstr "Ordem de ordenação de notificação para notificações em massa"
 msgid "Notification system"
 msgstr "Sistema de Notificação"
 
-msgid "Notification time period"
-msgstr "Período de tempo da notificação"
-
 msgid "Notifications"
 msgstr "Notificações"
 
@@ -33396,11 +33239,6 @@ msgstr "Notificações são desativadas manualmente para esta %s"
 msgid "Notifications are manually enabled for this %s"
 msgstr "Notificações são habilitadas manualmente para esta %s"
 
-msgid ""
-"Notifications are sent out when the status of a host or service changes."
-msgstr ""
-"As notificações são enviadas quando o status de um host ou serviço muda."
-
 msgid "Notified events for hosts"
 msgstr "Eventos notificados para os anfitriões"
 
@@ -33417,9 +33255,6 @@ msgid "Notify all users that have configured an email address in their profile"
 msgstr ""
 "Notificar todos os utilizadores que tenham configurado um endereço de e-mail "
 "no seu perfil"
-
-msgid "Notify by: "
-msgstr "Notifique por: "
 
 msgid "November"
 msgstr "Novembro"
@@ -33806,6 +33641,9 @@ msgstr "Número de notificações como texto"
 
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "O número de notificações excede o número máximo permitido"
+
+msgid "Number of objects"
+msgstr "Número de objetos"
 
 msgid "Number of ongoing shard info requests"
 msgstr "Número de pedidos de informações sobre fragmentos em andamento"
@@ -34289,6 +34127,10 @@ msgstr "Sequências fora de linha"
 msgid "Offline to spare ratio"
 msgstr "Relação off-line para reserva"
 
+#, fuzzy
+msgid "Offline verification"
+msgstr "verificação do certificado SSL"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -34443,6 +34285,10 @@ msgstr "Online"
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "Online (Versão: %s, Edição: %s)"
 
+#, fuzzy
+msgid "Online verification"
+msgstr "verificação do certificado SSL"
+
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Apenas A-Z, a-z, 0-9 e menos (-) são permitidos."
 
@@ -34497,9 +34343,6 @@ msgstr ""
 "Só se preocupam com os anfitriões que recebem dados piggyback de anfitriões "
 "cujo nome corresponde a uma destas expressões regulares."
 
-msgid "Only digits and dots are allowed in the version number."
-msgstr "Só são permitidos dígitos e pontos no número da versão."
-
 #, fuzzy
 msgid "Only discover monitors in the following states"
 msgstr "Aplique esta regra apenas nos seguintes sites"
@@ -34509,13 +34352,6 @@ msgstr "Só descubra novas etiquetas de anfitrião"
 
 msgid "Only display SLA Name"
 msgstr "Mostrar apenas o nome SLA"
-
-msgid ""
-"Only during this time period the user will get notifications about host or "
-"service alerts."
-msgstr ""
-"Somente durante este período de tempo o usuário receberá notificações sobre "
-"alertas de host ou serviço."
 
 msgid "Only execute manually"
 msgstr "Executar apenas manualmente"
@@ -36149,14 +35985,8 @@ msgstr "Opções de desempenho"
 msgid "Period"
 msgstr "Período"
 
-msgid "Period end date"
-msgstr "Data final do período"
-
 msgid "Period for outdated piggybacked host data"
 msgstr "Período para os dados do hospedeiro com piggyback desactualizados"
-
-msgid "Period start date"
-msgstr "Data de início do período"
 
 msgid "Periodic notification"
 msgstr "Notificação periódica"
@@ -36400,9 +36230,6 @@ msgstr "Colocação"
 
 msgid "Plain Email"
 msgstr "E-mail simples"
-
-msgid "Plain Text Email (using configured templates)"
-msgstr "E-mail de texto simples (usando modelos configurados)"
 
 msgid "Plain text (Unencrypted)"
 msgstr "Texto simples (não encriptado)"
@@ -36972,9 +36799,6 @@ msgstr "Número ou nome do item do plugue"
 
 msgid "Plugin"
 msgstr "Plugin"
-
-msgid "Plugin Arguments"
-msgstr "Argumentos de Plugin"
 
 msgid "Plugin Name"
 msgstr "Nome do Plugin"
@@ -37621,6 +37445,10 @@ msgstr "Consulta PromQL (só é permitido um único valor de retorno)"
 
 msgid "Prometheus"
 msgstr "Prometheus"
+
+#, fuzzy
+msgid "Prometheus API endpoint"
+msgstr "porta web Prometheus"
 
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
@@ -39643,9 +39471,6 @@ msgstr "Restringir-se a um único anfitrião"
 msgid "Restrict to check attempt"
 msgstr "Restringir a tentativa de verificação"
 
-msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
-msgstr "Restringir a n<sup>th</sup> to m<sup>th</sup> notification (escalação)"
-
 msgid "Restrict to notification number"
 msgstr "Restringir ao número de notificação"
 
@@ -39917,9 +39742,6 @@ msgstr "Árvore das Regras"
 msgid "Rule activation"
 msgstr "Ativação da regra"
 
-msgid "Rule based notifications"
-msgstr "Notificações baseadas em regras"
-
 msgid "Rule contact groups"
 msgstr "Grupos de contato de regras"
 
@@ -39995,9 +39817,6 @@ msgstr "Regra-ID"
 
 msgid "Rule:"
 msgstr "Regra:"
-
-msgid "Rulebased notifications are activated"
-msgstr "As notas baseadas em regras são ativadas"
 
 msgid "Rules"
 msgstr "Regras"
@@ -41454,9 +41273,6 @@ msgstr "Comentários de serviço"
 msgid "Service Description"
 msgstr "Descrição do Serviço"
 
-msgid "Service Events"
-msgstr "Eventos de Serviço"
-
 msgid "Service Filters"
 msgstr "Filtros de serviço"
 
@@ -41610,9 +41426,6 @@ msgstr "Descoberta de serviços: Descrição do serviço"
 
 msgid "Service discovery: State"
 msgstr "Descoberta de serviços: Estado"
-
-msgid "Service events"
-msgstr "Eventos de serviço"
 
 msgid "Service goes into critical state"
 msgstr "O serviço entra em estado crítico"
@@ -43218,9 +43031,6 @@ msgstr "Tamanho, idade e contagem dos grupos de arquivos"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Tamanho, idade e contagem dos grupos de ficheiros (mk_filestats)"
 
-msgid "Sizing"
-msgstr "Dimensionamento"
-
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Saltar mensagens excedentes, criar uma mensagem crítica"
 
@@ -44473,9 +44283,6 @@ msgstr "Início do próximo ano"
 msgid "Start or end of a scheduled downtime"
 msgstr "Início ou fim de um período de inatividade programado"
 
-msgid "Start or end of a scheduled downtime "
-msgstr "Início ou fim de um período de inatividade programado "
-
 msgid "Start or end of flapping state"
 msgstr "Início ou fim do estado de flapping"
 
@@ -44717,6 +44524,10 @@ msgid "State if input is OFF"
 msgstr "Indique se a entrada está desligada"
 
 msgid "State if input is ON"
+msgstr "Indique se a entrada está ligada"
+
+#, fuzzy
+msgid "State if input is Unknown"
 msgstr "Indique se a entrada está ligada"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
@@ -45636,12 +45447,6 @@ msgstr "ID da Subscrição"
 
 msgid "Subscription Status"
 msgstr "Status da Assinatura"
-
-msgid "Subscription details"
-msgstr "Detalhes da assinatura"
-
-msgid "Subscription settings"
-msgstr "Definições de subscrição"
 
 msgid "Substitution"
 msgstr "Substituição"
@@ -48430,6 +48235,12 @@ msgid ""
 "likely to result in an error."
 msgstr ""
 
+msgid ""
+"The full URL to the Prometheus API endpoint including the protocol (http or "
+"https). OpenShift exposes such endpoints via a route in the openshift-"
+"monitoring namespace called prometheus-k8s."
+msgstr ""
+
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "O determinado objeto básico \"%s\" não existe no LDAP (%s))"
@@ -48864,9 +48675,6 @@ msgstr "A lista de tags do host deve ser uma lista, mas é %r"
 msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "A lista de tags do host deve conter apenas strings, mas também contém %r"
-
-msgid "The list of services will never match"
-msgstr "A lista de serviços nunca irá corresponder"
 
 msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
@@ -50362,26 +50170,6 @@ msgid ""
 msgstr ""
 "A subpasta <i>%s</i> tem o site explícito <i>%s</i> definido, que pertence "
 "ao cliente <i>%s</i>. Isto viola a hierarquia de pastas CME."
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract."
-msgstr ""
-"Os detalhes da assinatura incluem a data de início do período, data final e "
-"tamanho. As credenciais do portal do cliente podem ser encontradas em seu "
-"contrato de assinatura."
-
-#, fuzzy
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract. "
-"These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk</a>."
-msgstr ""
-"Os detalhes da assinatura incluem a data de início do período, data final e "
-"tamanho. As credenciais do portal do cliente podem ser encontradas em seu "
-"contrato de assinatura. Estas são as mesmas credenciais também usadas para "
-"download <a href=\"https://checkmk.de/download\">Checkmk<a>."
 
 msgid ""
 "The suffix .new is a reserved keyword an cannot be used as aggregation id"
@@ -57852,6 +57640,13 @@ msgstr "Use as credenciais"
 msgid "Use custom connection parameters"
 msgstr "Use parâmetros de conexão personalizados"
 
+msgid "Use data from Checkmk Cluster Collector"
+msgstr ""
+
+#, fuzzy
+msgid "Use data from OpenShift"
+msgstr "Sem dados de nenhum site"
+
 msgid "Use default layout"
 msgstr "Use o layout padrão"
 
@@ -62392,15 +62187,6 @@ msgstr ""
 "combinação possível de estado de serviço. Se este parâmetro não for "
 "utilizado, então apenas online/legacy_run será assumido que está OK."
 
-msgid ""
-"You can specify arguments to the notification plugin here. Please refer to "
-"the documentation about the plugin for what parameters are allowed or "
-"required here."
-msgstr ""
-"É possível especificar aqui os argumentos para o plugin de notificação. "
-"Consulte a documentação sobre o plugin para saber quais parâmetros são "
-"permitidos ou necessários aqui."
-
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "É possível especificar, no máximo, as entradas %d"
@@ -62861,23 +62647,6 @@ msgstr ""
 "Você ativou as notificações de falha, mas perdeu a configuração de um "
 "endereço de e-mail. Você precisa configurar seu endereço de e-mail para "
 "poder receber as notificações de fallback."
-
-msgid ""
-"You have enabled the notifications but missed to configure a Email address. "
-"You need to configure your mail address in order to be able to receive "
-"emails."
-msgstr ""
-"Você ativou as notificações, mas não configurou um endereço de e-mail. Você "
-"precisa configurar o seu endereço de e-mail para poder receber e-mails."
-
-msgid ""
-"You have enabled the notifications but missed to make the user member of at "
-"least one contact group. You need to make the user member of a contact group "
-"which has hosts assigned in order to be able to receive emails."
-msgstr ""
-"Você ativou as notificações, mas falhou para tornar o usuário membro de pelo "
-"menos um grupo de contato. Você precisa tornar o usuário membro de um grupo "
-"de contato que tenha hosts designados para poder receber e-mails."
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -63459,10 +63228,6 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "A sua configuração e as configurações de fábrica são idênticas."
 
-msgid "Your user has no roles. Please assign at least one role."
-msgstr ""
-"O seu utilizador não tem funções. Por favor, atribua pelo menos uma função."
-
 msgid "ZFS filesystem usage"
 msgstr "Utilização do sistema de ficheiros ZFS"
 
@@ -63583,9 +63348,6 @@ msgstr "Agentes de panificação"
 
 msgid "all contacts of the notified object"
 msgstr "todos os contactos do objecto notificado"
-
-msgid "all events disabled"
-msgstr "todos os eventos com deficiência"
 
 msgid "all graphs"
 msgstr "todos os gráficos"
@@ -64011,9 +63773,6 @@ msgstr "permitir a depuração das consultas do Livestatus"
 msgid "enable extensive rule logging"
 msgstr "permitir o registo extensivo de regras"
 
-msgid "enable notifications"
-msgstr "permitir notificações"
-
 msgid "enable optimized rule execution"
 msgstr "permitir uma execução optimizada das regras"
 
@@ -64022,9 +63781,6 @@ msgstr "permitir a impressão de regras bonitas"
 
 msgid "enable sounds"
 msgstr "activar sons"
-
-msgid "end"
-msgstr "final"
 
 msgid "entries"
 msgstr "Entradas"
@@ -64150,9 +63906,6 @@ msgstr "locações gratuitas"
 
 msgid "free space"
 msgstr "espaço livre"
-
-msgid "from"
-msgstr "de"
 
 msgid "from the beginning"
 msgstr "desde o início"
@@ -64720,9 +64473,6 @@ msgstr "estados não OK"
 msgid "not OK states"
 msgstr "estados não OK"
 
-msgid "not a contact"
-msgstr "não é um contato"
-
 msgid "not attempted"
 msgstr "não tentado"
 
@@ -65192,9 +64942,6 @@ msgstr ""
 msgid "specify manually ->"
 msgstr "especificar manualmente ->"
 
-msgid "start"
-msgstr "início"
-
 msgid "status entries"
 msgstr "entradas de status"
 
@@ -65504,6 +65251,365 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid " (invalid)"
+#~ msgstr " (inválido)"
+
+#~ msgid "-"
+#~ msgstr "-"
+
+#~ msgid "1.000.000 Services"
+#~ msgstr "1.000.000 Serviços"
+
+#~ msgid "1.500.000 Services"
+#~ msgstr "1.500.000 Serviços"
+
+#~ msgid "100.000 Services"
+#~ msgstr "100.000 Serviços"
+
+#~ msgid "12.000 Services"
+#~ msgstr "12.000 Serviços"
+
+#~ msgid "18.000 Services"
+#~ msgstr "18.000 Serviços"
+
+#~ msgid "2.000.000 Services"
+#~ msgstr "2.000.000 Serviços"
+
+#~ msgid "2.000.000+ Services"
+#~ msgstr "2.000.000+ Serviços"
+
+#~ msgid "200.000 Services"
+#~ msgstr "200.000 Serviços"
+
+#~ msgid "3.000 Services"
+#~ msgstr "3.000 Serviços"
+
+#~ msgid "30.000 Services"
+#~ msgstr "30.000 Serviços"
+
+#~ msgid "300.000 Services"
+#~ msgstr "300.000 Serviços"
+
+#~ msgid "500.000 Services"
+#~ msgstr "500.000 Serviços"
+
+#~ msgid "60.000 Services"
+#~ msgstr "60.000 Serviços"
+
+#~ msgid "7.000 Services"
+#~ msgstr "7.000 Serviços"
+
+#, python-format
+#~ msgid ""
+#~ "<b>Warning</b><br><br>Rule based notifications are disabled in your "
+#~ "global settings. The rules that you edit here will have affect only on "
+#~ "notifications that are created by the Event Console. Normal monitoring "
+#~ "alerts will <b>not</b> use the rule based notifications now.<br><br>You "
+#~ "can change this setting <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "<b>Aviso</b>>>br>>br>Notificações baseadas em regras são desativadas em "
+#~ "suas configurações globais. As regras que você editar aqui terão efeito "
+#~ "apenas nas notificações que são criadas pelo Console de Eventos. Alertas "
+#~ "de monitoramento normal irão <b>não</b> usar as notificações baseadas em "
+#~ "regras agora.<br>>br>> você pode alterar esta configuração <a href=\"%s"
+#~ "\">aqui</a>."
+
+#~ msgid "Acknowledgement of host problem"
+#~ msgstr "Reconhecimento do problema do hospedeiro"
+
+#~ msgid "Acknowledgement of service problem"
+#~ msgstr "Reconhecimento do problema de serviço"
+
+#~ msgid "Add details manually"
+#~ msgstr "Adicionar detalhes manualmente"
+
+#~ msgid "Add notification"
+#~ msgstr "Adicionar notificação"
+
+#~ msgid "Blacklist the following services"
+#~ msgstr "Colocar na lista negra os seguintes serviços"
+
+#~ msgid ""
+#~ "Configure regular expressions that match the beginning of the service "
+#~ "names here."
+#~ msgstr ""
+#~ "Configure aqui as expressões regulares que correspondem ao início dos "
+#~ "nomes dos serviços."
+
+#~ msgid ""
+#~ "Configure regular expressions that match the beginning of the service "
+#~ "names here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> "
+#~ "that service."
+#~ msgstr ""
+#~ "Configure aqui as expressões regulares que correspondem ao início dos "
+#~ "nomes dos serviços. Prefira uma entrada com <tt>!</tt> a fim de "
+#~ "<i>excluir</i> esse serviço."
+
+#~ msgid ""
+#~ "Configure the hosts for this notification. Without prefix, only exact, "
+#~ "case sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex "
+#~ "matches."
+#~ msgstr ""
+#~ "Configure os anfitriões para esta notificação. Sem prefixo, apenas exato, "
+#~ "correspondências sensíveis a maiúsculas e minúsculas, <tt>!</tt> para "
+#~ "negação e <tt>~~</tt> para correspondências regex."
+
+#~ msgid "Currently disable this notification"
+#~ msgstr "Actualmente desactivar esta notificação"
+
+#~ msgid "Custom limit"
+#~ msgstr "Limite personalizado"
+
+#~ msgid "Customer portal credentials"
+#~ msgstr "Credenciais do portal do cliente"
+
+#~ msgid "Customer shortcut"
+#~ msgstr "Atalho do cliente"
+
+#~ msgid "Do only notifiy alerts within this time period"
+#~ msgstr "Notifique apenas os alertas dentro deste período de tempo"
+
+#~ msgid "Enable new rule based notifications"
+#~ msgstr "Habilitar novas notificações baseadas em regras"
+
+#~ msgid "Enabling"
+#~ msgstr "Habilitação"
+
+#~ msgid "Flexible Custom Notifications"
+#~ msgstr "Notificações Personalizadas Flexíveis"
+
+#~ msgid "Flexible and plain email notifications"
+#~ msgstr "Notificações por e-mail flexíveis e simples"
+
+#~ msgid ""
+#~ "Flexible and plain email notifications are considered deprecated in "
+#~ "version 1.5.0 and  will be removed in Checkmk version 1.6.0. Please "
+#~ "consider to switch to rulebased notifications."
+#~ msgstr ""
+#~ "Notificações por e-mail flexíveis e simples são consideradas depreciadas "
+#~ "na versão 1.5.0 e serão removidas na Checkmk versão 1.6.0. Por favor, "
+#~ "considere a possibilidade de mudar para notificações baseadas em regras."
+
+#~ msgid "Flexible notification rule"
+#~ msgstr "Regra de notificação flexível"
+
+#~ msgid ""
+#~ "Here you can configure how you want to be notified about host and service "
+#~ "problems and other monitoring events."
+#~ msgstr ""
+#~ "Aqui você pode configurar como deseja ser notificado sobre problemas de "
+#~ "hospedagem e serviços e outros eventos de monitoramento."
+
+#~ msgid ""
+#~ "Here you specify which types of alerts will be notified to this contact. "
+#~ "Note: these settings will only be saved and used if the user is member of "
+#~ "a contact group."
+#~ msgstr ""
+#~ "Aqui você especifica que tipos de alertas serão notificados a este "
+#~ "contato. Nota: estas configurações só serão salvas e usadas se o usuário "
+#~ "for membro de um grupo de contatos."
+
+#~ msgid "Host events"
+#~ msgstr "Acolher eventos"
+
+#~ msgid ""
+#~ "Host or Service must be in the following service level to get notification"
+#~ msgstr ""
+#~ "O Host ou Serviço deve estar no seguinte nível de serviço para obter "
+#~ "notificação"
+
+#~ msgid ""
+#~ "If you enable the new rule based notifications then the current plain "
+#~ "text email and &quot;flexible notifications&quot; will become inactive. "
+#~ "Instead notificatios will be configured with the WATO module "
+#~ "<i>Notifications</i> on a global base."
+#~ msgstr ""
+#~ "Se você ativar as novas notificações baseadas em regras, o e-mail e "
+#~ "&quot; notificações flexíveis&quot; ficarão inativos. Ao invés disso as "
+#~ "notificatios serão configuradas com o módulo WATO <i>Notificações</i> em "
+#~ "uma base global."
+
+#, python-format
+#~ msgid "Invalid subscription %s date"
+#~ msgstr "Data de subscrição inválida %s"
+
+#~ msgid "Invalid subscription period. Must be at least one year"
+#~ msgstr "Período de subscrição inválido. Deve ser de pelo menos um ano."
+
+#~ msgid "Invalid subscription sizing"
+#~ msgstr "Dimensionamento inválido de assinaturas"
+
+#~ msgid "Let through notifications counting from this number"
+#~ msgstr "Deixar passar notificações contando a partir deste número"
+
+#~ msgid "Limit to the following hosts"
+#~ msgstr "Limite para os seguintes anfitriões"
+
+#~ msgid "Limit to the following services"
+#~ msgstr "Limite aos seguintes serviços"
+
+#~ msgid "Notification Options"
+#~ msgstr "Opções de Notificação"
+
+#~ msgid "Notification Plugin"
+#~ msgstr "Plugin de Notificação"
+
+#~ msgid "Notification time period"
+#~ msgstr "Período de tempo da notificação"
+
+#~ msgid ""
+#~ "Notifications are sent out when the status of a host or service changes."
+#~ msgstr ""
+#~ "As notificações são enviadas quando o status de um host ou serviço muda."
+
+#~ msgid "Notify by: "
+#~ msgstr "Notifique por: "
+
+#~ msgid ""
+#~ "Only during this time period the user will get notifications about host "
+#~ "or service alerts."
+#~ msgstr ""
+#~ "Somente durante este período de tempo o usuário receberá notificações "
+#~ "sobre alertas de host ou serviço."
+
+#~ msgid "Period end date"
+#~ msgstr "Data final do período"
+
+#~ msgid "Period start date"
+#~ msgstr "Data de início do período"
+
+#~ msgid "Plain Text Email (using configured templates)"
+#~ msgstr "E-mail de texto simples (usando modelos configurados)"
+
+#~ msgid "Plugin Arguments"
+#~ msgstr "Argumentos de Plugin"
+
+#~ msgid ""
+#~ "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
+#~ msgstr ""
+#~ "Restringir a n<sup>th</sup> to m<sup>th</sup> notification (escalação)"
+
+#~ msgid "Rule based notifications"
+#~ msgstr "Notificações baseadas em regras"
+
+#~ msgid "Rulebased notifications are activated"
+#~ msgstr "As notas baseadas em regras são ativadas"
+
+#~ msgid "Service Events"
+#~ msgstr "Eventos de Serviço"
+
+#~ msgid "Service events"
+#~ msgstr "Eventos de serviço"
+
+#~ msgid "Sizing"
+#~ msgstr "Dimensionamento"
+
+#~ msgid "Start or end of a scheduled downtime "
+#~ msgstr "Início ou fim de um período de inatividade programado "
+
+#~ msgid "Subscription details"
+#~ msgstr "Detalhes da assinatura"
+
+#~ msgid "Subscription settings"
+#~ msgstr "Definições de subscrição"
+
+#~ msgid "The list of services will never match"
+#~ msgstr "A lista de serviços nunca irá corresponder"
+
+#~ msgid ""
+#~ "The subscription details include period start date, end date and sizing. "
+#~ "The customer portal credentials can be found in your subscription "
+#~ "contract."
+#~ msgstr ""
+#~ "Os detalhes da assinatura incluem a data de início do período, data final "
+#~ "e tamanho. As credenciais do portal do cliente podem ser encontradas em "
+#~ "seu contrato de assinatura."
+
+#, fuzzy
+#~| msgid ""
+#~| "The subscription details include period start date, end date and sizing. "
+#~| "The customer portal credentials can be found in your subscription "
+#~| "contract. These are the same credentials also used for downloading <a "
+#~| "href=\"https://checkmk.de/download\">Checkmk<a>."
+#~ msgid ""
+#~ "The subscription details include period start date, end date and sizing. "
+#~ "The customer portal credentials can be found in your subscription "
+#~ "contract. These are the same credentials also used for downloading <a "
+#~ "href=\"https://checkmk.de/download\">Checkmk</a>."
+#~ msgstr ""
+#~ "Os detalhes da assinatura incluem a data de início do período, data final "
+#~ "e tamanho. As credenciais do portal do cliente podem ser encontradas em "
+#~ "seu contrato de assinatura. Estas são as mesmas credenciais também usadas "
+#~ "para download <a href=\"https://checkmk.de/download\">Checkmk<a>."
+
+#~ msgid ""
+#~ "You can specify arguments to the notification plugin here. Please refer "
+#~ "to the documentation about the plugin for what parameters are allowed or "
+#~ "required here."
+#~ msgstr ""
+#~ "É possível especificar aqui os argumentos para o plugin de notificação. "
+#~ "Consulte a documentação sobre o plugin para saber quais parâmetros são "
+#~ "permitidos ou necessários aqui."
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to configure a Email "
+#~ "address. You need to configure your mail address in order to be able to "
+#~ "receive emails."
+#~ msgstr ""
+#~ "Você ativou as notificações, mas não configurou um endereço de e-mail. "
+#~ "Você precisa configurar o seu endereço de e-mail para poder receber e-"
+#~ "mails."
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to make the user member of "
+#~ "at least one contact group. You need to make the user member of a contact "
+#~ "group which has hosts assigned in order to be able to receive emails."
+#~ msgstr ""
+#~ "Você ativou as notificações, mas falhou para tornar o usuário membro de "
+#~ "pelo menos um grupo de contato. Você precisa tornar o usuário membro de "
+#~ "um grupo de contato que tenha hosts designados para poder receber e-mails."
+
+#~ msgid "Your user has no roles. Please assign at least one role."
+#~ msgstr ""
+#~ "O seu utilizador não tem funções. Por favor, atribua pelo menos uma "
+#~ "função."
+
+#~ msgid "all events disabled"
+#~ msgstr "todos os eventos com deficiência"
+
+#~ msgid "enable notifications"
+#~ msgstr "permitir notificações"
+
+#~ msgid "end"
+#~ msgstr "final"
+
+#~ msgid "from"
+#~ msgstr "de"
+
+#~ msgid "not a contact"
+#~ msgstr "não é um contato"
+
+#~ msgid "start"
+#~ msgstr "início"
+
+#~ msgid "Append Age to output"
+#~ msgstr "Anexar Idade à saída"
+
+#~ msgid "Asynchronous execution"
+#~ msgstr "Execução assíncrona"
+
+#~ msgid "Docker Containers"
+#~ msgstr "Docker Containers"
+
+#~ msgid "Docker Disk Usage"
+#~ msgstr "Utilização do Disco de Docker"
+
+#~ msgid "Docker Disk Usage Count"
+#~ msgstr "Contagem de utilização do disco de doca"
+
+#~ msgid "Only digits and dots are allowed in the version number."
+#~ msgstr "Só são permitidos dígitos e pontos no número da versão."
 
 #, fuzzy
 #~| msgid "This package does not exist."
@@ -66889,9 +66995,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Checkmk versions"
 #~ msgstr "Versões Checkmk"
-
-#~ msgid "Docker containers"
-#~ msgstr "Docker contentores"
 
 #~ msgid "Docker images"
 #~ msgstr "Imagens do Docker"
@@ -69758,9 +69861,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 #~ msgid "Number of messages in defined timespan"
 #~ msgstr "Número de mensagens em tempos definidos"
 
-#~ msgid "Number of objects"
-#~ msgstr "Número de objetos"
-
 #~ msgid "Number of physical CPUs"
 #~ msgstr "Número de CPUs físicas"
 
@@ -70749,9 +70849,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "WATO is disabled."
 #~ msgstr "A WATO está desactivada."
-
-#~ msgid "Prometheus web port"
-#~ msgstr "porta web Prometheus"
 
 #~ msgid ""
 #~ "Define textfiles to be monitored. The full path is necessary. Glob "

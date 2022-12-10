@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-11-25 07:00+0000\n"
+"PO-Revision-Date: 2022-12-09 07:00+0000\n"
 "Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -59,9 +59,6 @@ msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
 
 msgid " (in relation to all successful packets)"
 msgstr " (im Bezug auf alle erfolgreichen Pakete)"
-
-msgid " (invalid)"
-msgstr " (ungültig)"
 
 msgid " (outdated)"
 msgstr " (veraltet)"
@@ -549,6 +546,10 @@ msgstr "%s Instanzen"
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s ist kein gültiger UNIX Zeitstempel"
 
+#, fuzzy, python-format
+msgid "%s is not a valid version number."
+msgstr "Das ist keine gültige Checkmk-Versionsnummer"
+
 #, python-format
 msgid "%s is not an allowed value"
 msgstr "%s ist kein erlaubter Wert"
@@ -871,9 +872,6 @@ msgstr ", innerhalb der letzten %.1f Checkperioden wurde keine Daten empfangen"
 msgid ", the first match skips this rule pack"
 msgstr ", der erste Treffer überspringt das Regelpaket"
 
-msgid "-"
-msgstr "-"
-
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -920,12 +918,6 @@ msgstr "1 Zeile"
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
-msgid "1.000.000 Services"
-msgstr "1.000.000 Services"
-
-msgid "1.500.000 Services"
-msgstr "1.500.000 Services"
-
 msgid "1/s"
 msgstr "1/s"
 
@@ -945,9 +937,6 @@ msgstr "100% entspricht Volllast bei allen Kernen"
 msgid "100.0 - 200.0 ms"
 msgstr "100.0 - 200.0 ms"
 
-msgid "100.000 Services"
-msgstr "100.000 Services"
-
 msgid "10x14"
 msgstr "10x14"
 
@@ -957,14 +946,8 @@ msgstr "Untere Schwellen für 12 Volt"
 msgid "12 Volt Output Upper Levels"
 msgstr "Obere Schwellen für 12 Volt"
 
-msgid "12.000 Services"
-msgstr "12.000 Services"
-
 msgid "15 minutes"
 msgstr "15 Min."
-
-msgid "18.000 Services"
-msgstr "18.000 Services"
 
 msgid "2 weeks back"
 msgstr "Vor 2 Wochen"
@@ -972,26 +955,14 @@ msgstr "Vor 2 Wochen"
 msgid "2.0 - 5.0 ms"
 msgstr "2.0 - 5.0 ms"
 
-msgid "2.000.000 Services"
-msgstr "2.000.000 Services"
-
-msgid "2.000.000+ Services"
-msgstr "2.000.000+ Services"
-
 msgid "20.0 - 50.0 ms"
 msgstr "20.0 - 50.0 ms"
 
 msgid "200.0 - 500.0 ms"
 msgstr "200.0 - 500.0 ms"
 
-msgid "200.000 Services"
-msgstr "200.000 Services"
-
 msgid "3 months"
 msgstr "3 Monate"
-
-msgid "3.000 Services"
-msgstr "3.000 Services"
 
 msgid "3.3 Volt Output Lower Levels"
 msgstr "Untere Schwellen für 3.3 Volt"
@@ -1001,12 +972,6 @@ msgstr "Obere Schwellen für 3.3 Volt"
 
 msgid "30 Minutes"
 msgstr "30 Minuten"
-
-msgid "30.000 Services"
-msgstr "30.000 Services"
-
-msgid "300.000 Services"
-msgstr "300.000 Services"
 
 msgid "32bit packaged binary"
 msgstr "Paketierte 32bit binary"
@@ -1050,18 +1015,12 @@ msgstr "50.0 - 100.0 ms"
 msgid "500.0+ ms"
 msgstr "500.0+ ms"
 
-msgid "500.000 Services"
-msgstr "500.000 Services"
-
 #, fuzzy
 msgid "50th percentile"
 msgstr "Prozent"
 
 msgid "6 months"
 msgstr "6 Monate"
-
-msgid "60.000 Services"
-msgstr "60.000 Services"
 
 msgid "64bit packaged binary"
 msgstr "Paketierte 64bit binary"
@@ -1077,9 +1036,6 @@ msgstr "Helligkeit Siebensegmentanzeige"
 
 msgid "7-segment display uid"
 msgstr "UID Siebensegmentanzeige"
-
-msgid "7.000 Services"
-msgstr "7.000 Services"
 
 msgid "8 days back"
 msgstr "Vor 8 Tagen"
@@ -1186,21 +1142,6 @@ msgstr ""
 #, python-format
 msgid "<b>Warning:</b> There are %d unacknowledged incompatible werks:"
 msgstr "<b>Warnung:</b> Es gibt %d unquittierte Werks:"
-
-#, python-format
-msgid ""
-"<b>Warning</b><br><br>Rule based notifications are disabled in your global "
-"settings. The rules that you edit here will have affect only on "
-"notifications that are created by the Event Console. Normal monitoring "
-"alerts will <b>not</b> use the rule based notifications now.<br><br>You can "
-"change this setting <a href=\"%s\">here</a>."
-msgstr ""
-"<b>Warnung</b><br><br>Die regelbasierte Alarmierung sind in den globalen "
-"Einstellungen deaktiviert. Die Regeln, welche Sie hier editieren, werden nur "
-"solche Alarme beeinflussen, die von der Event Console weitergeleitet wurden. "
-"Normale Alarma aus dem Monitoring benutzen die regelbasierte Alarmierung "
-"aktuell <b>nicht</b>.<br><br>Sie können diese Einstellung <a href=\"%s"
-"\">hier</a> ändern."
 
 #, python-format
 msgid ""
@@ -1839,15 +1780,15 @@ msgstr ""
 "entsprechenden Protokolle zu löschen. Bei anderen Zuständen werden die "
 "Protokolleinträge beibehalten, aber ihr Zustand wird neu klassifiziert.</p>"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<p>You can optionally define one or multiple regular expressions where a "
 "matching case will result in the exclusion of the concerning %s(s). This "
 "allows to ignore services which are known to fail beforehand. </p>"
 msgstr ""
 "<p>Sie können optional einen oder mehrere reguläre Ausdrücke definieren, bei "
-"denen ein Treffer zum Ausschluss des/der betreffenden Dienstes(e) führt. "
-"Dies ermöglicht es Dienste zu ignorieren von denen bekannt ist dass sie "
+"denen ein Treffer zum Ausschluss des/der betreffenden %s(s) führt. Dies "
+"ermöglicht es Dienste zu ignorieren von denen bekannt ist, dass sie "
 "fehlschlagen werden. </p>"
 
 msgid ""
@@ -2454,9 +2395,8 @@ msgstr "AWS Merkmale"
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
 
-#, fuzzy
 msgid "AWS/CloudFront"
-msgstr "CloudFront"
+msgstr "AWS/CloudFront"
 
 msgid "AWS/CloudWatch Alarms Limits"
 msgstr "Grenzwerte von AWS/CloudWatch Alarme"
@@ -2482,9 +2422,8 @@ msgstr "AWS/EC2 CPU Guthaben"
 msgid "AWS/EC2 Limits"
 msgstr "AWS/EC2-Grenzwerte"
 
-#, fuzzy
 msgid "AWS/ECS Limits"
-msgstr "AWS/EBS GrenzwerteELB"
+msgstr "AWS/ECS Grenzwerte"
 
 msgid "AWS/ELB Backend Connection Errors"
 msgstr "AWS/ELB Backend Verbindungsfehler"
@@ -2513,9 +2452,8 @@ msgstr "AWS/ELBv2 LCU"
 msgid "AWS/ELBv2 Limits"
 msgstr "AWS/ELBv2 Grenzwerte"
 
-#, fuzzy
 msgid "AWS/ElastiCache Limits"
-msgstr "AWS/Glacier 'Limits'"
+msgstr "AWS/ElastiCache Grenzwerte"
 
 msgid "AWS/Glacier Limits"
 msgstr "AWS/Glacier 'Limits'"
@@ -2530,13 +2468,11 @@ msgstr "AWS/Glacier 'Vaults'"
 msgid "AWS/Lambda Concurrency"
 msgstr "Leistung"
 
-#, fuzzy
 msgid "AWS/Lambda Memory"
-msgstr "Leistung"
+msgstr "AWS/Lambda Speicher"
 
-#, fuzzy
 msgid "AWS/Lambda Performance"
-msgstr "Leistung"
+msgstr "AWS/Lambda Performance"
 
 msgid "AWS/RDS CPU Credits"
 msgstr "AWS/RDS CPU Credits"
@@ -2553,9 +2489,8 @@ msgstr "AWS/RDS Grenzwerte"
 msgid "AWS/RDS Replica lag"
 msgstr "AWS/RDS Replica lag"
 
-#, fuzzy
 msgid "AWS/Route53"
-msgstr "Route53"
+msgstr "AWS/Route53"
 
 msgid "AWS/S3 Bucket Objects"
 msgstr "AWS/S3 Bucket-Objekte"
@@ -2575,9 +2510,8 @@ msgstr "AWS/S3 Latenzzeit"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzwerte"
 
-#, fuzzy
 msgid "AWS/SNS Limits"
-msgstr "AWS/S3 Grenzwerte"
+msgstr "AWS/SNS Grenzwerte"
 
 msgid "AWS/WAFV2 Limits"
 msgstr "AWS/WAFV2 Grenzwerte"
@@ -2673,9 +2607,8 @@ msgstr "Absolute Schwellwerte für freien temporären Speicherplatz"
 msgid "Absolute levels for input traffic"
 msgstr "Absolute Schwellwerte für eigehenden Verkehr"
 
-#, fuzzy
 msgid "Absolute levels for logged-in users"
-msgstr "Absolute Schwellen für belegten %s"
+msgstr "Absolute Schwellen für angemeldete Benutzer"
 
 msgid "Absolute levels for memory reclaimed by GC"
 msgstr "Absolute Schwellwerte für Arbeitsspeicher 'reclaimed by GC'"
@@ -2720,9 +2653,8 @@ msgstr "Absolute Schwellen für benutzte Leases"
 msgid "Absolute value"
 msgstr "Absoluter Wert"
 
-#, fuzzy
 msgid "Accept TLS encrypted connections only"
-msgstr "Angenommene Verbindungen"
+msgstr "Nur TLS-verschlüsselte Verbindungen akzeptieren"
 
 msgid "Accept all"
 msgstr "Alle akzeptieren"
@@ -2730,9 +2662,8 @@ msgstr "Alle akzeptieren"
 msgid "Accept all incoming data, including unencrypted"
 msgstr "Akzeptieren Sie alle eingehenden Daten, auch unverschlüsselte"
 
-#, fuzzy
 msgid "Accept all types of encryption"
-msgstr "Statusverschlüsselung"
+msgstr "Alle Arten von Verschlüsselung akzeptieren"
 
 msgid "Accept any SSH Host Key"
 msgstr "Jeden SSH-Hostschlüssel akzeptieren"
@@ -2877,14 +2808,8 @@ msgstr "Autor der Quittierung"
 msgid "Acknowledgement Comment"
 msgstr "Autor des Kommentars"
 
-msgid "Acknowledgement of host problem"
-msgstr "Quittierung von Hostproblem"
-
 msgid "Acknowledgement of problem"
 msgstr "Quittierung von Problem"
-
-msgid "Acknowledgement of service problem"
-msgstr "Quittierung von Service-Problem"
 
 msgid "Act."
 msgstr "Akt."
@@ -3321,9 +3246,6 @@ msgstr "Kunde hinzufügen"
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
 
-msgid "Add details manually"
-msgstr "Details manuell hinzufügen"
-
 msgid "Add diskstate rule"
 msgstr "Regel hinzufügen"
 
@@ -3502,9 +3424,6 @@ msgstr "Neues Thema hinzufügen"
 
 msgid "Add new user configuration"
 msgstr "Neue Benutzerkonfiguration hinzufügen"
-
-msgid "Add notification"
-msgstr "Alarm ergänzen"
 
 msgid "Add notification rule"
 msgstr "Benachrichtigungsregel hinzufügen"
@@ -3756,9 +3675,9 @@ msgstr "Zusätzliche IPv6-Adressen"
 msgid "Additional Plugin Output"
 msgstr "Zusätzliche Pluginausgabe"
 
-#, fuzzy
 msgid "Additional agent labels to send during registration"
-msgstr "Zusätzliche Nachrichten die den Regel-Status beschreiben"
+msgstr ""
+"Zusätzliche Agenten-Labels, die bei der Registrierung zu versenden sind"
 
 msgid "Additional header lines"
 msgstr "Zusätzliche Headerzeilen"
@@ -4188,9 +4107,8 @@ msgstr "Zugriffsregeln des Agents"
 msgid "Agent bakery"
 msgstr "Agentenbäckerei"
 
-#, fuzzy
 msgid "Agent bakery logging"
-msgstr "Agentenbäckerei"
+msgstr "Agentenbäckerei logging"
 
 msgid "Agent bakery packages"
 msgstr "Agent Bäckerei Pakete"
@@ -4204,19 +4122,18 @@ msgstr "Agentenbacken und signieren."
 msgid "Agent baking finished."
 msgstr "Agentenbacken beendet."
 
-msgid "Agent based plugins (Checks, Inventory)"
+#, fuzzy
+msgid "Agent based plugins (Checks, Inventory),"
 msgstr "Agenten-basierte Plugins (Checks, Inventory)"
 
 msgid "Agent controller"
 msgstr "Agent-Controller"
 
-#, fuzzy
 msgid "Agent controller auto-registration"
-msgstr "Registrierung als Agent"
+msgstr "Automatische Registrierung von Agent-Controllern"
 
-#, fuzzy
 msgid "Agent controller deployment"
-msgstr "Agent-Controller"
+msgstr "Agent-Controller deployment"
 
 msgid "Agent deployment"
 msgstr "Bereitstellung des Agenten"
@@ -4268,9 +4185,8 @@ msgstr "Agenten-Signaturschlüssel"
 msgid "Agent signing"
 msgstr "Agent signieren"
 
-#, fuzzy
 msgid "Agent type"
-msgstr "Kommentartyp"
+msgstr "Agent-Type"
 
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agent-Updater (Linux, Windows, Solaris)"
@@ -5273,9 +5189,6 @@ msgstr "Auftreten von Gruppen-Mitgliedern in der Service-Ausgabe"
 msgid "Appearance of network interface"
 msgstr "Einsatz einer Netzwerkschnittstelle"
 
-msgid "Append Age to output"
-msgstr "Alter an Ausgabe anhängen"
-
 msgid "Append descriptions of OIDs to message texts"
 msgstr "Beschreibungen von OIDs an Nachrichtentexte anhängen"
 
@@ -5290,6 +5203,10 @@ msgstr "Anwendung (regulärer Ausdruck)"
 
 msgid "Application / Syslog-Tag"
 msgstr "Anwendung/Syslog Tag"
+
+#, fuzzy
+msgid "Application ID"
+msgstr "Anwendung"
 
 msgid "Application Key"
 msgstr "Anwendungsschlüssel"
@@ -5654,9 +5571,6 @@ msgstr "Asynchron"
 
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
-
-msgid "Asynchronous execution"
-msgstr "Asynchrone Ausführung"
 
 msgid "Asynchronous execution of plugins"
 msgstr "Asynchrone Ausführen von Plugins"
@@ -6767,9 +6681,6 @@ msgstr "Bits"
 
 msgid "Bits per second"
 msgstr "Bits p. Sek."
-
-msgid "Blacklist the following services"
-msgstr "Die folgenden Services ausschließen"
 
 msgid "Block storage name"
 msgstr "Paketname:"
@@ -8362,7 +8273,7 @@ msgid "Capacity filled"
 msgstr "Gefüllte Papiermenge"
 
 msgid "Capacity providers per cluster"
-msgstr ""
+msgstr "Capacity providers pro Cluster"
 
 msgid "Capacity remaining"
 msgstr "Verbleibende Kapazität"
@@ -9343,6 +9254,8 @@ msgid ""
 "Choose the Checkmk state in case of probe state not OK (probe state metric "
 "is 0)."
 msgstr ""
+"Wählen Sie den Status Checkmk, wenn der Sondierungsstatus nicht OK ist "
+"(Sondierungsstatus-Metrik ist 0)."
 
 msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
@@ -10388,6 +10301,8 @@ msgid ""
 "Configure TLS certificate validation for querying the agent receiver port "
 "from the Checkmk REST API"
 msgstr ""
+"Konfigurieren Sie die TLS-Zertifikatsvalidierung für die Abfrage des Agenten-"
+"Empfängerports von der Checkmk REST-API"
 
 msgid "Configure Windows Firewall to allow host monitoring"
 msgstr "Konfiguriere Windows Firewall so, dass Host Monitoring erlaubt ist"
@@ -10457,21 +10372,6 @@ msgstr "Konfigurieren Sie die Stufen der Richtlinienverletzung"
 #, fuzzy
 msgid "Configure proxy server usage"
 msgstr "Prozentuale Schwellen für verbrauchten Speicherplatz"
-
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here."
-msgstr ""
-"Konfigurieren Sie hier reguläre Ausdrücke, die auf den Anfang von Service-"
-"Namen passen."
-
-msgid ""
-"Configure regular expressions that match the beginning of the service names "
-"here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> that "
-"service."
-msgstr ""
-"Konfiguriere reguläre Ausdrücke die auf den Anfang von Service-Namen zu-"
-"treffen. Präfix <tt>!</tt> um den Service <i>auszuschließen</i>."
 
 msgid "Configure restrictions manually"
 msgstr "Einschränkungen manuell konfigurieren"
@@ -10594,14 +10494,6 @@ msgid ""
 "can eg. be configured to accumulate all indices which only differ in the "
 "trailing timestamp into a single service."
 msgstr ""
-
-msgid ""
-"Configure the hosts for this notification. Without prefix, only exact, case "
-"sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
-msgstr ""
-"Hosts für diese Alarmierung konfigurieren. Ohne Präfix, exakte "
-"Übereinstimmung. <tt>!</tt> am Anfang bedeutet Negation, <tt>~</tt> leitet "
-"einen regulären Ausdruck ein."
 
 #, python-format
 msgid ""
@@ -11233,10 +11125,12 @@ msgstr "Logdateien"
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core.%s"
 msgstr ""
+"Prozessorkerndateien (config, state und History) aus var/check_mk/core.%s"
 
 #, python-format
 msgid "Core files (config, state and history) from var/check_mk/core: %s"
 msgstr ""
+"Prozessorkerndateien (config, state und History) aus var/check_mk/core: %s"
 
 msgid "Core produced a notification"
 msgstr "Der Kern hat einen Alarm produziert"
@@ -12128,9 +12022,6 @@ msgstr "Die Ausführung des Jobs vorübergehend deaktivieren"
 msgid "Currently disable this aggregation"
 msgstr "Deaktiviere diese Aggregation"
 
-msgid "Currently disable this notification"
-msgstr "Deaktiviere diesen Alarm"
-
 msgid "Currently in downtime"
 msgstr "Zur Zeit in Wartung"
 
@@ -12277,9 +12168,6 @@ msgstr "Benutzerdefinierte Integrationen"
 msgid "Custom label"
 msgstr "Benutzerdefiniertes Etikett"
 
-msgid "Custom limit"
-msgstr "Individuelle Begrenzung"
-
 msgid "Custom localizations"
 msgstr "Angepasste Lokalisierungen"
 
@@ -12392,17 +12280,11 @@ msgstr "Kunde: Anzahl von Services mit Status PENDING"
 msgid "Customer number of services in state WARN"
 msgstr "Kunde: Anzahl von Services mit Status WARN"
 
-msgid "Customer portal credentials"
-msgstr "Anmeldedaten für das Kundenportal"
-
 msgid "Customer properties"
 msgstr "Kundeneigenschaften"
 
 msgid "Customer report layout"
 msgstr "Layout des Kundenberichts"
-
-msgid "Customer shortcut"
-msgstr "Kundenkürzel"
 
 msgid "Customer specific report layout"
 msgstr "Kundenspezifisches Report-Layout"
@@ -15073,7 +14955,7 @@ msgstr ""
 "Überwachungshistorie und Protokolldateien erstellen."
 
 msgid "Do not bake a generic agent package for this folder."
-msgstr ""
+msgstr "Backen Sie kein allgemeines Agentenpaket für diesen Ordner."
 
 msgid "Do not check"
 msgstr "Nicht überprüfen"
@@ -15384,7 +15266,7 @@ msgid "Do not impose levels, always be OK"
 msgstr "Keine Schwellwerte anwenden, immer OK"
 
 msgid "Do not manage the controllers auto-registration"
-msgstr ""
+msgstr "Die automatische Registrierung von Controllern nicht verwalten"
 
 msgid "Do not match Event Console alerts"
 msgstr "Alarme von der Event Console aussortieren"
@@ -15457,13 +15339,10 @@ msgid "Do not use absolute levels"
 msgstr "Keine absolute Schwellen benutzen"
 
 msgid "Do not validate server certificate during port query"
-msgstr ""
+msgstr "Serverzertifikat bei Portabfrage nicht validieren"
 
 msgid "Do now show reserved space"
 msgstr "Reservierten Platz nicht anzeigen"
-
-msgid "Do only notifiy alerts within this time period"
-msgstr "Führe Alarme nur innerhalb der Zeitperiode durch"
 
 msgid "Do status data inventory"
 msgstr "Statusdaten-Inventur durchführen"
@@ -15718,14 +15597,8 @@ msgstr ""
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Wollen Sie den Modes des Ereignis Daemon wirklich umschalten?"
 
-msgid "Docker Containers"
+msgid "Docker containers"
 msgstr "Docker Container"
-
-msgid "Docker Disk Usage"
-msgstr "Docker Festplattennutzung"
-
-msgid "Docker Disk Usage Count"
-msgstr "Docker Festplattennutzung nach Anzahl"
 
 msgid "Docker node"
 msgstr "Docker-Node"
@@ -16022,8 +15895,8 @@ msgstr ""
 "Aggregation nur einmal konfiguriert haben. Hinweis: Sie können im Titel der "
 "Toplevel-Aggregation Argumente verwenden, wie <tt>Host $HOST$</tt>."
 
-#, python-format
-msgid "Duplicate tag ID \"%s\" in auxilary tags"
+#, fuzzy, python-format
+msgid "Duplicate tag ID \"%s\" in auxiliary tags"
 msgstr "Doppelte Tag-ID \"%s\" in den Hilfsmerkmalen"
 
 msgid "Duplicated messages management"
@@ -16894,10 +16767,10 @@ msgid "Enable automatic host removal"
 msgstr "Automatische Agentupdates aktivieren"
 
 msgid "Enable community translated languages"
-msgstr ""
+msgstr "Aktivieren Sie Community übersetzte Sprachen"
 
 msgid "Enable community translated languages (not supported)"
-msgstr ""
+msgstr "Aktivieren Sie Community übersetzte Sprachen (nicht supported)"
 
 #, fuzzy
 msgid "Enable controller"
@@ -16950,9 +16823,6 @@ msgstr "Protokollierung von Anmeldefehlern einschalten"
 
 msgid "Enable login via GET requests"
 msgstr "Anmeldung über GET-Anfragen aktivieren"
-
-msgid "Enable new rule based notifications"
-msgstr "Regelbasierte Alarmierung einschalten"
 
 msgid "Enable notification logging"
 msgstr "Protokollierung der Alarme einschalten"
@@ -17070,9 +16940,6 @@ msgstr "Aktivierte Sektionen (Windows Agent)"
 
 msgid "Enabled until disabling"
 msgstr "Bis zum manuellen Deaktivieren aktiv"
-
-msgid "Enabling"
-msgstr "Aktivieren"
 
 msgid ""
 "Enabling the bulk notifications will collect several subsequent "
@@ -17266,9 +17133,6 @@ msgstr "Engine-IDs (nur für SNMPv3 benötigt)"
 
 msgid "English"
 msgstr "Englisch"
-
-msgid "Enrich with usage data from Checkmk Cluster Collector"
-msgstr "Anreicherung mit Nutzungsdaten aus dem Checkmk Cluster Collector"
 
 msgid "Enter"
 msgstr "OK"
@@ -19148,30 +19012,11 @@ msgstr "Belegung von Flash-Speicher"
 msgid "Flex. Duration"
 msgstr "Flexible Dauer"
 
-msgid "Flexible Custom Notifications"
-msgstr "Flexible benutzerdefinierte Alarme"
-
-msgid "Flexible and plain email notifications"
-msgstr "Flexible und einfache Text-E-Mail Alarmierung"
-
-msgid ""
-"Flexible and plain email notifications are considered deprecated in version "
-"1.5.0 and  will be removed in Checkmk version 1.6.0. Please consider to "
-"switch to rulebased notifications."
-msgstr ""
-"Die flexible Alarmierung sowie die einfache Alarmierung über Emails werden "
-"ab der Version 1.5.0 als veraltet angesehen und werden in der Checkmk-"
-"Version 1.6.0 entfernt. Eine Umstellung auf die regelbasierte Alarmierung "
-"wird empfohlen."
-
 msgid "Flexible downtime"
 msgstr "Flexible Wartung"
 
 msgid "Flexible downtime duration:"
 msgstr "Flexible Wartungsdauer"
-
-msgid "Flexible notification rule"
-msgstr "Regel der flexiblen Alarmierung"
 
 msgid "Floating point number"
 msgstr "Fließkommazahl"
@@ -20253,7 +20098,7 @@ msgid "Going to update %d sites"
 msgstr "Werde %d Instanzen aktualisieren"
 
 msgid "Good"
-msgstr ""
+msgstr "Gut"
 
 msgid "Google Cloud Platform"
 msgstr "Google Cloud-Plattform"
@@ -20584,6 +20429,9 @@ msgstr "HAproxy Frontend-Status"
 
 msgid "HAproxy Server State"
 msgstr "HAproxy-Server-Status"
+
+msgid "HELP"
+msgstr ""
 
 msgid "HH:MM:SS"
 msgstr "HH:MM:SS"
@@ -21034,13 +20882,6 @@ msgstr ""
 "Hier können Sie globale Einstellungen konfigurieren, die nur für diese Site "
 "gelten sollten. <b>Hinweis</b>: Das ist nur sinnvoll, wenn es sich um einen "
 "Konfigurations-Slave handelt."
-
-msgid ""
-"Here you can configure how you want to be notified about host and service "
-"problems and other monitoring events."
-msgstr ""
-"Hier legen Sie fest wie Sie über Host-/Serviceprobleme (und andere "
-"Ereignisse) alarmiert werden möchten."
 
 msgid ""
 "Here you can configure levels for usage, requests utilization and limits "
@@ -21742,15 +21583,6 @@ msgstr ""
 "backen."
 
 msgid ""
-"Here you specify which types of alerts will be notified to this contact. "
-"Note: these settings will only be saved and used if the user is member of a "
-"contact group."
-msgstr ""
-"Hier legen Sie fest bei welchen Alarmtypen der Kontakt alarmiert wird. "
-"Achtung: diese Einstellungen werden nur dann gespeichert/verwendet wenn der "
-"Benutzer Mitglied der Kontaktgruppe ist."
-
-msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
 "example, you can make certain filters mandatory. This enables you to build "
@@ -21803,8 +21635,16 @@ msgstr ""
 msgid "Hidden"
 msgstr "Versteckt"
 
+#, python-format
+msgid "Hide %s"
+msgstr "Blende %s aus"
+
 msgid "Hide Checkmk version"
 msgstr "Die Checkmk-Version verbergen"
+
+#, fuzzy
+msgid "Hide all settings"
+msgstr "Alle Einstellungen zeigen"
 
 msgid "Hide analysis"
 msgstr "Analyse ausblenden"
@@ -21814,6 +21654,22 @@ msgstr "Anmerkung im Bericht ausblenden"
 
 msgid "Hide bulks"
 msgstr "Sammelalarme ausblenden"
+
+msgid "Hide check parameters"
+msgstr "Check-Parameter verstecken"
+
+msgid "Hide checkboxes"
+msgstr "Checkboxen verstecken"
+
+msgid "Hide context"
+msgstr "Kontext ausblenden"
+
+#, fuzzy
+msgid "Hide details"
+msgstr "Details ausblenden"
+
+msgid "Hide discovered service labels"
+msgstr "Erkannte Service-Labels ausblenden"
 
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
@@ -21841,6 +21697,9 @@ msgstr "Interne Ordnernamen in WATO verstecken"
 
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
+
+msgid "Hide plugin names"
+msgstr "Namen von Plugins ausblenden"
 
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
@@ -22139,9 +21998,6 @@ msgstr "Host unten"
 msgid "Host event limit"
 msgstr "Host-Ereignis-Limit"
 
-msgid "Host events"
-msgstr "Hostereignisse"
-
 msgid "Host gets unreachble"
 msgstr "Host wird unerreichbar"
 
@@ -22265,11 +22121,6 @@ msgstr "Hostalarme aktiviert"
 msgid "Host or Disk"
 msgstr "Host oder Platte"
 
-msgid ""
-"Host or Service must be in the following service level to get notification"
-msgstr ""
-"Host/Service muss den folgenden Servicelevel haben, damit alarmiert wird"
-
 #, python-format
 msgid "Host or service %ss"
 msgstr "Host oder Service %ss"
@@ -22375,7 +22226,7 @@ msgstr "Zu verwendender Host für die Verbindung zu Cisco Prime"
 
 #, python-format
 msgid "Host uses xinetd or systemd %s"
-msgstr ""
+msgstr "Host verwendet xinetd oder systemd %s"
 
 msgid "Host&nbsp;status"
 msgstr "Host-Status"
@@ -22601,8 +22452,9 @@ msgid "Hosts using a specific SNMP Backend (Enterprise Edition only)"
 msgstr ""
 "Hosts, die ein bestimmtes SNMP-Backend verwenden (nur Enterprise-Edition)"
 
+#, fuzzy
 msgid ""
-"Hosts where this tag group is explicitely set and that are effected by the "
+"Hosts where this tag group is explicitly set and that are effected by the "
 "change"
 msgstr "Hosts mit dieser Merkmal-Gruppe die von Änderung betroffen sind."
 
@@ -23307,6 +23159,8 @@ msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
+"Wenn gegeben, Weiterleitung der Ausgabe an einen anderen Host unter "
+"Verwendung des Piggyback-Mechanismus."
 
 msgid ""
 "If in this time range the configured number of time the rule is triggered, "
@@ -23550,6 +23404,8 @@ msgid ""
 "If this is active, the controller will keep all other connections, that "
 "might have been created manually."
 msgstr ""
+"Wenn diese Option aktiviert ist, behält der Controller alle anderen "
+"Verbindungen bei, welche möglicherweise manuell erstellt wurden."
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -23865,6 +23721,13 @@ msgid ""
 "encryption is not only useless, but also prevents the controller from "
 "compressing the data for transport."
 msgstr ""
+"Wenn Sie die verschlüsselten TLS-Verbindungen des Agentencontrollers nicht "
+"verwenden können, können Sie auf die alte symmetrische Verschlüsselung auf "
+"der Basis von OpenSSH zurückgreifen (sofern Ihr Hostsystem diese "
+"unterstützt).\n"
+"Beachten Sie, dass die Verwendung dieser Verschlüsselung zusätzlich zur TLS-"
+"Verschlüsselung nicht nur nutzlos ist, sondern auch verhindert, dass der "
+"Controller die Daten für den Transport komprimiert."
 
 msgid ""
 "If you change this paths away from its default then the package will <b>not</"
@@ -24021,16 +23884,6 @@ msgstr ""
 "Verbindung zur entfernten Instanz aufrechtzuerhalten. Bitte beachten: Erhöht "
 "die Verarbeitungsgeschwindigkeit - sperrt aber zahlreiche Prozesse im "
 "Livestatus Modul der Zielinstanz."
-
-msgid ""
-"If you enable the new rule based notifications then the current plain text "
-"email and &quot;flexible notifications&quot; will become inactive. Instead "
-"notificatios will be configured with the WATO module <i>Notifications</i> on "
-"a global base."
-msgstr ""
-"Wenn Sie die regelbasierten Alarmierung einschalten, dann wird der einfach "
-"Emailversand und die &quot;flexiblen Alarme&quot; deaktiviert. Anstelle "
-"dessen konfigurieren Sie die Alarme über das WATO-Modul <i>Alarmierung</i>."
 
 msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
@@ -24567,7 +24420,7 @@ msgid "Ignore port types during discovery"
 msgstr "Ignoriere Port-Typen während der Service-Erkennung"
 
 msgid "Ignore proxies configured on the target system"
-msgstr ""
+msgstr "Auf dem Zielsystem konfigurierte Proxys ignorieren"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignoriere geplante Wartungszeiten"
@@ -24888,6 +24741,9 @@ msgid ""
 "In case you want to disable this instance, not acquire data from ntopng and "
 "disable all ntopng integration views, let this checkbox unchecked."
 msgstr ""
+"Wenn Sie diese Instanz deaktivieren, keine Daten von ntopng beziehen und "
+"alle ntopng-Integrationsansichten deaktivieren möchten, lassen Sie diese "
+"Checkbox deaktiviert."
 
 msgid ""
 "In case you want to either map a state determined by a check to another "
@@ -25307,7 +25163,7 @@ msgid "Indexes to search"
 msgstr "Suche zurücksetzen"
 
 msgid "Indexes to search, defaults to '*', which means all indexes."
-msgstr ""
+msgstr "Zu durchsuchende Indexe, Standardwert ist \"*\", d.h. alle Indexe."
 
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
@@ -25418,7 +25274,7 @@ msgid "Inherited from "
 msgstr "Geerbt von "
 
 msgid "Init duration with absolute limits"
-msgstr ""
+msgstr "Init Dauer mit absoluten Grenzen"
 
 msgid "Initial Scheduling"
 msgstr "Erstmaliges Ausführen von Checks"
@@ -26056,16 +25912,6 @@ msgstr "Ungültige Sicherung (zu klein)"
 
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
-
-#, python-format
-msgid "Invalid subscription %s date"
-msgstr "Ungültiges %s-Datum in Subskription"
-
-msgid "Invalid subscription period. Must be at least one year"
-msgstr "Ungültige Abonnementdauer. Muss mindestens ein Jahr betragen"
-
-msgid "Invalid subscription sizing"
-msgstr "Ungültige Größe der Subskription"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -27208,9 +27054,6 @@ msgstr "Queuelänge von eingehenden Mails"
 msgid "Length of output queue"
 msgstr "Länge der Outputqueue"
 
-msgid "Let through notifications counting from this number"
-msgstr "Alarme ab dieser Anzahl durchlassen"
-
 msgid ""
 "Let through notifications counting from this number. The first notification "
 "always has the number 1."
@@ -27834,6 +27677,10 @@ msgstr "Lizenzvereinbarung"
 msgid "License details"
 msgstr "Details ausblenden"
 
+#, fuzzy
+msgid "License key"
+msgstr "Lizenznutzung"
+
 msgid "License state"
 msgstr "Lizenzstatus"
 
@@ -27841,10 +27688,18 @@ msgid "License usage"
 msgstr "Lizenznutzung"
 
 #, fuzzy
+msgid "License verification"
+msgstr "SSL Zertifikats Überprüfung"
+
+#, fuzzy
 msgid "Licensing"
 msgstr "Lizenzierungsstatus"
 
 msgid "Licensing Status"
+msgstr "Lizenzierungsstatus"
+
+#, fuzzy
+msgid "Licensing settings"
 msgstr "Lizenzierungsstatus"
 
 msgid "Liebert UPS Device: Temperature sensor"
@@ -27935,12 +27790,6 @@ msgstr "Die Anzahl der Zeilen in Ansichten begrenzen"
 
 msgid "Limit the number of rows shown in tables"
 msgstr "Limitierung der maximalen Zahl von Zeilen in Tabellen"
-
-msgid "Limit to the following hosts"
-msgstr "Limit für die folgenden Hosts"
-
-msgid "Limit to the following services"
-msgstr "Limitiere auf die folgenden Services"
 
 msgid "Limit width"
 msgstr "Breite begrenzen"
@@ -29007,6 +28856,11 @@ msgstr "FEHLT '%s'"
 
 msgid "MK Remote Plugin Executor (MRPE)"
 msgstr "MK Remote Plugin Executor (MRPE)"
+
+#, python-format
+msgid ""
+"MKPs enforce semantic versioning. Please refer to %ssemver.org%s for details."
+msgstr ""
 
 msgid "MQTT broker statistics"
 msgstr "MQTT-Broker-Statistiken"
@@ -31108,7 +30962,7 @@ msgid "Monitor namespaces matching"
 msgstr "Überwachen Sie übereinstimmende Namensräume"
 
 msgid "Monitor other than Android or iOS devices"
-msgstr ""
+msgstr "Andere Geräte als Android oder iOS überwachen"
 
 msgid "Monitor request metrics"
 msgstr "Überwachung von Anforderungsmetriken"
@@ -32969,6 +32823,9 @@ msgid ""
 "Note that since OpenSSH 7.6, only version 2 is supported. Therefore, newer "
 "versions neither use nor report this configuration variable anymore."
 msgstr ""
+"Beachten Sie, dass seit OpenSSH 7.6 nur noch Version 2 unterstützt wird. "
+"Daher verwenden neuere Versionen diese Konfigurationsvariable nicht mehr und "
+"melden sie auch nicht."
 
 msgid "Note while closing"
 msgstr "Hinweis beim Schließen"
@@ -33080,14 +32937,8 @@ msgstr "Alarmierungs-Kommentar"
 msgid "Notification Method"
 msgstr "Alarmierungsmethode"
 
-msgid "Notification Options"
-msgstr "Alarmierungsoptionen"
-
 msgid "Notification Period"
 msgstr "Alarmierungsmethode"
-
-msgid "Notification Plugin"
-msgstr "Alarmierungs-Plugin"
 
 msgid "Notification Rules"
 msgstr "Alarmierungsregeln"
@@ -33158,9 +33009,6 @@ msgstr "Sortierungsreihenfolge für Sammelalarme"
 msgid "Notification system"
 msgstr "Alarmierungssystem"
 
-msgid "Notification time period"
-msgstr "Zeitperiode für Alarme"
-
 msgid "Notifications"
 msgstr "Alarmierung"
 
@@ -33187,10 +33035,6 @@ msgstr "Alarme für %s sind manuell abgeschaltet"
 msgid "Notifications are manually enabled for this %s"
 msgstr "Alarme für %s sind manuell eingeschaltet"
 
-msgid ""
-"Notifications are sent out when the status of a host or service changes."
-msgstr "Alarme werden versandt wenn sich der Status ändert."
-
 msgid "Notified events for hosts"
 msgstr "Alarmierte Ereignisse fur Hosts"
 
@@ -33207,9 +33051,6 @@ msgid "Notify all users that have configured an email address in their profile"
 msgstr ""
 "Alle Benutzer alarmieren, die in ihrem Profil eine Email-Adresse angegeben "
 "haben"
-
-msgid "Notify by: "
-msgstr "Alarm von: "
 
 msgid "November"
 msgstr "November"
@@ -33593,6 +33434,9 @@ msgstr "Anzahl der Alarmierungen als Text"
 
 msgid "Number of notifications exceeds maximum allowed number"
 msgstr "Anzahl von Alarme übersteigt erlaubte Höchstzahl"
+
+msgid "Number of objects"
+msgstr "Anzahl an Objekten"
 
 msgid "Number of ongoing shard info requests"
 msgstr "Anzahl von laufenden Shard Anfragen"
@@ -34058,6 +33902,10 @@ msgstr "Offlinesequenzen ausgehend"
 msgid "Offline to spare ratio"
 msgstr "Verhältnis von offline zu spare"
 
+#, fuzzy
+msgid "Offline verification"
+msgstr "SSL Zertifikats Überprüfung"
+
 msgid "Offset"
 msgstr "Offset"
 
@@ -34213,6 +34061,10 @@ msgstr "online"
 msgid "Online (Version: %s, Edition: %s)"
 msgstr "Online (Version: %s, Edition: %s)"
 
+#, fuzzy
+msgid "Online verification"
+msgstr "SSL Zertifikats Überprüfung"
+
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Nur A-Z, a-z, 0-9 und Minus (-) sind erlaubt."
 
@@ -34266,9 +34118,6 @@ msgstr ""
 "Kümmern Sie sich nur um Hosts, die Huckepackdaten von Hosts erhalten, deren "
 "Name einem dieser regulären Ausdrücke entspricht."
 
-msgid "Only digits and dots are allowed in the version number."
-msgstr "In der Versionsnummer sind nur Ziffern und Punkte erlaubt."
-
 msgid "Only discover monitors in the following states"
 msgstr "Entdecken Sie nur Monitore in den folgenden Staaten"
 
@@ -34277,13 +34126,6 @@ msgstr "Nur neue Host-Labels entdecken"
 
 msgid "Only display SLA Name"
 msgstr "Nur den SLA Namen anzeigen"
-
-msgid ""
-"Only during this time period the user will get notifications about host or "
-"service alerts."
-msgstr ""
-"Nur während dieser Zeitperiode wird der Benutzer Alarme über Host-/"
-"Serviceprobleme erhalten."
 
 msgid "Only execute manually"
 msgstr "Nur manuell ausführen"
@@ -34587,7 +34429,7 @@ msgstr ""
 "Zielsystems anbieten kann."
 
 msgid "Optionally forward output to host"
-msgstr ""
+msgstr "Ausgabe optional an den Host weiterleiten"
 
 msgid ""
 "Optionally provide protocol, server and site for agent registration and/or "
@@ -35901,14 +35743,8 @@ msgstr "Performance-Einstellungen"
 msgid "Period"
 msgstr "Periode"
 
-msgid "Period end date"
-msgstr "Enddatum des Zeitraums"
-
 msgid "Period for outdated piggybacked host data"
 msgstr "Zeitraum für veraltete Huckepack-Hostdaten"
-
-msgid "Period start date"
-msgstr "Anfangsdatum des Zeitraums"
 
 msgid "Periodic notification"
 msgstr "Periodische Alarmierung"
@@ -36154,9 +35990,6 @@ msgstr "Platzierung"
 msgid "Plain Email"
 msgstr "Einfache E-Mail"
 
-msgid "Plain Text Email (using configured templates)"
-msgstr "Einfaches Text-E-Mail (verwendet eingerichtete Templates)"
-
 msgid "Plain text (Unencrypted)"
 msgstr "Klartext (unverschlüsselt)"
 
@@ -36195,6 +36028,8 @@ msgid ""
 "Please activate the monitoring of at least one device type: Android, iOS or "
 "other devices"
 msgstr ""
+"Bitte aktivieren Sie das Monitoring von mindestens einem Gerätetyp: Android, "
+"iOS oder andere Geräte"
 
 msgid "Please add at least one child node."
 msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
@@ -36728,9 +36563,6 @@ msgstr "Anschlussnummer oder -name"
 msgid "Plugin"
 msgstr "Plugin"
 
-msgid "Plugin Arguments"
-msgstr "Plugin Argumente"
-
 msgid "Plugin Name"
 msgstr "Pluginname"
 
@@ -36985,7 +36817,7 @@ msgid "Pre-shared secret"
 msgstr "Erzeuge Zufallspasswort"
 
 msgid "Pre-shared secret used for encryption"
-msgstr ""
+msgstr "Für die Verschlüsselung verwendetes Pre-Shared Secret"
 
 msgid "Precedence"
 msgstr "Vorrang"
@@ -37376,6 +37208,10 @@ msgstr "PromQL Abfrage (nur einzelner Rückgabewert erlaubt)"
 msgid "Prometheus"
 msgstr "Prometheus"
 
+#, fuzzy
+msgid "Prometheus API endpoint"
+msgstr "Prometheus Web-Port"
+
 msgid ""
 "Prometheus Scrape Targets (include Prometheus Exporters) to fetch "
 "information from"
@@ -37565,6 +37401,8 @@ msgid ""
 "Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program Files"
 "\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
 msgstr ""
+"Geben Sie hier den Pfad zur ausführbaren Datei nvidia-smi.exe an, z. B. C:"
+"\\Program Files\\NVSMI\\nvidia-smi.exe"
 
 msgid "Put this element on"
 msgstr "Dieses Element auf folgende Seiten setzen:"
@@ -37597,7 +37435,7 @@ msgid "QoS outbound bits"
 msgstr "QoS ausgehende Bits"
 
 msgid "Qps"
-msgstr ""
+msgstr "Qps"
 
 msgid "Quantum Storage Status"
 msgstr "Quantum Speicher Status"
@@ -37639,6 +37477,9 @@ msgid ""
 "the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
 "search_syntax'>log search syntax</a>."
 msgstr ""
+"Abfrage, welche Protokolle an die Event Console weitergeleitet werden "
+"sollen. Verwenden Sie die Datadog <a href='https://docs.datadoghq.com/logs/"
+"explorer/search_syntax'>log search syntax</a>."
 
 msgid "Queue Latency"
 msgstr "Durchschnittliche Warteschlangenlatenz"
@@ -38455,6 +38296,8 @@ msgid ""
 "Regular expression which is used to narrow down the selected files further. "
 "Applies to the selected logfile paths."
 msgstr ""
+"Regulärer Ausdruck, der verwendet wird, um die ausgewählten Dateien weiter "
+"einzugrenzen. Gilt für die ausgewählten Logdateipfade."
 
 msgid "Regular expression: "
 msgstr "Regulärer Ausdruck: "
@@ -39368,10 +39211,6 @@ msgstr "Auf einen einzelnen Host beschränken"
 msgid "Restrict to check attempt"
 msgstr "Einschränkung auf Check-Versuch"
 
-msgid "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
-msgstr ""
-"Beschränke Alarme (Eskalationen) auf n<sup>th</sup> bis m<sup>th</sup>."
-
 msgid "Restrict to notification number"
 msgstr "Auf Alarmnummer einschränken"
 
@@ -39644,9 +39483,6 @@ msgstr "Regelbaum"
 msgid "Rule activation"
 msgstr "Regelaktivierung"
 
-msgid "Rule based notifications"
-msgstr "Regelbasierte Alarmierung"
-
 msgid "Rule contact groups"
 msgstr "Regel-Kontaktgruppen"
 
@@ -39718,9 +39554,6 @@ msgstr "Regel-ID"
 
 msgid "Rule:"
 msgstr "Regel:"
-
-msgid "Rulebased notifications are activated"
-msgstr "Die regelbasierte Alarmierung ist aktiv"
 
 msgid "Rules"
 msgstr "Regeln"
@@ -41165,9 +40998,6 @@ msgstr "Servicekommentare"
 msgid "Service Description"
 msgstr "Servicebeschreibung"
 
-msgid "Service Events"
-msgstr "Serviceereignisse"
-
 msgid "Service Filters"
 msgstr "Servicefilter"
 
@@ -41317,9 +41147,6 @@ msgstr "Service discovery: Service description"
 
 msgid "Service discovery: State"
 msgstr "Serviceerkennung: Zustand"
-
-msgid "Service events"
-msgstr "Service-Ereignisse"
 
 msgid "Service goes into critical state"
 msgstr "Service in Status CRIT gewechselt"
@@ -41611,7 +41438,7 @@ msgid "Set absolute levels"
 msgstr "Setze absolute Schwellwerte"
 
 msgid "Set an individual idle timeout"
-msgstr "Einen indiviellen Timeout festlegen"
+msgstr "Einen individuellen Timeout festlegen"
 
 msgid "Set as start URL"
 msgstr "Als Start-URL einstellen"
@@ -42015,7 +41842,7 @@ msgstr ""
 "verwenden."
 
 msgid "Setup"
-msgstr "Setup"
+msgstr "Einstellungen"
 
 msgid ""
 "Setup can repair things for you. It can rename tags in folders, host and "
@@ -42926,9 +42753,6 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
-
-msgid "Sizing"
-msgstr "Größenbestimmung"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Übrige Nachrichten auslassen, eine kritische Nachricht erstellen"
@@ -43872,6 +43696,9 @@ msgid ""
 "Specify the site that this connections should be initiated with. You must "
 "have a matching rule to create the host in a folder monitored on that site."
 msgstr ""
+"Geben Sie die Site an, von dem aus diese Verbindung initiiert werden soll. "
+"Sie müssen eine passende Regel haben, um den Host in einem auf dieser Site "
+"überwachten Ordner zu erstellen."
 
 msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
@@ -43908,6 +43735,9 @@ msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "
 "(duration) in percent of the AWS Lambda configuration value \"Timeout\"."
 msgstr ""
+"Geben Sie die oberen Schwellwerte für die verstrichene Zeit der Ausführung "
+"einer Funktion (Dauer) in Prozent des AWS Lambda-Konfigurationswerts "
+"\"Timeout\" an."
 
 #, fuzzy
 msgid ""
@@ -44184,9 +44014,6 @@ msgstr "Anfang des nächsten Jahres"
 msgid "Start or end of a scheduled downtime"
 msgstr "Beginn oder Ende einer geplanten Wartungszeit"
 
-msgid "Start or end of a scheduled downtime "
-msgstr "Beginn oder Ende einer geplanten Wartungszeit"
-
 msgid "Start or end of flapping state"
 msgstr "Beginn oder Ende einer Unstetigkeit"
 
@@ -44428,6 +44255,10 @@ msgid "State if input is OFF"
 msgstr "Zustand, wenn der Eingang AUS ist"
 
 msgid "State if input is ON"
+msgstr "Zustand, wenn Eingang EIN ist"
+
+#, fuzzy
+msgid "State if input is Unknown"
 msgstr "Zustand, wenn Eingang EIN ist"
 
 msgid "State if just <i>some</i> check plugins received no monitoring data"
@@ -45334,12 +45165,6 @@ msgstr "Subskriptions-ID"
 
 msgid "Subscription Status"
 msgstr "Subskriptionsstatus"
-
-msgid "Subscription details"
-msgstr "Details zur Subskription"
-
-msgid "Subscription settings"
-msgstr "Einstellungen für die Subskription"
 
 msgid "Substitution"
 msgstr "Substitution"
@@ -48125,6 +47950,12 @@ msgstr ""
 "Die vollständige URL zum Kubernetes-API-Server einschließlich des Protokolls "
 "(http oder https) und des Ports."
 
+msgid ""
+"The full URL to the Prometheus API endpoint including the protocol (http or "
+"https). OpenShift exposes such endpoints via a route in the openshift-"
+"monitoring namespace called prometheus-k8s."
+msgstr ""
+
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "Objekt <tt>%s</tt> ist im LDAP nicht vorhanden (%s)"
@@ -48560,9 +48391,6 @@ msgstr "Die Liste der Hostmerkmale muss vom Typ list sein, ist aber %r"
 msgid "The list of host tags must only contain strings but also contains %r"
 msgstr ""
 "Die Liste der Hostmerkmale darf nur Texte enthalten, aber enthält auch %r"
-
-msgid "The list of services will never match"
-msgstr "Die Liste der Services wird niemals greifen"
 
 msgid "The livestatus connection to this site configured not to be encrypted."
 msgstr ""
@@ -50084,26 +49912,6 @@ msgid ""
 msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract."
-msgstr ""
-"Die Subkriptionsdetails umfassen das Startdatum, das Enddatum und die Größe "
-"des Zeitraums. Die Anmeldedaten für das Kundenportal finden Sie in Ihrem "
-"Subkriptionsvertrag."
-
-msgid ""
-"The subscription details include period start date, end date and sizing. The "
-"customer portal credentials can be found in your subscription contract. "
-"These are the same credentials also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk</a>."
-msgstr ""
-"Die Angaben zum Abonnement umfassen das Startdatum, das Enddatum und die "
-"Größe. Die Zugangsdaten für das Kundenportal finden Sie in Ihrem "
-"Abonnementvertrag. Dies sind die gleichen Zugangsdaten, die auch für das "
-"Herunterladen von <a href=\"https://checkmk.de/download\">Checkmk</a> "
-"verwendet werden."
 
 msgid ""
 "The suffix .new is a reserved keyword an cannot be used as aggregation id"
@@ -57569,6 +57377,14 @@ msgstr "Zugangsdaten angeben"
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
+#, fuzzy
+msgid "Use data from Checkmk Cluster Collector"
+msgstr "Anreicherung mit Nutzungsdaten aus dem Checkmk Cluster Collector"
+
+#, fuzzy
+msgid "Use data from OpenShift"
+msgstr "Keine Daten verfügbar"
+
 msgid "Use default layout"
 msgstr "Standardlayout verwenden"
 
@@ -62139,14 +61955,6 @@ msgstr ""
 "der Servicezustände festlegen. Wenn Sie diesen Parameter nicht benutzen, "
 "dann werden nur die Werte online/veraltet als OK betrachtet."
 
-msgid ""
-"You can specify arguments to the notification plugin here. Please refer to "
-"the documentation about the plugin for what parameters are allowed or "
-"required here."
-msgstr ""
-"Hier können Sie Argumente für Alarmierungs-Erweiterungen setzen. Lesen Sie "
-"in der Dokumentation nach welche Argumente erlaubt und benötigt werden."
-
 #, python-format
 msgid "You can specify at most %d entries"
 msgstr "Sie können höchstens %d Einträge angeben"
@@ -62629,23 +62437,6 @@ msgstr ""
 "Sie haben Ersatz-Benachrichtigungen aktiviert, aber noch keine E-Mail-"
 "Adresse als Empfänger angegeben. Damit diese E-Mails empfangen werden "
 "können, muss eine E-Mailadresse konfiguriert sein."
-
-msgid ""
-"You have enabled the notifications but missed to configure a Email address. "
-"You need to configure your mail address in order to be able to receive "
-"emails."
-msgstr ""
-"Sie haben Alarme aktiviert, aber noch keine E-Mailadresse angegeben. Damit E-"
-"Mails empfangen werden können, muss eine E-Mailadresse konfiguriert sein."
-
-msgid ""
-"You have enabled the notifications but missed to make the user member of at "
-"least one contact group. You need to make the user member of a contact group "
-"which has hosts assigned in order to be able to receive emails."
-msgstr ""
-"Sie haben Alarme aktiviert, aber den Benutzer noch in keine Kontaktgruppe "
-"aufgenommen. Damit ein Benutzer E-Mails empfangen kann, muss es in einer "
-"Kontaktgruppe sein, der Hosts zugeordnet sind."
 
 msgid ""
 "You have no mail transfer agent installed. <tt>/usr/sbin/sendmail</tt> is "
@@ -63242,9 +63033,6 @@ msgstr ""
 msgid "Your setting and factory settings are identical."
 msgstr "Ihre Einstellungen und die Werkseinstellungen sind gleich."
 
-msgid "Your user has no roles. Please assign at least one role."
-msgstr "Benutzer gehört zu keiner Rolle. Bitte mindestens eine Rolle zuweisen."
-
 msgid "ZFS filesystem usage"
 msgstr "Nutzung des ZFS-Dateisystems"
 
@@ -63362,9 +63150,6 @@ msgstr "alle Agenten"
 
 msgid "all contacts of the notified object"
 msgstr "Alle Kontakte des alarmierten Objektes"
-
-msgid "all events disabled"
-msgstr "alle Ereignisse deaktiviert"
 
 msgid "all graphs"
 msgstr "Alle Graphen"
@@ -63783,9 +63568,6 @@ msgstr "aktiviere Fehlersuche für Livestatus Abfragen"
 msgid "enable extensive rule logging"
 msgstr "aktiviere ausführliches Protokoll für Regeln"
 
-msgid "enable notifications"
-msgstr "aktiviere Alarme"
-
 msgid "enable optimized rule execution"
 msgstr "aktiviere optimierte Regel-Ausführung"
 
@@ -63794,9 +63576,6 @@ msgstr "aktiviere formatierte Ausgabe für Regeln"
 
 msgid "enable sounds"
 msgstr "aktiviere Tonausgabe"
-
-msgid "end"
-msgstr "Ende"
 
 msgid "entries"
 msgstr "Einträge"
@@ -63920,9 +63699,6 @@ msgstr "freie Leases"
 
 msgid "free space"
 msgstr "freier Platz"
-
-msgid "from"
-msgstr "von"
 
 msgid "from the beginning"
 msgstr "vom Anfang"
@@ -64477,9 +64253,6 @@ msgstr "nicht %s Staaten"
 msgid "not OK states"
 msgstr "nicht OK-Zustände"
 
-msgid "not a contact"
-msgstr "kein Kontakt"
-
 msgid "not attempted"
 msgstr "nicht ausgeführt"
 
@@ -64947,9 +64720,6 @@ msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
 
-msgid "start"
-msgstr "Starten"
-
 msgid "status entries"
 msgstr "Statuseinträge"
 
@@ -65259,6 +65029,357 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid " (invalid)"
+#~ msgstr " (ungültig)"
+
+#~ msgid "-"
+#~ msgstr "-"
+
+#~ msgid "1.000.000 Services"
+#~ msgstr "1.000.000 Services"
+
+#~ msgid "1.500.000 Services"
+#~ msgstr "1.500.000 Services"
+
+#~ msgid "100.000 Services"
+#~ msgstr "100.000 Services"
+
+#~ msgid "12.000 Services"
+#~ msgstr "12.000 Services"
+
+#~ msgid "18.000 Services"
+#~ msgstr "18.000 Services"
+
+#~ msgid "2.000.000 Services"
+#~ msgstr "2.000.000 Services"
+
+#~ msgid "2.000.000+ Services"
+#~ msgstr "2.000.000+ Services"
+
+#~ msgid "200.000 Services"
+#~ msgstr "200.000 Services"
+
+#~ msgid "3.000 Services"
+#~ msgstr "3.000 Services"
+
+#~ msgid "30.000 Services"
+#~ msgstr "30.000 Services"
+
+#~ msgid "300.000 Services"
+#~ msgstr "300.000 Services"
+
+#~ msgid "500.000 Services"
+#~ msgstr "500.000 Services"
+
+#~ msgid "60.000 Services"
+#~ msgstr "60.000 Services"
+
+#~ msgid "7.000 Services"
+#~ msgstr "7.000 Services"
+
+#, python-format
+#~ msgid ""
+#~ "<b>Warning</b><br><br>Rule based notifications are disabled in your "
+#~ "global settings. The rules that you edit here will have affect only on "
+#~ "notifications that are created by the Event Console. Normal monitoring "
+#~ "alerts will <b>not</b> use the rule based notifications now.<br><br>You "
+#~ "can change this setting <a href=\"%s\">here</a>."
+#~ msgstr ""
+#~ "<b>Warnung</b><br><br>Die regelbasierte Alarmierung sind in den globalen "
+#~ "Einstellungen deaktiviert. Die Regeln, welche Sie hier editieren, werden "
+#~ "nur solche Alarme beeinflussen, die von der Event Console weitergeleitet "
+#~ "wurden. Normale Alarma aus dem Monitoring benutzen die regelbasierte "
+#~ "Alarmierung aktuell <b>nicht</b>.<br><br>Sie können diese Einstellung <a "
+#~ "href=\"%s\">hier</a> ändern."
+
+#~ msgid "Acknowledgement of host problem"
+#~ msgstr "Quittierung von Hostproblem"
+
+#~ msgid "Acknowledgement of service problem"
+#~ msgstr "Quittierung von Service-Problem"
+
+#~ msgid "Add details manually"
+#~ msgstr "Details manuell hinzufügen"
+
+#~ msgid "Add notification"
+#~ msgstr "Alarm ergänzen"
+
+#~ msgid "Blacklist the following services"
+#~ msgstr "Die folgenden Services ausschließen"
+
+#~ msgid ""
+#~ "Configure regular expressions that match the beginning of the service "
+#~ "names here."
+#~ msgstr ""
+#~ "Konfigurieren Sie hier reguläre Ausdrücke, die auf den Anfang von Service-"
+#~ "Namen passen."
+
+#~ msgid ""
+#~ "Configure regular expressions that match the beginning of the service "
+#~ "names here. Prefix an entry with <tt>!</tt> in order to <i>exclude</i> "
+#~ "that service."
+#~ msgstr ""
+#~ "Konfiguriere reguläre Ausdrücke die auf den Anfang von Service-Namen zu-"
+#~ "treffen. Präfix <tt>!</tt> um den Service <i>auszuschließen</i>."
+
+#~ msgid ""
+#~ "Configure the hosts for this notification. Without prefix, only exact, "
+#~ "case sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex "
+#~ "matches."
+#~ msgstr ""
+#~ "Hosts für diese Alarmierung konfigurieren. Ohne Präfix, exakte "
+#~ "Übereinstimmung. <tt>!</tt> am Anfang bedeutet Negation, <tt>~</tt> "
+#~ "leitet einen regulären Ausdruck ein."
+
+#~ msgid "Currently disable this notification"
+#~ msgstr "Deaktiviere diesen Alarm"
+
+#~ msgid "Custom limit"
+#~ msgstr "Individuelle Begrenzung"
+
+#~ msgid "Customer portal credentials"
+#~ msgstr "Anmeldedaten für das Kundenportal"
+
+#~ msgid "Customer shortcut"
+#~ msgstr "Kundenkürzel"
+
+#~ msgid "Do only notifiy alerts within this time period"
+#~ msgstr "Führe Alarme nur innerhalb der Zeitperiode durch"
+
+#~ msgid "Enable new rule based notifications"
+#~ msgstr "Regelbasierte Alarmierung einschalten"
+
+#~ msgid "Enabling"
+#~ msgstr "Aktivieren"
+
+#~ msgid "Flexible Custom Notifications"
+#~ msgstr "Flexible benutzerdefinierte Alarme"
+
+#~ msgid "Flexible and plain email notifications"
+#~ msgstr "Flexible und einfache Text-E-Mail Alarmierung"
+
+#~ msgid ""
+#~ "Flexible and plain email notifications are considered deprecated in "
+#~ "version 1.5.0 and  will be removed in Checkmk version 1.6.0. Please "
+#~ "consider to switch to rulebased notifications."
+#~ msgstr ""
+#~ "Die flexible Alarmierung sowie die einfache Alarmierung über Emails "
+#~ "werden ab der Version 1.5.0 als veraltet angesehen und werden in der "
+#~ "Checkmk-Version 1.6.0 entfernt. Eine Umstellung auf die regelbasierte "
+#~ "Alarmierung wird empfohlen."
+
+#~ msgid "Flexible notification rule"
+#~ msgstr "Regel der flexiblen Alarmierung"
+
+#~ msgid ""
+#~ "Here you can configure how you want to be notified about host and service "
+#~ "problems and other monitoring events."
+#~ msgstr ""
+#~ "Hier legen Sie fest wie Sie über Host-/Serviceprobleme (und andere "
+#~ "Ereignisse) alarmiert werden möchten."
+
+#~ msgid ""
+#~ "Here you specify which types of alerts will be notified to this contact. "
+#~ "Note: these settings will only be saved and used if the user is member of "
+#~ "a contact group."
+#~ msgstr ""
+#~ "Hier legen Sie fest bei welchen Alarmtypen der Kontakt alarmiert wird. "
+#~ "Achtung: diese Einstellungen werden nur dann gespeichert/verwendet wenn "
+#~ "der Benutzer Mitglied der Kontaktgruppe ist."
+
+#~ msgid "Host events"
+#~ msgstr "Hostereignisse"
+
+#~ msgid ""
+#~ "Host or Service must be in the following service level to get notification"
+#~ msgstr ""
+#~ "Host/Service muss den folgenden Servicelevel haben, damit alarmiert wird"
+
+#~ msgid ""
+#~ "If you enable the new rule based notifications then the current plain "
+#~ "text email and &quot;flexible notifications&quot; will become inactive. "
+#~ "Instead notificatios will be configured with the WATO module "
+#~ "<i>Notifications</i> on a global base."
+#~ msgstr ""
+#~ "Wenn Sie die regelbasierten Alarmierung einschalten, dann wird der "
+#~ "einfach Emailversand und die &quot;flexiblen Alarme&quot; deaktiviert. "
+#~ "Anstelle dessen konfigurieren Sie die Alarme über das WATO-Modul "
+#~ "<i>Alarmierung</i>."
+
+#, python-format
+#~ msgid "Invalid subscription %s date"
+#~ msgstr "Ungültiges %s-Datum in Subskription"
+
+#~ msgid "Invalid subscription period. Must be at least one year"
+#~ msgstr "Ungültige Abonnementdauer. Muss mindestens ein Jahr betragen"
+
+#~ msgid "Invalid subscription sizing"
+#~ msgstr "Ungültige Größe der Subskription"
+
+#~ msgid "Let through notifications counting from this number"
+#~ msgstr "Alarme ab dieser Anzahl durchlassen"
+
+#~ msgid "Limit to the following hosts"
+#~ msgstr "Limit für die folgenden Hosts"
+
+#~ msgid "Limit to the following services"
+#~ msgstr "Limitiere auf die folgenden Services"
+
+#~ msgid "Notification Options"
+#~ msgstr "Alarmierungsoptionen"
+
+#~ msgid "Notification Plugin"
+#~ msgstr "Alarmierungs-Plugin"
+
+#~ msgid "Notification time period"
+#~ msgstr "Zeitperiode für Alarme"
+
+#~ msgid ""
+#~ "Notifications are sent out when the status of a host or service changes."
+#~ msgstr "Alarme werden versandt wenn sich der Status ändert."
+
+#~ msgid "Notify by: "
+#~ msgstr "Alarm von: "
+
+#~ msgid ""
+#~ "Only during this time period the user will get notifications about host "
+#~ "or service alerts."
+#~ msgstr ""
+#~ "Nur während dieser Zeitperiode wird der Benutzer Alarme über Host-/"
+#~ "Serviceprobleme erhalten."
+
+#~ msgid "Period end date"
+#~ msgstr "Enddatum des Zeitraums"
+
+#~ msgid "Period start date"
+#~ msgstr "Anfangsdatum des Zeitraums"
+
+#~ msgid "Plain Text Email (using configured templates)"
+#~ msgstr "Einfaches Text-E-Mail (verwendet eingerichtete Templates)"
+
+#~ msgid "Plugin Arguments"
+#~ msgstr "Plugin Argumente"
+
+#~ msgid ""
+#~ "Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"
+#~ msgstr ""
+#~ "Beschränke Alarme (Eskalationen) auf n<sup>th</sup> bis m<sup>th</sup>."
+
+#~ msgid "Rule based notifications"
+#~ msgstr "Regelbasierte Alarmierung"
+
+#~ msgid "Rulebased notifications are activated"
+#~ msgstr "Die regelbasierte Alarmierung ist aktiv"
+
+#~ msgid "Service Events"
+#~ msgstr "Serviceereignisse"
+
+#~ msgid "Service events"
+#~ msgstr "Service-Ereignisse"
+
+#~ msgid "Sizing"
+#~ msgstr "Größenbestimmung"
+
+#~ msgid "Start or end of a scheduled downtime "
+#~ msgstr "Beginn oder Ende einer geplanten Wartungszeit"
+
+#~ msgid "Subscription details"
+#~ msgstr "Details zur Subskription"
+
+#~ msgid "Subscription settings"
+#~ msgstr "Einstellungen für die Subskription"
+
+#~ msgid "The list of services will never match"
+#~ msgstr "Die Liste der Services wird niemals greifen"
+
+#~ msgid ""
+#~ "The subscription details include period start date, end date and sizing. "
+#~ "The customer portal credentials can be found in your subscription "
+#~ "contract."
+#~ msgstr ""
+#~ "Die Subkriptionsdetails umfassen das Startdatum, das Enddatum und die "
+#~ "Größe des Zeitraums. Die Anmeldedaten für das Kundenportal finden Sie in "
+#~ "Ihrem Subkriptionsvertrag."
+
+#~ msgid ""
+#~ "The subscription details include period start date, end date and sizing. "
+#~ "The customer portal credentials can be found in your subscription "
+#~ "contract. These are the same credentials also used for downloading <a "
+#~ "href=\"https://checkmk.de/download\">Checkmk</a>."
+#~ msgstr ""
+#~ "Die Angaben zum Abonnement umfassen das Startdatum, das Enddatum und die "
+#~ "Größe. Die Zugangsdaten für das Kundenportal finden Sie in Ihrem "
+#~ "Abonnementvertrag. Dies sind die gleichen Zugangsdaten, die auch für das "
+#~ "Herunterladen von <a href=\"https://checkmk.de/download\">Checkmk</a> "
+#~ "verwendet werden."
+
+#~ msgid ""
+#~ "You can specify arguments to the notification plugin here. Please refer "
+#~ "to the documentation about the plugin for what parameters are allowed or "
+#~ "required here."
+#~ msgstr ""
+#~ "Hier können Sie Argumente für Alarmierungs-Erweiterungen setzen. Lesen "
+#~ "Sie in der Dokumentation nach welche Argumente erlaubt und benötigt "
+#~ "werden."
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to configure a Email "
+#~ "address. You need to configure your mail address in order to be able to "
+#~ "receive emails."
+#~ msgstr ""
+#~ "Sie haben Alarme aktiviert, aber noch keine E-Mailadresse angegeben. "
+#~ "Damit E-Mails empfangen werden können, muss eine E-Mailadresse "
+#~ "konfiguriert sein."
+
+#~ msgid ""
+#~ "You have enabled the notifications but missed to make the user member of "
+#~ "at least one contact group. You need to make the user member of a contact "
+#~ "group which has hosts assigned in order to be able to receive emails."
+#~ msgstr ""
+#~ "Sie haben Alarme aktiviert, aber den Benutzer noch in keine Kontaktgruppe "
+#~ "aufgenommen. Damit ein Benutzer E-Mails empfangen kann, muss es in einer "
+#~ "Kontaktgruppe sein, der Hosts zugeordnet sind."
+
+#~ msgid "Your user has no roles. Please assign at least one role."
+#~ msgstr ""
+#~ "Benutzer gehört zu keiner Rolle. Bitte mindestens eine Rolle zuweisen."
+
+#~ msgid "all events disabled"
+#~ msgstr "alle Ereignisse deaktiviert"
+
+#~ msgid "enable notifications"
+#~ msgstr "aktiviere Alarme"
+
+#~ msgid "end"
+#~ msgstr "Ende"
+
+#~ msgid "from"
+#~ msgstr "von"
+
+#~ msgid "not a contact"
+#~ msgstr "kein Kontakt"
+
+#~ msgid "start"
+#~ msgstr "Starten"
+
+#~ msgid "Append Age to output"
+#~ msgstr "Alter an Ausgabe anhängen"
+
+#~ msgid "Asynchronous execution"
+#~ msgstr "Asynchrone Ausführung"
+
+#~ msgid "Docker Containers"
+#~ msgstr "Docker Container"
+
+#~ msgid "Docker Disk Usage"
+#~ msgstr "Docker Festplattennutzung"
+
+#~ msgid "Docker Disk Usage Count"
+#~ msgstr "Docker Festplattennutzung nach Anzahl"
+
+#~ msgid "Only digits and dots are allowed in the version number."
+#~ msgstr "In der Versionsnummer sind nur Ziffern und Punkte erlaubt."
 
 #~ msgid "This package is missing or broken."
 #~ msgstr "Dieses Paket fehlt oder ist kaputt."
@@ -66593,9 +66714,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Checkmk versions"
 #~ msgstr "Checkmk-Versionen"
-
-#~ msgid "Docker containers"
-#~ msgstr "Docker Container"
 
 #~ msgid "Docker images"
 #~ msgstr "Docker Images"
@@ -69441,9 +69559,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Number of messages in defined timespan"
 #~ msgstr "Anzahl der Meldungen in definierter Zeitspanne"
 
-#~ msgid "Number of objects"
-#~ msgstr "Anzahl an Objekten"
-
 #~ msgid "Number of physical CPUs"
 #~ msgstr "Anzahl der physischen CPUs"
 
@@ -70434,9 +70549,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "WATO is disabled."
 #~ msgstr "WATO ist deaktiviert."
 
-#~ msgid "Prometheus web port"
-#~ msgstr "Prometheus Web-Port"
-
 #~ msgid ""
 #~ "Define textfiles to be monitored. The full path is necessary. Glob "
 #~ "pattern (* and ?) are supported and will produce multiple services at "
@@ -70894,24 +71006,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Filter namespaces"
 #~ msgstr "Namensbereiche filtern"
-
-#~ msgid "Hide %s"
-#~ msgstr "Blende %s aus"
-
-#~ msgid "Hide check parameters"
-#~ msgstr "Check-Parameter verstecken"
-
-#~ msgid "Hide checkboxes"
-#~ msgstr "Checkboxen verstecken"
-
-#~ msgid "Hide context"
-#~ msgstr "Kontext ausblenden"
-
-#~ msgid "Hide discovered service labels"
-#~ msgstr "Erkannte Service-Labels ausblenden"
-
-#~ msgid "Hide plugin names"
-#~ msgstr "Namen von Plugins ausblenden"
 
 #~ msgid "Show only modified settings"
 #~ msgstr "Nur geänderte Einstellungen zeigen"

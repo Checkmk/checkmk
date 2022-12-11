@@ -8,6 +8,7 @@ set -e
 REPO_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../..
 IWYU_TOOL="python3 ${REPO_DIR}/scripts/iwyu_tool.py"
 MAPPING_FILE="${REPO_DIR}/livestatus/iwyu-mappings/check_mk.imp"
+CLANG_VERSION=14
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -176,7 +177,8 @@ fi
 # non-pipeline stuff: formatting/documentation #################################
 
 if [ ${RUN_FORMAT} = yes ]; then
-    echo "formatting sources..." # TODO
+    find src test include -type f \( -name '*.h' -o -name '*.cc' \) -print0 |
+        xargs -0 clang-format-"$CLANG_VERSION" -i -style=file
 fi
 
 if [ ${RUN_DOCUMENTATION} = yes ]; then

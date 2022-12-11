@@ -14476,7 +14476,7 @@ msgstr ""
 "Controles personalizados deshabilitados - definidos a través de una regla"
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "Desactivar el paquete de extensión %s"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -64703,9 +64703,6 @@ msgstr "norma de notificación"
 msgid "notifications within last"
 msgstr "notificaciones en el último"
 
-msgid "ntop GUI extensions"
-msgstr "Extensiones de la interfaz gráfica de usuario de ntop"
-
 msgid "ntopng Admin User"
 msgstr "Usuario administrador de ntopng"
 
@@ -65463,6 +65460,9 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "ntop GUI extensions"
+#~ msgstr "Extensiones de la interfaz gráfica de usuario de ntop"
 
 #~ msgid " (invalid)"
 #~ msgstr " (invalido)"

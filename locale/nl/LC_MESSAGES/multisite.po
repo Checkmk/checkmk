@@ -14368,7 +14368,7 @@ msgid "Disabled custom checks - defined via rule"
 msgstr "Uitgeschakelde aangepaste controles - gedefinieerd via regels"
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "Uitschakelen uitbreidingspakket %s"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -64177,9 +64177,6 @@ msgstr "kennisgevingsregel"
 msgid "notifications within last"
 msgstr "kennisgevingen binnen de laatste"
 
-msgid "ntop GUI extensions"
-msgstr "ntop GUI uitbreidingen"
-
 msgid "ntopng Admin User"
 msgstr "ntopng Admin gebruiker"
 
@@ -64936,6 +64933,9 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "ntop GUI extensions"
+#~ msgstr "ntop GUI uitbreidingen"
 
 #~ msgid " (invalid)"
 #~ msgstr " (ongeldig)"

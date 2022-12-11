@@ -14389,7 +14389,7 @@ msgid "Disabled custom checks - defined via rule"
 msgstr "Deaktivierte benutzerdefinierte Prüfungen - definiert über eine Regel"
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "Erweiterungspaket %s deaktivieren"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -64271,9 +64271,6 @@ msgstr "Alarmierungsregel"
 msgid "notifications within last"
 msgstr "Alarme innerhalb der letzten"
 
-msgid "ntop GUI extensions"
-msgstr "ntop GUI Erweiterung"
-
 msgid "ntopng Admin User"
 msgstr "ntopng Benutzer mit Administrator Rechten"
 
@@ -65029,6 +65026,9 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "ntop GUI extensions"
+#~ msgstr "ntop GUI Erweiterung"
 
 #~ msgid " (invalid)"
 #~ msgstr " (ungültig)"

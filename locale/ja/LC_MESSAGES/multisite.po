@@ -13790,7 +13790,7 @@ msgid "Disabled custom checks - defined via rule"
 msgstr "無効なカスタムチェック(ルールによる定義)"
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "拡張パッケージ %sを無効にする"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -60854,9 +60854,6 @@ msgstr "通知ルール"
 msgid "notifications within last"
 msgstr "最後の内の通知"
 
-msgid "ntop GUI extensions"
-msgstr "ntop GUI拡張機能"
-
 msgid "ntopng Admin User"
 msgstr "ntopng管理者ユーザー"
 
@@ -61608,6 +61605,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "ntop GUI extensions"
+#~ msgstr "ntop GUI拡張機能"
 
 #~ msgid " (invalid)"
 #~ msgstr " (無効)"

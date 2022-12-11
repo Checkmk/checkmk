@@ -14574,7 +14574,7 @@ msgid "Disabled custom checks - defined via rule"
 msgstr "Controlli personalizzati disabilitati (definiti tramite regola)"
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "Disabilita il pacchetto di estensioni %s"
 
 #, fuzzy
@@ -65119,9 +65119,6 @@ msgstr "regola di notifica"
 msgid "notifications within last"
 msgstr "notifiche entro l'ultimo"
 
-msgid "ntop GUI extensions"
-msgstr "estensioni ntop GUI"
-
 msgid "ntopng Admin User"
 msgstr "Utente Admin ntopng"
 
@@ -65883,6 +65880,9 @@ msgstr "%s è troppo basso. Il valore minimo consentito è %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "ntop GUI extensions"
+#~ msgstr "estensioni ntop GUI"
 
 #~ msgid " (invalid)"
 #~ msgstr " (non valido)"

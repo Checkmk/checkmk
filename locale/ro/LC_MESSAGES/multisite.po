@@ -13857,7 +13857,7 @@ msgid "Disabled custom checks - defined via rule"
 msgstr ""
 
 #, fuzzy, python-format
-msgid "Disabled extension package %s"
+msgid "Disabled extension package %s %s"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -59681,10 +59681,6 @@ msgid "notifications within last"
 msgstr ""
 
 #, fuzzy
-msgid "ntop GUI extensions"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "ntopng Admin User"
 msgstr "Parola"
 
@@ -60461,6 +60457,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "ntop GUI extensions"
+#~ msgstr "Dezactiveaza Notificarile"
 
 #~ msgid " (invalid)"
 #~ msgstr " (invalid)"

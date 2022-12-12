@@ -11,7 +11,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from time import sleep
-from typing import Any, DefaultDict, Final, Generic, TypeVar
+from typing import DefaultDict, Final, Generic, TypeVar
 
 import redis
 
@@ -97,7 +97,7 @@ class IndexBuilder:
         self._redis_client = get_redis_client()
 
     @staticmethod
-    def add_to_prefix(prefix: str, to_add: Any) -> str:
+    def add_to_prefix(prefix: str, to_add: object) -> str:
         return f"{prefix}:{to_add}"
 
     @classmethod

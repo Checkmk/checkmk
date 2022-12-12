@@ -1454,9 +1454,10 @@ class MenuSearchResultsRenderer:
             default_icons = ("main_" + self.search_type + "_active", "main_" + self.search_type)
             icon_mapping = self._get_icon_mapping(default_icons)
 
-            for topic, search_results in results:
+            for topic, search_results_iter in results:
+                search_results_list = list(search_results_iter)
                 max_num_displayed_results_exceeded = (
-                    len(list(search_results)) >= self._max_num_displayed_results
+                    len(search_results_list) >= self._max_num_displayed_results
                 )
 
                 icons = icon_mapping.get(topic, default_icons)
@@ -1466,7 +1467,7 @@ class MenuSearchResultsRenderer:
                 )
                 self._render_topic(topic, icons)
                 html.open_ul()
-                for count, result in enumerate(list(search_results)):
+                for count, result in enumerate(search_results_list):
                     self._render_result(
                         result,
                         hidden=count >= self._max_num_displayed_results,

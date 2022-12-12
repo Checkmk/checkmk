@@ -182,7 +182,7 @@ def test_diagnostics_element_local_files_json() -> None:
 
 
 def _create_test_package(name: str) -> packaging.Manifest:
-    check_dir = Path(packaging.PackagePart.CHECKS.path)
+    check_dir = packaging.PackagePart.CHECKS.path
     check_dir.mkdir(parents=True, exist_ok=True)
 
     (check_dir / name).touch()

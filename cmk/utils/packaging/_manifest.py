@@ -42,7 +42,7 @@ class Manifest(BaseModel):
     def file_content(self) -> str:
         raw = {
             **self.dict(by_alias=True),
-            "files": {str(p.ident): [str(f) for f in files] for p, files in self.files.items()},
+            "files": {p.ident: [str(f) for f in files] for p, files in self.files.items()},
         }
         return f"{pprint.pformat(raw)}\n"
 

@@ -17,11 +17,12 @@ from cmk.utils.i18n import _
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 PartName = str
-PartFiles = list[str]
 
 
 @enum.unique
 class PackagePart(str, enum.Enum):
+    # We have to inherit str to make the (de)serialization work as expected.
+    # It's a shame, but other approaches don't work or are worse.
     EC_RULE_PACKS = "ec_rule_packs"
     AGENT_BASED = "agent_based"
     CHECKS = "checks"
@@ -61,6 +62,7 @@ class PackagePart(str, enum.Enum):
                     _("Agent based plugins (Checks, Inventory),"),
                     cmk.utils.paths.local_agent_based_plugins_dir,
                 )
+
             case PackagePart.CHECKS:
                 return _("Legacy check plugins"), cmk.utils.paths.local_checks_dir
             case PackagePart.HASI:
@@ -80,6 +82,7 @@ class PackagePart(str, enum.Enum):
                     _("PNP4Nagios templates (deprecated)"),
                     cmk.utils.paths.local_pnp_templates_dir,
                 )
+
             case PackagePart.DOC:
                 return _("Documentation files"), cmk.utils.paths.local_doc_dir
             case PackagePart.LOCALES:

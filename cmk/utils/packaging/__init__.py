@@ -41,7 +41,7 @@ from ._installed import (
     remove_installed_manifest,
 )
 from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
-from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName
+from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 g_logger = logging.getLogger("cmk.utils.packaging")
@@ -85,12 +85,6 @@ def _get_permissions(path: Path) -> int:
     raise PackageException("could not determine permissions for %r" % path)
 
 
-PackageFiles = dict[PartName, PartFiles]
-
-
-Packages = dict[PackageName, Manifest]
-
-
 class PackagePartInfoElement(TypedDict):
     # Whatch out! This is used in diagnostics (only) and must remain JSON dumpable!
     title: str
@@ -130,7 +124,7 @@ def release(pacname: PackageName) -> None:
         g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in filenames:
             g_logger.log(VERBOSE, "    %s", f)
-        if part == PackagePart.EC_RULE_PACKS:
+        if part is PackagePart.EC_RULE_PACKS:
             ec.release_packaged_rule_packs([str(f) for f in filenames])
 
     remove_installed_manifest(pacname)
@@ -193,7 +187,7 @@ def create_mkp_object(manifest: Manifest) -> bytes:
                     "--force-local",
                     "-C",
                     str(part.path),
-                    *filenames,
+                    *(str(f) for f in filenames),
                 ]
             )
             add_file(part.ident + ".tar", subdata)
@@ -207,7 +201,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
             continue
 
         g_logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
-        if part.ident == "ec_rule_packs":
+        if part is PackagePart.EC_RULE_PACKS:
             _remove_packaged_rule_packs(filenames)
             continue
         for fn in filenames:
@@ -479,7 +473,7 @@ def _install(  # pylint: disable=too-many-branches
             # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
             # been installed for cache invalidation.
             with subprocess.Popen(
-                ["tar", "xf", "-", "--touch", "-C", str(part.path), *filenames],
+                ["tar", "xf", "-", "--touch", "-C", part.path, *(str(f) for f in filenames)],
                 stdin=subprocess.PIPE,
                 shell=False,
                 close_fds=True,
@@ -509,7 +503,7 @@ def _install(  # pylint: disable=too-many-branches
                     path.chmod(desired_perm)
 
             if part is PackagePart.EC_RULE_PACKS:
-                ec.add_rule_pack_proxies([str(f) for f in filenames])
+                ec.add_rule_pack_proxies((str(f) for f in filenames))
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
@@ -566,7 +560,7 @@ def _raise_for_conflicts(
 def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
-) -> Iterable[tuple[str, str]]:
+) -> Iterable[tuple[Path, str]]:
     packaged_files = get_packaged_files()
     # Before installing check for conflicts
     for part in PACKAGE_PARTS + CONFIG_PARTS:
@@ -577,10 +571,10 @@ def _conflicting_files(
         for fn in package.files.get(part, []):
             if fn in old_files:
                 continue
-            path = str(part.path / fn)
+            path = part.path / fn
             if fn in packaged:
                 yield path, "part of another package"
-            elif os.path.exists(path):
+            elif path.exists():
                 yield path, "already existing"
 
 
@@ -611,28 +605,27 @@ def _validate_package_files(
     pacname: PackageName, files: Mapping[PackagePart, Sequence[Path]]
 ) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
-    packages = {manifest.name: manifest for manifest in get_installed_manifests()}
-
     for part in PACKAGE_PARTS:
-        _validate_package_files_part(packages, pacname, part, files.get(part, []))
+        _validate_package_files_part(
+            [m for m in get_installed_manifests() if m.name != pacname], part, files.get(part, [])
+        )
 
 
 def _validate_package_files_part(
-    packages: Packages,
-    pacname: PackageName,
+    other_installed_manifests: Sequence[Manifest],
     part: PackagePart,
-    rel_paths: Iterable[Path],
+    rel_paths: Sequence[Path],
 ) -> None:
     for rel_path in rel_paths:
-        if not (full_path := part.path / rel_path).exists():
-            raise PackageException("File %s does not exist." % full_path)
+        path = part.path / rel_path
+        if not path.exists():
+            raise PackageException("File %s does not exist." % path)
 
-        for other_pacname, other_manifest in packages.items():
-            for other_rel_path in other_manifest.files.get(part, []):
-                if other_rel_path == rel_path and other_pacname != pacname:
-                    raise PackageException(
-                        f"File {full_path} does already belong to package {other_pacname}"
-                    )
+        for manifest in other_installed_manifests:
+            if rel_path in manifest.files.get(part, []):
+                raise PackageException(
+                    f"File {path} already belongs to {manifest.name} {manifest.version}"
+                )
 
 
 def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:

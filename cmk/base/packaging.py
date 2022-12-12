@@ -179,7 +179,7 @@ def show_package(name: str, show_info: bool = False) -> None:
             sys.stdout.write("Files in package %s:\n" % name)
             for part in PACKAGE_PARTS:
                 if part_files := package.files.get(part.ident, []):
-                    sys.stdout.write(f"  {tty.bold}{part.title}{tty.normal}:\n")
+                    sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")
                     for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
@@ -203,7 +203,7 @@ def package_create(args: list[str]) -> None:
         files = unpackaged_files_in_dir(part.ident, part.path)
         filelists[part.ident] = files
         if len(files) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for f in files:
                 logger.log(VERBOSE, "    %s", f)
 
@@ -234,7 +234,7 @@ def package_find(_no_args: list[str]) -> None:
                 Path(part.path) / f for f in files if (Path(part.path) / f).resolve() not in visited
             )
             if found:
-                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for p in found:
                 if logger.isEnabledFor(VERBOSE):
                     logger.log(VERBOSE, "    %s", p.relative_to(part.path))

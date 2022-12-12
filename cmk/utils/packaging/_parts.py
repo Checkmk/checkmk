@@ -44,7 +44,7 @@ class PackagePart(enum.Enum):
         return self.value
 
     @property
-    def title(self) -> str:
+    def ui_title(self) -> str:  # don't mix up with str.title
         return self._derived_properties[0]
 
     @property

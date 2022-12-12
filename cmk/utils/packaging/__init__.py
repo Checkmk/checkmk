@@ -130,7 +130,7 @@ def release(pacname: PackageName) -> None:
         if not (filenames := manifest.files.get(part.ident, [])):
             continue
 
-        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in filenames:
             logger.log(VERBOSE, "    %s", f)
         if part.ident == "ec_rule_packs":
@@ -173,7 +173,7 @@ def create_mkp_object(manifest: Manifest) -> bytes:
             if not (filenames := manifest.files.get(part.ident, [])):
                 continue
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for f in filenames:
                 logger.log(VERBOSE, "    %s", f)
             subdata = subprocess.check_output(
@@ -189,7 +189,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         if not (filenames := manifest.files.get(part.ident, [])):
             continue
 
-        logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
+        logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
         if part.ident == "ec_rule_packs":
             _remove_packaged_rule_packs(filenames)
             continue
@@ -446,7 +446,7 @@ def _install(  # pylint: disable=too-many-branches
             if not (filenames := manifest.files.get(part.ident, [])):
                 continue
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for fn in filenames:
                 logger.log(VERBOSE, "    %s", fn)
 
@@ -725,7 +725,7 @@ def package_part_info() -> PackagePartInfo:
             files = []
 
         part_info[part.ident] = {
-            "title": part.title,
+            "title": part.ui_title,
             "permissions": [_get_permissions(os.path.join(part.path, f)) for f in files],
             "path": part.path,
             "files": files,

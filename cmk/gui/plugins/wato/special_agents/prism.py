@@ -33,7 +33,10 @@ def _valuespec_special_agents_prism():
                     title=_("User ID for web login"),
                 ),
             ),
-            ("password", MigrateToIndividualOrStoredPassword(title=_("Password for this user"))),
+            (
+                "password",
+                MigrateToIndividualOrStoredPassword(title=_("Password for this user"), size=35),
+            ),
         ],
         optional_keys=["port"],
     )

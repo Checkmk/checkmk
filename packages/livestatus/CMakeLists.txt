@@ -19,16 +19,6 @@ project(
   DESCRIPTION "Livestatus library"
   LANGUAGES CXX)
 
-# TOOLING:
-find_package(Python3 REQUIRED)
-message("Found python3: ${Python3_EXECUTABLE}")
-
-find_program(
-  run_clang_tidy_path
-  NAMES run-clang-tidy.py
-  PATHS ${root_repo_dir}/scripts)
-message("run-clang-tidy: ${run_clang_tidy_path} in ${root_repo_dir}/scripts")
-
 # SUB-DIRS:
 add_subdirectory(src)
 add_subdirectory(test)

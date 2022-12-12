@@ -492,7 +492,7 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	cd packages/livestatus && if [ ! -f build/Makefile ] ; then cmake -S . -B build ; fi && cmake --build build -t tidy
+	cd packages/livestatus && ./run-ci --clang-tidy
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy

@@ -9,6 +9,7 @@ REPO_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../..
 IWYU_TOOL="python3 ${REPO_DIR}/scripts/iwyu_tool.py"
 MAPPING_FILE="${REPO_DIR}/livestatus/iwyu-mappings/check_mk.imp"
 CLANG_VERSION=14
+TIDY_TOOL="python3 ${REPO_DIR}/scripts/run-clang-tidy.py -clang-tidy-binary=clang-tidy-${CLANG_VERSION} -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}"
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -171,7 +172,8 @@ if [ ${RUN_IWYU} = yes ]; then
 fi
 
 if [ ${RUN_CLANG_TIDY} = yes ]; then
-    echo "running clang-tidy..." # TODO
+    # shellcheck disable=SC2086
+    ${TIDY_TOOL} ${CLANG_TIDY_EXTRA_ARGS} -quiet -j6 -p=build ${FILES:-src test}
 fi
 
 # non-pipeline stuff: formatting/documentation #################################

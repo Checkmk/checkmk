@@ -48,26 +48,6 @@ target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})
 
-if(run_clang_tidy_path)
-  if(${CLANG_VERSION})
-    message("CLANG_VERSION is set to ${CLANG_VERSION}")
-  else()
-    message("CLANG_VERSION is not set, falling back to 14")
-    set(CLANG_VERSION 14)
-  endif()
-
-  add_custom_target(
-    tidy
-    COMMAND
-      "${Python3_EXECUTABLE}" "${run_clang_tidy_path}"
-      -clang-tidy-binary=clang-tidy-${CLANG_VERSION}
-      -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}
-      $(CLANG_TIDY_EXTRA_ARGS) -quiet -j6 -p=${CMAKE_BINARY_DIR}
-      ${livestatus_sources}
-    COMMENT "Running clang-tidy tool"
-    VERBATIM)
-endif()
-
 # Black Magic for IDE:
 source_group(
   TREE "${PROJECT_SOURCE_DIR}/include"

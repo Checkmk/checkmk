@@ -1,0 +1,14 @@
+Title: fileinfo_groups: Fix state for 'Out of relevant time of day'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1670859496
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+After migration to the new check API in version 2.1.0,
+the fileinfo_groups check plugin didn't calculate the Checkmk state
+correctly. Levels were applied even during irrelevant time periods.
+Now, state will always be OK if outside of relevant time period.

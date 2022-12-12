@@ -882,13 +882,18 @@ def test_fileinfo_group_discovery(info, params, expected_result):
         (
             INFO_MISSING_TIME_SYSLOG,
             "log",
-            {"group_patterns": [("*syslog*", "")], "timeofday": [((8, 0), (9, 0))]},
+            {
+                "group_patterns": [("*syslog*", "")],
+                "maxage_oldest": (5, 2),
+                "timeofday": [((8, 0), (9, 0))],
+            },
             [
                 Result(state=State.OK, notice="Include patterns: *syslog*"),
                 Result(
                     state=State.OK,
                     notice="[/var/log/syslog.1] Age: 7 hours 59 minutes, Size: 1,235,157 B",
                 ),
+                Result(state=State.OK, summary="Out of relevant time of day"),
                 Result(state=State.OK, summary="Count: 1"),
                 Metric("count", 1),
                 Result(state=State.OK, summary="Size: 1,235,157 B"),
@@ -897,11 +902,13 @@ def test_fileinfo_group_discovery(info, params, expected_result):
                 Metric("size_largest", 1235157),
                 Result(state=State.OK, summary="Smallest size: 1,235,157 B"),
                 Metric("size_smallest", 1235157),
-                Result(state=State.OK, summary="Oldest age: 7 hours 59 minutes"),
-                Metric("age_oldest", 28741),
+                Result(
+                    state=State.OK,
+                    summary="Oldest age: 7 hours 59 minutes (warn/crit at 5 seconds/2 seconds)",
+                ),
+                Metric("age_oldest", 28741.0, levels=(5.0, 2.0)),
                 Result(state=State.OK, summary="Newest age: 7 hours 59 minutes"),
                 Metric("age_newest", 28741),
-                Result(state=State.OK, summary="Out of relevant time of day"),
             ],
         ),
     ],

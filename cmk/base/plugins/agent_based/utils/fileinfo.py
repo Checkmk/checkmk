@@ -603,10 +603,13 @@ def check_fileinfo_groups_data(
             state=State.WARN, summary="Files with unknown stat: %s" % ", ".join(files_stat_failed)
         )
 
-    yield from _fileinfo_check_function(check_definition, params)
-
     outof_range_txt = fileinfo_check_timeranges(params)
+    check_results = _fileinfo_check_function(check_definition, params)
+
     if outof_range_txt:
         yield Result(state=State.OK, summary=outof_range_txt)
+        yield from change_results_state_to_ok(check_results)
+    else:
+        yield from check_results
 
     yield from _fileinfo_check_conjunctions(check_definition, params)

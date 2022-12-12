@@ -4,8 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.base.events import add_to_event_context, EventContext, raw_context_from_string
+from cmk.utils.type_defs import Labels
+
+import cmk.base.events
+from cmk.base.events import (
+    add_to_event_context,
+    EventContext,
+    raw_context_from_string,
+    update_raw_contect_with_labels,
+)
 
 
 @pytest.mark.parametrize(
@@ -193,3 +202,91 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
     context: EventContext = {}
     add_to_event_context(context, "PARAMETER", param)
     assert context == expected
+
+
+@pytest.mark.parametrize(
+    "raw_context, host_labels, service_labels, expected",
+    [
+        pytest.param(
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "heute",
+                "SERVICEDESC": "Interface 1",
+                "WHAT": "SERVICE",
+            },
+            {
+                "cmk/check_mk_server": "yes",
+                "cmk/docker_object": "node",
+                "cmk/os_family": "linux",
+                "rule": "label",
+                "explicit": "label",
+                "cmk/site": "heute",
+            },
+            {"dicovered": "label", "rule": "label"},
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "heute",
+                "WHAT": "SERVICE",
+                "SERVICEDESC": "Interface 1",
+                "HOSTLABEL_cmk/check_mk_server": "yes",
+                "HOSTLABEL_cmk/docker_object": "node",
+                "HOSTLABEL_cmk/os_family": "linux",
+                "HOSTLABEL_rule": "label",
+                "HOSTLABEL_explicit": "label",
+                "HOSTLABEL_cmk/site": "heute",
+                "SERVICELABEL_dicovered": "label",
+                "SERVICELABEL_rule": "label",
+            },
+            id="service notification",
+        ),
+        pytest.param(
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "heute",
+                "WHAT": "HOST",
+            },
+            {
+                "cmk/check_mk_server": "yes",
+                "cmk/docker_object": "node",
+                "cmk/os_family": "linux",
+                "rule": "label",
+                "explicit": "label",
+                "cmk/site": "heute",
+            },
+            {"dicovered": "label", "rule": "label"},
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "heute",
+                "WHAT": "HOST",
+                "HOSTLABEL_cmk/check_mk_server": "yes",
+                "HOSTLABEL_cmk/docker_object": "node",
+                "HOSTLABEL_cmk/os_family": "linux",
+                "HOSTLABEL_rule": "label",
+                "HOSTLABEL_explicit": "label",
+                "HOSTLABEL_cmk/site": "heute",
+            },
+            id="host notification",
+        ),
+    ],
+)
+def test_update_raw_contect_with_labels(
+    raw_context: EventContext,
+    host_labels: Labels,
+    service_labels: Labels,
+    expected: EventContext,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        cmk.base.events, "_get_host_labels", lambda ruleset_matcher, host_name: host_labels
+    )
+    monkeypatch.setattr(
+        cmk.base.events,
+        "_get_service_labels",
+        lambda ruleset_matcher, host_name, service_desc: service_labels,
+    )
+    update_raw_contect_with_labels(raw_context)
+    assert raw_context == expected

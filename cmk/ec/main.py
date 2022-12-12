@@ -3327,7 +3327,9 @@ class EventStatus:
         # has less groups, we do not care. If it has more groups, then we
         # do not care either. We just compare the common "prefix".
         for nr, (prev_group, cur_group) in enumerate(
-            zip(event["match_groups"], match_groups.get("match_groups_message_ok", ()))
+            zip(
+                event["match_groups"], match_groups.get("match_groups_message_ok", ()), strict=False
+            )
         ):
             if prev_group != cur_group:
                 if debug:
@@ -3349,6 +3351,7 @@ class EventStatus:
             zip(
                 event.get("match_groups_syslog_application", ()),
                 match_groups.get("match_groups_syslog_application_ok", ()),
+                strict=False,
             )
         ):
             if prev_group != cur_group:

@@ -313,6 +313,16 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
 
+    - NAME: 'Unit Test Lib Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES
+      DIR: 'packages/livestatus'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --unit-tests &> ${RESULTS}/lib-livestatus.txt"
+      TEXT_ON_SKIP: 'No lib livestatus files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus.txt"
+
     - NAME: 'Unit Test Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES
       DIR: 'livestatus/src/test'

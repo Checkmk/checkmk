@@ -163,7 +163,11 @@ if [ ${RUN_BUILD} = yes ]; then
 fi
 
 if [ ${RUN_UNIT_TESTS} = yes ]; then
-    echo "running unit tests..." # TODO
+    cmake --build build --target test
+    if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
+        VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
+    fi
+    GTEST_OUTPUT=xml ${VALGRIND} build/test/test
 fi
 
 if [ ${RUN_IWYU} = yes ]; then

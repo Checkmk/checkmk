@@ -39,6 +39,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -1010,7 +1011,7 @@ def _get_host_file_path(
     config_path: Optional[VersionedConfigPath] = None,
     host_name: Optional[HostName] = None,
 ) -> Path:
-    root_path = Path(config_path) if config_path else Path("latest")
+    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
     if host_name:
         return root_path / "notify" / "labels" / host_name
     return root_path / "notify" / "labels"

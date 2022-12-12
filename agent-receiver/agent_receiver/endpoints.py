@@ -184,7 +184,6 @@ def _store_agent_data(
     target_dir: Path,
     decompressed_data: bytes,
 ) -> None:
-    target_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=target_dir,
         delete=False,
@@ -260,10 +259,22 @@ async def agent_data(
             detail="Decompression of agent data failed",
         ) from e
 
-    _store_agent_data(
-        host.source_path,
-        decompressed_agent_data,
-    )
+    try:
+        _store_agent_data(
+            host.source_path,
+            decompressed_agent_data,
+        )
+    except FileNotFoundError:
+        # We only end up here in case someone re-configures the host at exactly the same time when
+        # data is being pushed. To avoid internal server errors, we still handle this case.
+        logger.error(
+            "uuid=%s Host is not registered or not configured as push host.",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=403,
+            detail="Host is not registered or not configured as push host",
+        )
 
     _move_ready_file(uuid)
 

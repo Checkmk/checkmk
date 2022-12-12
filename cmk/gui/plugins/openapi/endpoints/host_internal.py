@@ -54,7 +54,7 @@ def _link_with_uuid(
     uuid_link_manager.create_link(
         host_name,
         uuid,
-        push_configured=host.effective_attributes().get("cmk_agent_connection") == "push-agent",
+        create_target_dir=host.effective_attributes().get("cmk_agent_connection") == "push-agent",
     )
 
 

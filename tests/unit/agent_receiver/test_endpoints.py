@@ -30,7 +30,7 @@ def fixture_symlink_push_host(
     uuid: UUID,
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
-    (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
+    (target_dir := tmp_path / "hostname").mkdir()
     source.symlink_to(target_dir)
 
 
@@ -411,7 +411,7 @@ def test_agent_data_success(
         files={"monitoring_data": ("filename", compressed_agent_data)},
     )
 
-    file_path = tmp_path / "push-agent" / "hostname" / "agent_output"
+    file_path = tmp_path / "hostname" / "agent_output"
     assert file_path.read_text() == "mock file"
 
     assert response.status_code == 204

@@ -32,12 +32,18 @@ class TestUUIDLink:
     def test_hostname(self, link: UUIDLink) -> None:
         assert isinstance(link.hostname, HostName)
 
-    def test_unlink_nonexisiting(self, link: UUIDLink) -> None:
+    def test_unlink_nonexisiting_target(self, link: UUIDLink) -> None:
+        link.source.symlink_to(link.target)
+
+        assert not link.target.exists()
+        link.unlink_target()
+
+    def test_unlink_nonexisiting_source(self, link: UUIDLink) -> None:
         assert not link.source.exists()
-        link.unlink()
+        link.unlink_source()
 
 
-def test_uuid_link_manager_create_pull_link() -> None:
+def test_uuid_link_manager_create_link() -> None:
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
@@ -45,17 +51,18 @@ def test_uuid_link_manager_create_pull_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
+    assert not data_source_push_agent_dir.exists()
 
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
-def test_uuid_link_manager_create_push_link() -> None:
+def test_uuid_link_manager_create_link_and_target_dir() -> None:
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
@@ -63,9 +70,10 @@ def test_uuid_link_manager_create_push_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=True)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=True)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
+    assert len(list(data_source_push_agent_dir.iterdir())) == 1
 
     link = next(iter(uuid_link_manager))
 
@@ -81,9 +89,9 @@ def test_uuid_link_manager_create_existing_link() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     # second time should be no-op, at least not fail
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
 
 
 def test_uuid_link_manager_create_link_to_different_uuid() -> None:
@@ -95,8 +103,8 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), push_configured=False)
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid_old), create_target_dir=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid_new), create_target_dir=False)
 
     assert len(list(received_outputs_dir.iterdir())) == 1
     assert not data_source_push_agent_dir.exists()
@@ -104,11 +112,11 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid_new)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
-@pytest.mark.parametrize("push_configured", [True, False])
-def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None:
+@pytest.mark.parametrize("create_target_dir", [True, False])
+def test_uuid_link_manager_update_links_host_push(create_target_dir: bool) -> None:
     hostname = "my-hostname"
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
@@ -118,10 +126,12 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     )
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=push_configured)
+    # During links update the target dirs are created for push hosts.
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=create_target_dir)
     uuid_link_manager.update_links({hostname: {"cmk_agent_connection": "push-agent"}})
 
     assert len(list(received_outputs_dir.iterdir())) == 1
+    assert len(list(data_source_push_agent_dir.iterdir())) == 1
 
     link = next(iter(uuid_link_manager))
 
@@ -148,10 +158,11 @@ def test_uuid_link_manager_update_links_no_host() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({})
 
-    assert [p.name for p in received_outputs_dir.iterdir()] == []
+    assert list(received_outputs_dir.iterdir()) == []
+    assert not data_source_push_agent_dir.exists()
 
 
 def test_uuid_link_manager_update_links_host_no_push() -> None:
@@ -162,15 +173,16 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({hostname: {}})
 
     assert len(list(received_outputs_dir.iterdir())) == 1
+    assert not data_source_push_agent_dir.exists()
 
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
 @pytest.mark.parametrize(
@@ -198,13 +210,15 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=False)
+    uuid_link_manager.create_link(hostname, UUID(raw_uuid), create_target_dir=False)
     uuid_link_manager.update_links({})
 
     if has_link:
         assert len(list(received_outputs_dir.iterdir())) == 1
     else:
         assert list(received_outputs_dir.iterdir()) == []
+
+    assert not data_source_push_agent_dir.exists()
 
 
 def test_uuid_link_manager_unlink_sources() -> None:
@@ -217,9 +231,13 @@ def test_uuid_link_manager_unlink_sources() -> None:
         received_outputs_dir=received_outputs_dir,
         data_source_dir=data_source_push_agent_dir,
     )
-    uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), push_configured=False)
-    uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), push_configured=False)
+    uuid_link_manager.create_link(hostname_1, UUID(raw_uuid_1), create_target_dir=False)
+    uuid_link_manager.create_link(hostname_2, UUID(raw_uuid_2), create_target_dir=False)
 
-    uuid_link_manager.unlink([hostname_1])
+    uuid_link_manager.unlink_sources([hostname_1])
 
-    assert [s.name for s in received_outputs_dir.iterdir()] == [raw_uuid_2]
+    sources = list(received_outputs_dir.iterdir())
+    assert len(sources) == 1
+    assert sources[0].name == raw_uuid_2
+
+    assert not data_source_push_agent_dir.exists()

@@ -30,6 +30,7 @@ import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from logging import getLogger, Logger
 from pathlib import Path
 from types import FrameType
@@ -822,7 +823,7 @@ class EventServer(ECServerThread):
                         raise ValueError(f"Invalid remote address '{address!r}' for SNMP trap")
                     addr = address
                     self.process_raw_data(
-                        lambda: self._snmp_trap_engine.process_snmptrap(message, addr)
+                        partial(self._snmp_trap_engine.process_snmptrap, message, addr)
                     )
                 except Exception:
                     self._logger.exception(

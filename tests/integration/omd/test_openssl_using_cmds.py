@@ -8,7 +8,7 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.mark.parametrize("cmd", ["ssh", "curl", "pdftoppm"])
+@pytest.mark.parametrize("cmd", ["ssh -V", "curl -V", "pdftoppm --version"])
 def test_command(site: Site, cmd: str) -> None:
     """
     Ensures that commands using OpenSSL, such as ssh and curl, are working.
@@ -23,5 +23,5 @@ def test_command(site: Site, cmd: str) -> None:
     We execute this test in the CI containers of all supported distros to ensure that commands using
     OpenSSL which are available there can be executed.
     """
-    with site.execute([cmd, "--version"]) as p:
+    with site.execute(cmd.split()) as p:
         assert p.wait() == 0

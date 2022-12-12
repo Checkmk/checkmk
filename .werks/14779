@@ -1,0 +1,18 @@
+Title: Remove less useful graphs
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1670416124
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This removes some of the less useful graphs introduced in
+Werks 14777 and 14778 from the OMD performance page.  The
+corresponding metrics are still available over Livestatus.
+
+The removed graphs are:  Number of performance data received;
+Number of metrics received; Performance data loss for "connection";
+Bytes sent to the "connection", where "connection" is either RRD,
+InfluxDB or Carbon.

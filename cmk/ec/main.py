@@ -2762,7 +2762,7 @@ class StatusServer(ECServerThread):
 
     def handle_command_resetcounters(self, arguments: list[str]) -> None:
         if arguments:
-            self._logger.info("Resetting counters of rule " + arguments[0])
+            self._logger.info("Resetting counters of rule %s", arguments[0])
             self._event_status.reset_counters(arguments[0])
         else:
             self._logger.info("Resetting all rule counters")

@@ -448,8 +448,7 @@ def _expire_logfiles(
             for path in settings.paths.history_dir.value.glob("*.log"):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info(
-                        "Deleting log file %s (age %s)"
-                        % (path, date_and_time(path.stat().st_mtime))
+                        "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
                     )
                     path.unlink()
         except Exception as e:

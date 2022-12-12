@@ -3,20 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for processing Checkmk werks. This is needed by several components,
-so it's best place is in the central library."""
+so it's best place is in the central library.
+
+We are currently in the progress of moving the werk files from nowiki syntax to
+markdown. The files written by the developers (in `.werks` folder in this repo)
+contain markdown if the filenames ends with `.md`, otherwise nowiki syntax.
+
+In order to speed up the loading of the werk files they are precompiled and
+packaged as json during release. Pydantic models RawWerkV1 (for nowiki) and
+RawWerkV2 (for markdown) are used to handle the serializing and deserializing.
+
+But all this should be implementation details, because downstream tools should
+only handle the Werk NamedTuple, which unifies both formats.
+"""
 
 import itertools
-import json
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast, IO
+from typing import IO, Protocol, TypeVar
+
+from pydantic import BaseModel, parse_file_as
 
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.version import parse_check_mk_version
 
-from .werk import Werk, WerkTranslator
+from .werk import Class, Compatibility, NoWiki, Werk, WerkError, WerkTranslator
+from .werkv1 import load_werk_v1, RawWerkV1
+from .werkv2 import load_werk_v2, RawWerkV2
+
+
+class Werks(BaseModel):
+    __root__: dict[int, RawWerkV1 | RawWerkV2]
+
+
+class GuiWerkProtocol(Protocol):
+    werk: Werk
+    acknowledged: bool
+
+
+GWP = TypeVar("GWP", bound=GuiWerkProtocol)
 
 
 def _compiled_werks_dir() -> Path:
@@ -34,65 +59,35 @@ def load() -> dict[int, Werk]:
 
 def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     # ? what is the content of these files, to which the path shows
-    with path.open() as fp:
-        return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
+    return {
+        werk_id: werk.to_werk()
+        for werk_id, werk in parse_file_as(dict[int, RawWerkV1 | RawWerkV2], path).items()
+    }
 
 
-def load_raw_files(werks_dir: Path) -> dict[int, Werk]:
+def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
     if werks_dir is None:
         werks_dir = _compiled_werks_dir()
-    werks = {}
+    werks: list[RawWerkV1 | RawWerkV2] = []
     for file_name in werks_dir.glob("[0-9]*"):
-        werk_id = int(file_name.name)
-        try:
-            werk = _load_werk(file_name)
-            werk["id"] = werk_id
-            werks[werk_id] = werk
-        except Exception as e:
-            raise MKGeneralException(_('Failed to load werk "%s": %s') % (werk_id, e))
+        if file_name.name.endswith(".md"):
+            werk2 = load_werk_v2(file_name, werk_id=file_name.name.removesuffix(".md"))
+            werks.append(werk2)
+        else:
+            werk_id = int(file_name.name)
+            try:
+                werks.append(load_werk_v1(file_name, werk_id))
+            except Exception as e:
+                raise WerkError(_('Failed to load werk "%s": %s') % (werk_id, e)) from e
     return werks
 
 
-def _load_werk(path: Path) -> Werk:
-    werk: dict[str, Any] = {
-        "description": [],
-        "compatible": "compat",
-        "edition": "cre",
-    }
-    in_header = True
-    with path.open(encoding="utf-8") as fp:
-        for line in fp:
-            line = line.strip()
-            if in_header and not line:
-                in_header = False
-            elif in_header:
-                key, text = line.split(":", 1)
-                try:
-                    value: int | str = int(text.strip())
-                except ValueError:
-                    value = text.strip()
-                field = key.lower()
-                if field not in (Werk.__optional_keys__ | Werk.__required_keys__):
-                    raise MKGeneralException("unknown werk field %s" % key)
-                werk[field] = value
-            else:
-                werk["description"].append(line)
-
-    missing_fields = Werk.__required_keys__ - set(werk.keys())
-    if missing_fields:
-        raise MKGeneralException("missing fields: %s" % ",".join(missing_fields))
-    # TODO: Check if all fields have an allowed value, see .werks/config.
-    # We incrementally fill the werk-dict. We make sure only allowed fields get
-    # in, and that all mandatory fields are set. The conversion from regular
-    # dict to TypedDict are a mess, so casting...
-    return cast(Werk, werk)
-
-
-def write_precompiled_werks(path: Path, werks: dict[int, Werk]) -> None:
+def write_precompiled_werks(path: Path, werks: dict[int, RawWerkV1 | RawWerkV2]) -> None:
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(json.dumps(werks, check_circular=False))
+        fp.write(Werks.parse_obj(werks).json(by_alias=True))
 
 
+# this function is used from the bauwelt repo. TODO: move script from bauwelt into this repo
 def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True) -> None:
     """Write the given werks to a file object
 
@@ -100,7 +95,7 @@ def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True
     """
     translator = WerkTranslator()
     werklist = sort_by_version_and_component(werks.values())
-    for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
+    for version, version_group in itertools.groupby(werklist, key=lambda w: w.version):
         # write_version=False is used by the announcement mails
         if write_version:
             f.write("%s:\n" % version)
@@ -114,61 +109,48 @@ def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True
         f.write("\n")
 
 
+def has_content(description: NoWiki | str) -> bool:
+    if isinstance(description, NoWiki):
+        return bool(("".join(description.value)).strip())
+    return bool(description.strip())
+
+
 def write_werk_as_text(f: IO[str], werk: Werk) -> None:
     prefix = ""
-    if werk["class"] == "fix":
+    if werk.class_ == Class.FIX:
         prefix = " FIX:"
-    elif werk["class"] == "security":
+    elif werk.class_ == Class.SECURITY:
         prefix = " SEC:"
 
     # See following commits...
-    if werk.get("description") and len(werk["description"]) > 3:
+    if has_content(werk.description):
         omit = "..."
     else:
         omit = ""
-    # ? exact type of werk is not known; it depends again on the werklist dictionary
+
     f.write(
         "    * %04d%s %s%s\n"
         % (
-            werk["id"],
+            werk.id,
             prefix,
-            werk["title"],
+            werk.title,
             omit,
         )
     )
 
-    if werk["compatible"] == "incomp":
+    if werk.compatible == Compatibility.NOT_COMPATIBLE:
         f.write("            NOTE: Please refer to the migration notes!\n")
 
 
-_CLASS_SORTING_VALUE = {
-    "feature": 1,
-    "security": 2,
-    "fix": 3,
-}
+class SortKeyProtocol(Protocol):
+    def sort_by_version_and_component(self, translator: WerkTranslator) -> tuple[str | int, ...]:
+        pass
 
-_COMPATIBLE_SORTING_VALUE = {
-    "incomp_unack": 1,
-    "incomp_ack": 2,
-    "compat": 3,
-}
+
+T = TypeVar("T", bound=SortKeyProtocol)
 
 
 # sort by version and within one version by component
-def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+def sort_by_version_and_component(werks: Iterable[T]) -> list[T]:
     translator = WerkTranslator()
-    return sorted(
-        werks,
-        key=lambda w: (
-            -parse_check_mk_version(w["version"]),
-            translator.component_of(w),
-            _CLASS_SORTING_VALUE.get(w["class"], 99),
-            -w["level"],
-            _COMPATIBLE_SORTING_VALUE.get(w["compatible"], 99),
-            w["title"],
-        ),
-    )
-
-
-def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
-    return sorted(werks, key=lambda w: w["date"], reverse=True)
+    return sorted(werks, key=lambda w: w.sort_by_version_and_component(translator))

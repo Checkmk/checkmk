@@ -409,6 +409,13 @@
               &.show_all_items {
                 display: none;
               }
+
+              &.warning {
+                border-radius: $theme-border-radius;
+                padding: $spacing-half;
+                margin-top: $spacing-half;
+                line-height: 1.5 * $spacing;
+              }
             }
           }
 

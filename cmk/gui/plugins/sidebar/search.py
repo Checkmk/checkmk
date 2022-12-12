@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import itertools
 import json
 import re
 import traceback
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum, unique
-from typing import Union
+from typing import Final, Literal, TypeVar, Union
 
 import livestatus
 
@@ -1374,26 +1375,17 @@ match_plugin_registry.register(MonitorMenuMatchPlugin())
 
 
 class MenuSearchResultsRenderer:
-    _max_num_displayed_results = 10
+    MAX_RESULTS_BEFORE_SHOW_ALL: Final = 10
 
-    def __init__(self, search_type: str) -> None:
-
-        # TODO: In the future, we should separate the rendering and the generation of the results
-        if search_type == "monitoring":
-            self._generate_results = QuicksearchManager(
-                raise_too_many_rows_error=False
-            ).generate_results
-        elif search_type == "setup":
-            self._generate_results = IndexSearcher(
-                PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))
-            ).search
-        else:
-            raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
-        self.search_type = search_type
+    def __init__(self, search_type: Literal["monitoring", "setup"]) -> None:
+        generate_results, max_results_after_show_all = self._search_type_specific_setup(search_type)
+        self.generate_results: Final = generate_results
+        self.max_results_after_show_all: Final = max_results_after_show_all
+        self.search_type: Final = search_type
 
     def render(self, query: str) -> str:
         try:
-            results = self._generate_results(query)
+            results = self.generate_results(query)
         # Don't render the IncorrectLabelInputError in Mega Menu to make the handling of
         # incorrect inputs consistent with other search querys
         except IncorrectLabelInputError:
@@ -1401,6 +1393,22 @@ class MenuSearchResultsRenderer:
         except MKException as error:
             return self._render_error(error)
         return self._render_results(results)
+
+    @staticmethod
+    def _search_type_specific_setup(
+        search_type: Literal["monitoring", "setup"]
+    ) -> tuple[Callable[[str], SearchResultsByTopic], int | None]:
+        if search_type == "monitoring":
+            return (
+                QuicksearchManager(raise_too_many_rows_error=False).generate_results,
+                None,
+            )
+        if search_type == "setup":
+            return (
+                IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))).search,
+                80,
+            )
+        raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
 
     def _render_error(self, error: MKException) -> str:
         with output_funnel.plugged():
@@ -1455,29 +1463,33 @@ class MenuSearchResultsRenderer:
             icon_mapping = self._get_icon_mapping(default_icons)
 
             for topic, search_results_iter in results:
-                search_results_list = list(search_results_iter)
+                if self.max_results_after_show_all is None:
+                    search_results_list = list(search_results_iter)
+                    show_all_limit_exceeded = False
+                else:
+                    search_results_list, show_all_limit_exceeded = _evaluate_iterable_up_to(
+                        search_results_iter,
+                        self.max_results_after_show_all,
+                    )
                 if not search_results_list:
                     continue
 
-                max_num_displayed_results_exceeded = (
-                    len(search_results_list) >= self._max_num_displayed_results
-                )
+                use_show_all = len(search_results_list) >= self.MAX_RESULTS_BEFORE_SHOW_ALL
 
                 icons = icon_mapping.get(topic, default_icons)
                 html.open_div(
                     id_=topic,
-                    class_=["topic", "extendable" if max_num_displayed_results_exceeded else ""],
+                    class_=["topic", "extendable" if use_show_all else ""],
                 )
                 self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(search_results_list):
                     self._render_result(
                         result,
-                        hidden=count >= self._max_num_displayed_results,
+                        hidden=count >= self.MAX_RESULTS_BEFORE_SHOW_ALL,
                     )
 
-                # TODO: Remove this as soon as the index search does limit its search results
-                if max_num_displayed_results_exceeded:
+                if use_show_all:
                     html.open_li(class_="show_all_items")
                     html.open_a(
                         href="",
@@ -1485,6 +1497,17 @@ class MenuSearchResultsRenderer:
                     )
                     html.write_text(_("Show all results"))
                     html.close_a()
+                    html.close_li()
+
+                if show_all_limit_exceeded:
+                    html.open_li(
+                        class_="hidden warning",
+                        **{"data-extended": "false"},
+                    )
+                    html.write_text(
+                        _("More than %d results available, please refine your search.")
+                        % self.max_results_after_show_all
+                    )
                     html.close_li()
 
                 html.close_ul()
@@ -1527,6 +1550,24 @@ class MenuSearchResultsRenderer:
         )
         html.close_a()
         html.close_li()
+
+
+_TIterItem = TypeVar("_TIterItem")
+
+
+def _evaluate_iterable_up_to(
+    iterable: Iterable[_TIterItem], up_to: int
+) -> tuple[list[_TIterItem], bool]:
+    """
+    >>> _evaluate_iterable_up_to([1, 2, 3], 5)
+    ([1, 2, 3], False)
+    >>> _evaluate_iterable_up_to([1, 2, 3], 2)
+    ([1, 2], True)
+    """
+    evaluated = list(itertools.islice(iterable, up_to + 1))
+    if len(evaluated) > up_to:
+        return evaluated[:-1], True
+    return evaluated, False
 
 
 class MonitoringSearch(ABCMegaMenuSearch):

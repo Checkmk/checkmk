@@ -1,0 +1,18 @@
+Title: Setup search: Limit number of results per topic to 80
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1671526724
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+When pressing <i>Show  all results</i> for a topic, the search will now display at maximum 80
+results. In case more results are available, a corresponding message will be displayed. This can
+improve the performance of scenarios where for example a large number of hosts is found for a given
+search term.
+
+Furthermore, showing more than 80 results is not helpful to the user. When hitting this limit, users
+should either refine their search request or use a dedicated search dialog (such as the search
+dialogs in the service monitoring rules or hosts pages).

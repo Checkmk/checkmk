@@ -1456,6 +1456,9 @@ class MenuSearchResultsRenderer:
 
             for topic, search_results_iter in results:
                 search_results_list = list(search_results_iter)
+                if not search_results_list:
+                    continue
+
                 max_num_displayed_results_exceeded = (
                     len(search_results_list) >= self._max_num_displayed_results
                 )

@@ -20,7 +20,7 @@ from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainRRDCached,
 )
 from cmk.gui.session import _UserContext
-from cmk.gui.type_defs import SearchResult
+from cmk.gui.type_defs import SearchResult, SearchResultsByTopic
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
@@ -250,7 +250,7 @@ class TestIndexBuilderAndSearcher:
         index_searcher: IndexSearcher,
     ) -> None:
         index_builder.build_full_index()
-        assert list(index_searcher.search("**")) == [
+        assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
         ]
@@ -263,7 +263,7 @@ class TestIndexBuilderAndSearcher:
     ) -> None:
         index_builder._mark_index_as_built()
         index_builder.build_changed_sub_indices("something")
-        assert not list(index_searcher.search("**"))
+        assert not self._evaluate_search_results_by_topic(index_searcher.search("**"))
 
     @pytest.mark.usefixtures("with_admin_login")
     def test_update_and_search_with_update(
@@ -273,7 +273,7 @@ class TestIndexBuilderAndSearcher:
     ) -> None:
         index_builder._mark_index_as_built()
         index_builder.build_changed_sub_indices("some_change_dependent_whatever")
-        assert list(index_searcher.search("**")) == [
+        assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Change-dependent", [SearchResult(title="change_dependent", url="")]),
         ]
 
@@ -301,9 +301,15 @@ class TestIndexBuilderAndSearcher:
         )
 
         index_builder.build_changed_sub_indices("some_change_dependent_whatever")
-        assert list(index_searcher.search("**")) == [
+        assert self._evaluate_search_results_by_topic(index_searcher.search("**")) == [
             ("Localization-dependent", [SearchResult(title="localization_dependent", url="")]),
         ]
+
+    @staticmethod
+    def _evaluate_search_results_by_topic(
+        results_by_topic: SearchResultsByTopic,
+    ) -> list[tuple[str, list[SearchResult]]]:
+        return [(topic, list(results)) for topic, results in results_by_topic]
 
 
 @pytest.fixture(name="created_host_url")
@@ -361,22 +367,90 @@ class TestIndexSearcher:
             list(IndexSearcher(PermissionsHandler(URLChecker(ModeEditHost))).search("change_dep"))
 
     def test_sort_search_results(self) -> None:
+        def fake_permissions_check(_url: str) -> bool:
+            return True
+
         assert list(
             IndexSearcher._sort_search_results(
                 {
-                    "Hosts": [SearchResult(title="host", url="")],
-                    "Setup": [SearchResult(title="setup_menu_entry", url="")],
-                    "Global settings": [SearchResult(title="global_setting", url="")],
-                    "Other topic": [SearchResult(title="other_item", url="")],
-                    "Another topic": [SearchResult(title="another_item", url="")],
+                    "Hosts": [
+                        search._SearchResultWithPermissionsCheck(
+                            SearchResult(title="host", url=""),
+                            fake_permissions_check,
+                        )
+                    ],
+                    "Setup": [
+                        search._SearchResultWithPermissionsCheck(
+                            SearchResult(title="setup_menu_entry", url=""),
+                            fake_permissions_check,
+                        )
+                    ],
+                    "Global settings": [
+                        search._SearchResultWithPermissionsCheck(
+                            SearchResult(title="global_setting", url=""),
+                            fake_permissions_check,
+                        )
+                    ],
+                    "Other topic": [
+                        search._SearchResultWithPermissionsCheck(
+                            SearchResult(title="other_item", url=""),
+                            fake_permissions_check,
+                        )
+                    ],
+                    "Another topic": [
+                        search._SearchResultWithPermissionsCheck(
+                            SearchResult(title="another_item", url=""),
+                            fake_permissions_check,
+                        )
+                    ],
                 }
             )
         ) == [
-            ("Setup", [SearchResult(title="setup_menu_entry", url="")]),
-            ("Hosts", [SearchResult(title="host", url="")]),
-            ("Another topic", [SearchResult(title="another_item", url="")]),
-            ("Other topic", [SearchResult(title="other_item", url="")]),
-            ("Global settings", [SearchResult(title="global_setting", url="")]),
+            (
+                "Setup",
+                [
+                    search._SearchResultWithPermissionsCheck(
+                        SearchResult(title="setup_menu_entry", url=""),
+                        fake_permissions_check,
+                    )
+                ],
+            ),
+            (
+                "Hosts",
+                [
+                    search._SearchResultWithPermissionsCheck(
+                        SearchResult(title="host", url=""),
+                        fake_permissions_check,
+                    )
+                ],
+            ),
+            (
+                "Another topic",
+                [
+                    search._SearchResultWithPermissionsCheck(
+                        SearchResult(title="another_item", url=""),
+                        fake_permissions_check,
+                    )
+                ],
+            ),
+            (
+                "Other topic",
+                [
+                    search._SearchResultWithPermissionsCheck(
+                        SearchResult(title="other_item", url=""),
+                        fake_permissions_check,
+                    )
+                ],
+            ),
+            (
+                "Global settings",
+                [
+                    search._SearchResultWithPermissionsCheck(
+                        SearchResult(title="global_setting", url=""),
+                        fake_permissions_check,
+                    )
+                ],
+            ),
         ]
 
 

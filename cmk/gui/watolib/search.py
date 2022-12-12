@@ -6,12 +6,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Collection, Iterable, Mapping
+from collections import defaultdict
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from time import sleep
-from typing import DefaultDict, Final, Generic, TypeVar
+from typing import Final, Generic, TypeVar
 
 import redis
 
@@ -339,41 +340,60 @@ class IndexSearcher:
         self._redis_client = get_redis_client()
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
-        yield from self._sort_search_results(self._search(query))
+        """
+        Sorted search results restricted according to the permissions of the current user.
 
-    def _search(self, query: SearchQuery) -> Mapping[str, Iterable[SearchResult]]:
+        The permissions check for the individual results is explicitly separated from the actual
+        search in Redis. Searching in Redis and sorting the results by topic is fast. Checking the
+        permissions can be quite slow, so we do this step at the very end in a generator function.
+        This way, the code which displays the results can request as many results as it wants to
+        render only, thus avoiding checking the permissions for all found results.
+        """
+        yield from self._filter_results_by_user_permissions(
+            self._sort_search_results(self._search_redis(query))
+        )
+
+    def _search_redis(
+        self, query: SearchQuery
+    ) -> dict[str, list[_SearchResultWithPermissionsCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
             build_index_background()
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
-        results: DefaultDict[str, list[SearchResult]] = DefaultDict(list)
 
-        self._search_redis(
-            query_preprocessed,
-            IndexBuilder.key_categories(IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT),
-            IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT,
-            results,
+        results_localization_independent = self._search_redis_categories(
+            query=query_preprocessed,
+            key_categories=IndexBuilder.key_categories(
+                IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT
+            ),
+            key_prefix_match_items=IndexBuilder.PREFIX_LOCALIZATION_INDEPENDENT,
         )
-        self._search_redis(
-            query_preprocessed,
-            IndexBuilder.key_categories(IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT),
-            IndexBuilder.add_to_prefix(
+        results_localization_dependent = self._search_redis_categories(
+            query=query_preprocessed,
+            key_categories=IndexBuilder.key_categories(IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT),
+            key_prefix_match_items=IndexBuilder.add_to_prefix(
                 IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT,
                 get_current_language(),
             ),
-            results,
         )
 
-        return results
+        return {
+            topic: [
+                *results_localization_independent[topic],
+                *results_localization_dependent[topic],
+            ]
+            for topic in chain(results_localization_independent, results_localization_dependent)
+        }
 
-    def _search_redis(
+    def _search_redis_categories(
         self,
+        *,
         query: str,
         key_categories: str,
         key_prefix_match_items: str,
-        results: DefaultDict[str, list[SearchResult]],
-    ) -> None:
+    ) -> defaultdict[str, list[_SearchResultWithPermissionsCheck]]:
+        results = defaultdict(list)
         for category in self._redis_client.smembers(key_categories):
             if not self._may_see_category(category):
                 continue
@@ -382,7 +402,7 @@ class IndexSearcher:
                 key_prefix_match_items,
                 category,
             )
-            permissions_check = self._may_see_item_func.get(category, lambda _: True)
+            permissions_check = self._may_see_item_func.get(category, lambda _url: True)
 
             for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
                 IndexBuilder.key_match_texts(prefix_category),
@@ -392,9 +412,6 @@ class IndexSearcher:
                     IndexBuilder.add_to_prefix(prefix_category, idx_matched_item)
                 )
 
-                if not permissions_check(match_item_dict["url"]):
-                    continue
-
                 # This call to i18n._ with a non-constant string is ok. Here, we translate the
                 # topics of our search results. For localization-dependent search results, such as
                 # rulesets, they are already localized anyway. However, for localization-independent
@@ -403,17 +420,21 @@ class IndexSearcher:
                 # "Hosts" instead of "Hôtes" in the setup search.
                 # pylint: disable=translation-of-non-string
                 results[_(match_item_dict["topic"])].append(
-                    SearchResult(
-                        match_item_dict["title"],
-                        match_item_dict["url"],
+                    _SearchResultWithPermissionsCheck(
+                        SearchResult(
+                            match_item_dict["title"],
+                            match_item_dict["url"],
+                        ),
+                        permissions_check,
                     )
                 )
+        return results
 
     @classmethod
     def _sort_search_results(
         cls,
-        results: Mapping[str, Iterable[SearchResult]],
-    ) -> SearchResultsByTopic:
+        results: Mapping[str, Iterable[_SearchResultWithPermissionsCheck]],
+    ) -> Iterator[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]]:
         first_topics = cls._first_topics()
         last_topics = cls._last_topics()
         middle_topics = sorted(set(results.keys()) - set(first_topics) - set(last_topics))
@@ -459,6 +480,28 @@ class IndexSearcher:
             _("Deprecated rulesets"),
             # _("Maintenance"),
         )
+
+    @staticmethod
+    def _filter_results_by_user_permissions(
+        results_by_topic: Iterable[tuple[str, Iterable[_SearchResultWithPermissionsCheck]]]
+    ) -> SearchResultsByTopic:
+        yield from (
+            (
+                topic,
+                (
+                    result.result
+                    for result in results
+                    if result.permissions_check(result.result.url)
+                ),
+            )
+            for topic, results in results_by_topic
+        )
+
+
+@dataclass(frozen=True)
+class _SearchResultWithPermissionsCheck:
+    result: SearchResult
+    permissions_check: Callable[[str], bool]
 
 
 def _build_index_background(

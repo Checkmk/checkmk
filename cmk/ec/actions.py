@@ -498,8 +498,6 @@ def _add_contact_information_to_context(
 def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
         return query_status_enable_notifications()
-    except Exception as e:
-        logger.info(
-            "Cannot determine whether notifcations are enabled in core: %s. Assuming YES.", e
-        )
+    except Exception:
+        logger.info("Cannot determine whether notifications are enabled in core. Assuming YES.")
         return True

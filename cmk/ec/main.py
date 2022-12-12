@@ -405,8 +405,8 @@ class TimePeriods:
             if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
                 self._active = query_timeperiods_in()
                 self._cache_timestamp = timestamp
-        except Exception as e:
-            self._logger.exception("Cannot update time period information: %s", e)
+        except Exception:
+            self._logger.exception("Cannot update time period information")
             raise
 
     def active(self, name: TimeperiodName) -> bool:
@@ -864,10 +864,8 @@ class EventServer(ECServerThread):
                         self.process_line(line, address)
 
                     self.process_raw_data(handler)
-                except Exception as e:
-                    self._logger.exception(
-                        "Exception handling a log line (skipping this one): %s", e
-                    )
+                except Exception:
+                    self._logger.exception("Exception handling a log line (skipping this one)")
 
     def do_housekeeping(self) -> None:
         with self._event_status.lock, self._lock_configuration:
@@ -1264,16 +1262,15 @@ class EventServer(ECServerThread):
                                     else:
                                         rule["state"][1][key] = value
 
-                    except Exception as e:
+                    except Exception:
                         if self.settings.options.debug:
                             raise
                         rule["disabled"] = True
                         count_disabled += 1
                         self._logger.exception(
-                            "Ignoring rule '%s/%s' because of an invalid regex (%s).",
+                            "Ignoring rule '%s/%s' because of an invalid regex.",
                             rule["pack"],
                             rule["id"],
-                            e,
                         )
 
                     if self._config["rule_optimizer"]:
@@ -1623,9 +1620,9 @@ class EventServer(ECServerThread):
     def do_translate_hostname(self, event: Event) -> None:
         try:
             event["host"] = translate_hostname(self._config["hostname_translation"], event["host"])
-        except Exception as e:
+        except Exception:
             if self._config["debug_rules"]:
-                self._logger.exception('Unable to parse host "%s" (%s)', event.get("host"), e)
+                self._logger.exception('Unable to parse host "%s"', event.get("host"))
             event["host"] = ""
 
     def log_message(self, event: Event) -> None:
@@ -2479,10 +2476,10 @@ class StatusServer(ECServerThread):
                 self._logger.info(
                     "Going to listen for status queries on TCP port %d", self._tcp_port
                 )
-            except Exception as e:
+            except Exception:
                 if self.settings.options.debug:
                     raise
-                self._logger.exception("Cannot listen on TCP socket port %d: %s", self._tcp_port, e)
+                self._logger.exception("Cannot listen on TCP socket port %d", self._tcp_port)
         else:
             self._tcp_socket = None
             self._tcp_port = 0
@@ -2915,8 +2912,8 @@ def run_eventd(  # pylint: disable=too-many-branches
                     next_replication = now + replication_settings["interval"]
             except MKSignalException as e:
                 raise e
-            except Exception as e:
-                logger.exception("Exception in main thread:\n%s", e)
+            except Exception:
+                logger.exception("Exception in main thread")
                 if settings.options.debug:
                     raise
                 time.sleep(1)
@@ -3095,8 +3092,8 @@ class EventStatus:
                 self._rule_stats = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %s.", path)
-            except Exception as e:
-                self._logger.exception(f"Error loading event state from {path}: {e}")
+            except Exception:
+                self._logger.exception(f"Error loading event state from {path}")
                 raise
 
         # Add new columns and fix broken events
@@ -3576,8 +3573,8 @@ def replication_pull(  # pylint: disable=too-many-branches
                         slave_status["mode"] = "sync"
                 slave_status["last_master_down"] = None
 
-            except Exception as e:
-                logger.warning("Replication: cannot sync with master: %s", e)
+            except Exception:
+                logger.warning("Replication: cannot sync with master", exc_info=True)
                 slave_status["success"] = False
                 if slave_status["last_master_down"] is None:
                     slave_status["last_master_down"] = now

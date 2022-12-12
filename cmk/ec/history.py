@@ -451,10 +451,10 @@ def _expire_logfiles(
                         "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
                     )
                     path.unlink()
-        except Exception as e:
+        except Exception:
             if settings.options.debug:
                 raise
-            logger.exception("Error expiring log files: %s", e)
+            logger.exception("Error expiring log files")
 
 
 # Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
@@ -635,8 +635,8 @@ def parse_history_file(
                 convert_history_line(history_columns, parts)
                 if filter_row(parts):
                     entries.append(parts)
-            except Exception as e:
-                logger.exception(f"Invalid line '{line!r}' in history file {path}: {e}")
+            except Exception:
+                logger.exception(f"Invalid line '{line!r}' in history file {path}")
 
     return entries
 

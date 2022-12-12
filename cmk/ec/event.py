@@ -79,9 +79,9 @@ def create_event_from_line(
     ipaddress = "" if address is None else address[0]
     try:
         event = parse_message(line, ipaddress)
-    except Exception as e:
+    except Exception:
         if verbose:
-            logger.exception('could not parse message "%s" (%s)', line, e)
+            logger.exception('could not parse message "%s"', line)
         event = _make_event(line, ipaddress)
     if verbose:
         width = max(len(k) for k in event.keys()) + 1

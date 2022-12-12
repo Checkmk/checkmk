@@ -278,9 +278,10 @@ class SNMPTrapTranslator:
 
             # This object maintains various indices built from MIBs data
             return pysnmp.smi.view.MibViewController(builder)
-        except pysnmp.smi.error.SmiError as e:
-            logger.info("Exception while loading MIB modules. Proceeding without modules!")
-            logger.exception("Exception: %s", e)
+        except pysnmp.smi.error.SmiError:
+            logger.info(
+                "Exception while loading MIB modules. Proceeding without modules!", exc_info=True
+            )
             return None
 
     def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
@@ -309,12 +310,11 @@ class SNMPTrapTranslator:
         for oid, value in var_bind_list:
             try:
                 translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
-            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
+            except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError):
                 self._logger.warning(
-                    "Failed to translate OID %s (in trap from %s): %s (enable debug logging for details)",
+                    "Failed to translate OID %s (in trap from %s): (enable debug logging for details)",
                     oid.prettyPrint(),
                     ipaddress,
-                    e,
                 )
                 self._logger.debug(
                     "Failed trap var binds:\n%s",

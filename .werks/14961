@@ -1,0 +1,23 @@
+Title: MRPE: Deprecate add_age flag
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1670851592
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, there was an option to decide whether the cache age (in case of activated caching) of
+an MRPE check should be displayed at the corresponding service. This could be specified either at
+the "Execute MRPE checks" agent ruleset, or directly at the <tt>mrpe.cfg</tt> file (UNIX) or
+<tt>check_mk.user.yml</tt> file.
+
+This option turned out to be of limited use, as there's no advantage in not including the cache age
+information to the service. Hence, the new behavior is to always include the cache age information.
+
+While this option has been inactive for a while (and never has been active for Windows), it's now
+officially removed from the config format. Old agent rulesets will be migrated automatically; manually
+specified checks will continue to work, but the <tt>appendage</tt>/<tt>add_age</tt> flags will be ignored
+without further notice.
+

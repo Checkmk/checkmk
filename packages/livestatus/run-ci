@@ -175,5 +175,5 @@ if [ ${RUN_FORMAT} = yes ]; then
 fi
 
 if [ ${RUN_DOCUMENTATION} = yes ]; then
-    echo "generating documentation..." # TODO
+    doxygen doc/Doxyfile
 fi

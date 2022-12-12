@@ -2157,9 +2157,6 @@ msgstr "APC自動転送スイッチ出力"
 msgid "APC Inrow System Events"
 msgstr "APC Inrowシステムイベント"
 
-msgid "APC Power Consumption"
-msgstr "APCの消費電力"
-
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetraチェック"
 
@@ -35247,9 +35244,6 @@ msgstr "PostgreSQLデータベース接続"
 msgid "Power"
 msgstr "Power"
 
-msgid "Power Comsumption of APC Devices"
-msgstr "APCデバイスの消費電力"
-
 msgid "Power Presence Sensors"
 msgstr ""
 
@@ -61605,6 +61599,12 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "APC Power Consumption"
+#~ msgstr "APCの消費電力"
+
+#~ msgid "Power Comsumption of APC Devices"
+#~ msgstr "APCデバイスの消費電力"
 
 #~ msgid "ntop GUI extensions"
 #~ msgstr "ntop GUI拡張機能"

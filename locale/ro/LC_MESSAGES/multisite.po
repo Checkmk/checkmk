@@ -1926,9 +1926,6 @@ msgstr ""
 msgid "APC Inrow System Events"
 msgstr ""
 
-msgid "APC Power Consumption"
-msgstr "APC consum de Curent"
-
 msgid "APC Symmetra Checks"
 msgstr "Verificări APC Symmetra"
 
@@ -35486,9 +35483,6 @@ msgstr "Conexiuni Active"
 msgid "Power"
 msgstr ""
 
-msgid "Power Comsumption of APC Devices"
-msgstr ""
-
 msgid "Power Presence Sensors"
 msgstr ""
 
@@ -60457,6 +60451,9 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#~ msgid "APC Power Consumption"
+#~ msgstr "APC consum de Curent"
 
 #, fuzzy
 #~ msgid "ntop GUI extensions"

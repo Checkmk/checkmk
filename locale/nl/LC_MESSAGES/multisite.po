@@ -2282,9 +2282,6 @@ msgstr "APC automatische transferschakelaar uitgang"
 msgid "APC Inrow System Events"
 msgstr "APC Inrow Systeem Gebeurtenissen"
 
-msgid "APC Power Consumption"
-msgstr "APC Stroomverbruik"
-
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetra Controles"
 
@@ -36689,9 +36686,6 @@ msgstr "PostgreSQL database verbindingen"
 msgid "Power"
 msgstr "Vermogen"
 
-msgid "Power Comsumption of APC Devices"
-msgstr "Stroomverbruik van APC-apparaten"
-
 msgid "Power Presence Sensors"
 msgstr "Stroom Aanwezigheid Sensoren"
 
@@ -64933,6 +64927,12 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "APC Power Consumption"
+#~ msgstr "APC Stroomverbruik"
+
+#~ msgid "Power Comsumption of APC Devices"
+#~ msgstr "Stroomverbruik van APC-apparaten"
 
 #~ msgid "ntop GUI extensions"
 #~ msgstr "ntop GUI uitbreidingen"

@@ -2253,9 +2253,6 @@ msgstr "Saída do Interruptor de Transferência Automática APC"
 msgid "APC Inrow System Events"
 msgstr "Eventos do sistema APC Inrow"
 
-msgid "APC Power Consumption"
-msgstr "Consumo de energia APC"
-
 msgid "APC Symmetra Checks"
 msgstr "APC Symmetra Verificações"
 
@@ -37020,9 +37017,6 @@ msgstr "Conexões de banco de dados PostgreSQL"
 msgid "Power"
 msgstr "Energia"
 
-msgid "Power Comsumption of APC Devices"
-msgstr "Consumo de energia dos dispositivos APC"
-
 msgid "Power Presence Sensors"
 msgstr "Sensores de presença de energia"
 
@@ -65248,6 +65242,12 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "APC Power Consumption"
+#~ msgstr "Consumo de energia APC"
+
+#~ msgid "Power Comsumption of APC Devices"
+#~ msgstr "Consumo de energia dos dispositivos APC"
 
 #~ msgid "ntop GUI extensions"
 #~ msgstr "Extensões ntop GUI"

@@ -605,7 +605,7 @@ class EventServer(ECServerThread):
                 self._syslog_udp.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin syslog server on UDP port %d", endpoint.value)
         except Exception as e:
-            raise Exception(f"Cannot start builtin syslog server: {e}")
+            raise Exception("Cannot start builtin syslog server") from e
 
     def open_syslog_tcp(self) -> None:
         endpoint = self.settings.options.syslog_tcp
@@ -625,7 +625,7 @@ class EventServer(ECServerThread):
                 self._syslog_tcp.listen(20)
                 self._logger.info("Opened builtin syslog-tcp server on TCP port %d", endpoint.value)
         except Exception as e:
-            raise Exception(f"Cannot start builtin syslog-tcp server: {e}")
+            raise Exception("Cannot start builtin syslog-tcp server") from e
 
     def open_snmptrap(self) -> None:
         endpoint = self.settings.options.snmptrap_udp
@@ -642,7 +642,7 @@ class EventServer(ECServerThread):
                 self._snmptrap.bind(("0.0.0.0", endpoint.value))
                 self._logger.info("Opened builtin snmptrap server on UDP port %d", endpoint.value)
         except Exception as e:
-            raise Exception(f"Cannot start builtin snmptrap server: {e}")
+            raise Exception("Cannot start builtin snmptrap server") from e
 
     def open_eventsocket(self) -> None:
         path = self.settings.paths.event_socket.value
@@ -2827,8 +2827,8 @@ class StatusServer(ECServerThread):
                     time.time() - last_update,
                 )
 
-        except Exception:
-            raise MKClientError("Invalid arguments to command REPLICATE")
+        except (ValueError, OverflowError) as e:
+            raise MKClientError("Invalid arguments to command REPLICATE") from e
         return replication_send(
             self._config, self._lock_configuration, self._event_status, last_update
         )
@@ -3681,14 +3681,16 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
                 break
 
         return ast.literal_eval(response_text.decode("utf-8"))
-    except SyntaxError:
-        raise Exception(f"Invalid response from event daemon: <pre>{repr(response_text)}</pre>")
+    except SyntaxError as e:
+        raise Exception(
+            f"Invalid response from event daemon: <pre>{repr(response_text)}</pre>"
+        ) from e
 
     except OSError as e:
-        raise Exception(f"Master not responding: {e}")
+        raise Exception("Master not responding") from e
 
     except Exception as e:
-        raise Exception(f"Cannot connect to event daemon: {e}")
+        raise Exception("Cannot connect to event daemon") from e
 
 
 def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:

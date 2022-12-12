@@ -98,7 +98,7 @@ class QueryGET(Query):
                 header, argument = line.rstrip("\n").split(":", 1)
                 self._parse_header_line(header, argument.lstrip(" "), logger)
             except Exception as e:
-                raise MKClientError(f"Invalid header line '{line.rstrip()}': {e}")
+                raise MKClientError(f"Invalid header line '{line.rstrip()}'") from e
 
     def _parse_header_line(self, header: str, argument: str, logger: Logger) -> None:
         if header == "OutputFormat":
@@ -132,10 +132,10 @@ class QueryGET(Query):
 
         try:
             convert = self.table.column_types[column]
-        except KeyError:
+        except KeyError as e:
             raise MKClientError(
                 f"Unknown column: {column} (Available are: {self.table.column_names})"
-            )
+            ) from e
 
         op_name, operator_function = operator_for(operator_name)
         # TODO: BUG: The query is decoded to unicode after receiving it from

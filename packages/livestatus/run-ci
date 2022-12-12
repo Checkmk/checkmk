@@ -5,6 +5,10 @@
 
 set -e
 
+REPO_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../..
+IWYU_TOOL="python3 ${REPO_DIR}/scripts/iwyu_tool.py"
+MAPPING_FILE="${REPO_DIR}/livestatus/iwyu-mappings/check_mk.imp"
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -161,7 +165,8 @@ if [ ${RUN_UNIT_TESTS} = yes ]; then
 fi
 
 if [ ${RUN_IWYU} = yes ]; then
-    echo "running IWYU..." # TODO
+    # shellcheck disable=SC2086
+    ${IWYU_TOOL} --jobs=4 --output-format=clang -p build ${FILES:-src test} -- ${IWYU_EXTRA_ARGS} -Xiwyu "--mapping_file=${MAPPING_FILE}"
 fi
 
 if [ ${RUN_CLANG_TIDY} = yes ]; then

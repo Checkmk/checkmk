@@ -499,6 +499,7 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 iwyu: config.status
+	cd packages/livestatus && ./run-ci --iwyu
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu

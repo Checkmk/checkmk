@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <memory>
+#include <string>
 
 #include "livestatus/Logger.h"
 #include "livestatus/POSIXUtils.h"

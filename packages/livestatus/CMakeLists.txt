@@ -24,12 +24,6 @@ find_package(Python3 REQUIRED)
 message("Found python3: ${Python3_EXECUTABLE}")
 
 find_program(
-  iwyu_tool_path
-  NAMES iwyu_tool.py
-  PATHS ${root_repo_dir}/scripts)
-message("iwyu_tool_path: ${iwyu_tool_path} in ${root_repo_dir}/scripts")
-
-find_program(
   run_clang_tidy_path
   NAMES run-clang-tidy.py
   PATHS ${root_repo_dir}/scripts)

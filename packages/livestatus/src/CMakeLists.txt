@@ -16,7 +16,7 @@ if(${USE_ASIO_OMD})
   FetchContent_Declare(
     asio-omd
     URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/${USE_ASIO_VERSION}.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP no)
+        DOWNLOAD_EXTRACT_TIMESTAMP no)
   FetchContent_MakeAvailable(asio-omd)
   FetchContent_GetProperties(
     asio-omd
@@ -45,20 +45,8 @@ target_include_directories(livestatus PUBLIC ../include/livestatus
                                              ${asio_ext_include})
 target_link_libraries(livestatus PRIVATE pthread ${asio_ext_lib})
 target_compile_features(livestatus PUBLIC cxx_std_17)
-set_target_properties(
-  livestatus PROPERTIES VERSION ${PROJECT_VERSION}
-                        SOVERSION ${PROJECT_VERSION_MAJOR})
-
-if(iwyu_tool_path)
-  add_custom_target(
-    iwyu
-    COMMAND
-      "${Python3_EXECUTABLE}" "${iwyu_tool_path}" -j4 --output-format=clang -p
-      "${CMAKE_BINARY_DIR}" -- ${IWYU_EXTRA_ARGS} -Xiwyu
-      --mapping_file=${root_repo_dir}/livestatus/iwyu-mappings/check_mk.imp
-    COMMENT "Running include-what-you-use tool"
-    VERBATIM)
-endif()
+set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
+                                            SOVERSION ${PROJECT_VERSION_MAJOR})
 
 if(run_clang_tidy_path)
   if(${CLANG_VERSION})

@@ -8,7 +8,7 @@ import pytest
 from tests.testlib.site import Site
 
 
-@pytest.mark.parametrize("cmd", ["ssh -V", "curl -V", "pdftoppm --version"])
+@pytest.mark.parametrize("cmd", ["ssh -V", "curl -V", "pdftoppm -v"])
 def test_command(site: Site, cmd: str) -> None:
     """
     Ensures that commands using OpenSSL, such as ssh and curl, are working.

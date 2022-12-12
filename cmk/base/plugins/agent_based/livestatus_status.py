@@ -188,9 +188,7 @@ def _generate_livestatus_results(
             (100, render.percent, "helper_usage_checker", "Checker helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
             (1, lambda x: "%.2f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
-            (1, lambda x: "%d" % x, "perf_data_count", "Number of performance data received"),
             (1, lambda x: "%d/s" % x, "perf_data_count_rate", "Rate of performance data received"),
-            (1, lambda x: "%d" % x, "metrics_count", "Number of metrics received"),
             (1, lambda x: "%d/s" % x, "metrics_count_rate", "Rate of metrics received"),
         ]
         for conn, name in (("carbon", "Carbon"), ("influxdb", "InfluxDB"), ("rrdcached", "RRD")):
@@ -202,7 +200,6 @@ def _generate_livestatus_results(
                         f"{conn}_queue_usage_rate",
                         f"{name} queue usage rate",
                     ),
-                    (1, render.bytes, f"{conn}_bytes_sent", f"Bytes sent to the {name} connection"),
                     (
                         1,
                         render.iobandwidth,
@@ -220,25 +217,17 @@ def _generate_livestatus_results(
                     "helper_usage_fetcher",
                     "helper_usage_checker",
                     "average_latency_fetcher",
-                    "carbon_overflows",
                     "carbon_overflows_rate",
                     "carbon_queue_usage",
                     "carbon_queue_usage_rate",
-                    "carbon_bytes_sent",
                     "carbon_bytes_sent_rate",
-                    "influxdb_overflows",
                     "influxdb_overflows_rate",
                     "influxdb_queue_usage",
                     "influxdb_queue_usage_rate",
-                    "influxdb_bytes_sent",
                     "influxdb_bytes_sent_rate",
-                    "rrdcached_overflows",
                     "rrdcached_queue_usage_rate",
-                    "rrdcached_bytes_sent",
                     "rrdcached_bytes_sent_rate",
-                    "perf_data_count",
                     "perf_data_count_rate",
-                    "metrics_count",
                     "metrics_count_rate",
                 ]:
                     value = 0.0

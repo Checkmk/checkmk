@@ -1,0 +1,18 @@
+Title: Remove less useful graphs
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1670416124
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p18
+
+This removes the following graphs from the OMD Performance page:
+Number of metrics received; Performance data loss for "connection";
+Bytes sent to the "connection", where "connection" is either RRD,
+InfluxDB or Carbon.
+
+These graphs are always monotonically increasing and do not
+provide any useful information.

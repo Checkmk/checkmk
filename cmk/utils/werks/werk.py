@@ -4,34 +4,81 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# We need the typing_extensions TypedDict in order to have NotRequired to fill
-# the __optional_keys__ instead of __required_keys__. IMHO this can be imported
-# from typing directly as soon as we are on 3.11
-from typing_extensions import NotRequired, TypedDict
+import datetime
+from enum import Enum
+from typing import NamedTuple, Union
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+from cmk.utils.version import parse_check_mk_version
 
-# The class attribute cannot be set with the class-style definition
-Werk = TypedDict(
-    "Werk",
-    {
-        "class": str,
-        "component": str,
-        "date": int,
-        "level": int,
-        "title": str,
-        "version": str,
-        "compatible": str,
-        "edition": str,
-        "knowledge": NotRequired[
-            str
-        ],  # TODO: What's this? Can we simply nuke the fields below from all werks?
-        "state": NotRequired[str],
-        "id": NotRequired[int],
-        "targetversion": NotRequired[str],
-        "description": list[str],
-    },
-)
+
+class WerkError(MKGeneralException):
+    pass
+
+
+class Edition(Enum):
+    # would love to use cmk.utils.version.Edition
+    # but pydantic does not understand it.
+    CRE = "cre"
+    CEE = "cee"
+    CCE = "cce"
+    CME = "cme"
+    CFE = "cfe"
+
+
+class Level(Enum):
+    LEVEL_1 = 1
+    LEVEL_2 = 2
+    LEVEL_3 = 3
+
+
+class Compatibility(Enum):
+    COMPATIBLE = "yes"
+    NOT_COMPATIBLE = "no"
+
+
+class Class(Enum):
+    FEATURE = "feature"
+    FIX = "fix"
+    SECURITY = "security"
+
+
+_CLASS_SORTING_VALUE = {
+    Class.FEATURE: 1,
+    Class.SECURITY: 2,
+    Class.FIX: 3,
+}
+
+_COMPATIBLE_SORTING_VALUE = {
+    Compatibility.NOT_COMPATIBLE: 1,
+    Compatibility.COMPATIBLE: 3,
+}
+
+
+class Werk(NamedTuple):
+    compatible: Compatibility
+    version: str
+    title: str
+    id: int
+    date: datetime.datetime
+    description: Union[str, "NoWiki"]
+    level: Level
+    class_: Class
+    component: str
+    edition: Edition
+
+    def sort_by_version_and_component(self, translator: "WerkTranslator") -> tuple[str | int, ...]:
+        return (
+            -parse_check_mk_version(self.version),
+            translator.translate_component(self.component),
+            _CLASS_SORTING_VALUE.get(self.class_, 99),
+            -self.level.value,
+            # GuiWerk alters this tuple, and adds an element here!
+            _COMPATIBLE_SORTING_VALUE.get(self.compatible, 99),
+            self.title,
+        )
+
 
 # This class is used to avoid repeated construction of dictionaries, including
 # *all* translation values.
@@ -80,33 +127,30 @@ class WerkTranslator:
             2: _("Prominent change"),
             3: _("Major change"),
         }
-        self._compatibilities = {
-            "compat": _("Compatible"),
-            "incomp_ack": _("Incompatible"),
-            "incomp_unack": _("Incompatible - TODO"),
-        }
 
     def classes(self) -> list[tuple[str, str]]:
         return list(self._classes.items())
 
     def class_of(self, werk: Werk) -> str:
-        return self._classes[werk["class"]]
+        return self._classes[werk.class_.value]  # TODO: remove .value
 
     def components(self) -> list[tuple[str, str]]:
         return list(self._components.items())
 
     def component_of(self, werk: Werk) -> str:
-        c = werk["component"]
+        c = werk.component
         return self._components.get(c, c)
+
+    def translate_component(self, component: str) -> str:
+        return self._components.get(component, component)
 
     def levels(self) -> list[tuple[int, str]]:
         return list(self._levels.items())
 
     def level_of(self, werk: Werk) -> str:
-        return self._levels[werk["level"]]
+        return self._levels[werk.level.value]  # TODO: remove .value
 
-    def compatibilities(self) -> list[tuple[str, str]]:
-        return list(self._compatibilities.items())
 
-    def compatibility_of(self, werk: Werk) -> str:
-        return self._compatibilities[werk["compatible"]]
+class NoWiki:
+    def __init__(self, value: list[str]):
+        self.value = value

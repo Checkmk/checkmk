@@ -17,6 +17,15 @@ import cmk.utils.memoize
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
 
+
+def _render_description(description: str | cmk.utils.werks.werk.NoWiki) -> str:
+    # reimplementation of cmk.gui.werks.render_description
+    # can be removed as soon as all werks are converted to markdown
+    if isinstance(description, cmk.utils.werks.werk.NoWiki):
+        return "\n".join(description.value)
+    return description
+
+
 CVSS_REGEX = re.compile(
     r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
 )
@@ -82,7 +91,7 @@ def test_version_comparison(version_str_a: str, version_str_b: str) -> None:
 @pytest.fixture(scope="function", name="precompiled_werks")
 def fixture_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", all_werks)
+    cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", {w.id: w for w in all_werks})
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
@@ -90,19 +99,24 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cre_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cre"}
-    cee_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cee"}
-    cme_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cme"}
+    cre_werks = {w.id: w for w in all_werks if w.edition == "cre"}
+    cee_werks = {w.id: w for w in all_werks if w.edition == "cee"}
+    cme_werks = {w.id: w for w in all_werks if w.edition == "cme"}
+    cce_werks = {w.id: w for w in all_werks if w.edition == "cce"}
+    assert len(all_werks) == len(cre_werks) + len(cee_werks) + len(cme_werks) + len(cce_werks)
 
-    assert len(cre_werks) > 1000
+    assert len(cre_werks) > 9847
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks", cre_werks)
 
-    assert len(cee_werks) > 700
+    assert len(cee_werks) > 1358
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-enterprise", cee_werks)
 
-    assert len(cme_werks) > 5
+    assert len(cme_werks) > 50
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-managed", cme_werks)
+
+    assert len(cce_werks) > 10
+    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
 
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
     werks_loaded = cmk.utils.werks.load()
@@ -110,19 +124,25 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     merged_werks = cre_werks
     merged_werks.update(cee_werks)
     merged_werks.update(cme_werks)
+    merged_werks.update(cce_werks)
+    assert len(all_werks) == len(merged_werks)
 
-    assert merged_werks == werks_loaded
+    assert set(merged_werks.keys()) == (werks_loaded.keys())
+    for werk_id, werk in werks_loaded.items():
+        raw_werk = merged_werks[werk_id]
+        assert werk.title == raw_werk.title
+        assert _render_description(werk.description) == "\n".join(raw_werk.description)
 
 
 def test_werk_versions(precompiled_werks: None) -> None:
     parsed_version = cmk_version.Version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
-        parsed_werk_version = cmk_version.Version(werk["version"])
+        parsed_werk_version = cmk_version.Version(werk.version)
 
         assert (
             parsed_werk_version <= parsed_version
-        ), "Version %s of werk #%d is not allowed in this branch" % (werk["version"], werk_id)
+        ), "Version %s of werk #%d is not allowed in this branch" % (werk.version, werk_id)
 
 
 def test_secwerk_has_cvss(precompiled_werks: None) -> None:
@@ -131,11 +151,11 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < skip_lower:
             continue
-        if werk["class"] != "security":
+        if werk.class_.value != "security":
             continue
         assert (
-            CVSS_REGEX.search("\n".join(werk["description"])) is not None
-        ), f"Werk {werk_id} is missing a CVSS"
+            CVSS_REGEX.search(_render_description(werk.description)) is not None
+        ), f"Werk {werk_id} is missing a CVSS:\n{werk.description}"
 
 
 def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
@@ -149,7 +169,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
         if werk_id in {10062, 10063, 10064, 10125, 12836, 15493}:
             continue
 
-        tag_name = "v%s" % werk["version"]
+        tag_name = "v%s" % werk.version
         if not _git_tag_exists(tag_name):
             # print "No tag found in git: %s. Assuming version was not released yet." % tag_name
             continue
@@ -160,7 +180,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
                 key=lambda t: cmk_version.Version(t[1:]),
             )
             list_of_offenders.append(
-                (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-")
+                (werk_id, werk.version, tag_name, werk_tags[0] if werk_tags else "-")
             )
 
     assert not list_of_offenders, (

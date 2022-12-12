@@ -6,6 +6,7 @@
 from tests.testlib.site import Site
 
 import cmk.utils.werks
+from cmk.utils.werks.werk import Edition
 
 
 def test_load(site: Site) -> None:
@@ -30,7 +31,8 @@ def test_make_sure_werks_have_mandatory_fields(site: Site) -> None:
     }
     werks = cmk.utils.werks.load()
     for werk in werks.values():
-        missing_fields = mandatory_werk_fields - set(werk.keys())
+
+        missing_fields = mandatory_werk_fields - set(werk._asdict())
         if missing_fields:
             assert False, f"werk {werk} has missing fields: {missing_fields}"
 
@@ -38,7 +40,7 @@ def test_make_sure_werks_have_mandatory_fields(site: Site) -> None:
 def test_regular_werks(site: Site) -> None:
     werks = cmk.utils.werks.load()
 
-    regular_werks = [werk for werk in werks.values() if werk["edition"] == "cre"]
+    regular_werks = [werk for werk in werks.values() if werk.edition == Edition.CRE]
 
     assert len(regular_werks) > 1000
 
@@ -46,7 +48,7 @@ def test_regular_werks(site: Site) -> None:
 def test_enterprise_werks(site: Site) -> None:
     werks = cmk.utils.werks.load()
 
-    enterprise_werks = [werk for werk in werks.values() if werk["edition"] == "cee"]
+    enterprise_werks = [werk for werk in werks.values() if werk.edition == Edition.CEE]
 
     if site.version.is_raw_edition():
         assert not enterprise_werks
@@ -57,7 +59,7 @@ def test_enterprise_werks(site: Site) -> None:
 def test_managed_werks(site: Site) -> None:
     werks = cmk.utils.werks.load()
 
-    managed_werks = [werk for werk in werks.values() if werk["edition"] == "cme"]
+    managed_werks = [werk for werk in werks.values() if werk.edition == Edition.CME]
 
     if site.version.is_managed_edition():
         assert managed_werks
@@ -68,7 +70,7 @@ def test_managed_werks(site: Site) -> None:
 def test_cloud_werks(site: Site) -> None:
     werks = cmk.utils.werks.load()
 
-    cloud_werks = [werk for werk in werks.values() if werk["edition"] == "cce"]
+    cloud_werks = [werk for werk in werks.values() if werk.edition == Edition.CCE]
 
     if site.version.is_cloud_edition():
         assert cloud_werks

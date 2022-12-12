@@ -257,7 +257,6 @@ CEE_UNUSED_PACKAGES = [
     "importlib_metadata",
     "itsdangerous",
     "jmespath",
-    "markdown",
     "more-itertools",
     "multidict",
     "openapi-spec-validator",

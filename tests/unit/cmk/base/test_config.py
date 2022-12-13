@@ -1669,11 +1669,11 @@ def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
     xyz_host = HostName("xyz")
     ts.add_host(test_host, tags={"agent": "no-agent"})
     ts.add_host(xyz_host)
-    config_cache = ts.apply(monkeypatch)
 
+    config_cache = ts.apply(monkeypatch)
     print(config_cache._hosttags[test_host])
     print(config_cache._hosttags[xyz_host])
-    assert config_cache.tag_list_of_host(xyz_host) == {
+    assert config_cache.tag_list(xyz_host) == {
         "/wato/",
         "lan",
         "ip-v4",
@@ -1689,10 +1689,8 @@ def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_config_cache_tag_list_of_host_not_existing(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-    config_cache = ts.apply(monkeypatch)
-
-    assert config_cache.tag_list_of_host(HostName("not-existing")) == {
+    config_cache = Scenario().apply(monkeypatch)
+    assert config_cache.tag_list(HostName("not-existing")) == {
         "/",
         "lan",
         "cmk-agent",
@@ -1714,10 +1712,9 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(test_host, tags={"agent": "no-agent"})
     ts.add_host(xyz_host)
-    config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.make_host_config(xyz_host)
-    assert cfg.tag_groups == {
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.tags(xyz_host) == {
         "address_family": "ip-v4-only",
         "agent": "cmk-agent",
         "criticality": "prod",
@@ -1729,10 +1726,7 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
         "tcp": "tcp",
         "checkmk-agent": "checkmk-agent",
     }
-    assert config_cache.tags_of_host(xyz_host) == cfg.tag_groups
-
-    cfg = config_cache.make_host_config(test_host)
-    assert cfg.tag_groups == {
+    assert config_cache.tags(test_host) == {
         "address_family": "ip-v4-only",
         "agent": "no-agent",
         "criticality": "prod",
@@ -1742,7 +1736,6 @@ def test_host_tags_of_host(monkeypatch: MonkeyPatch) -> None:
         "site": "unit",
         "snmp_ds": "no-snmp",
     }
-    assert config_cache.tags_of_host(test_host) == cfg.tag_groups
 
 
 def test_service_tag_rules_default() -> None:
@@ -1771,8 +1764,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
 
-    cfg = config_cache.make_host_config(xyz_host)
-    assert cfg.tag_groups == {
+    assert config_cache.tags(xyz_host) == {
         "address_family": "ip-v4-only",
         "agent": "cmk-agent",
         "criticality": "prod",
@@ -1786,8 +1778,7 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
     }
     assert config_cache.tags_of_service(xyz_host, "CPU load") == {}
 
-    cfg = config_cache.make_host_config(test_host)
-    assert cfg.tag_groups == {
+    assert config_cache.tags(test_host) == {
         "address_family": "ip-v4-only",
         "agent": "no-agent",
         "criticality": "prod",
@@ -1804,7 +1795,7 @@ def test_host_label_rules_default() -> None:
     assert isinstance(config.host_label_rules, list)
 
 
-def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
+def test_labels(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")
 
@@ -1825,19 +1816,16 @@ def test_host_config_labels(monkeypatch: MonkeyPatch) -> None:
 
     ts.add_host(test_host, tags={"agent": "no-agent"}, labels={"explicit": "ding"})
     ts.add_host(xyz_host)
+
     config_cache = ts.apply(monkeypatch)
-
-    cfg = config_cache.make_host_config(xyz_host)
-    assert cfg.labels == {"cmk/site": "NO_SITE"}
-
-    cfg = config_cache.make_host_config(test_host)
-    assert cfg.labels == {
+    assert config_cache.labels(xyz_host) == {"cmk/site": "NO_SITE"}
+    assert config_cache.labels(test_host) == {
         "cmk/site": "NO_SITE",
         "explicit": "ding",
         "from-rule": "rule1",
         "from-rule2": "rule2",
     }
-    assert cfg.label_sources == {
+    assert config_cache.label_sources(test_host) == {
         "cmk/site": "discovered",
         "explicit": "explicit",
         "from-rule": "ruleset",
@@ -1856,11 +1844,11 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
         f.write(repr({"äzzzz": {"value": "eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(test_host).labels == {
+    assert config_cache.labels(test_host) == {
         "cmk/site": "NO_SITE",
         "äzzzz": "eeeeez",
     }
-    assert config_cache.make_host_config(test_host).label_sources == {
+    assert config_cache.label_sources(test_host) == {
         "cmk/site": "discovered",
         "äzzzz": "discovered",
     }

@@ -74,6 +74,7 @@ from cmk.utils.type_defs import (
     IPMICredentials,
     Item,
     Labels,
+    LabelSources,
     Ruleset,
     RuleSetName,
     Seconds,
@@ -933,10 +934,7 @@ def _filter_active_hosts(
 
 def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
-    return (
-        ConfigCache.tags_of_host(hostname).get("site", distributed_wato_site)
-        == distributed_wato_site
-    )
+    return ConfigCache.tags(hostname).get("site", distributed_wato_site) == distributed_wato_site
 
 
 def duplicate_hosts() -> Sequence[HostName]:
@@ -1317,7 +1315,7 @@ def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> list[Ser
             )
 
         if tuple_rulesets.hosttags_match_taglist(
-            config_cache.tag_list_of_host(hostname), tags
+            config_cache.tag_list(hostname), tags
         ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
             for pattern in patternlist:
                 matchobject = regex(pattern).search(servicedesc)
@@ -2418,15 +2416,6 @@ class HostConfig:
 
         self._config_cache: Final = config_cache
 
-        # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
-        self.tags: Final = self._config_cache.tag_list_of_host(hostname)
-        self.tag_groups: Final = ConfigCache.tags_of_host(hostname)
-
-        self.labels: Final = self._config_cache.ruleset_matcher.labels_of_host(hostname)
-        self.label_sources: Final = self._config_cache.ruleset_matcher.label_sources_of_host(
-            hostname
-        )
-
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
@@ -2532,6 +2521,8 @@ class ConfigCache:
         self._explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self._snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
         self._disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
+        self._labels: dict[HostName, Labels] = {}
+        self._label_sources: dict[HostName, LabelSources] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2550,15 +2541,16 @@ class ConfigCache:
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
-        self.labels = LabelManager(
-            host_labels, host_label_rules, service_label_rules, self._discovered_labels_of_service
-        )
-
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             tag_to_group_map=tag_to_group_map,
             host_tags=host_tags,
             host_paths=self._host_paths,
-            labels=self.labels,
+            labels=LabelManager(
+                host_labels,
+                host_label_rules,
+                service_label_rules,
+                self._discovered_labels_of_service,
+            ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_of_cache,
             all_configured_hosts=self._all_configured_hosts,
@@ -2587,6 +2579,8 @@ class ConfigCache:
         self._explicit_check_command.clear()
         self._snmp_fetch_interval.clear()
         self._disabled_snmp_sections.clear()
+        self._labels.clear()
+        self._label_sources.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -2711,6 +2705,8 @@ class ConfigCache:
         self._explicit_check_command.clear()
         self._snmp_fetch_interval.clear()
         self._disabled_snmp_sections.clear()
+        self._labels.clear()
+        self._label_sources.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -2935,7 +2931,7 @@ class ConfigCache:
 
     def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
         return self._computed_datasources.setdefault(
-            host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags_of_host(host_name))
+            host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags(host_name))
         )
 
     def is_tcp_host(self, host_name: HostName) -> bool:
@@ -2946,7 +2942,7 @@ class ConfigCache:
 
     def is_piggyback_host(self, host_name: HostName) -> bool:
         def get_is_piggyback_host() -> bool:
-            tag_groups: Final = ConfigCache.tags_of_host(host_name)
+            tag_groups: Final = ConfigCache.tags(host_name)
             if tag_groups["piggyback"] == "piggyback":
                 return True
             if tag_groups["piggyback"] == "no-piggyback":
@@ -3249,10 +3245,7 @@ class ConfigCache:
             **{tag_to_group_map.get(tag_id, tag_id): tag_id for tag_id in tag_list},
         }
 
-    # Kept for compatibility with pre 1.6 sites
-    # TODO: Clean up all call sites one day (1.7?)
-    # TODO: check all call sites and remove this
-    def tag_list_of_host(self, hostname: HostName) -> TagIDs:
+    def tag_list(self, hostname: HostName) -> TagIDs:
         """Returns the list of all configured tags of a host. In case
         a host has no tags configured or is not known, it returns an
         empty list."""
@@ -3260,11 +3253,11 @@ class ConfigCache:
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return ConfigCache._tag_groups_to_tag_list("/", ConfigCache.tags_of_host(hostname))
+        return ConfigCache._tag_groups_to_tag_list("/", ConfigCache.tags(hostname))
 
     # TODO: check all call sites and remove this or make it private?
     @staticmethod
-    def tags_of_host(hostname: HostName) -> TaggroupIDToTagID:
+    def tags(hostname: HostName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
@@ -3284,6 +3277,14 @@ class ConfigCache:
             "site": omd_site(),
             "address_family": "ip-v4-only",
         }
+
+    def labels(self, host_name: HostName) -> Labels:
+        return self._labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))
+
+    def label_sources(self, host_name: HostName) -> LabelSources:
+        return self._label_sources.setdefault(
+            host_name, self.ruleset_matcher.label_sources_of_host(host_name)
+        )
 
     def max_cachefile_age(self, hostname: HostName) -> cache_file.MaxAge:
         return max_cachefile_age(
@@ -3489,13 +3490,13 @@ class ConfigCache:
 
     @staticmethod
     def is_no_ip_host(hostname: HostName) -> bool:
-        tag_groups = ConfigCache.tags_of_host(hostname)
+        tag_groups = ConfigCache.tags(hostname)
         return tag_groups["address_family"] == "no-ip"
 
     @staticmethod
     def is_ipv6_host(hostname: HostName) -> bool:
         # Whether or not the given host is configured not to be monitored via IP
-        tag_groups = ConfigCache.tags_of_host(hostname)
+        tag_groups = ConfigCache.tags(hostname)
         return "ip-v6" in tag_groups
 
     @staticmethod
@@ -3503,14 +3504,14 @@ class ConfigCache:
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        tag_groups = ConfigCache.tags_of_host(hostname)
+        tag_groups = ConfigCache.tags(hostname)
         return "ip-v4" in tag_groups or (
             not ConfigCache.is_ipv6_host(hostname) and not ConfigCache.is_no_ip_host(hostname)
         )
 
     @staticmethod
     def is_ipv4v6_host(hostname: HostName) -> bool:
-        tag_groups = ConfigCache.tags_of_host(hostname)
+        tag_groups = ConfigCache.tags(hostname)
         return "ip-v6" in tag_groups and "ip-v4" in tag_groups
 
     def is_ipv6_primary(self, hostname: HostName) -> bool:

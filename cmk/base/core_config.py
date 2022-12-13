@@ -787,12 +787,10 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
-    host_config = config_cache.make_host_config(hostname)
-
-    attrs["_TAGS"] = " ".join(sorted(host_config.tags))
-    attrs.update(_get_tag_attributes(host_config.tag_groups, "TAG"))
-    attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
-    attrs.update(_get_tag_attributes(host_config.label_sources, "LABELSOURCE"))
+    attrs["_TAGS"] = " ".join(sorted(config_cache.tag_list(hostname)))
+    attrs.update(_get_tag_attributes(config_cache.tags(hostname), "TAG"))
+    attrs.update(_get_tag_attributes(config_cache.labels(hostname), "LABEL"))
+    attrs.update(_get_tag_attributes(config_cache.label_sources(hostname), "LABELSOURCE"))
 
     if "alias" not in attrs:
         attrs["alias"] = config_cache.alias(hostname)
@@ -936,11 +934,11 @@ def _verify_cluster_datasource(
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
 ) -> None:
-    cluster_tg = config_cache.make_host_config(host_name).tag_groups
+    cluster_tg = config_cache.tags(host_name)
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
     for nodename in nodes:
-        node_tg = config_cache.make_host_config(nodename).tag_groups
+        node_tg = config_cache.tags(nodename)
         node_agent_ds = node_tg.get("agent")
         node_snmp_ds = node_tg.get("snmp_ds")
         warn_text = "Cluster '%s' has different datasources as its node" % host_name

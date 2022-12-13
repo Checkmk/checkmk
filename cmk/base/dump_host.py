@@ -103,7 +103,6 @@ def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(hostname)
 
     out.output("\n")
     if config_cache.is_cluster(hostname):
@@ -148,10 +147,10 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
-    tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
+    tags = [(tag_template % ":".join(t)) for t in sorted(config_cache.tags(hostname).items())]
     out.output(tty.yellow + "Tags:                   " + tty.normal + ", ".join(tags) + "\n")
 
-    labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
+    labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     if config_cache.is_cluster(hostname):

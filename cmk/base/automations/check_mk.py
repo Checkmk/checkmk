@@ -868,8 +868,8 @@ class AutomationAnalyseHost(Automation):
         host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         return automation_results.AnalyseHostResult(
-            config_cache.make_host_config(host_name).labels,
-            config_cache.make_host_config(host_name).label_sources,
+            config_cache.labels(host_name),
+            config_cache.label_sources(host_name),
         )
 
 

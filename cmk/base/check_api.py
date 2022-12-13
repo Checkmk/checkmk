@@ -288,7 +288,7 @@ def all_matching_hosts(condition: RuleConditionsSpec, with_foreign_hosts: bool) 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def tags_of_host(hostname: HostName) -> Set[str]:
-    return _config.get_config_cache().make_host_config(hostname).tags
+    return _config.get_config_cache().tag_list(hostname)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to

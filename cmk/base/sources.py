@@ -320,7 +320,7 @@ class _Builder:
             else:
                 self._add(*self._get_agent())
 
-        if "no-piggyback" not in self.host_config.tags:
+        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
             source = SourceInfo(
                 self.host_name,
                 self.ipaddress,

@@ -84,22 +84,22 @@ class ModeAuditLog(WatoMode):
                     ],
                 ),
                 PageMenuDropdown(
-                    name="export",
-                    title=_("Export"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Export"),
-                            entries=list(self._page_menu_entries_export()),
-                        ),
-                    ],
-                ),
-                PageMenuDropdown(
                     name="related",
                     title=_("Related"),
                     topics=[
                         PageMenuTopic(
                             title=_("Setup"),
                             entries=list(self._page_menu_entries_setup()),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="export",
+                    title=_("Export"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Export"),
+                            entries=list(self._page_menu_entries_export()),
                         ),
                     ],
                 ),
@@ -113,7 +113,7 @@ class ModeAuditLog(WatoMode):
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
         if user.may("wato.sites"):
             yield PageMenuEntry(
-                title=_("View changes"),
+                title=_("Activate pending changes"),
                 icon_name="activate",
                 item=make_simple_link(folder_preserving_link([("mode", "changelog")])),
             )

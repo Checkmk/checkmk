@@ -3,7 +3,7 @@ Class: fix
 Compatible: compat
 Component: agents
 Date: 1670849604
-Edition: cee
+Edition: cre
 Knowledge: doc
 Level: 1
 Version: 2.2.0i1
@@ -19,7 +19,7 @@ Starting with this Werk, a specified caching interval will also have effect on W
 To configure an interval, you have the two options:
 
 LI: Specify it within a check definition at the <tt>mrpe</tt> section at the <tt>check_mk.user.yml</tt>
-file in the form of <tt>check = (interval=<i>INTERVAL</i>) <i>COMMAND</i><br>. A config reload is required
+file in the form of <tt>check = (interval=<i>INTERVAL</i>) <i>COMMAND</i><tt>. A config reload is required
 after editing the file.
 LI: Optionally select and enter it at the agent ruleset "Execute MRPE checks". Already configured rulesets
 will start to work after baking and updating/deploying agents once.

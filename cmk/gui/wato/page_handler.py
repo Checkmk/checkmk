@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Collection
-
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -17,7 +15,6 @@ from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralExcept
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -25,7 +22,6 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
-from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -84,7 +80,7 @@ def page_handler() -> None:
 
     current_mode = request.var("mode") or "main"
     mode_class = mode_registry.get(current_mode, ModeNotImplemented)
-    _ensure_static_mode_permissions(mode_class.static_permissions())
+    mode_class.ensure_static_permissions()
 
     display_options.load_from_html(request, html)
 
@@ -158,16 +154,3 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
         html.reload_whole_page()
 
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
-
-
-def _ensure_static_mode_permissions(permissions: None | Collection[PermissionName]) -> None:
-    if permissions is None:
-        permissions = []
-    else:
-        user.need_permission("wato.use")
-    if transactions.is_transaction():
-        user.need_permission("wato.edit")
-    elif user.may("wato.seeall"):
-        permissions = []
-    for pname in permissions:
-        user.need_permission(pname if "." in pname else ("wato." + pname))

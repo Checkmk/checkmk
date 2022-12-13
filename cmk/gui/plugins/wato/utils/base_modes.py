@@ -6,6 +6,7 @@
 import abc
 import http.client
 from collections.abc import Collection, Iterable
+from typing import final
 
 from cmk.utils.plugin_registry import Registry
 
@@ -14,10 +15,12 @@ from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -36,6 +39,21 @@ class WatoMode(abc.ABC):
         least wato.use and - if he makes actions - wato.edit. Plus wato.*
         for each permission in the list."""
         raise NotImplementedError()
+
+    @final
+    @classmethod
+    def ensure_static_permissions(cls) -> None:
+        permissions = cls.static_permissions()
+        if permissions is None:
+            permissions = []
+        else:
+            user.need_permission("wato.use")
+        if transactions.is_transaction():
+            user.need_permission("wato.edit")
+        elif user.may("wato.seeall"):
+            permissions = []
+        for pname in permissions:
+            user.need_permission(pname if "." in pname else ("wato." + pname))
 
     @classmethod
     @abc.abstractmethod

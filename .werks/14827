@@ -1,4 +1,4 @@
-Title: Re-work agent plugin for monitoring SSH daemon configuration
+Title: <tt>mk_sshd_config</tt>: Monitor effective SSH daemon configuration
 Class: fix
 Compatible: incomp
 Component: checks
@@ -9,9 +9,12 @@ Level: 1
 State: unknown
 Version: 2.1.0p18
 
-The agent plugin for monitoring the SSH daemon configuration (<tt>mk_sshd_config</tt>) has been
-re-worked. The previous version of the plugin used the contents of <tt>/etc/ssh/sshd_config</tt> to
-monitor the daemon configuration. This is problematic in multiple ways:
+This change only affects you in case you use the agent plugin <tt>mk_sshd_config</tt> for monitoring
+the SSH daemon configuration of your Linux systems.
+
+<tt>mk_sshd_config</tt> has been re-worked. The previous version of the plugin used the contents of
+<tt>/etc/ssh/sshd_config</tt> to monitor the daemon configuration. This is problematic in multiple
+ways:
 
 LI: Include directives, such as <tt>Include /etc/ssh/sshd_config.d/*.conf</tt>, are not taken into account, resulting in potentially wrong monitoring results.
 LI: Match directives are evaluated incorrectly, leading to monitoring results such as "PasswordAuthentication: noyes".
@@ -26,7 +29,7 @@ password.
 This werk is marked as incompatible for two reasons:
 
 LI: The behavioural changes listed above.
-LI: <tt>sshd -T</tt> will likely require root permissions to execute successfully. Hence, the new version of the plugin will likely not work on systems where the agent is executed as non-root.
+LI: <tt>sshd -T</tt> will likely require root permissions to execute successfully. Hence, the new version of the plugin will likely not work on systems where the agent is executed as non-root. In this case, the user under which the agent is running must be granted the necessary permissions (eg. read access to the private host keys). If this is not an option, <tt>mk_sshd_config</tt> can unfortunately not be used any longer on such systems.
 
 Finally, note that the configuration option <tt>ChallengeResponseAuthentication</tt> is deprecated
 and has been replaced with <tt>KbdInteractiveAuthentication</tt>. If configured to monitor this

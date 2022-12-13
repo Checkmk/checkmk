@@ -195,7 +195,7 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).agent_port == result
+    assert config_cache.agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -622,7 +622,7 @@ def test_is_all_special_agents_host(
         ("testhost2", 1337),
     ],
 )
-def test_host_config_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, result: int) -> None:
+def test_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, result: int) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -631,7 +631,7 @@ def test_host_config_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, res
         [{"condition": {"host_name": ["testhost2"]}, "value": 1337, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).agent_port == result
+    assert config_cache.agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -641,9 +641,7 @@ def test_host_config_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, res
         ("testhost2", 12.0),
     ],
 )
-def test_host_config_tcp_connect_timeout(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: float
-) -> None:
+def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname_str: str, result: float) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -652,7 +650,7 @@ def test_host_config_tcp_connect_timeout(
         [{"condition": {"host_name": ["testhost2"]}, "value": 12.0, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).tcp_connect_timeout == result
+    assert config_cache.tcp_connect_timeout(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -662,7 +660,7 @@ def test_host_config_tcp_connect_timeout(
         ("testhost2", EncryptionHandling.TLS_ENCRYPTED_ONLY),
     ],
 )
-def test_host_config_encryption_handling(
+def test_encryption_handling(
     monkeypatch: MonkeyPatch, hostname_str: str, result: EncryptionHandling
 ) -> None:
     hostname = HostName(hostname_str)
@@ -678,7 +676,7 @@ def test_host_config_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).encryption_handling is result
+    assert config_cache.encryption_handling(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -688,7 +686,7 @@ def test_host_config_encryption_handling(
         ("testhost2", "my-super-secret-psk"),
     ],
 )
-def test_host_config_symmetric_agent_encryption(
+def test_symmetric_agent_encryption(
     monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
@@ -704,7 +702,7 @@ def test_host_config_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).symmetric_agent_encryption is result
+    assert config_cache.symmetric_agent_encryption(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -714,7 +712,7 @@ def test_host_config_symmetric_agent_encryption(
         ("testhost2", cmk_version.__version__),
     ],
 )
-def test_host_config_agent_target_version(
+def test_agent_target_version(
     monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
@@ -730,7 +728,7 @@ def test_host_config_agent_target_version(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).agent_target_version == result
+    assert config_cache.agent_target_version(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -740,7 +738,7 @@ def test_host_config_agent_target_version(
         ("testhost2", "echo 1"),
     ],
 )
-def test_host_config_datasource_program(
+def test_datasource_program(
     monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
@@ -756,7 +754,7 @@ def test_host_config_datasource_program(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).datasource_program == result
+    assert config_cache.datasource_program(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -803,9 +801,7 @@ def test_special_agents(monkeypatch: MonkeyPatch, hostname_str: str, result: lis
         ("testhost2", ["127.0.0.1"]),
     ],
 )
-def test_host_config_only_from(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
-) -> None:
+def test_only_from(monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -825,7 +821,7 @@ def test_host_config_only_from(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).only_from == result
+    assert config_cache.only_from(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -871,9 +867,7 @@ def test_explicit_check_command(
         ("testhost2", {"ding": 1, "dong": 1}),
     ],
 )
-def test_host_config_ping_levels(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
-) -> None:
+def test_ping_levels(monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -895,7 +889,7 @@ def test_host_config_ping_levels(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).ping_levels == result
+    assert config_cache.ping_levels(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -905,9 +899,7 @@ def test_host_config_ping_levels(
         ("testhost2", ["icon1", "icon2"]),
     ],
 )
-def test_host_config_icons_and_actions(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]
-) -> None:
+def test_icons_and_actions(monkeypatch: MonkeyPatch, hostname_str: str, result: list[str]) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname)
@@ -929,7 +921,7 @@ def test_host_config_icons_and_actions(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert sorted(config_cache.make_host_config(hostname).icons_and_actions) == sorted(result)
+    assert sorted(config_cache.icons_and_actions(hostname)) == sorted(result)
 
 
 @pytest.mark.parametrize(

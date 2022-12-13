@@ -233,9 +233,7 @@ def check_icmp_arguments_of(
     add_defaults: bool = True,
     family: int | None = None,
 ) -> str:
-    host_config = config_cache.make_host_config(hostname)
-    levels = host_config.ping_levels
-
+    levels = config_cache.ping_levels(hostname)
     if not add_defaults and not levels:
         return ""
 
@@ -833,7 +831,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
         attrs["_FILENAME"] = path
 
     # Add custom user icons and actions
-    actions = host_config.icons_and_actions
+    actions = config_cache.icons_and_actions(hostname)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
 

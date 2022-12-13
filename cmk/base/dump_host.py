@@ -181,7 +181,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         agenttypes.append("PING only")
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(host_config.agent_description + "\n")
+    out.output(config_cache.agent_description(hostname) + "\n")
 
     out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

@@ -519,7 +519,7 @@ class _Builder:
         )
 
     def _get_agent(self) -> tuple[SourceInfo, Fetcher, FileCache]:
-        datasource_program = self.host_config.datasource_program
+        datasource_program = self.config_cache.datasource_program(self.host_name)
         if datasource_program is not None:
             source = SourceInfo(
                 self.host_name,
@@ -593,11 +593,11 @@ class _Builder:
                 source,
                 TCPFetcher(
                     family=self.config_cache.default_address_family(self.host_name),
-                    address=(source.ipaddress, self.host_config.agent_port),
+                    address=(source.ipaddress, self.config_cache.agent_port(self.host_name)),
                     host_name=source.hostname,
-                    timeout=self.host_config.tcp_connect_timeout,
-                    encryption_handling=self.host_config.encryption_handling,
-                    pre_shared_secret=self.host_config.symmetric_agent_encryption,
+                    timeout=self.config_cache.tcp_connect_timeout(self.host_name),
+                    encryption_handling=self.config_cache.encryption_handling(self.host_name),
+                    pre_shared_secret=self.config_cache.symmetric_agent_encryption(self.host_name),
                 ),
                 AgentFileCache(
                     source.hostname,

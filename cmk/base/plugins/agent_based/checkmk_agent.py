@@ -31,7 +31,7 @@ from .utils.checkmk import CheckmkSection, ControllerSection, Plugin, PluginSect
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
-    return get_config_cache().make_host_config(host_name()).only_from
+    return get_config_cache().only_from(host_name())
 
 
 def discover_checkmk_agent(

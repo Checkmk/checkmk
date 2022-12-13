@@ -2427,130 +2427,6 @@ class HostConfig:
             hostname
         )
 
-    @staticmethod
-    def _is_inline_backend_supported() -> bool:
-        return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
-
-    @property
-    def agent_port(self) -> int:
-        ports = self._config_cache.host_extra_conf(self.hostname, agent_ports)
-        if not ports:
-            return agent_port
-
-        return ports[0]
-
-    @property
-    def tcp_connect_timeout(self) -> float:
-        timeouts = self._config_cache.host_extra_conf(self.hostname, tcp_connect_timeouts)
-        if not timeouts:
-            return tcp_connect_timeout
-
-        return timeouts[0]
-
-    @property
-    def encryption_handling(
-        self,
-    ) -> EncryptionHandling:
-        if not (settings := self._config_cache.host_extra_conf(self.hostname, encryption_handling)):
-            return EncryptionHandling.ANY_AND_PLAIN
-        match settings[0]["accept"]:
-            case "tls_encrypted_only":
-                return EncryptionHandling.TLS_ENCRYPTED_ONLY
-            case "any_encrypted":
-                return EncryptionHandling.ANY_ENCRYPTED
-            case "any_and_plain":
-                return EncryptionHandling.ANY_AND_PLAIN
-        raise ValueError("Unknown setting: %r" % settings[0])
-
-    @property
-    def symmetric_agent_encryption(self) -> str | None:
-        return (
-            settings[0]
-            if (settings := self._config_cache.host_extra_conf(self.hostname, agent_encryption))
-            else None
-        )
-
-    @property
-    def agent_description(self) -> str:
-        if self._config_cache.is_all_agents_host(self.hostname):
-            return "Normal Checkmk agent, all configured special agents"
-
-        if self._config_cache.is_all_special_agents_host(self.hostname):
-            return "No Checkmk agent, all configured special agents"
-
-        if self._config_cache.is_tcp_host(self.hostname):
-            return "Normal Checkmk agent, or special agent if configured"
-
-        return "No agent"
-
-    @property
-    def agent_exclude_sections(self) -> dict[str, str]:
-        settings = self._config_cache.host_extra_conf(self.hostname, agent_exclude_sections)
-        if not settings:
-            return {}
-        return settings[0]
-
-    @property
-    def agent_target_version(self) -> AgentTargetVersion:
-        agent_target_versions = self._config_cache.host_extra_conf(
-            self.hostname, check_mk_agent_target_versions
-        )
-        if not agent_target_versions:
-            return None
-
-        spec = agent_target_versions[0]
-        if spec == "ignore":
-            return None
-        if spec == "site":
-            return cmk_version.__version__
-        if isinstance(spec, str):
-            # Compatibility to old value specification format (a single version string)
-            return spec
-        if spec[0] == "specific":
-            return spec[1]
-
-        return spec  # return the whole spec in case of an "at least version" config
-
-    @property
-    def datasource_program(self) -> str | None:
-        """Return the command line to execute instead of contacting the agent
-
-        In case no datasource program is configured for a host return None
-        """
-        programs = self._config_cache.host_extra_conf(self.hostname, datasource_programs)
-        if not programs:
-            return None
-
-        return programs[0]
-
-    @property
-    def only_from(self) -> None | list[str] | str:
-        """The agent of a host may be configured to be accessible only from specific IPs"""
-        ruleset = agent_config.get("only_from", [])
-        if not ruleset:
-            return None
-
-        entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
-        if not entries:
-            return None
-
-        return entries[0]
-
-    @property
-    def ping_levels(self) -> PingLevels:
-        levels: PingLevels = {}
-
-        values = self._config_cache.host_extra_conf(self.hostname, ping_levels)
-        # TODO: Use host_extra_conf_merged?)
-        for value in values[::-1]:  # make first rules have precedence
-            levels.update(value)
-
-        return levels
-
-    @property
-    def icons_and_actions(self) -> list[str]:
-        return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
-
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
         return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
@@ -3528,11 +3404,15 @@ class ConfigCache:
 
         return not self.in_binary_hostlist(host_name, snmpv2c_hosts)
 
+    @staticmethod
+    def _is_inline_backend_supported() -> bool:
+        return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
+
     def get_snmp_backend(self, host_name: HostName) -> SNMPBackendEnum:
         if self.in_binary_hostlist(host_name, usewalk_hosts):
             return SNMPBackendEnum.STORED_WALK
 
-        with_inline_snmp = HostConfig._is_inline_backend_supported()
+        with_inline_snmp = ConfigCache._is_inline_backend_supported()
 
         host_backend_config = self.host_extra_conf(host_name, snmp_backend_hosts)
 
@@ -4140,6 +4020,109 @@ class ConfigCache:
         if "cmk_inventory" in use_new_descriptions_for:
             return "Check_MK Discovery"
         return "Check_MK inventory"
+
+    def agent_port(self, host_name: HostName) -> int:
+        ports = self.host_extra_conf(host_name, agent_ports)
+        if not ports:
+            return agent_port
+
+        return ports[0]
+
+    def tcp_connect_timeout(self, host_name: HostName) -> float:
+        timeouts = self.host_extra_conf(host_name, tcp_connect_timeouts)
+        if not timeouts:
+            return tcp_connect_timeout
+
+        return timeouts[0]
+
+    def encryption_handling(self, host_name: HostName) -> EncryptionHandling:
+        if not (settings := self.host_extra_conf(host_name, encryption_handling)):
+            return EncryptionHandling.ANY_AND_PLAIN
+        match settings[0]["accept"]:
+            case "tls_encrypted_only":
+                return EncryptionHandling.TLS_ENCRYPTED_ONLY
+            case "any_encrypted":
+                return EncryptionHandling.ANY_ENCRYPTED
+            case "any_and_plain":
+                return EncryptionHandling.ANY_AND_PLAIN
+        raise ValueError("Unknown setting: %r" % settings[0])
+
+    def symmetric_agent_encryption(self, host_name: HostName) -> str | None:
+        return (
+            settings[0] if (settings := self.host_extra_conf(host_name, agent_encryption)) else None
+        )
+
+    def agent_description(self, host_name: HostName) -> str:
+        if self.is_all_agents_host(host_name):
+            return "Normal Checkmk agent, all configured special agents"
+
+        if self.is_all_special_agents_host(host_name):
+            return "No Checkmk agent, all configured special agents"
+
+        if self.is_tcp_host(host_name):
+            return "Normal Checkmk agent, or special agent if configured"
+
+        return "No agent"
+
+    def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
+        settings = self.host_extra_conf(host_name, agent_exclude_sections)
+        if not settings:
+            return {}
+        return settings[0]
+
+    def agent_target_version(self, host_name: HostName) -> AgentTargetVersion:
+        agent_target_versions = self.host_extra_conf(host_name, check_mk_agent_target_versions)
+        if not agent_target_versions:
+            return None
+
+        spec = agent_target_versions[0]
+        if spec == "ignore":
+            return None
+        if spec == "site":
+            return cmk_version.__version__
+        if isinstance(spec, str):
+            # Compatibility to old value specification format (a single version string)
+            return spec
+        if spec[0] == "specific":
+            return spec[1]
+
+        return spec  # return the whole spec in case of an "at least version" config
+
+    def datasource_program(self, host_name: HostName) -> str | None:
+        """Return the command line to execute instead of contacting the agent
+
+        In case no datasource program is configured for a host return None
+        """
+        programs = self.host_extra_conf(host_name, datasource_programs)
+        if not programs:
+            return None
+
+        return programs[0]
+
+    def only_from(self, host_name: HostName) -> None | list[str] | str:
+        """The agent of a host may be configured to be accessible only from specific IPs"""
+        ruleset = agent_config.get("only_from", [])
+        if not ruleset:
+            return None
+
+        entries = self.host_extra_conf(host_name, ruleset)
+        if not entries:
+            return None
+
+        return entries[0]
+
+    def ping_levels(self, host_name: HostName) -> PingLevels:
+        levels: PingLevels = {}
+
+        values = self.host_extra_conf(host_name, ping_levels)
+        # TODO: Use host_extra_conf_merged?)
+        for value in values[::-1]:  # make first rules have precedence
+            levels.update(value)
+
+        return levels
+
+    def icons_and_actions(self, host_name: HostName) -> list[str]:
+        return list(set(self.host_extra_conf(host_name, host_icons_and_actions)))
 
 
 def get_config_cache() -> ConfigCache:

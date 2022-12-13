@@ -12,10 +12,12 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
+from cmk.base.config import ConfigCache
 from cmk.base.sources import fetch_all, make_sources
 from cmk.base.submitters import Submitter
 
@@ -26,6 +28,8 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
@@ -33,12 +37,13 @@ def commandline_checking(
     keepalive: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
-    config_cache = config.get_config_cache()
     return error_handling.check_result(
         partial(
             _commandline_checking,
             host_name,
             ipaddress,
+            config_cache=config_cache,
+            file_cache_options=file_cache_options,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
             submitter=submitter,
@@ -58,41 +63,48 @@ def _commandline_checking(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
-    config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_name)
+
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
+        hosts = [(host_name, ipaddress)]
+    else:
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched = fetch_all(
-        make_sources(
-            host_name,
-            ipaddress,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
-            selected_sections=selected_sections,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-            simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name, config.snmp_without_sys_descr
-            ),
-            file_cache_max_age=config_cache.max_cachefile_age(host_name),
+        *(
+            make_sources(
+                host_name_,
+                ipaddress_,
+                config_cache=config_cache,
+                force_snmp_cache_refresh=False,
+                selected_sections=selected_sections if nodes is None else NO_SELECTION,
+                on_scan_error=OnError.RAISE,
+                simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
+                file_cache_max_age=config_cache.max_cachefile_age(host_name),
+            )
+            for host_name_, ipaddress_ in hosts
         ),
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )
     return execute_checkmk_checks(
         hostname=host_name,
+        config_cache=config_cache,
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
         submitter=submitter,
     )

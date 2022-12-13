@@ -124,6 +124,9 @@ RUN /opt/install-freetds.sh
 # in the next step
 RUN /opt/strip_binaries /opt
 
+# Run this AFTER strip_binaries!!
+RUN /opt/install-bazel.sh
+
 ### Actual Image ###
 FROM base
 
@@ -140,6 +143,7 @@ RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
+RUN /opt/install-bazel.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh

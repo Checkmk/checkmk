@@ -9,6 +9,7 @@ from livestatus import SiteId
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
@@ -22,7 +23,7 @@ def acknowledge_service_problem(  # type:ignore[no-untyped-def]
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Acknowledge the current problem for the given service.
@@ -104,7 +105,7 @@ def acknowledge_servicegroup_problem(  # type:ignore[no-untyped-def]
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Acknowledge the problems of the current services of the service group
@@ -174,7 +175,7 @@ def acknowledge_host_problem(  # type:ignore[no-untyped-def]
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Acknowledge the current problem for the given host.
@@ -254,7 +255,7 @@ def acknowledge_hostgroup_problem(  # type:ignore[no-untyped-def]
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Acknowledge the problems of the current hosts of the host group

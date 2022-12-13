@@ -43,6 +43,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Callable, Iterable
+from enum import auto, Enum
 from pathlib import Path
 from typing import BinaryIO, cast, Final, IO, NamedTuple, NoReturn
 
@@ -60,6 +61,7 @@ from omdlib.config_hooks import (
     create_config_environment,
     hook_exists,
     load_config_hooks,
+    load_defaults,
     load_hook_dependencies,
     save_site_conf,
     sort_hooks,
@@ -75,6 +77,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.instance_id import has_instance_id, save_instance_id
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
     delete_apache_hook,
@@ -192,6 +195,32 @@ def stop_logging() -> None:
     g_stderr_log = None
 
 
+class CommandType(Enum):
+    create = auto()
+    move = auto()
+    copy = auto()
+
+    # reuse in options or not:
+    restore_existing_site = auto()
+    restore_as_new_site = auto()
+
+    @property
+    def short(self) -> str:
+        if self is CommandType.create:
+            return "create"
+
+        if self is CommandType.move:
+            return "mv"
+
+        if self is CommandType.copy:
+            return "cp"
+
+        if self in [CommandType.restore_as_new_site, CommandType.restore_existing_site]:
+            return "restore"
+
+        raise TypeError()
+
+
 # .
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |
@@ -220,7 +249,10 @@ def all_sites() -> Iterable[str]:
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
     prepare_and_populate_tmpfs(version_info, site)
-    call_init_scripts(site, "start")
+    call_init_scripts(site.dir, "start")
+    if not has_instance_id(site):
+        # Existing sites may not have an instance ID yet. After an update we create a new one.
+        save_instance_id(site)
 
 
 def stop_if_not_stopped(site: SiteContext) -> None:
@@ -229,7 +261,7 @@ def stop_if_not_stopped(site: SiteContext) -> None:
 
 
 def stop_site(site: SiteContext) -> None:
-    call_init_scripts(site, "stop")
+    call_init_scripts(site.dir, "stop")
 
 
 def get_skel_permissions(skel_path: str, perms: Permissions, relpath: str) -> int:
@@ -292,6 +324,9 @@ def create_skeleton_files(site: SiteContext, directory: str) -> None:
 def save_version_meta_data(site: SiteContext, version: str) -> None:
     """Make meta information from the version available in the site directory
 
+    the prurpose of this metadir is to be able to upgrade without the old
+    version and the symlinks
+
     Currently it holds the following information
     A) A copy of the versions skel/ directory
     B) A copy of the skel.permissions file
@@ -334,9 +369,9 @@ def create_skeleton_file(
         mode = read_skel_permissions().get(relpath)
         if mode is None:
             if skel_path.is_dir():
-                mode = 0o755
+                mode = 0o750
             else:
-                mode = 0o644
+                mode = 0o640
         user_path.chmod(mode)
 
 
@@ -1574,8 +1609,8 @@ def init_action(
     # OMD guarantees that we are in OMD_ROOT
     with chdir(site.dir):
         if command == "status":
-            return check_status(site, display=True, daemon=daemon, bare="bare" in options)
-        return call_init_scripts(site, command, daemon)
+            return check_status(site.dir, display=True, daemon=daemon, bare="bare" in options)
+        return call_init_scripts(site.dir, command, daemon)
 
 
 # .
@@ -2141,7 +2176,7 @@ def init_site(
     # Change ownership of all files and dirs to site user
     chown_tree(site.dir, site.name)
 
-    site.load_config()  # load default values from all hooks
+    site.load_config(load_defaults(site))  # load default values from all hooks
     if config_settings:  # add specific settings
         for hook_name, value in config_settings.items():
             site.conf[hook_name] = value
@@ -2150,7 +2185,7 @@ def init_site(
     # Change the few files that config save as created as root
     chown_tree(site.dir, site.name)
 
-    finalize_site(version_info, site, "create", apache_reload)
+    finalize_site(version_info, site, CommandType.create, apache_reload)
 
     return admin_password
 
@@ -2159,7 +2194,7 @@ def init_site(
 # What is "create", "mv" or "cp". It is used for
 # running the appropriate hooks.
 def finalize_site(
-    version_info: VersionInfo, site: SiteContext, what: str, apache_reload: bool
+    version_info: VersionInfo, site: SiteContext, command_type: CommandType, apache_reload: bool
 ) -> None:
 
     # Now we need to do a few things as site user. Note:
@@ -2177,7 +2212,7 @@ def finalize_site(
 
             # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
             # see CMK-3067
-            finalize_site_as_user(version_info, site, what, ignored_hooks=["TMPFS"])
+            finalize_site_as_user(version_info, site, command_type, ignored_hooks=["TMPFS"])
             sys.exit(0)
         except Exception as e:
             bail_out("Failed to finalize site: %s" % e)
@@ -2189,14 +2224,14 @@ def finalize_site(
     # The config changes above, made with the site user, have to be also available for
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
-    site.load_config()
+    site.load_config(load_defaults(site))
     register_with_system_apache(version_info, site, apache_reload)
 
 
 def finalize_site_as_user(
     version_info: VersionInfo,
     site: SiteContext,
-    what: str,
+    command_type: CommandType,
     ignored_hooks: list[str] | None = None,
 ) -> None:
     # Mount and create contents of tmpfs. This must be done as normal
@@ -2212,7 +2247,10 @@ def finalize_site_as_user(
     initialize_site_ca(site)
     save_site_conf(site)
 
-    call_scripts(site, "post-" + what)
+    if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
+        save_instance_id(site)
+
+    call_scripts(site, "post-" + command_type.short)
 
 
 def main_rm(
@@ -2314,7 +2352,7 @@ def main_update_apache_config(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
-    site.load_config()
+    site.load_config(load_defaults(site))
     if _is_apache_enabled(site):
         register_with_system_apache(version_info, site, apache_reload=True)
     else:
@@ -2338,16 +2376,16 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     old_site: SiteContext,
     global_opts: "GlobalOptions",
-    what: str,
+    command_type: CommandType,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
 
     conflict_mode = _get_conflict_mode(options)
-    action = "rename" if what == "mv" else "copy"
+    action = "rename" if command_type is CommandType.move else "copy"
 
     if len(args) != 1:
-        bail_out("omd: Usage: omd %s oldname newname" % what)
+        bail_out("omd: Usage: omd %s oldname newname" % command_type.short)
     new_site = SiteContext(args[0])
 
     reuse = False
@@ -2369,14 +2407,14 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
             "PIDs: %s" % (action, old_site.name, old_site.name, " ".join(pids))
         )
 
-    if what == "mv":
+    if command_type is CommandType.move:
         unmount_tmpfs(old_site, kill="kill" in options)
         if not reuse:
             remove_from_fstab(old_site)
 
     sys.stdout.write(
         "{}ing site {} to {}...".format(
-            what == "mv" and "Mov" or "Copy", old_site.name, new_site.name
+            command_type is CommandType.move and "Mov" or "Copy", old_site.name, new_site.name
         )
     )
     sys.stdout.flush()
@@ -2388,7 +2426,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
-    if what == "mv" and not reuse:
+    if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site.dir, new_site.dir)
         delete_apache_hook(old_site.name)
@@ -2421,17 +2459,17 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     patch_skeleton_files(conflict_mode, old_site, new_site)
 
     # In case of mv now delete old user
-    if what == "mv" and not reuse:
+    if command_type is CommandType.move and not reuse:
         userdel(old_site.name)
 
     # clean up old site
-    if what == "mv" and reuse:
+    if command_type is CommandType.move and reuse:
         main_rm(version_info, old_site, global_opts, [], {"reuse": None})
 
     sys.stdout.write("OK\n")
 
     # Now switch over to the new site as currently active site
-    new_site.load_config()
+    new_site.load_config(load_defaults(new_site))
     set_environment(new_site)
 
     # Entry for tmps in /etc/fstab
@@ -2441,7 +2479,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
 
-    finalize_site(version_info, new_site, what, "apache-reload" in options)
+    finalize_site(version_info, new_site, command_type, "apache-reload" in options)
 
 
 def main_diff(
@@ -2789,7 +2827,7 @@ def main_update(  # pylint: disable=too-many-branches
 
     # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
     # new settings and default values.
-    site.load_config()
+    site.load_config(load_defaults(site))
 
     # Execute some builtin initializations before executing the update-pre-hooks
     initialize_livestatus_tcp_tls_after_update(site)
@@ -2964,6 +3002,10 @@ def main_init_action(  # pylint: disable=too-many-branches
             # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
             save_tmpfs_dump(site)
 
+        if command == "start" and not has_instance_id(site):
+            # Existing sites may not have an instance ID yet. After an update we create a new one.
+            save_instance_id(site)
+
         sys.exit(exit_status)
 
     # if no site is selected, all sites are affected
@@ -2991,7 +3033,7 @@ def main_init_action(  # pylint: disable=too-many-branches
         if site.is_disabled():
             continue
 
-        site.load_config()
+        site.load_config(load_defaults(site))
 
         # Handle non autostart sites
         if command in ["start", "restart", "reload"] or ("auto" in options and command == "status"):
@@ -3196,7 +3238,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     version_info: VersionInfo,
     source_descr: str,
     new_site_name: str | None,
-) -> None:
+) -> SiteContext:
     try:
         sitename, version = omdlib.backup.get_site_and_version_from_backup(tar)
     except Exception as e:
@@ -3229,7 +3271,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         sys.stdout.write("Restoring site from %s...\n" % source_descr)
         sys.stdout.flush()
 
-        site.load_config()
+        site.load_config(load_defaults(site))
         orig_apache_port = site.conf["APACHE_TCP_PORT"]
 
         prepare_restore_as_site_user(site, global_opts, options)
@@ -3259,7 +3301,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
 
         tar.extract(tarinfo, path=site.dir)
 
-    site.load_config()
+    site.load_config(load_defaults(site))
 
     # give new user all files
     chown_tree(site.dir, site.name)
@@ -3280,6 +3322,8 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
         postprocess_restore_as_root(version_info, site, options)
     else:
         postprocess_restore_as_site_user(version_info, site, options, orig_apache_port)
+
+    return site
 
 
 def main_restore(
@@ -3316,7 +3360,7 @@ def main_restore(
             fileobj=fileobj,
             mode=mode,
         ) as tar:
-            _restore_backup_from_tar(
+            site = _restore_backup_from_tar(
                 tar=tar,
                 site=site,
                 options=options,
@@ -3507,10 +3551,13 @@ def postprocess_restore_as_root(
     version_info: VersionInfo, site: SiteContext, options: CommandOptions
 ) -> None:
     # Entry for tmps in /etc/fstab
-    if "reuse" not in options:
+    if "reuse" in options:
+        command_type = CommandType.restore_existing_site
+    else:
+        command_type = CommandType.restore_as_new_site
         add_to_fstab(site, tmpfs_size=options.get("tmpfs-size"))
 
-    finalize_site(version_info, site, "restore", "apache-reload" in options)
+    finalize_site(version_info, site, command_type, "apache-reload" in options)
 
 
 def postprocess_restore_as_site_user(
@@ -3521,7 +3568,15 @@ def postprocess_restore_as_site_user(
     site.conf["APACHE_TCP_PORT"] = orig_apache_port
     save_site_conf(site)
 
-    finalize_site_as_user(version_info, site, "restore")
+    finalize_site_as_user(
+        version_info,
+        site,
+        (
+            CommandType.restore_existing_site
+            if "reuse" in options
+            else CommandType.restore_as_new_site
+        ),
+    )
 
 
 def main_cleanup(
@@ -3936,7 +3991,7 @@ COMMANDS: Final = [
         confirm=False,
         args_text="NEWNAME",
         handler=lambda version_info, site, global_opts, args_text, opts: main_mv_or_cp(
-            version_info, site, global_opts, "mv", args_text, opts
+            version_info, site, global_opts, CommandType.move, args_text, opts
         ),
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -3973,7 +4028,7 @@ COMMANDS: Final = [
         confirm=False,
         args_text="NEWNAME",
         handler=lambda version_info, site, global_opts, args_text, opts: main_mv_or_cp(
-            version_info, site, global_opts, "cp", args_text, opts
+            version_info, site, global_opts, CommandType.copy, args_text, opts
         ),
         options=[
             Option("uid", "u", True, "create site user with UID ARG"),
@@ -4508,7 +4563,8 @@ def main() -> None:  # pylint: disable=too-many-branches
         elif omdlib.__version__ != v:
             exec_other_omd(site, v, command.command)
 
-    site.load_config()
+    if isinstance(site, SiteContext):
+        site.load_config(load_defaults(site))
 
     # Commands which affect a site and can be called as root *or* as
     # site user should always run with site user privileges. That way

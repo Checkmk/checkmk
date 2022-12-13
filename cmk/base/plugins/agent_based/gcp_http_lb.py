@@ -66,14 +66,13 @@ def check_latencies(
     section_gcp_service_http_lb: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
-    metrics = {
-        "latencies": gcp.MetricSpec(
-            "loadbalancing.googleapis.com/https/total_latencies",
-            "Latency",
-            render.timespan,
-            scale=1e-3,
-        )
-    }
+    metrics = gcp.get_percentile_metric_specs(
+        "loadbalancing.googleapis.com/https/total_latencies",
+        "latencies",
+        "Latency",
+        render.timespan,
+        scale=1e-3,
+    )
     yield from gcp.check(
         metrics, item, params, section_gcp_service_http_lb, ASSET_TYPE, section_gcp_assets
     )
@@ -86,7 +85,7 @@ register.check_plugin(
     check_ruleset_name="gcp_http_lb_latencies",
     discovery_function=discover,
     check_function=check_latencies,
-    check_default_parameters={"latencies": None},
+    check_default_parameters={"latencies": (99, None)},
 )
 
 

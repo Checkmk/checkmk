@@ -4,7 +4,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used for marking up Monitoring data, such as host and
- * service states, Perf-O-Meters und the like.
+ * service states, Perf-O-Meters and the like.
  *
  * CSS classes for service states:
  * state0 - OK
@@ -251,15 +251,6 @@ b.stmark {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-}
-
-/* inline icon in plugin output for URLs */
-/* TODO: Reproduce this html element */
-img.pluginurl {
-  width: 16px;
-  height: 16px;
-  margin: 1px;
-  vertical-align: middle;
 }
 
 /* Status of sites in sidebar and in WATO */
@@ -522,18 +513,10 @@ table.data div.objectlist div {
  Sites can be represented by small icons with a size of 24x24 px.
  This is the styling for these icons.
  */
-/* TODO: Reproduce this html element. Is cmk.gui.plugins.views.py:PainterSiteIcon ever rendered?
- *       The painter is used e.g. in the host group view. */
 img.siteicon {
   width: 24px;
   height: 24px;
   border: 1px solid $bi-box-border-color;
-}
-
-/* TODO: Reproduce table.customvars */
-table.customvars {
-  padding: 0;
-  border-collapse: collapse;
 }
 
 table.data tr.data td table.customvars td {

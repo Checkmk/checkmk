@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import re
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
@@ -246,34 +245,6 @@ class DiscoveryResult:
     diff_text: str | None = None
 
 
-class UserId(str):
-    USER_ID_REGEX = re.compile(r"^[\w_$][-\w.@_$]*$")
-
-    @classmethod
-    def validate(cls, text: str) -> None:
-        """Check if it is a valid UserId
-
-        We use the userid to create file paths, so we we need to be strict...
-
-        >>> UserId.validate("cmkadmin")
-        >>> UserId.validate("")
-        >>> UserId.validate("foo/../")
-        Traceback (most recent call last):
-        ...
-        ValueError: Invalid username: 'foo/../'
-        """
-        if text == "":
-            # For legacy reasons (e.g. cmk.gui.visuals)
-            return
-
-        if not cls.USER_ID_REGEX.match(text):
-            raise ValueError(f"Invalid username: {text!r}")
-
-    def __new__(cls, text: str) -> UserId:
-        cls.validate(text)
-        return super().__new__(cls, text)
-
-
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
 SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
@@ -358,3 +329,5 @@ InfluxDBConnectionSpec = dict[str, Any]
 #           we need to fix the layering problem with the
 #           global config before this is safe.
 IPMICredentials = Mapping[str, str]
+
+HTTPMethod = Literal["get", "put", "post", "delete"]

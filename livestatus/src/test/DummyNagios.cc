@@ -57,11 +57,11 @@ int is_escalated_contact_for_service(service * /*unused*/,
 time_t last_command_check;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 time_t last_log_rotation;
-int neb_deregister_callback(int /*unused*/, int (*/*unused*/)(int, void *)) {
+int neb_deregister_callback(int /*unused*/, int (* /*unused*/)(int, void *)) {
     return 0;
 }
 int neb_register_callback(int /*unused*/, void * /*unused*/, int /*unused*/,
-                          int (*/*unused*/)(int, void *)) {
+                          int (* /*unused*/)(int, void *)) {
     return 0;
 }
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

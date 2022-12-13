@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import dataclasses
 import numbers
 import os
 import shutil
@@ -24,6 +25,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ConfigurationWarnings,
@@ -42,13 +45,7 @@ import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 from cmk.base.check_utils import ConfiguredService
-from cmk.base.config import (
-    ConfigCache,
-    HostCheckCommand,
-    HostConfig,
-    ObjectAttributes,
-    TaggroupIDToTagID,
-)
+from cmk.base.config import ConfigCache, ObjectAttributes, TaggroupIDToTagID
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ObjectMacros = dict[str, AnyStr]
@@ -58,6 +55,12 @@ CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
 
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
 AbstractServiceID = Union[ActiveServiceID, ServiceID]
+
+
+@dataclasses.dataclass(frozen=True)
+class CollectedHostLabels:
+    host_labels: Labels
+    service_labels: dict[ServiceName, Labels]
 
 
 class MonitoringCore(abc.ABC):
@@ -150,17 +153,6 @@ def duplicate_service_warning(
 #                                  Tuple[Literal["custom"], TextInput]])
 
 
-def _get_host_check_command(
-    host_config: HostConfig, default_host_check_command: str
-) -> HostCheckCommand:
-    explicit_command = host_config.explicit_check_command
-    if explicit_command is not None:
-        return explicit_command
-    if ConfigCache.is_no_ip_host(host_config.hostname):
-        return "ok"
-    return default_host_check_command
-
-
 def _cluster_ping_command(
     config_cache: ConfigCache, host_name: HostName, ip: HostAddress
 ) -> CoreCommand | None:
@@ -174,7 +166,6 @@ def _cluster_ping_command(
 
 def host_check_command(
     config_cache: ConfigCache,
-    host_config: HostConfig,
     host_name: HostName,
     ip: HostAddress,
     is_clust: bool,
@@ -182,7 +173,7 @@ def host_check_command(
     host_check_via_service_status: Callable,
     host_check_via_custom_check: Callable,
 ) -> CoreCommand | None:
-    value = _get_host_check_command(host_config, default_host_check_command)
+    value = config_cache.host_check_command(host_name, default_host_check_command)
 
     if value == "smart":
         if is_clust:
@@ -792,25 +783,25 @@ def _set_addresses(
 
 
 def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> ObjectAttributes:
-    host_config = config_cache.make_host_config(hostname)
-    attrs = host_config.extra_host_attributes
+    attrs = config_cache.extra_host_attributes(hostname)
 
     # Pre 1.6 legacy attribute. We have changed our whole code to use the
     # livestatus column "tags" which is populated by all attributes starting with
     # "__TAG_" instead. We may deprecate this is one day.
-    attrs["_TAGS"] = " ".join(sorted(config_cache.make_host_config(hostname).tags))
+    host_config = config_cache.make_host_config(hostname)
 
+    attrs["_TAGS"] = " ".join(sorted(host_config.tags))
     attrs.update(_get_tag_attributes(host_config.tag_groups, "TAG"))
     attrs.update(_get_tag_attributes(host_config.labels, "LABEL"))
     attrs.update(_get_tag_attributes(host_config.label_sources, "LABELSOURCE"))
 
     if "alias" not in attrs:
-        attrs["alias"] = host_config.alias
+        attrs["alias"] = config_cache.alias(hostname)
 
     # Now lookup configured IP addresses
     v4address: str | None = None
     if ConfigCache.is_ipv4_host(hostname):
-        v4address = ip_address_of(hostname, host_config, socket.AF_INET)
+        v4address = ip_address_of(hostname, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -818,7 +809,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: str | None = None
     if ConfigCache.is_ipv6_host(hostname):
-        v6address = ip_address_of(hostname, host_config, socket.AF_INET6)
+        v6address = ip_address_of(hostname, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -872,8 +863,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
-            node_config = config_cache.make_host_config(h)
-            addr = ip_address_of(h, node_config, family)
+            addr = ip_address_of(h, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -883,8 +873,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
-            node_config = config_cache.make_host_config(h)
-            addr = ip_address_of(h, node_config, family)
+            addr = ip_address_of(h, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -898,17 +887,13 @@ def get_cluster_attributes(
     return attrs
 
 
-def get_cluster_nodes_for_config(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    host_config: HostConfig,
-) -> list[HostName]:
+def get_cluster_nodes_for_config(config_cache: ConfigCache, host_name: HostName) -> list[HostName]:
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         return []
 
     _verify_cluster_address_family(host_name, nodes, config_cache)
-    _verify_cluster_datasource(host_name, nodes, config_cache, host_config)
+    _verify_cluster_datasource(host_name, nodes, config_cache)
     nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
@@ -951,9 +936,8 @@ def _verify_cluster_datasource(
     host_name: HostName,
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
-    host_config: HostConfig,
 ) -> None:
-    cluster_tg = host_config.tag_groups
+    cluster_tg = config_cache.make_host_config(host_name).tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
     for nodename in nodes:
@@ -967,11 +951,9 @@ def _verify_cluster_datasource(
             warning(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
 
 
-def ip_address_of(
-    host_name: HostName, host_config: HostConfig, family: socket.AddressFamily
-) -> str | None:
+def ip_address_of(host_name: HostName, family: socket.AddressFamily) -> str | None:
     try:
-        return config.lookup_ip_address(host_config, family=family)
+        return config.lookup_ip_address(host_name, family=family)
     except Exception as e:
         config_cache = config.get_config_cache()
         if config_cache.is_cluster(host_name):
@@ -1044,14 +1026,13 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
 def translate_ds_program_source_cmdline(
     template: str,
     host_name: HostName,
-    host_config: HostConfig,
     ipaddress: HostAddress | None,
 ) -> str:
-    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
+    def _translate_host_macros(cmd: str) -> str:
         config_cache = config.get_config_cache()
         attrs = get_host_attributes(host_name, config_cache)
         if config_cache.is_cluster(host_name):
-            parents_list = get_cluster_nodes_for_config(config_cache, host_name, host_config)
+            parents_list = get_cluster_nodes_for_config(config_cache, host_name)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
             attrs.update(
                 get_cluster_attributes(
@@ -1078,7 +1059,48 @@ def translate_ds_program_source_cmdline(
             },
         )
 
-    return _translate_host_macros(
-        _translate_legacy_macros(template, host_name, ipaddress),
-        host_config,
+    return _translate_host_macros(_translate_legacy_macros(template, host_name, ipaddress))
+
+
+def write_notify_host_file(
+    config_path: VersionedConfigPath,
+    labels_per_host: dict[HostName, CollectedHostLabels],
+) -> None:
+    notify_labels_path: Path = _get_host_file_path(config_path)
+    for host, labels in labels_per_host.items():
+        host_path = notify_labels_path / host
+        save_object_to_file(
+            host_path,
+            dataclasses.asdict(
+                CollectedHostLabels(
+                    host_labels=labels.host_labels,
+                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
+                )
+            ),
+        )
+
+
+def read_notify_host_file(
+    host_name: HostName,
+) -> CollectedHostLabels:
+    host_file_path: Path = _get_host_file_path(host_name=host_name)
+    return CollectedHostLabels(
+        **load_object_from_file(
+            path=host_file_path,
+            default={"host_labels": {}, "service_labels": {}},
+        )
     )
+
+
+def _get_host_file_path(
+    config_path: VersionedConfigPath | None = None,
+    host_name: HostName | None = None,
+) -> Path:
+    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
+    if host_name:
+        return root_path / "notify" / "labels" / host_name
+    return root_path / "notify" / "labels"
+
+
+def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:
+    return {key[8:]: value for key, value in key_value_pairs if key.startswith("__LABEL_")}

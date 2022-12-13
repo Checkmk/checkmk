@@ -11,6 +11,8 @@ import pytest
 
 import tests.testlib as testlib
 
+from tests.unit.conftest import FixPluginLegacy
+
 import cmk.utils.paths
 
 import cmk.base.check_utils
@@ -48,7 +50,7 @@ def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
         r"\btags_of_host\b",
     ],
 )
-def test_deprecated_api_features(deprecated_pattern) -> None:  # type:ignore[no-untyped-def]
+def test_deprecated_api_features(deprecated_pattern: str) -> None:
     check_files = (
         pathname
         for pathname in Path(cmk.utils.paths.checks_dir).glob("*")
@@ -66,7 +68,7 @@ def test_deprecated_api_features(deprecated_pattern) -> None:  # type:ignore[no-
     )
 
 
-def test_includes_are_deprecated(fix_plugin_legacy) -> None:  # type:ignore[no-untyped-def]
+def test_includes_are_deprecated(fix_plugin_legacy: FixPluginLegacy) -> None:
     for name, check_info in fix_plugin_legacy.check_info.items():
         assert not check_info.get("includes"), f"Plugin {name}: includes are deprecated!"
 

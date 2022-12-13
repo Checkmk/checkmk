@@ -7,7 +7,7 @@
 This module exposes three functions:
  * analyse_node_labels
  * analyse_cluster_labels
- * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
+ * analyse_host_labels (dispatching to one of the above based on the cluster configuration)
 
 """
 from collections.abc import Mapping, Sequence
@@ -19,6 +19,7 @@ from cmk.utils.type_defs import HostKey, HostName, SourceType
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.config import ConfigCache
 from cmk.base.discovered_labels import HostLabel
 
 from .utils import QualifiedDiscovery
@@ -27,15 +28,16 @@ from .utils import QualifiedDiscovery
 def analyse_host_labels(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
     load_labels: bool,
     save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
-    config_cache = config.get_config_cache()
     return (
         analyse_cluster_labels(
             host_name,
+            config_cache=config_cache,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -44,6 +46,7 @@ def analyse_host_labels(
         if config_cache.is_cluster(host_name)
         else analyse_node_labels(
             host_name=host_name,
+            config_cache=config_cache,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -55,6 +58,7 @@ def analyse_host_labels(
 def analyse_node_labels(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -74,6 +78,7 @@ def analyse_node_labels(
     """
     return _analyse_host_labels(
         host_name=host_name,
+        config_cache=config_cache,
         discovered_host_labels=_discover_host_labels(
             host_name=host_name,
             parsed_sections_broker=parsed_sections_broker,
@@ -87,6 +92,7 @@ def analyse_node_labels(
 def analyse_cluster_labels(
     host_name: HostName,
     *,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -104,7 +110,6 @@ def analyse_cluster_labels(
     Some plugins discover services based on host labels, so the ruleset
     optimizer caches have to be cleared if new host labels are found.
     """
-    config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return QualifiedDiscovery.empty()
@@ -113,6 +118,7 @@ def analyse_cluster_labels(
     for node in nodes:
         node_result = analyse_node_labels(
             host_name=node,
+            config_cache=config_cache,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -132,6 +138,7 @@ def analyse_cluster_labels(
 
     return _analyse_host_labels(
         host_name=host_name,
+        config_cache=config_cache,
         discovered_host_labels=list(nodes_host_labels.values()),
         existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
         save_labels=save_labels,
@@ -141,6 +148,7 @@ def analyse_cluster_labels(
 def _analyse_host_labels(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
     discovered_host_labels: Sequence[HostLabel],
     existing_host_labels: Sequence[HostLabel],
     save_labels: bool,
@@ -183,7 +191,7 @@ def _analyse_host_labels(
         # based on these new host labels but we only got the cached result.
         # If we found new host labels, we have to evaluate these rules again in order
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
-        config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
+        config_cache.ruleset_matcher.ruleset_optimizer.clear_caches()
 
     return host_labels
 

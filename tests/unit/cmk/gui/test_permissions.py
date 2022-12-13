@@ -542,10 +542,10 @@ def test_registered_permissions() -> None:
             "wato.bake_agents",
             "wato.dcd_connections",
             "wato.download_all_agents",
-            "wato.license_usage",
             "wato.licensing",
+            "wato.licensing_settings",
+            "wato.license_usage",
             "wato.influxdb_connections",
-            "wato.submit_license_usage",
             "wato.manage_mkps",
             "wato.mkps",
             "wato.sign_agents",
@@ -618,6 +618,7 @@ def test_registered_permissions() -> None:
             "view.customer_hosts_pend",
             "view.customer_hosts_unreach",
             "sidesnap.customers",
+            "graph_collection.default",
         ]
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())

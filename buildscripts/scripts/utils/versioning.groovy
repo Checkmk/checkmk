@@ -5,8 +5,6 @@
 // library for calculation of version numbers
 import groovy.transform.Field
 
-// TODO: Use ntop_rules.json as soon as we want to exclude ntop-mkp-able files from the enterprise build
-// as this logic is shared by the script to create the ntop mkp
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
@@ -39,12 +37,9 @@ def REPO_PATCH_RULES = [\
         "managed", \
         "cme", \
         "cme.py", \
-        "plus", \
-        "cpe", \
-        "cpe.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
+        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
 "managed": [\
     "paths_to_be_removed": [\
         "plus", \

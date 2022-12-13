@@ -15,30 +15,6 @@ interface Args {
     add_ajax_id?: boolean;
 }
 
-// NOTE: This function is deprecated; use call_ajax instead.
-export function post_url(
-    url: string,
-    post_params: string,
-    responseHandler?: (a?, b?) => void,
-    handler_data: any = undefined,
-    errorHandler?: (a?, b?, c?) => void
-) {
-    var args: Args = {
-        method: "POST",
-        post_data: post_params,
-    };
-
-    if (typeof responseHandler !== "undefined") {
-        args.response_handler = responseHandler;
-    }
-
-    if (typeof handler_data !== "undefined") args.handler_data = handler_data;
-
-    if (typeof errorHandler !== "undefined") args.error_handler = errorHandler;
-
-    call_ajax(url, args);
-}
-
 export function call_ajax(url, optional_args?) {
     const default_args = {
         add_ajax_id: true,
@@ -49,7 +25,6 @@ export function call_ajax(url, optional_args?) {
         method: "GET",
         post_data: null,
         sync: false,
-        for_license_usage: false,
         authorization: null,
     };
     var args = {
@@ -90,14 +65,10 @@ export function call_ajax(url, optional_args?) {
     }
 
     if (args.method == "POST") {
-        if (args.for_license_usage) {
-            AJAX.setRequestHeader("Content-type", "application/json");
-        } else {
-            AJAX.setRequestHeader(
-                "Content-type",
-                "application/x-www-form-urlencoded"
-            );
-        }
+        AJAX.setRequestHeader(
+            "Content-type",
+            "application/x-www-form-urlencoded"
+        );
     }
 
     if (!args.sync) {
@@ -136,8 +107,7 @@ export function call_ajax(url, optional_args?) {
     if (
         typeof args.post_data == "string" &&
         !args.post_data.includes("&csrf_token=") &&
-        !args.post_data.startsWith("csrf_token=") &&
-        !args.for_license_usage
+        !args.post_data.startsWith("csrf_token=")
     ) {
         args.post_data +=
             "&csrf_token=" + encodeURIComponent(global_csrf_token);

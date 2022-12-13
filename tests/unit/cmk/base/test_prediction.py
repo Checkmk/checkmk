@@ -5,11 +5,14 @@
 
 import math
 import time
+from collections.abc import Callable, Sequence
 from pprint import pprint
 
 import pytest
 
 from tests.testlib import on_time
+
+from cmk.utils.prediction import DataStats, Seconds, Timegroup, TimeSeriesValues, Timestamp
 
 from cmk.base import prediction
 
@@ -23,7 +26,11 @@ from cmk.base import prediction
         (prediction._group_by_everyhour, 1543402820, ("everyhour", 20)),
     ],
 )
-def test_group_by(group_by, timestamp, result) -> None:  # type:ignore[no-untyped-def]
+def test_group_by(
+    group_by: Callable[[Timestamp], tuple[Timegroup, Timestamp]],
+    timestamp: Timestamp,
+    result: tuple[Timegroup, Timestamp],
+) -> None:
     with on_time(timestamp, "CET"):
         assert group_by(timestamp) == result
 
@@ -115,8 +122,13 @@ def test_group_by(group_by, timestamp, result) -> None:  # type:ignore[no-untype
         ),
     ],
 )
-def test_time_slices(  # type:ignore[no-untyped-def]
-    utcdate, timezone, horizon, period_info, timegroup, result
+def test_time_slices(
+    utcdate: str,
+    timezone: str,
+    horizon: Seconds,
+    period_info: prediction._PeriodInfo,
+    timegroup: Timegroup,
+    result: Sequence[tuple[Timestamp, Timestamp]],
 ) -> None:
     """Find period slices for predictive levels
 
@@ -183,5 +195,5 @@ def test_time_slices(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_data_stats(slices, result) -> None:  # type:ignore[no-untyped-def]
+def test_data_stats(slices: list[TimeSeriesValues], result: DataStats) -> None:
     assert prediction._data_stats(slices) == result

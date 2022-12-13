@@ -17,7 +17,7 @@ notification_logging = 15
 notification_backlog = 10  # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
-enable_rulebased_notifications = False
+enable_rulebased_notifications = True
 notification_fallback_email = ""
 notification_fallback_format: tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
 notification_rules: list[EventRule] = []

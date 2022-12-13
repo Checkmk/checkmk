@@ -56,7 +56,7 @@ def parse_arguments(args: Sequence[str] | None) -> Args:
     return parser.parse_args(args)
 
 
-def agent_activemq_main(args: Args) -> None:
+def agent_activemq_main(args: Args) -> int:
     api_url = parse_api_url(
         server_address=args.servername,
         api_path="admin/xml/",
@@ -79,7 +79,7 @@ def agent_activemq_main(args: Args) -> None:
         data = ET.fromstring(xml)
     except Exception as e:
         sys.stderr.write("Unable to connect. Credentials might be incorrect: %s\n" % e)
-        return
+        return 1
 
     attributes = ["size", "consumerCount", "enqueueCount", "dequeueCount"]
     count = 0
@@ -106,14 +106,15 @@ def agent_activemq_main(args: Args) -> None:
             output_lines.append("0 Active_MQ - Found %s Queues in total" % count)
     except Exception as e:  # Probably an IndexError
         sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)
-        return
+        return 1
 
     print("\n".join(output_lines))
+    return 0
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(
+    return special_agent_main(
         parse_arguments,
         agent_activemq_main,
     )

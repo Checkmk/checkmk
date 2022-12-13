@@ -10,7 +10,8 @@
   "browserslist": [
     "last 2 version",
     "> 1%",
-    "not dead"
+    "not dead",
+    "not op_mini all"
   ],
   "scripts": {
     "build": "webpack",

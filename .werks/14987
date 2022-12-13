@@ -1,0 +1,27 @@
+Title: Extension packages: Enforce semantic versioning
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1669995872
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This Werk only affects maintainers of Checkmk <i>Extension Packages (MKP)</i>.
+
+We now enforce both in the GUI and on the commandline the use of <a href="https://semver.org">semantic versioning</a>.
+Previously the GUI only allowed strings consisting of dots and digits (such as <tt>"..7"</tt>).
+The commandline on the other hand would allow any string at all (such as <tt>"🐟semmel"</tt>).
+
+We meet in the reasonable middle, and enforce values resembling semantic versioning upon creation or modification of packages.
+For now, packages with any other version string will continue to work.
+The <a href="https://exchange.checkmk.com/">Checkmk Exchange</a> no longer accepts packages with other versioning.
+
+<b>Note:</b> Some backend operations require us to sort the packages (to install the newest).
+We try our best to compare all version strings as reasonable as possible, but there are limitations.
+For instance: <tt>v10</tt> will be considered older than <tt>v2</tt> (because the "v" prevents an interpretation as number).
+
+This change allows to implement a well-defined version comparison in the future, allowing us to move forward with features and streamlined workflows.
+
+

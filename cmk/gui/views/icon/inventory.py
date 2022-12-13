@@ -7,8 +7,9 @@ import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import VisualLinkSpec
-from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
+
+from .base import Icon
 
 
 class InventoryIcon(Icon):

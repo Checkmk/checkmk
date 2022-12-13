@@ -21,8 +21,6 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.wato.pages.users import select_language
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.watolib.users import get_vs_flexible_notifications
 
 from .abstract_page import ABCUserProfilePage
 
@@ -61,10 +59,6 @@ class UserProfile(ABCUserProfilePage):
 
         # load the new language
         localize(user.language)
-
-        if user.may("general.edit_notifications") and user_spec.get("notifications_enabled"):
-            value = _get_input(get_vs_flexible_notifications(), "notification_method")
-            user_spec["notification_method"] = value
 
         # Custom attributes
         if user.may("general.edit_user_attributes"):
@@ -122,24 +116,6 @@ class UserProfile(ABCUserProfilePage):
         html.write_text(user_spec.get("alias", ""))
 
         select_language(user_spec)
-
-        # Let the user configure how he wants to be notified
-        rulebased_notifications = rulebased_notifications_enabled()
-        if (
-            not rulebased_notifications
-            and user.may("general.edit_notifications")
-            and user_spec.get("notifications_enabled")
-        ):
-            forms.section(_("Notifications"))
-            html.help(
-                _(
-                    "Here you can configure how you want to be notified about host and service problems and "
-                    "other monitoring events."
-                )
-            )
-            get_vs_flexible_notifications().render_input(
-                "notification_method", user_spec.get("notification_method")
-            )
 
         if user.may("general.edit_user_attributes"):
             custom_user_attr_topics = get_user_attributes_by_topic()

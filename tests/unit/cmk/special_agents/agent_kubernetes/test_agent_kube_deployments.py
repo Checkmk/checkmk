@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from collections.abc import Mapping
 
 from kubernetes import client  # type: ignore[import]
-from mocket import Mocketizer  # type: ignore[import]
-from mocket.mockhttp import Entry  # type: ignore[import]
+
+from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 from cmk.special_agents.utils_kubernetes.transform import deployment_conditions, parse_metadata
@@ -17,32 +15,24 @@ from cmk.special_agents.utils_kubernetes.transform import deployment_conditions,
 class TestAPIDeployments:
     def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         mocked_deployments = {
-            "items": [
-                {
-                    "metadata": {
-                        "name": "cluster-collector",
-                        "namespace": "checkmk-monitoring",
-                        "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
-                        "resourceVersion": "207264",
-                        "generation": 2,
-                        "creationTimestamp": "2022-03-25T13:24:42Z",
-                        "labels": {"app": "cluster-collector"},
-                        "annotations": {
-                            "deployment.kubernetes.io/revision": "2",
-                            "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
-                        },
-                    },
+            "metadata": {
+                "name": "cluster-collector",
+                "namespace": "checkmk-monitoring",
+                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+                "resourceVersion": "207264",
+                "generation": 2,
+                "creationTimestamp": "2022-03-25T13:24:42Z",
+                "labels": {"app": "cluster-collector"},
+                "annotations": {
+                    "deployment.kubernetes.io/revision": "2",
+                    "seccomp.security.alpha.kubernetes.io/pod": "runtime/default",
                 },
-            ]
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/apps/v1/deployments",
-            body=json.dumps(mocked_deployments),
-            headers={"content-type": "application/json"},
+        deployment = apps_client.api_client.deserialize(
+            FakeResponse(mocked_deployments),
+            "V1Deployment",
         )
-        with Mocketizer():
-            deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
 
         metadata = parse_metadata(deployment.metadata, type_=str)
         assert metadata.name == "cluster-collector"
@@ -57,27 +47,19 @@ class TestAPIDeployments:
         self, apps_client: client.AppsV1Api, dummy_host: str
     ) -> None:
         mocked_deployments = {
-            "items": [
-                {
-                    "metadata": {
-                        "name": "cluster-collector",
-                        "namespace": "checkmk-monitoring",
-                        "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
-                        "resourceVersion": "207264",
-                        "generation": 2,
-                        "creationTimestamp": "2022-03-25T13:24:42Z",
-                    },
-                },
-            ]
+            "metadata": {
+                "name": "cluster-collector",
+                "namespace": "checkmk-monitoring",
+                "uid": "debc9fe4-9e45-4688-ad04-a95604fa1f30",
+                "resourceVersion": "207264",
+                "generation": 2,
+                "creationTimestamp": "2022-03-25T13:24:42Z",
+            },
         }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/apps/v1/deployments",
-            body=json.dumps(mocked_deployments),
-            headers={"content-type": "application/json"},
+        deployment = apps_client.api_client.deserialize(
+            FakeResponse(mocked_deployments),
+            "V1Deployment",
         )
-        with Mocketizer():
-            deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
 
         metadata = parse_metadata(deployment.metadata, type_=str)
         assert metadata.name == "cluster-collector"
@@ -88,40 +70,31 @@ class TestAPIDeployments:
 
     def test_parse_conditions(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
         deployment_with_conditions = {
-            "items": [
-                {
-                    "status": {
-                        "conditions": [
-                            {
-                                "type": "Available",
-                                "status": "True",
-                                "lastUpdateTime": "2021-12-06T14:49:09Z",
-                                "lastTransitionTime": "2021-12-06T14:49:09Z",
-                                "reason": "MinimumReplicasAvailable",
-                                "message": "Deployment has minimum availability.",
-                            },
-                            {
-                                "type": "Progressing",
-                                "status": "True",
-                                "lastUpdateTime": "2021-12-06T14:49:09Z",
-                                "lastTransitionTime": "2021-12-06T14:49:06Z",
-                                "reason": "NewReplicaSetAvailable",
-                                "message": "ReplicaSet has successfully progressed.",
-                            },
-                        ]
-                    }
-                }
-            ]
+            "status": {
+                "conditions": [
+                    {
+                        "type": "Available",
+                        "status": "True",
+                        "lastUpdateTime": "2021-12-06T14:49:09Z",
+                        "lastTransitionTime": "2021-12-06T14:49:09Z",
+                        "reason": "MinimumReplicasAvailable",
+                        "message": "Deployment has minimum availability.",
+                    },
+                    {
+                        "type": "Progressing",
+                        "status": "True",
+                        "lastUpdateTime": "2021-12-06T14:49:09Z",
+                        "lastTransitionTime": "2021-12-06T14:49:06Z",
+                        "reason": "NewReplicaSetAvailable",
+                        "message": "ReplicaSet has successfully progressed.",
+                    },
+                ]
+            }
         }
 
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/apps/v1/deployments",
-            body=json.dumps(deployment_with_conditions),
-            headers={"content-type": "application/json"},
+        deployment = apps_client.api_client.deserialize(
+            FakeResponse(deployment_with_conditions), "V1Deployment"
         )
-        with Mocketizer():
-            deployment = list(apps_client.list_deployment_for_all_namespaces().items)[0]
         conditions = deployment_conditions(deployment.status)
         assert len(conditions) == 2
         assert all(
@@ -139,19 +112,11 @@ class TestAPIDeployments:
         Sometimes a Deployment has an empty status. This occurs during start-up
         of the Minikube with the core-dns Deployment."""
         # Arrange
-        deployment_with_conditions: Mapping = {
-            "items": [
-                {"status": {}},
-            ]
-        }
-        Entry.single_register(
-            Entry.GET,
-            f"{dummy_host}/apis/apps/v1/deployments",
-            body=json.dumps(deployment_with_conditions),
-            headers={"content-type": "application/json"},
+        deployment_with_conditions: dict[str, dict] = {"status": {}}
+
+        deployment = apps_client.api_client.deserialize(
+            FakeResponse(deployment_with_conditions), "V1Node"
         )
-        with Mocketizer():
-            deployment = apps_client.list_deployment_for_all_namespaces().items[0]
         # Act
         conditions = deployment_conditions(deployment.status)
         # Assert

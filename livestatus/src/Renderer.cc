@@ -6,17 +6,11 @@
 #include "Renderer.h"
 
 #include <cmath>
-#include <cstdint>
-#include <ctime>
-#include <iomanip>
-#include <ostream>
 
 #include "Logger.h"
-#include "OStreamStateSaver.h"
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
-#include "RendererPython.h"
 #include "RendererPython3.h"
 #include "data_encoding.h"
 
@@ -33,8 +27,6 @@ std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,
                                                        data_encoding);
         case OutputFormat::json:
             return std::make_unique<RendererJSON>(os, logger, data_encoding);
-        case OutputFormat::python:
-            return std::make_unique<RendererPython>(os, logger, data_encoding);
         case OutputFormat::python3:
             return std::make_unique<RendererPython3>(os, logger, data_encoding);
     }
@@ -50,29 +42,16 @@ void Renderer::output(double value) {
     }
 }
 
-void Renderer::output(PlainChar value) { _os.put(value._ch); }
-
-void Renderer::output(HexEscape value) {
-    OStreamStateSaver s(_os);
-    _os << R"(\x)" << std::hex << std::setw(2) << std::setfill('0')
-        << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
-}
-
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
-void Renderer::output(char16_t value) {
-    OStreamStateSaver s(_os);
-    _os << R"(\u)" << std::hex << std::setw(4) << std::setfill('0')
-        << static_cast<uint16_t>(value);
-}
-
-void Renderer::output(char32_t value) {
-    if (value < 0x10000) {
-        output(static_cast<char16_t>(value));
+void Renderer::outputUnicodeChar(char32_t value) {
+    if (value < 0x10000U) {
+        outputHex('u', 4, value);
+    } else if (useSurrogatePairs()) {
+        outputHex('u', 4, 0xd800U | (((value - 0x10000U) >> 10) & 0x3ffU));
+        outputHex('u', 4, 0xdc00U | ((value - 0x10000U) & 0x3ffU));
     } else {
-        OStreamStateSaver s(_os);
-        _os << R"(\U)" << std::hex << std::setw(8) << std::setfill('0')
-            << static_cast<uint32_t>(value);
+        outputHex('U', 8, value);
     }
 }
 
@@ -107,17 +86,18 @@ void Renderer::outputByteString(const std::string &prefix,
     _os << prefix << R"(")";  // "
     for (auto ch : value) {
         if (isBoringChar(ch)) {
-            output(PlainChar{ch});
+            _os.put(ch);
         } else {
-            output(HexEscape{ch});
+            outputHex('x', 2,
+                      static_cast<unsigned>(static_cast<unsigned char>(ch)));
         }
     }
     _os << R"(")";  // "
 }
 
-void Renderer::outputUnicodeString(const std::string &prefix, const char *start,
-                                   const char *end, Encoding data_encoding) {
-    _os << prefix << R"(")";  // "
+void Renderer::outputUnicodeString(const char *start, const char *end,
+                                   Encoding data_encoding) {
+    _os << R"(")";  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
@@ -139,9 +119,9 @@ void Renderer::outputUTF8(const char *start, const char *end) {
         unsigned char ch0 = *p;
         if ((ch0 & 0x80) == 0x00) {
             if (isBoringChar(ch0)) {
-                output(PlainChar{*p});
+                _os.put(*p);
             } else {
-                output(char32_t{ch0});
+                outputUnicodeChar(ch0);
             }
         } else if ((ch0 & 0xE0) == 0xC0) {
             // 2 byte encoding
@@ -156,8 +136,8 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
-                                         ((ch1 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x1F) << 6) |  //
+                              ((ch1 & 0x3F) << 0));
         } else if ((ch0 & 0xF0) == 0xE0) {
             // 3 byte encoding
             if (end <= &p[2]) {
@@ -171,9 +151,9 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch2 & 0xC0) != 0x80) {
                 return invalidUTF8(ch2);
             }
-            output(static_cast<char32_t>(((ch0 & 0x0F) << 12) |  //
-                                         ((ch1 & 0x3F) << 6) |   //
-                                         ((ch2 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x0F) << 12) |  //
+                              ((ch1 & 0x3F) << 6) |   //
+                              ((ch2 & 0x3F) << 0));
         } else if ((ch0 & 0xF8) == 0xF0) {
             // 4 byte encoding
             if (ch0 == 0xF5 || ch0 == 0xF6 || ch0 == 0xF7) {
@@ -195,10 +175,10 @@ void Renderer::outputUTF8(const char *start, const char *end) {
             if ((ch3 & 0xC0) != 0x80) {
                 return invalidUTF8(ch3);
             }
-            output(static_cast<char32_t>(((ch0 & 0x07) << 18) |  //
-                                         ((ch1 & 0x3F) << 12) |  //
-                                         ((ch2 & 0x3f) << 6) |   //
-                                         ((ch3 & 0x3f) << 0)));
+            outputUnicodeChar(((ch0 & 0x07) << 18) |  //
+                              ((ch1 & 0x3F) << 12) |  //
+                              ((ch2 & 0x3f) << 6) |   //
+                              ((ch3 & 0x3f) << 0));
         } else {
             return invalidUTF8(ch0);
         }
@@ -209,9 +189,9 @@ void Renderer::outputLatin1(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch = *p;
         if (isBoringChar(ch)) {
-            output(PlainChar{*p});
+            _os.put(*p);
         } else {
-            output(char32_t{ch});
+            outputUnicodeChar(ch);
         }
     }
 }
@@ -220,7 +200,7 @@ void Renderer::outputMixed(const char *start, const char *end) {
     for (const char *p = start; p != end; ++p) {
         unsigned char ch0 = *p;
         if (isBoringChar(ch0)) {
-            output(PlainChar{*p});
+            _os.put(*p);
         } else if ((ch0 & 0xE0) == 0xC0) {
             // Possible 2 byte encoding? => Assume UTF-8, ignore overlong
             // encodings
@@ -231,11 +211,11 @@ void Renderer::outputMixed(const char *start, const char *end) {
             if ((ch1 & 0xC0) != 0x80) {
                 return invalidUTF8(ch1);
             }
-            output(static_cast<char32_t>(((ch0 & 0x1F) << 6) |  //
-                                         ((ch1 & 0x3F) << 0)));
+            outputUnicodeChar(((ch0 & 0x1F) << 6) |  //
+                              ((ch1 & 0x3F) << 0));
         } else {
             // Assume Latin1.
-            output(char32_t{ch0});
+            outputUnicodeChar(ch0);
         }
     }
 }

@@ -9,11 +9,12 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 # HACK: Keep this and the rsync below in sync with top-level Makefile.
-JAVASCRIPT_MINI=$(for jmini in main mobile side zxcvbn; do echo "web/htdocs/js/${jmini}_min.js"; done)
+REPO_PATH=$(realpath ..)
+JAVASCRIPT_MINI=$(for jmini in main mobile side zxcvbn; do echo "$REPO_PATH/web/htdocs/js/${jmini}_min.js"; done)
 THEMES="facelift modern-dark"
-THEME_CSS_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.css"; done)
-THEME_JSON_FILES=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/theme.json"; done)
-THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "web/htdocs/themes/${theme}/images"; done)
+THEME_CSS_FILES=$(for theme in $THEMES; do echo "$REPO_PATH/web/htdocs/themes/${theme}/theme.css"; done)
+THEME_JSON_FILES=$(for theme in $THEMES; do echo "$REPO_PATH/web/htdocs/themes/${theme}/theme.json"; done)
+THEME_IMAGE_DIRS=$(for theme in $THEMES; do echo "$REPO_PATH/web/htdocs/themes/${theme}/images"; done)
 THEME_RESOURCES="${THEME_CSS_FILES} ${THEME_JSON_FILES} ${THEME_IMAGE_DIRS}"
 
 echo "Updating compiled JS/CSS files..."
@@ -30,10 +31,10 @@ sudo rsync -arxR \
     htdocs/images \
     htdocs/jquery \
     htdocs/openapi \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}"; done) \
-    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#web/}".map; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}"; done) \
+    $(for i in ${JAVASCRIPT_MINI}; do echo "${i#$REPO_PATH/web/}".map; done) \
     htdocs/sounds \
-    $(for i in ${THEME_RESOURCES}; do echo "${i#web/}"; done) \
+    $(for i in ${THEME_RESOURCES}; do echo "${i#$REPO_PATH/web/}"; done) \
     "$ROOT/share/check_mk/web/"
 
 # Also deploy all other directories of same type

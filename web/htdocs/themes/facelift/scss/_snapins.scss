@@ -132,11 +132,6 @@ table.mkeventd_performance {
   }
 }
 
-/* TODO: Reproduce this html element */
-#snapin_mkeventd_performance select {
-  margin-bottom: 2px;
-}
-
 /*
  * Performance snapin
  */
@@ -154,11 +149,6 @@ table.performance {
       white-space: nowrap;
     }
   }
-}
-
-/* TODO: Reproduce this html element */
-#snapin_performance select {
-  margin-bottom: 2px;
 }
 
 /*
@@ -202,12 +192,6 @@ table.sitestate {
       font-size: $font-size-small;
     }
   }
-}
-
-/* TODO: Reproduce this html element */
-div.snapin table.sitestate td img.iconbutton {
-  width: 60px;
-  height: 16px;
 }
 
 /*
@@ -297,10 +281,7 @@ table.tacticaloverview {
 table.tacticaloverview td a,
 table.tacticaloverview td a.link,
 table.tacticaloverview td a:hover,
-table.tacticaloverview td span,
-/* TODO: Reproduce these two html elements */
-table.tacticaloverview td body.main .popup_menu span,
-body.main .popup_menu table.tacticaloverview td span {
+table.tacticaloverview td span {
   padding: 4px;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
@@ -350,7 +331,6 @@ div.spacertop {
     margin-bottom: 2px;
   }
 
-  /* TODO: Reproduce this html element */
   form img.iconbutton {
     display: inline-box;
     float: right;
@@ -633,35 +613,4 @@ div.spacertop {
 
 div.snapin select {
   background-image: url(images/select_arrow.png);
-}
-
-/*
- * Snapin dashlets in dashboard
- */
-body.main {
-  #side_content {
-    top: 0;
-    height: auto;
-    padding-top: 4px;
-    padding-left: 4px;
-  }
-
-  div.snapin:last-child {
-    margin-bottom: 0;
-  }
-
-  div.snapin {
-    padding: 0;
-    margin: 0;
-  }
-
-  body.side {
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    // TODO: Rm this if redundant
-    div.snapin {
-      background-color: $color-table-border-dark;
-    }
-  }
 }

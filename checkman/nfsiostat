@@ -1,7 +1,7 @@
 title: NFS Mounts: IO Performance
 agents: linux
 catalog: os/storage
-distribution:
+distribution: check_mk
 author: Marius Pana <mp@spearhead.systems>
 license: GPLv2
 description:

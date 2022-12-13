@@ -263,7 +263,9 @@ def test_local_connection(mock_livestatus: MockLiveStatusConnection) -> None:
         ("a'dmin", False),
     ],
 )
-def test_set_auth_user(mock_livestatus, user_id, allowed):
+def test_set_auth_user(
+    mock_livestatus: MockLiveStatusConnection, user_id: livestatus.UserId, allowed: bool
+) -> None:
     with mock_livestatus(expect_status_query=False):
         if not allowed:
             with pytest.raises(ValueError, match="Invalid user ID"):

@@ -37,6 +37,7 @@ _RELEVANT_SINGULAR_OPTIONS_PARSER: Mapping[str, Callable[[str], object]] = {
     "passwordauthentication": _identity,
     "permitemptypasswords": _identity,
     "challengeresponseauthentication": _identity,
+    "kbdinteractiveauthentication": _identity,
     "x11forwarding": _identity,
     "usepam": _identity,
     "ciphers": lambda x: sorted(x.split(",")),
@@ -44,8 +45,9 @@ _RELEVANT_SINGULAR_OPTIONS_PARSER: Mapping[str, Callable[[str], object]] = {
 
 
 def parse_sshd_config(string_table: StringTable) -> _Section:
+    ports = _parse_ports(string_table)
     return {
-        "port": _parse_ports(string_table),
+        **({"port": ports} if ports else {}),
         **{
             key: _RELEVANT_SINGULAR_OPTIONS_PARSER[key](" ".join(line[1:]))
             for line in string_table
@@ -71,10 +73,16 @@ _OPTIONS_TO_HUMAN_READABLE = {
     "permitrootlogin": "Permit root login",
     "passwordauthentication": "Allow password authentication",
     "permitemptypasswords": "Permit empty passwords",
+    "kbdinteractiveauthentication": "Allow keyboard-interactive authentication",
     "challengeresponseauthentication": "Allow challenge-response authentication",
     "x11forwarding": "Permit X11 forwarding",
     "usepam": "Use pluggable authentication module",
     "ciphers": "Ciphers",
+}
+
+_MISSING_OPTIONS_TO_HUMAN_READABLE = {
+    "kbdinteractiveauthentication": "Allow keyboard-interactive/challenge-response authentication",
+    "challengeresponseauthentication": "Allow keyboard-interactive/challenge-response authentication",
 }
 
 
@@ -82,12 +90,32 @@ def _value_to_human_readable(v: object) -> str:
     return ", ".join(map(str, v)) if isinstance(v, list) else str(v)
 
 
-def check_sshd_config(params: Mapping[str, object], section: _Section) -> CheckResult:
+def _adjust_params(*, params: Mapping[str, object], section: _Section) -> Mapping[str, object]:
     if params.get("permitrootlogin") == "without-password":
         params = {
             **params,
             "permitrootlogin": "key-based",
         }
+
+    previous_sshd_config_variable_names = {
+        "kbdinteractiveauthentication": "challengeresponseauthentication"
+    }
+
+    return {
+        (
+            deprecated_name
+            if (
+                (deprecated_name := previous_sshd_config_variable_names.get(option))
+                and deprecated_name in section
+            )
+            else option
+        ): value
+        for option, value in params.items()
+    }
+
+
+def check_sshd_config(params: Mapping[str, object], section: _Section) -> CheckResult:
+    params = _adjust_params(params=params, section=section)
 
     for option, val in section.items():
         state = State.OK
@@ -102,7 +130,7 @@ def check_sshd_config(params: Mapping[str, object], section: _Section) -> CheckR
     for option in sorted(set(params) - set(section)):
         yield Result(
             state=State.CRIT,
-            summary=f"{_OPTIONS_TO_HUMAN_READABLE[option]}: not present in SSH daemon configuration",
+            summary=f"{_MISSING_OPTIONS_TO_HUMAN_READABLE.get(option, _OPTIONS_TO_HUMAN_READABLE[option])}: not present in SSH daemon configuration",
         )
 
 

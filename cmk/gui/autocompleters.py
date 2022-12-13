@@ -30,7 +30,6 @@ from cmk.gui.plugins.visuals.utils import (
     livestatus_query_bare,
     livestatus_query_bare_string,
 )
-from cmk.gui.query_filters import sites_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.gui.valuespec import autocompleter_registry
@@ -100,8 +99,9 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     return match_list
 
 
-@autocompleter_registry.register_expression("sites")
-def sites_autocompleter(value: str, params: dict) -> Choices:
+def sites_autocompleter(
+    value: str, params: dict, sites_options: Callable[[], list[tuple[str, str]]]
+) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
 

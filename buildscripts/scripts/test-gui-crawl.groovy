@@ -21,7 +21,7 @@ def main() {
             VERSION: "git",
             DOCKER_TAG: versioning.select_docker_tag(
                 branch_name,
-                "", 
+                "",
                 ""),   // FIXME was DOCKER_TAG_DEFAULT before
             MAKE_TARGET: "test-gui-crawl-docker",
             BRANCH: branch_name,
@@ -29,7 +29,7 @@ def main() {
         )
     } finally {
         stage('archive crawler report') {
-            dir("${checkout_dir}") {
+            dir("${WORKSPACE}") {
                 xunit([
                     JUnit(
                     deleteOutputFiles: true,

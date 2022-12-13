@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -44,7 +46,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_mbg_lantime_ng_state_ref_clock(params, result) -> None:  # type:ignore[no-untyped-def]
+def test_mbg_lantime_ng_state_ref_clock(
+    params: Mapping[str, tuple[float, float]], result: tuple[float, str, Sequence[object]]
+) -> None:
     check = Check("mbg_lantime_ng_state")
     ref_clock_result = list(check.run_check(None, params, [["2", "1", "GPS", "0.0009"]]))[-1]
     assert ref_clock_result == result

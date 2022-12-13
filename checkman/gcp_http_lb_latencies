@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors the requests of an external HTTP(S) load balancer.
 
- - 99th percentile of the total latency measured.
+ - 50th, 95th and 99th percentile of the total latency measured.
 
  The total latency is the time from when the request is received by the
  external HTTP(S) load balancer proxy to when the proxy received ACK from the
@@ -15,7 +15,8 @@ description:
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.
 
- Upper levels are configurable via the rule "GCP/HTTP(S) load balancer latencies".
+ Upper levels on a chosen percentile are configurable
+ via the rule "GCP/HTTP(S) load balancer latencies".
 
 discovery:
  One service is created per load balancer.

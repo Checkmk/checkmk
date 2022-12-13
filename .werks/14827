@@ -2,7 +2,7 @@ Title: Re-work agent plugin for monitoring SSH daemon configuration
 Class: fix
 Compatible: incomp
 Component: checks
-Date: 1667986568
+Date: 1669803726
 Edition: cre
 Knowledge: doc
 Level: 1
@@ -26,3 +26,7 @@ This werk is marked as incompatible for two reasons:
 
 LI: The behavioural changes listed above.
 LI: <tt>sshd -T</tt> will likely require root permissions to execute successfully. Hence, the new version of the plugin will likely not work on systems where the agent is executed as non-root.
+
+Finally, note that the configuration option <tt>ChallengeResponseAuthentication</tt> is deprecated
+and has been replaced with <tt>KbdInteractiveAuthentication</tt>. If configured to monitor this
+option, Checkmk now checks for both keys and only alerts if neither of the two is found.

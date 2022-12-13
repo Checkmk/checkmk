@@ -20,7 +20,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.wato.mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 from cmk.gui.config import active_config
@@ -386,8 +385,6 @@ def _get_expected_paths(
             "local/share/check_mk/web",
             "local/share/check_mk/web/htdocs",
             "local/share/check_mk/web/htdocs/themes",
-            "local/share/check_mk/web/htdocs/themes/classic",
-            "local/share/check_mk/web/htdocs/themes/classic/images",
             "local/share/check_mk/web/htdocs/themes/facelift",
             "local/share/check_mk/web/htdocs/themes/facelift/images",
             "local/share/check_mk/web/htdocs/themes/modern-dark",

@@ -9,7 +9,7 @@
 
 import logging
 import os.path
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from functools import partial
 from pathlib import Path
 from typing import Final
@@ -25,7 +25,7 @@ from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, 
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
 from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
-from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
+from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.ipmi import IPMIFetcher
@@ -46,11 +46,11 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache
 
 __all__ = [
+    "do_fetch",
     "fetch_all",
-    "make_non_cluster_sources",
     "make_sources",
     "make_plugin_store",
     "parse",
@@ -62,25 +62,26 @@ def parse(
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
+    keep_outdated: bool,
     logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    parser = _make_parser(source, logger=logger)
+    parser = _make_parser(source, keep_outdated=keep_outdated, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(source: SourceInfo, *, logger: logging.Logger) -> Parser:
+def _make_parser(source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger) -> Parser:
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             source.hostname,
             SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
-            **_make_snmp_parser_config(source.hostname)._asdict(),
+            **_make_snmp_parser_config(source.hostname, keep_outdated=keep_outdated)._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(source.hostname)
+    agent_parser_config = _make_agent_parser_config(source.hostname, keep_outdated=keep_outdated)
     return AgentParser(
         source.hostname,
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
@@ -131,7 +132,7 @@ def make_file_cache_path_template(
     }[fetcher_type]
 
 
-def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
+def _make_agent_parser_config(hostname: HostName, *, keep_outdated: bool) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
@@ -139,21 +140,22 @@ def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     return AgentParserConfig(
         check_interval=config_cache.check_mk_check_interval(hostname),
         encoding_fallback=config.fallback_agent_output_encoding,
-        keep_outdated=FileCacheGlobals.keep_outdated,
+        keep_outdated=keep_outdated,
         translation=config.get_piggyback_translations(hostname),
         agent_simulator=config.agent_simulator,
     )
 
 
-def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
+def _make_snmp_parser_config(hostname: HostName, *, keep_outdated: bool) -> SNMPParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
     config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(hostname)
     return SNMPParserConfig(
-        check_intervals=make_check_intervals(hostname, host_config, selected_sections=NO_SELECTION),
-        keep_outdated=FileCacheGlobals.keep_outdated,
+        check_intervals=make_check_intervals(
+            config_cache, hostname, selected_sections=NO_SELECTION
+        ),
+        keep_outdated=keep_outdated,
     )
 
 
@@ -185,20 +187,20 @@ def make_plugin_store() -> SNMPPluginStore:
 
 
 def make_check_intervals(
+    config_cache: ConfigCache,
     host_name: HostName,
-    host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
 ) -> Mapping[SectionName, int | None]:
     return {
-        section_name: host_config.snmp_fetch_interval(section_name)
+        section_name: config_cache.snmp_fetch_interval(host_name, section_name)
         for section_name in _make_checking_sections(host_name, selected_sections=selected_sections)
     }
 
 
 def make_sections(
+    config_cache: ConfigCache,
     host_name: HostName,
-    host_config: HostConfig,
     *,
     selected_sections: SectionNameCollection,
 ) -> dict[SectionName, SectionMeta]:
@@ -207,13 +209,13 @@ def make_sections(
         return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
 
     checking_sections = _make_checking_sections(host_name, selected_sections=selected_sections)
-    disabled_sections = host_config.disabled_snmp_sections()
+    disabled_sections = config_cache.disabled_snmp_sections(host_name)
     return {
         name: SectionMeta(
             checking=name in checking_sections,
             disabled=name in disabled_sections,
             redetect=name in checking_sections and needs_redetection(name),
-            fetch_interval=host_config.snmp_fetch_interval(name),
+            fetch_interval=config_cache.snmp_fetch_interval(host_name, name),
         )
         for name in (checking_sections | disabled_sections)
     }
@@ -250,23 +252,24 @@ class _Builder:
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
+        config_cache: ConfigCache,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
         simulation_mode: bool,
-        missing_sys_description: bool,
+        file_cache_options: FileCacheOptions,
         file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
-        self.config_cache: Final = config.get_config_cache()
+        self.config_cache: Final = config_cache
         self.host_config: Final = self.config_cache.make_host_config(self.host_name)
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.simulation_mode: Final = simulation_mode
-        self.missing_sys_description: Final = missing_sys_description
+        self.file_cache_options: Final = file_cache_options
         self.file_cache_max_age: Final = file_cache_max_age
         self._elems: dict[str, tuple[SourceInfo, FileCache, Fetcher]] = {}
 
@@ -301,16 +304,16 @@ class _Builder:
         # TODO: We should cleanup these old directories one day, then we can
         #       remove this special case.
         #
-        if self.host_config.is_all_agents_host:
+        if self.config_cache.is_all_agents_host(self.host_name):
             self._add(*self._get_agent())
             for elem in self._get_special_agents():
                 self._add(*elem)
 
-        elif self.host_config.is_all_special_agents_host:
+        elif self.config_cache.is_all_special_agents_host(self.host_name):
             for elem in self._get_special_agents():
                 self._add(*elem)
 
-        elif self.host_config.is_tcp_host:
+        elif self.config_cache.is_tcp_host(self.host_name):
             special_agents = tuple(self._get_special_agents())
             if special_agents:
                 self._add(*special_agents[0])
@@ -340,7 +343,7 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=FileCacheGlobals.use_outdated,
+                    use_outdated=self.file_cache_options.use_outdated,
                     simulation=False,  # TODO Quickfix for SUP-9912
                     use_only_cache=False,
                     file_cache_mode=FileCacheMode.DISABLED,
@@ -364,7 +367,7 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self.host_config.is_snmp_host:
+        if not self.config_cache.is_snmp_host(self.host_name):
             return
         self._initialize_snmp_plugin_store()
         source = SourceInfo(
@@ -378,13 +381,17 @@ class _Builder:
             source,
             SNMPFetcher(
                 sections=make_sections(
+                    self.config_cache,
                     self.host_name,
-                    self.host_config,
                     selected_sections=self.selected_sections,
                 ),
                 on_error=self.on_scan_error,
-                missing_sys_description=self.missing_sys_description,
-                do_status_data_inventory=self.host_config.do_status_data_inventory,
+                missing_sys_description=self.config_cache.missing_sys_description(self.host_name),
+                do_status_data_inventory=(
+                    self.config_cache.hwsw_inventory_parameters(
+                        self.host_name
+                    ).status_data_inventory
+                ),
                 section_store_path=make_persisted_section_dir(source),
                 snmp_config=self.config_cache.make_snmp_config(source.hostname, source.ipaddress),
             ),
@@ -398,16 +405,20 @@ class _Builder:
                 ),
                 use_outdated=(
                     self.simulation_mode
-                    or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated)
+                    or (
+                        False
+                        if self.force_snmp_cache_refresh
+                        else self.file_cache_options.use_outdated
+                    )
                 ),
                 simulation=self.simulation_mode,
                 use_only_cache=False,
-                file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                file_cache_mode=self.file_cache_options.file_cache_mode(),
             ),
         )
 
     def _initialize_mgmt_boards(self) -> None:
-        protocol = self.host_config.management_protocol
+        protocol = self.config_cache.management_protocol(self.host_name)
         if protocol is None:
             return
 
@@ -430,11 +441,19 @@ class _Builder:
                 source,
                 SNMPFetcher(
                     sections=make_sections(
-                        self.host_name, self.host_config, selected_sections=self.selected_sections
+                        self.config_cache,
+                        self.host_name,
+                        selected_sections=self.selected_sections,
                     ),
                     on_error=self.on_scan_error,
-                    missing_sys_description=self.missing_sys_description,
-                    do_status_data_inventory=self.host_config.do_status_data_inventory,
+                    missing_sys_description=self.config_cache.missing_sys_description(
+                        self.host_name
+                    ),
+                    do_status_data_inventory=(
+                        self.config_cache.hwsw_inventory_parameters(
+                            self.host_name
+                        ).status_data_inventory
+                    ),
                     section_store_path=make_persisted_section_dir(source),
                     snmp_config=self.config_cache.make_snmp_config(
                         source.hostname, source.ipaddress
@@ -453,12 +472,12 @@ class _Builder:
                         or (
                             False
                             if self.force_snmp_cache_refresh
-                            else FileCacheGlobals.use_outdated
+                            else self.file_cache_options.use_outdated
                         )
                     ),
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         elif protocol == "ipmi":
@@ -483,10 +502,10 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         else:
@@ -513,7 +532,7 @@ class _Builder:
                 source,
                 ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        datasource_program, self.host_name, self.host_config, self.ipaddress
+                        datasource_program, self.host_name, self.ipaddress
                     ),
                     stdin=None,
                     is_cmc=config.is_cmc(),
@@ -524,14 +543,14 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=False,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
 
-        connection_mode = self.host_config.agent_connection_mode()
+        connection_mode = self.config_cache.agent_connection_mode(self.host_name)
         if connection_mode == "push-agent":
             source = SourceInfo(
                 self.host_name,
@@ -551,13 +570,13 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=MaxAge(interval, interval, interval),
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
                     use_only_cache=True,
                     file_cache_mode=(
                         # Careful: at most read-only!
                         FileCacheMode.DISABLED
-                        if FileCacheGlobals.disabled
+                        if self.file_cache_options.disabled
                         else FileCacheMode.READ
                     ),
                 ),
@@ -586,10 +605,10 @@ class _Builder:
                         fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
-                    use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                    use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                     simulation=self.simulation_mode,
-                    use_only_cache=FileCacheGlobals.tcp_use_only_cache,
-                    file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                    use_only_cache=self.file_cache_options.tcp_use_only_cache,
+                    file_cache_mode=self.file_cache_options.file_cache_mode(),
                 ),
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
@@ -598,7 +617,7 @@ class _Builder:
         def make_id(agentname: str) -> str:
             return f"special_{agentname}"
 
-        for agentname, params in self.host_config.special_agents:
+        for agentname, params in self.config_cache.special_agents(self.host_name):
             source = SourceInfo(
                 self.host_name,
                 self.ipaddress,
@@ -627,34 +646,36 @@ class _Builder:
                     fetcher_type=source.fetcher_type, ident=source.ident
                 ),
                 max_age=self.file_cache_max_age,
-                use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+                use_outdated=self.simulation_mode or self.file_cache_options.use_outdated,
                 simulation=self.simulation_mode,
                 use_only_cache=False,
-                file_cache_mode=FileCacheGlobals.file_cache_mode(),
+                file_cache_mode=self.file_cache_options.file_cache_mode(),
             )
             yield source, fetcher, file_cache
 
 
-def make_non_cluster_sources(
+def make_sources(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
-    missing_sys_description: bool,
+    file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
 ) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
         host_name,
         ipaddress,
+        config_cache=config_cache,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
-        missing_sys_description=missing_sys_description,
+        file_cache_options=file_cache_options,
         file_cache_max_age=file_cache_max_age,
     ).sources
 
@@ -665,54 +686,20 @@ def fetch_all(
     mode: Mode,
 ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: list[
-        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
-    ] = []
-    for source, file_cache, fetcher in sources:
-        console.vverbose(f"  Source: {source}\n")
-
-        with CPUTracker() as tracker:
-            raw_data = get_raw_data(file_cache, fetcher, mode)
-        out.append((source, raw_data, tracker.duration))
-    return out
-
-
-def make_sources(
-    host_name: HostName,
-    ip_address: HostAddress | None,
-    *,
-    ip_lookup: Callable[[HostName], HostAddress | None],
-    selected_sections: SectionNameCollection,
-    force_snmp_cache_refresh: bool,
-    on_scan_error: OnError,
-    simulation_mode: bool,
-    missing_sys_description: bool,
-    file_cache_max_age: MaxAge,
-) -> Sequence[tuple[SourceInfo, FileCache, Fetcher]]:
-    config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_name)
-    if nodes is None:
-        # Not a cluster
-        host_names = [host_name]
-    else:
-        host_names = nodes
     return [
-        source
-        for host_name_ in host_names
-        for source in make_non_cluster_sources(
-            host_name_,
-            (ip_address if config_cache.nodes_of(host_name) is None else ip_lookup(host_name_)),
-            force_snmp_cache_refresh=(
-                force_snmp_cache_refresh if config_cache.nodes_of(host_name) is None else False
-            ),
-            selected_sections=(
-                selected_sections if config_cache.nodes_of(host_name) is None else NO_SELECTION
-            ),
-            on_scan_error=(
-                on_scan_error if config_cache.nodes_of(host_name) is None else OnError.RAISE
-            ),
-            simulation_mode=simulation_mode,
-            missing_sys_description=missing_sys_description,
-            file_cache_max_age=file_cache_max_age,
-        )
+        do_fetch(source_info, file_cache, fetcher, mode=mode)
+        for source_info, file_cache, fetcher in sources
     ]
+
+
+def do_fetch(
+    source_info: SourceInfo,
+    file_cache: FileCache,
+    fetcher: Fetcher,
+    *,
+    mode: Mode,
+) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
+    console.vverbose(f"  Source: {source_info}\n")
+    with CPUTracker() as tracker:
+        raw_data = get_raw_data(file_cache, fetcher, mode)
+    return source_info, raw_data, tracker.duration

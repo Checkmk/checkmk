@@ -100,7 +100,7 @@ _SUBSCRIPTION_DETAILS_SOURCE_MAP = {
     "manual": SubscriptionDetailsSource.manual,
 }
 
-SUBSCRIPTION_LIMITS_FIXED = (
+_SUBSCRIPTION_LIMITS_FIXED = (
     "3000",
     "7000",
     "12000",
@@ -181,7 +181,7 @@ class SubscriptionDetailsLimit(NamedTuple):
                 limit_value=-1,
             )
 
-        if str(raw_limit_value) in SUBSCRIPTION_LIMITS_FIXED:
+        if str(raw_limit_value) in _SUBSCRIPTION_LIMITS_FIXED:
             return SubscriptionDetailsLimit(
                 limit_type=SubscriptionDetailsLimitType.fixed,
                 limit_value=int(raw_limit_value),

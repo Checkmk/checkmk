@@ -3,6 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 include ../defines.make
+include ../artifacts.make
 
 AGENTS_DIR := $(REPO_PATH)/agents
 RPM_VERSION := $(subst -,_,$(VERSION))
@@ -10,12 +11,31 @@ NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(
 NAME := check-mk-agent
 DISTNAME := $(NAME)-$(VERSION)
 BUILDROOT := $(AGENTS_DIR)/.buildroot
+BUILDROOT_STAMP := $(AGENTS_DIR)/.buildroot.stamp
 RPM_TOPDIR := $(AGENTS_DIR)/.rpm.topdir
-RPM_PACKAGE := $(DISTNAME)-1.noarch.rpm
-DEB_PACKAGE := check-mk-agent_$(VERSION)-1_all.deb
+RPM_BUILDDIR := $(AGENTS_DIR)/.rpm.builddir
+RPM_PACKAGE := $(AGENTS_DIR)/$(DISTNAME)-1.noarch.rpm
+DEB_PACKAGE := $(AGENTS_DIR)/check-mk-agent_$(VERSION)-1_all.deb
 DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
+AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
+AGENT_CTL_CARGO_OUT := cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
+AGENT_CTL_DEPS := cmk-agent-ctl/Cargo.lock \
+	cmk-agent-ctl/Cargo.toml \
+	$(wildcard cmk-agent-ctl/src/*.rs) \
+	$(wildcard cmk-agent-ctl/src/configuration/*.rs) \
+	$(wildcard cmk-agent-ctl/src/modes/*.rs) \
+	$(wildcard cmk-agent-ctl/src/monitoring_data/*.rs)
+
+BUILDROOT_DEPS := \
+	conffiles/super-server.cfg \
+	check_mk_agent.linux \
+	check_mk_caching_agent.linux \
+	$(AGENT_CTL) \
+	mk-job \
+	waitmax \
+	$(shell find scripts/ -type f)
 
 usage:
 	@echo "make waitmax       -- compile waitmax.c"
@@ -63,37 +83,37 @@ setversion:
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' cmk-agent-ctl/src/constants.rs
 
-build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
+build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
-# If this is no longer phony, add the dependencies to the $(BUILDROOT) target!
-controller:
-	rm -f linux/cmk-agent-ctl
-	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
-	&& mkdir -p linux \
-	&& cp cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl linux \
-	&& strip linux/cmk-agent-ctl ; \
-	which upx >/dev/null 2>&1 \
-	&& upx linux/cmk-agent-ctl \
-	|| true
+controller: $(AGENT_CTL)
+
+$(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
+	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release)
+	touch $(AGENT_CTL_CARGO_OUT)
+
+$(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)
+	mkdir -p linux
+	install -m 755 $(AGENT_CTL_CARGO_OUT) $(AGENT_CTL)
+	strip $(AGENT_CTL)
+	which upx >/dev/null 2>&1 && upx $(AGENT_CTL) || true
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
-
 deb: $(DEB_PACKAGE)
-
 rpm: $(RPM_PACKAGE)
 
-$(RPM_PACKAGE): $(BUILDROOT)
+$(RPM_PACKAGE): $(BUILDROOT_STAMP)
 	rm -f *.rpm
 	rm -rf "$(RPM_TOPDIR)"
-	rpmbuild -bb --buildroot "$(BUILDROOT)" \
+	cp -pr $(BUILDROOT) $(RPM_BUILDDIR)
+	rpmbuild -bb --buildroot "$(RPM_BUILDDIR)" \
 	    --define "_topdir $(RPM_TOPDIR)" \
 	    --define "_version $(VERSION)" \
 	    --define "_rpm_version $(RPM_VERSION)" \
 	    $(NAME).spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
-	rm -rf $(RPM_TOPDIR)
+	rm -rf $(RPM_TOPDIR) $(RPM_BUILDDIR)
 
-$(DEB_PACKAGE): $(BUILDROOT)
+$(DEB_PACKAGE): $(BUILDROOT_STAMP)
 	rm $(DEB_BUILDDIR) -rf
 	mkdir -p $(DEB_BUILDDIR)/control
 	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
@@ -108,22 +128,17 @@ $(DEB_PACKAGE): $(BUILDROOT)
 	# gnu formatted tar
 	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" *
 	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" *
-	cd "$(DEB_TOPDIR)"; ar cr "$(AGENTS_DIR)/$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
+	cd "$(DEB_TOPDIR)"; ar cr "$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
 	rm $(DEB_BUILDDIR) -rf
 
-# This is always built, because controller is phony.
-# If that changes, we have to properly add the dependencies here!
-$(BUILDROOT): controller waitmax
-	rm -rf "$(BUILDROOT)"
-	#
-	# create build root (as tree would show it)
+$(BUILDROOT_STAMP): $(BUILDROOT_DEPS)
 	mkdir -p "$(BUILDROOT)/etc/check_mk"
 	install -m 644 "conffiles/super-server.cfg" "$(BUILDROOT)/etc/check_mk/super-server.cfg"
 	mkdir -p "$(BUILDROOT)/usr/bin"
 	mkdir -p "$(BUILDROOT)/var/lib/cmk-agent"
 	install -m 755 check_mk_agent.linux "$(BUILDROOT)/usr/bin/check_mk_agent"
 	install -m 755 check_mk_caching_agent.linux "$(BUILDROOT)/usr/bin/check_mk_caching_agent"
-	install -m 755 linux/cmk-agent-ctl "$(BUILDROOT)/usr/bin/cmk-agent-ctl"
+	install -m 755 $(AGENT_CTL) "$(BUILDROOT)/usr/bin/cmk-agent-ctl"
 	install -m 755 mk-job "$(BUILDROOT)/usr/bin/mk-job"
 	install -m 755 waitmax "$(BUILDROOT)/usr/bin/waitmax"
 	mkdir -p "$(BUILDROOT)/usr/lib/check_mk_agent/local"
@@ -133,7 +148,7 @@ $(BUILDROOT): controller waitmax
 	mkdir -p "$(BUILDROOT)/var/lib/check_mk_agent/spool"
 	cp -r scripts "$(BUILDROOT)/var/lib/cmk-agent"
 	mv "$(BUILDROOT)/var/lib/cmk-agent/scripts/super-server/1_xinetd/check-mk-agent" "$(BUILDROOT)/etc/check_mk/xinetd-service-template.cfg"
-
+	touch $@
 
 clean:
-	rm -rf *~ waitmax *.rpm *.deb linux/cmk-agent-ctl "$(BUILDROOT)" "$(DEB_BUILDDIR)"
+	rm -rf *~ waitmax *.rpm *.deb $(AGENT_CTL) "$(BUILDROOT)" "$(BUILDROOT_STAMP)" "$(DEB_BUILDDIR)" "$(RPM_BUILDDIR)" "$(RPM_TOPDIR)"

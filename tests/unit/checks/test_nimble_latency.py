@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -31,6 +32,10 @@ range_data = {
         ]
     ),
 }
+
+Param = Mapping[str, str | tuple[float, float]]
+Data = Mapping[str, Mapping[str, object]]
+Result = tuple[float, str, Sequence[object]]
 
 
 @pytest.mark.parametrize(
@@ -68,7 +73,11 @@ range_data = {
         ),
     ],
 )
-def test_nimble_latency_ranges(params, data, result) -> None:  # type:ignore[no-untyped-def]
+def test_nimble_latency_ranges(
+    params: Param,
+    data: Data,
+    result: Result,
+) -> None:
     """The user can specify a parameter range_reference, which serves as a starting
     point from which values should start to be stacked and checked against levels.
     Test whether the stacking is correct."""
@@ -94,7 +103,7 @@ def test_nimble_latency_ranges(params, data, result) -> None:  # type:ignore[no-
         ),
     ],
 )
-def test_nimble_latency_read_params(params, data, result) -> None:  # type:ignore[no-untyped-def]
+def test_nimble_latency_read_params(params: Param, data: Data, result: Result) -> None:
     """Test that latency read levels are applied to read types only."""
 
     read_check = Check("nimble_latency")
@@ -121,7 +130,7 @@ def test_nimble_latency_read_params(params, data, result) -> None:  # type:ignor
         ),
     ],
 )
-def test_nimble_latency_write_params(params, data, result) -> None:  # type:ignore[no-untyped-def]
+def test_nimble_latency_write_params(params: Param, data: Data, result: Result) -> None:
     """Test that latency write levels are applied to write types only."""
 
     read_check = Check("nimble_latency")

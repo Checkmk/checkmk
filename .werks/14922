@@ -1,0 +1,13 @@
+Title: Fix enforced password change with 2FA
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1669205707
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+When a password change was forced by an administrator and the user had two-factor authentication enabled, the user was unable to login and change the password.
+

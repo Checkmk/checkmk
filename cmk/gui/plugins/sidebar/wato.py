@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Iterable
 
-import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -15,6 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.dashboard.utils import get_permitted_dashboards
 from cmk.gui.plugins.sidebar import search
 from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,
@@ -355,9 +355,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
             ("views", (k, v)) for k, v in views_to_show
         ]
-        visuals_to_show += [
-            ("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()
-        ]
+        visuals_to_show += [("dashboards", (k, v)) for k, v in get_permitted_dashboards().items()]
 
         topics = make_topic_menu(visuals_to_show)
         topic_choices: Choices = [(topic.title, topic.title) for topic in topics]

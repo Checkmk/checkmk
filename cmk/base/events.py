@@ -26,6 +26,7 @@ from cmk.utils.type_defs import EventContext, EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
+from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this
 
@@ -348,10 +349,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         if (value := raw_context.get("LASTSERVICEOK")) is not None:
             raw_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        # Rule based notifications enabled? We might need to complete a few macros
-        contact = raw_context.get("CONTACTNAME")
-        if not contact or contact == "check-mk-notify":
-            add_rulebased_macros(raw_context)
+        add_rulebased_macros(raw_context)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
@@ -412,17 +410,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             raw_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
         raw_context["HOSTFORURL"] = quote(raw_context["HOSTNAME"])
 
-        config_cache = config.get_config_cache()
-        ruleset_matcher = config_cache.ruleset_matcher
-        for k, v in ruleset_matcher.labels_of_host(raw_context["HOSTNAME"]).items():
-            # Dynamically added keys...
-            raw_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
-        if raw_context["WHAT"] == "SERVICE":
-            for k, v in ruleset_matcher.labels_of_service(
-                raw_context["HOSTNAME"], raw_context["SERVICEDESC"]
-            ).items():
-                # Dynamically added keys...
-                raw_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+        _update_raw_context_with_labels(raw_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -438,6 +426,17 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             )
         )
         logger.info("Computed variables:\n%s", log_context)
+
+
+def _update_raw_context_with_labels(raw_context: EventContext) -> None:
+    labels = read_notify_host_file(raw_context["HOSTNAME"])
+    for k, v in labels.host_labels.items():
+        # Dynamically added keys...
+        raw_context["HOSTLABEL_" + k] = v  # type: ignore[literal-required]
+    if raw_context["WHAT"] == "SERVICE":
+        for k, v in labels.service_labels.get(raw_context["SERVICEDESC"], {}).items():
+            # Dynamically added keys...
+            raw_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
 
 
 # TODO: Use cmk.utils.render.*?

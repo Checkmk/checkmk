@@ -38,7 +38,6 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
     create_spoolfile,
-    ensure_utf8,
     find_wato_folder,
     log_to_history,
     notification_message,
@@ -46,7 +45,6 @@ from cmk.utils.notify import (
     NotificationForward,
     NotificationPluginName,
     NotificationResultCode,
-    NotificationViaPlainMail,
     NotificationViaPlugin,
 )
 from cmk.utils.regex import regex
@@ -339,75 +337,22 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAna
     return None
 
 
-# Here we decide which notification implementation we are using.
-# Hopefully we can drop a couple of them some day
-# 1. Rule Based Notifications  (since 1.2.5i1)
-# 2. Flexible Notifications   (since 1.2.2)
-# 3. Plain email notification (refer to git log if you are really interested)
 def locally_deliver_raw_context(
     raw_context: EventContext, analyse: bool = False
 ) -> NotifyAnalysisInfo | None:
-    contactname = raw_context.get("CONTACTNAME")
     try:
 
-        # If rule based notifications are enabled then the Micro Core does not set the
-        # variable CONTACTNAME. In the other cores the CONTACTNAME is being set to
-        # check-mk-notify.
-        # We do we not simply check the config variable enable_rulebased_notifications?
-        # -> Because the core needs are restart in order to reflect this while the
-        #    notification mode of Checkmk not. There are thus situations where the
-        #    setting of the core is different from our global variable. The core must
-        #    have precedence in this situation!
-        if not contactname or contactname == "check-mk-notify":
-            # 1. RULE BASE NOTIFICATIONS
-            logger.debug("Preparing rule based notifications")
-            return notify_rulebased(raw_context, analyse=analyse)
-
         if analyse:
-            return None  # Analysis only possible when rule based notifications are enabled
+            return None
 
-        # Now fetch all configuration about that contact (it needs to be configure via
-        # Checkmk for that purpose). If we do not know that contact then we cannot use
-        # flexible notifications even if they are enabled.
-        contact: Contact = config.contacts[contactname]
-
-        disable_notifications_opts = contact.get("disable_notifications", {})
-        if disable_notifications_opts.get("disable", False):
-            start, end = disable_notifications_opts.get("timerange", (None, None))
-            if start is None or end is None:
-                logger.info(
-                    "Notifications for %s are disabled in personal settings. Skipping.", contactname
-                )
-                return None
-            if start <= time.time() <= end:
-                logger.info(
-                    "Notifications for %s are disabled in personal settings from %s to %s. Skipping.",
-                    contactname,
-                    start,
-                    end,
-                )
-                return None
-
-        # Get notification settings for the contact in question - if available.
-        if contact:
-            method = contact.get("notification_method", "email")
-        else:
-            method = "email"
-
-        if isinstance(method, tuple) and method[0] == "flexible":
-            # 2. FLEXIBLE NOTIFICATIONS
-            logger.info("Preparing flexible notifications for %s", contactname)
-            notify_flexible(raw_context, method[1])
-
-        else:
-            # 3. PLAIN EMAIL NOTIFICATION
-            logger.info("Preparing plain email notifications for %s", contactname)
-            notify_plain_email(raw_context)
+        logger.debug("Preparing rule based notifications")
+        return notify_rulebased(raw_context, analyse=analyse)
 
     except Exception:
         if cmk.utils.debug.enabled():
             raise
         logger.exception("ERROR:")
+
     return None
 
 
@@ -519,7 +464,7 @@ def _create_notifications(
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
 
-    plugintxt = plugin_name or "plain email"
+    plugintxt = plugin_name
 
     key = contacts, plugin_name
     if plugin_parameters is None:  # cancelling
@@ -615,7 +560,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
         for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
             verb = "would notify" if analyse else "notifying"
             contactstxt = ", ".join(contacts)
-            plugintxt = plugin_name or "plain email"
+            plugintxt = plugin_name
             paramtxt = ", ".join(params) if params else "(no parameters)"
             bulktxt = "yes" if bulk else "no"
             logger.info(
@@ -1250,288 +1195,6 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 
 
 # .
-#   .--Flexible-Notifications----------------------------------------------.
-#   |                  _____ _           _ _     _                         |
-#   |                 |  ___| | _____  _(_) |__ | | ___                    |
-#   |                 | |_  | |/ _ \ \/ / | '_ \| |/ _ \                   |
-#   |                 |  _| | |  __/>  <| | |_) | |  __/                   |
-#   |                 |_|   |_|\___/_/\_\_|_.__/|_|\___|                   |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Implementation of the pre 1.2.5, hopelessly outdated flexible       |
-#   |  notifications.                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def notify_flexible(raw_context: EventContext, notification_table: NotificationTable) -> None:
-    for entry in notification_table:
-        plugin_name = entry["plugin"]
-        assert isinstance(plugin_name, str)
-
-        logger.info(" Notification channel with plugin %s", (plugin_name or "plain email"))
-
-        if not should_notify(raw_context, entry):
-            continue
-
-        parameters = entry.get("parameters", [])
-        assert isinstance(parameters, list)
-
-        plugin_context = create_plugin_context(raw_context, parameters)
-
-        if config.notification_spooling in ("local", "both"):
-            create_spoolfile(
-                logger,
-                Path(notification_spooldir),
-                NotificationViaPlugin({"context": plugin_context, "plugin": plugin_name}),
-            )
-        else:
-            call_notification_script(plugin_name, plugin_context)
-
-
-# may return
-# 0  : everything fine   -> proceed
-# 1  : currently not OK  -> try to process later on
-# >=2: invalid           -> discard
-def should_notify(  # pylint: disable=too-many-branches
-    context: EventContext,
-    entry: NotificationTableEntry,
-) -> bool:
-    # Check disabling
-    if entry.get("disabled"):
-        logger.info(" - Skipping: it is disabled for this user")
-        return False
-
-    # Check host, if configured
-    if entry.get("only_hosts"):
-        hostname = context.get("HOSTNAME")
-
-        skip = True
-        regex_match = False
-        negate = False
-        for h in entry["only_hosts"]:
-            if h.startswith("!"):  # negate
-                negate = True
-                h = h[1:]
-            elif h.startswith("~"):
-                regex_match = True
-                h = h[1:]
-
-            if not regex_match and hostname is not None and hostname == h:
-                skip = negate
-                break
-
-            if regex_match and hostname is not None and re.match(h, hostname):
-                skip = negate
-                break
-        if skip:
-            logger.info(
-                " - Skipping: host '%s' matches none of %s",
-                hostname,
-                ", ".join(entry["only_hosts"]),
-            )
-            return False
-
-    # Check if the host has to be in a special service_level
-    if "match_sl" in entry:
-        assert isinstance(entry["match_sl"], list)
-        from_sl, to_sl = entry["match_sl"]
-        if context["WHAT"] == "SERVICE" and context.get("SVC_SL", "").isdigit():
-            sl = events.saveint(context.get("SVC_SL"))
-        else:
-            sl = events.saveint(context.get("HOST_SL"))
-
-        assert isinstance(from_sl, (int, float))
-        assert isinstance(to_sl, (int, float))
-        if sl < from_sl or sl > to_sl:
-            logger.info(" - Skipping: service level %d not between %d and %d", sl, from_sl, to_sl)
-            return False
-
-    # Skip blacklistet serivces
-    if entry.get("service_blacklist"):
-        servicedesc = context.get("SERVICEDESC")
-        if not servicedesc:
-            logger.info(" - Proceed: blacklist certain services, but this is a host notification")
-        else:
-            for s in entry["service_blacklist"]:
-                if re.match(s, servicedesc):
-                    logger.info(
-                        " - Skipping: service '%s' matches blacklist (%s)",
-                        servicedesc,
-                        ", ".join(entry["service_blacklist"]),
-                    )
-                    return False
-
-    # Check service, if configured
-    if entry.get("only_services"):
-        servicedesc = context.get("SERVICEDESC")
-        if not servicedesc:
-            logger.info(" - Proceed: limited to certain services, but this is a host notification")
-        else:
-            # Example
-            # only_services = [ "!LOG foo", "LOG", BAR" ]
-            # -> notify all services beginning with LOG or BAR, but not "LOG foo..."
-            skip = True
-            for s in entry["only_services"]:
-                if s.startswith("!"):  # negate
-                    negate = True
-                    s = s[1:]
-                else:
-                    negate = False
-                if re.match(s, servicedesc):
-                    skip = negate
-                    break
-            if skip:
-                logger.info(
-                    " - Skipping: service '%s' matches none of %s",
-                    servicedesc,
-                    ", ".join(entry["only_services"]),
-                )
-                return False
-
-    # Check notification type
-    host_events = entry["host_events"]
-    assert isinstance(host_events, list)
-    service_events = entry["service_events"]
-    assert isinstance(service_events, list)
-    event, allowed_events = check_notification_type(context, host_events, service_events)
-
-    if event not in allowed_events:
-        logger.info(
-            " - Skipping: wrong notification type %s (%s), only %s are allowed",
-            event,
-            context["NOTIFICATIONTYPE"],
-            ",".join(allowed_events),
-        )
-        return False
-
-    # Check notification number (in case of repeated notifications/escalations)
-    if "escalation" in entry:
-        assert isinstance(entry["escalation"], tuple)
-        from_number, to_number = entry["escalation"]
-        assert isinstance(from_number, (int, float))
-        assert isinstance(to_number, (int, float))
-
-        if context["WHAT"] == "HOST":
-            notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
-        else:
-            notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
-
-        if notification_number < from_number or notification_number > to_number:
-            logger.info(
-                " - Skipping: notification number %d does not lie in range %d ... %d",
-                notification_number,
-                from_number,
-                to_number,
-            )
-            return False
-
-    if "timeperiod" in entry:
-        timeperiod = entry["timeperiod"]
-        if timeperiod and timeperiod != "24X7":
-            if not cmk.base.core.check_timeperiod(str(timeperiod)):
-                logger.info(" - Skipping: time period %s is currently not active", timeperiod)
-                return False
-    return True
-
-
-def check_notification_type(
-    context: EventContext, host_events: list[Event], service_events: list[Event]
-) -> tuple[Event, list[Event]]:
-    notification_type = context["NOTIFICATIONTYPE"]
-    if context["WHAT"] == "HOST":
-        allowed_events = host_events
-        state: str = context["HOSTSTATE"]
-        event_map = {"UP": "r", "DOWN": "d", "UNREACHABLE": "u"}
-    else:
-        allowed_events = service_events
-        state = context["SERVICESTATE"]
-        event_map = {"OK": "r", "WARNING": "w", "CRITICAL": "c", "UNKNOWN": "u"}
-
-    if notification_type == "RECOVERY":
-        event = "r"
-    elif notification_type in ["FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED"]:
-        event = "f"
-    elif notification_type in ["DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
-        event = "s"
-    elif notification_type == "ACKNOWLEDGEMENT":
-        event = "x"
-    else:
-        event = event_map.get(state, "?")
-
-    return event, allowed_events
-
-
-# .
-#   .--Plain Email---------------------------------------------------------.
-#   |          ____  _       _         _____                 _ _           |
-#   |         |  _ \| | __ _(_)_ __   | ____|_ __ ___   __ _(_) |          |
-#   |         | |_) | |/ _` | | '_ \  |  _| | '_ ` _ \ / _` | | |          |
-#   |         |  __/| | (_| | | | | | | |___| | | | | | (_| | | |          |
-#   |         |_|   |_|\__,_|_|_| |_| |_____|_| |_| |_|\__,_|_|_|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Plain Email notification, inline implemented. This is also being    |
-#   |  used as a pseudo-plugin by Flexible Notification and RBN.           |
-#   '----------------------------------------------------------------------'
-
-
-def notify_plain_email(raw_context: EventContext) -> None:
-    plugin_context = create_plugin_context(raw_context, [])
-
-    if config.notification_spooling in ("local", "both"):
-        create_spoolfile(
-            logger,
-            Path(notification_spooldir),
-            NotificationViaPlainMail({"context": plugin_context, "plugin": None}),
-        )
-    else:
-        logger.info("Sending plain email to %s", plugin_context["CONTACTNAME"])
-        notify_via_email(plugin_context)
-
-
-def notify_via_email(plugin_context: NotificationContext) -> int:
-    logger.info(substitute_context(notification_log_template, plugin_context))
-
-    if plugin_context["WHAT"] == "SERVICE":
-        subject_t = notification_service_subject
-        body_t = notification_service_body
-    else:
-        subject_t = notification_host_subject
-        body_t = notification_host_body
-
-    subject = substitute_context(subject_t, plugin_context)
-    plugin_context["SUBJECT"] = subject
-    body = substitute_context(notification_common_body + body_t, plugin_context)
-    command = [str(cmk.utils.paths.bin_dir / "mail"), "-s", subject, plugin_context["CONTACTEMAIL"]]
-
-    old_lang = os.getenv("LANG", "")
-    ensure_utf8(logger)
-    # Important: we must not output anything on stdout or stderr. Data of stdout
-    # goes back into the socket to the CMC in keepalive mode and garbles the
-    # handshake signal.
-    logger.debug("Executing command: %s", " ".join(command))
-
-    completed_process = subprocess.run(
-        command,
-        capture_output=True,
-        close_fds=True,
-        encoding="utf-8",
-        check=False,
-        input=body,
-    )
-    os.putenv("LANG", old_lang)  # Important: do not destroy our environment
-    if completed_process.returncode:
-        logger.info(
-            "ERROR: could not deliver mail. Exit code of command is %r",
-            completed_process.returncode,
-        )
-        for line in (completed_process.stdout + completed_process.stderr).splitlines():
-            logger.info("mail: %s", line.rstrip())
-        return 2
-
-    return 0
-
-
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -1606,17 +1269,13 @@ def call_notification_script(
 ) -> int:
     log_to_history(
         notification_message(
-            NotificationPluginName(plugin_name or "plain email"),
+            NotificationPluginName(plugin_name),
             plugin_context,
         )
     )
 
     def plugin_log(s: str) -> None:
         logger.info("     %s", s)
-
-    # The "Pseudo"-Plugin None means builtin plain email
-    if not plugin_name:
-        return notify_via_email(plugin_context)
 
     # Call actual script without any arguments
     path = path_to_notification_script(plugin_name)
@@ -1740,7 +1399,7 @@ def handle_spoolfile(spoolfile: str) -> int:
                 "Got spool file %s (%s) for local delivery via %s",
                 notif_uuid[:8],
                 events.find_host_service_in_context(plugin_context),
-                (plugin_name or "plain mail"),
+                (plugin_name),
             )
             return call_notification_script(
                 plugin_name=plugin_name,
@@ -2123,7 +1782,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
             bulk_context.reverse()
 
         assert old_params is not None
-        plugin_text = NotificationPluginName("bulk " + (plugin_name or "plain email"))
+        plugin_text = NotificationPluginName("bulk " + (plugin_name))
         context_lines = create_bulk_parameter_context(old_params)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create

@@ -7,20 +7,22 @@ from typing import Any
 import pytest
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
-    IdentifiableMetricFactory,
-    PerformanceMetricFactory,
+    IdentifiableSampleFactory,
+    PerformanceSampleFactory,
 )
 
-from cmk.special_agents.utils_kubernetes.common import Piggyback, PodsToHost, SectionName
-from cmk.special_agents.utils_kubernetes.performance import (
-    _determine_cpu_rate_metrics,
+from cmk.special_agents.utils_kubernetes.common import (
     create_sections,
+    Piggyback,
+    PodsToHost,
+    SectionName,
     Selector,
 )
+from cmk.special_agents.utils_kubernetes.performance import _determine_cpu_rate_metrics
 
 
 def test_determine_cpu_rate_metrics() -> None:
-    current_cpu_metric = PerformanceMetricFactory.build(timestamp=1)
+    current_cpu_metric = PerformanceSampleFactory.build(timestamp=1)
     old_cpu_metric = current_cpu_metric.copy()
     old_cpu_metric.timestamp = 0
     containers_rate_metrics = _determine_cpu_rate_metrics([current_cpu_metric], [old_cpu_metric])
@@ -33,14 +35,14 @@ def test_determine_cpu_rate_metrics() -> None:
 
 def test_determine_cpu_rate_metrics_for_containers_with_same_timestamp() -> None:
     """Test that no rate metrics are returned if no rates can be determined."""
-    cpu_metric = PerformanceMetricFactory.build()
+    cpu_metric = PerformanceSampleFactory.build()
     containers_rate_metrics = _determine_cpu_rate_metrics([cpu_metric], [cpu_metric])
     assert len(containers_rate_metrics) == 0
 
 
 @pytest.mark.parametrize("size", [2, 4])
 def test_selector_one_metric_per_pod(size: int) -> None:
-    identies = IdentifiableMetricFactory.batch(size=size)
+    identies = IdentifiableSampleFactory.batch(size=size)
     pod_names = [i.pod_lookup_from_metric() for i in identies]
     selector: Selector[Any] = Selector(identies, len)  # type: ignore[arg-type]
 
@@ -53,7 +55,7 @@ def test_selector_one_metric_per_pod(size: int) -> None:
 
 
 def test_selector_no_metrics() -> None:
-    pod_names = [i.pod_lookup_from_metric() for i in IdentifiableMetricFactory.batch(size=5)]
+    pod_names = [i.pod_lookup_from_metric() for i in IdentifiableSampleFactory.batch(size=5)]
     selector: Selector[Any] = Selector([], len)  # type: ignore[arg-type]
 
     sections = list(
@@ -65,7 +67,7 @@ def test_selector_no_metrics() -> None:
 
 def test_kube_create_sections() -> None:
     # Assemble
-    identities = IdentifiableMetricFactory.batch(size=2)
+    identities = IdentifiableSampleFactory.batch(size=2)
     one_metric_per_pod_selector: Selector[Any] = Selector(identities, len)  # type: ignore[arg-type]
     piggyback_name = "host_name"
     piggyback_to_pod_names = [
@@ -94,7 +96,7 @@ def test_kube_create_sections() -> None:
 
 def test_kube_create_resource_quota_sections() -> None:
     # Assemble
-    identities = IdentifiableMetricFactory.batch(size=2)
+    identities = IdentifiableSampleFactory.batch(size=2)
     one_metric_per_pod_selector: Selector[Any] = Selector(identities, len)  # type: ignore[arg-type]
     piggyback_name = "host_name"
     piggyback_to_pod_names = [

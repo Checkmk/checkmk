@@ -7,8 +7,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 ###########################################################################
-# NOTE: These metrics (and associated special agent/checks) are deprecated and
-#       will be removed in Checkmk version 2.2.
+# NOTE: These metrics (and associated checks) are deprecated and
+#       will be removed in Checkmk version 2.3. CMK-11309
 ###########################################################################
 
 
@@ -26,12 +26,6 @@ from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
-
-metric_info["k8s_nodes"] = {  # legacy kubernetes checks
-    "title": _("Nodes"),
-    "unit": "count",
-    "color": "11/a",
-}
 
 metric_info["k8s_pods_request"] = {
     "title": _("Pods"),
@@ -90,12 +84,6 @@ metric_info["k8s_memory_request"] = {
 }
 
 
-metric_info["k8s_memory_requests"] = {
-    "title": _("Request"),
-    "unit": "bytes",
-    "color": "42/b",
-}
-
 metric_info["k8s_memory_limit"] = {
     "title": _("Limit"),
     "unit": "bytes",
@@ -127,42 +115,10 @@ metric_info["k8s_memory_usage"] = {
 }
 
 
-metric_info["k8s_mem_used"] = {
-    "color": "#80ff40",
-    "title": _("Memory used"),
-    "unit": "bytes",
-}
-
-
-metric_info["k8s_mem_used_percent"] = {
-    "color": "#80ff40",
-    "title": _("Memory used %"),
-    "unit": "%",
-}
-
-
 metric_info["k8s_cpu_usage"] = {
     "title": _("CPU request"),
     "unit": "%",
     "color": "31/a",
-}
-
-metric_info["k8s_total_roles"] = {
-    "title": _("Total"),
-    "unit": "",
-    "color": "31/a",
-}
-
-metric_info["k8s_cluster_roles"] = {
-    "title": _("Cluster roles"),
-    "unit": "",
-    "color": "21/a",
-}
-
-metric_info["k8s_roles"] = {
-    "title": _("Roles"),
-    "unit": "",
-    "color": "21/b",
 }
 
 metric_info["k8s_daemon_pods_ready"] = {
@@ -200,19 +156,6 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "unit": "",
     "color": "14/a",
 }
-
-metric_info["ready_replicas"] = {
-    "title": _("Ready replicas"),
-    "unit": "",
-    "color": "21/a",
-}
-
-metric_info["total_replicas"] = {
-    "title": _("Total replicas"),
-    "unit": "",
-    "color": "35/a",
-}
-
 
 # .
 #   .--Graphs--------------------------------------------------------------.
@@ -268,33 +211,10 @@ graph_info["k8s_resources.memory"] = {
 }
 
 
-graph_info["k8s_memory_usage"] = {
-    "title": _("Memory usage"),
-    "metrics": [
-        ("k8s_memory_requests", "line"),
-        ("k8s_memory_limit", "line"),
-        ("k8s_mem_used", "area"),
-    ],
-    "optional_metrics": ["k8s_memory_request", "k8s_memory_limit"],
-}
-
-
 graph_info["k8s_pod_container"] = {
     "title": _("Ready containers"),
     "metrics": [
         ("docker_all_containers", "line"),
         ("ready_containers", "area"),
-    ],
-}
-
-
-graph_info["replicas"] = {
-    "title": _("Replicas"),
-    "metrics": [
-        ("ready_replicas", "area"),
-        ("total_replicas", "line"),
-    ],
-    "scalars": [
-        "ready_replicas:crit",
     ],
 }

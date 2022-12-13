@@ -12,14 +12,15 @@ from tests.testlib import on_time
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
-from cmk.gui.painters.v0.base import painter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
+from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.visual_link import render_link_to_view
 
 
@@ -842,7 +843,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "mustsearch": False,
             "name": "allhosts",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "play_sounds": False,
             "public": True,
             "title": "Test view",

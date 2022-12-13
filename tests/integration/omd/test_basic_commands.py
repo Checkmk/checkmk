@@ -18,7 +18,7 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk-update-config",
     ]
 
-    if site.version.edition() == "enterprise":
+    if site.version.is_enterprise_edition():
         commands.append("bin/fetcher")
 
     for rel_path in commands:

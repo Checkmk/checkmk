@@ -223,9 +223,7 @@ class RulesetMatcher:
         with_foreign_hosts = (
             match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
         )
-        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(
-            ruleset, with_foreign_hosts, is_binary=is_binary
-        )
+        optimized_ruleset = self.ruleset_optimizer.get_service_ruleset(ruleset, with_foreign_hosts)
 
         for (
             value,
@@ -455,7 +453,7 @@ class RulesetOptimizer:
         return host_values
 
     def get_service_ruleset(
-        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset:
         cache_id = id(ruleset), with_foreign_hosts
 
@@ -463,13 +461,13 @@ class RulesetOptimizer:
             return self._service_ruleset_cache[cache_id]
 
         cached_ruleset = self._convert_service_ruleset(
-            ruleset, with_foreign_hosts=with_foreign_hosts, is_binary=is_binary
+            ruleset, with_foreign_hosts=with_foreign_hosts
         )
         self._service_ruleset_cache[cache_id] = cached_ruleset
         return cached_ruleset
 
     def _convert_service_ruleset(
-        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset:
         new_rules: PreprocessedServiceRuleset = []
         for rule in ruleset:

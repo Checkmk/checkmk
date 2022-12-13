@@ -7,20 +7,30 @@
 
 import ast
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, overload
+from typing import Any, Literal, NamedTuple, overload
+
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
-from cmk.gui.type_defs import ColumnName, PainterSpec, SingleInfos, SorterSpec, ViewSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    ColumnTypes,
+    PainterName,
+    PainterParameters,
+    PainterSpec,
+    SingleInfos,
+    SorterSpec,
+    ViewSpec,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
-    Alternative,
     CascadingDropdown,
     CascadingDropdownChoice,
     Dictionary,
@@ -39,6 +49,7 @@ from cmk.gui.valuespec import (
 
 from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
+from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views, get_permitted_views
 
@@ -181,72 +192,74 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
 
 
 def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
-    vs_column = _get_common_vs_column(ds_name)
-
-    if join_vs_column := _get_join_vs_column(ds_name):
-        vs_column = Alternative(
-            elements=[
-                vs_column,
-                join_vs_column,
-            ],
-            match=lambda x: 1 * (x is not None and x[1] is not None),
-        )
+    choices = [_get_common_vs_column_choice(ds_name)]
+    if join_vs_column_choice := _get_join_vs_column_choice(ds_name):
+        choices.append(join_vs_column_choice)
 
     return _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Columns"),
-        vs_column=vs_column,
+        vs_column=CascadingDropdown(choices=choices),
         allow_empty=False,
         empty_text=_("Please add at least one column to your view."),
     )
 
 
 def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
-    vs_column = _get_common_vs_column(ds_name)
     return _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Grouping"),
-        vs_column=vs_column,
+        vs_column=CascadingDropdown(choices=[_get_common_vs_column_choice(ds_name)]),
         allow_empty=True,
         empty_text=None,
     )
 
 
-def _get_common_vs_column(ds_name: str) -> ValueSpec:
+class _VSColumnChoice(NamedTuple):
+    column_type: ColumnTypes
+    title: str
+    vs: Tuple
+
+
+def _get_common_vs_column_choice(ds_name: str) -> _VSColumnChoice:
     painters = painters_of_datasource(ds_name)
-    return Tuple(
+    return _VSColumnChoice(
+        column_type="column",
         title=_("Column"),
-        elements=[
-            _get_vs_column_dropdown(ds_name, "painter", painters),
-            FixedValue(value=None, totext=""),
-            FixedValue(value=None, totext=""),
-        ]
-        + _get_vs_link_or_tooltip_elements(painters),
+        vs=Tuple(
+            elements=[
+                _get_vs_column_dropdown(ds_name, "painter", painters),
+            ]
+            + _get_vs_link_or_tooltip_elements(painters),
+        ),
     )
 
 
-def _get_join_vs_column(ds_name: str) -> None | ValueSpec:
+def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
     if not (join_painters := join_painters_of_datasource(ds_name)):
         return None
 
-    return Tuple(
+    return _VSColumnChoice(
+        column_type="join_column",
         title=_("Joined column"),
-        help=_(
-            "A joined column can display information about specific services for "
-            "host objects in a view showing host objects. You need to specify the "
-            "service description of the service you like to show the data for."
-        ),
-        elements=[
-            _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
-            TextInput(
-                title=_("of Service"),
-                allow_empty=False,
+        vs=Tuple(
+            help=_(
+                "A joined column can display information about specific services for "
+                "host objects in a view showing host objects. You need to specify the "
+                "service description of the service you like to show the data for."
             ),
-            TextInput(title=_("Title")),
-        ]
-        + _get_vs_link_or_tooltip_elements(join_painters),
+            elements=[
+                _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
+                TextInput(
+                    title=_("of Service"),
+                    allow_empty=False,
+                ),
+                TextInput(title=_("Title")),
+            ]
+            + _get_vs_link_or_tooltip_elements(join_painters),
+        ),
     )
 
 
@@ -279,6 +292,22 @@ def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[Va
     ]
 
 
+_RawColumnPainterSpec = tuple[
+    PainterName | tuple[PainterName, PainterParameters],
+    VisualLinkSpec | None,
+    ColumnName | None,
+]
+
+
+_RawJoinColumnPainterSpec = tuple[
+    PainterName | tuple[PainterName, PainterParameters],
+    ColumnName,
+    str,
+    VisualLinkSpec | None,
+    ColumnName | None,
+]
+
+
 def _view_editor_spec(
     *,
     ident: str,
@@ -288,13 +317,103 @@ def _view_editor_spec(
     allow_empty: bool,
     empty_text: str | None,
 ) -> Dictionary:
+    # Note: for ident == "grouping" we always have "column" type,
+    # ie. there aren't any "join_column"s.
+
+    def _from_vs(
+        value: (
+            tuple[Literal["column"], _RawColumnPainterSpec]
+            | tuple[Literal["join_column"], _RawJoinColumnPainterSpec]
+        )
+    ) -> PainterSpec:
+        column_type, inner_value = value
+
+        if isinstance(name_or_parameters := inner_value[0], tuple):
+            name, parameters = name_or_parameters
+        else:
+            name = name_or_parameters
+            parameters = None
+
+        link_spec = inner_value[-2]
+        tooltip = inner_value[-1]
+
+        if column_type == "column":
+            return PainterSpec(
+                _column_type=column_type,
+                name=name,
+                parameters=parameters,
+                link_spec=link_spec,
+                tooltip=tooltip,
+            )
+
+        if (
+            column_type == "join_column"
+            and isinstance(join_index := inner_value[1], str)
+            and isinstance(column_title := inner_value[2], str)
+        ):
+            return PainterSpec(
+                _column_type=column_type,
+                name=name,
+                parameters=parameters,
+                join_index=join_index,
+                column_title=column_title,
+                link_spec=link_spec,
+                tooltip=tooltip,
+            )
+
+        raise ValueError()
+
+    def _to_vs(
+        painter_spec: PainterSpec | None,
+    ) -> (
+        tuple[Literal["column"], _RawColumnPainterSpec]
+        | tuple[Literal["join_column"], _RawJoinColumnPainterSpec]
+        | None
+    ):
+        if painter_spec is None:
+            return None
+
+        if painter_spec.column_type == "column" and painter_spec.join_index is None:
+            return (
+                painter_spec.column_type,
+                (
+                    _get_name_or_params(painter_spec),
+                    painter_spec.link_spec,
+                    painter_spec.tooltip,
+                ),
+            )
+
+        if (
+            painter_spec.column_type == "join_column"
+            and isinstance(painter_spec.join_index, str)
+            and isinstance(painter_spec.column_title, str)
+        ):
+            return (
+                painter_spec.column_type,
+                (
+                    _get_name_or_params(painter_spec),
+                    painter_spec.join_index,
+                    painter_spec.column_title,
+                    painter_spec.link_spec,
+                    painter_spec.tooltip,
+                ),
+            )
+
+        raise ValueError()
+
+    def _get_name_or_params(
+        painter_spec: PainterSpec,
+    ) -> PainterName | tuple[PainterName, PainterParameters]:
+        if painter_spec.parameters is None:
+            return painter_spec.name
+        return (painter_spec.name, painter_spec.parameters)
+
     vs_column = Transform(
         valuespec=vs_column,
-        from_valuespec=lambda value: (value[0], value[3], value[4], value[1], value[2]),
-        to_valuespec=lambda value: (
-            None if value is None else (value[0], value[3], value[4], value[1], value[2])
-        ),
+        from_valuespec=_from_vs,
+        to_valuespec=_to_vs,
     )
+
     return Dictionary(
         title=title,
         render="form",
@@ -434,9 +553,7 @@ def render_view_config(
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", value["columns"])
 
-    vs_sorting = view_editor_sorter_specs(
-        "sorting", ds_name, [PainterSpec.from_raw(v) for v in value["columns"]["columns"]]
-    )
+    vs_sorting = view_editor_sorter_specs("sorting", ds_name, value["columns"]["columns"])
     vs_sorting.render_input("sorting", value["sorting"])
 
     vs_grouping = view_editor_grouping_spec("grouping", ds_name)
@@ -468,17 +585,13 @@ def _transform_view_to_valuespec_value(view: ViewDashletConfig | ViewSpec) -> di
         if value.get(key):
             value["visibility"][key] = value[key]
 
-    value["grouping"] = {
-        "grouping": [painter_spec.to_raw() for painter_spec in value.get("group_painters", [])]
-    }
+    value["grouping"] = {"grouping": value.get("group_painters", [])}
 
     value["sorting"] = {
         "sorters": [sorter_spec.to_raw() for sorter_spec in value.get("sorters", {})]
     }
 
-    value["columns"] = {
-        "columns": [painter_spec.to_raw() for painter_spec in value.get("painters", [])]
-    }
+    value["columns"] = {"columns": value.get("painters", [])}
     return value
 
 
@@ -498,10 +611,10 @@ def _transform_valuespec_value_to_view(ident, attrs):
         return {"sorters": [SorterSpec(*s) for s in attrs["sorters"]]}
 
     if ident == "grouping":
-        return {"group_painters": [PainterSpec.from_raw(v) for v in attrs["grouping"]]}
+        return {"group_painters": attrs["grouping"]}
 
     if ident == "columns":
-        return {"painters": [PainterSpec.from_raw(v) for v in attrs["columns"]]}
+        return {"painters": attrs["columns"]}
 
     return {ident: attrs}
 
@@ -575,7 +688,7 @@ def _dummy_view_spec() -> ViewSpec:
             "mustsearch": False,
             "name": "allhosts",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [],
             "play_sounds": False,
             "public": True,

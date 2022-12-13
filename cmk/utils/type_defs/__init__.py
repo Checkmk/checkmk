@@ -13,3 +13,4 @@ from .notify import *
 from .parent_scan import *
 from .pluginname import *
 from .protocol import *
+from .user_id import *

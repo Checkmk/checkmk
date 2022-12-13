@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import threading
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, ContextManager, Literal, NamedTuple
@@ -23,6 +23,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from mypy_extensions import KwArg
 
 from tests.testlib.plugin_registry import reset_registries
+from tests.testlib.rest_api_client import expand_rel, get_link
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
@@ -38,10 +39,10 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
-from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.plugins.dashboard.utils import dashlet_registry
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
@@ -251,39 +252,15 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-def get_link(resp: dict, rel: str) -> Mapping:
-    for link in resp.get("links", []):
-        if link["rel"].startswith(rel):
-            return link
-    if "result" in resp:
-        for link in resp["result"].get("links", []):
-            if link["rel"].startswith(rel):
-                return link
-    for member in resp.get("members", {}).values():
-        if member["memberType"] == "action":
-            for link in member["links"]:
-                if link["rel"].startswith(rel):
-                    return link
-    raise KeyError(f"{rel!r} not found")
-
-
-def _expand_rel(rel: str) -> str:
-    if rel.startswith(".../"):
-        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
-    if rel.startswith("cmk/"):
-        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
-    return rel
-
-
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
     def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kw)
-        self.username: str | None = None
+        self.username: UserId | None = None
         self.password: str | None = None
 
-    def set_credentials(self, username: str | None, password: str | None) -> None:
+    def set_credentials(self, username: UserId | None, password: str | None) -> None:
         self.username = username
         self.password = password
 
@@ -296,7 +273,7 @@ class WebTestAppForCMK(webtest.TestApp):
         if resp.status_code == 204:
             return False
         try:
-            _ = get_link(resp.json, _expand_rel(rel))
+            _ = get_link(resp.json, expand_rel(rel))
             return True
         except KeyError:
             return False
@@ -313,21 +290,21 @@ class WebTestAppForCMK(webtest.TestApp):
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
             if json_data is None:
                 json_data = resp.json
-            link = get_link(json_data, _expand_rel(rel))
+            link = get_link(json_data, expand_rel(rel))
             if "body_params" in link and link["body_params"]:
                 params["params"] = json.dumps(link["body_params"])
                 params["content_type"] = "application/json"
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
 
-    def login(self, username: str, password: str) -> WebTestAppForCMK:
+    def login(self, username: UserId, password: str) -> webtest.TestResponse:
         self.username = username
         login = self.get("/NO_SITE/check_mk/login.py")
         login.form["_username"] = username
         login.form["_password"] = password
         resp = login.form.submit("_login", index=1)
         assert "Invalid credentials." not in resp.text
-        return self
+        return resp
 
 
 def _make_webtest(debug):
@@ -355,13 +332,29 @@ def avoid_search_index_update_background(monkeypatch):
 
 
 @pytest.fixture()
-def logged_in_wsgi_app(wsgi_app, with_user):
-    return wsgi_app.login(with_user[0], with_user[1])
+def logged_in_wsgi_app(
+    wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]
+) -> WebTestAppForCMK:
+    _ = wsgi_app.login(with_user[0], with_user[1])
+    return wsgi_app
 
 
 @pytest.fixture()
-def logged_in_admin_wsgi_app(wsgi_app, with_admin):
-    return wsgi_app.login(with_admin[0], with_admin[1])
+def logged_in_admin_wsgi_app(
+    wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
+) -> WebTestAppForCMK:
+    _ = wsgi_app.login(with_admin[0], with_admin[1])
+    return wsgi_app
+
+
+@pytest.fixture()
+def aut_user_auth_wsgi_app(
+    wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+) -> WebTestAppForCMK:
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", f"{username} {secret}"))
+    return wsgi_app
 
 
 @pytest.fixture()

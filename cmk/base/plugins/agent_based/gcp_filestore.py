@@ -3,13 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
+
+import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Service, ServiceLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Service,
+    ServiceLabel,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils import gcp
-
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
 
 def parse(string_table: StringTable) -> gcp.Section:
@@ -34,7 +45,9 @@ def discover(
             ServiceLabel("gcp/filestore/name", item),
             ServiceLabel("gcp/projectId", assets.project),
         ]
-        labels.extend([ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()])
+        labels.extend(
+            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
+        )
         yield Service(item=item, labels=labels)
 
 
@@ -44,19 +57,39 @@ def check(
     section_gcp_service_filestore: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
+
+    if section_gcp_service_filestore is None or not gcp.item_in_section(
+        item, ASSET_TYPE, section_gcp_assets
+    ):
+        return
+
     metrics = {
-        "fs_used_percent": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/used_bytes_percent", "Usage", render.percent, scale=1e2
+        "utilization": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes_percent", "", str),
+        "read_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/read_ops_count", "", str),
+        "write_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/write_ops_count", "", str),
+        "average_read_wait": gcp.MetricSpec(
+            "file.googleapis.com/nfs/server/average_read_latency", "", str
         ),
-        "disk_read_ios": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/read_ops_count", "Read operations", str
+        "average_write_wait": gcp.MetricSpec(
+            "file.googleapis.com/nfs/server/average_write_latency", "", str
         ),
-        "disk_write_ios": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/write_ops_count", "Write operations", str
-        ),
+        "free_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/free_bytes", "", str),
+        "used_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes", "", str),
     }
-    yield from gcp.check(
-        metrics, item, params, section_gcp_service_filestore, ASSET_TYPE, section_gcp_assets
+
+    timeseries = section_gcp_service_filestore.get(item, gcp.SectionItem(rows=[])).rows
+
+    disk_data = {
+        metric_name: gcp.get_value(timeseries, metric_spec)
+        for metric_name, metric_spec in metrics.items()
+    }
+    disk_data["capacity"] = disk_data.pop("free_capacity") + disk_data["used_capacity"]
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk_data,
+        value_store=get_value_store(),
+        this_time=time.time(),
     )
 
 
@@ -68,9 +101,12 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     check_default_parameters={
-        "fs_used_percent": (80.0, 90.0),
+        "disk_utilization": (80.0, 90.0),
         "disk_read_ios": None,
         "disk_write_ios": None,
+        "disk_average_read_wait": None,
+        "disk_average_write_wait": None,
+        "latency": None,
     },
 )
 

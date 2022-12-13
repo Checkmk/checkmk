@@ -53,17 +53,18 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter_options import paint_age
-from cmk.gui.painters.v0.helpers import render_cache_info
-from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
-from cmk.gui.views.graph import cmk_graph_url
-from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
+
+from ..graph import cmk_graph_url
+from ..painter.v0.helpers import render_cache_info
+from ..painter.v1.helpers import is_stale
+from ..painter_options import paint_age
+from .base import Icon
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -1162,6 +1163,8 @@ class AggregationIcon(Icon):
             start = args.find("-a' '") + 5
             end = args.find("' ", start)
             aggr_name = args[start:end]
+            aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
+            aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 
             url = "{}/check_mk/view.py?view_name=aggr_single&aggr_name={}".format(
                 base_url,

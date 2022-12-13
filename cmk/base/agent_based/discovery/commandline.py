@@ -23,6 +23,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -52,7 +53,9 @@ __all__ = ["commandline_discovery", "commandline_check_discovery"]
 def commandline_discovery(
     arg_hostnames: set[HostName],
     *,
+    config_cache: ConfigCache,
     selected_sections: SectionNameCollection,
+    file_cache_options: FileCacheOptions,
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
@@ -63,49 +66,51 @@ def commandline_discovery(
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
     """
-    config_cache = config.get_config_cache()
-
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
-
     host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
 
     mode = Mode.DISCOVERY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS
 
     # Now loop through all hosts
     for host_name in sorted(host_names):
-        host_config = config_cache.make_host_config(host_name)
+        nodes = config_cache.nodes_of(host_name)
+        if nodes is None:
+            hosts = [(host_name, config.lookup_ip_address(host_name))]
+        else:
+            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+
         section.section_begin(host_name)
         try:
             fetched: Sequence[
                 tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
             ] = fetch_all(
-                make_sources(
-                    host_name,
-                    config.lookup_ip_address(host_config),
-                    ip_lookup=lambda host_name: config.lookup_ip_address(
-                        config_cache.make_host_config(host_name)
-                    ),
-                    selected_sections=selected_sections,
-                    force_snmp_cache_refresh=False,
-                    on_scan_error=on_error,
-                    simulation_mode=config.simulation_mode,
-                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_name,
-                        config.snmp_without_sys_descr,
-                    ),
-                    file_cache_max_age=config.max_cachefile_age(),
+                *(
+                    make_sources(
+                        host_name_,
+                        ip_address_,
+                        config_cache=config_cache,
+                        force_snmp_cache_refresh=False,
+                        selected_sections=selected_sections if nodes is None else NO_SELECTION,
+                        on_scan_error=on_error if nodes is None else OnError.RAISE,
+                        simulation_mode=config.simulation_mode,
+                        file_cache_options=file_cache_options,
+                        file_cache_max_age=config.max_cachefile_age(),
+                    )
+                    for host_name_, ip_address_ in hosts
                 ),
                 mode=mode,
             )
             host_sections, _results = parse_messages(
                 ((f[0], f[1]) for f in fetched),
                 selected_sections=selected_sections,
+                keep_outdated=file_cache_options.keep_outdated,
                 logger=logging.getLogger("cmk.base.discovery"),
             )
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(
                 host_name=host_name,
+                config_cache=config_cache,
                 parsed_sections_broker=parsed_sections_broker,
                 run_plugin_names=run_plugin_names,
                 only_new=arg_only_new,
@@ -160,6 +165,7 @@ def _preprocess_hostnames(
 def _commandline_discovery_on_host(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
@@ -172,6 +178,7 @@ def _commandline_discovery_on_host(
 
     host_labels = analyse_node_labels(
         host_name=host_name,
+        config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=load_labels,
         save_labels=True,
@@ -215,12 +222,21 @@ def commandline_check_discovery(
     host_name: HostName,
     ipaddress: HostAddress | None,
     *,
+    config_cache: ConfigCache,
     active_check_handler: Callable[[HostName, str], object],
+    file_cache_options: FileCacheOptions,
+    discovery_file_cache_max_age: int | None,
     keepalive: bool,
 ) -> ServiceState:
-    config_cache = config.get_config_cache()
     return error_handling.check_result(
-        partial(_commandline_check_discovery, host_name, ipaddress),
+        partial(
+            _commandline_check_discovery,
+            host_name,
+            ipaddress,
+            file_cache_options=file_cache_options,
+            discovery_file_cache_max_age=discovery_file_cache_max_age,
+            config_cache=config_cache,
+        ),
         exit_spec=config_cache.exit_code_spec(host_name),
         host_name=host_name,
         service_name="Check_MK Discovery",
@@ -235,35 +251,43 @@ def commandline_check_discovery(
 def _commandline_check_discovery(
     host_name: HostName,
     ipaddress: HostAddress | None,
+    *,
+    file_cache_options: FileCacheOptions,
+    discovery_file_cache_max_age: int | None,
+    config_cache: ConfigCache,
 ) -> ActiveCheckResult:
-    config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
-
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_name)
+
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
+        hosts = [(host_name, ipaddress)]
+    else:
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched = fetch_all(
-        make_sources(
-            host_name,
-            ipaddress,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-            simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name,
-                config.snmp_without_sys_descr,
-            ),
-            file_cache_max_age=config.max_cachefile_age(
-                discovery=None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0
-            ),
+        *(
+            make_sources(
+                host_name_,
+                ipaddress_,
+                config_cache=config_cache,
+                force_snmp_cache_refresh=False,
+                selected_sections=NO_SELECTION,
+                on_scan_error=OnError.RAISE,
+                simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
+                file_cache_max_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
+            )
+            for host_name_, ipaddress_ in hosts
         ),
         mode=Mode.DISCOVERY,
     )
 
-    return execute_check_discovery(host_name, fetched=fetched)
+    return execute_check_discovery(
+        host_name,
+        config_cache=config_cache,
+        fetched=fetched,
+        keep_outdated=file_cache_options.keep_outdated,
+    )

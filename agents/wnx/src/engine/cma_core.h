@@ -598,7 +598,7 @@ private:
 
     std::wstring cmd_line_;
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
     FRIEND_TEST(PluginTest, TimeoutCalc);

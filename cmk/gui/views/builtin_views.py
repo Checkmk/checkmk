@@ -7,9 +7,17 @@ from collections.abc import Sequence
 from typing import Any
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import PainterSpec, SorterSpec, ViewName, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import (
+    PainterParameters,
+    PainterSpec,
+    SorterSpec,
+    ViewName,
+    ViewSpec,
+    VisualLinkSpec,
+)
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -84,7 +92,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "allhosts",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -131,7 +139,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "unmonitored_services",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_discovery_service"),
                 PainterSpec(name="service_discovery_check"),
@@ -177,7 +185,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "pending_discovery",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_discovery_service"),
                 PainterSpec(name="service_discovery_check"),
@@ -219,7 +227,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "allservices",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -310,7 +318,7 @@ builtin_views.update(
             "sort_index": 70,
             "is_show_more": True,
             "icon": "service_duration",
-            "owner": "",
+            "owner": UserId.builtin(),
             "link_from": {},
             "add_context_to_title": True,
         },
@@ -327,7 +335,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "comments",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="comment_author"),
                 PainterSpec(name="comment_time"),
@@ -373,7 +381,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "comments_of_host",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="comment_author"),
                 PainterSpec(name="comment_comment"),
@@ -406,7 +414,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "comments_of_service",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="comment_author"),
                 PainterSpec(name="comment_comment"),
@@ -439,7 +447,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "downtimes",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -515,7 +523,7 @@ builtin_views.update(
             "title": _l("Downtime history"),
             "topic": "history",
             "sort_index": 30,
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "downtime_history",
             "user_sortable": True,
             "single_infos": [],
@@ -543,7 +551,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "api_downtimes",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -597,7 +605,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "downtimes_of_host",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="downtime_origin"),
                 PainterSpec(name="downtime_author"),
@@ -634,7 +642,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "downtimes_of_service",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="downtime_origin"),
                 PainterSpec(name="downtime_author"),
@@ -678,7 +686,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -730,7 +738,7 @@ builtin_views.update(
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
             "title": _l("Services of Host"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "host_export",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -762,7 +770,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hosts",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -799,7 +807,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host_ok",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -835,7 +843,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host_warn",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -871,7 +879,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host_crit",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -907,7 +915,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host_unknown",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -943,7 +951,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "host_pending",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -981,7 +989,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "problemsofhost",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1020,7 +1028,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroup",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1068,7 +1076,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroup_up",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1114,7 +1122,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroup_down",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1160,7 +1168,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroup_unreach",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1206,7 +1214,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroup_pend",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1244,7 +1252,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1310,7 +1318,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices_ok",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1376,7 +1384,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices_warn",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1442,7 +1450,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices_crit",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1508,7 +1516,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices_unknwn",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1574,7 +1582,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroupservices_pend",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -1633,7 +1641,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostgroups",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="hg_name",
@@ -1704,7 +1712,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostproblems",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": True,
             "public": True,
@@ -1740,7 +1748,7 @@ builtin_views.update(
             "layout": "dataset",
             "mustsearch": False,
             "name": "hoststatus",
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 # 1. Identification and icons
                 PainterSpec(name="sitealias"),
@@ -1835,7 +1843,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "pendingsvc",
             "num_columns": 5,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="service_description",
@@ -1868,7 +1876,7 @@ builtin_views.update(
             "mustsearch": True,
             "name": "searchhost",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1914,7 +1922,7 @@ builtin_views.update(
             "mustsearch": True,
             "name": "searchsvc",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -1956,7 +1964,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "service",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 # 1. Identification and icons
                 PainterSpec(name="sitealias"),
@@ -2032,7 +2040,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "servicedesc",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(name="service_icons"),
@@ -2079,7 +2087,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "servicegroup",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -2117,7 +2125,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitehosts",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_view_painters,
             "public": True,
             "sorters": [
@@ -2149,7 +2157,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "svcgroups",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="sg_name",
@@ -2187,7 +2195,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "svcproblems",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_service_view_painters,
             "play_sounds": True,
             "public": True,
@@ -2244,7 +2252,7 @@ builtin_views.update(
             "mustsearch": True,
             "name": "searchpnp",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [PainterSpec(name="service_graphs")],
             "play_sounds": False,
             "public": True,
@@ -2293,7 +2301,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostpnp",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [PainterSpec(name="host_graphs")],
             "play_sounds": False,
             "public": True,
@@ -2331,7 +2339,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "recentsvc",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": host_service_view_painters,
             "play_sounds": False,
             "public": True,
@@ -2387,7 +2395,7 @@ builtin_views.update(
             "topic": "problems",
             "sort_index": 40,
             "is_show_more": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "service_staleness": {"is_service_staleness": "1"},
@@ -2422,7 +2430,7 @@ builtin_views.update(
             "title": _l("Stale hosts"),
             "topic": "problems",
             "user_sortable": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "host_staleness": {"is_host_staleness": "1"},
@@ -2446,7 +2454,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "events",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -2502,7 +2510,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostevents",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -2557,7 +2565,7 @@ builtin_views.update(
             "title": _l("Historic downtimes of host"),
             "topic": "history",
             "is_show_more": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "host_dt_hist",
             "user_sortable": True,
             "single_infos": ["host"],
@@ -2583,7 +2591,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "svcevents",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -2637,7 +2645,7 @@ builtin_views.update(
             ],
             "title": _l("Historic downtimes of service"),
             "topic": "history",
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "svc_dt_hist",
             "user_sortable": True,
             "single_infos": ["service", "host"],
@@ -2666,7 +2674,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostsvcevents",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -2714,7 +2722,7 @@ builtin_views.update(
             "mustsearch": True,
             "name": "logfile",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -2782,7 +2790,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs_ok",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -2838,7 +2846,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs_warn",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -2894,7 +2902,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs_crit",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -2950,7 +2958,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs_unknwn",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -3006,7 +3014,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs_pend",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -3062,7 +3070,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "sitesvcs",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -3113,7 +3121,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "alertstats",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -3172,7 +3180,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "nagstamon_hosts",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -3226,7 +3234,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "nagstamon_svc",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -3322,7 +3330,7 @@ builtin_views.update(
             ],
             "title": _l("Matrix of Performance Data"),
             "user_sortable": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "public": True,
             "name": "perf_matrix",
             "link_from": {},
@@ -3376,7 +3384,7 @@ builtin_views.update(
             "title": _l("Search performance data"),
             "topic": "history",
             "sort_index": 60,
-            "owner": "",
+            "owner": UserId.builtin(),
             "public": True,
             "name": "perf_matrix_search",
             "link_from": {},
@@ -3416,7 +3424,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_all",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3480,7 +3488,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_group",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3544,7 +3552,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_singlehosts",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(
@@ -3619,7 +3627,7 @@ builtin_views.update(
             "layout": "table",
             "mustsearch": False,
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(
@@ -3691,7 +3699,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_singlehost",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3729,7 +3737,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_host",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3794,7 +3802,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_service",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3861,7 +3869,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_problems",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -3932,7 +3940,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_hostproblems",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(
@@ -4005,7 +4013,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_single",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_icons"),
                 PainterSpec(name="aggr_state"),
@@ -4042,7 +4050,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_all_api",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_group"),
                 PainterSpec(name="aggr_name"),
@@ -4083,7 +4091,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "aggr_single_api",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="aggr_state_num"),
                 PainterSpec(name="aggr_output"),
@@ -4131,7 +4139,7 @@ builtin_views.update(
             "title": _l("BI Aggregations Summary State"),
             "topic": "bi",
             "user_sortable": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {},
             "link_from": {},
@@ -4177,7 +4185,7 @@ builtin_views.update(
             ],
             "title": _l("Host group with BI state"),
             "user_sortable": True,
-            "owner": "",
+            "owner": UserId.builtin(),
             "link_from": {},
             "topic": "",
             "add_context_to_title": True,
@@ -4205,7 +4213,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostnotifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4262,7 +4270,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "hostsvcnotifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4326,7 +4334,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "notifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4391,7 +4399,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "failed_notifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4466,7 +4474,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "svcnotifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4520,7 +4528,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "contactnotifications",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4590,7 +4598,7 @@ builtin_views.update(
             "mustsearch": False,
             "name": "alerthandlers",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),
@@ -4701,7 +4709,7 @@ def _simple_host_view(custom_attributes, add_context=None):
             SorterSpec(sorter="site", negate=False),
             SorterSpec(sorter="site_host", negate=False),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "link_from": {},
         "is_show_more": False,
@@ -4859,7 +4867,7 @@ builtin_views["crash_reports"] = {
     "topic": "analyze",
     "sort_index": 30,
     "is_show_more": True,
-    "owner": "",
+    "owner": UserId.builtin(),
     "public": True,
     "link_from": {},
     "add_context_to_title": True,
@@ -4886,29 +4894,29 @@ builtin_views["cmk_servers"] = {
     "painters": [
         PainterSpec(
             name="host",
-            parameters={
-                "color_choices": [
+            parameters=PainterParameters(
+                color_choices=[
                     "colorize_up",
                     "colorize_down",
                     "colorize_unreachable",
                     "colorize_pending",
                     "colorize_downtime",
                 ]
-            },
+            ),
             link_spec=VisualLinkSpec(type_name="views", name="host"),
             tooltip="host_addresses",
         ),
         PainterSpec(
             name="inv_software_os_name",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="inv_hardware_cpu_cores",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="inv_hardware_memory_total_ram_usable",
-            parameters={"use_short": True},
+            parameters=PainterParameters(use_short=True),
         ),
         PainterSpec(
             name="perfometer",
@@ -4937,7 +4945,7 @@ builtin_views["cmk_servers"] = {
     "title": _l("Checkmk servers"),
     "topic": "analyze",
     "sort_index": 6,
-    "owner": "",
+    "owner": UserId.builtin(),
     "public": True,
     "link_from": {},
     "is_show_more": False,
@@ -5028,7 +5036,7 @@ builtin_views["cmk_sites"] = {
     "title": _l("Checkmk sites"),
     "topic": "analyze",
     "sort_index": 7,
-    "owner": "",
+    "owner": UserId.builtin(),
     "public": True,
     "link_from": {},
     "is_show_more": False,
@@ -5061,9 +5069,154 @@ builtin_views["cmk_sites_of_host"] = {
     "user_sortable": True,
     "title": _l("Checkmk sites of host"),
     "topic": "applications",
-    "owner": "",
+    "owner": UserId.builtin(),
     "public": True,
     "link_from": {},
     "sort_index": 99,
     "is_show_more": False,
 }
+
+# FIXME: Can be removed once all dashboards have been converted
+# to have the view definitions right inside the dashboards
+builtin_views.update(
+    {
+        # A similar view, used in the dashboard
+        "hostproblems_dash": {
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "datasource": "hosts",
+            "description": _l(
+                "A complete list of all host problems, optimized for usage in the dashboard"
+            ),
+            "group_painters": [],
+            "hidden": True,
+            "hidebutton": True,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "hostproblems_dash",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                PainterSpec(name="host_state"),
+                PainterSpec(
+                    name="host",
+                    link_spec=VisualLinkSpec(type_name="views", name="host"),
+                ),
+                PainterSpec(name="host_icons"),
+                PainterSpec(name="host_state_age"),
+                PainterSpec(name="host_plugin_output"),
+            ],
+            "public": True,
+            "sorters": [SorterSpec(sorter="hoststate", negate=True)],
+            "title": _l("Host problems"),
+            "topic": "",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {
+                "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
+                "hoststate": {"hst0": "", "hst1": "on", "hst2": "on", "hstp": ""},
+                "host_acknowledged": {"is_host_acknowledged": "0"},
+            },
+            "link_from": {},
+            "icon": None,
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+        # Similar view, but for the dashboard
+        "svcproblems_dash": {
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "datasource": "services",
+            "description": _l(
+                "All non-downtime, non-acknownledged services, used for the dashbaord"
+            ),
+            "group_painters": [],
+            "hidden": True,
+            "hidebutton": False,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "svcproblems_dash",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                PainterSpec(name="service_state"),
+                PainterSpec(
+                    name="host",
+                    link_spec=VisualLinkSpec(type_name="views", name="host"),
+                ),
+                PainterSpec(
+                    name="service_description",
+                    link_spec=VisualLinkSpec(type_name="views", name="service"),
+                ),
+                PainterSpec(name="service_icons"),
+                PainterSpec(name="svc_plugin_output"),
+                PainterSpec(name="svc_state_age"),
+                PainterSpec(name="svc_check_age"),
+            ],
+            "play_sounds": True,
+            "public": True,
+            "sorters": [
+                SorterSpec(sorter="svcstate", negate=True),
+                SorterSpec(sorter="stateage", negate=False),
+                SorterSpec(sorter="svcdescr", negate=False),
+            ],
+            "title": _l("Service problems"),
+            "topic": "",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {
+                "service_acknowledged": {"is_service_acknowledged": "0"},
+                "svcstate": {"st0": "", "st1": "on", "st2": "on", "st3": "on", "stp": ""},
+                "hoststate": {"hst0": "on", "hst1": "", "hst2": "", "hstp": "on"},
+                "in_downtime": {"is_in_downtime": "0"},
+            },
+            "link_from": {},
+            "icon": None,
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+        # Similar view, but for dashboard
+        "events_dash": {
+            "browser_reload": 90,
+            "column_headers": "pergroup",
+            "datasource": "log_events",
+            "description": _l("Events of the last 4 hours."),
+            "group_painters": [],
+            "hidden": True,
+            "hidebutton": False,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "events_dash",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                PainterSpec(name="log_icon"),
+                PainterSpec(name="log_time"),
+                PainterSpec(
+                    name="host",
+                    link_spec=VisualLinkSpec(type_name="views", name="hostsvcevents"),
+                ),
+                PainterSpec(
+                    name="service_description",
+                    link_spec=VisualLinkSpec(type_name="views", name="svcevents"),
+                ),
+                PainterSpec(name="log_plugin_output"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "sorters": [],
+            "title": _l("Events of the last 4 hours (for the dashboard)"),
+            "topic": "",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {"logtime": {"logtime_from": "4", "logtime_from_range": "3600"}},
+            "link_from": {},
+            "icon": None,
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+    }
+)

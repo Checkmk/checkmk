@@ -116,7 +116,7 @@ class MainMenuRenderer:
 def ajax_message_read():
     response.set_content_type("application/json")
     try:
-        message.delete_gui_message(request.var("id"))
+        message.delete_gui_message(request.get_str_input_mandatory("id"))
         html.write_text("OK")
     except Exception:
         if active_config.debug:

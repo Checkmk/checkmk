@@ -35,15 +35,16 @@ from cmk.utils.i18n import _
 
 class _EditionValue(NamedTuple):
     short: str
+    name: str
     title: str
 
 
 class Edition(_EditionValue, enum.Enum):
-    CRE = _EditionValue("cre", "Checkmk Raw Edition")
-    CEE = _EditionValue("cee", "Checkmk Enterprise Edition")
-    CPE = _EditionValue("cpe", "Checkmk Enterprise Plus Edition")
-    CME = _EditionValue("cme", "Checkmk Managed Services Edition")
-    CFE = _EditionValue("cfe", "Checkmk Free Edition")
+    CRE = _EditionValue("cre", "raw", "Checkmk Raw Edition")
+    CEE = _EditionValue("cee", "enterprise", "Checkmk Enterprise Edition")
+    CPE = _EditionValue("cpe", "plus", "Checkmk Enterprise Plus Edition")
+    CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
+    CFE = _EditionValue("cfe", "free", "Checkmk Free Edition")
 
 
 @lru_cache
@@ -712,7 +713,7 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
     (2, 2, 0): max(
         Version("2.1.0p11"),  # ?
         Version("2.1.0p15"),  # migration for MKPs (Werk #14636)
-        Version("2.1.0p17"),  # added severity_new_host_label to sample config
+        Version("2.1.0p17"),  # added severity_new_host_label to sample config and werk 14938
     ),
 }
 

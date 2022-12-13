@@ -10,6 +10,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -85,21 +86,22 @@ def test_truncation_error() -> None:
         ("bcrypt_user", False),
     ],
 )
-def test_update_hashes(htpasswd_file: Path, user: UserId, expect_update: bool) -> None:
+def test_update_hashes(htpasswd_file: Path, user: str, expect_update: bool) -> None:
+    uid = UserId(user)
     password = Password("cmk")
     htpasswd_connector = htpasswd.HtpasswdUserConnector({})
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        htpasswd_connector.check_credentials(user, password)
+        htpasswd_connector.check_credentials(uid, password)
 
     # Note: bcrypt $2b$ hashes are not "updated" to $2y$
     assert (
-        f"{user}:$2y$" in htpasswd_file.read_text()
+        f"{uid}:$2y$" in htpasswd_file.read_text()
     ) == expect_update, "Only sha256-crypt hashes are updated"
 
-    if not "locked" in user:
+    if "locked" not in uid:
         assert (
-            htpasswd_connector.check_credentials(user, password) == user
+            htpasswd_connector.check_credentials(uid, password) == user
         ), "Password is still valid"
 
 
@@ -111,7 +113,7 @@ def test_update_long_password(htpasswd_file: Path) -> None:
     usr = UserId("longcat")
     pw = 74 * "x"  # too long for bcrypt
     pw_hash = "$5$rounds=1000$FwEKt/q2WUEYYjOm$EhgODZbqGIl8LcdDtGYYjfFLECubBN.xNSavUiP5.UB"
-    htpasswd_file.write_text(f"{usr}:{pw_hash}\n")
+    htpasswd_file.write_text(Htpasswd.serialize_entries([(usr, pw_hash)]))
 
     assert (
         htpasswd_connector.check_credentials(usr, Password(pw)) == usr

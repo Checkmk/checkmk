@@ -1,0 +1,17 @@
+Title: Fix Veeam CDP job monitoring for disabled jobs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669369913
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The Windows agent plugin for monitoring Veeam jobs (<tt>veeam_backup_status.ps1</tt>) crashed if
+there was a disabled CDP job on the target system. This has been fixed, hence, disabled jobs will
+now be discovered as services in Checkmk. Their monitoring status is <i>OK</i> and they don't report
+the time since the last CDP run, which is not available for disabled jobs.
+
+Note that users have to update the agent plugin on affected hosts in order to benefit from this
+werk.

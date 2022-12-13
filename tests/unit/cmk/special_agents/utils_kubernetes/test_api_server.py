@@ -7,12 +7,13 @@
 import json
 import logging
 from collections.abc import Mapping, Sequence
+from unittest.mock import patch
 
 import pytest
 from kubernetes import client  # type: ignore[import]
 from kubernetes.client import ApiClient  # type: ignore[import]
-from mocket import Mocketizer  # type: ignore[import]
-from mocket.mockhttp import Entry  # type: ignore[import]
+
+from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeByteResponse
 
 from cmk.special_agents.utils_kubernetes.api_server import (
     _verify_version_support,
@@ -35,27 +36,24 @@ def _raw_api() -> RawAPI:
     return RawAPI(kubernetes_api_client(), timeout=(10, 10))
 
 
-def test_raw_api_get_healthz_ok(raw_api: RawAPI) -> None:
-    Entry.single_register(Entry.GET, "http://api-unittest/some_health_endpoint", body="response-ok")
-    with Mocketizer():
-        result = raw_api._get_healthz("/some_health_endpoint")
+CALL_API = "cmk.special_agents.utils_kubernetes.api_server.client.ApiClient.call_api"
 
+
+def test_raw_api_get_healthz_ok(raw_api: RawAPI) -> None:
+    with patch(CALL_API) as mock_request:
+        mock_request.return_value = (FakeByteResponse("response-ok"), 200, {})
+        result = raw_api._get_healthz("/some_health_endpoint")
     assert result.status_code == 200
     assert result.response == "response-ok"
     assert result.verbose_response is None
 
 
 def test_raw_api_get_healthz_nok(raw_api: RawAPI) -> None:
-    Entry.single_register(
-        Entry.GET, "http://api-unittest/some_health_endpoint", body="response-nok", status=500
-    )
-    Entry.single_register(
-        Entry.GET,
-        "http://api-unittest/some_health_endpoint?verbose=1",
-        body="verbose\nresponse\nnok",
-        status=500,
-    )
-    with Mocketizer():
+    with patch(CALL_API) as mock_request:
+        mock_request.side_effect = [
+            (FakeByteResponse("response-nok"), 500, {}),
+            (FakeByteResponse("verbose\nresponse\nnok"), 500, {}),
+        ]
         result = raw_api._get_healthz("/some_health_endpoint")
 
     assert result.status_code == 500
@@ -133,14 +131,13 @@ def test_version_endpoint(
 ) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
-    Entry.single_register(
-        Entry.GET,
-        "http://api-unittest/version",
-        body=version_json_dump,
-        headers={"content-type": "application/json"},
-    )
     # act
-    with Mocketizer():
+    with patch(CALL_API) as mock_request:
+        mock_request.return_value = (
+            FakeByteResponse(version_json_dump),
+            200,
+            {"content-type": "application/json"},
+        )
         queried_version = raw_api.query_raw_version()
     # assert
     assert queried_version == version_json_dump
@@ -152,8 +149,8 @@ def test_version_endpoint_no_json(raw_api: RawAPI) -> None:
     Invalid endpoint, since returned data is not json. RawAPI will not
     identify this issue. Instead, the issue needs to be handled seperately.
     """
-    Entry.single_register(Entry.GET, "http://api-unittest/version", body="I'm not json")
-    with Mocketizer():
+    with patch(CALL_API) as mock_request:
+        mock_request.return_value = (FakeByteResponse("I'm not json"), 200, {})
         result = raw_api.query_raw_version()
     assert result == "I'm not json"
 
@@ -166,14 +163,13 @@ def test_version_endpoint_invalid_json(raw_api: RawAPI) -> None:
     """
 
     # arrange
-    Entry.single_register(
-        Entry.GET,
-        "http://api-unittest/version",
-        body=json.dumps({}),
-        headers={"content-type": "application/json"},
-    )
-    # act
-    with Mocketizer():
+    with patch(CALL_API) as mock_request:
+        mock_request.return_value = (
+            FakeByteResponse(json.dumps({})),
+            200,
+            {"content-type": "application/json"},
+        )
+        # act
         queried_version = raw_api.query_raw_version()
     # assert
     assert queried_version == "{}"

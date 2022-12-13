@@ -34,7 +34,7 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass
-from typing import Literal, Protocol, TypeVar
+from typing import Literal, TypeVar
 from urllib.parse import urlparse
 
 import requests
@@ -50,7 +50,7 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
-from cmk.special_agents.utils_kubernetes import performance, query
+from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -69,16 +69,6 @@ NATIVE_NODE_CONDITION_TYPES = [
     "PIDPressure",
     "NetworkUnavailable",
 ]
-
-
-class PBFormatter(Protocol):
-    def __call__(self, object_type: str, namespaced_name: str) -> str:
-        ...
-
-
-class ObjectSpecificPBFormatter(Protocol):
-    def __call__(self, namespaced_name: str) -> str:
-        ...
 
 
 class AnnotationNonPatternOption(enum.Enum):
@@ -158,23 +148,8 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
             "will be used."
         ),
     )
-    p.add_argument(
-        "--cluster-collector-endpoint",
-        help="Endpoint to query metrics from Kubernetes cluster agent",
-    )
-    p.add_argument(
-        "--cluster-collector-proxy",
-        type=str,
-        default="FROM_ENVIRONMENT",
-        metavar="PROXY",
-        help=(
-            "HTTP proxy used to connect to the Kubernetes cluster agent. If not set, the environment settings "
-            "will be used."
-        ),
-    )
 
     p.add_argument("--verify-cert-api", action="store_true", help="Verify certificate")
-    p.add_argument("--verify-cert-collector", action="store_true", help="Verify certificate")
     namespaces = p.add_mutually_exclusive_group()
     namespaces.add_argument(
         "--namespace-include-patterns",
@@ -195,20 +170,6 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "--profile",
         metavar="FILE",
         help="Profile the performance of the agent and write the output to a file",
-    )
-    p.add_argument(
-        "--cluster-collector-connect-timeout",
-        type=int,
-        default=10,
-        help="The timeout in seconds the special agent will wait for a "
-        "connection to the cluster collector.",
-    )
-    p.add_argument(
-        "--cluster-collector-read-timeout",
-        type=int,
-        default=12,
-        help="The timeout in seconds the special agent will wait for a "
-        "response from the cluster collector.",
     )
     p.add_argument(
         "--k8s-api-connect-timeout",
@@ -266,6 +227,50 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     )
     group_host_labels.set_defaults(annotation_key_pattern=AnnotationNonPatternOption.ignore_all)
 
+    data_endpoint = p.add_mutually_exclusive_group()
+    data_endpoint.add_argument(
+        "--cluster-collector-endpoint",
+        help="Endpoint to query metrics from Kubernetes cluster agent",
+    )
+    data_endpoint.add_argument(
+        "--prometheus-endpoint",
+        help="The full URL to the Prometheus API endpoint including the protocol (http or https). "
+        "OpenShift exposes such endpoints via a route in the openshift-monitoring namespace called "
+        "prometheus-k8s.",
+    )
+    p.add_argument(
+        "--usage-connect-timeout",
+        type=int,
+        default=10,
+        help="The timeout in seconds the special agent will wait for a "
+        "connection to the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
+    p.add_argument(
+        "--usage-read-timeout",
+        type=int,
+        default=12,
+        help="The timeout in seconds the special agent will wait for a "
+        "response from the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
+    p.add_argument(
+        "--usage-proxy",
+        type=str,
+        default="FROM_ENVIRONMENT",
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the endpoint specified by --prometheus-endpoint or "
+            "--cluster-collector-endpoint. "
+            "If not set, the environment settings will be used."
+        ),
+    )
+    p.add_argument(
+        "--usage-verify-cert",
+        action="store_true",
+        help="Verify certificate for the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
     arguments = p.parse_args(args)
     return arguments
 
@@ -701,6 +706,12 @@ def _node_collector_replicas(
     )
 
 
+PB_KUBE_OBJECT = (
+    Cluster | api.CronJob | Deployment | DaemonSet | api.Namespace | Node | api.Pod | StatefulSet
+)
+PiggybackFormatter = Callable[[PB_KUBE_OBJECT], str]
+
+
 @dataclass(frozen=True)
 class ComposedEntities:
     # TODO: Currently, this class prepares APIData by packaging data from
@@ -1132,7 +1143,7 @@ def write_cronjobs_api_sections(
     api_cron_job_pods: Sequence[api.Pod],
     api_jobs: Mapping[api.JobUID, api.Job],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_cronjob_sections(
         cron_job: api.CronJob,
@@ -1161,9 +1172,7 @@ def write_cronjobs_api_sections(
         _write_sections(sections)
 
     for api_cron_job in api_cron_jobs:
-        with ConditionalPiggybackSection(
-            piggyback_formatter(f"{api_cron_job.metadata.namespace}_{api_cron_job.metadata.name}")
-        ):
+        with ConditionalPiggybackSection(piggyback_formatter(api_cron_job)):
             output_cronjob_sections(
                 api_cron_job,
                 filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
@@ -1177,7 +1186,7 @@ def write_namespaces_api_sections(
     api_resource_quotas: Sequence[api.ResourceQuota],
     api_pods: Sequence[api.Pod],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_namespace_sections(
         namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]
@@ -1215,7 +1224,7 @@ def write_namespaces_api_sections(
         _write_sections(sections)
 
     for api_namespace in api_namespaces:
-        with ConditionalPiggybackSection(piggyback_formatter(namespace_name(api_namespace))):
+        with ConditionalPiggybackSection(piggyback_formatter(api_namespace)):
             output_namespace_sections(
                 api_namespace, filter_pods_by_namespace(api_pods, namespace_name(api_namespace))
             )
@@ -1233,7 +1242,7 @@ def write_nodes_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_nodes: Sequence[Node],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
         sections = {
@@ -1256,7 +1265,7 @@ def write_nodes_api_sections(
         _write_sections(sections)
 
     for node in api_nodes:
-        with ConditionalPiggybackSection(piggyback_formatter(node.metadata.name)):
+        with ConditionalPiggybackSection(piggyback_formatter(node)):
             output_sections(node)
 
 
@@ -1265,7 +1274,7 @@ def write_deployments_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_deployments: Sequence[Deployment],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the deployment relevant sections based on k8 API information"""
 
@@ -1289,9 +1298,7 @@ def write_deployments_api_sections(
         _write_sections(sections)
 
     for deployment in api_deployments:
-        with ConditionalPiggybackSection(
-            piggyback_formatter(namespaced_name_from_metadata(deployment.metadata))
-        ):
+        with ConditionalPiggybackSection(piggyback_formatter(deployment)):
             output_sections(deployment)
 
 
@@ -1304,7 +1311,7 @@ def write_daemon_sets_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_daemon_sets: Sequence[DaemonSet],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the daemon set relevant sections based on k8 API information"""
 
@@ -1325,9 +1332,7 @@ def write_daemon_sets_api_sections(
         _write_sections(sections)
 
     for daemon_set in api_daemon_sets:
-        with ConditionalPiggybackSection(
-            piggyback_formatter(namespaced_name_from_metadata(daemon_set.metadata))
-        ):
+        with ConditionalPiggybackSection(piggyback_formatter(daemon_set)):
             output_sections(daemon_set)
 
 
@@ -1336,7 +1341,7 @@ def write_statefulsets_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_statefulsets: Sequence[StatefulSet],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the StatefulSet relevant sections based on k8 API information"""
 
@@ -1357,21 +1362,19 @@ def write_statefulsets_api_sections(
         _write_sections(sections)
 
     for statefulset in api_statefulsets:
-        with ConditionalPiggybackSection(
-            piggyback_formatter(namespaced_name_from_metadata(statefulset.metadata))
-        ):
+        with ConditionalPiggybackSection(piggyback_formatter(statefulset)):
             output_sections(statefulset)
 
 
 def write_machine_sections(
     composed_entities: ComposedEntities,
     machine_sections: Mapping[str, str],
-    piggyback_formatter_node: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
     for node in composed_entities.nodes:
         if sections := machine_sections.get(str(node.metadata.name)):
-            with ConditionalPiggybackSection(piggyback_formatter_node(node.metadata.name)):
+            with ConditionalPiggybackSection(piggyback_formatter(node)):
                 sys.stdout.write(sections)
 
 
@@ -1412,7 +1415,7 @@ def request_cluster_collector(
     prepare_request = session.prepare_request(request)
     try:
         cluster_resp = session.send(
-            prepare_request, verify=config.verify_cert_collector, timeout=config.requests_timeout()
+            prepare_request, verify=config.usage_verify_cert, timeout=config.requests_timeout()
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
@@ -1539,10 +1542,6 @@ def _filter_namespaces(
     }
 
 
-def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_name: str) -> str:
-    return f"{object_type}_{cluster_name}_{namespaced_name}"
-
-
 def _names_of_running_pods(
     kube_object: Node | Deployment | DaemonSet | StatefulSet,
 ) -> Sequence[PodLookupName]:
@@ -1563,15 +1562,13 @@ def pods_from_namespaces(
 
 def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
-    monitored_pods: set[PodLookupName],
     composed_entities: ComposedEntities,
     monitored_namespaces: set[api.NamespaceName],
     api_pods: Sequence[api.Pod],
     resource_quotas: Sequence[api.ResourceQuota],
     monitored_api_namespaces: Sequence[api.Namespace],
     api_cron_jobs: Sequence[api.CronJob],
-    piggyback_formatter: PBFormatter,
-    piggyback_formatter_node: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> PodsToHost:
     piggybacks: list[Piggyback] = []
     namespace_piggies = []
@@ -1594,10 +1591,7 @@ def determine_pods_to_host(
             else:
                 resource_quota_pod_names = []
 
-            piggyback_name = piggyback_formatter(
-                object_type="namespace",
-                namespaced_name=namespace_name(api_namespace),
-            )
+            piggyback_name = piggyback_formatter(api_namespace)
             piggybacks.append(
                 Piggyback(
                     piggyback=piggyback_name,
@@ -1615,31 +1609,23 @@ def determine_pods_to_host(
     # on write_sections_based_on_performance_pods should be refactored to use the
     # other function similar to namespaces
     if MonitoredObject.pods in monitored_objects:
-        running_pods = pods_from_namespaces(
+        monitored_pods = pods_from_namespaces(
             filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
         )
-        lookup_name_piggyback_mappings = {
-            pod_lookup_from_api_pod(pod): pod_name(pod, prepend_namespace=True) for pod in api_pods
-        }
-
-        monitored_running_pods = monitored_pods.intersection(
-            {pod_lookup_from_api_pod(pod) for pod in running_pods}
-        )
-
+        if MonitoredObject.cronjobs_pods not in monitored_objects:
+            cronjob_pod_uids = {uid for cronjob in api_cron_jobs for uid in cronjob.pod_uids}
+            monitored_pods = [pod for pod in monitored_pods if pod.uid not in cronjob_pod_uids]
         piggybacks.extend(
             Piggyback(
-                piggyback=piggyback_formatter(
-                    object_type="pod",
-                    namespaced_name=lookup_name_piggyback_mappings[pod_name],
-                ),
-                pod_names=[pod_name],
+                piggyback=piggyback_formatter(pod),
+                pod_names=[pod_lookup_from_api_pod(pod)],
             )
-            for pod_name in monitored_running_pods
+            for pod in monitored_pods
         )
     if MonitoredObject.nodes in monitored_objects:
         piggybacks.extend(
             Piggyback(
-                piggyback=piggyback_formatter_node(node.metadata.name),
+                piggyback=piggyback_formatter(node),
                 pod_names=names,
             )
             for node in composed_entities.nodes
@@ -1652,14 +1638,11 @@ def determine_pods_to_host(
         ("statefulset", MonitoredObject.statefulsets, composed_entities.statefulsets),
         ("daemonset", MonitoredObject.daemonsets, composed_entities.daemonsets),
     ]
-    for object_type_name, object_type, objects in name_type_objects:
+    for _object_type_name, object_type, objects in name_type_objects:
         if object_type in monitored_objects:
             piggybacks.extend(
                 Piggyback(
-                    piggyback=piggyback_formatter(
-                        object_type=object_type_name,
-                        namespaced_name=namespaced_name_from_metadata(k.metadata),
-                    ),
+                    piggyback=piggyback_formatter(k),
                     pod_names=names,
                 )
                 for k in kube_objects_from_namespaces(objects, monitored_namespaces)
@@ -1681,10 +1664,7 @@ def determine_pods_to_host(
     if MonitoredObject.cronjobs in monitored_objects:
         piggybacks.extend(
             Piggyback(
-                piggyback=piggyback_formatter(
-                    object_type="cronjob",
-                    namespaced_name=f"{k.metadata.namespace}_{k.metadata.name}",
-                ),
+                piggyback=piggyback_formatter(k),
                 pod_names=[
                     pod_lookup_from_api_pod(pod)
                     for pod in filter_pods_by_phase(
@@ -1894,7 +1874,7 @@ def write_api_pods_sections(
     annotation_key_pattern: AnnotationOption,
     pods: Sequence[api.Pod],
     kubernetes_cluster_hostname: str,
-    piggyback_formatter: ObjectSpecificPBFormatter,
+    piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_pod_sections(
         pod: api.Pod,
@@ -1924,10 +1904,50 @@ def write_api_pods_sections(
         _write_sections(sections)
 
     for pod in pods:
-        with ConditionalPiggybackSection(
-            piggyback_formatter(f"{pod_name(pod, prepend_namespace=True)}")
-        ):
+        with ConditionalPiggybackSection(piggyback_formatter(pod)):
             output_pod_sections(pod, cluster_name, annotation_key_pattern)
+
+
+def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_name: str) -> str:
+    return f"{object_type}_{cluster_name}_{namespaced_name}"
+
+
+def piggyback_formatter_with_cluster_name(
+    cluster_name: str,
+    kube_object: PB_KUBE_OBJECT,
+) -> str:
+
+    match kube_object:
+        case Cluster():
+            return ""
+        case Node():
+            return cluster_piggyback_formatter(
+                cluster_name,
+                object_type="node",
+                namespaced_name=kube_object.metadata.name,
+            )
+        case Deployment() | DaemonSet() | StatefulSet():
+            return cluster_piggyback_formatter(
+                cluster_name,
+                object_type=kube_object.type_,
+                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+            )
+        case api.Namespace():
+            return cluster_piggyback_formatter(
+                cluster_name, object_type="namespace", namespaced_name=namespace_name(kube_object)
+            )
+        case api.CronJob():
+            return cluster_piggyback_formatter(
+                cluster_name,
+                object_type="cronjob",
+                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+            )
+        case api.Pod():
+            return cluster_piggyback_formatter(
+                cluster_name,
+                object_type="pod",
+                namespaced_name=namespaced_name_from_metadata(kube_object.metadata),
+            )
 
 
 def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-branches
@@ -1974,9 +1994,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
-            piggyback_formatter = functools.partial(cluster_piggyback_formatter, arguments.cluster)
-            piggyback_formatter_node: ObjectSpecificPBFormatter = functools.partial(
-                piggyback_formatter, "node"
+            piggyback_formatter = functools.partial(
+                piggyback_formatter_with_cluster_name, arguments.cluster
             )
 
             if MonitoredObject.nodes in arguments.monitored_objects:
@@ -1986,7 +2005,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     arguments.annotation_key_pattern,
                     composed_entities.nodes,
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=piggyback_formatter_node,
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.deployments in arguments.monitored_objects:
@@ -1998,7 +2017,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         composed_entities.deployments, monitored_namespace_names
                     ),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             resource_quotas = api_data.resource_quotas
@@ -2027,7 +2046,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     resource_quotas,
                     api_data.pods,
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
@@ -2039,7 +2058,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         composed_entities.daemonsets, monitored_namespace_names
                     ),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
@@ -2051,13 +2070,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         composed_entities.statefulsets, monitored_namespace_names
                     ),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
+                    piggyback_formatter=piggyback_formatter,
                 )
-
-            monitored_pods: set[PodLookupName] = {
-                pod_lookup_from_api_pod(pod)
-                for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
-            }
 
             monitored_api_cron_job_pods = [
                 api_pod
@@ -2073,7 +2087,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     monitored_api_cron_job_pods,
                     {job.uid: job for job in api_data.jobs},
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
@@ -2083,7 +2097,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     arguments.annotation_key_pattern,
                     monitored_api_cron_job_pods,
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
+                    piggyback_formatter=piggyback_formatter,
                 )
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
@@ -2097,13 +2111,50 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         not in [pod_lookup_from_api_pod(pod) for pod in monitored_api_cron_job_pods]
                     ],
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                    piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
+                    piggyback_formatter=piggyback_formatter,
                 )
 
             usage_config = query.parse_session_config(arguments)
+
             # Skip machine & container sections when cluster agent endpoint not configured
             if isinstance(usage_config, query.NoUsageConfig):
                 return 0
+
+            if isinstance(usage_config, query.PrometheusSessionConfig):
+                cpu, memory = query.send_requests(
+                    usage_config,
+                    [
+                        query.Query.sum_rate_container_cpu_usage_seconds_total,
+                        query.Query.sum_container_memory_working_set_bytes,
+                    ],
+                    logger=LOGGER,
+                )
+
+                common.write_sections(
+                    [prometheus_section.debug_section(usage_config.query_url(), cpu, memory)]
+                )
+                prometheus_selectors = prometheus_section.create_selectors(cpu[1], memory[1])
+                pods_to_host = determine_pods_to_host(
+                    composed_entities=composed_entities,
+                    monitored_objects=arguments.monitored_objects,
+                    monitored_namespaces=monitored_namespace_names,
+                    api_pods=api_data.pods,
+                    resource_quotas=resource_quotas,
+                    api_cron_jobs=api_data.cron_jobs,
+                    monitored_api_namespaces=monitored_api_namespaces,
+                    piggyback_formatter=piggyback_formatter,
+                )
+                common.write_sections(
+                    common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
+                )
+                write_machine_sections(
+                    composed_entities,
+                    machine_sections=prometheus_section.machine_sections(usage_config),
+                    piggyback_formatter=piggyback_formatter,
+                )
+                return 0
+
+            assert isinstance(usage_config, query.CollectorSessionConfig)
 
             # Sections based on cluster collector performance data
 
@@ -2176,7 +2227,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
                 pods_to_host = determine_pods_to_host(
                     composed_entities=composed_entities,
-                    monitored_pods=monitored_pods,
                     monitored_objects=arguments.monitored_objects,
                     monitored_namespaces=monitored_namespace_names,
                     api_pods=api_data.pods,
@@ -2184,10 +2234,9 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     api_cron_jobs=api_data.cron_jobs,
                     monitored_api_namespaces=monitored_api_namespaces,
                     piggyback_formatter=piggyback_formatter,
-                    piggyback_formatter_node=piggyback_formatter_node,
                 )
                 try:
-                    selectors = performance.create_selectors(
+                    collector_selectors = performance.create_selectors(
                         cluster_name=arguments.cluster,
                         container_metrics=container_metrics,
                     )
@@ -2199,8 +2248,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     ) from e
 
                 try:
-                    performance.write_sections(
-                        performance.create_sections(*selectors, pods_to_host=pods_to_host)
+                    common.write_sections(
+                        common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
                     )
 
                 except Exception as e:
@@ -2240,7 +2289,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         write_machine_sections(
                             composed_entities,
                             {s["node_name"]: s["sections"] for s in machine_sections},
-                            piggyback_formatter_node,
+                            piggyback_formatter,
                         )
                     except Exception as e:
                         raise CollectorHandlingException(

@@ -7,6 +7,7 @@
 import functools
 import inspect
 import itertools
+import types
 from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
@@ -56,7 +57,7 @@ def _validate_parse_function(
 ) -> None:
     """Validate the parse functions signature and type"""
 
-    if not inspect.isfunction(parse_function):
+    if not isinstance(parse_function, types.FunctionType):
         raise TypeError("parse function must be a function: %r" % (parse_function,))
 
     if inspect.isgeneratorfunction(parse_function):

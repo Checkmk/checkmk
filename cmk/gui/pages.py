@@ -5,7 +5,6 @@
 
 import abc
 import http.client as http_client
-import inspect
 import json
 from collections.abc import Callable
 from typing import Any
@@ -124,17 +123,30 @@ class PageRegistry(cmk.utils.plugin_registry.Registry[type[Page]]):
 
     def register_page(self, path: str) -> Callable[[type[Page]], type[Page]]:
         def wrap(plugin_class: type[Page]) -> type[Page]:
-            if not inspect.isclass(plugin_class):
+            if not isinstance(plugin_class, type):
                 raise NotImplementedError()
 
             # mypy is not happy with this. Find a cleaner way
-            plugin_class._ident = path
-            plugin_class.ident = classmethod(lambda cls: cls._ident)
+            plugin_class._ident = path  # type: ignore[attr-defined]
+            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
 
             self.register(plugin_class)
             return plugin_class
 
         return wrap
+
+    def register_page_handler(self, path: str, page_handler: PageHandlerFunc) -> type[Page]:
+        cls_name = "PageClass%s" % path.title().replace(":", "")
+        cls = type(
+            cls_name,
+            (Page,),
+            {
+                "_wrapped_callable": (page_handler,),
+                "page": lambda self: self._wrapped_callable[0](),
+            },
+        )
+        self.register_page(path)(cls)
+        return cls
 
 
 page_registry = PageRegistry()
@@ -153,27 +165,10 @@ def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
     """
 
     def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
-        cls_name = "PageClass%s" % path.title().replace(":", "")
-        LegacyPageClass = type(
-            cls_name,
-            (Page,),
-            {
-                "_wrapped_callable": (wrapped_callable,),
-                "page": lambda self: self._wrapped_callable[0](),
-            },
-        )
-
-        page_registry.register_page(path)(LegacyPageClass)
-        return lambda: LegacyPageClass().handle_page()
+        cls = page_registry.register_page_handler(path, wrapped_callable)
+        return lambda: cls().handle_page()
 
     return wrap
-
-
-# TODO: replace all call sites by directly calling page_registry.register_page("path")
-def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerFunc:
-    """Register a function to be called when the given URL is called."""
-    wrap = register(path)
-    return wrap(page_func)
 
 
 def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHandlerFunc | None:

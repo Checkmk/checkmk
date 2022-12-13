@@ -91,14 +91,15 @@ def test_get_hash(test_config: Htpasswd, users: Entries, no_users: list[UserId])
 
 
 @pytest.mark.parametrize(
-    "user_id, password_hash",
+    "user, password_hash",
     [
         ("new_user", "hash"),
         ("$nü$üser$", "!hash"),
         ("", ""),  # as long as UserId allows this...
     ],
 )
-def test_save_new_user(test_config: Htpasswd, user_id: UserId, password_hash: str) -> None:
+def test_save_new_user(test_config: Htpasswd, user: str, password_hash: str) -> None:
+    user_id = UserId(user)
     before = test_config.load()
 
     test_config.save(user_id, password_hash)

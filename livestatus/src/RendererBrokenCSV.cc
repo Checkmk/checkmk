@@ -46,6 +46,8 @@ void RendererBrokenCSV::endDict() {}
 
 // --------------------------------------------------------------------------
 
+bool RendererBrokenCSV::useSurrogatePairs() const { return false; };
+
 void RendererBrokenCSV::outputNull() {}
 
 void RendererBrokenCSV::outputBlob(const std::vector<char> &value) {

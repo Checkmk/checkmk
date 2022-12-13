@@ -283,6 +283,7 @@ def switch_to_site_user(site: "SiteContext") -> None:
     # course), then please tell mk -> mk@mathias-kettner.de.
     os.setgroups(_groups_of(site.name))
     os.setuid(uid)
+    os.umask(0o077)
 
 
 def _groups_of(username: str) -> list[int]:

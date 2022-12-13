@@ -34,18 +34,16 @@ class Password(Generic[AnyStr]):
             raise ValueError(f"Invalid password: {password!r}")
         self.raw: Final[AnyStr] = password
 
+    @property
+    def raw_bytes(self) -> bytes:
+        """Return the raw password as bytes, utf-8-encoded in case it is a string"""
+        match self.raw:
+            case bytes():
+                return self.raw
+            case str():
+                return self.raw.encode("utf-8")
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Password):
             return NotImplemented
-        return const_time_compare(self.raw, other.raw)
-
-
-def const_time_compare(a: AnyStr, b: AnyStr) -> bool:
-    def as_bytes(v: AnyStr) -> bytes:
-        match v:
-            case bytes():
-                return v
-            case str():
-                return v.encode("utf-8")
-
-    return secrets.compare_digest(as_bytes(a), as_bytes(b))
+        return secrets.compare_digest(self.raw_bytes, other.raw_bytes)

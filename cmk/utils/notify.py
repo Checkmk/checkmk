@@ -49,11 +49,6 @@ class NotificationForward(TypedDict):
     context: EventContext
 
 
-class NotificationViaPlainMail(TypedDict):
-    plugin: None
-    context: NotificationContext
-
-
 class NotificationViaPlugin(TypedDict):
     plugin: str
     context: NotificationContext
@@ -195,9 +190,7 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
 def create_spoolfile(
     logger_: Logger,
     spool_dir: Path,
-    data: (
-        NotificationForward | NotificationResult | NotificationViaPlainMail | NotificationViaPlugin
-    ),
+    data: (NotificationForward | NotificationResult | NotificationViaPlugin),
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())
@@ -219,3 +212,17 @@ def _livestatus_cmd(command: str) -> None:
     except Exception:
         logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
         logger.info("Command was: %s", command)
+
+
+def transform_flexible_and_plain_context(context: NotificationContext) -> NotificationContext:
+    if "CONTACTS" not in context:
+        context["CONTACTS"] = context.get("CONTACTNAME", "?")
+        context["PARAMETER_GRAPHS_PER_NOTIFICATION"] = "5"
+        context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"] = "5"
+    return context
+
+
+def transform_flexible_and_plain_plugin(
+    plugin: NotificationPluginName | None,
+) -> NotificationPluginName:
+    return plugin or NotificationPluginName("mail")

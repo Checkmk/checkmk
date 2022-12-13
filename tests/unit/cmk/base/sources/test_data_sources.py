@@ -9,8 +9,9 @@ from tests.testlib.base import Scenario
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.core_helpers.cache import FileCacheOptions
 
-from cmk.base.sources import make_non_cluster_sources
+from cmk.base.sources import make_sources
 
 
 def make_scenario(hostname, tags):
@@ -91,15 +92,16 @@ def test_host_config_creates_passing_source_sources(
     sources,
 ):
     ts = make_scenario(hostname, tags)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     assert [
         type(fetcher)
-        for _meta, _file_cache, fetcher in make_non_cluster_sources(
+        for _meta, _file_cache, fetcher in make_sources(
             hostname,
             "127.0.0.1",
+            config_cache=config_cache,
             simulation_mode=True,
-            missing_sys_description=False,
+            file_cache_options=FileCacheOptions(),
             file_cache_max_age=file_cache.MaxAge.none(),
         )
     ] == sources

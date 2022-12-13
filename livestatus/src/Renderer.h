@@ -9,26 +9,21 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
+#include "OStreamStateSaver.h"
 enum class Encoding;
 class CSVSeparators;
 class Logger;
 
-enum class OutputFormat { csv, broken_csv, json, python, python3 };
+enum class OutputFormat { csv, broken_csv, json, python3 };
 
 struct Null {};
-
-struct PlainChar {
-    char _ch;
-};
-
-struct HexEscape {
-    char _ch;
-};
 
 struct RowFragment {
     std::string _str;
@@ -51,15 +46,13 @@ public:
     }
 
     void output(double value);
-    void output(PlainChar value);
-    void output(HexEscape value);
     void output(const RowFragment &value);
-    void output(char16_t value);
-    void output(char32_t value);
     void output(Null value);
     void output(const std::vector<char> &value);
     void output(const std::string &value);
     void output(std::chrono::system_clock::time_point value);
+
+    void outputUnicodeChar(char32_t value);
 
     // A whole query.
     virtual void beginQuery() = 0;
@@ -98,8 +91,8 @@ protected:
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
-    void outputUnicodeString(const std::string &prefix, const char *start,
-                             const char *end, Encoding data_encoding);
+    void outputUnicodeString(const char *start, const char *end,
+                             Encoding data_encoding);
 
 private:
     Logger *const _logger;
@@ -110,9 +103,17 @@ private:
     void truncatedUTF8();
     void invalidUTF8(unsigned char ch);
 
+    [[nodiscard]] virtual bool useSurrogatePairs() const = 0;
     virtual void outputNull() = 0;
     virtual void outputBlob(const std::vector<char> &value) = 0;
     virtual void outputString(const std::string &value) = 0;
+
+    template <class T>
+    std::ostream &outputHex(char prefix, int width, T value) {
+        OStreamStateSaver s(_os);
+        return _os << '\\' << prefix << std::hex << std::setw(width)
+                   << std::setfill('0') << value;
+    }
 };
 
 enum class EmitBeginEnd { on, off };

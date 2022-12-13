@@ -57,6 +57,77 @@ def _tcp_timeouts():
     )
 
 
+def _usage_endpoint():
+    return (
+        "usage_endpoint",
+        CascadingDropdown(
+            title=("Enrich with usage data"),
+            choices=[
+                (
+                    "cluster-collector",
+                    _("Use data from Checkmk Cluster Collector"),
+                    Dictionary(  # TODO: adjust help texts depending on ingress inclusion
+                        elements=[
+                            (
+                                "endpoint",
+                                HTTPUrl(
+                                    title=_("Collector NodePort / Ingress endpoint"),
+                                    allow_empty=False,
+                                    default_value="https://<service url>:30035",
+                                    help=_(
+                                        "The full URL to the Cluster Collector service including "
+                                        "the protocol (http or https) and the port. Depending on "
+                                        "the deployed configuration of the service this can "
+                                        "either be the NodePort or the Ingress endpoint."
+                                    ),
+                                    size=80,
+                                ),
+                            ),
+                            ssl_verification(),
+                            (
+                                "proxy",
+                                HTTPProxyReference(),
+                            ),
+                            _tcp_timeouts(),
+                        ],
+                        required_keys=["endpoint", "verify-cert"],
+                    ),
+                ),
+                (
+                    "prometheus",
+                    _("Use data from OpenShift"),
+                    Dictionary(
+                        elements=[
+                            (
+                                "endpoint",
+                                HTTPUrl(
+                                    title=_("Prometheus API endpoint"),
+                                    allow_empty=False,
+                                    default_value="https://",
+                                    help=_(
+                                        "The full URL to the Prometheus API endpoint including the "
+                                        "protocol (http or https). OpenShift exposes such "
+                                        "endpoints via a route in the openshift-monitoring "
+                                        "namespace called prometheus-k8s."
+                                    ),
+                                    size=80,
+                                ),
+                            ),
+                            ssl_verification(),
+                            (
+                                "proxy",
+                                HTTPProxyReference(),
+                            ),
+                            _tcp_timeouts(),
+                        ],
+                        required_keys=["endpoint", "verify-cert"],
+                    ),
+                ),
+            ],
+        ),
+    )
+
+
 def _valuespec_special_agents_kube():
     return Dictionary(
         elements=[
@@ -111,36 +182,7 @@ def _valuespec_special_agents_kube():
                     title=_("API server connection"),
                 ),
             ),
-            (
-                "cluster-collector",  # TODO: adjust help texts depending on ingress inclusion
-                Dictionary(
-                    elements=[
-                        (
-                            "endpoint",
-                            HTTPUrl(
-                                title=_("Collector NodePort / Ingress endpoint"),
-                                allow_empty=False,
-                                default_value="https://<service url>:30035",
-                                help=_(
-                                    "The full URL to the Cluster Collector service including "
-                                    "the protocol (http or https) and the port. Depending on "
-                                    "the deployed configuration of the service this can "
-                                    "either be the NodePort or the Ingress endpoint."
-                                ),
-                                size=80,
-                            ),
-                        ),
-                        ssl_verification(),
-                        (
-                            "proxy",
-                            HTTPProxyReference(),
-                        ),
-                        _tcp_timeouts(),
-                    ],
-                    required_keys=["endpoint", "verify-cert"],
-                    title=_("Enrich with usage data from Checkmk Cluster Collector"),
-                ),
-            ),
+            _usage_endpoint(),
             (
                 "monitored-objects",
                 ListChoice(
@@ -298,7 +340,7 @@ def _valuespec_special_agents_kube():
         ],
         optional_keys=[
             "namespaces",
-            "cluster-collector",
+            "usage_endpoint",
             "cluster-resource-aggregation",
             "import-annotations",
         ],

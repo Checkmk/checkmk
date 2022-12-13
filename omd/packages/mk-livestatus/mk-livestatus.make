@@ -1,8 +1,12 @@
 MK_LIVESTATUS := mk-livestatus
 MK_LIVESTATUS_DIR := $(MK_LIVESTATUS)-$(CMK_VERSION)
 
+# It is used from top-level Makefile and this makefile as an intermediate step.
+# We should end up with one central place to care for packaging our files
+# without the need to have shared logic between like this.
+include ../artifacts.make
+
 # Attention: copy-n-paste from check_mk/Makefile below...
-MK_LIVESTATUS_PACKAGE := $(PACKAGE_DIR)/$(MK_LIVESTATUS)/$(MK_LIVESTATUS_DIR).tar.gz
 MK_LIVESTATUS_UNPACK := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS_DIR)-unpack
 MK_LIVESTATUS_BUILD := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS_DIR)-build
 MK_LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS_DIR)-install
@@ -11,10 +15,13 @@ MK_LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/$(MK_LIVESTATUS_DIR)-install
 MK_LIVESTATUS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MK_LIVESTATUS_DIR)
 #MK_LIVESTATUS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MK_LIVESTATUS_DIR)
 
-$(MK_LIVESTATUS_PACKAGE):
-	$(MAKE) -C $(REPO_PATH) omd/packages/mk-livestatus/$(MK_LIVESTATUS_DIR).tar.gz
+$(LIVESTATUS_INTERMEDIATE_ARCHIVE):
+ifneq ($(CI),)
+	@echo "ERROR: Should have been built by source stage (top level: 'make dist')" ; exit 1
+endif
+	$(MAKE) -C $(REPO_PATH) $(LIVESTATUS_INTERMEDIATE_ARCHIVE)
 
-$(MK_LIVESTATUS_UNPACK): $(MK_LIVESTATUS_PACKAGE)
+$(MK_LIVESTATUS_UNPACK): $(LIVESTATUS_INTERMEDIATE_ARCHIVE)
 	$(RM) -r $(BUILD_HELPER_DIR)/$*
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_GZ) $< -C $(PACKAGE_BUILD_DIR)

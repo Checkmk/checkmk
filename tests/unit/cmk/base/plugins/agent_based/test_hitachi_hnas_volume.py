@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 
 import pytest
@@ -173,8 +174,11 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
     ],
     ids=["standard", "virtual"],
 )
-def test_check_hitachi_hnas_virtual_volume(  # type:ignore[no-untyped-def]
-    item, params, section, expected
+def test_check_hitachi_hnas_virtual_volume(
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    expected: Sequence[Result],
 ) -> None:
     """Hitachi virtual volume check function returns expected results for different volume params"""
     results = tuple(check_hitachi_hnas_virtual_volume(item, params, section))

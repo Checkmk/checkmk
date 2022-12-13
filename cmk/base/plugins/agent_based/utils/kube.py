@@ -19,6 +19,7 @@ from typing import (
 )
 
 from pydantic import BaseModel, Field
+from typing_extensions import assert_never
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -150,13 +151,13 @@ class Controller(BaseModel):
 ControlChain = Sequence[Controller]
 
 
-def condition_short_description(name: str, status: str) -> str:
+def condition_short_description(name: str, status: bool | str) -> str:
     return f"{name.upper()}: {status}"
 
 
 def condition_detailed_description(
     name: str,
-    status: str,
+    status: bool | str,
     reason: Optional[str],
     message: Optional[str],
 ) -> str:
@@ -968,3 +969,48 @@ def erroneous_or_incomplete_containers(
             isinstance(container.state, ContainerTerminatedState) and container.state.exit_code == 0
         )
     ]
+
+
+class ResultType(enum.Enum):
+    request_exception = "request_exception"
+    json_decode_error = "json_decode_error"
+    validation_error = "validation_error"
+    response_error = "response_error"
+    response_invalid_data = "reponse_invalid_data"
+    response_empty_result = "reponse_empty_result"
+    success = "success"
+
+
+class PrometheusResult(BaseModel):
+    """Serialize exceptions."""
+
+    query_: str
+    type_: ResultType
+    details: str | None
+
+    def summary(self) -> str:
+        match self.type_:
+            case ResultType.request_exception:
+                return f"Request Exception: {self.details}"
+            case ResultType.json_decode_error:
+                return "Invalid response: did not receive JSON"
+            case ResultType.validation_error:
+                return "Invalid response: did not match Prometheus HTTP API"
+            case ResultType.response_error:
+                return f"Prometheus error: {self.details}"
+            case ResultType.response_empty_result:
+                return "Querying endpoint succeeded, but no samples received"
+            case ResultType.response_invalid_data:
+                return (
+                    "Incompatible data received: data did not match format expected from OpenShift"
+                )
+            case ResultType.success:
+                return "Success"
+        assert_never(self.type_)
+
+
+class OpenShiftEndpoint(Section):
+    """section: prometheus_debug_v1"""
+
+    url: str
+    results: Sequence[PrometheusResult]

@@ -30,7 +30,7 @@ from lxml import etree
 from playwright.async_api import async_playwright
 
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import current_base_branch_name
 
 logger = logging.getLogger()
 
@@ -643,13 +643,14 @@ def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url, None, 
 
 @pytest.fixture
 def site() -> Site:
-    version = os.environ.get("VERSION", CMKVersion.DAILY)
     reuse = os.environ.get("REUSE")
     # if REUSE is undefined, a site will neither be reused nor be dropped
     reuse_site = reuse == "1"
     drop_site = reuse == "0"
     sf = get_site_factory(
-        prefix="crawl_", update_from_git=version == "git", install_test_python_modules=False
+        prefix="crawl_",
+        install_test_python_modules=False,
+        fallback_branch=current_base_branch_name,
     )
 
     site = sf.get_existing_site("central")

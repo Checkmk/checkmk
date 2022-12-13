@@ -11,7 +11,10 @@ import pwd
 import re
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
+
+from cmk.utils.version import Edition
 
 logger = logging.getLogger()
 
@@ -166,9 +169,7 @@ def site_id() -> str:
     if site_id is not None:
         return site_id
 
-    branch_name = os.environ.get("BRANCH")
-    if branch_name is None:
-        branch_name = current_branch_name()
+    branch_name = branch_from_env(current_branch_name)
 
     # Split by / and get last element, remove unwanted chars
     branch_part = re.sub("[^a-zA-Z0-9_]", "", branch_name.split("/")[-1])
@@ -199,5 +200,39 @@ def add_python_paths() -> None:
         sys.path.insert(0, os.path.join(cmk_path(), "omd/packages/omd"))
 
 
-def package_hash_path(version: str, edition: str) -> Path:
-    return Path(f"/tmp/cmk_package_hash_{version}_{edition}")
+def package_hash_path(version: str, edition: Edition) -> Path:
+    return Path(f"/tmp/cmk_package_hash_{version}_{edition.name}")
+
+
+def version_spec_from_env(fallback: str | None = None) -> str:
+    if version := os.environ.get("VERSION"):
+        return version
+    if fallback:
+        return fallback
+    raise RuntimeError("VERSION environment variable, e.g. 2016.12.22, is missing")
+
+
+def _parse_raw_edition(raw_edition: str) -> Edition:
+    try:
+        return Edition[raw_edition.upper()]
+    except KeyError:
+        for edition in Edition:
+            if edition.name == raw_edition:
+                return edition
+    raise ValueError(f"Unknown edition: {raw_edition}")
+
+
+def edition_from_env(fallback: Edition | None = None) -> Edition:
+    if raw_editon := os.environ.get("EDITION"):
+        return _parse_raw_edition(raw_editon)
+    if fallback:
+        return fallback
+    raise RuntimeError("EDITION environment variable, e.g. cre or enterprise, is missing")
+
+
+def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
+    if branch := os.environ.get("BRANCH"):
+        return branch
+    if fallback:
+        return fallback if isinstance(fallback, str) else fallback()
+    raise RuntimeError("BRANCH environment variable, e.g. master, is missing")

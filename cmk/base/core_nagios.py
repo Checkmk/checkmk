@@ -33,6 +33,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     InventoryPluginName,
+    Labels,
     ServicegroupName,
     ServiceName,
     TimeperiodName,
@@ -45,8 +46,15 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
-from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
+from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.core_config import (
+    AbstractServiceID,
+    CollectedHostLabels,
+    CoreCommand,
+    CoreCommandName,
+    get_labels_from_attributes,
+    write_notify_host_file,
+)
 
 ObjectSpec = dict[str, Any]
 
@@ -70,10 +78,10 @@ class NagiosCore(core_config.MonitoringCore):
         config_cache: ConfigCache,
         hosts_to_update: HostsToUpdate = None,
     ) -> None:
-        self._create_core_config()
+        self._create_core_config(config_path)
         self._precompile_hostchecks(config_path)
 
-    def _create_core_config(self) -> None:
+    def _create_core_config(self, config_path: VersionedConfigPath) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
         During create_config() exceptions may be raised which are caused by configuration issues.
@@ -83,7 +91,7 @@ class NagiosCore(core_config.MonitoringCore):
         while the monitoring is running.
         """
         config_buffer = StringIO()
-        create_config(config_buffer, hostnames=None)
+        create_config(config_buffer, config_path, hostnames=None)
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
 
@@ -124,7 +132,11 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
-def create_config(outfile: IO[str], hostnames: list[HostName] | None) -> None:
+def create_config(
+    outfile: IO[str],
+    config_path: VersionedConfigPath,
+    hostnames: list[HostName] | None,
+) -> None:
     if config.host_notification_periods != []:
         core_config.warning(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
@@ -154,8 +166,13 @@ def create_config(outfile: IO[str], hostnames: list[HostName] | None) -> None:
     _output_conf_header(cfg)
 
     stored_passwords = cmk.utils.password_store.load()
+    all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in sorted(hostnames):
-        _create_nagios_config_host(cfg, config_cache, hostname, stored_passwords)
+        all_host_labels[hostname] = _create_nagios_config_host(
+            cfg, config_cache, hostname, stored_passwords
+        )
+
+    write_notify_host_file(config_path, all_host_labels)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -184,26 +201,35 @@ def _create_nagios_config_host(
     config_cache: ConfigCache,
     hostname: HostName,
     stored_passwords: Mapping[str, str],
-) -> None:
+) -> CollectedHostLabels:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
+
     host_attrs = core_config.get_host_attributes(hostname, config_cache)
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
         cfg.write(_format_nagios_object("host", host_spec))
-    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, stored_passwords)
+
+    return CollectedHostLabels(
+        host_labels=get_labels_from_attributes(list(host_attrs.items())),
+        service_labels=_create_nagios_servicedefs(
+            cfg,
+            config_cache,
+            hostname,
+            host_attrs,
+            stored_passwords,
+        ),
+    )
 
 
 def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
 ) -> ObjectSpec:
-    host_config = config_cache.make_host_config(hostname)
-
     ip = attrs["address"]
 
     if config_cache.is_cluster(hostname):
-        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname, host_config)
+        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname)
         attrs.update(core_config.get_cluster_attributes(config_cache, hostname, nodes))
 
     #   _
@@ -257,7 +283,6 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     # Host check command might differ from default
     command = core_config.host_check_command(
         config_cache,
-        host_config,
         hostname,
         ip,
         config_cache.is_cluster(hostname),
@@ -268,13 +293,13 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     if command:
         host_spec["check_command"] = command
 
-    hostgroups = host_config.hostgroups
+    hostgroups = config_cache.hostgroups(hostname)
     if config.define_hostgroups or hostgroups == [config.default_host_group]:
         cfg.hostgroups_to_define.update(hostgroups)
     host_spec["hostgroups"] = ",".join(hostgroups)
 
     # Contact groups
-    contactgroups = host_config.contactgroups
+    contactgroups = config_cache.contactgroups(hostname)
     if contactgroups:
         host_spec["contact_groups"] = ",".join(contactgroups)
         cfg.contactgroups_to_define.update(contactgroups)
@@ -285,7 +310,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
         # the ruleset "parents" in case no explicit parents are set
         if not attrs.get("parents", []):
-            parents_list = host_config.parents
+            parents_list = config_cache.parents(hostname)
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
@@ -295,7 +320,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios
-    for key, value in host_config.extra_host_attributes.items():
+    for key, value in config_cache.extra_host_attributes(hostname).items():
         if key == "cmk_agent_connection":
             continue
         if config_cache.is_cluster(hostname) and key == "parents":
@@ -311,7 +336,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     hostname: HostName,
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
-) -> None:
+) -> dict[ServiceName, Labels]:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
     host_config = config_cache.make_host_config(hostname)
@@ -350,8 +375,8 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     host_check_table = get_check_table(hostname)
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
+    service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
-
         if not service.description:
             core_config.warning(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"
@@ -392,11 +417,16 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             "check_command": "check_mk-%s" % service.check_plugin_name,
         }
 
-        service_spec.update(
-            core_config.get_cmk_passive_service_attributes(
-                config_cache, hostname, service, check_mk_attrs
-            )
+        passive_service_attributes = core_config.get_cmk_passive_service_attributes(
+            config_cache, hostname, service, check_mk_attrs
         )
+
+        service_labels[service.description] = {
+            label.name: label.value for label in service.service_labels.values()
+        } | get_labels_from_attributes(list(passive_service_attributes.items()))
+
+        service_spec.update(passive_service_attributes)
+
         service_spec.update(
             _extra_service_conf_of(cfg, config_cache, hostname, service.description)
         )
@@ -419,7 +449,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # legacy checks via active_checks
     actchecks = []
-    for plugin_name, entries in host_config.active_checks:
+    for plugin_name, entries in config_cache.active_checks(hostname):
         cfg.active_checks_to_define.add(plugin_name)
         act_info = config.active_check_info[plugin_name]
         for params in entries:
@@ -500,7 +530,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                     cfg.write(get_dependencies(hostname, description))
 
     # Legacy checks via custom_checks
-    custchecks = host_config.custom_checks
+    custchecks = config_cache.custom_checks(hostname)
     if custchecks:
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:
@@ -587,7 +617,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     service_discovery_name = ConfigCache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
-    if not (disco_params := host_config.discovery_check_parameters()).commandline_only:
+    if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:
         service_spec = {
             "use": config.inventory_check_template,
             "host_name": hostname,
@@ -657,6 +687,8 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 "PING IPv6",
                 host_attrs.get("_NODEIPS_6"),
             )
+
+    return service_labels
 
 
 def _add_ping_service(
@@ -903,12 +935,6 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
             if "pager" in contact:
                 contact_spec["pager"] = contact["pager"]
 
-            not_enabled = (
-                False
-                if config.enable_rulebased_notifications
-                else contact.get("notifications_enabled", True)
-            )
-
             for what in ["host", "service"]:
                 if what == "host":
                     no: str = contact.get("host_notification_options", "")
@@ -917,7 +943,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
                 else:
                     raise ValueError()
 
-                if not no or not not_enabled:
+                if not no:
                     contact_spec["%s_notifications_enabled" % what] = 0
                     no = "n"
 
@@ -936,7 +962,7 @@ def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName])
             contact_spec["contactgroups"] = ", ".join(cgrs)
             cfg.write(_format_nagios_object("contact", contact_spec))
 
-    if config.enable_rulebased_notifications and hostnames:
+    if hostnames:
         cfg.contactgroups_to_define.add("check-mk-notify")
         cfg.write("# Needed for rule based notifications\n")
         cfg.write(
@@ -1109,13 +1135,11 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     *,
     verify_site_python: bool = True,
 ) -> str | None:
-    host_config = config_cache.make_host_config(hostname)
-
     (
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(hostname, host_config)
+    ) = _get_needed_plugin_names(config_cache, hostname)
 
     if config_cache.is_cluster(hostname):
         nodes = config_cache.nodes_of(hostname)
@@ -1123,12 +1147,11 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             raise TypeError()
 
         for node in nodes:
-            node_config = config_cache.make_host_config(node)
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(node, node_config)
+            ) = _get_needed_plugin_names(config_cache, node)
             needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
@@ -1253,21 +1276,16 @@ if '-d' in sys.argv:
             raise TypeError()
 
         for node in nodes:
-            node_config = config_cache.make_host_config(node)
             if ConfigCache.is_ipv4_host(node):
-                needed_ipaddresses[node] = config.lookup_ip_address(
-                    node_config, family=socket.AF_INET
-                )
+                needed_ipaddresses[node] = config.lookup_ip_address(node, family=socket.AF_INET)
 
             if ConfigCache.is_ipv6_host(node):
-                needed_ipv6addresses[node] = config.lookup_ip_address(
-                    node_config, family=socket.AF_INET6
-                )
+                needed_ipv6addresses[node] = config.lookup_ip_address(node, family=socket.AF_INET6)
 
         try:
             if ConfigCache.is_ipv4_host(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
-                    host_config, family=socket.AF_INET
+                    hostname, family=socket.AF_INET
                 )
         except Exception:
             pass
@@ -1275,19 +1293,17 @@ if '-d' in sys.argv:
         try:
             if ConfigCache.is_ipv6_host(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                    host_config, family=socket.AF_INET6
+                    hostname, family=socket.AF_INET6
                 )
         except Exception:
             pass
     else:
         if ConfigCache.is_ipv4_host(hostname):
-            needed_ipaddresses[hostname] = config.lookup_ip_address(
-                host_config, family=socket.AF_INET
-            )
+            needed_ipaddresses[hostname] = config.lookup_ip_address(hostname, family=socket.AF_INET)
 
         if ConfigCache.is_ipv6_host(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                host_config, family=socket.AF_INET6
+                hostname, family=socket.AF_INET6
             )
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
@@ -1336,12 +1352,13 @@ if '-d' in sys.argv:
 
 
 def _get_needed_plugin_names(
-    host_name: HostName,
-    host_config: HostConfig,
+    config_cache: ConfigCache, host_name: HostName
 ) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 
-    needed_legacy_check_plugin_names = {f"agent_{name}" for name, _p in host_config.special_agents}
+    needed_legacy_check_plugin_names = {
+        f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
+    }
 
     # Collect the needed check plugin names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
@@ -1362,7 +1379,7 @@ def _get_needed_plugin_names(
     # Inventory plugins get passed parsed data these days.
     # Load the required sections, or inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: set[InventoryPluginName] = set()
-    if host_config.do_status_data_inventory:
+    if config_cache.hwsw_inventory_parameters(host_name).status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
             for parsed_section_name in inventory_plugin.sections:

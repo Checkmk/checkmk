@@ -6,9 +6,10 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal
+from typing import Literal, Optional, Pattern
 from urllib.parse import urljoin, urlsplit
 
+from playwright._impl import _api_types
 from playwright.sync_api import expect, Locator, Page, Response
 
 from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
@@ -24,11 +25,11 @@ class LocatorHelper(ABC):
     def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str) -> None:
+    def check_success(self, message: str | Pattern) -> None:
         """check for a success div and its content"""
         expect(self.locator("div.success")).to_have_text(message)
 
-    def check_error(self, message: str) -> None:
+    def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""
         expect(self.locator("div.error")).to_have_text(message)
 
@@ -82,6 +83,10 @@ class MainMenu(LocatorHelper):
         if "active" not in classes:
             self.user.click()
         return self.locator("#popup_menu_user")
+
+    @property
+    def main_page(self) -> Locator:
+        return self.locator('a[title="Go to main page"]')
 
     @property
     def user_color_theme(self) -> Locator:
@@ -188,6 +193,17 @@ class MainArea(LocatorHelper):
         """check the page title"""
         expect(self.locator("div.titlebar > a")).to_have_text(title)
 
+    def expect_no_entries(self) -> None:
+        """Expect no previous entries are found in the page.
+
+        If it fails, the current test site should be cleaned up.
+        """
+        expect(self.get_text("No entries")).to_be_visible()
+
+    def locator_via_xpath(self, element: str, text: str) -> Locator:
+        """Return a locator defined by element and text via xpath."""
+        return self.locator(f"//{element}[text() = '{text}']")
+
 
 class Sidebar(LocatorHelper):
     """functionality to find items from the sidebar"""
@@ -253,6 +269,11 @@ class PPage(LocatorHelper):
             timeout=TIMEOUT_ACTIVATE_CHANGES_MS
         )
 
+    def goto_main_dashboard(self) -> None:
+        """Click the banner and wait for the dashboard"""
+        self.main_menu.main_page.click()
+        self.main_area.check_page_title("Main dashboard")
+
     @property
     def megamenu_setup(self) -> Locator:
         return self.main_menu.locator("#popup_trigger_mega_menu_setup")
@@ -261,6 +282,11 @@ class PPage(LocatorHelper):
         """main menu -> setup -> Hosts"""
         self.megamenu_setup.click()
         return self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
+
+    def goto_edit_users(self) -> None:
+        """main menu -> setup -> Users"""
+        self.megamenu_setup.click()
+        return self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
 
     @property
     def megamenu_monitoring(self) -> Locator:
@@ -301,10 +327,38 @@ class PPage(LocatorHelper):
             urljoin(self.site_url, url), timeout=timeout, wait_until=wait_until, referer=referer
         )
 
-    def click_and_wait(self, locator: Locator, navigate: bool = False) -> None:
-        """clicks the located element and wait until the current url has changed and is loaded"""
+    def click_and_wait(
+        self,
+        locator: Locator,
+        navigate: bool = False,
+        expected_locator: Optional[Locator] = None,
+        reload_on_error: bool = False,
+        max_tries: int = 10,
+    ) -> None:
+        """Click the located element and wait until the current URL has changed and is loaded or an
+        expected locator is found.
+        """
         url = self.page.url
         locator.click()
-        if navigate:
-            expect(self.page).not_to_have_url(url)
-        self.page.wait_for_load_state("networkidle")
+
+        for _ in range(max_tries):
+            try:
+                if navigate:
+                    expect(self.page).not_to_have_url(url)
+                elif expected_locator:
+                    expect(expected_locator).to_be_visible()
+                self.page.wait_for_load_state("networkidle")
+                return
+            except AssertionError:
+                pass
+
+            try:
+                if reload_on_error:
+                    self.page.reload()
+                    self.page.wait_for_load_state("networkidle")
+            except _api_types.Error:
+                continue
+
+        raise AssertionError(
+            "Current URL did not change, expected locator not found or page failed to reload."
+        )

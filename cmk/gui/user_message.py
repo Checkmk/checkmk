@@ -26,7 +26,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
 @cmk.gui.pages.page_registry.register_page("user_message")
@@ -70,7 +69,7 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
         item=make_simple_link("user_profile.py"),
     )
 
-    if rulebased_notifications_enabled() and user.may("general.edit_notifications"):
+    if user.may("general.edit_notifications"):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",

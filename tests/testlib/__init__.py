@@ -11,7 +11,7 @@ import os
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -255,9 +255,7 @@ def fake_version_and_paths() -> None:
         Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
     )
 
-    monkeypatch.setattr(
-        "cmk.utils.paths.license_usage_dir", Path(cmk.utils.paths.var_dir, "license_usage")
-    )
+    monkeypatch.setattr("cmk.utils.paths.licensing_dir", Path(cmk.utils.paths.var_dir, "licensing"))
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -292,7 +290,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-def wait_until_liveproxyd_ready(site: Site, site_ids: Sequence[str]) -> None:
+def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
     def _config_available() -> bool:
         return site.file_exists("etc/check_mk/liveproxyd.mk")
 

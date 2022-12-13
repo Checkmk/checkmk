@@ -24,7 +24,6 @@ from cmk.gui.plugins.watolib.utils import (
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
-    Checkbox,
     DropdownChoice,
     EmailAddress,
     Integer,
@@ -35,33 +34,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.utils import site_neutral_path
-
-
-@config_variable_registry.register
-class ConfigVariableEnableRBN(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupNotifications
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
-
-    def ident(self) -> str:
-        return "enable_rulebased_notifications"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Rule based notifications"),
-            label=_("Enable new rule based notifications"),
-            help=_(
-                "If you enable the new rule based notifications then the current plain text email and "
-                "&quot;flexible notifications&quot; will become inactive. Instead notificatios will "
-                "be configured with the WATO module <i>Notifications</i> on a global base."
-            ),
-        )
-
-    # TODO: Duplicate with domain specification. Drop this?
-    def need_restart(self) -> bool:
-        return True
 
 
 @config_variable_registry.register

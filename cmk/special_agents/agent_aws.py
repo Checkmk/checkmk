@@ -6437,9 +6437,11 @@ class AWSSectionsGeneric(AWSSections):
                     )
                 )
 
-        elasticache_summary = ElastiCacheSummary(elasticache_client, region, config, distributor)
-        distributor.add("elasticache_limits", elasticache_summary)
-        self._sections.append(elasticache_summary)
+            elasticache_summary = ElastiCacheSummary(
+                elasticache_client, region, config, distributor
+            )
+            distributor.add("elasticache_limits", elasticache_summary)
+            self._sections.append(elasticache_summary)
 
 
 # .

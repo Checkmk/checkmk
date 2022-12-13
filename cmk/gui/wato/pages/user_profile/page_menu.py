@@ -8,7 +8,6 @@ from collections.abc import Iterator
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
 def page_menu_dropdown_user_related(
@@ -53,11 +52,7 @@ def _page_menu_entries_related(
             is_shortcut=show_shortcuts,
         )
 
-    if (
-        page_name != "user_notifications_p"
-        and rulebased_notifications_enabled()
-        and user.may("general.edit_notifications")
-    ):
+    if page_name != "user_notifications_p" and user.may("general.edit_notifications"):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",

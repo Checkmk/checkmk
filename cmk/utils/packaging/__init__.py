@@ -9,11 +9,14 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
+from itertools import groupby
 from pathlib import Path
-from typing import Any, Final, NamedTuple, TypedDict
+from typing import Final, TypedDict
+
+from typing_extensions import assert_never
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -22,7 +25,6 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
-from cmk.utils.exceptions import MKException
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
 from cmk.utils.version import parse_check_mk_version
@@ -37,7 +39,8 @@ from ._package import (
     PackageInfo,
     read_package_info_optionally,
 )
-from ._type_defs import PackageException
+from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName, PartPath
+from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 logger = logging.getLogger("cmk.utils.packaging")
 
@@ -80,21 +83,20 @@ def _get_permissions(path: str) -> int:
     raise PackageException("could not determine permissions for %r" % path)
 
 
-PackageName = str
-PartName = str
-PartPath = str
-PartFiles = list[str]
 PackageFiles = dict[PartName, PartFiles]
 
 
-class PackagePart(NamedTuple):
-    ident: PartName
-    title: str
-    path: PartPath
-
-
 Packages = dict[PackageName, PackageInfo]
-PackagePartInfo = dict[PartName, Any]
+
+
+class PackagePartInfoElement(TypedDict):
+    title: str
+    permissions: Sequence[int]
+    path: PartPath
+    files: Sequence[str]
+
+
+PackagePartInfo = dict[PartName, PackagePartInfoElement]
 
 package_ignored_files = {
     "lib": ["nagios/plugins/README.txt"],
@@ -115,70 +117,18 @@ def get_installed_package_info(
     )
 
 
-def get_config_parts() -> list[PackagePart]:
-    return [
-        PackagePart("ec_rule_packs", _("Event Console rule packs"), str(ec.mkp_rule_pack_dir())),
-    ]
-
-
-def get_repo_ntop_parts() -> list[PackagePart]:
-    # This function is meant to return the location of mkp-able ntop files within the git repository.
-    # It is used for building a mkp which enables the ntop integration
-    return [
-        PackagePart("web", _("ntop GUI extensions"), "enterprise/cmk/gui/cee/"),
-    ]
-
-
-def get_package_parts() -> list[PackagePart]:
-    return [
-        PackagePart(
-            "agent_based",
-            _("Agent based plugins (Checks, Inventory)"),
-            str(cmk.utils.paths.local_agent_based_plugins_dir),
-        ),
-        PackagePart("checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)),
-        PackagePart(
-            "inventory", _("Legacy inventory plugins"), str(cmk.utils.paths.local_inventory_dir)
-        ),
-        PackagePart(
-            "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
-        ),
-        PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
-        PackagePart(
-            "notifications", _("Notification scripts"), str(cmk.utils.paths.local_notifications_dir)
-        ),
-        PackagePart("gui", _("GUI extensions"), str(cmk.utils.paths.local_gui_plugins_dir)),
-        PackagePart("web", _("Legacy GUI extensions"), str(cmk.utils.paths.local_web_dir)),
-        PackagePart(
-            "pnp-templates",
-            _("PNP4Nagios templates (deprecated)"),
-            str(cmk.utils.paths.local_pnp_templates_dir),
-        ),
-        PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
-        PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
-        PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
-        PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
-        PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
-        PackagePart(
-            "alert_handlers",
-            _("Alert handlers"),
-            str(cmk.utils.paths.local_share_dir / "alert_handlers"),
-        ),
-    ]
-
-
-def format_file_name(*, name: str, version: str) -> str:
+def format_file_name(package_id: PackageID) -> str:
     """
-    >>> f = format_file_name
+    >>> package_id = PackageID(
+    ...     name=PackageName("my_package"),
+    ...     version=PackageVersion("1.0.2"),
+    ... )
 
-    >>> f(name="aaa", version="1.0")
-    'aaa-1.0.mkp'
-
-    >>> f(name="a-a-a", version="99.99")
-    'a-a-a-99.99.mkp'
+    >>> format_file_name(package_id)
+    'my_package-1.0.2.mkp'
 
     """
-    return f"{name}-{version}{PACKAGE_EXTENSION}"
+    return f"{package_id.name}-{package_id.version}{PACKAGE_EXTENSION}"
 
 
 def release(pacname: PackageName) -> None:
@@ -186,7 +136,7 @@ def release(pacname: PackageName) -> None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := package.files.get(part.ident, [])):
             continue
 
@@ -211,11 +161,8 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
     return info
 
 
-def create_mkp_object(
-    package: PackageInfo,
-    package_parts: Callable = get_package_parts,
-    config_parts: Callable = get_config_parts,
-) -> bytes:
+def create_mkp_object(package: PackageInfo) -> bytes:
+
     package.version_packaged = cmk_version.__version__
 
     buffer = BytesIO()
@@ -232,7 +179,7 @@ def create_mkp_object(
         add_file("info.json", package.json_file_content().encode())
 
         # Now pack the actual files into sub tars
-        for part in package_parts() + config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 
@@ -248,7 +195,7 @@ def create_mkp_object(
 
 
 def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := package.files.get(part.ident, [])):
             continue
 
@@ -286,7 +233,7 @@ class PackageStore:
 
         package = extract_package_info(file_content)
 
-        base_name = format_file_name(name=package.name, version=package.version)
+        base_name = format_file_name(package.id)
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
@@ -318,33 +265,55 @@ class PackageStore:
             return []
 
 
-def read_package(package_file_base_name: str) -> bytes:
-    return _get_full_package_path(package_file_base_name).read_bytes()
+# TODO: this can go
+def read_package(package_store: PackageStore, package_file_base_name: str) -> bytes:
+    return _get_full_package_path(package_store, package_file_base_name).read_bytes()
 
 
-def disable(package_name: PackageName) -> None:
-    package_path, package_meta_info = _find_path_and_package_info(package_name)
+def disable(package_name: PackageName, package_version: PackageVersion | None) -> None:
+    package_path, package_meta_info = _find_path_and_package_info(package_name, package_version)
 
-    if package_name in installed_names():
-        uninstall(package_meta_info)
+    if (installed := get_installed_package_info(package_name)) is not None:
+        if package_version is None or installed.version == package_version:
+            uninstall(package_meta_info)
 
     package_path.unlink()
 
 
-def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, PackageInfo]:
+def _find_path_and_package_info(
+    package_name: PackageName, package_version: PackageVersion | None
+) -> tuple[Path, PackageInfo]:
+
+    # not sure if we need this, but better safe than sorry.
+    def filename_matches(package: PackageInfo, name: str) -> bool:
+        return format_file_name(package.id) == name
+
+    def package_matches(
+        package: PackageInfo, package_name: PackageName, package_version: PackageVersion | None
+    ) -> bool:
+        return package.name == package_name and (
+            package_version is None or package.version == package_version
+        )
 
     enabled_packages = get_enabled_package_infos()
 
-    for package_path in _get_enabled_package_paths():
-        if (package := enabled_packages.get(package_path.name)) is None:
-            continue
-        if (
-            package.name == package_name
-            or format_file_name(name=package.name, version=package.version) == package_name
-        ):
-            return package_path, package
+    matching_packages = [
+        (package_path, package)
+        for package_path in _get_enabled_package_paths()
+        if (package := enabled_packages.get(package_path.name)) is not None
+        and (
+            package_matches(package, package_name, package_version)
+            or filename_matches(package, package_name)
+        )
+    ]
 
-    raise PackageException("Package %s is not enabled" % package_name)
+    package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
+    if not matching_packages:
+        raise PackageException(f"Package {package_str} is not enabled")
+    if len(matching_packages) > 1:
+        raise PackageException(f"Package not unique: {package_str}")
+
+    return matching_packages[0]
 
 
 def create(pkg_info: PackageInfo) -> None:
@@ -380,7 +349,7 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(name=manifest.name, version=manifest.version)
+    base_name = format_file_name(manifest.id)
     file_path = cmk.utils.paths.local_optional_packages_dir / base_name
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -391,17 +360,19 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     mark_as_enabled(file_path)
 
 
-def _get_full_package_path(package_file_name: str) -> Path:
-    package_store = PackageStore()
+# TODO: this belongs to PackageStore.
+def _get_full_package_path(package_store: PackageStore, package_file_name: str) -> Path:
     for package in package_store.list_local_packages() + package_store.list_shipped_packages():
         if package_file_name == package.name:
             return package
     raise PackageException("Optional package %s does not exist" % package_file_name)
 
 
-def install_optional_package(package_file_base_name: str) -> PackageInfo:
+def install_optional_package(
+    package_store: PackageStore, package_file_base_name: str
+) -> PackageInfo:
     return install(
-        _get_full_package_path(package_file_base_name),
+        _get_full_package_path(package_store, package_file_base_name),
         allow_outdated=True,
     )
 
@@ -413,6 +384,10 @@ def mark_as_enabled(package_path: Path) -> None:
     be synchronized with the remote sites.
     """
     destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
+
+    # hack: we might be installing from the path to an already enabled package :-(
+    if destination == package_path:
+        return
 
     destination.parent.mkdir(parents=True, exist_ok=True)
 
@@ -428,7 +403,7 @@ def mark_as_enabled(package_path: Path) -> None:
 
 
 def remove_enabled_mark(package_info: PackageInfo) -> None:
-    base_name = format_file_name(name=package_info.name, version=package_info.version)
+    base_name = format_file_name(package_info.id)
     (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
         missing_ok=True
     )  # should never be missing, but don't crash in messed up state
@@ -477,7 +452,7 @@ def _install(  # pylint: disable=too-many-branches
 
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
-        for part in get_package_parts() + get_config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             if not (filenames := package.files.get(part.ident, [])):
                 continue
 
@@ -531,7 +506,7 @@ def _install(  # pylint: disable=too-many-branches
 
     # In case of an update remove files from old_package not present in new one
     if old_package is not None:
-        for part in get_package_parts() + get_config_parts():
+        for part in PACKAGE_PARTS + CONFIG_PARTS:
             new_files = set(package.files.get(part.ident, []))
             old_files = set(old_package.files.get(part.ident, []))
             remove_files = old_files - new_files
@@ -587,7 +562,7 @@ def _conflicting_files(
     old_package: PackageInfo | None,
 ) -> Iterable[tuple[str, str]]:
     # Before installing check for conflicts
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         packaged = _packaged_files_in_dir(part.ident)
 
         old_files = set(old_package.files.get(part.ident, [])) if old_package else set()
@@ -633,7 +608,7 @@ def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
         if (package_info := get_installed_package_info(package_name)) is not None
     }
 
-    for part in get_package_parts():
+    for part in PACKAGE_PARTS:
         _validate_package_files_part(
             packages, pacname, part.ident, part.path, files.get(part.ident, [])
         )
@@ -716,12 +691,17 @@ def get_unpackaged_files() -> dict[str, list[str]]:
     return {part.ident: files for part, files in unpackaged_files().items()}
 
 
-def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
-    return {name: get_installed_package_info(name) for name in installed_names()}
+def get_installed_package_infos() -> Mapping[PackageName, PackageInfo]:
+    return {
+        name: manifest
+        for name in installed_names()
+        if (manifest := get_installed_package_info(name)) is not None
+    }
 
 
-def get_optional_package_infos() -> Mapping[str, tuple[PackageInfo, bool]]:
-    package_store = PackageStore()
+def get_optional_package_infos(
+    package_store: PackageStore,
+) -> Mapping[str, tuple[PackageInfo, bool]]:
     local_packages = package_store.list_local_packages()
     local_names = {p.name for p in local_packages}
     shipped_packages = (
@@ -754,14 +734,14 @@ def _get_enabled_package_paths():
 
 def unpackaged_files() -> dict[PackagePart, list[str]]:
     unpackaged = {}
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         unpackaged[part] = unpackaged_files_in_dir(part.ident, part.path)
     return unpackaged
 
 
 def package_part_info() -> PackagePartInfo:
     part_info: PackagePartInfo = {}
-    for part in get_package_parts() + get_config_parts():
+    for part in PACKAGE_PARTS + CONFIG_PARTS:
         try:
             files = os.listdir(part.path)
         except OSError:
@@ -769,7 +749,7 @@ def package_part_info() -> PackagePartInfo:
 
         part_info[part.ident] = {
             "title": part.title,
-            "permissions": list(map(_get_permissions, [os.path.join(part.path, f) for f in files])),
+            "permissions": [_get_permissions(os.path.join(part.path, f)) for f in files],
             "path": part.path,
             "files": files,
         }
@@ -786,7 +766,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
         return []
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = {p.path for p in get_package_parts() + get_config_parts() if p.ident != part}
+    taboo_dirs = {p.path for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
     # os.path.realpath would resolve /omd to /opt/omd ...
     taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
     if directory in taboo_dirs:
@@ -825,7 +805,7 @@ def _packaged_files_in_dir(part: PartName) -> list[str]:
 
 
 def installed_names() -> list[PackageName]:
-    return sorted([p.name for p in package_dir().iterdir()])
+    return sorted(PackageName(p.name) for p in package_dir().iterdir())
 
 
 def _package_exists(pacname: PackageName) -> bool:
@@ -841,17 +821,17 @@ def _remove_package_info(pacname: PackageName) -> None:
     (package_dir() / pacname).unlink()
 
 
-def rule_pack_id_to_mkp() -> dict[str, Any]:
+def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     """
     Returns a dictionary of rule pack ID to MKP package for a given package_info.
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
 
-    def mkp_of(rule_pack_file: str) -> Any:
+    def mkp_of(rule_pack_file: str) -> PackageName | None:
         """Find the MKP for the given file"""
-        for package_name, package in get_installed_package_infos().items():
-            if package and rule_pack_file in package.files.get("ec_rule_packs", []):
+        for package_name, package_info in get_installed_package_infos().items():
+            if rule_pack_file in package_info.files.get("ec_rule_packs", []):
                 return package_name
         return None
 
@@ -892,7 +872,7 @@ def _install_applicable_inactive_packages(
     log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
     for name, package_paths in _sort_enabled_packages_for_installation(log):
-        for version, path in package_paths:
+        for package_info, path in package_paths:
             try:
                 install(
                     path,
@@ -900,9 +880,11 @@ def _install_applicable_inactive_packages(
                     post_package_change_actions=post_package_change_actions,
                 )
             except PackageException as exc:
-                logger.log(VERBOSE, "[%s]: Verison %s not installed (%s)", name, version, exc)
+                log.log(
+                    VERBOSE, "[%s]: Version %s not installed (%s)", name, package_info.version, exc
+                )
             else:
-                logger.log(VERBOSE, "[%s]: Version %s installed", name, version)
+                log.log(VERBOSE, "[%s]: Version %s installed", name, package_info.version)
                 # We're done with this package.
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
@@ -911,74 +893,19 @@ def _install_applicable_inactive_packages(
 
 def _sort_enabled_packages_for_installation(
     log: logging.Logger,
-) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
-    packages_by_name: dict[str, dict[str, Path]] = {}
-    for pkg_path in _get_enabled_package_paths():
-        if (package_info := extract_package_info_optionally(pkg_path, logger)) is None:
-            continue
-        packages_by_name.setdefault(package_info.name, {})[package_info.version] = pkg_path
-
-    return _sort_by_name_then_newest_version(packages_by_name)
-
-
-def _sort_by_name_then_newest_version(
-    packages_by_name: Mapping[str, Mapping[str, Path]]
-) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
-    """
-    >>> from pprint import pprint
-    >>> pprint(_sort_by_name_then_newest_version({
-    ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
-    ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
-    ... }))
-    [('argl_extension',
-      [('dling', 'lexically_later'), ('canoo', 'lexically_first')]),
-     ('boo_package', [('1.3', 'new_boo'), ('1.2', 'old_boo')])]
-    """
-
-    def sortkey(item: tuple[str, Path]) -> tuple[tuple[float, str], ...]:
-        return _version_sort_key(item[0])
-
-    return [
-        (
-            name,
-            sorted(paths_by_version.items(), key=sortkey, reverse=True),
-        )
-        for name, paths_by_version in sorted(packages_by_name.items())
+) -> Iterable[tuple[PackageName, Iterable[tuple[PackageInfo, Path]]]]:
+    packages = [
+        (package_info, package_path)
+        for package_path in _get_enabled_package_paths()
+        if (package_info := extract_package_info_optionally(package_path, log)) is not None
     ]
-
-
-def _version_sort_key(raw: str) -> tuple[tuple[float, str], ...]:
-    """Try our best to sort version strings
-
-    They should only consist of dots and digits, but we try not to ever crash.
-    This does the right thing for reasonable versions:
-
-    >>> _version_sort_key("12.3")
-    ((12, ''), (3, ''))
-    >>> _version_sort_key("2022.09.03") < _version_sort_key("2022.8.21")
-    False
-
-    And it does not crash for nonsense values (which our GUI does not allow).
-    Obviously that's not a meaningful result.
-
-    >>> _version_sort_key("12.0-alpha")
-    ((12, ''), (-inf, '0-alpha'))
-    >>> _version_sort_key("12.0-alpha") >= _version_sort_key("käsebrot 3.0")
-    True
-
-    Reasonable ones are "newer":
-
-    >>> _version_sort_key("wurstsalat") < _version_sort_key("0.1")
-    True
-    """
-    key_elements: list[tuple[float, str]] = []
-    for s in raw.split("."):
-        try:
-            key_elements.append((int(s), ""))
-        except ValueError:
-            key_elements.append((float("-Inf"), s))
-
-    return tuple(key_elements)
+    return groupby(
+        sorted(
+            sorted(packages, key=lambda x: x[0].version.sort_key, reverse=True),
+            key=lambda x: x[0].name,
+        ),
+        key=lambda x: x[0].name,
+    )
 
 
 def disable_outdated() -> None:
@@ -996,7 +923,7 @@ def disable_outdated() -> None:
             _raise_for_too_new_cmk_version(package_info, cmk_version.__version__)
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
-            disable(package_name)
+            disable(package_name, package_info.version)
         else:
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
 

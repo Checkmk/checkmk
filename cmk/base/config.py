@@ -8,7 +8,6 @@ from __future__ import annotations
 import ast
 import contextlib
 import copy
-import inspect
 import ipaddress
 import itertools
 import marshal
@@ -18,6 +17,7 @@ import py_compile
 import socket
 import struct
 import sys
+import types
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
@@ -57,6 +57,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_storage_loaders
 from cmk.utils.structured_data import RawIntervalsFromConfig
+from cmk.utils.tags import ComputedDataSources
 from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
@@ -1365,11 +1366,12 @@ def get_service_translations(hostname: HostName) -> cmk.utils.translations.Trans
     translations: cmk.utils.translations.TranslationOptions = {}
     for rule in rules[::-1]:
         for k, v in rule.items():
+            # TODO: Fix this typing chaos below, the actual values are much more restricted than the code below thinks.
             if isinstance(v, list):
-                translations.setdefault(k, set())
-                translations[k] |= set(v)
+                translations.setdefault(k, set())  # type: ignore[misc]
+                translations[k] |= set(v)  # type: ignore[literal-required]
             else:
-                translations[k] = v
+                translations[k] = v  # type: ignore[literal-required]
 
     return translations_cache.setdefault(hostname, translations)
 
@@ -1883,6 +1885,8 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         console.vverbose(f"Precompile {path} to {precompiled_path}\n")
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
+        # The original file is from the version so the calculated mode is world readable...
+        os.chmod(precompiled_path, 0o640)
 
     exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)
 
@@ -1930,7 +1934,7 @@ def _set_check_variable_defaults(
             continue
 
         # NOTE: Classes and builtin functions are callable, too!
-        if callable(value) or inspect.ismodule(value):
+        if callable(value) or isinstance(value, types.ModuleType):
             continue
 
         _check_variable_defaults[varname] = copy.copy(value)
@@ -2404,8 +2408,6 @@ class HostConfig:
 
         self._config_cache: Final = config_cache
 
-        self._explicit_attributes_lookup = None
-
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags: Final = self._config_cache.tag_list_of_host(hostname)
         self.tag_groups: Final = ConfigCache.tags_of_host(hostname)
@@ -2415,136 +2417,22 @@ class HostConfig:
             hostname
         )
 
-        self.computed_datasources: Final = cmk.utils.tags.compute_datasources(self.tag_groups)
-
-        # Basic types
-        self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
-        self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
-
-        def get_is_piggyback_host() -> bool:
-            if self.tag_groups["piggyback"] == "piggyback":
-                return True
-            if self.tag_groups["piggyback"] == "no-piggyback":
-                return False
-            # Legacy automatic detection
-            return self._config_cache.has_piggyback_data(self.hostname)
-
-        self.is_piggyback_host: Final = get_is_piggyback_host()
-
-        # Agent types
-        self.is_agent_host: Final[bool] = self.is_tcp_host or self.is_piggyback_host
-        self.management_protocol: Final = management_protocol.get(hostname)
-        self.has_management_board: Final[bool] = self.management_protocol is not None
-        self.is_ping_host: Final = not (
-            self.is_snmp_host or self.is_agent_host or self.has_management_board
-        )
-
-        self.is_dual_host: Final = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host: Final = self.computed_datasources.is_all_agents_host
-        self.is_all_special_agents_host: Final = (
-            self.computed_datasources.is_all_special_agents_host
-        )
-
     def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             hostname=self.hostname,
             is_ipv4_host=ConfigCache.is_ipv4_host(self.hostname),
             is_ipv6_host=ConfigCache.is_ipv6_host(self.hostname),
             is_no_ip_host=ConfigCache.is_no_ip_host(self.hostname),
-            is_snmp_host=self.is_snmp_host,
+            is_snmp_host=self._config_cache.is_snmp_host(self.hostname),
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
             default_address_family=self._config_cache.default_address_family(self.hostname),
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
         )
 
-    @property
-    def alias(self) -> str:
-        # Alias by explicit matching
-        alias = self._explicit_host_attributes.get("alias")
-        if alias:
-            return alias
-
-        # Alias by rule matching
-        default: Ruleset[HostName] = []
-        aliases = self._config_cache.host_extra_conf(
-            self.hostname, extra_host_conf.get("alias", default)
-        )
-
-        # Fallback alias
-        if not aliases:
-            return self.hostname
-
-        # First rule match
-        return aliases[0]
-
-    @property
-    def parents(self) -> list[str]:
-        """Returns the parents of a host configured via ruleset "parents"
-
-        Use only those parents which are defined and active in all_hosts"""
-        parent_candidates = set()
-
-        # Parent by explicit matching
-        explicit_parents = self._explicit_host_attributes.get("parents")
-        if explicit_parents:
-            parent_candidates.update(explicit_parents.split(","))
-
-        # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
-        for parent_names in self._config_cache.host_extra_conf(self.hostname, parents):
-            parent_candidates.update(parent_names.split(","))
-
-        return list(parent_candidates.intersection(self._config_cache.all_active_realhosts()))
-
-    def agent_connection_mode(self) -> Literal["pull-agent", "push-agent"]:
-        mode = self._explicit_host_attributes.get("cmk_agent_connection", "pull-agent")
-        if mode == "pull-agent":
-            return "pull-agent"
-        if mode == "push-agent":
-            return "push-agent"
-        raise NotImplementedError(f"unknown connection mode: {mode!r}")
-
     @staticmethod
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
-
-    def snmp_fetch_interval(self, section_name: SectionName) -> int | None:
-        """Return the fetch interval of SNMP sections in seconds
-
-        This has been added to reduce the fetch interval of single SNMP sections
-        to be executed less frequently than the "Check_MK" service is executed.
-        """
-        section = agent_based_register.get_section_plugin(section_name)
-        if not isinstance(section, SNMPSectionPlugin):
-            return None  # no values at all for non snmp section
-
-        # Previous to 1.5 "match" could be a check name (including subchecks) instead of
-        # only main check names -> section names. This has been cleaned up, but we still
-        # need to be compatible. Strip of the sub check part of "match".
-        for match, minutes in self._config_cache.host_extra_conf(
-            self.hostname,
-            snmp_check_interval,
-        ):
-            if match is None or match.split(".")[0] == str(section_name):
-                return minutes * 60  # use first match
-
-        return None
-
-    def disabled_snmp_sections(self) -> set[SectionName]:
-        """Return a set of disabled snmp sections"""
-        rules = self._config_cache.host_extra_conf(self.hostname, snmp_exclude_sections)
-        merged_section_settings = {"if64adm": True}
-        for rule in reversed(rules):
-            for section in rule.get("sections_enabled", ()):
-                merged_section_settings[section] = False
-            for section in rule.get("sections_disabled", ()):
-                merged_section_settings[section] = True
-
-        return {
-            SectionName(name)
-            for name, is_disabled in merged_section_settings.items()
-            if is_disabled
-        }
 
     @property
     def agent_port(self) -> int:
@@ -2587,13 +2475,13 @@ class HostConfig:
 
     @property
     def agent_description(self) -> str:
-        if self.is_all_agents_host:
+        if self._config_cache.is_all_agents_host(self.hostname):
             return "Normal Checkmk agent, all configured special agents"
 
-        if self.is_all_special_agents_host:
+        if self._config_cache.is_all_special_agents_host(self.hostname):
             return "No Checkmk agent, all configured special agents"
 
-        if self.is_tcp_host:
+        if self._config_cache.is_tcp_host(self.hostname):
             return "Normal Checkmk agent, or special agent if configured"
 
         return "No agent"
@@ -2639,21 +2527,6 @@ class HostConfig:
         return programs[0]
 
     @property
-    def special_agents(self) -> list[tuple[str, dict]]:
-        matched: list[tuple[str, dict]] = []
-        # Previous to 1.5.0 it was not defined in which order the special agent
-        # rules overwrite each other. When multiple special agents were configured
-        # for a single host a "random" one was picked (depending on the iteration
-        # over config.special_agents.
-        # We now sort the matching special agents by their name to at least get
-        # a deterministic order of the special agents.
-        for agentname, ruleset in sorted(special_agents.items()):
-            params = self._config_cache.host_extra_conf(self.hostname, ruleset)
-            if params:
-                matched.append((agentname, params[0]))
-        return matched
-
-    @property
     def only_from(self) -> None | list[str] | str:
         """The agent of a host may be configured to be accessible only from specific IPs"""
         ruleset = agent_config.get("only_from", [])
@@ -2663,17 +2536,6 @@ class HostConfig:
         entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
         if not entries:
             return None
-
-        return entries[0]
-
-    @property
-    def explicit_check_command(self) -> HostCheckCommand:
-        entries = self._config_cache.host_extra_conf(self.hostname, host_check_commands)
-        if not entries:
-            return None
-
-        if entries[0] == "smart" and monitoring_core != "cmc":
-            return "ping"  # avoid problems when switching back to nagios core
 
         return entries[0]
 
@@ -2692,196 +2554,14 @@ class HostConfig:
     def icons_and_actions(self) -> list[str]:
         return list(set(self._config_cache.host_extra_conf(self.hostname, host_icons_and_actions)))
 
-    @property
-    def extra_host_attributes(self) -> ObjectAttributes:
-        attrs: ObjectAttributes = {}
-        attrs.update(self._explicit_host_attributes)
-
-        for key, ruleset in extra_host_conf.items():
-            if key in attrs:
-                # An explicit value is already set
-                values = [attrs[key]]
-            else:
-                values = self._config_cache.host_extra_conf(self.hostname, ruleset)
-                if not values:
-                    continue
-
-            if values[0] is not None:
-                attrs[key] = values[0]
-
-        # Convert _keys to uppercase. Affects explicit and rule based keys
-        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
-        return attrs
-
-    @property
-    def _explicit_host_attributes(self) -> ObjectAttributes:
-        if self._explicit_attributes_lookup is not None:
-            return self._explicit_attributes_lookup
-
-        hostname = self.hostname
-        cache = {}
-        for key, hostnames in explicit_host_conf.items():
-            if hostname in hostnames:
-                cache[key] = hostnames[hostname]
-        self._explicit_attributes_lookup = cache
-        return self._explicit_attributes_lookup
-
-    def discovery_check_parameters(self) -> DiscoveryCheckParameters:
-        """Compute the parameters for the discovery check for a host"""
-        service_discovery_name = ConfigCache.service_discovery_name()
-        if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
-            return DiscoveryCheckParameters.commandline_only_defaults()
-
-        entries = self._config_cache.host_extra_conf(self.hostname, periodic_discovery)
-        if not entries:
-            return DiscoveryCheckParameters.default()
-
-        if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
-            return DiscoveryCheckParameters.commandline_only_defaults()
-
-        return DiscoveryCheckParameters(
-            commandline_only=False,
-            check_interval=int(check_interval),
-            severity_new_services=int(entry["severity_unmonitored"]),
-            severity_vanished_services=int(entry["severity_vanished"]),
-            severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
-            rediscovery=entry.get("inventory_rediscovery", {}),
-        )
-
     def checkmk_check_parameters(self) -> CheckmkCheckParameters:
-        return CheckmkCheckParameters(enabled=not self.is_ping_host)
-
-    def inventory_parameters(self, ruleset_name: RuleSetName) -> dict:
-        default: Ruleset[object] = []
-        return self._config_cache.host_extra_conf_merged(
-            self.hostname, inv_parameters.get(str(ruleset_name), default)
-        )
+        return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
 
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> dict:
         default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
             self.hostname, notification_parameters.get(plugin_name, default)
         )
-
-    @property
-    def active_checks(self) -> list[tuple[str, list[Any]]]:
-        """Returns the list of active checks configured for this host
-
-        These are configured using the active check formalization of WATO
-        where the whole parameter set is configured using valuespecs.
-        """
-        configured_checks: list[tuple[str, list[Any]]] = []
-        for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
-            # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
-            # user has enabled the inventory for ping only hosts
-            if plugin_name == "cmk_inv" and self.is_ping_host:
-                continue
-
-            entries = self._config_cache.host_extra_conf(self.hostname, ruleset)
-            if not entries:
-                continue
-
-            configured_checks.append((plugin_name, entries))
-
-        return configured_checks
-
-    @property
-    def custom_checks(self) -> list[dict]:
-        """Return the free form configured custom checks without formalization"""
-        return self._config_cache.host_extra_conf(self.hostname, custom_checks)
-
-    def enforced_services_table(
-        self,
-    ) -> Mapping[
-        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
-    ]:
-        """Return a table of enforced services
-
-        Note: We need to reverse the order of the enforced services.
-        Users assume that earlier rules have precedence over later ones.
-        Important if there are two rules for a host with the same combination of plugin name
-        and item.
-        """
-        return {
-            ServiceID(check_plugin_name, item): (
-                RulesetName(checkgroup_name),
-                cmk.base.check_utils.ConfiguredService(
-                    check_plugin_name=check_plugin_name,
-                    item=item,
-                    description=descr,
-                    parameters=compute_check_parameters(
-                        self._config_cache.host_of_clustered_service(self.hostname, descr),
-                        check_plugin_name,
-                        item,
-                        {},
-                        configured_parameters=TimespecificParameters((params,)),
-                    ),
-                    discovered_parameters={},
-                    service_labels={},
-                ),
-            )
-            for checkgroup_name, ruleset in static_checks.items()
-            for check_plugin_name, item, params in (
-                self._sanitize_enforced_entry(*entry)
-                for entry in reversed(self._config_cache.host_extra_conf(self.hostname, ruleset))
-            )
-            if (descr := service_description(self.hostname, check_plugin_name, item))
-        }
-
-    @staticmethod
-    def _sanitize_enforced_entry(
-        raw_name: object,
-        raw_item: object,
-        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
-    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
-        return (
-            CheckPluginName(maincheckify(str(raw_name))),
-            None if raw_item is None else str(raw_item),
-            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
-        )
-
-    @property
-    def hostgroups(self) -> list[HostgroupName]:
-        """Returns the list of hostgroups of this host
-
-        If the host has no hostgroups it will be added to the default hostgroup
-        (Nagios requires each host to be member of at least on group)."""
-        groups = self._config_cache.host_extra_conf(self.hostname, host_groups)
-        if not groups:
-            return [default_host_group]
-        return groups
-
-    @property
-    def contactgroups(self) -> list[ContactgroupName]:
-        """Returns the list of contactgroups of this host"""
-        cgrs: list[ContactgroupName] = []
-
-        # host_contactgroups may take single values as well as lists as item value.
-        #
-        # The list entries are generated by the WATO hosts.mk files and only
-        # the first one is meant to be used by a host. This logic, which is similar
-        # to a dedicated "first match" ruleset realizes the inheritance in the folder
-        # hiearchy for the "contactgroups" attribute.
-        #
-        # The single-contact-groups entries (not in a list) are configured by the group
-        # ruleset and should all match because the ruleset is a match all ruleset.
-        #
-        # It would be clearer to have independent rulesets for this...
-        folder_cgrs = []
-        for entry in self._config_cache.host_extra_conf(self.hostname, host_contactgroups):
-            if isinstance(entry, list):
-                folder_cgrs.append(entry)
-            else:
-                cgrs.append(entry)
-
-        # Use the match of the nearest folder, which is the first entry in the list
-        if folder_cgrs:
-            cgrs += folder_cgrs[0]
-
-        if monitoring_core == "nagios" and enable_rulebased_notifications:
-            cgrs.append("check-mk-notify")
-
-        return list(set(cgrs))
 
     @property
     def management_address(self) -> HostAddress | None:
@@ -2896,7 +2576,7 @@ class HostConfig:
 
     @property
     def management_credentials(self) -> ManagementCredentials | None:
-        protocol = self.management_protocol
+        protocol = self._config_cache.management_protocol(self.hostname)
         credentials_variable: Mapping[HostName, ManagementCredentials]
         default_value: ManagementCredentials | None = None
         if protocol == "snmp":
@@ -2936,7 +2616,7 @@ class HostConfig:
 
     @property
     def management_snmp_config(self) -> SNMPHostConfig:
-        if self.management_protocol != "snmp":
+        if self._config_cache.management_protocol(self.hostname) != "snmp":
             raise MKGeneralException("Management board is not configured to be contacted via SNMP")
 
         address = self.management_address
@@ -2969,36 +2649,13 @@ class HostConfig:
         )
 
     @property
-    def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
-        if self._config_cache.is_cluster(self.hostname):
-            return HWSWInventoryParameters.from_raw({})
-
-        # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
-        rules = active_checks.get("cmk_inv")
-        if rules is None:
-            return HWSWInventoryParameters.from_raw({})
-
-        # 'host_extra_conf' is already cached thus we can
-        # use it after every check cycle.
-        entries = self._config_cache.host_extra_conf(self.hostname, rules)
-
-        if not entries:
-            return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
-
-        # Convert legacy rules to current dict format (just like the valuespec)
-        return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
-
-    @property
-    def do_status_data_inventory(self) -> bool:
-        return self.hwsw_inventory_parameters.status_data_inventory
-
-    @property
     def is_dyndns_host(self) -> bool:
         return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
 
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
-    mgmt_address = host_config.management_address
+    mgmt_address: Final = host_config.management_address
+    host_name: Final = host_config.hostname
     try:
         mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
     except (ValueError, TypeError):
@@ -3008,13 +2665,13 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
     try:
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
-            host_name=mgmt_address or host_config.hostname,
-            family=config_cache.default_address_family(host_config.hostname),
+            host_name=mgmt_address or host_name,
+            family=config_cache.default_address_family(host_name),
             configured_ip_address=mgmt_ipa,
             simulation_mode=simulation_mode,
             is_snmp_usewalk_host=(
-                config_cache.get_snmp_backend(host_config.hostname) is SNMPBackendEnum.STORED_WALK
-                and (host_config.management_protocol == "snmp")
+                config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
+                and (config_cache.management_protocol(host_name) == "snmp")
             ),
             override_dns=fake_dns,
             is_dyndns_host=host_config.is_dyndns_host,
@@ -3026,15 +2683,14 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
 
 
 def lookup_ip_address(
-    host_config: HostConfig,
+    host_name: HostName,
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
     config_cache = get_config_cache()
-    host_name = host_config.hostname
+    host_config = config_cache.make_host_config(host_name)
     if family is None:
         family = config_cache.default_address_family(host_name)
-    config_cache = get_config_cache()
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
@@ -3044,7 +2700,7 @@ def lookup_ip_address(
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=(
             config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK
-            and host_config.is_snmp_host
+            and config_cache.is_snmp_host(host_name)
         ),
         override_dns=fake_dns,
         is_dyndns_host=host_config.is_dyndns_host,
@@ -3070,17 +2726,35 @@ def lookup_ip_address(
 #   +----------------------------------------------------------------------+
 
 
-# TODO: Shouldn't we find a better place for the *_of_service() methods?
-# Wouldn't it be better to make them part of HostConfig?
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
+        self._enforced_services_table: dict[
+            HostName,
+            Mapping[
+                cmk.base.check_utils.ServiceID,
+                tuple[RulesetName, cmk.base.check_utils.ConfiguredService],
+            ],
+        ] = {}
+        self._is_piggyback_host: dict[HostName, bool] = {}
+        self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
+        self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
+        self._explicit_host_attributes: dict[HostName, dict[str, str]] = {}
+        self._computed_datasources: dict[HostName, ComputedDataSources] = {}
+        self._discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
+        self._active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
+        self._special_agents: dict[HostName, Sequence[tuple[str, dict]]] = {}
+        self._hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
+        self._contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
+        self._explicit_check_command: dict[HostName, HostCheckCommand] = {}
+        self._snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
+        self._disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
         return host_name in self.all_configured_clusters()
 
-    def initialize(self) -> None:
+    def initialize(self) -> ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
@@ -3113,7 +2787,23 @@ class ConfigCache:
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
+        return self
+
     def _initialize_caches(self) -> None:
+        self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
+        self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
+        self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
+        self._active_checks.clear()
+        self._special_agents.clear()
+        self._hostgroups.clear()
+        self._contactgroups.clear()
+        self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -3174,23 +2864,30 @@ class ConfigCache:
     def make_snmp_config(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> SNMPHostConfig:
-        return SNMPHostConfig(
-            is_ipv6_primary=self.is_ipv6_primary(host_name),
-            hostname=host_name,
-            ipaddress=ip_address,
-            credentials=self._snmp_credentials(host_name),
-            port=self._snmp_port(host_name),
-            is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
-            is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(host_name, snmpv2c_hosts),
-            bulk_walk_size_of=self._bulk_walk_size(host_name),
-            timing=self._snmp_timing(host_name),
-            oid_range_limits={
-                SectionName(name): rule
-                for name, rule in reversed(self.host_extra_conf(host_name, snmp_limit_oid_range))
-            },
-            snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
-            character_encoding=self._snmp_character_encoding(host_name),
-            snmp_backend=self.get_snmp_backend(host_name),
+        return self._snmp_config.setdefault(
+            (host_name, ip_address),
+            SNMPHostConfig(
+                is_ipv6_primary=self.is_ipv6_primary(host_name),
+                hostname=host_name,
+                ipaddress=ip_address,
+                credentials=self._snmp_credentials(host_name),
+                port=self._snmp_port(host_name),
+                is_bulkwalk_host=self.in_binary_hostlist(host_name, bulkwalk_hosts),
+                is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(
+                    host_name, snmpv2c_hosts
+                ),
+                bulk_walk_size_of=self._bulk_walk_size(host_name),
+                timing=self._snmp_timing(host_name),
+                oid_range_limits={
+                    SectionName(name): rule
+                    for name, rule in reversed(
+                        self.host_extra_conf(host_name, snmp_limit_oid_range)
+                    )
+                },
+                snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
+                character_encoding=self._snmp_character_encoding(host_name),
+                snmp_backend=self.get_snmp_backend(host_name),
+            ),
         )
 
     def make_host_config(self, hostname: HostName) -> HostConfig:
@@ -3204,6 +2901,20 @@ class ConfigCache:
         return self._host_configs.setdefault(hostname, HostConfig(self, hostname))
 
     def invalidate_host_config(self, hostname: HostName) -> None:
+        self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
+        self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
+        self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
+        self._active_checks.clear()
+        self._special_agents.clear()
+        self._hostgroups.clear()
+        self._contactgroups.clear()
+        self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
         try:
             del self._host_configs[hostname]
         except KeyError:
@@ -3222,6 +2933,409 @@ class ConfigCache:
 
     def host_path(self, hostname: HostName) -> str:
         return self._host_paths.get(hostname, "/")
+
+    def enforced_services_table(
+        self, hostname: HostName
+    ) -> Mapping[
+        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
+    ]:
+        """Return a table of enforced services
+
+        Note: We need to reverse the order of the enforced services.
+        Users assume that earlier rules have precedence over later ones.
+        Important if there are two rules for a host with the same combination of plugin name
+        and item.
+        """
+        return self._enforced_services_table.setdefault(
+            hostname,
+            {
+                ServiceID(check_plugin_name, item): (
+                    RulesetName(checkgroup_name),
+                    cmk.base.check_utils.ConfiguredService(
+                        check_plugin_name=check_plugin_name,
+                        item=item,
+                        description=descr,
+                        parameters=compute_check_parameters(
+                            self.host_of_clustered_service(hostname, descr),
+                            check_plugin_name,
+                            item,
+                            {},
+                            configured_parameters=TimespecificParameters((params,)),
+                        ),
+                        discovered_parameters={},
+                        service_labels={},
+                    ),
+                )
+                for checkgroup_name, ruleset in static_checks.items()
+                for check_plugin_name, item, params in (
+                    ConfigCache._sanitize_enforced_entry(*entry)
+                    for entry in reversed(self.host_extra_conf(hostname, ruleset))
+                )
+                if (descr := service_description(hostname, check_plugin_name, item))
+            },
+        )
+
+    @staticmethod
+    def _sanitize_enforced_entry(
+        raw_name: object,
+        raw_item: object,
+        raw_params: Any | None = None,  # Can be any value spec supplied type :-(
+    ) -> tuple[CheckPluginName, Item, TimespecificParameterSet]:
+        return (
+            CheckPluginName(maincheckify(str(raw_name))),
+            None if raw_item is None else str(raw_item),
+            TimespecificParameterSet.from_parameters({} if raw_params is None else raw_params),
+        )
+
+    def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
+        def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
+            if self.is_cluster(host_name):
+                return HWSWInventoryParameters.from_raw({})
+
+            # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
+            rules = active_checks.get("cmk_inv")
+            if rules is None:
+                return HWSWInventoryParameters.from_raw({})
+
+            # 'host_extra_conf' is already cached thus we can
+            # use it after every check cycle.
+            entries = self.host_extra_conf(host_name, rules)
+
+            if not entries:
+                return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
+
+            # Convert legacy rules to current dict format (just like the valuespec)
+            return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
+
+        return self._hwsw_inventory_parameters.setdefault(
+            host_name, get_hwsw_inventory_parameters()
+        )
+
+    def management_protocol(self, host_name: HostName) -> Literal["snmp", "ipmi"] | None:
+        return management_protocol.get(host_name)
+
+    def has_management_board(self, host_name: HostName) -> bool:
+        return self.management_protocol(host_name) is not None
+
+    def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
+        def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:
+            for key, mapping in explicit_host_conf.items():
+                with contextlib.suppress(KeyError):
+                    yield key, mapping[host_name]
+
+        return self._explicit_host_attributes.setdefault(
+            host_name, dict(make_explicit_host_attributes())
+        )
+
+    def alias(self, host_name: HostName) -> str:
+        # Alias by explicit matching
+        alias_ = self.explicit_host_attributes(host_name).get("alias")
+        if alias_:
+            return alias_
+
+        # Alias by rule matching
+        default: Ruleset[HostName] = []
+        aliases = self.host_extra_conf(host_name, extra_host_conf.get("alias", default))
+
+        # Fallback alias
+        if not aliases:
+            return host_name
+
+        # First rule match
+        return aliases[0]
+
+    def parents(self, host_name: HostName) -> list[str]:
+        """Returns the parents of a host configured via ruleset "parents"
+
+        Use only those parents which are defined and active in all_hosts"""
+        parent_candidates = set()
+
+        # Parent by explicit matching
+        explicit_parents = self.explicit_host_attributes(host_name).get("parents")
+        if explicit_parents:
+            parent_candidates.update(explicit_parents.split(","))
+
+        # Respect the ancient parents ruleset. This can not be configured via WATO and should be removed one day
+        for parent_names in self.host_extra_conf(host_name, parents):
+            parent_candidates.update(parent_names.split(","))
+
+        return list(parent_candidates.intersection(self.all_active_realhosts()))
+
+    def agent_connection_mode(self, host_name: HostName) -> Literal["pull-agent", "push-agent"]:
+        mode = self.explicit_host_attributes(host_name).get("cmk_agent_connection", "pull-agent")
+        if mode == "pull-agent":
+            return "pull-agent"
+        if mode == "push-agent":
+            return "push-agent"
+        raise NotImplementedError(f"unknown connection mode: {mode!r}")
+
+    def extra_host_attributes(self, host_name: HostName) -> ObjectAttributes:
+        attrs: ObjectAttributes = {}
+        attrs.update(self.explicit_host_attributes(host_name))
+
+        for key, ruleset in extra_host_conf.items():
+            if key in attrs:
+                # An explicit value is already set
+                values = [attrs[key]]
+            else:
+                values = self.host_extra_conf(host_name, ruleset)
+                if not values:
+                    continue
+
+            if values[0] is not None:
+                attrs[key] = values[0]
+
+        # Convert _keys to uppercase. Affects explicit and rule based keys
+        attrs = {key.upper() if key[0] == "_" else key: value for key, value in attrs.items()}
+        return attrs
+
+    def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
+        return self._computed_datasources.setdefault(
+            host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags_of_host(host_name))
+        )
+
+    def is_tcp_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_tcp
+
+    def is_snmp_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_snmp
+
+    def is_piggyback_host(self, host_name: HostName) -> bool:
+        def get_is_piggyback_host() -> bool:
+            tag_groups: Final = ConfigCache.tags_of_host(host_name)
+            if tag_groups["piggyback"] == "piggyback":
+                return True
+            if tag_groups["piggyback"] == "no-piggyback":
+                return False
+            # Legacy automatic detection
+            return self._has_piggyback_data(host_name)
+
+        return self._is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
+
+    def is_agent_host(self, host_name: HostName) -> bool:
+        return self.is_tcp_host(host_name) or self.is_piggyback_host(host_name)
+
+    def is_ping_host(self, host_name: HostName) -> bool:
+        return not (
+            self.is_snmp_host(host_name)
+            or self.is_agent_host(host_name)
+            or self.has_management_board(host_name)
+        )
+
+    def is_dual_host(self, host_name: HostName) -> bool:
+        return self.is_tcp_host(host_name) and self.is_snmp_host(host_name)
+
+    def is_all_agents_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_all_agents_host
+
+    def is_all_special_agents_host(self, host_name: HostName) -> bool:
+        return self.computed_datasources(host_name).is_all_special_agents_host
+
+    def discovery_check_parameters(self, host_name: HostName) -> DiscoveryCheckParameters:
+        """Compute the parameters for the discovery check for a host"""
+
+        def make_discovery_check_parameters() -> DiscoveryCheckParameters:
+            service_discovery_name = ConfigCache.service_discovery_name()
+            if self.is_ping_host(host_name) or service_ignored(
+                host_name, None, service_discovery_name
+            ):
+                return DiscoveryCheckParameters.commandline_only_defaults()
+
+            entries = self.host_extra_conf(host_name, periodic_discovery)
+            if not entries:
+                return DiscoveryCheckParameters.default()
+
+            if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
+                return DiscoveryCheckParameters.commandline_only_defaults()
+
+            return DiscoveryCheckParameters(
+                commandline_only=False,
+                check_interval=int(check_interval),
+                severity_new_services=int(entry["severity_unmonitored"]),
+                severity_vanished_services=int(entry["severity_vanished"]),
+                severity_new_host_labels=int(entry.get("severity_new_host_label", 1)),
+                rediscovery=entry.get("inventory_rediscovery", {}),
+            )
+
+        return self._discovery_check_parameters.setdefault(
+            host_name, make_discovery_check_parameters()
+        )
+
+    def inventory_parameters(
+        self, host_name: HostName, ruleset_name: RuleSetName
+    ) -> dict[str, object]:
+        default: Ruleset[object] = []
+        return self.host_extra_conf_merged(
+            host_name, inv_parameters.get(str(ruleset_name), default)
+        )
+
+    def custom_checks(self, host_name: HostName) -> list[dict]:
+        """Return the free form configured custom checks without formalization"""
+        return self.host_extra_conf(host_name, custom_checks)
+
+    def active_checks(self, host_name: HostName) -> list[tuple[str, list[Any]]]:
+        """Returns the list of active checks configured for this host
+
+        These are configured using the active check formalization of WATO
+        where the whole parameter set is configured using valuespecs.
+        """
+
+        def make_active_checks() -> list[tuple[str, list[Any]]]:
+            configured_checks: list[tuple[str, list[Any]]] = []
+            for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
+                # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
+                # user has enabled the inventory for ping only hosts
+                if plugin_name == "cmk_inv" and self.is_ping_host(host_name):
+                    continue
+
+                entries = self.host_extra_conf(host_name, ruleset)
+                if not entries:
+                    continue
+
+                configured_checks.append((plugin_name, entries))
+
+            return configured_checks
+
+        return self._active_checks.setdefault(host_name, make_active_checks())
+
+    def special_agents(self, host_name: HostName) -> Sequence[tuple[str, dict]]:
+        def special_agents_impl() -> Sequence[tuple[str, dict]]:
+            matched: list[tuple[str, dict]] = []
+            # Previous to 1.5.0 it was not defined in which order the special agent
+            # rules overwrite each other. When multiple special agents were configured
+            # for a single host a "random" one was picked (depending on the iteration
+            # over config.special_agents.
+            # We now sort the matching special agents by their name to at least get
+            # a deterministic order of the special agents.
+            for agentname, ruleset in sorted(special_agents.items()):
+                params = self.host_extra_conf(host_name, ruleset)
+                if params:
+                    matched.append((agentname, params[0]))
+            return matched
+
+        return self._special_agents.setdefault(host_name, special_agents_impl())
+
+    def hostgroups(self, host_name: HostName) -> Sequence[HostgroupName]:
+        """Returns the list of hostgroups of this host
+
+        If the host has no hostgroups it will be added to the default hostgroup
+        (Nagios requires each host to be member of at least on group)."""
+
+        def hostgroups_impl() -> Sequence[HostgroupName]:
+            groups = self.host_extra_conf(host_name, host_groups)
+            if not groups:
+                return [default_host_group]
+            return groups
+
+        return self._hostgroups.setdefault(host_name, hostgroups_impl())
+
+    def contactgroups(self, host_name: HostName) -> Sequence[ContactgroupName]:
+        """Returns the list of contactgroups of this host"""
+
+        def contactgroups_impl() -> Sequence[ContactgroupName]:
+            cgrs: list[ContactgroupName] = []
+
+            # host_contactgroups may take single values as well as lists as item value.
+            #
+            # The list entries are generated by the WATO hosts.mk files and only
+            # the first one is meant to be used by a host. This logic, which is similar
+            # to a dedicated "first match" ruleset realizes the inheritance in the folder
+            # hiearchy for the "contactgroups" attribute.
+            #
+            # The single-contact-groups entries (not in a list) are configured by the group
+            # ruleset and should all match because the ruleset is a match all ruleset.
+            #
+            # It would be clearer to have independent rulesets for this...
+            folder_cgrs = []
+            for entry in self.host_extra_conf(host_name, host_contactgroups):
+                if isinstance(entry, list):
+                    folder_cgrs.append(entry)
+                else:
+                    cgrs.append(entry)
+
+            # Use the match of the nearest folder, which is the first entry in the list
+            if folder_cgrs:
+                cgrs += folder_cgrs[0]
+
+            if monitoring_core == "nagios" and enable_rulebased_notifications:
+                cgrs.append("check-mk-notify")
+
+            return list(set(cgrs))
+
+        return self._contactgroups.setdefault(host_name, contactgroups_impl())
+
+    def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
+        def explicit_check_command_impl() -> HostCheckCommand:
+            entries = self.host_extra_conf(host_name, host_check_commands)
+            if not entries:
+                return None
+
+            if entries[0] == "smart" and monitoring_core != "cmc":
+                return "ping"  # avoid problems when switching back to nagios core
+
+            return entries[0]
+
+        return self._explicit_check_command.setdefault(host_name, explicit_check_command_impl())
+
+    def host_check_command(
+        self, host_name: HostName, default_host_check_command: HostCheckCommand
+    ) -> HostCheckCommand:
+        explicit_command = self.explicit_check_command(host_name)
+        if explicit_command is not None:
+            return explicit_command
+        if ConfigCache.is_no_ip_host(host_name):
+            return "ok"
+        return default_host_check_command
+
+    def missing_sys_description(self, host_name: HostName) -> bool:
+        return self.in_binary_hostlist(host_name, snmp_without_sys_descr)
+
+    def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
+        """Return the fetch interval of SNMP sections in seconds
+
+        This has been added to reduce the fetch interval of single SNMP sections
+        to be executed less frequently than the "Check_MK" service is executed.
+        """
+
+        def snmp_fetch_interval_impl() -> int | None:
+            section = agent_based_register.get_section_plugin(section_name)
+            if not isinstance(section, SNMPSectionPlugin):
+                return None  # no values at all for non snmp section
+
+            # Previous to 1.5 "match" could be a check name (including subchecks) instead of
+            # only main check names -> section names. This has been cleaned up, but we still
+            # need to be compatible. Strip of the sub check part of "match".
+            for match, minutes in self.host_extra_conf(
+                host_name,
+                snmp_check_interval,
+            ):
+                if match is None or match.split(".")[0] == str(section_name):
+                    return minutes * 60  # use first match
+
+            return None
+
+        return self._snmp_fetch_interval.setdefault(
+            (host_name, section_name), snmp_fetch_interval_impl()
+        )
+
+    def disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
+        def disabled_snmp_sections_impl() -> frozenset[SectionName]:
+            """Return a set of disabled snmp sections"""
+            rules = self.host_extra_conf(host_name, snmp_exclude_sections)
+            merged_section_settings = {"if64adm": True}
+            for rule in reversed(rules):
+                for section in rule.get("sections_enabled", ()):
+                    merged_section_settings[section] = False
+                for section in rule.get("sections_disabled", ()):
+                    merged_section_settings[section] = True
+
+            return frozenset(
+                SectionName(name)
+                for name, is_disabled in merged_section_settings.items()
+                if is_disabled
+            )
+
+        return self._disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts
@@ -3566,7 +3680,7 @@ class ConfigCache:
             return rules[0]
         return "ipv4"
 
-    def has_piggyback_data(self, host_name: HostName) -> bool:
+    def _has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)
         time_settings.append((None, "max_cache_age", piggyback_max_cachefile_age))
 
@@ -3727,7 +3841,7 @@ class ConfigCache:
         if folder_cgrs:
             cgrs.update(folder_cgrs[0])
 
-        if monitoring_core == "nagios" and enable_rulebased_notifications:
+        if monitoring_core == "nagios":
             cgrs.add("check-mk-notify")
 
         return list(cgrs)
@@ -4061,7 +4175,7 @@ def get_config_cache() -> ConfigCache:
     config_cache = _config_cache.get("config_cache")
     if not config_cache:
         cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
-        config_cache["cache"] = cache_class()
+        config_cache["cache"] = cache_class().initialize()
     return config_cache["cache"]
 
 

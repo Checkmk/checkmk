@@ -28,12 +28,12 @@ inline bool SendDataThroughCarrier() {}
 class TheBox {
 public:
     TheBox() {}
-    TheBox(const TheBox&) = delete;
-    TheBox& operator=(const TheBox&) = delete;
+    TheBox(const TheBox &) = delete;
+    TheBox &operator=(const TheBox &) = delete;
 
     // #TODO implement movers!
-    TheBox(const TheBox&&) = delete;
-    TheBox& operator=(const TheBox&&) = delete;
+    TheBox(const TheBox &&) = delete;
+    TheBox &operator=(const TheBox &&) = delete;
 
     ~TheBox() { clean(); }
 
@@ -47,7 +47,7 @@ public:
         try {
             processExecArray(ExecArray);
             // now exec all
-            for (auto& exec : exec_array_) {
+            for (auto &exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
                 auto started = ar->goExecAsJob(exec);
                 if (started)
@@ -55,7 +55,7 @@ public:
                 else
                     delete ar;  // start failed
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             XLOG::l(XLOG_FLINE + " exception {}", e.what());
         }
         return processes_.size();
@@ -73,7 +73,7 @@ public:
             exec_array.push_back(ExeFile.wstring());
             processExecArray(exec_array);
             // now exec all
-            for (auto& exec : exec_array_) {
+            for (auto &exec : exec_array_) {
                 auto ar = new wtools::AppRunner;
                 auto started = ar->goExecAsJob(exec);
                 if (started)
@@ -81,7 +81,7 @@ public:
                 else
                     delete ar;  // start failed
             }
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             XLOG::l(XLOG_FLINE + " exception {}", e.what());
         }
         return processes_.size();
@@ -91,7 +91,7 @@ public:
     std::vector<HANDLE> gatherReadHandles() {
         std::vector<HANDLE> handles;
         std::unique_lock lk(lock_);
-        for (auto& app : processes_) {
+        for (auto &app : processes_) {
             auto h = app->getStdioRead();
             if (h) handles.push_back(h);
         }
@@ -102,7 +102,7 @@ public:
     std::vector<uint32_t> gatherProcessId() {
         std::vector<uint32_t> proc_id;
         std::unique_lock lk(lock_);
-        for (auto& app : processes_) {
+        for (auto &app : processes_) {
             auto pid = app->processId();
             if (pid) proc_id.push_back(pid);
         }
@@ -110,12 +110,12 @@ public:
         return proc_id;
     }
 
-    bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
+    bool appendResult(HANDLE Handle, std::vector<char> &Buf) {
         using namespace std;
         if (Buf.size() == 0) return true;
 
         lock_guard lk(lock_);
-        for (auto& app : processes_) {
+        for (auto &app : processes_) {
             auto h = app->getStdioRead();
             if (h && h == Handle) {
                 cma::tools::AddVector(app->getData(), Buf);
@@ -128,7 +128,7 @@ public:
     bool storeExitCode(uint32_t Pid, uint32_t Code) {
         using namespace std;
         lock_guard lk(lock_);
-        for (auto& app : processes_) {
+        for (auto &app : processes_) {
             if (app->trySetExitCode(Pid, Code)) return true;
         }
         return false;
@@ -136,12 +136,12 @@ public:
 
     // add content of file to the Buf
     template <typename T>
-    bool appendFileContent(T& Buf, HANDLE h, size_t Count) const noexcept {
+    bool appendFileContent(T &Buf, HANDLE h, size_t Count) const noexcept {
         // check what we have already inside
         auto buf_size = Buf.size();
         try {
             Buf.resize(buf_size + Count);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             xlog::l(XLOG_FLINE + " exception: %s", e.what());
             return false;
         }
@@ -209,14 +209,14 @@ public:
         auto processes = std::move(processes_);
         lk.unlock();
 
-        for (auto& app : processes) {
+        for (auto &app : processes) {
             delete app;
         }
     }
 
     void processResults(
         std::function<void(const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data)>
+                           uint32_t Code, const std::vector<char> &Data)>
             Func) {
         std::unique_lock lk(lock_);
         for (auto p : processes_) {
@@ -235,9 +235,9 @@ private:
         }
     }
 
-    int processExecArray(const std::vector<std::wstring>& ExecArray) {
+    int processExecArray(const std::vector<std::wstring> &ExecArray) {
         int count = 0;
-        for (auto& exec_entry : ExecArray) {
+        for (auto &exec_entry : ExecArray) {
             namespace fs = std::filesystem;
             fs::path p = exec_entry;
             std::error_code ec;
@@ -245,7 +245,7 @@ private:
 
             if (fs::is_directory(p, ec)) {
                 // this is bad idea
-                for (auto& dir_entry : fs::directory_iterator(p, ec)) {
+                for (auto &dir_entry : fs::directory_iterator(p, ec)) {
                     auto p_entry = dir_entry.path();
 
                     if (tryAddToExecArray(p_entry)) count++;
@@ -274,7 +274,7 @@ private:
     // updates object
     // returns list of active processes
     std::vector<uint32_t> updateProcessExitCode(
-        const std::vector<uint32_t>& Processes) {
+        const std::vector<uint32_t> &Processes) {
         using namespace std;
         vector<uint32_t> waiting_processes;
         for (auto pid : Processes) {
@@ -310,7 +310,7 @@ private:
         return waiting_processes;
     }
 
-    bool isExecValid(const std::filesystem::path& FileExec) const {
+    bool isExecValid(const std::filesystem::path &FileExec) const {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
         if (exec_array_.size() > kMaxPluginsToExec) return false;  // !
@@ -324,7 +324,7 @@ private:
         return true;
     }
 
-    bool isExecIn(const std::filesystem::path& FileExec) {
+    bool isExecIn(const std::filesystem::path &FileExec) {
         using namespace std::filesystem;
         using namespace std;
 
@@ -345,7 +345,7 @@ private:
     }
 
 private:
-    bool tryAddToExecArray(const std::filesystem::path& FileExec) {
+    bool tryAddToExecArray(const std::filesystem::path &FileExec) {
         using namespace std::filesystem;
         using namespace std;
 
@@ -363,10 +363,10 @@ private:
     std::vector<std::wstring> exec_array_;
 
     std::mutex lock_;
-    std::vector<wtools::AppRunner*>
+    std::vector<wtools::AppRunner *>
         processes_;  // #TODO ? replace with unique_ptr
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class PlayerTest;
     FRIEND_TEST(PlayerTest, All);
     FRIEND_TEST(PlayerTest, Extensions);

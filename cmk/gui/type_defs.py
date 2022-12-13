@@ -172,7 +172,7 @@ SingleInfos = Sequence[InfoName]
 
 
 class _VisualMandatory(TypedDict):
-    owner: str
+    owner: UserId
     name: str
     context: VisualContext
     single_infos: SingleInfos
@@ -224,7 +224,33 @@ PainterName = str
 SorterName = str
 ViewName = str
 ColumnName = str
-PainterParameters = dict  # TODO: Improve this type
+
+
+class PainterParameters(TypedDict, total=False):
+    # TODO Improve:
+    # First step was: make painter's param a typed dict with ALL possible keys.
+    aggregation: tuple[str, str]
+    color_choices: list[str]
+    column_title: str
+    ident: str
+    max_len: int
+    metric: str
+    render_states: list[int | str]
+    use_short: bool
+    uuid: str
+
+
+ColumnTypes = Literal["column", "join_column"]
+
+
+class RawPainterSpec(TypedDict):
+    name: PainterName
+    parameters: PainterParameters | None
+    link_spec: tuple[VisualTypeName, VisualName] | None
+    tooltip: ColumnName | None
+    join_index: ColumnName | None
+    column_title: str | None
+    column_type: ColumnTypes | None
 
 
 @dataclass(frozen=True)
@@ -235,44 +261,67 @@ class PainterSpec:
     tooltip: ColumnName | None = None
     join_index: ColumnName | None = None
     column_title: str | None = None
+    _column_type: ColumnTypes | None = None
+
+    @property
+    def column_type(self) -> ColumnTypes:
+        if self._column_type in ["column", "join_column"]:
+            return self._column_type
+        return "column" if self.join_index is None else "join_column"
 
     @classmethod
-    def from_raw(cls, value: tuple) -> PainterSpec:
+    def from_raw(cls, value: tuple | RawPainterSpec) -> PainterSpec:
+        # TODO The tuple-case can be remove with Checkmk 2.4.
+        # The transformation is done via update_config/plugins/actions/cre_visuals.py
+
+        if isinstance(value, dict):
+            join_index = value["join_index"]
+            return cls(
+                name=value["name"],
+                parameters=value["parameters"],
+                link_spec=(
+                    None
+                    if (link_spec := value["link_spec"]) is None
+                    else VisualLinkSpec.from_raw(link_spec)
+                ),
+                tooltip=value["tooltip"],
+                join_index=join_index,
+                column_title=value["column_title"],
+                _column_type=value.get("column_type"),
+            )
+
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
 
+        parameters: PainterParameters | None
         if isinstance(value[0], tuple):
             name, parameters = value[0]
         else:
             name = value[0]
             parameters = None
 
+        join_index = value[3]
         return cls(
             name=name,
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_index=value[3],
+            join_index=join_index,
             column_title=value[4],
+            _column_type=None,
         )
 
-    def to_raw(
-        self,
-    ) -> tuple[
-        PainterName | tuple[PainterName, PainterParameters],
-        tuple[VisualTypeName, VisualName] | None,
-        ColumnName | None,
-        ColumnName | None,
-        str | None,
-    ]:
-        return (
-            self.name if self.parameters is None else (self.name, self.parameters),
-            None if self.link_spec is None else self.link_spec.to_raw(),
-            self.tooltip,
-            self.join_index,
-            self.column_title,
-        )
+    def to_raw(self) -> RawPainterSpec:
+        return {
+            "name": self.name,
+            "parameters": self.parameters,
+            "link_spec": None if self.link_spec is None else self.link_spec.to_raw(),
+            "tooltip": self.tooltip,
+            "join_index": self.join_index,
+            "column_title": self.column_title,
+            "column_type": self.column_type,
+        }
 
     def __repr__(self) -> str:
         """
@@ -284,13 +333,13 @@ class PainterSpec:
 @dataclass(frozen=True)
 class SorterSpec:
     # The sorter parameters should be moved to a separate attribute instead
-    sorter: SorterName | tuple[SorterName, Mapping[str, str]]
+    sorter: SorterName | tuple[SorterName, PainterParameters]
     negate: bool
     join_key: str | None = None
 
     def to_raw(
         self,
-    ) -> tuple[SorterName | tuple[SorterName, Mapping[str, str]], bool, str | None]:
+    ) -> tuple[SorterName | tuple[SorterName, PainterParameters], bool, str | None]:
         return (
             self.sorter,
             self.negate,
@@ -620,3 +669,6 @@ class Key(BaseModel):
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.
     not_downloaded: bool = False
+
+
+GlobalSettings = Mapping[str, Any]

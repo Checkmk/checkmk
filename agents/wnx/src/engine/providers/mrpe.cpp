@@ -42,27 +42,43 @@ std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
 }
 
 namespace {
-std::optional<std::tuple<int, bool>> ParseCacheAgeToken(std::string_view text) {
+std::optional<std::string> ExtractInterval(std::string_view text) {
+    auto tokens = tools::SplitString(std::string(text), "=");
+    if (tokens.size() == 2) {
+        if (tokens[0] != "(interval") {
+            XLOG::l(
+                "mrpe entry malformed: Unknown directive '{}', expected '(interval=SECONDS)'",
+                text);
+            return {};
+        }
+        return tokens[1];
+    }
+
+    tokens = tools::SplitString(std::string(text), ":");
+    if (tokens.size() == 2) {
+        XLOG::l("Parsing legacy caching directive '{}', ignoring ADD_AGE flag.",
+                text);
+
+        return tokens[0].substr(1);
+    }
+
+    return {};
+}
+
+std::optional<int> ParseCacheAgeToken(std::string_view text) {
     if (text.size() < 3 || text[0] != '(' || text[text.size() - 1] != ')') {
+        // Seems to be no interval spec, hence no caching.
         return {};
     }
 
-    auto tokens = tools::SplitString(std::string(text), ":");
-    if (tokens.size() != 2) {
-        return {};
-    }
-
-    auto add_age = tokens[1] == "yes)";
-
-    try {
-        auto cache_age = std::stoi(tokens[0].c_str() + 1);
-
-        return {{cache_age, add_age}};
-
-    } catch (std::invalid_argument const &e) {
-        XLOG::l("mrpe entry malformed '{}'", e.what());
-    } catch (std::out_of_range const &e) {
-        XLOG::l("mrpe entry malformed '{}'", e.what());
+    if (auto interval_token = ExtractInterval(text)) {
+        try {
+            return std::stoi(*interval_token);
+        } catch (std::invalid_argument const &e) {
+            XLOG::l("mrpe entry malformed '{}'", e.what());
+        } catch (std::out_of_range const &e) {
+            XLOG::l("mrpe entry malformed '{}'", e.what());
+        }
     }
 
     return {};
@@ -87,11 +103,10 @@ void MrpeEntry::loadFromString(const std::string &value) {
 
     int position_exe = 1;
 
-    auto optional_cache_data = ParseCacheAgeToken(tokens[1]);
+    caching_interval_ = ParseCacheAgeToken(tokens[1]);
 
-    if (optional_cache_data.has_value()) {
+    if (caching_interval_) {
         position_exe++;
-        std::tie(cache_max_age_, add_age_) = *optional_cache_data;
     }
 
     auto exe_name = tokens[position_exe];  // Intentional copy
@@ -227,12 +242,7 @@ void MrpeProvider::addParsedIncludes() {
 }
 
 bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
-    auto table = tools::SplitString(entry, "=");
-    if (table.size() != 2) {
-        XLOG::t("Strange entry {} in {}", entry,
-                cfg::GetPathOfLoadedConfigAsString());
-        return false;
-    }
+    auto table = tools::SplitString(entry, "=", 1);
 
     // include entry determined when type is 'include' the type
     auto type = table.at(0);
@@ -325,7 +335,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
         XLOG::d("Failed to start minibox sync {}", entry.command_line_);
 
         // string is form the legacy agent
-        return result + "3 Unable to execute - plugin may be missing.\n";
+        return result + "3 Unable to execute - plugin may be missing.";
     }
 
     auto success = minibox.waitForEnd(timeout);
@@ -344,7 +354,6 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
 
         // mrpe output must be patched in a bit strange way
         FixCrCnForMrpe(data);
-        data += "\n";
 
         if (cfg::LogMrpeOutput()) {
             XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
@@ -356,6 +365,35 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     return result;
 }
 
+std::string MrpeEntryResult(const MrpeEntry &entry, MrpeCache &cache,
+                            std::chrono::milliseconds timeout) {
+    if (!entry.caching_interval_) {
+        return ExecMrpeEntry(entry, timeout);
+    }
+
+    const auto &[cached_result, cached_state] =
+        cache.getLineData(entry.description_, *entry.caching_interval_);
+
+    switch (cached_state) {
+        case MrpeCache::LineState::ready: {
+            return cached_result;
+        }
+        case MrpeCache::LineState::absent: {
+            cache.createLine(entry.description_);
+        }
+            [[fallthrough]];
+        case MrpeCache::LineState::old: {
+            auto result = std::format(
+                "cached({},{}) {}", cma::tools::SecondsSinceEpoch(),
+                *entry.caching_interval_, ExecMrpeEntry(entry, timeout));
+            cache.updateLine(entry.description_, result);
+            return result;
+        }
+    }
+    // unreachable
+    return {};
+}
+
 std::string MrpeProvider::makeBody() {
     std::string out;
     auto parallel = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kMrpeParallel,
@@ -364,25 +402,24 @@ std::string MrpeProvider::makeBody() {
         std::mutex lock;
         std::for_each(std::execution::par_unseq, entries_.begin(),
                       entries_.end(), [&out, &lock, this](auto &&entry) {
-                          auto ret = ExecMrpeEntry(
-                              entry, std::chrono::seconds(timeout()));
+                          auto ret = MrpeEntryResult(
+                              entry, cache_, std::chrono::seconds(timeout()));
                           std::lock_guard lk(lock);
-                          out += ret;
+                          out += ret + "\n";
                       });
     } else
         for (const auto &entry : entries_) {
-            out += ExecMrpeEntry(entry, std::chrono::seconds(timeout()));
+            out += MrpeEntryResult(entry, cache_,
+                                   std::chrono::seconds(timeout())) +
+                   "\n";
         }
 
     return out;
 }
 
-void MrpeCache::createLine(std::string_view key, int max_age, bool add_age) {
+void MrpeCache::createLine(std::string_view key) {
     try {
-        Line l;
-        l.add_age = add_age;
-        l.max_age = max_age;
-        cache_[std::string(key)] = l;
+        cache_.insert_or_assign(std::string{key}, Line{});
     } catch (const std::exception &e) {
         XLOG::l("exception '{}' in mrpe cache", e.what());
     }
@@ -406,24 +443,8 @@ bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
     return false;
 }
 
-// returns true if erased
-bool MrpeCache::eraseLine(std::string_view key) {
-    try {
-        auto k = std::string(key);
-        if (!cache_.contains(k)) {
-            return false;
-        }
-        cache_.erase(k);
-        return true;
-    } catch (const std::exception &e) {
-        XLOG::l("exception '{}' in mrpe update cache", e.what());
-    }
-
-    return false;
-}
-
 std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
-    std::string_view key) {
+    std::string_view key, int max_age) {
     try {
         auto k = std::string(key);
         auto it = cache_.find(k);
@@ -438,18 +459,11 @@ std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
         }
 
         auto time_pos = std::chrono::steady_clock::now();
-
         auto diff = duration_cast<std::chrono::seconds>(time_pos - line.tp);
-
-        auto result = line.data;
-        if (line.add_age) {
-            result += fmt::format(" ({};{})", diff.count(), line.max_age);
-        }
-
         auto status =
-            diff.count() > line.max_age ? LineState::old : LineState::ready;
+            diff.count() > max_age ? LineState::old : LineState::ready;
 
-        return {result, status};
+        return {line.data, status};
     } catch (const std::exception &e) {
         XLOG::l("exception '{}' in mrpe update cache", e.what());
     }

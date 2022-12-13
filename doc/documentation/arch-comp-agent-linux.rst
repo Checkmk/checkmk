@@ -1,6 +1,6 @@
-===========
-Linux agent
-===========
+==============================
+Linux agent (`check_mk_agent`)
+==============================
 
 The following describes the Checkmk agent for Linux.
 Other POSIX based agents (AIX, Solaris, OpenWRT, FreeBSD, MaxOS, HPUX, NetBSD) are similar, and will hopefully converge.

@@ -594,10 +594,7 @@ class ManPageRenderer:
 
         ags = [CHECK_MK_AGENTS.get(agent, agent.upper()) for agent in self._page.agents]
         self._print_info_line(
-            "Distribution:            ",
-            "official part of Check_MK"
-            if self._page.distribution == "check_mk"
-            else self._page.distribution,
+            "Distribution:            ", self._format_distribution(self._page.distribution)
         )
         self._print_info_line("License:                 ", self._page.license)
         self._print_info_line("Supported Agents:        ", ", ".join(ags))
@@ -616,6 +613,13 @@ class ManPageRenderer:
 
         self._print_empty_line()
         self._flush()
+
+    def _format_distribution(self, distr: str) -> str:
+        if distr == "check_mk":
+            return "Official part of Checkmk"
+        if distr == "check_mk_plus":
+            return "Official part of Checkmk Plus Edition"
+        return distr
 
     def _flush(self) -> None:
         raise NotImplementedError()

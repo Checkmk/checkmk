@@ -205,7 +205,7 @@ def test_openapi_password_delete(aut_user_auth_wsgi_app: WebTestAppForCMK) -> No
 
 
 @managedtest
-def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
     credentials_with_newlines = """{

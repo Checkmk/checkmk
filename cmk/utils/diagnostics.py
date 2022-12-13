@@ -258,7 +258,7 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
 
 
 class AllPackageInfos(TypedDict):
-    installed: Mapping[packaging.PackageName, packaging.PackageInfo | None]
+    installed: Mapping[packaging.PackageName, packaging.PackageInfo]
     unpackaged: Mapping[str, list[str]]
     parts: packaging.PackagePartInfo
     optional_packages: Mapping[str, tuple[packaging.PackageInfo, bool]]
@@ -266,17 +266,18 @@ class AllPackageInfos(TypedDict):
 
 
 def get_all_package_infos() -> AllPackageInfos:
+    store = packaging.PackageStore()
     return {
         "installed": packaging.get_installed_package_infos(),
         "unpackaged": packaging.get_unpackaged_files(),
         "parts": packaging.package_part_info(),
-        "optional_packages": packaging.get_optional_package_infos(),
+        "optional_packages": packaging.get_optional_package_infos(store),
         "enabled_packages": packaging.get_enabled_package_infos(),
     }
 
 
-def _parse_mkp_file_parts(contents: Mapping[str, Any]) -> dict[str, dict[str, dict]]:
-    file_list: dict[str, Any] = {}
+def _parse_mkp_file_parts(contents: packaging.PackagePartInfoElement) -> dict[str, dict[str, str]]:
+    file_list: dict[str, dict[str, str]] = {}
     for idx, file in enumerate(contents["files"]):
         path = "{}/{}".format(contents["path"], file)
         file_list[path] = {"path": path, "permissions": str(contents["permissions"][idx])}
@@ -285,8 +286,8 @@ def _parse_mkp_file_parts(contents: Mapping[str, Any]) -> dict[str, dict[str, di
 
 def _parse_mkp_files(
     items: list[str], module: str, contents: packaging.PackageInfo | None, state: str, package: str
-) -> dict[str, dict[str, dict]]:
-    file_list: dict[str, dict[str, Any]] = {}
+) -> dict[str, dict[str, str]]:
+    file_list: dict[str, dict[str, str]] = {}
     columns = (
         {}
         if contents is None
@@ -305,8 +306,8 @@ def _parse_mkp_files(
 
 
 def _deep_update(
-    d1: dict[str, dict[str, Any]], d2: dict[str, dict[str, Any]]
-) -> dict[str, dict[str, Any]]:
+    d1: dict[str, dict[str, str]], d2: dict[str, dict[str, str]]
+) -> dict[str, dict[str, str]]:
     for key in set(d1) | set(d2):
         if key not in d1:
             d1[key] = d2[key]
@@ -325,7 +326,7 @@ def _get_path_type(path: Path) -> str:
     return "missing"
 
 
-def _filelist_to_csv_lines(dictlist: dict[str, dict[str, Any]]) -> Sequence[str]:
+def _filelist_to_csv_lines(dictlist: dict[str, dict[str, str]]) -> Sequence[str]:
     lines = ["'%s'" % "';'".join(_CSV_COLUMNS)]
     for file_definition in dictlist.values():
         lines.append("'%s'" % "';'".join([file_definition.get(col, "N/A") for col in _CSV_COLUMNS]))
@@ -333,7 +334,7 @@ def _filelist_to_csv_lines(dictlist: dict[str, dict[str, Any]]) -> Sequence[str]
 
 
 def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
-    files: dict[str, dict[str, Any]] = {}
+    files: dict[str, dict[str, str]] = {}
 
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
@@ -343,13 +344,10 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
             files = _deep_update(
                 files, _parse_mkp_files(items, module, contents, "optional_packages", package)
             )
-    for package, opt_contents in infos["installed"].items():
-        if opt_contents is None:
-            # skip corrupt packages. TODO: rather create dummy package info and report the issue!
-            continue
-        for (module, items) in opt_contents.files.items():
+    for package, contents in infos["installed"].items():
+        for (module, items) in contents.files.items():
             files = _deep_update(
-                files, _parse_mkp_files(items, module, opt_contents, "installed", package)
+                files, _parse_mkp_files(items, module, contents, "installed", package)
             )
     for (module, data) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(data))

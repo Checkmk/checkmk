@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.kaspersky_av_client as kaspersky_av_client
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
@@ -30,8 +33,8 @@ def set_fixed_timezone():
         ([["Signatures", "Missing"]], 0, {}),
     ],
 )
-def test_parse_kaspersky_av_client(  # type:ignore[no-untyped-def]
-    string_table, now, expected_section
+def test_parse_kaspersky_av_client(
+    string_table: StringTable, now: int, expected_section: kaspersky_av_client.Section
 ) -> None:
     assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section
 
@@ -82,6 +85,8 @@ def test_parse_kaspersky_av_client(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_kaskpersky_av_client(section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check_kaskpersky_av_client(
+    section: kaspersky_av_client.Section, results: Sequence[Result]
+) -> None:
     test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

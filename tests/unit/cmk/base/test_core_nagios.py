@@ -27,7 +27,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
-from cmk.base.config import HostConfig
 
 
 def test_format_nagios_object() -> None:
@@ -79,6 +78,7 @@ def test_format_nagios_object() -> None:
                 "address": "127.0.0.1",
                 "alias": "localhost",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "localhost",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
@@ -109,6 +109,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "lOCALhost",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "host2",
                 "hostgroups": "check_mk",
                 "use": "check_mk_host",
@@ -143,6 +144,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "cluster1",
                 "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "cluster1",
                 "hostgroups": "check_mk",
                 "parents": "",
@@ -178,6 +180,7 @@ def test_format_nagios_object() -> None:
                 "address": "0.0.0.0",
                 "alias": "CLUSTer",
                 "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "cluster2",
                 "hostgroups": "check_mk",
                 "parents": "node1,node2",
@@ -209,6 +212,7 @@ def test_format_nagios_object() -> None:
                 "address": "127.0.0.1",
                 "alias": "node1",
                 "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "contact_groups": "check-mk-notify",
                 "host_name": "node1",
                 "hostgroups": "check_mk",
                 "parents": "switch",
@@ -469,7 +473,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -502,7 +505,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2\n'
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -540,7 +542,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!'--arg1' 'arument1' '--host_alias' '$HOSTALIAS$'\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -574,7 +575,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -616,7 +616,6 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-http!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           HTTP my special HTTP\n"
             "  use                           check_mk_default\n"
@@ -633,16 +632,16 @@ def test_create_nagios_servicedefs_active_check(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -681,7 +680,6 @@ def test_create_nagios_servicedefs_active_check(
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
             "  use                           check_mk_default\n"
@@ -719,25 +717,25 @@ def test_create_nagios_servicedefs_active_check(
         ),
     ],
 )
-def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
+def test_create_nagios_servicedefs_with_warnings(
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     active_check_info: Mapping[str, Mapping[str, str]],
     host_attrs: dict[str, Any],
     expected_result: str,
     expected_warning: str,
     monkeypatch: MonkeyPatch,
-    capsys,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -778,17 +776,17 @@ def test_create_nagios_servicedefs_omit_service(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(config, "service_ignored", lambda *_: True)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -826,18 +824,18 @@ def test_create_nagios_servicedefs_invalid_args(
     error_message: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+        core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
 
 
 @pytest.mark.parametrize(
@@ -868,7 +866,6 @@ def test_create_nagios_servicedefs_invalid_args(
             "  active_checks_enabled         1\n"
             "  check_command                 check_mk_active-my_active_check!--arg1 arument1 --host_alias $HOSTALIAS$\n"
             "  check_interval                1.0\n"
-            "  contact_groups                \n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
             "  use                           check_mk_default\n"
@@ -895,16 +892,16 @@ def test_create_nagios_config_commands(
     expected_result: str,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(HostConfig, "active_checks", active_checks)
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    cache = config.get_config_cache()
-    cache.initialize()
+    config_cache = config.get_config_cache()
+    config_cache.initialize()
+    monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
+    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
     core_nagios._create_nagios_config_commands(cfg)
 
     assert outfile.getvalue() == expected_result

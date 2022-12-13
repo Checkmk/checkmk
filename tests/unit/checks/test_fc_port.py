@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -133,7 +135,7 @@ pytestmark = pytest.mark.checks
         ),  # "00 00 00 00 00 DA 85 00"
     ],
 )
-def test_services_split(oid_value, expected) -> None:  # type:ignore[no-untyped-def]
+def test_services_split(oid_value: Sequence[int], expected: int) -> None:
     check = Check("fc_port")
     fc_parse_counter = check.context["fc_parse_counter"]
     actual = fc_parse_counter(oid_value)

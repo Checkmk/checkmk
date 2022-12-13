@@ -5,6 +5,7 @@
 
 import json
 import time
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -22,8 +23,9 @@ from cmk.utils.type_defs import HostName
 from cmk.base import prediction
 
 
+@pytest.mark.usefixtures("web")
 @pytest.fixture(name="cfg_setup", scope="module")
-def cfg_setup_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
+def cfg_setup_fixture(request: pytest.FixtureRequest, site: Site) -> Iterator[None]:
     hostname = "test-prediction"
 
     # Enforce use of the pre-created RRD file from the git. The restart of the core
@@ -65,6 +67,7 @@ custom_checks = [
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.usefixtures("cfg_setup")
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, period, result",
@@ -113,9 +116,7 @@ custom_checks = [
         ),
     ],
 )
-def test_get_rrd_data(  # type:ignore[no-untyped-def]
-    cfg_setup, utcdate, timezone, period, result
-) -> None:
+def test_get_rrd_data(utcdate: str, timezone: str, period: str, result: tuple[int, int]) -> None:
 
     with on_time(utcdate, timezone):
         timestamp = time.time()
@@ -135,14 +136,13 @@ def test_get_rrd_data(  # type:ignore[no-untyped-def]
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.usefixtures("cfg_setup")
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
 )
-def test_get_rrd_data_point_max(  # type:ignore[no-untyped-def]
-    cfg_setup, max_entries, result
-) -> None:
+def test_get_rrd_data_point_max(max_entries: int, result: tuple[int, int]) -> None:
     from_time, until_time = 1543430040, 1543502040
     timeseries = cmk.utils.prediction.get_rrd_data(
         HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time, max_entries
@@ -152,6 +152,7 @@ def test_get_rrd_data_point_max(  # type:ignore[no-untyped-def]
     assert (timeseries.step, len(timeseries.values)) == result
 
 
+@pytest.mark.usefixtures("cfg_setup")
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, params, reference",
@@ -411,12 +412,19 @@ def test_get_rrd_data_point_max(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_retieve_grouped_data_from_rrd(  # type:ignore[no-untyped-def]
-    cfg_setup, utcdate, timezone, params, reference
+def test_retieve_grouped_data_from_rrd(
+    utcdate: str,
+    timezone: str,
+    params: Mapping[str, str | int],
+    reference: tuple[
+        cmk.utils.prediction.TimeWindow, Sequence[cmk.utils.prediction.TimeSeriesValues]
+    ],
 ) -> None:
     "This mostly verifies the up-sampling"
 
-    period_info = prediction._PREDICTION_PERIODS[params["period"]]
+    index = params["period"]
+    assert isinstance(index, str)
+    period_info = prediction._PREDICTION_PERIODS[index]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
@@ -441,6 +449,7 @@ def _load_expected_result(path: Path) -> object:
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
+@pytest.mark.usefixtures("cfg_setup")
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "utcdate, timezone, params",
@@ -466,10 +475,13 @@ def _load_expected_result(path: Path) -> object:
         ),
     ],
 )
-def test_calculate_data_for_prediction(  # type:ignore[no-untyped-def]
-    cfg_setup, utcdate, timezone, params
+def test_calculate_data_for_prediction(
+    utcdate: str, timezone: str, params: Mapping[str, str | int]
 ) -> None:
-    period_info = prediction._PREDICTION_PERIODS[params["period"]]
+
+    index = params["period"]
+    assert isinstance(index, str)
+    period_info = prediction._PREDICTION_PERIODS[index]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
@@ -499,6 +511,7 @@ def test_calculate_data_for_prediction(  # type:ignore[no-untyped-def]
             assert getattr(data_for_pred, key) == expected_reference[key]
 
 
+@pytest.mark.usefixtures("cfg_setup")
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
 @pytest.mark.parametrize(
     "timerange, result",
@@ -515,8 +528,8 @@ def test_calculate_data_for_prediction(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_rrd_data_incomplete(  # type:ignore[no-untyped-def]
-    cfg_setup, timerange, result
+def test_get_rrd_data_incomplete(
+    timerange: tuple[int, int], result: tuple[int, Sequence[float | None]]
 ) -> None:
     from_time, until_time = timerange
     timeseries = cmk.utils.prediction.get_rrd_data(
@@ -528,7 +541,8 @@ def test_get_rrd_data_incomplete(  # type:ignore[no-untyped-def]
     assert (timeseries.step, timeseries.values) == result
 
 
-def test_get_rrd_data_fails(cfg_setup) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("cfg_setup")
+def test_get_rrd_data_fails() -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
     _, from_time, until_time, _ = prediction._get_prediction_timegroup(
         int(timestamp), prediction._PREDICTION_PERIODS["hour"]

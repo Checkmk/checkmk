@@ -47,6 +47,8 @@ void RendererCSV::endDict() {}
 
 // --------------------------------------------------------------------------
 
+bool RendererCSV::useSurrogatePairs() const { return false; };
+
 void RendererCSV::outputNull() {}
 
 void RendererCSV::outputEscaped(char ch) {

@@ -42,8 +42,14 @@ You may also want to try the [GitHub Hello World tutorial](https://guides.github
 
 ## How to prepare for contributing
 
-We are developing Checkmk on **Ubuntu Linux** systems.
-It's not a hard requirement, but most helper scripts are optimized for this, so we highly recommend it for best experience.
+We are developing Checkmk on **Ubuntu Linux** systems. We support these
+versions:
+
+* Current LTS
+* Previous LTS
+* Current non-LTS (If you want bleeding edge, then you get it. We won't support the previous non-LTS)
+
+Anything that deviates from it can not be supported.
 
 To set up the development environment do the following:
 

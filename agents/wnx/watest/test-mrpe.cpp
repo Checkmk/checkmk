@@ -223,7 +223,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
                                   wtools::ToStr(mrpe_file_1.filename()) + ")");
         EXPECT_EQ(table_1[1], "Type");
         EXPECT_EQ(table_1[2], "0");
-        EXPECT_EQ(table_1[3], "output_of_mrpe1\n");
+        EXPECT_EQ(table_1[3], "output_of_mrpe1");
     }
     {
         auto result_2 = ExecMrpeEntry(entries[1], std::chrono::seconds(10));
@@ -234,7 +234,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
                                   wtools::ToStr(mrpe_file_2.filename()) + ")");
         EXPECT_EQ(table_2[1], "Type");
         EXPECT_EQ(table_2[2], "0");
-        EXPECT_EQ(table_2[3], "output_of_mrpe2\n");
+        EXPECT_EQ(table_2[3], "output_of_mrpe2");
     }
     auto result_missing = ExecMrpeEntry(entries[2], std::chrono::seconds(10));
     {
@@ -245,7 +245,7 @@ TEST(SectionProviderMrpe, ProcessCfg) {
         EXPECT_EQ(table_missing[1], "BadFile");
         EXPECT_EQ(table_missing[2], "3");
         EXPECT_EQ(table_missing[3],
-                  "Unable to execute - plugin may be missing.\n");
+                  "Unable to execute - plugin may be missing.");
     }
 }
 
@@ -257,20 +257,18 @@ TEST(SectionProviderMrpe, Ctor) {
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age(), false);
-        ASSERT_EQ(me.cache_age_max(), 0);
+        ASSERT_FALSE(me.caching_interval_.has_value());
     }
 
     {
         std::string base =
-            "Codepage (123456:yes) 'c:\\windows\\system32\\chcp.com' x d f";
+            "Codepage (interval=123456) 'c:\\windows\\system32\\chcp.com' x d f";
         MrpeEntry me("", base);
         EXPECT_EQ(me.exe_name_, "chcp.com");
         EXPECT_EQ(me.full_path_name_, "c:\\windows\\system32\\chcp.com");
         EXPECT_EQ(me.command_line_, "c:\\windows\\system32\\chcp.com x d f");
         EXPECT_EQ(me.description_, "Codepage");
-        ASSERT_EQ(me.add_age(), true);
-        ASSERT_EQ(me.cache_age_max(), 123456);
+        ASSERT_EQ(*me.caching_interval_, 123456);
     }
 }
 
@@ -351,6 +349,93 @@ TEST(SectionProviderMrpe, Run) {
         { EXPECT_TRUE(table[0].find(hdr0) == 0 || table[1].find(hdr0) == 0); }
         { EXPECT_TRUE(table[0].find(hdr1) == 0 || table[1].find(hdr1) == 0); }
     }
-}  // namespace cma::provider
+}
+
+TEST(SectionProviderMrpe, RunCachedIntegration) {
+    YamlLoaderMrpe w;
+    using namespace cma::cfg;
+    MrpeProvider mrpe;
+    EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
+    auto yaml = GetLoadedConfig();
+    ASSERT_TRUE(yaml.IsMap());
+
+    auto mrpe_yaml_optional = GetGroup(yaml, groups::kMrpe);
+    ASSERT_TRUE(mrpe_yaml_optional.has_value());
+    {
+        auto &mrpe_cfg = mrpe_yaml_optional.value();
+
+        ASSERT_TRUE(GetVal(mrpe_cfg, vars::kEnabled, false));
+        auto entries = GetArray<std::string>(mrpe_cfg, vars::kMrpeConfig);
+        ASSERT_EQ(entries.size(), 0)
+            << "check that yml is ok";  // include and check
+    }
+
+    replaceYamlSeq(
+        groups::kMrpe, vars::kMrpeConfig,
+        {
+            R"(check = Time 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = CachedTime (interval=10) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+            R"(check = LegacyCachedTime (20:no) 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' Get-Date -Format HHmmssffff)",
+        });
+
+    auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    EXPECT_EQ(strings.size(), 3);
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.includes().size(), 0);
+    ASSERT_EQ(mrpe.checks().size(), 3);
+
+    EXPECT_EQ(mrpe.entries().size(), 3);
+    mrpe.updateSectionStatus();
+
+    yaml[groups::kMrpe][vars::kMrpeParallel] = false;
+    auto accu = mrpe.generateContent();
+    ASSERT_TRUE(!accu.empty());
+    auto table = cma::tools::SplitString(accu, "\n");
+    EXPECT_EQ(table[0], "<<<mrpe>>>");
+
+    // expect "(powershell.exe) Time 0 TIMESTAMP"
+    auto result_1 = cma::tools::SplitString(table[1], " ");
+    auto mrpe_1 = mrpe.entries()[0];
+    EXPECT_EQ(result_1.size(), 4);
+    EXPECT_EQ(result_1[0], fmt::format("({})", mrpe_1.exe_name_));
+    EXPECT_EQ(result_1[1], mrpe_1.description_);
+    EXPECT_EQ(result_1[2], "0");
+    auto &time_1 = result_1[3];
+    std::cout << time_1 << std::endl;
+
+    // expect "cached(TIME_SINCE_EPOCH,10) (powershell.exe) CachedTime 0
+    // TIMESTAMP"
+    auto result_2 = cma::tools::SplitString(table[2], " ");
+    auto mrpe_2 = mrpe.entries()[1];
+    EXPECT_EQ(result_2.size(), 5);
+    EXPECT_EQ(result_2[0].find("cached("), 0);
+    EXPECT_EQ(result_2[0].find(",10)"), result_2[0].size() - 4);
+    EXPECT_EQ(result_2[1], fmt::format("({})", mrpe_2.exe_name_));
+    EXPECT_EQ(result_2[2], mrpe_2.description_);
+    EXPECT_EQ(result_2[3], "0");
+    auto &time_2 = result_2[4];
+
+    // expect "cached(TIME_SINCE_EPOCH,10) (powershell.exe) LegacyCachedTime 0
+    // TIMESTAMP"
+    auto result_3 = cma::tools::SplitString(table[3], " ");
+    auto mrpe_3 = mrpe.entries()[2];
+    EXPECT_EQ(result_3.size(), 5);
+    EXPECT_EQ(result_3[0].find("cached("), 0);
+    EXPECT_EQ(result_3[0].find(",20)"), result_3[0].size() - 4);
+    EXPECT_EQ(result_3[1], fmt::format("({})", mrpe_3.exe_name_));
+    EXPECT_EQ(result_3[2], mrpe_3.description_);
+    EXPECT_EQ(result_3[3], "0");
+    auto &time_3 = result_3[4];
+
+    cma::tools::sleep(10);
+
+    // expect TIMESTAMP to change for first check, while the other two are
+    // cached and stay unchanged
+    auto second_run = mrpe.generateContent();
+    auto second_table = cma::tools::SplitString(second_run, "\n");
+    EXPECT_TRUE(time_1 != cma::tools::SplitString(second_table[1], " ")[3]);
+    EXPECT_TRUE(time_2 == cma::tools::SplitString(second_table[2], " ")[4]);
+    EXPECT_TRUE(time_3 == cma::tools::SplitString(second_table[3], " ")[4]);
+}
 
 }  // namespace cma::provider

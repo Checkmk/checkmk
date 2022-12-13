@@ -5,6 +5,8 @@
 
 import sys
 
+import pytest
+
 import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
@@ -218,7 +220,7 @@ def test_registered_pages() -> None:
             "ajax_ntop_engaged_alerts",
             "ajax_ntop_past_alerts",
             "ajax_ntop_flow_alerts",
-            "license_usage_download",
+            "licensing_download_verification_request",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we
@@ -248,22 +250,6 @@ def test_pages_register(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-
     assert capsys.readouterr()[0] == "123"
 
 
-def test_pages_register_handler(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
-    monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
-
-    class PageClass:
-        def handle_page(self) -> None:
-            sys.stdout.write("234")
-
-    cmk.gui.pages.register_page_handler("234handler", lambda: PageClass().handle_page())
-
-    handler = cmk.gui.pages.get_page_handler("234handler")
-    assert callable(handler)
-
-    handler()
-    assert capsys.readouterr()[0] == "234"
-
-
 def test_page_registry_register_page(monkeypatch, capsys) -> None:  # type:ignore[no-untyped-def]
     page_registry = cmk.gui.pages.PageRegistry()
 
@@ -274,6 +260,24 @@ def test_page_registry_register_page(monkeypatch, capsys) -> None:  # type:ignor
 
     handler = page_registry.get("234handler")
     assert handler == PageClass
+
+    handler().handle_page()
+    assert capsys.readouterr()[0] == "234"
+
+
+def test_page_registry_register_page_handler(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    page_registry = cmk.gui.pages.PageRegistry()
+
+    def page() -> None:
+        sys.stdout.write("234")
+
+    page_registry.register_page_handler("234handler", page)
+
+    handler = page_registry["234handler"]
+    assert issubclass(handler, cmk.gui.pages.Page)
 
     handler().handle_page()
     assert capsys.readouterr()[0] == "234"

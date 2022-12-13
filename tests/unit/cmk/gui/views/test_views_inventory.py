@@ -26,6 +26,7 @@ from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _register_sorter,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
@@ -41,6 +42,7 @@ from cmk.gui.views.inventory import (
     TableDisplayHint,
     TableViewSpec,
 )
+from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 
 RAW_ROWS = [("this_site", "this_hostname")]
@@ -828,3 +830,27 @@ def test_view_spec_view_name(view_name: str, expected: str) -> None:
     table_view_spec = TableViewSpec.from_raw(tuple(), {"view": view_name})
     assert table_view_spec is not None
     assert table_view_spec.view_name == expected
+
+
+def test_registered_sorter_cmp() -> None:
+    hint = AttributeDisplayHint(
+        data_type="str",
+        paint_function=inv_paint_generic,
+        sort_function=_decorate_sort_function(_cmp_inv_generic),
+        title="Product",
+        _long_title_function=lambda: "System ➤ Product",
+        is_show_more=False,
+    )
+
+    _register_sorter(
+        ident="test_sorter",
+        long_inventory_title="A long title",
+        load_inv=False,
+        columns=["foobar"],
+        hint=hint,
+        value_extractor=lambda v: v.get("key"),
+    )
+
+    sorter_cls = sorter_registry.get("test_sorter")
+    assert sorter_cls is not None
+    assert sorter_cls().cmp({}, {}, None) == 0

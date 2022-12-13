@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based import winperf_processor
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -168,6 +171,11 @@ def test_discovery() -> None:
         ),
     ],
 )
-def test_check(monkeypatch, value_store, params, result) -> None:  # type:ignore[no-untyped-def]
+def test_check(
+    monkeypatch: MonkeyPatch,
+    value_store: dict[str, object],
+    params: Mapping[str, object],
+    result: Sequence[Result | Metric],
+) -> None:
     monkeypatch.setattr(winperf_processor, "get_value_store", value_store.copy)
     assert list(winperf_processor.check_winperf_processor_util(params, SECTION)) == result

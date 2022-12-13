@@ -24,6 +24,7 @@ information about VMs and nodes:
 
 import logging
 import re
+import sys
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
@@ -451,7 +452,7 @@ def fetch_backup_data(
         )
 
 
-def agent_proxmox_ve_main(args: Args) -> None:
+def agent_proxmox_ve_main(args: Args) -> int:
     """Fetches and writes selected information formatted as agent output to stdout"""
     with ProxmoxVeAPI(
         host=args.hostname,
@@ -638,6 +639,8 @@ def agent_proxmox_ve_main(args: Args) -> None:
                 )
             with SectionWriter("proxmox_ve_vm_snapshot_age") as writer:
                 writer.append_json(snapshot_data.get(vmid))
+
+    return 0
 
 
 class ProxmoxVeSession:
@@ -875,10 +878,10 @@ class ProxmoxVeAPI:
         return rec_get_tree(None, requested_structure, [])
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_proxmox_ve_main)
+    return special_agent_main(parse_arguments, agent_proxmox_ve_main)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

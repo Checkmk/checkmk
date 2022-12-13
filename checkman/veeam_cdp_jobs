@@ -4,15 +4,16 @@ catalog: os/storage
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the status and the time since last execution of the
- Continuous Data Protection (CDP) jobs run by Veeam.
+ This check monitors the status of the Continuous Data Protection (CDP) jobs
+ run by Veeam. If the job is not disabled, the check also monitors the time
+ since last execution.
 
  In order to carry out the check, the Veeam agent plugin
  needs to be installed on the backup server. See special instructions in the
  comment section of the two Veeam agent plugin scripts on how to install
  the scripts.
 
- - This service is {OK} if the result of the job is {Running}
+ - This service is {OK} if the result of the job is {Running} or {Disabled}.
 
  - It goes {CRIT} if the result of the backup is {Failed} or {Stopped}.
 

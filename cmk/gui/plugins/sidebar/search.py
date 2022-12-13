@@ -1205,11 +1205,11 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         used_filters: UsedFilters,
         rows: Rows,
     ) -> Matches:
-        # "svcsearch" and "allservices" are needed for Multi-Filter use
+        # "searchsvc" and "allservices" are needed for Multi-Filter use
         supported_views = {
             "searchhost": "host_regex",
             "host": "host",
-            "svcsearch": "svcsearch",
+            "searchsvc": "searchsvc",
             "allservices": "allservices",
         }
 
@@ -1217,7 +1217,7 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
         if not filter_name:
             return None
 
-        if row and filter_name not in ["allservices", "svcsearch"]:
+        if row and filter_name not in ["allservices", "searchsvc"]:
             hostname = row.get("host_name", row.get("name"))
             return hostname, [(filter_name, hostname)]
 

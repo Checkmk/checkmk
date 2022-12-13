@@ -52,7 +52,7 @@ runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_st
 test_export_with_run_cached() {
     LOG_SECTION_TIME=true set_up_profiling
 
-    run_cached "my_test_name" "42" "_log_section_time" "echo '<<<my_test_section>>>'"
+    run_cached "my_test_name" "42" "42" "_log_section_time" "echo '<<<my_test_section>>>'"
 
     # wait for the async part to complete
     wait_for "$(profiling_dir)/echo____my_test_section____.log"

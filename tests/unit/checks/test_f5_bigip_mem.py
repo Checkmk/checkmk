@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import Check
@@ -20,7 +22,9 @@ pytestmark = pytest.mark.checks
         ([[1, 0, "", ""]], (1.0, 0.0, [("total", {})])),
     ],
 )
-def test_f5_bigip_mem_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
+def test_f5_bigip_mem_discovery(
+    info: Sequence[Sequence[str | int]], result: tuple[float | None, float | None, Sequence[object]]
+) -> None:
     mem_total, mem_used, items = result
     check = Check("f5_bigip_mem")
     parsed = check.run_parse(info)
@@ -41,7 +45,9 @@ def test_f5_bigip_mem_discovery(info, result) -> None:  # type:ignore[no-untyped
         ([["", "", 1, 0]], [("TMM", {})]),
     ],
 )
-def test_f5_bigip_mem_tmm_discovery(info, result) -> None:  # type:ignore[no-untyped-def]
+def test_f5_bigip_mem_tmm_discovery(
+    info: Sequence[Sequence[str | int]], result: Sequence[object]
+) -> None:
     parsed = Check("f5_bigip_mem").run_parse(info)
     check = Check("f5_bigip_mem.tmm")
 
@@ -67,7 +73,9 @@ def test_f5_bigip_mem_tmm_discovery(info, result) -> None:  # type:ignore[no-unt
         ),
     ],
 )
-def test_f5_bigip_mem_check(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_f5_bigip_mem_check(
+    parsed: Mapping[str, tuple[float, float]], expected_result: object
+) -> None:
     check = Check("f5_bigip_mem")
     assert check.run_check(None, {}, parsed) == expected_result
 
@@ -88,6 +96,8 @@ def test_f5_bigip_mem_check(parsed, expected_result) -> None:  # type:ignore[no-
         ),
     ],
 )
-def test_f5_bigip_mem_tmm_check(parsed, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_f5_bigip_mem_tmm_check(
+    parsed: Mapping[str, tuple[float, float]], expected_result: object
+) -> None:
     check = Check("f5_bigip_mem.tmm")
     assert check.run_check(None, {}, parsed) == expected_result

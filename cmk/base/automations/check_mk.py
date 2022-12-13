@@ -68,7 +68,7 @@ from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentia
 
 import cmk.core_helpers.cache
 from cmk.core_helpers import factory, FetcherType, get_raw_data
-from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.tcp import TCPFetcher
@@ -91,7 +91,7 @@ import cmk.base.sources as sources
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -103,14 +103,12 @@ HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(
-        self, config_cache: ConfigCache, host_name: HostName, host_config: HostConfig
-    ) -> None:
+    def _trigger_discovery_check(self, config_cache: ConfigCache, host_name: HostName) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
         if not config.inventory_check_autotrigger:
             return
 
-        if host_config.discovery_check_parameters().commandline_only:
+        if config_cache.discovery_check_parameters(host_name).commandline_only:
             return
 
         if config_cache.is_cluster(host_name):
@@ -142,10 +140,13 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         # Do a full service scan
         if args[0] == "@scan":
-            use_cached_snmp_data = False
+            force_snmp_cache_refresh = True
             args = args[1:]
         else:
-            use_cached_snmp_data = True
+            force_snmp_cache_refresh = False
+
+        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
+        file_cache_options = FileCacheOptions(use_outdated=True)
 
         if len(args) < 2:
             raise MKAutomationError(
@@ -160,22 +161,21 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryResult] = {}
 
         for hostname in hostnames:
-            host_config = config_cache.make_host_config(hostname)
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
-                host_config=host_config,
                 mode=mode,
                 service_filters=None,
                 on_error=on_error,
-                use_cached_snmp_data=use_cached_snmp_data,
+                file_cache_options=file_cache_options,
+                force_snmp_cache_refresh=force_snmp_cache_refresh,
                 max_cachefile_age=config.max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
                 # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(config_cache, hostname, host_config)
+                self._trigger_discovery_check(config_cache, hostname)
 
         return automation_results.DiscoveryResult(results)
 
@@ -228,15 +228,16 @@ class AutomationTryDiscovery(Automation):
     ) -> tuple[
         Sequence[automation_results.CheckPreviewEntry], discovery.QualifiedDiscovery[HostLabel]
     ]:
-
-        use_cached_snmp_data = False
+        force_snmp_cache_refresh = True
         if args[0] == "@noscan":
             args = args[1:]
-            use_cached_snmp_data = True
-
+            force_snmp_cache_refresh = False
         elif args[0] == "@scan":
             # Do a full service scan
             args = args[1:]
+
+        # `force_snmp_cache_refresh` overrides `use_outdated` for SNMP.
+        file_cache_options = FileCacheOptions(use_outdated=True)
 
         if args[0] == "@raiseerrors":
             on_error = OnError.RAISE
@@ -246,8 +247,10 @@ class AutomationTryDiscovery(Automation):
 
         return discovery.get_check_preview(
             host_name=HostName(args[0]),
+            config_cache=config.get_config_cache(),
+            file_cache_options=file_cache_options,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
             max_cachefile_age=config.max_cachefile_age(),
-            use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )
 
@@ -269,7 +272,6 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         new_items: SetAutochecksTable | SetAutochecksTablePre20 = ast.literal_eval(sys.stdin.read())
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         # Not loading all checks improves performance of the calls and as a result the
         # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
@@ -300,7 +302,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             )
 
         config_cache.set_autochecks(hostname, new_services)
-        self._trigger_discovery_check(config_cache, hostname, host_config)
+        self._trigger_discovery_check(config_cache, hostname)
         return automation_results.SetAutochecksResult()
 
 
@@ -348,8 +350,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
-        self._trigger_discovery_check(config_cache, hostname, host_config)
+        self._trigger_discovery_check(config_cache, hostname)
         return automation_results.UpdateHostLabelsResult()
 
 
@@ -728,7 +729,6 @@ class AutomationAnalyseServices(Automation):
                 service_info := self._get_service_info(
                     config_cache=config_cache,
                     host_name=hostname,
-                    host_config=config_cache.make_host_config(hostname),
                     host_attrs=core_config.get_host_attributes(hostname, config_cache),
                     servicedesc=servicedesc,
                 )
@@ -747,7 +747,6 @@ class AutomationAnalyseServices(Automation):
         self,
         config_cache: ConfigCache,
         host_name: HostName,
-        host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
@@ -759,7 +758,7 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Enforced services
-        for checkgroup_name, service in host_config.enforced_services_table().values():
+        for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():
             if service.description == servicedesc:
                 return {
                     "origin": "static",  # TODO: (how) can we change this to "enforced"?
@@ -779,7 +778,7 @@ class AutomationAnalyseServices(Automation):
             return autocheck_service
 
         # 3. Classical checks
-        for entry in host_config.custom_checks:
+        for entry in config_cache.custom_checks(host_name):
             desc = entry["service_description"]
             if desc == servicedesc:
                 result: automation_results.ServiceInfo = {
@@ -791,11 +790,11 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         with plugin_contexts.current_host(host_name):
-            for plugin_name, entries in host_config.active_checks:
+            for plugin_name, entries in config_cache.active_checks(host_name):
                 for active_check_params in entries:
                     for description in core_config.get_active_check_descriptions(
                         host_name,
-                        host_config.alias,
+                        config_cache.alias(host_name),
                         host_attrs,
                         plugin_name,
                         active_check_params,
@@ -1259,7 +1258,6 @@ class AutomationDiagHost(Automation):
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
 
         # In 1.5 the tcp connect timeout has been added. The automation may
         # be called from a remote site with an older version. For this reason
@@ -1287,9 +1285,12 @@ class AutomationDiagHost(Automation):
             if snmpv3_use == "authPriv":
                 snmpv3_privacy_proto, snmpv3_privacy_password = args[13:15]
 
+        # No caching option over commandline here.
+        file_cache_options = FileCacheOptions()
+
         if not ipaddress:
             try:
-                resolved_address = config.lookup_ip_address(host_config)
+                resolved_address = config.lookup_ip_address(hostname)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1308,11 +1309,11 @@ class AutomationDiagHost(Automation):
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
                         hostname,
-                        host_config,
                         ipaddress,
                         agent_port=agent_port,
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
+                        file_cache_options=file_cache_options,
                     )
                 )
 
@@ -1329,7 +1330,7 @@ class AutomationDiagHost(Automation):
                 return automation_results.DiagHostResult(
                     *self._execute_snmp(
                         test,
-                        host_config,
+                        config_cache.make_snmp_config(hostname, ipaddress),
                         hostname,
                         ipaddress,
                         snmp_community,
@@ -1373,20 +1374,20 @@ class AutomationDiagHost(Automation):
     def _execute_agent(
         self,
         host_name: HostName,
-        host_config: HostConfig,
         ipaddress: HostAddress,
+        *,
         agent_port: int,
         cmd: str,
         tcp_connect_timeout: float | None,
+        file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
         state, output = 0, ""
-        for source, file_cache, fetcher in sources.make_non_cluster_sources(
+        for source, file_cache, fetcher in sources.make_sources(
             host_name,
             ipaddress,
+            config_cache=config.get_config_cache(),
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name, config.snmp_without_sys_descr
-            ),
+            file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
             if source.fetcher_type is FetcherType.SNMP:
@@ -1396,7 +1397,7 @@ class AutomationDiagHost(Automation):
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd, host_name, host_config, ipaddress
+                        cmd, host_name, ipaddress
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
@@ -1453,12 +1454,12 @@ class AutomationDiagHost(Automation):
             raise
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(  # pylint: disable=too-many-branches
+    def _execute_snmp(  # type: ignore[no-untyped-def]  # pylint: disable=too-many-branches
         self,
-        test,
-        host_config,
-        hostname,
-        ipaddress,
+        test: str,
+        snmp_config: SNMPHostConfig,
+        hostname: HostName,
+        ipaddress: HostAddress,
         snmp_community,
         snmp_timeout,
         snmp_retries,
@@ -1468,9 +1469,7 @@ class AutomationDiagHost(Automation):
         snmpv3_security_password,
         snmpv3_privacy_proto,
         snmpv3_privacy_password,
-    ):
-        snmp_config = host_config.snmp_config(ipaddress)
-
+    ) -> tuple[int, str]:
         # SNMPv3 tuples
         # ('noAuthNoPriv', "username")
         # ('authNoPriv', 'md5', '11111111', '22222222')
@@ -1582,12 +1581,11 @@ class AutomationActiveCheck(Automation):
         plugin, item = args[1:]
 
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
         with redirect_stdout(open(os.devnull, "w")):
             host_attrs = core_config.get_host_attributes(hostname, config_cache)
 
         if plugin == "custom":
-            for entry in host_config.custom_checks:
+            for entry in config_cache.custom_checks(hostname):
                 if entry["service_description"] != item:
                     continue
 
@@ -1613,7 +1611,7 @@ class AutomationActiveCheck(Automation):
         # (used e.g. by check_http)
         stored_passwords = cmk.utils.password_store.load()
         with plugin_contexts.current_host(hostname):
-            for params in dict(host_config.active_checks).get(plugin, []):
+            for params in dict(config_cache.active_checks(hostname)).get(plugin, []):
 
                 for description, command_args in core_config.iter_active_check_services(
                     plugin, act_info, hostname, host_attrs, params, stored_passwords
@@ -1713,23 +1711,23 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
-        host_config = config_cache.make_host_config(hostname)
+
+        # No caching option over commandline here.
+        file_cache_options = FileCacheOptions()
 
         success = True
         output = ""
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(host_config)
+            ipaddress = config.lookup_ip_address(hostname)
             if ty == "agent":
-                FileCacheGlobals.maybe = not FileCacheGlobals.disabled
-                for source, file_cache, fetcher in sources.make_non_cluster_sources(
+                for source, file_cache, fetcher in sources.make_sources(
                     hostname,
                     ipaddress,
+                    config_cache=config.get_config_cache(),
                     simulation_mode=config.simulation_mode,
-                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        hostname, config.snmp_without_sys_descr
-                    ),
+                    file_cache_options=file_cache_options,
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
                     if source.fetcher_type is FetcherType.SNMP:
@@ -1740,6 +1738,7 @@ class AutomationGetAgentOutput(Automation):
                         source,
                         raw_data,
                         selection=NO_SELECTION,
+                        keep_outdated=file_cache_options.keep_outdated,
                         logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(
@@ -1750,7 +1749,7 @@ class AutomationGetAgentOutput(Automation):
                         time_settings=config_cache.get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
-                        is_piggyback=host_config.is_piggyback_host,
+                        is_piggyback=config_cache.is_piggyback_host(hostname),
                         fetcher_type=source.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):

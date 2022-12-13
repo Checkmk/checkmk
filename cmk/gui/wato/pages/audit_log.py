@@ -184,8 +184,8 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Show details"),
-                        icon_name="checked_checkbox" if self._show_details else "checkbox",
+                        title=_("Hide details") if self._show_details else _("Show details"),
+                        icon_name="toggle_on" if self._show_details else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
                                 request,

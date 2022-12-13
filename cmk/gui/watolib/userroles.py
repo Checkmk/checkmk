@@ -44,7 +44,12 @@ def clone_role(
     while new_alias in {role.alias for role in all_roles.values()}:
         new_alias += _(" (copy)")
 
-    cloned_user_role = UserRole(name=new_role_id, basedon=role_to_clone.name, alias=new_alias)
+    cloned_user_role = UserRole(
+        name=new_role_id,
+        basedon=role_to_clone.basedon or role_to_clone.name,
+        alias=new_alias,
+        permissions=role_to_clone.permissions,
+    )
     all_roles[RoleID(new_role_id)] = cloned_user_role
     save_all_roles(all_roles)
 

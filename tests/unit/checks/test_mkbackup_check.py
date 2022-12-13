@@ -7,6 +7,8 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.api.agent_based.type_defs import StringTable
+
 pytestmark = pytest.mark.checks
 
 info_1 = [
@@ -181,6 +183,6 @@ info_3 = [
         info_3,
     ],
 )
-def test_mkbackup_parse(info) -> None:  # type:ignore[no-untyped-def]
+def test_mkbackup_parse(info: StringTable) -> None:
     check = Check("mkbackup")
     check.run_parse(info)

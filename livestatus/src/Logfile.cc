@@ -45,6 +45,7 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
     // In that case, if the logfile has grown, we need to
     // load the rest of the file, even if no logclasses
     // are missing.
+    // TODO(sp) Check return values of fclose, fgetpos, fsetpos, fseek.
     if (_watch) {
         FILE *file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
@@ -55,25 +56,25 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
         // If we read this file for the first time, we initialize
         // the current file position to 0
         if (_lineno == 0) {
-            fgetpos(file, &_read_pos);
+            (void)fgetpos(file, &_read_pos);
         }
 
         // file might have grown. Read all classes that we already
         // have read to the end of the file
         if (_logclasses_read != 0U) {
-            fsetpos(file, &_read_pos);  // continue at previous end
+            (void)fsetpos(file, &_read_pos);  // continue at previous end
             loadRange(max_lines_per_logfile, file, _logclasses_read,
                       logclasses);
-            fgetpos(file, &_read_pos);
+            (void)fgetpos(file, &_read_pos);
         }
         if (missing_types != 0U) {
-            fseek(file, 0, SEEK_SET);
+            (void)fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(max_lines_per_logfile, file, missing_types, logclasses);
             _logclasses_read |= missing_types;
-            fgetpos(file, &_read_pos);  // remember current end of file
+            (void)fgetpos(file, &_read_pos);  // remember current end of file
         }
-        fclose(file);
+        (void)fclose(file);
     } else {
         if (missing_types == 0) {
             return;
@@ -89,7 +90,7 @@ void Logfile::load(size_t max_lines_per_logfile, unsigned logclasses) {
         _lineno = 0;
         loadRange(max_lines_per_logfile, file, missing_types, logclasses);
         _logclasses_read |= missing_types;
-        fclose(file);
+        (void)fclose(file);
     }
 }
 

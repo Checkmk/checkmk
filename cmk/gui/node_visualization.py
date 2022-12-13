@@ -13,7 +13,7 @@ import livestatus
 from livestatus import SiteId
 
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.bi as bi
 import cmk.gui.visuals
@@ -24,11 +24,12 @@ from cmk.gui.breadcrumb import (
     make_topic_breadcrumb,
 )
 from cmk.gui.config import active_config
+from cmk.gui.dashboard import get_topology_view_and_filters
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_vis_lib import BILayoutManagement
@@ -44,12 +45,11 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import Visual, VisualContext
+from cmk.gui.type_defs import PainterSpec, Visual, VisualContext, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
-from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
-from cmk.gui.views.store import get_permitted_views
+from cmk.gui.views.store import multisite_builtin_views
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -99,7 +99,7 @@ class ParentChildTopologyPage(Page):
     @classmethod
     def visual_spec(cls) -> Visual:
         return {
-            "owner": "",
+            "owner": UserId.builtin(),
             "description": "",
             "hidebutton": False,
             "public": True,
@@ -248,18 +248,6 @@ class ParentChildTopologyPage(Page):
                 ],
             ),
         )
-
-
-def get_topology_view_and_filters() -> tuple[View, list[Filter]]:
-    view_name = "topology_filters"
-
-    view_spec = get_permitted_views()[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}))
-    filters = cmk.gui.visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
-    )
-    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return view, show_filters
 
 
 @page_registry.register_page("ajax_initial_topology_filters")
@@ -1001,3 +989,168 @@ class ParentChildNetworkTopology(Topology):
 
 
 topology_registry.register(ParentChildNetworkTopology)
+
+multisite_builtin_views.update(
+    {
+        "topology_filters": {
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "datasource": "hosts",
+            "description": _l(
+                "Configures the number of available filters in the network topology view."
+            ),
+            "group_painters": [],
+            "hidden": True,
+            "hidebutton": True,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "topology_filters",
+            "num_columns": 3,
+            "owner": UserId.builtin(),
+            "painters": [PainterSpec(name="host_state")],
+            "play_sounds": False,
+            "public": True,
+            "sorters": [],
+            "title": _l("Topology filters"),
+            "topic": "Topology",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {
+                "topology_max_nodes": {},
+                "topology_mesh_depth": {},
+                "hoststate": {},
+                "hostalias": {},
+                "siteopt": {},
+                "hostregex": {},
+                "hostgroups": {},
+                "host_labels": {},
+                "opthost_contactgroup": {},
+                "host_tags": {},
+            },
+            "link_from": {},
+            "icon": None,
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+        "bi_map_hover_host": {
+            "browser_reload": 0,
+            "column_headers": "pergroup",
+            "datasource": "hosts",
+            "description": _l("Host hover menu shown in BI visualization"),
+            "hidden": True,
+            "hidebutton": True,
+            "group_painters": [],
+            "icon": None,
+            "layout": "dataset",
+            "mobile": False,
+            "mustsearch": False,
+            "name": "bi_map_hover_host",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                PainterSpec(
+                    name="host",
+                    parameters={"color_choices": []},
+                    link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
+                ),
+                PainterSpec(name="host_state"),
+                PainterSpec(name="host_plugin_output"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "single_infos": ["host"],
+            "sorters": [],
+            "title": _l("BI host details"),
+            "user_sortable": True,
+            "context": {},
+            "link_from": {},
+            "topic": "",
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+        "bi_map_hover_service": {
+            "browser_reload": 0,
+            "column_headers": "pergroup",
+            "datasource": "services",
+            "description": _l("Service hover menu shown in BI visualization"),
+            "hidden": True,
+            "hidebutton": True,
+            "group_painters": [],
+            "icon": None,
+            "layout": "dataset",
+            "mobile": False,
+            "mustsearch": False,
+            "name": "bi_map_hover_service",
+            "num_columns": 1,
+            "painters": [
+                PainterSpec(
+                    name="host",
+                    parameters={"color_choices": []},
+                    link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
+                ),
+                PainterSpec(
+                    name="service_description",
+                    link_spec=VisualLinkSpec(type_name="views", name="service"),
+                ),
+                PainterSpec(name="service_state"),
+                PainterSpec(name="host_check_age"),
+                PainterSpec(name="svc_acknowledged"),
+                PainterSpec(name="svc_in_downtime"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "single_infos": ["service", "host"],
+            "sorters": [],
+            "title": _l("BI service details"),
+            "owner": UserId.builtin(),
+            "user_sortable": True,
+            "context": {},
+            "link_from": {},
+            "topic": "",
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+        "topology_hover_host": {
+            "browser_reload": 0,
+            "column_headers": "pergroup",
+            "datasource": "hosts",
+            "description": _l("Host hover menu shown in topolgoy visualization"),
+            "hidden": True,
+            "hidebutton": True,
+            "group_painters": [],
+            "icon": None,
+            "layout": "dataset",
+            "mobile": False,
+            "mustsearch": False,
+            "name": "topology_hover_host",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                PainterSpec(
+                    name="host",
+                    parameters={"color_choices": []},
+                    link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
+                ),
+                PainterSpec(name="host_state"),
+                PainterSpec(name="host_plugin_output"),
+                PainterSpec(name="host_parents"),
+                PainterSpec(name="host_childs"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "single_infos": ["host"],
+            "sorters": [],
+            "title": _l("Toplogy host details"),
+            "user_sortable": True,
+            "context": {},
+            "link_from": {},
+            "topic": "",
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
+        },
+    }
+)

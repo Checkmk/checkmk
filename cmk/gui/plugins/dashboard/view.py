@@ -12,7 +12,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.dashboard.utils import (
     ABCViewDashletConfig,
     dashlet_registry,
@@ -34,6 +33,7 @@ from cmk.gui.views.page_edit_view import (
     view_choices,
 )
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
+from cmk.gui.views.painter_options import PainterOptions
 from cmk.gui.views.store import get_permitted_views
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)

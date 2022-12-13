@@ -40,11 +40,11 @@ class TestStoredWalkSNMPBackend:
         assert StoredWalkSNMPBackend._compare_oids(a, b) == result
 
     def test_read_walk_data(self, tmpdir) -> None:  # type:ignore[no-untyped-def]
-        assert StoredWalkSNMPBackend.read_walk_data(tmpdir / "walkdata" / "1.txt") == [
+        assert StoredWalkSNMPBackend.read_walk_from_path(tmpdir / "walkdata" / "1.txt") == [
             ".1.2.3 foo\n",
             ".1.2.4 bar\nfoobar\n",
         ]
-        assert StoredWalkSNMPBackend.read_walk_data(tmpdir / "walkdata" / "2.txt") == [
+        assert StoredWalkSNMPBackend.read_walk_from_path(tmpdir / "walkdata" / "2.txt") == [
             ".1.2.3 foo\n\n\n",
             ".1.2.5 test\n",
         ]

@@ -4,13 +4,13 @@
 
 #
 include defines.make
+include artifacts.make
 
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin
 CONFDIR            := /etc/$(NAME)
 LIBDIR             := $(PREFIX)/lib/$(NAME)
-DISTNAME           := $(NAME)-$(VERSION)
 DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
@@ -29,7 +29,7 @@ BLACK              := scripts/run-black
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
-DIST_DEPS          := $(CONFIG_DEPS) 
+DIST_DEPS          := $(CONFIG_DEPS)
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
@@ -37,12 +37,18 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
 
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
+                      $(wildcard $(addprefix packages/livestatus/src/,*.cc)) \
+                      $(wildcard $(addprefix packages/livestatus/include/livestatus/,*.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
+
+CMAKE_FORMAT       := cmake-format
+CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/*')
+
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
@@ -55,18 +61,12 @@ SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise managed, \
 						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
 
-JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
 RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool/rrdtool.make | sed 's/RRDTOOL_VERS\s:=\s//')
 
 WEBPACK_MODE       ?= production
-THEMES             := facelift modern-dark
-THEME_CSS_FILES    := $(addprefix web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))
-THEME_JSON_FILES   := $(addprefix web/htdocs/themes/,$(addsuffix /theme.json,$(THEMES)))
-THEME_IMAGE_DIRS   := $(addprefix web/htdocs/themes/,$(addsuffix /images,$(THEMES)))
-THEME_RESOURCES    := $(THEME_CSS_FILES) $(THEME_JSON_FILES) $(THEME_IMAGE_DIRS)
 
 OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
@@ -117,22 +117,36 @@ check-version:
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
 	    false ; }
 
+$(SOURCE_BUILT_LINUX_AGENTS):
+	$(MAKE) -C agents $@
+
+ifeq ($(ENTERPRISE),yes)
+$(REPO_PATH)/agents/plugins/cmk-update-agent:
+	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
+
+$(REPO_PATH)/agents/plugins/cmk-update-agent-32:
+	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
+endif
+
+$(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
+	@echo "ERROR: Should have already been built by Windows node jobs"
+	@echo "If you don't need the windows artifacts, you can use "
+	@echo "'scripts/fake-windows-artifacts' to continue with stub files"
+	@exit 1
+
 # Is executed by our build environment from a "git archive" snapshot and during
 # RPM building to create the source tar.gz for the RPM build process.
 # Would use --exclude-vcs-ignores but that's available from tar 1.29 which
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS) protobuf-files
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
-	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
-endif
+dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) $(DIST_DEPS) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != $(DISTNAME).tar.gz && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -162,93 +176,10 @@ endif
 	    check-mk-$(EDITION)-$(OMD_VERSION)
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
-# This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
-	@echo "Making $(DISTNAME)"
-	rm -rf $(DISTNAME)
-	mkdir -p $(DISTNAME)
-	$(MAKE) -C agents build
-	$(MAKE) -C doc/plugin-api html
-	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
-	gzip $(DISTNAME)/bin.tar
-	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
-	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
-	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
-	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
-	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web \
-      app \
-      htdocs/openapi \
-      htdocs/css \
-      htdocs/images \
-      htdocs/jquery \
-      $(patsubst web/%,%,$(JAVASCRIPT_MINI)) \
-      $(patsubst web/%,%.map,$(JAVASCRIPT_MINI)) \
-      htdocs/sounds \
-      $(patsubst web/%,%,$(THEME_RESOURCES))
-
-	tar xzf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz
-	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C mk-livestatus-$(VERSION) $$(cd mk-livestatus-$(VERSION) ; ls -A )
-	rm -rf mk-livestatus-$(VERSION)
-
-	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc --exclude plugin-api $$(cd doc ; ls)
-	tar rf $(DISTNAME)/doc.tar $(TAROPTS) \
-	    -C doc \
-	    --transform "s/^plugin-api\/build/plugin-api/" \
-	    plugin-api/build/html
-	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
-	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
-	gzip $(DISTNAME)/doc.tar
-
-	make -C agents/plugins
-	cd agents ; tar czf ../$(DISTNAME)/agents.tar.gz $(TAROPTS) \
-		--exclude __init__.py \
-		--exclude check_mk_agent.spec \
-		--exclude special/lib \
-		--exclude plugins/Makefile \
-		--exclude plugins/*.checksum \
-		--exclude plugins/__init__.py \
-		cfg_examples \
-		plugins \
-		sap \
-		scripts \
-		special \
-		z_os \
-		check-mk-agent_*.deb \
-		check-mk-agent-*.rpm \
-		check_mk_agent.* \
-		check_mk_caching_agent.linux \
-		CONTENTS \
-		mk-job* \
-		waitmax \
-		linux \
-		windows/cfg_examples \
-		windows/check_mk_agent.msi \
-		windows/unsign-msi.patch \
-		windows/python-3.cab \
-		windows/python-3.4.cab \
-		windows/check_mk.user.yml \
-		windows/OpenHardwareMonitorLib.dll \
-		windows/OpenHardwareMonitorCLI.exe \
-		windows/CONTENTS \
-		windows/mrpe \
-		windows/plugins
-	install -m 644 COPYING AUTHORS ChangeLog standalone.make $(DISTNAME)
-	echo "$(VERSION)" > $(DISTNAME)/VERSION
-	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
-	rm -rf $(DISTNAME)
-
-	@echo "=============================================================================="
-	@echo "   FINISHED. "
-	@echo "=============================================================================="
-
-ntop-mkp:
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
-
-.werks/werks: $(WERKS)
+$(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
 
-ChangeLog: .werks/werks
+$(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
 
 packages:
@@ -256,10 +187,10 @@ packages:
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
-omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz:
+$(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
+	tar chf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
@@ -365,15 +296,11 @@ node_modules/.bin/prettier: .ran-npm
 # appliance. It is called from the cma git's makefile and the built css file is moved
 # to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
 .INTERMEDIATE: .ran-webpack
-web/htdocs/js/main_min.js: .ran-webpack
-web/htdocs/js/side_min.js: .ran-webpack
-web/htdocs/js/mobile_min.js: .ran-webpack
-web/htdocs/themes/facelift/theme.css: .ran-webpack
-web/htdocs/themes/modern-dark/theme.css: .ran-webpack
-web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
+$(JAVASCRIPT_MINI): .ran-webpack
+$(THEME_CSS_FILES): .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
+	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -399,9 +326,7 @@ EXCLUDE_PROPER= \
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
-	    --exclude="node_modules" \
-	    --exclude="livestatus/src/doc/plantuml.jar" \
-	    --exclude="enterprise/core/src/doc/plantuml.jar"
+	    --exclude="node_modules"
 
 AGENT_CTL_TARGET_PATH=agents/cmk-agent-ctl/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
@@ -557,6 +482,7 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
+	cd packages/livestatus && if [ ! -f build/Makefile ] ; then cmake -S . -B build ; fi  && cmake --build build
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -566,6 +492,7 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
+	cd packages/livestatus && if [ ! -f build/Makefile ] ; then cmake -S . -B build ; fi && cmake --build build -t tidy
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
@@ -587,13 +514,19 @@ format: format-python format-c format-shell format-js format-css
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
 # available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-clang-format-with = $(CLANG_FORMAT) -style=file $(1) $(FILES_TO_FORMAT_LINUX)
+clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
 
 format-c:
 	$(call clang-format-with,-i)
 
 test-format-c:
 	@$(call clang-format-with,-Werror --dry-run)
+
+format-cmake:
+	$(CMAKE_FORMAT) -i $(CMAKE_TXT_FILES)
+
+test-format-cmake:
+	$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
 
 format-python: format-python-isort format-python-black
 

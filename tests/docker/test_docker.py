@@ -21,25 +21,27 @@ from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
 from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
+from tests.testlib.version import CMKVersion, version_from_env
+
+from cmk.utils.version import Edition
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
-branch_name = os.environ.get("BRANCH", "master")
 distro_codename = "jammy"
 
 logger = logging.getLogger()
 
 
-def build_version() -> testlib.CMKVersion:
-    return testlib.CMKVersion(
-        version_spec=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
-        edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
-        branch=branch_name,
+def build_version() -> CMKVersion:
+    return version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        fallback_branch="master",
     )
 
 
 @pytest.fixture(scope="session")
-def version() -> testlib.CMKVersion:
+def version() -> CMKVersion:
     return build_version()
 
 
@@ -48,19 +50,19 @@ def client() -> docker.DockerClient:
     return docker.DockerClient()
 
 
-def _image_name(version: testlib.CMKVersion) -> str:
-    return f"docker-tests/check-mk-{version.edition()}-{branch_name}-{version.version}"
+def _image_name(version: CMKVersion) -> str:
+    return f"docker-tests/check-mk-{version.edition.name}-{version.branch}-{version.version}"
 
 
-def _package_name(version: testlib.CMKVersion) -> str:
-    return f"check-mk-{version.edition()}-{version.version}_0.{distro_codename}_amd64.deb"
+def _package_name(version: CMKVersion) -> str:
+    return f"check-mk-{version.edition.name}-{version.version}_0.{distro_codename}_amd64.deb"
 
 
 def _prepare_build() -> None:
     assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
-def _prepare_package(version: testlib.CMKVersion) -> None:
+def _prepare_package(version: CMKVersion) -> None:
     """On Jenkins copies a previously built package to the build path."""
     if "WORKSPACE" not in os.environ:
         logger.info("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
@@ -108,7 +110,7 @@ def resolve_image_alias(alias: str) -> str:
 def _build(
     request: pytest.FixtureRequest,
     client: docker.DockerClient,
-    version: testlib.CMKVersion,
+    version: CMKVersion,
     prepare_package: bool = True,
 ) -> tuple[Image, Mapping[str, str]]:
     _prepare_build()
@@ -136,7 +138,7 @@ def _build(
             network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition(),
+                "CMK_EDITION": version.edition.name,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
@@ -211,8 +213,8 @@ def _build(
     return image, build_logs
 
 
-def _pull(client: docker.DockerClient, version: testlib.CMKVersion) -> Image:
-    if version.edition() != "raw":
+def _pull(client: docker.DockerClient, version: CMKVersion) -> Image:
+    if not version.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
 
     logger.info("Downloading docker image: checkmk/check-mk-raw:%s", version.version)
@@ -222,7 +224,7 @@ def _pull(client: docker.DockerClient, version: testlib.CMKVersion) -> Image:
 def _start(
     request: pytest.FixtureRequest,
     client: docker.DockerClient,
-    version: testlib.CMKVersion | None = None,
+    version: CMKVersion | None = None,
     is_update: bool = False,
     # former kwargs
     environment: dict[str, str] | None = None,
@@ -302,7 +304,7 @@ def _exec_run(
 
 
 def test_start_simple(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     c = _start(request, client)
 
@@ -392,7 +394,7 @@ def test_start_execute_custom_command(
 
 
 def test_start_with_custom_command(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     image, _build_logs = _build(request, client, version)
     output = client.containers.run(
@@ -405,7 +407,7 @@ def test_start_with_custom_command(
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     package_path = Path(build_path, _package_name(version))
     package_path.write_bytes(b"")
@@ -418,10 +420,10 @@ def test_build_using_local_deb(
 # Test that the deb package from the download server is used.
 # Works only with daily enterprise builds.
 def test_build_using_package_from_download_server(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     if not (
-        version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
+        version.is_enterprise_edition() and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
     ):
         pytest.skip("only enterprise daily packages are available on the download server")
     package_path = Path(build_path, _package_name(version))
@@ -433,7 +435,7 @@ def test_build_using_package_from_download_server(
 
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
     pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
@@ -634,16 +636,16 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
 
 
 def test_update(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
-    container_name = "%s-monitoring" % branch_name
+    container_name = "%s-monitoring" % version.branch
 
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
-    old_version = testlib.CMKVersion(
+    old_version = CMKVersion(
         version_spec="2.1.0b3",
         branch="2.1.0",
-        edition=testlib.CMKVersion.CRE,
+        edition=Edition.CRE,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

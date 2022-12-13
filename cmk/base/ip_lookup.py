@@ -27,8 +27,6 @@ _enforce_localhost = False
 
 
 class IPLookupConfig(NamedTuple):
-    """This is what we expect from a HostConfig in *this* module"""
-
     hostname: HostName
     is_ipv4_host: bool
     is_ipv6_host: bool

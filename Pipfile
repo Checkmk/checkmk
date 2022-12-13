@@ -6,7 +6,7 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-astroid = "*"  # used by testlib.pylint_checker_localization
+astroid = "==2.12.12"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
@@ -18,8 +18,7 @@ freezegun = "*"  # used by various unit tests
 isort = "*"  # used as a plugin for editors
 lxml-stubs = "*"  # used for type checking
 mock = "*"  # used in checktestlib in unit tests
-mocket = "*"    # used for mocking kubernetes python client
-pylint = "*"  # used by test/Makefile's test-pylint target
+pylint = "==2.15.5"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 twine = "*" # used to upload packages to internal PyPi mirror
@@ -50,7 +49,7 @@ pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
 responses = "*"  # used for unit tests
 webtest = "*"  # used by WSGI based tests
-pre-commit = "*"  # used to fix / find issues before commiting changes
+pre-commit = "*"  # used to fix / find issues before committing changes
 flake8 = "*"
 autoflake = "*"  # used to remove unused import statements
 sphinx = "*"  # used for the plugin API documentation
@@ -67,6 +66,7 @@ pylsp-mypy = "*"  # mypy plugin for python-lsp-server
 mypy-protobuf = "*" # for mypy
 pipfile = "*" # for generating import names during int tests
 py-import-cycles = "*"  # used in tests/Makefile
+types-pysaml2 = "*"  # typing extension for pysaml2
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py
@@ -101,14 +101,14 @@ requests = {version = "==2.28.1",extras = ["security"]}  # needed by DCD, connex
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
 MarkupSafe = "==2.1.1"  # needed by Jinja2
-itsdangerous = "==2.0.1"  # needed by Flask
-Jinja2 = "==3.0.3"  # needed by Flask
+itsdangerous = "==2.1.2"  # needed by Flask
+Jinja2 = "==3.1.2"  # needed by Flask
 more-itertools = "==8.12.0"  # needed by connexion through zipp, pytest
 zipp = "==3.7.0"  # needed by importlib_metadata
 attrs = "==21.4.0"  # needed by jsonschema
 importlib_metadata = "==4.8.2"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema
-click = "==8.0.3"  # needed by Flask
+click = "==8.1.3"  # needed by Flask
 Werkzeug = "==2.2.2"  # direct dependency and needed by Flask
 jsonschema = "==4.2.1"  # needed by openapi-spec-validator
 Flask = "==2.2.2"  # direct dependency
@@ -179,6 +179,7 @@ setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
 black = {version = "==22.10.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
 meraki = "==1.24.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
+pysaml2 = "==7.2.1"  # used by SSO via SAML2.0
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

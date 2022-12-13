@@ -90,7 +90,7 @@ set_up_get_epoch() {
 set_up_current_shell() {
     # Note the current shell may not be the same as what is specified in the
     # shebang, e.g. when reconfigured in the xinetd/systemd/whateverd config file
-    CURRENT_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+    CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
 #
@@ -749,7 +749,7 @@ section_chrony() {
         # The "| cat" has been added for some kind of regression in RedHat 7.5. The
         # SELinux rules shipped with that release were denying the chronyc call
         # without cat.
-        run_cached "chrony" 30 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
+        run_cached "chrony" 120 30 "echo '<<<chrony>>>'; waitmax 5 chronyc -n tracking | cat || true"
     fi
 }
 
@@ -763,9 +763,9 @@ section_kernel() {
 
 section_ipmitool() {
     if inpath ipmitool; then
-        run_cached "ipmi" 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
+        run_cached "ipmi" 300 300 "echo '<<<ipmi:sep(124)>>>'; waitmax 300 ipmitool sensor list | grep -v 'command failed' | grep -v -E '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
-        run_cached "ipmi_discrete" 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
+        run_cached "ipmi_discrete" 300 300 "echo '<<<ipmi_discrete:sep(124)>>>'; waitmax 300 ipmitool sdr elist compact"
     fi
 }
 
@@ -785,7 +785,7 @@ section_ipmisensors() {
     fi
 
     # At least with ipmi-sensors 0.7.16 this group is Power_Unit instead of "Power Unit"
-    run_cached "ipmi_sensors" 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
+    run_cached "ipmi_sensors" 300 300 "echo '<<<ipmi_sensors>>>'; for class in Temperature Power_Unit Fan; do
         ipmi-sensors ${IPMI_FORMAT} --sdr-cache-directory /var/cache ${IPMI_GROUP_OPT} \"\${class}\" | sed -e 's/ /_/g' -e 's/:_\?/ /g' -e 's@ \([^(]*\)_(\([^)]*\))@ \2_\1@'
         # In case of a timeout immediately leave loop.
         if [ $? = 255 ]; then break; fi
@@ -890,7 +890,7 @@ section_3ware_raid() {
 
 section_areca_raid() {
     if inpath cli64; then
-        run_cached "arc_raid_status" 300 "echo '<<<arc_raid_status>>>'; cli64 rsf info | tail -n +3 | head -n -2"
+        run_cached "arc_raid_status" 300 300 "echo '<<<arc_raid_status>>>'; cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
 
@@ -1043,7 +1043,7 @@ section_mailqueue() {
 
 section_omd() {
     if inpath omd; then
-        run_cached "omd_status" 60 "echo '<<<omd_status>>>'; omd status --bare || true"
+        run_cached "omd_status" 60 60 "echo '<<<omd_status>>>'; omd status --bare || true"
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -1069,6 +1069,15 @@ section_omd() {
                 # prevent next section to fail caused by a missing newline at the end of the statsfile
                 echo
             fi
+        done
+
+        echo '<<<omd_diskusage:sep(0)>>>'
+        for sitedir in /omd/sites/*; do
+            site=${sitedir#/omd/sites/}
+            echo "[site ${site}]"
+            du -bs "$sitedir"
+            du -bs "$sitedir/var/log"
+            du -bs "$sitedir/var/check_mk/rrd"
         done
 
         echo '<<<omd_info:sep(59)>>>'
@@ -1387,7 +1396,7 @@ section_fileinfo() {
 
 get_ntpq() {
     inpath ntpq || return 1
-    run_cached "ntp" 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true" | sed 's/\(<<<ntp:cached(.*,\)30)>>>/\1120)>>>/'
+    run_cached "ntp" 120 30 "echo '<<<ntp>>>'; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
 }
 
 section_timesyncd() {
@@ -1551,29 +1560,30 @@ run_real_time_checks_for_remote() {
 # Usage: run_cached NAME MAXAGE [COMMAND ...]
 #   NAME     name of the section (also used as cache file name)
 #   MAXAGE   maximum cache livetime in seconds
+#   REFRESH_INTERVAL threshold in seconds when the cache file needs to be regenerated
 #   COMMAND  command to run
 #
 # Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
 # This means that extra escaping is required.
 # For example: to run `cat "My File"` every two minutes, you'll have to call
 #
-#     run_cached "my_file_output" 120 "cat \"My File\""
+#     run_cached "my_file_output" 120 120 "cat \"My File\""
 #
 run_cached() {
+    NAME="${1}"
+    MAXAGE="${2}"
+    REFRESH_INTERVAL="${3}"
+    shift 3
+
     if ${DISABLE_CACHING:-false}; then
-        shift 2
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
         $@
         return
     fi
 
-    NAME="${1}"
-    MAXAGE="${2}"
-    shift 2
     # ideally, these should be independent parameters:
     TIMEOUT=$((MAXAGE * 2))
-    REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
@@ -1645,7 +1655,8 @@ run_local_checks() {
     # Call some local checks only every X'th second
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
-            run_cached "local_${script##*/}" "${script%/*}" "_log_section_time '${script}'"
+            interval="${script%/*}"
+            run_cached "local_${script##*/}" "${interval}" "${interval}" "_log_section_time '${script}'"
         fi
     done
 }
@@ -1740,8 +1751,9 @@ run_plugins() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                interval="${script%/*}"
                 # shellcheck disable=SC2086
-                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
+                run_cached "plugins_${script##*/}" "${interval}" "${interval}" _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done
@@ -1771,7 +1783,7 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            run_cached "mrpe_${descr}" "${interval}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
         fi
 
     done

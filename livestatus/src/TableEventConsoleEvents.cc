@@ -18,9 +18,9 @@
 #include "TimeColumn.h"
 
 #ifdef CMC
-class Host;
+#include "User.h"
 #else
-struct host_struct;
+#include "nagios.h"
 #endif
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)

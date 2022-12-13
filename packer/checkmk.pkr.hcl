@@ -54,11 +54,30 @@ source "qemu" "ubuntu-2204-amd64-qemu" {
   ssh_timeout      = "60m"
 }
 
+source "azure-arm" "builder" {
+  azure_tags = {
+    dept = "Engineering"
+    task = "Image deployment"
+  }
+  client_id                         = "${var.azure_client_id}"
+  client_secret                     = "${var.azure_client_secret}"
+  image_offer                       = "0001-com-ubuntu-server-jammy"
+  image_publisher                   = "Canonical"
+  image_sku                         = "22_04-lts"
+  location                          = "East US"
+  managed_image_name                = "cmk"
+  managed_image_resource_group_name = "myResourceGroup"
+  os_type                           = "Linux"
+  subscription_id                   = "${var.azure_subscription_id}"
+  tenant_id                         = "${var.azure_tenant_id}"
+  vm_size                           = "Standard_DS2_v2"
+}
 
 build {
   name = "checkmk-ansible"
   sources = [
-    "source.qemu.ubuntu-2204-amd64-qemu"
+    # "source.qemu.ubuntu-2204-amd64-qemu"
+    "source.azure-arm.builder"
   ]
   # setup apt-get
   provisioner "shell" {
@@ -80,12 +99,12 @@ build {
   provisioner "ansible-local" {
     playbook_file = "./playbook.yml"
     galaxy_file = "./requirements.yml"
-
+    galaxy_collections_path = "/tmp/ansible/collections"
   }
   # update user
   provisioner "shell" {
     inline = [
-       "sudo passwd --expire ubuntu",
+       "sudo passwd --expire $(whoami)",
     ]
   }
 }

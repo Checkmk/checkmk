@@ -222,7 +222,7 @@ class LDAPUserConnector(UserConnector):
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
         self._num_queries = 0
-        self._user_cache: dict = {}
+        self._user_cache: dict[UserId, tuple[str, UserId]] = {}
         self._group_cache: dict = {}
         self._group_search_cache: dict = {}
 
@@ -234,7 +234,7 @@ class LDAPUserConnector(UserConnector):
         self._save_suffix()
 
     @classmethod
-    def type(cls):
+    def type(cls) -> str:
         return "ldap"
 
     @classmethod
@@ -744,7 +744,7 @@ class LDAPUserConnector(UserConnector):
     def _replace_macros(self, tmpl):
         return replace_macros_in_str(tmpl, {"$OMD_SITE$": omd_site() or ""})
 
-    def _sanitize_user_id(self, user_id):
+    def _sanitize_user_id(self, user_id: str) -> UserId:
         if self._config.get("lower_user_ids", False):
             user_id = user_id.lower()
 
@@ -772,9 +772,9 @@ class LDAPUserConnector(UserConnector):
                 }
             )
 
-        return user_id
+        return UserId(user_id)
 
-    def _get_user(self, username, no_escape=False):
+    def _get_user(self, username: UserId, no_escape: bool = False) -> tuple[str, UserId] | None:
         if username in self._user_cache:
             return self._user_cache[username]
 
@@ -825,7 +825,7 @@ class LDAPUserConnector(UserConnector):
             return (dn, user_id)
         return (dn.replace("\\", "\\\\"), user_id)
 
-    def get_users(self, add_filter=""):
+    def get_users(self, add_filter: str = "") -> Users:
         user_id_attr = self._user_id_attr()
 
         columns = [
@@ -1093,7 +1093,7 @@ class LDAPUserConnector(UserConnector):
 
         return groups
 
-    def _group_and_user_base_dn(self):
+    def _group_and_user_base_dn(self) -> str:
         user_dn = ldap.dn.str2dn(self._get_user_dn())
         group_dn = ldap.dn.str2dn(self.get_group_dn())
 
@@ -1212,14 +1212,14 @@ class LDAPUserConnector(UserConnector):
         suffix = self._get_suffix()
         return f"{username}@{suffix}"
 
-    def do_sync(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def do_sync(  # pylint: disable=too-many-branches
         self,
         *,
         add_to_changelog: bool,
         only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
-    ):
+    ) -> None:
         if not self.has_user_base_dn_configured():
             self._logger.info('Not trying sync (no "user base DN" configured)')
             return  # silently skip sync without configuration

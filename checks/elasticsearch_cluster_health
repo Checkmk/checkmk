@@ -122,7 +122,10 @@ factory_settings["elasticsearch_cluster_shards"] = {
 
 
 def check_elasticsearch_cluster_health_shards(no_item, params, parsed):
-    for shard, values in sorted(parsed["Shards"].items()):
+    if (shards := parsed.get("Shards")) is None:
+        return
+
+    for shard, values in sorted(shards.items()):
         value = values[0]
         infotext = values[1]
         warn, crit = params.get(shard) or (None, None)
@@ -165,7 +168,10 @@ check_info["elasticsearch_cluster_health.shards"] = {
 
 
 def check_elasticsearch_cluster_health_tasks(no_item, params, parsed):
-    for task, values in sorted(parsed["Tasks"].items()):
+    if (tasks := parsed.get("Tasks")) is None:
+        return
+
+    for task, values in sorted(tasks.items()):
         value = values[0]
         infotext = values[1]
 

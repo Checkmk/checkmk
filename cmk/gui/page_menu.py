@@ -391,7 +391,7 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
             PageMenuEntry(
                 name="checkbox_selection",
                 title=_("Deselect all checkboxes") if is_selected else _("Select all checkboxes"),
-                icon_name="checkbox" if is_selected else "checked_checkbox",
+                icon_name="toggle_on" if is_selected else "toggle_off",
                 item=make_javascript_link(
                     "cmk.selection.toggle_all_rows(this.form, %s, %s);"
                     % (name_selected, name_deselected)

@@ -2,7 +2,7 @@ title: Checkmk Appliance: Backup Job State
 agents: linux
 catalog: app/cmk
 license: GPLv2
-distribution: checkmk
+distribution: check_mk
 description:
  This check checks the status of Checkmk Appliance device backup jobs. It
  will raise a {CRIT} state in case the job failed or the next execution of

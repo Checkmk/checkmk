@@ -38,9 +38,6 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 def test_openapi_customer(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "user",
@@ -94,9 +91,6 @@ def test_openapi_customer(
 def test_openapi_user_minimal_settings(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
         user_object: UserObject = {
@@ -137,7 +131,7 @@ def test_openapi_user_minimal_settings(
         "locked": False,
         "pager": "",
         "roles": [],
-        "user_scheme_serial": 0,
+        "user_scheme_serial": 1,
         "last_pw_change": 1632486960,
         "num_failed_logins": 0,
         "serial": 0,
@@ -149,9 +143,6 @@ def test_openapi_user_minimal_password_settings(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "user",
@@ -180,7 +171,7 @@ def test_openapi_user_minimal_password_settings(
     assert "last_pw_change" not in extensions
     assert "password" not in extensions
 
-    user_from_db = userdb.load_user(resp.json["id"])
+    user_from_db = userdb.load_user(UserId(resp.json["id"]))
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
@@ -207,19 +198,15 @@ def test_openapi_user_minimal_password_settings(
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 
-    user_from_db = userdb.load_user(resp.json["id"])
+    user_from_db = userdb.load_user(UserId(resp.json["id"]))
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
 
-def test_openapi_all_users(
-    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
-) -> None:
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+def test_openapi_all_users(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = wsgi_app.call_method(
+    resp = aut_user_auth_wsgi_app.call_method(
         "get",
         base + "/domain-types/user_config/collections/all",
         status=200,
@@ -228,7 +215,7 @@ def test_openapi_all_users(
     users = resp.json_body["value"]
     assert len(users) == 1
 
-    _user_resp = wsgi_app.call_method(
+    _user_resp = aut_user_auth_wsgi_app.call_method(
         "get", users[0]["links"][0]["href"], status=200, headers={"Accept": "application/json"}
     )
 
@@ -239,9 +226,6 @@ def test_openapi_user_config(
     with_automation_user: tuple[UserId, str],
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     name = _random_string(10)
     alias = "KPECYCq79E"
@@ -316,9 +300,6 @@ def test_openapi_user_config(
 def test_openapi_user_internal_with_notifications(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     name = UserId(_random_string(10))
 
@@ -359,7 +340,7 @@ def test_openapi_user_internal_with_notifications(
         "email": "",
         "fallback_contact": False,
         "disable_notifications": {"timerange": (1577836800.0, 1577923200.0)},
-        "user_scheme_serial": 0,
+        "user_scheme_serial": 1,
         "locked": False,
         "roles": [],
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
@@ -387,9 +368,6 @@ def test_update_user_auth_options(
     test_data: Mapping[str, str],
     expected_serial_count: int,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     name = _random_string(10)
     resp = aut_user_auth_wsgi_app.call_method(
@@ -424,9 +402,6 @@ def test_update_user_auth_options(
 def test_openapi_user_edit_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     name = "foo"
     alias = "Foo Bar"
@@ -488,9 +463,6 @@ def test_openapi_user_internal_auth_handling(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-    monkeypatch.setattr(
         "cmk.gui.userdb.htpasswd.hash_password",
         lambda x: "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
     )
@@ -535,7 +507,7 @@ def test_openapi_user_internal_auth_handling(
         "contactgroups": [],
         "fallback_contact": False,
         "disable_notifications": {},
-        "user_scheme_serial": 0,
+        "user_scheme_serial": 1,
         "locked": False,
         "roles": ["user"],
         "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
@@ -568,7 +540,7 @@ def test_openapi_user_internal_auth_handling(
         "contactgroups": [],
         "fallback_contact": False,
         "disable_notifications": {},
-        "user_scheme_serial": 0,
+        "user_scheme_serial": 1,
         "locked": False,
         "roles": ["user"],
         "automation_secret": "QWXWBFUCSUOXNCPJUMS@",
@@ -601,7 +573,7 @@ def test_openapi_user_internal_auth_handling(
         "contactgroups": [],
         "fallback_contact": False,
         "disable_notifications": {},
-        "user_scheme_serial": 0,
+        "user_scheme_serial": 1,
         "locked": False,
         "roles": ["user"],
         "serial": 1,
@@ -616,9 +588,6 @@ def test_openapi_user_internal_auth_handling(
 def test_openapi_managed_global_edition(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
     monkeypatch.setattr("cmk.utils.version.is_managed_edition", lambda: True)
 
     user_detail = {
@@ -648,9 +617,6 @@ def test_managed_global_internal(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_object: UserObject = {
         UserId("user"): {
@@ -688,9 +654,6 @@ def test_global_full_configuration(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "cmkuser",
@@ -752,9 +715,6 @@ def test_managed_idle_internal(
     run_as_superuser: Callable[[], ContextManager[None]],
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
     username, _secret = with_automation_user
 
     user_object: UserObject = {
@@ -795,9 +755,6 @@ def test_openapi_user_update_contact_options(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "cmkuser",
@@ -866,9 +823,6 @@ def test_openapi_user_disable_notifications(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "cmkuser",
@@ -914,9 +868,6 @@ def test_show_all_users_with_no_email(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test a user which has no email internally similar to the internal cmkadmin user"""
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
     user_detail = {
         "username": "internal_user",
         "fullname": "Internal",
@@ -953,9 +904,6 @@ def test_user_enforce_password_change_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test enforce password change option for create and update endpoints"""
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     user_detail = {
         "username": "cmkuser",
@@ -1001,10 +949,6 @@ def test_response_schema_compatible_with_request_schema(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
 
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
-
     user_detail = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
@@ -1041,9 +985,6 @@ def test_user_interface_settings(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test enforce password change option for create and update endpoints"""
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
     user_detail = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
@@ -1113,9 +1054,6 @@ def _internal_attributes(user_attributes):
 def test_openapi_new_user_with_cloned_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     cloned_role: UserRole = clone_role(RoleID("admin"))
 
@@ -1191,9 +1129,6 @@ def test_openapi_custom_attributes_of_user(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     attr: Mapping[str, str | bool] = {
         "name": "judas",
@@ -1241,9 +1176,6 @@ def test_openapi_custom_attributes_of_user(
 def test_create_user_with_non_existing_custom_attribute(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
-    )
 
     params = {
         "username": "cmkuser",

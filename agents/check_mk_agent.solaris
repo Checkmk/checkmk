@@ -90,7 +90,7 @@ set_up_get_epoch() {
 set_up_current_shell() {
     # Note the current shell may not be the same as what is specified in the
     # shebang, e.g. when reconfigured in the xinetd/systemd/whateverd config file
-    CURRENT_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+    CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
 #
@@ -480,7 +480,7 @@ section_cpu() {
 section_zpool() {
     # zpool status
     if [ -x /sbin/zpool ]; then
-        run_cached "zpool_status" 120 "echo '<<<zpool_status>>>'; /sbin/zpool status -x"
+        run_cached "zpool_status" 120 120 "echo '<<<zpool_status>>>'; /sbin/zpool status -x"
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -515,7 +515,7 @@ section_solaris_prtg() {
     if inpath prtdiag; then
         # prtdiag does not work in local zones
         if [ "${zonename}" == "global" ]; then
-            run_cached "solaris_prtdiag_status" 300 \
+            run_cached "solaris_prtdiag_status" 300 300 \
                 'echo "<<<solaris_prtdiag_status>>>"; /usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
         fi
     fi
@@ -657,29 +657,30 @@ section_checkmk_failed_plugins() {
 # Usage: run_cached NAME MAXAGE [COMMAND ...]
 #   NAME     name of the section (also used as cache file name)
 #   MAXAGE   maximum cache livetime in seconds
+#   REFRESH_INTERVAL threshold in seconds when the cache file needs to be regenerated
 #   COMMAND  command to run
 #
 # Note that while multiple COMMAND arguments are considered, they are evaluated in a string.
 # This means that extra escaping is required.
 # For example: to run `cat "My File"` every two minutes, you'll have to call
 #
-#     run_cached "my_file_output" 120 "cat \"My File\""
+#     run_cached "my_file_output" 120 120 "cat \"My File\""
 #
 run_cached() {
+    NAME="${1}"
+    MAXAGE="${2}"
+    REFRESH_INTERVAL="${3}"
+    shift 3
+
     if ${DISABLE_CACHING:-false}; then
-        shift 2
         # We need the re-splitting to be compatible with the caching case, so:
         # shellcheck disable=SC2068
         $@
         return
     fi
 
-    NAME="${1}"
-    MAXAGE="${2}"
-    shift 2
     # ideally, these should be independent parameters:
     TIMEOUT=$((MAXAGE * 2))
-    REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
@@ -751,7 +752,8 @@ run_local_checks() {
     # Call some local checks only every X'th second
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
-            run_cached "local_${script##*/}" "${script%/*}" "_log_section_time '${script}'"
+            interval="${script%/*}"
+            run_cached "local_${script##*/}" "${interval}" "${interval}" "_log_section_time '${script}'"
         fi
     done
 }
@@ -846,8 +848,9 @@ run_plugins() {
     for script in [1-9]*/*; do
         if is_valid_plugin "${script}"; then
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
+                interval="${script%/*}"
                 # shellcheck disable=SC2086
-                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time ${plugin_interpreter} "${script}"
+                run_cached "plugins_${script##*/}" "${interval}" "${interval}" _log_section_time ${plugin_interpreter} "${script}"
             fi
         fi
     done
@@ -877,7 +880,7 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            run_cached "mrpe_${descr}" "${interval}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
         fi
 
     done

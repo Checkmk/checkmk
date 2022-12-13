@@ -13,12 +13,13 @@ CL:
 
 from __future__ import annotations
 
+import itertools
 import logging
 import time
 from collections.abc import Collection, Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple
+from typing import Callable, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -27,18 +28,30 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import RawIntervalsFromConfig, StructuredDataNode, UpdateResult
+from cmk.utils.structured_data import (
+    ATTRIBUTES_KEY,
+    make_filter_from_choice,
+    parse_visible_raw_path,
+    RawIntervalsFromConfig,
+    RetentionIntervals,
+    SDPath,
+    StructuredDataNode,
+    TABLE_KEY,
+    UpdateResult,
+)
 from cmk.utils.type_defs import (
     AgentRawData,
     HostKey,
     HostName,
     InventoryPluginName,
     result,
+    RuleSetName,
     SourceType,
 )
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
@@ -49,7 +62,6 @@ from cmk.base.agent_based.data_provider import (
     make_broker,
     parse_messages,
     ParsedSectionsBroker,
-    SourceResults,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import (
@@ -58,10 +70,8 @@ from cmk.base.agent_based.utils import (
     summarize_host_sections,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 from cmk.base.sources import fetch_all, make_sources
-
-from ._tree_aggregator import ItemsOfInventoryPlugin, RealHostTreeUpdater
 
 __all__ = [
     "inventorize_status_data_of_real_host",
@@ -71,7 +81,7 @@ __all__ = [
 
 class FetchedDataResult(NamedTuple):
     parsed_sections_broker: ParsedSectionsBroker
-    source_results: SourceResults
+    source_results: Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
     processing_failed: bool
     no_data_or_files: bool
@@ -89,13 +99,14 @@ class CheckInventoryTreeResult:
 def check_inventory_tree(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName],
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
-    config_cache = config.get_config_cache()
     if config_cache.is_cluster(host_name):
         inventory_tree = _inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
         return CheckInventoryTreeResult(
@@ -115,7 +126,8 @@ def check_inventory_tree(
 
     fetched_data_result = _fetch_real_host_data(
         host_name,
-        host_config=host_config,
+        config_cache=config_cache,
+        file_cache_options=file_cache_options,
         selected_sections=selected_sections,
     )
 
@@ -124,7 +136,7 @@ def check_inventory_tree(
         items_of_inventory_plugins=list(
             _collect_inventory_plugin_items(
                 host_name,
-                host_config=host_config,
+                inventory_parameters=inventory_parameters,
                 parsed_sections_broker=fetched_data_result.parsed_sections_broker,
                 run_plugin_names=run_plugin_names,
             )
@@ -137,28 +149,34 @@ def check_inventory_tree(
         processing_failed=fetched_data_result.processing_failed,
         no_data_or_files=fetched_data_result.no_data_or_files,
         check_result=ActiveCheckResult.from_subresults(
-            *_check_fetched_data_or_trees(
-                parameters=parameters,
-                fetched_data_result=fetched_data_result,
-                inventory_tree=trees.inventory,
-                status_data_tree=trees.status_data,
-                old_tree=old_tree,
-            ),
-            *summarize_host_sections(
-                source_results=fetched_data_result.source_results,
-                # Do not use source states which would overwrite "State when inventory fails" in the
-                # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-                override_non_ok_state=parameters.fail_status,
-                exit_spec_cb=config_cache.exit_code_spec,
-                time_settings_cb=lambda hostname: config_cache.get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=hostname,
+            *itertools.chain(
+                _check_fetched_data_or_trees(
+                    parameters=parameters,
+                    fetched_data_result=fetched_data_result,
+                    inventory_tree=trees.inventory,
+                    status_data_tree=trees.status_data,
+                    old_tree=old_tree,
                 ),
-                is_piggyback=host_config.is_piggyback_host,
-            ),
-            *check_parsing_errors(
-                errors=fetched_data_result.parsing_errors,
-                error_state=parameters.fail_status,
-            ),
+                *(
+                    summarize_host_sections(
+                        host_sections,
+                        source,
+                        # Do not use source states which would overwrite "State when inventory fails" in the
+                        # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
+                        override_non_ok_state=parameters.fail_status,
+                        exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                        time_settings=config_cache.get_piggybacked_hosts_time_settings(
+                            piggybacked_hostname=source.hostname,
+                        ),
+                        is_piggyback=config_cache.is_piggyback_host(host_name),
+                    )
+                    for source, host_sections in fetched_data_result.source_results
+                ),
+                check_parsing_errors(
+                    errors=fetched_data_result.parsing_errors,
+                    error_state=parameters.fail_status,
+                ),
+            )
         ),
         inventory_tree=trees.inventory,
         update_result=update_result,
@@ -210,35 +228,39 @@ def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
 def _fetch_real_host_data(
     host_name: HostName,
     *,
-    host_config: HostConfig,
     selected_sections: SectionNameCollection,
+    config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
 ) -> FetchedDataResult:
-    ipaddress = config.lookup_ip_address(host_config)
-    config_cache = config.get_config_cache()
+    ipaddress = config.lookup_ip_address(host_name)
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
+        hosts = [(host_name, ipaddress)]
+    else:
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
-        make_sources(
-            host_name,
-            ipaddress,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
-            selected_sections=selected_sections,
-            force_snmp_cache_refresh=False,
-            on_scan_error=OnError.RAISE,
-            simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name, config.snmp_without_sys_descr
-            ),
-            file_cache_max_age=config_cache.max_cachefile_age(host_name),
+        *(
+            make_sources(
+                host_name_,
+                ipaddress_,
+                config_cache=config_cache,
+                force_snmp_cache_refresh=False,
+                on_scan_error=OnError.RAISE,
+                simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
+                file_cache_max_age=config_cache.max_cachefile_age(host_name),
+            )
+            for host_name_, ipaddress_ in hosts
         ),
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
     host_sections, results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
+        keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
     store_piggybacked_sections(host_sections)
@@ -321,10 +343,10 @@ def _inventorize_real_host(
 
     section.section_step("May update inventory tree")
 
-    tree_updater = RealHostTreeUpdater(raw_intervals_from_config)
-    tree_updater.may_add_cache_info(now=now, items_of_inventory_plugins=items_of_inventory_plugins)
-    update_result = tree_updater.may_update(
+    update_result = _may_update(
         now=now,
+        items_of_inventory_plugins=items_of_inventory_plugins,
+        raw_intervals_from_config=raw_intervals_from_config,
         inventory_tree=trees.inventory,
         previous_tree=old_tree,
     )
@@ -341,14 +363,14 @@ def _inventorize_real_host(
 def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     return _create_trees_from_inventory_plugin_items(
         _collect_inventory_plugin_items(
             host_name,
-            host_config=host_config,
+            inventory_parameters=inventory_parameters,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
         )
@@ -372,10 +394,16 @@ def inventorize_status_data_of_real_host(
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True)
+class ItemsOfInventoryPlugin:
+    items: list[Attributes | TableRow]
+    raw_cache_info: tuple[int, int] | None
+
+
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
@@ -405,8 +433,8 @@ def _collect_inventory_plugin_items(
             if inventory_plugin.inventory_ruleset_name is not None:
                 kwargs = {
                     **kwargs,
-                    "params": host_config.inventory_parameters(
-                        inventory_plugin.inventory_ruleset_name
+                    "params": inventory_parameters(
+                        host_name, inventory_plugin.inventory_ruleset_name
                     ),
                 }
 
@@ -503,6 +531,141 @@ def _create_trees_from_inventory_plugin_items(
 
 
 # .
+#   .--retentions----------------------------------------------------------.
+#   |                     _             _   _                              |
+#   |            _ __ ___| |_ ___ _ __ | |_(_) ___  _ __  ___              |
+#   |           | '__/ _ \ __/ _ \ '_ \| __| |/ _ \| '_ \/ __|             |
+#   |           | | |  __/ ||  __/ | | | |_| | (_) | | | \__ \             |
+#   |           |_|  \___|\__\___|_| |_|\__|_|\___/|_| |_|___/             |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# Data for the HW/SW Inventory has a validity period (live data or persisted).
+# With the retention intervals configuration you can keep specific attributes or table columns
+# longer than their validity period.
+#
+# 1.) Collect cache infos from plugins if and only if there is a configured 'path-to-node' and
+#     attributes/table keys entry in the ruleset 'Retention intervals for HW/SW inventory
+#     entities'.
+#
+# 2.) Process collected cache infos - handle the following four cases via AttributesUpdater,
+#     TableUpdater:
+#
+#       previous node | inv node | retention intervals from
+#     -----------------------------------------------------------------------------------
+#       no            | no       | None
+#       no            | yes      | inv_node keys
+#       yes           | no       | previous_node keys
+#       yes           | yes      | previous_node keys + inv_node keys
+#
+#     - If there's no previous node then filtered keys + intervals of current node is stored
+#       (like a first run) and will be checked against the future node in the next run.
+#     - if there's a previous node then check if the data is recent enough and merge
+#       attributes/tables data from the previous node with the current one.
+#       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
+#       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
+#             retention_interval: configured in the above ruleset
+
+
+def _may_update(
+    *,
+    now: int,
+    items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
+    raw_intervals_from_config: RawIntervalsFromConfig,
+    inventory_tree: StructuredDataNode,
+    previous_tree: StructuredDataNode,
+) -> UpdateResult:
+    if not (intervals_from_config := _get_intervals_from_config(raw_intervals_from_config)):
+        return UpdateResult(
+            save_tree=False,
+            reason="No retention intervals found.",
+        )
+
+    def _get_node_type(item: Attributes | TableRow) -> str:
+        if isinstance(item, Attributes):
+            return ATTRIBUTES_KEY
+        if isinstance(item, TableRow):
+            return TABLE_KEY
+        raise NotImplementedError()
+
+    raw_cache_info_by_retention_key = {
+        (tuple(item.path), _get_node_type(item)): items_of_inventory_plugin.raw_cache_info
+        for items_of_inventory_plugin in items_of_inventory_plugins
+        for item in items_of_inventory_plugin.items
+    }
+
+    results = []
+    for retention_key, from_config in intervals_from_config.items():
+        if (raw_cache_info := raw_cache_info_by_retention_key.get(retention_key)) is None:
+            raw_cache_info = (now, 0)
+
+        item_path, node_type = retention_key
+
+        if (previous_node := previous_tree.get_node(item_path)) is None:
+            previous_node = StructuredDataNode()
+
+        if (inv_node := inventory_tree.get_node(item_path)) is None:
+            inv_node = inventory_tree.setdefault_node(item_path)
+
+        filter_func = make_filter_from_choice(from_config.choices)
+        intervals = RetentionIntervals(
+            cached_at=raw_cache_info[0],
+            cache_interval=raw_cache_info[1],
+            retention_interval=from_config.interval,
+        )
+
+        if node_type == ATTRIBUTES_KEY:
+            results.append(
+                inv_node.attributes.update_from_previous(
+                    now,
+                    previous_node.attributes,
+                    filter_func,
+                    intervals,
+                )
+            )
+
+        elif node_type == TABLE_KEY:
+            results.append(
+                inv_node.table.update_from_previous(
+                    now,
+                    previous_node.table,
+                    filter_func,
+                    intervals,
+                )
+            )
+
+    return UpdateResult(
+        save_tree=any(result.save_tree for result in results),
+        reason=", ".join(result.reason for result in results if result.reason),
+    )
+
+
+class IntervalFromConfig(NamedTuple):
+    choices: tuple[str, list[str]] | str
+    interval: int
+
+
+def _get_intervals_from_config(
+    raw_intervals_from_config: RawIntervalsFromConfig,
+) -> dict[tuple[SDPath, str], IntervalFromConfig]:
+    intervals: dict[tuple[SDPath, str], IntervalFromConfig] = {}
+
+    for entry in raw_intervals_from_config:
+        interval = entry["interval"]
+        node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
+
+        if for_attributes := entry.get("attributes"):
+            intervals.setdefault(
+                (node_path, ATTRIBUTES_KEY), IntervalFromConfig(for_attributes, interval)
+            )
+
+        if for_table := entry.get("columns"):
+            intervals.setdefault((node_path, TABLE_KEY), IntervalFromConfig(for_table, interval))
+
+    return intervals
+
+
+# .
 #   .--cluster properties--------------------------------------------------.
 #   |                         _           _                                |
 #   |                     ___| |_   _ ___| |_ ___ _ __                     |
@@ -537,7 +700,7 @@ def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: 
 
 def _check_fetched_data_or_trees(
     *,
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     fetched_data_result: FetchedDataResult,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
@@ -560,7 +723,7 @@ def _check_fetched_data_or_trees(
 
 def _check_trees(
     *,
-    parameters: config.HWSWInventoryParameters,
+    parameters: HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,
     status_data_tree: StructuredDataNode,
     old_tree: StructuredDataNode,

@@ -8,6 +8,7 @@ import time
 from logging import Logger
 
 from .helpers import ECLock
+from .history import Columns
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -83,7 +84,7 @@ class Perfcounters:
             self._old_counters = self._counters.copy()
 
     @classmethod
-    def status_columns(cls: type[Perfcounters]) -> list[tuple[str, float]]:
+    def status_columns(cls: type[Perfcounters]) -> Columns:
         columns: list[tuple[str, float]] = []
         # Please note: status_columns() and get_status() need to produce lists with exact same column order
         for name in cls._counter_names:

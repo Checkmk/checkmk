@@ -38,9 +38,11 @@ class UserChangePasswordPage(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user_spec = users[user.id]
 
-        cur_password = request.get_str_input_mandatory("cur_password")
-        password = request.get_str_input_mandatory("password")
-        password2 = request.get_str_input_mandatory("password2", "")
+        cur_password = request.get_validated_type_input(
+            Password, "cur_password", empty_is_none=True
+        )
+        password = request.get_validated_type_input(Password, "password", empty_is_none=True)
+        password2 = request.get_validated_type_input(Password, "password2", empty_is_none=True)
 
         # Force change pw mode
         if not cur_password:
@@ -53,14 +55,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
             raise MKUserError("password", _("The new password must differ from your current one."))
 
         now = datetime.now()
-        if userdb.check_credentials(user.id, Password(cur_password), now) is False:
+        if userdb.check_credentials(user.id, cur_password, now) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
             raise MKUserError("password2", _("The both new passwords do not match."))
 
         verify_password_policy(password)
-        user_spec["password"] = hash_password(Password(password))
+        user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
 
         # In case the user was enforced to change it's password, remove the flag

@@ -243,10 +243,11 @@ PLUGINS = [
     pytest.param(
         Plugin(
             function=check_gcp_sql_network,
-            metrics=["net_data_sent", "net_data_recv"],
+            metrics=["net_data_sent", "net_data_recv", "connections"],
             results=[
                 Result(state=State.OK, summary="In: 3.36 Bit/s"),
                 Result(state=State.OK, summary="Out: 3.36 Bit/s"),
+                Result(state=State.OK, summary="Active connections: 0.42"),
             ],
         ),
         id="network",
@@ -254,11 +255,16 @@ PLUGINS = [
     pytest.param(
         Plugin(
             function=check_gcp_sql_disk,
-            metrics=["fs_used_percent", "disk_write_ios", "disk_read_ios"],
+            metrics=[
+                "disk_utilization",
+                "disk_write_ios",
+                "disk_read_ios",
+            ],
+            pure_metrics=["disk_used_capacity", "disk_capacity"],
             results=[
-                Result(state=State.OK, summary="Disk utilization: 42.00%"),
-                Result(state=State.OK, summary="Read operations: 0.42"),
-                Result(state=State.OK, summary="Write operations: 0.42"),
+                Result(state=State.OK, notice="Utilization: 42.00%"),
+                Result(state=State.OK, notice="Read operations: 0.42/s"),
+                Result(state=State.OK, notice="Write operations: 0.42/s"),
             ],
         ),
         id="disk",

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from typing import Any, Final, NamedTuple, Union
+from typing import Any, Final, NamedTuple
 
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
@@ -32,17 +32,14 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
-CacheInfo = Union[tuple[int, int] | None]
+_CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
 
-SourceResults = Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]
-
-
 class ParsingResult(NamedTuple):
     data: ParsedSectionContent
-    cache_info: CacheInfo
+    cache_info: _CacheInfo | None
 
 
 class ResolvedResult(NamedTuple):
@@ -115,7 +112,7 @@ class SectionsParser:
             )
             return None
 
-    def _get_cache_info(self, section_name: SectionName) -> CacheInfo:
+    def _get_cache_info(self, section_name: SectionName) -> _CacheInfo | None:
         return self._host_sections.cache_info.get(section_name)
 
 
@@ -208,7 +205,7 @@ class ParsedSectionsBroker:
     def get_cache_info(
         self,
         parsed_section_names: list[ParsedSectionName],
-    ) -> CacheInfo:
+    ) -> _CacheInfo | None:
         # TODO: should't the host key be provided here?
         """Aggregate information about the age of the data in the agent sections
 
@@ -285,6 +282,7 @@ def parse_messages(
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
+    keep_outdated: bool,
     logger: logging.Logger,
 ) -> tuple[
     Mapping[HostKey, HostSections],
@@ -313,6 +311,7 @@ def parse_messages(
             source,
             raw_data,
             selection=selected_sections,
+            keep_outdated=keep_outdated,
             logger=logger,
         )
         results.append((source, source_result))

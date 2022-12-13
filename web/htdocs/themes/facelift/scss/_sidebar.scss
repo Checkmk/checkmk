@@ -386,17 +386,6 @@ div.snapin {
     }
   }
 
-  /* TODO: Reproduce this html element */
-  textarea {
-    width: 100%;
-  }
-
-  /* TODO: Reproduce this html element */
-  div.footnote {
-    width: 100%;
-    text-align: right;
-  }
-
   /* Style for exceptions displayed in snapins */
   div.snapinexception {
     width: 220px;
@@ -421,12 +410,12 @@ div.snapin {
 
     a {
       border-radius: $spacing;
-    }
 
-    a:hover {
-      /* TODO: create a better hover effect */
-      text-decoration: none;
-      opacity: 0.5;
+      &:hover {
+        /* TODO: create a better hover effect */
+        text-decoration: none;
+        opacity: 0.5;
+      }
     }
   }
 

@@ -77,6 +77,8 @@ def _noauth(func: pages.PageHandlerFunc) -> Callable[[], Response]:
     def _call_noauth():
         try:
             func()
+        except HTTPRedirect:
+            raise
         except Exception as e:
             html.write_text(str(e))
             if active_config.debug:

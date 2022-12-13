@@ -271,46 +271,47 @@ export class LayoutManagerLayer extends node_visualization_viewport_utils.Layere
     }
 
     delete_layout_id(layout_id) {
-        ajax.post_url(
-            "ajax_delete_bi_template_layout.py",
-            "layout_id=" + encodeURIComponent(layout_id),
-            () => this.toolbar_plugin.fetch_all_layouts()
-        );
+        ajax.call_ajax("ajax_delete_bi_template_layout.py", {
+            method: "POST",
+            post_data: "layout_id=" + encodeURIComponent(layout_id),
+            response_handler: () => this.toolbar_plugin.fetch_all_layouts(),
+        });
     }
 
     save_layout_template(layout_config) {
-        ajax.post_url(
-            "ajax_save_bi_template_layout.py",
-            "layout=" + encodeURIComponent(JSON.stringify(layout_config)),
-            () => this.toolbar_plugin.fetch_all_layouts()
-        );
+        ajax.call_ajax("ajax_save_bi_template_layout.py", {
+            method: "POST",
+            post_data: "layout=" + encodeURIComponent(JSON.stringify(layout_config)),
+            response_handler: () => this.toolbar_plugin.fetch_all_layouts(),
+        });
     }
 
     // TODO: check parameters
     save_layout_for_aggregation(layout_config, aggregation_name) {
-        ajax.post_url(
-            "ajax_save_bi_aggregation_layout.py",
-            "layout=" +
+        ajax.call_ajax("ajax_save_bi_aggregation_layout.py", {
+            method: "POST",
+            post_data:
+                "layout=" +
                 encodeURIComponent(JSON.stringify(layout_config)) +
                 "&aggregation_name=" +
                 encodeURIComponent(aggregation_name),
-            () => {
+            response_handler: () => {
                 this.viewport.main_instance.datasource_manager.schedule(true);
                 this.toolbar_plugin.fetch_all_layouts();
-            }
-        );
+            },
+        });
     }
 
     delete_layout_for_aggregation(aggregation_name) {
-        ajax.post_url(
-            "ajax_delete_bi_aggregation_layout.py",
-            "aggregation_name=" + encodeURIComponent(aggregation_name),
-            () => {
+        ajax.call_ajax("ajax_delete_bi_aggregation_layout.py", {
+            method: "POST",
+            post_data: "aggregation_name=" + encodeURIComponent(aggregation_name),
+            response_handler: () => {
                 this.allow_layout_updates = true;
                 this.viewport.main_instance.datasource_manager.schedule(true);
                 this.toolbar_plugin.fetch_all_layouts();
-            }
-        );
+            },
+        });
     }
 }
 

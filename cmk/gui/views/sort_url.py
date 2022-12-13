@@ -3,17 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
+from collections.abc import Iterable, Sequence
 
-from cmk.gui.painters.v0.base import painter_exists, painter_registry
-from cmk.gui.type_defs import PainterName, PainterSpec, SorterName, SorterSpec
-from cmk.gui.views.sorter import ParameterizedSorter, sorter_registry
+from cmk.gui.type_defs import PainterName, PainterParameters, PainterSpec, SorterName, SorterSpec
+
+from .painter.v0.base import painter_exists, painter_registry
+from .sorter import ParameterizedSorter, sorter_registry
 
 
 def compute_sort_url_parameter(
     painter_name: PainterName,
-    painter_parameters: Mapping[str, Any] | None,
+    painter_parameters: PainterParameters | None,
     join_key: str | None,
     group_painters: Sequence[PainterSpec],
     config_sorters: Sequence[SorterSpec],
@@ -47,7 +47,7 @@ def compute_sort_url_parameter(
     if sorter_name not in sorter_registry:
         return _encode_sorter_url(sorters)
 
-    sorter: SorterName | tuple[SorterName, Mapping[str, str]]
+    sorter: SorterName | tuple[SorterName, PainterParameters]
     if issubclass(sorter_registry[sorter_name], ParameterizedSorter):
         assert painter_parameters is not None
         sorter = (painter_name, painter_parameters)

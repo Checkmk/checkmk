@@ -32,11 +32,14 @@ pytestmark = pytest.mark.checks
                     "proxy": ("no_proxy", "no_proxy"),
                     "timeout": {"connect": 5, "read": 8},
                 },
-                "cluster-collector": {
-                    "endpoint": "https://11.211.3.32:20026",
-                    "verify-cert": False,
-                    "timeout": {"connect": 10, "read": 12},
-                },
+                "usage_endpoint": (
+                    "cluster-collector",
+                    {
+                        "endpoint": "https://11.211.3.32:20026",
+                        "verify-cert": False,
+                        "timeout": {"connect": 10, "read": 12},
+                    },
+                ),
                 "monitored-objects": ["pods"],
             },
             [
@@ -61,12 +64,12 @@ pytestmark = pytest.mark.checks
                 "8",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
-                "--cluster-collector-connect-timeout",
-                "10",
-                "--cluster-collector-read-timeout",
-                "12",
-                "--cluster-collector-proxy",
+                "--usage-proxy",
                 "FROM_ENVIRONMENT",
+                "--usage-connect-timeout",
+                "10",
+                "--usage-read-timeout",
+                "12",
             ],
         ),
         (
@@ -78,10 +81,13 @@ pytestmark = pytest.mark.checks
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
-                "cluster-collector": {
-                    "endpoint": "https://11.211.3.32:20026",
-                    "verify-cert": True,
-                },
+                "usage_endpoint": (
+                    "cluster-collector",
+                    {
+                        "endpoint": "https://11.211.3.32:20026",
+                        "verify-cert": True,
+                    },
+                ),
                 "monitored-objects": ["pods"],
             },
             [
@@ -102,9 +108,9 @@ pytestmark = pytest.mark.checks
                 "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
-                "--verify-cert-collector",
-                "--cluster-collector-proxy",
+                "--usage-proxy",
                 "FROM_ENVIRONMENT",
+                "--usage-verify-cert",
             ],
         ),
         (
@@ -116,10 +122,13 @@ pytestmark = pytest.mark.checks
                     "verify-cert": False,
                     "proxy": ("no_proxy", "no_proxy"),
                 },
-                "cluster-collector": {
-                    "endpoint": "https://11.211.3.32:20026",
-                    "verify-cert": False,
-                },
+                "usage_endpoint": (
+                    "cluster-collector",
+                    {
+                        "endpoint": "https://11.211.3.32:20026",
+                        "verify-cert": False,
+                    },
+                ),
                 "monitored-objects": ["pods", "namespaces"],
             },
             [
@@ -141,7 +150,7 @@ pytestmark = pytest.mark.checks
                 "NO_PROXY",
                 "--cluster-collector-endpoint",
                 "https://11.211.3.32:20026",
-                "--cluster-collector-proxy",
+                "--usage-proxy",
                 "FROM_ENVIRONMENT",
             ],
         ),

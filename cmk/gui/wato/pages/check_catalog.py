@@ -13,8 +13,6 @@ import re
 from collections.abc import Collection, Mapping
 from typing import Any, overload
 
-from six import ensure_str
-
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginNameStr
@@ -126,20 +124,22 @@ class ModeCheckPluginSearch(WatoMode):
         collection: dict[ManPageCatalogPath, list[dict]] = {}
         handled_check_names: set[CheckPluginNameStr] = set()
 
+        # TODO: type of entry argument seems to be unclear.
+        def entry_part_matches(entry: dict, key: str) -> bool:
+            value = entry.get(key, "")
+            return (
+                self._search is not None
+                and self._search in (value.decode() if isinstance(value, bytes) else value).lower()
+            )
+
         # searches in {"name" : "asd", "title" : "das", ...}
         def get_matched_entry(entry):
-            if isinstance(entry, dict):
-                # ? type of entry argument seems to be unclear.
-                name = ensure_str(entry.get("name", ""))  # pylint: disable= six-ensure-str-bin-call
-                title = ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                    entry.get("title", "")
-                )
-                if self._search is not None and (
-                    self._search in name.lower() or self._search in title.lower()
-                ):
-                    return entry
-
-            return None
+            return (
+                entry
+                if isinstance(entry, dict)
+                and (entry_part_matches(entry, "name") or entry_part_matches(entry, "title"))
+                else None
+            )
 
         def check_entries(key, entries):
             if isinstance(entries, list):

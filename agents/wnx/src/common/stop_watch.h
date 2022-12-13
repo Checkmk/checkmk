@@ -137,7 +137,7 @@ private:
     std::chrono::microseconds last_{};
     bool started_ = false;
     std::chrono::time_point<std::chrono::steady_clock> pos_;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class Wtools;
     FRIEND_TEST(Wtools, StopWatch);
 #endif

@@ -25,6 +25,7 @@ from cmk.gui.fields.attributes import (
     SNMPCredentials,
 )
 from cmk.gui.fields.custom_fields import (
+    AuxTagIDField,
     LDAPConnectionID,
     NetworkPortNumber,
     RelativeUrl,
@@ -53,6 +54,7 @@ from cmk.gui.fields.definitions import (
 )
 
 __all__ = [
+    "AuxTagIDField",
     "host_attributes_field",
     "column_field",
     "customer_field",

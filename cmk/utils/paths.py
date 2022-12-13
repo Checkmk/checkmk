@@ -9,11 +9,6 @@ import os
 from pathlib import Path
 
 
-# One bright day, when every path is really a Path, this can die... :-)
-def _path(*args: str | Path) -> str:
-    return str(Path(*args))
-
-
 def _omd_path(path: str) -> Path:
     return omd_root / path
 
@@ -23,7 +18,7 @@ def _omd_path_str(path: str) -> str:
 
 
 def _local_path(global_path: str | Path) -> Path:
-    return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
+    return omd_root / "local" / Path(global_path).relative_to(omd_root)
 
 
 # TODO: Add active_checks_dir and use it in code
@@ -132,7 +127,7 @@ local_enabled_packages_dir = local_share_dir / "enabled_packages"
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
 
-license_usage_dir = Path(var_dir, "license_usage")
+licensing_dir = Path(var_dir, "licensing")
 
 # Agent registration paths
 received_outputs_dir = Path(omd_root, "var/agent-receiver/received-outputs")

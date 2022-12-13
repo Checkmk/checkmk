@@ -28,6 +28,18 @@ class TestAgentSummarizer:
     def test_summarize_MKTimeout_exception(self) -> None:
         assert summarize_failure(ExitSpec(), MKTimeout()) == [ActiveCheckResult(2)]
 
+    def test_summarize_multiline_exception(self) -> None:
+        assert summarize_failure(
+            ExitSpec(),
+            RuntimeError("detail line 1\ndetail line 2\nexpected summary line"),
+        ) == [
+            ActiveCheckResult(
+                state=3,
+                summary="expected summary line",
+                details=["detail line 1", "detail line 2", "expected summary line"],
+            )
+        ]
+
 
 class TestPiggybackSummarizer:
     def test_summarize_missing_data_without_is_piggyback_option(self) -> None:

@@ -252,20 +252,6 @@ def _rename_host_in_event_rules(oldname, newname):  # pylint: disable=too-many-b
                 actions += ["alert_rules"] * num_changed
                 alert_handling.save_alert_handler_rules(arules)
 
-    # Notification channels of flexible notifications also can have host conditions
-    for user in users.values():
-        method = user.get("notification_method")
-        if method and isinstance(method, tuple) and method[0] == "flexible":
-            channels_changed = 0
-            for channel in method[1]:
-                if channel.get("only_hosts"):
-                    num_changed = rename_host_in_list(channel["only_hosts"], oldname, newname)
-                    if num_changed:
-                        channels_changed += 1
-                        some_user_changed = True
-            if channels_changed:
-                actions += ["notify_flexible"] * channels_changed
-
     if some_user_changed:
         userdb.save_users(users, datetime.now())
 

@@ -52,6 +52,7 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 		tar cf - -C "$$PACKAGE_PATH/skel" \
 		    --exclude="*~" \
 		    --exclude=".gitignore" \
+		    --exclude=".f12" \
 		    . | tar xvf - -C $(DESTDIR)$(OMD_ROOT)/skel ; \
             fi
 
@@ -148,13 +149,17 @@ include \
     packages/rrdtool/rrdtool.make \
     packages/mk-livestatus/mk-livestatus.make \
     packages/snap7/snap7.make \
-    packages/appliance/appliance.make
+    packages/appliance/appliance.make \
+    $(REPO_PATH)/packages/livestatus/livestatus.make
+
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),free)
-include $(REPO_PATH)/enterprise/enterprise.make
+include \
+    $(REPO_PATH)/enterprise/enterprise.make \
+    $(REPO_PATH)/plus/plus.make
 endif
 ifeq ($(EDITION),managed)
 include \

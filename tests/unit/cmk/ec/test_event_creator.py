@@ -599,7 +599,9 @@ def test_split_syslog_nonnil_sd_and_message(
     ],
 )
 def test_split_syslog_structured_data_and_message_exception(sd_and_message: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="Invalid RFC 5424 syslog message: structured data has the wrong format"
+    ):
         split_syslog_structured_data_and_message(sd_and_message)
 
 
@@ -670,7 +672,10 @@ def test_parse_syslog_message_structured_data(
 
 
 def test_parse_syslog_message_structured_data_exception() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="Invalid RFC 5424 syslog message: Found Checkmk structured data element multiple times",
+    ):
         parse_syslog_message_structured_data(
             '[Checkmk@18662 sl="0" ipaddress="127.0.0.1"][Checkmk@18662 sl="0" ipaddress="127.0.0.2"]'
         )

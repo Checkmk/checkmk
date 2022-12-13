@@ -18,7 +18,6 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme, theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
 def _get_current_theme_title() -> str:
@@ -95,7 +94,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if rulebased_notifications_enabled() and user.may("general.edit_notifications"):
+    if user.may("general.edit_notifications"):
         items.insert(
             1,
             TopicMenuItem(

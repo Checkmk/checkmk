@@ -11,11 +11,15 @@ except the python standard library or pydantic.
 """
 
 import enum
+import json
 from collections.abc import Mapping, Sequence
 from typing import Literal, NewType
 
-from pydantic import BaseModel, Field
+import requests
+from pydantic import BaseModel, Field, ValidationError
+from typing_extensions import assert_never
 
+from cmk.special_agents.utils_kubernetes import prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 HostName = NewType("HostName", str)
@@ -607,3 +611,56 @@ class KubeletInfo(Section, api.KubeletInfo):
 
 class HardResourceRequirement(Section, api.HardResourceRequirement):
     """sections: [kube_resource_quota_memory_v1, kube_resource_quota_cpu_v1]"""
+
+
+class ResultType(enum.Enum):
+    request_exception = "request_exception"
+    json_decode_error = "json_decode_error"
+    validation_error = "validation_error"
+    response_error = "response_error"
+    response_invalid_data = "reponse_invalid_data"
+    response_empty_result = "reponse_empty_result"
+    success = "success"
+
+
+class PrometheusResult(BaseModel):
+    """Serialize exceptions."""
+
+    query_: str
+    type_: ResultType
+    details: str | None
+
+    @classmethod
+    def from_response(cls, response: query.HTTPResponse) -> "PrometheusResult":
+        query_, result = response
+        type_, details = cls._from_result(result)
+        return cls(query_=query_, type_=type_, details=details)
+
+    @classmethod
+    def _from_result(cls, result: query.HTTPResult) -> tuple[ResultType, str | None]:
+        match result:
+            case requests.exceptions.RequestException():
+                return ResultType.request_exception, type(result).__name__
+            case json.JSONDecodeError():
+                return ResultType.json_decode_error, None
+            case ValidationError():
+                return ResultType.validation_error, None
+            case prometheus_api.ResponseError():
+                return ResultType.response_error, f"{result.error_type}: {result.error}"
+            case prometheus_api.ResponseSuccess(data=prometheus_api.Vector(result=[])):
+                return ResultType.response_empty_result, None
+            case prometheus_api.ResponseSuccess(data=prometheus_api.Vector()):
+                return ResultType.success, None
+            case prometheus_api.ResponseSuccess():
+                return ResultType.response_invalid_data, None
+        assert_never(result)
+        # match statements are disliked by pylint. The statement below is not reachable, but ensures
+        # that pylint knows this function returns a tuple
+        return ResultType.response_invalid_data, None
+
+
+class OpenShiftEndpoint(Section):
+    """section: prometheus_debug_v1"""
+
+    url: str
+    results: Sequence[PrometheusResult]

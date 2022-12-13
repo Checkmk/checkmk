@@ -50,7 +50,6 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.painters.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -72,6 +71,7 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.view import View
+from cmk.gui.views.painter.v0.helpers import format_plugin_output
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
 
 # Variable name conventions
@@ -978,7 +978,9 @@ def show_bi_availability(  # pylint: disable=too-many-branches
 
                     html.write_text(" &nbsp; ")
                     html.icon_button(
-                        makeuri(request, [("timewarp", "")]), _("Close Timewarp"), "closetimewarp"
+                        makeuri(request, [], delvars=["timewarp"]),
+                        _("Close timewarp"),
+                        "closetimewarp",
                     )
                     html.write_text(
                         "%s %s"

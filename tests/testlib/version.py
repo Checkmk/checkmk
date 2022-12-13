@@ -6,6 +6,12 @@
 import logging
 import os
 import time
+from collections.abc import Callable
+from typing import Final
+
+from tests.testlib.utils import branch_from_env, edition_from_env, version_spec_from_env
+
+from cmk.utils.version import Edition
 
 logger = logging.getLogger()
 
@@ -16,95 +22,66 @@ class CMKVersion:
     DAILY = "daily"
     GIT = "git"
 
-    CEE = "cee"
-    CRE = "cre"
-    CPE = "cpe"
-    CME = "cme"
+    def __init__(self, version_spec: str, edition: Edition, branch: str) -> None:
+        self.version_spec: Final = version_spec
+        self.version: Final = self._version(version_spec, branch)
+        self.edition: Final = edition
+        self.branch: Final = branch
 
-    def __init__(self, version_spec: str, edition: str, branch: str) -> None:
-        self.version_spec = version_spec
-        self._branch = branch
-
-        self._set_edition(edition)
-        self.set_version(version_spec, branch)
-
-    def _set_edition(self, edition: str) -> None:
-        # Allow short (cre) and long (raw) notation as input
-        if edition not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
-            edition_short = self._get_short_edition(edition)
-        else:
-            edition_short = edition
-
-        if edition_short not in [CMKVersion.CRE, CMKVersion.CEE, CMKVersion.CME, CMKVersion.CPE]:
-            raise NotImplementedError("Unknown short edition: %s" % edition_short)
-
-        self.edition_short = edition_short
-
-    def _get_short_edition(self, edition: str) -> str:
-        if edition == "raw":
-            return "cre"
-        if edition == "enterprise":
-            return "cee"
-        if edition == "managed":
-            return "cme"
-        if edition == "plus":
-            return "cpe"
-        raise NotImplementedError("Unknown edition: %s" % edition)
-
-    def get_default_version(self) -> str:
+    def _get_default_version(self) -> str:
         if os.path.exists("/etc/alternatives/omd"):
             path = os.readlink("/etc/alternatives/omd")
         else:
             path = os.readlink("/omd/versions/default")
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
-    def set_version(self, version: str, branch: str) -> None:
-        if version in [CMKVersion.DAILY, CMKVersion.GIT]:
+    def _version(self, version_spec: str, branch: str) -> str:
+        if version_spec in (self.DAILY, self.GIT):
             date_part = time.strftime("%Y.%m.%d")
             if branch != "master":
-                self.version = f"{branch}-{date_part}"
-            else:
-                self.version = date_part
+                return f"{branch}-{date_part}"
+            return date_part
 
-        elif version == CMKVersion.DEFAULT:
-            self.version = self.get_default_version()
+        if version_spec == self.DEFAULT:
+            return self._get_default_version()
 
-        else:
-            if ".cee" in version or ".cre" in version:
-                raise Exception("Invalid version. Remove the edition suffix!")
-            self.version = version
-
-    def branch(self) -> str:
-        return self._branch
-
-    def edition(self) -> str:
-        if self.edition_short == CMKVersion.CRE:
-            return "raw"
-        if self.edition_short == CMKVersion.CEE:
-            return "enterprise"
-        if self.edition_short == CMKVersion.CME:
-            return "managed"
-        if self.edition_short == CMKVersion.CPE:
-            return "plus"
-        raise NotImplementedError()
+        if ".cee" in version_spec or ".cre" in version_spec:
+            raise Exception("Invalid version. Remove the edition suffix!")
+        return version_spec
 
     def is_managed_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CME
+        return self.edition is Edition.CME
 
     def is_enterprise_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CEE
+        return self.edition is Edition.CEE
 
     def is_raw_edition(self) -> bool:
-        return self.edition_short == CMKVersion.CRE
+        return self.edition is Edition.CRE
+
+    def is_plus_edition(self) -> bool:
+        return self.edition is Edition.CPE
 
     def version_directory(self) -> str:
         return self.omd_version()
 
     def omd_version(self) -> str:
-        return f"{self.version}.{self.edition_short}"
+        return f"{self.version}.{self.edition.short}"
 
     def version_path(self) -> str:
         return "/omd/versions/%s" % self.version_directory()
 
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
+
+
+def version_from_env(
+    *,
+    fallback_version_spec: str | None = None,
+    fallback_edition: Edition | None = None,
+    fallback_branch: str | Callable[[], str] | None = None,
+) -> CMKVersion:
+    return CMKVersion(
+        version_spec_from_env(fallback_version_spec),
+        edition_from_env(fallback_edition),
+        branch_from_env(fallback_branch),
+    )

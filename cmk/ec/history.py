@@ -44,6 +44,8 @@ HistoryWhat = Literal[
     "CHANGESTATE",
 ]
 
+Columns = Sequence[tuple[str, float | int | str | list]]
+
 
 class History:
     def __init__(
@@ -51,8 +53,8 @@ class History:
         settings: Settings,
         config: Config,
         logger: Logger,
-        event_columns: list[tuple[str, Any]],
-        history_columns: list[tuple[str, Any]],
+        event_columns: Columns,
+        history_columns: Columns,
     ) -> None:
         super().__init__()
         self._settings = settings
@@ -146,11 +148,11 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
 def _mongodb_local_connection_opts(settings: Settings) -> tuple[str | None, int | None]:
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding="utf-8") as f:
-        for l in f:
-            if l.startswith("bind_ip"):
-                ip = l.split("=")[1].strip()
-            elif l.startswith("port"):
-                port = int(l.split("=")[1].strip())
+        for entry in f:
+            if entry.startswith("bind_ip"):
+                ip = entry.split("=")[1].strip()
+            elif entry.startswith("port"):
+                port = int(entry.split("=")[1].strip())
     return ip, port
 
 
@@ -446,8 +448,7 @@ def _expire_logfiles(
             for path in settings.paths.history_dir.value.glob("*.log"):
                 if flush or path.stat().st_mtime < min_mtime:
                     logger.info(
-                        "Deleting log file %s (age %s)"
-                        % (path, date_and_time(path.stat().st_mtime))
+                        "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
                     )
                     path.unlink()
         except Exception as e:

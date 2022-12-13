@@ -5,7 +5,7 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -22,6 +22,7 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.agent_based.checking as checking
@@ -39,7 +40,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,
@@ -59,53 +60,56 @@ __all__ = ["get_check_preview"]
 def get_check_preview(
     *,
     host_name: HostName,
+    config_cache: ConfigCache,
+    file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
-    use_cached_snmp_data: bool,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
-
-    ip_address = (
-        None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
-    )
+    ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
     host_attrs = get_host_attributes(host_name, config_cache)
 
-    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
-    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
+    # The code below this line is duplicated in automation_discovery()
+    nodes = config_cache.nodes_of(host_name)
+    if nodes is None:
+        hosts = [(host_name, ip_address)]
+    else:
+        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
     fetched: Sequence[
         tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
-        make_sources(
-            host_name,
-            ip_address,
-            ip_lookup=lambda host_name: config.lookup_ip_address(
-                config_cache.make_host_config(host_name)
-            ),
-            selected_sections=NO_SELECTION,
-            force_snmp_cache_refresh=not use_cached_snmp_data,
-            on_scan_error=on_error,
-            simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_name, config.snmp_without_sys_descr
-            ),
-            file_cache_max_age=max_cachefile_age,
+        *(
+            make_sources(
+                host_name_,
+                ip_address_,
+                config_cache=config_cache,
+                force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
+                selected_sections=NO_SELECTION,
+                on_scan_error=on_error if nodes is None else OnError.RAISE,
+                simulation_mode=config.simulation_mode,
+                file_cache_options=file_cache_options,
+                file_cache_max_age=max_cachefile_age,
+            )
+            for host_name_, ip_address_ in hosts
         ),
         mode=Mode.DISCOVERY,
     )
     host_sections, _source_results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
+        keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
+    # end of code duplication
 
     host_labels = analyse_host_labels(
         host_name=host_name,
+        config_cache=config_cache,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -118,16 +122,16 @@ def get_check_preview(
 
     grouped_services = get_host_services(
         host_name,
-        host_config,
-        parsed_sections_broker,
-        on_error,
+        config_cache=config_cache,
+        parsed_sections_broker=parsed_sections_broker,
+        on_error=on_error,
     )
 
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [
             _check_preview_table_row(
                 host_name,
-                host_config=host_config,
+                config_cache=config_cache,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
                     item=entry.item,
@@ -151,27 +155,32 @@ def get_check_preview(
         ] + [
             _check_preview_table_row(
                 host_name,
-                host_config=host_config,
+                config_cache=config_cache,
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
                 found_on_nodes=[host_name],
                 value_store_manager=value_store_manager,
             )
-            for _ruleset_name, service in host_config.enforced_services_table().values()
+            for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
         ]
 
     return [
         *passive_rows,
-        *_active_check_preview_rows(host_name, host_config, host_attrs),
-        *_custom_check_preview_rows(host_name, host_config),
+        *_active_check_preview_rows(
+            host_name,
+            config_cache.alias(host_name),
+            config_cache.active_checks(host_name),
+            host_attrs,
+        ),
+        *_custom_check_preview_rows(host_name, config_cache.custom_checks(host_name)),
     ], host_labels
 
 
 def _check_preview_table_row(
     host_name: HostName,
     *,
-    host_config: HostConfig,
+    config_cache: ConfigCache,
     service: ConfiguredService,
     check_source: _Transition | Literal["manual"],
     parsed_sections_broker: ParsedSectionsBroker,
@@ -183,8 +192,8 @@ def _check_preview_table_row(
 
     result = checking.get_aggregated_result(
         host_name,
+        config_cache,
         parsed_sections_broker,
-        host_config,
         service,
         plugin,
         value_store_manager=value_store_manager,
@@ -208,7 +217,7 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    host_name: HostName, host_config: HostConfig
+    host_name: HostName, custom_checks: list[dict]
 ) -> Sequence[CheckPreviewEntry]:
     return list(
         {
@@ -221,14 +230,15 @@ def _custom_check_preview_rows(
                 if config.service_ignored(host_name, None, description=entry["service_description"])
                 else "custom",
             )
-            for entry in host_config.custom_checks
+            for entry in custom_checks
         }.values()
     )
 
 
 def _active_check_preview_rows(
     host_name: HostName,
-    host_config: HostConfig,
+    alias: str,
+    active_checks: list[tuple[str, list[Any]]],
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
     return list(
@@ -243,10 +253,10 @@ def _active_check_preview_rows(
                 else "active",
                 effective_parameters=params,
             )
-            for plugin_name, entries in host_config.active_checks
+            for plugin_name, entries in active_checks
             for params in entries
             for descr in get_active_check_descriptions(
-                host_name, host_config.alias, host_attrs, plugin_name, params
+                host_name, alias, host_attrs, plugin_name, params
             )
         }.values()
     )

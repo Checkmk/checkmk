@@ -285,7 +285,7 @@ def load(
             # TODO: Figure out later which elements can contain these types and change them explicitly
             visual[key] = str(value)  # type: ignore[literal-required]
 
-        visuals[(UserId(""), name)] = visual
+        visuals[(UserId.builtin(), name)] = visual
 
     # Add custom "user_*.mk" visuals
     visuals.update(
@@ -580,7 +580,7 @@ def available(
 
     # 3. Builtin visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == "" and n not in visuals and user.may(f"{permprefix}.{n}"):
+        if u == UserId.builtin() and n not in visuals and user.may(f"{permprefix}.{n}"):
             visuals[n] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
@@ -761,7 +761,9 @@ def page_list(  # pylint: disable=too-many-branches
                     )
 
                 # Edit
-                if owner == user.id or (owner != "" and user.may("general.edit_foreign_%s" % what)):
+                if owner == user.id or (
+                    owner != UserId.builtin() and user.may("general.edit_foreign_%s" % what)
+                ):
                     edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
@@ -805,7 +807,7 @@ def page_list(  # pylint: disable=too-many-branches
                     table.cell(title3, renderer(visual))
 
                 # Owner
-                if owner == "":
+                if owner == UserId.builtin():
                     ownertxt = "<i>" + _("builtin") + "</i>"
                 else:
                     ownertxt = owner
@@ -819,7 +821,13 @@ def page_list(  # pylint: disable=too-many-branches
     html.footer()
 
 
-def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
+def _visual_can_be_linked(
+    what: VisualTypeName,
+    visual_name: VisualName,
+    user_visuals: dict[VisualName, T],
+    visual: T,
+    owner: UserId,
+) -> bool:
     if owner == user.id or user.may("general.edit_foreign_%s" % what):
         return True
 
@@ -827,7 +835,7 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
     if user_visuals.get(visual_name) != visual:
         return False
 
-    return visual["public"]
+    return bool(visual["public"])
 
 
 def _partition_visuals(
@@ -837,16 +845,18 @@ def _partition_visuals(
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []
     for (owner, visual_name) in keys_sorted:
-        if owner == "" and not user.may(f"{what[:-1]}.{visual_name}"):
+        if owner == UserId.builtin() and not user.may(f"{what[:-1]}.{visual_name}"):
             continue  # not allowed to see this view
 
         visual = visuals[(owner, visual_name)]
-        if visual["public"] and owner == "":
+        if visual["public"] and owner == UserId.builtin():
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
         elif (
-            visual["public"] and owner != "" and user_may(owner, "general.publish_%s" % what)
+            visual["public"]
+            and owner != UserId.builtin()
+            and user_may(owner, "general.publish_%s" % what)
         ) or user.may("general.edit_foreign_%s" % what):
             foreign_visuals.append((owner, visual_name, visual))
 

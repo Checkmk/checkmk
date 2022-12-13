@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 
 @pytest.mark.parametrize(
@@ -35,6 +39,8 @@ from tests.testlib import Check
         ([["[[H11 11]]"]], {"H11 11": {"log": "", "timestamp": "not available"}}),
     ],
 )
-def test_parse_sap_hana_ess_migration(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_sap_hana_ess_migration(
+    info: StringTable, expected_result: Mapping[str, Mapping[str, str]]
+) -> None:
     result = Check("sap_hana_ess_migration").run_parse(info)
     assert result == expected_result

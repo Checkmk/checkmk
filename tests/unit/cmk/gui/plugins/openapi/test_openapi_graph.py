@@ -30,14 +30,12 @@ def endpoint(name: str) -> str:
 
 @not_in_cre
 def test_openapi_graph_custom(
-    wsgi_app: WebTestAppForCMK,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
-    with_automation_user: tuple[str, str],
+    with_automation_user: tuple[UserId, str],
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
     username, _ = with_automation_user
-
-    wsgi_app.set_authorization(("Bearer", " ".join(with_automation_user)))
 
     graph_spec = {
         "owner": username,
@@ -50,10 +48,10 @@ def test_openapi_graph_custom(
     new_page = CustomGraphPage(graph_spec)  # type: ignore
     instances: OverridableInstances[CustomGraphPage] = OverridableInstances()
     instances.add_page(new_page)
-    CustomGraphPage.save_user_instances(instances, owner=UserId(username))
+    CustomGraphPage.save_user_instances(instances, owner=username)
 
     with mock_livestatus():
-        resp = wsgi_app.post(
+        resp = aut_user_auth_wsgi_app.post(
             url=endpoint("get_custom_graph"),
             content_type="application/json",
             headers={"Accept": "application/json"},

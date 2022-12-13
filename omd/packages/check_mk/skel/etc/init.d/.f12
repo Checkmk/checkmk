@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+TARGET="/omd/sites/$SITE/etc/init.d/"
+
+sudo rsync -a \
+    --exclude=.f12 \
+    ./ $TARGET
+sudo chown -R $SITE.$SITE $TARGET

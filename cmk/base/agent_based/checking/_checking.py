@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
+import itertools
 import logging
 from collections import defaultdict
 from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import DefaultDict, NamedTuple
+from typing import Callable, DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -28,6 +29,7 @@ from cmk.utils.type_defs import (
     HostName,
     MetricTuple,
     ParsedSectionName,
+    RuleSetName,
     ServiceName,
     SourceType,
     state_markers,
@@ -64,7 +66,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache, HWSWInventoryParameters
 from cmk.base.submitters import Submittee, Submitter
 
 from . import _cluster_modes
@@ -83,13 +85,13 @@ class _AggregatedResult(NamedTuple):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
+    config_cache: ConfigCache,
     fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
+    keep_outdated: bool,
     selected_sections: SectionNameCollection,
     submitter: Submitter,
 ) -> ActiveCheckResult:
-    config_cache = config.get_config_cache()
-    host_config = config_cache.make_host_config(hostname)
     exit_spec = config_cache.exit_code_spec(hostname)
 
     services = config.resolve_service_dependencies(
@@ -102,6 +104,7 @@ def execute_checkmk_checks(
     host_sections, source_results = parse_messages(
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
+        keep_outdated=keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
     )
     store_piggybacked_sections(host_sections)
@@ -110,7 +113,6 @@ def execute_checkmk_checks(
         service_results = check_host_services(
             hostname,
             config_cache=config_cache,
-            host_config=host_config,
             parsed_sections_broker=broker,
             services=services,
             run_plugin_names=run_plugin_names,
@@ -120,27 +122,32 @@ def execute_checkmk_checks(
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
                 hostname,
-                host_config,
+                inventory_parameters=config_cache.inventory_parameters,
+                params=config_cache.hwsw_inventory_parameters(hostname),
                 parsed_sections_broker=broker,
             )
-        timed_results = [
-            *summarize_host_sections(
-                source_results=source_results,
-                include_ok_results=True,
-                exit_spec_cb=config_cache.exit_code_spec,
-                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=hostname,
-                ),
-                is_piggyback=host_config.is_piggyback_host,
+        timed_results = itertools.chain(
+            *(
+                summarize_host_sections(
+                    host_sections,
+                    source,
+                    include_ok_results=True,
+                    exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                    time_settings=config_cache.get_piggybacked_hosts_time_settings(
+                        piggybacked_hostname=source.hostname,
+                    ),
+                    is_piggyback=config_cache.is_piggyback_host(hostname),
+                )
+                for source, host_sections in source_results
             ),
-            *check_parsing_errors(
+            check_parsing_errors(
                 errors=broker.parsing_errors(),
             ),
-            *_check_plugins_missing_data(
+            _check_plugins_missing_data(
                 service_results,
                 exit_spec,
             ),
-        ]
+        )
     return ActiveCheckResult.from_subresults(
         *timed_results,
         _timing_results(tracker.duration, tuple((f[0], f[2]) for f in fetched)),
@@ -149,20 +156,21 @@ def execute_checkmk_checks(
 
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
-    host_config: HostConfig,
     *,
+    inventory_parameters: Callable[[HostName, RuleSetName], dict[str, object]],
+    params: HWSWInventoryParameters,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
 
-    if not host_config.do_status_data_inventory:
+    if not params.status_data_inventory:
         # includes cluster case
         tree_store.remove(host_name=host_name)
         return  # nothing to do here
 
     status_data_tree = inventorize_status_data_of_real_host(
         host_name,
-        host_config=host_config,
+        inventory_parameters=inventory_parameters,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
     )
@@ -253,7 +261,6 @@ def check_host_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
@@ -273,8 +280,8 @@ def check_host_services(
             submittables = [
                 get_aggregated_result(
                     host_name,
+                    config_cache,
                     parsed_sections_broker,
-                    host_config,
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
@@ -333,8 +340,8 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
 
 def get_aggregated_result(
     host_name: HostName,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
-    host_config: HostConfig,
     service: ConfiguredService,
     plugin: checking_classes.CheckPlugin | None,
     *,
@@ -354,7 +361,6 @@ def get_aggregated_result(
             cache_info=None,
         )
 
-    config_cache = config.get_config_cache()
     check_function = (
         _cluster_modes.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),
@@ -453,14 +459,7 @@ def _get_clustered_service_node_keys(
         or ()
     )
 
-    return [
-        HostKey(
-            nc.hostname,
-            source_type,
-        )
-        for nodename in used_nodes
-        if (nc := config_cache.make_host_config(nodename))
-    ]
+    return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
 def _get_monitoring_data_kwargs(

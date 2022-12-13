@@ -2,12 +2,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime
 
 import pytest
 from werkzeug.test import create_environ
+
+from tests.testlib.users import create_and_destroy_user
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.type_defs import UserId
 
@@ -17,6 +22,7 @@ from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import UserSpec, WebAuthnCredential
 from cmk.gui.userdb import session
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.utils.transaction_manager import transactions
@@ -25,6 +31,49 @@ from cmk.gui.utils.transaction_manager import transactions
 @pytest.fixture(name="user_id")
 def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
+
+
+def test_login_two_factor_redirect(wsgi_app: WebTestAppForCMK) -> None:
+    auth: WebAuthnCredential = {
+        "credential_id": "Yaddayadda!",
+        "registered_at": 0,
+        "alias": "Yaddayadda!",
+        "credential_data": b"",
+    }
+    custom_attrs: UserSpec = {
+        "two_factor_credentials": {"webauthn_credentials": {"foo": auth}, "backup_codes": []},
+    }
+    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+        resp = wsgi_app.login(user_tuple[0], user_tuple[1])
+        assert resp.status_code == 302
+        assert resp.location.startswith("user_login_two_factor.py")
+
+
+def test_login_forced_password_change(wsgi_app: WebTestAppForCMK) -> None:
+    custom_attrs: UserSpec = {
+        "enforce_pw_change": True,
+    }
+    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+        resp = wsgi_app.login(user_tuple[0], user_tuple[1])
+        assert resp.status_code == 302
+        assert resp.location.startswith("user_change_pw.py")
+
+
+def test_login_two_factor_has_precedence_over_password_change(wsgi_app: WebTestAppForCMK) -> None:
+    auth: WebAuthnCredential = {
+        "credential_id": "Yaddayadda!",
+        "registered_at": 0,
+        "alias": "Yaddayadda!",
+        "credential_data": b"",
+    }
+    custom_attrs: UserSpec = {
+        "enforce_pw_change": True,
+        "two_factor_credentials": {"webauthn_credentials": {"foo": auth}, "backup_codes": []},
+    }
+    with create_and_destroy_user(custom_attrs=custom_attrs) as user_tuple:
+        resp = wsgi_app.login(user_tuple[0], user_tuple[1])
+        assert resp.status_code == 302
+        assert resp.location.startswith("user_login_two_factor.py")
 
 
 def test_authenticate_success(
@@ -105,7 +154,7 @@ def test_parse_auth_cookie_allow_current(
     current_cookie: str, with_user: tuple[UserId, str], session_id: str
 ) -> None:
     assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (
-        UserId(with_user[0]),
+        with_user[0],
         session_id,
         login._generate_auth_hash(with_user[0], session_id),
     )
@@ -138,7 +187,11 @@ def test_web_server_auth_session(user_id: UserId) -> None:
         assert user.id is None
 
 
-def test_ignore_transaction_ids(request_context, monkeypatch, with_automation_user):
+def test_ignore_transaction_ids(
+    request_context: Iterator[None],
+    monkeypatch: pytest.MonkeyPatch,
+    with_automation_user: tuple[UserId, str],
+) -> None:
     user_id, password = with_automation_user
     request.set_var("_secret", password)
     request.set_var("_username", user_id)

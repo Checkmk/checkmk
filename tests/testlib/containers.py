@@ -199,7 +199,7 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name = f"{base_image_name}-{version.edition_short}-{version.version}"
+    image_name = f"{base_image_name}-{version.edition.short}-{version.version}"
     image_name_with_tag = f"{image_name}:{docker_tag}"
 
     logger.info("Preparing image [%s]", image_name_with_tag)
@@ -231,9 +231,9 @@ def _create_cmk_image(
             "org.tribe29.build_id": base_image.short_id,
             "org.tribe29.base_image": base_image_name_with_tag,
             "org.tribe29.base_image_hash": base_image.short_id,
-            "org.tribe29.cmk_edition_short": version.edition_short,
+            "org.tribe29.cmk_edition_short": version.edition.short,
             "org.tribe29.cmk_version": version.version,
-            "org.tribe29.cmk_branch": version.branch(),
+            "org.tribe29.cmk_branch": version.branch,
             # override the base image label
             "com.tribe29.image_type": "cmk-image",
         },
@@ -276,7 +276,7 @@ def _create_cmk_image(
         # image labels.
         logger.info("Get Checkmk package hash")
         exit_code, output = container.exec_run(
-            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition()))],
+            ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
         )
         assert exit_code == 0
         hash_entry = output.decode("ascii").strip()
@@ -292,7 +292,7 @@ def _create_cmk_image(
         logger.info("Finalizing image")
         labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
         image = labeled_container.commit(image_name_with_tag)
-        labeled_container.remove(force=True)
+        labeled_container.remove(v=True, force=True)
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
@@ -437,8 +437,8 @@ def _container_env(version: CMKVersion) -> dict[str, str]:
         "PIPENV_PIPFILE": "/git/Pipfile",
         "PIPENV_VENV_IN_PROJECT": "true",
         "VERSION": version.version_spec,
-        "EDITION": version.edition_short,
-        "BRANCH": version.branch(),
+        "EDITION": version.edition.short,
+        "BRANCH": version.branch,
         "RESULT_PATH": "/results",
         "CI": os.environ.get("CI", ""),
         # Write to this result path by default (may be overridden e.g. by integration tests)
@@ -468,7 +468,8 @@ def _start(client, **kwargs):
     try:
         yield c
     finally:
-        c.remove(force=True)
+        # Do not leave inactive containers and anonymous volumes behind
+        c.remove(v=True, force=True)
 
 
 def _exec_run(c, cmd, **kwargs):
@@ -627,6 +628,23 @@ def _prepare_git_overlay(container, lower_path, target_path):
                 "overlay",
                 "-o",
                 f"lowerdir={lower_path},upperdir={upperdir_path},workdir={workdir_path}",
+                target_path,
+            ],
+        )
+        == 0
+    )
+
+    # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
+    # that by default, so we explicitly say that this is ok.
+    assert (
+        _exec_run(
+            container,
+            [
+                "git",
+                "config",
+                "--global",
+                "--add",
+                "safe.directory",
                 target_path,
             ],
         )

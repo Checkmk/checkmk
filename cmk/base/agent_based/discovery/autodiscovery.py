@@ -35,6 +35,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.autochecks as autochecks
@@ -49,7 +50,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources import fetch_all, make_sources
@@ -105,11 +106,11 @@ def automation_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
     mode: DiscoveryMode,
     service_filters: _ServiceFilters | None,
     on_error: OnError,
-    use_cached_snmp_data: bool,
+    file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -117,9 +118,6 @@ def automation_discovery(
     if host_name not in config_cache.all_active_hosts():
         result.error_text = ""
         return result
-
-    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
-    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -131,40 +129,49 @@ def automation_discovery(
             )  # this is cluster-aware!
 
         ipaddress = (
-            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
+            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
         )
+
+        # The code below this line is duplicated in get_check_preview().
+        nodes = config_cache.nodes_of(host_name)
+        if nodes is None:
+            hosts = [(host_name, ipaddress)]
+        else:
+            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
 
         fetched: Sequence[
             tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
         ] = fetch_all(
-            make_sources(
-                host_name,
-                ipaddress,
-                ip_lookup=lambda host_name: config.lookup_ip_address(
-                    config_cache.make_host_config(host_name)
-                ),
-                selected_sections=NO_SELECTION,
-                force_snmp_cache_refresh=not use_cached_snmp_data,
-                on_scan_error=on_error,
-                simulation_mode=config.simulation_mode,
-                missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                    host_name, config.snmp_without_sys_descr
-                ),
-                file_cache_max_age=max_cachefile_age,
+            *(
+                make_sources(
+                    host_name_,
+                    ipaddress_,
+                    config_cache=config_cache,
+                    force_snmp_cache_refresh=force_snmp_cache_refresh if nodes is None else False,
+                    selected_sections=NO_SELECTION,
+                    on_scan_error=on_error if nodes is None else OnError.RAISE,
+                    simulation_mode=config.simulation_mode,
+                    file_cache_options=file_cache_options,
+                    file_cache_max_age=max_cachefile_age,
+                )
+                for host_name_, ipaddress_ in hosts
             ),
             mode=Mode.DISCOVERY,
         )
         host_sections, _results = parse_messages(
             ((f[0], f[1]) for f in fetched),
             selected_sections=NO_SELECTION,
+            keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
         store_piggybacked_sections(host_sections)
         parsed_sections_broker = make_broker(host_sections)
+        # end of code duplication
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
                 host_name=host_name,
+                config_cache=config_cache,
                 parsed_sections_broker=parsed_sections_broker,
                 load_labels=True,
                 save_labels=True,
@@ -182,7 +189,7 @@ def automation_discovery(
         # Compute current state of new and existing checks
         services = _get_host_services(
             host_name,
-            host_config,
+            config_cache,
             parsed_sections_broker,
             on_error=on_error,
         )
@@ -216,28 +223,34 @@ def automation_discovery(
 
 def _get_host_services(
     host_name: HostName,
-    host_config: HostConfig,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
-    config_cache = config.get_config_cache()
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
+        services = {
+            **_get_cluster_services(
+                host_name,
+                config_cache=config_cache,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+            )
+        }
     else:
         services = {
             **_get_node_services(
                 host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
-                host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
+                host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
     services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
-    enforced_services = host_config.enforced_services_table()
+    enforced_services = config_cache.enforced_services_table(host_name)
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
@@ -356,11 +369,12 @@ def _make_diff(
 def discover_marked_hosts(
     core: MonitoringCore,
     autodiscovery_queue: AutoQueue,
+    *,
+    file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
+    config_cache: ConfigCache,
 ) -> None:
     """Autodiscovery"""
-
-    config_cache = config.get_config_cache()
-
     autodiscovery_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
         logger=console.verbose,
@@ -384,7 +398,8 @@ def discover_marked_hosts(
             activation_required |= _discover_marked_host(
                 host_name,
                 config_cache=config_cache,
-                host_config=config_cache.make_host_config(host_name),
+                file_cache_options=file_cache_options,
+                force_snmp_cache_refresh=force_snmp_cache_refresh,
                 autodiscovery_queue=autodiscovery_queue,
                 reference_time=rediscovery_reference_time,
                 oldest_queued=oldest_queued,
@@ -400,11 +415,9 @@ def discover_marked_hosts(
     ):
         try:
             _config_cache.clear_all()
-            config.get_config_cache().initialize()
+            config_cache.initialize()
 
             # reset these to their original value to create a correct config
-            cmk.core_helpers.cache.FileCacheGlobals.use_outdated = False
-            cmk.core_helpers.cache.FileCacheGlobals.maybe = True
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     core,
@@ -419,21 +432,22 @@ def discover_marked_hosts(
                 )
         finally:
             _config_cache.clear_all()
-            config.get_config_cache().initialize()
+            config_cache.initialize()
 
 
 def _discover_marked_host(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    host_config: HostConfig,
+    file_cache_options: FileCacheOptions,
+    force_snmp_cache_refresh: bool,
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
 ) -> bool:
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
-    if (params := host_config.discovery_check_parameters()).commandline_only:
+    if (params := config_cache.discovery_check_parameters(host_name)).commandline_only:
         console.verbose("  failed: discovery check disabled\n")
         return False
 
@@ -449,11 +463,11 @@ def _discover_marked_host(
     result = automation_discovery(
         host_name,
         config_cache=config_cache,
-        host_config=host_config,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         on_error=OnError.IGNORE,
-        use_cached_snmp_data=True,
+        file_cache_options=file_cache_options,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
         # autodiscovery is run every 5 minutes (see
         # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
         # make sure we may use the file the active discovery check left behind:
@@ -565,14 +579,21 @@ def _may_rediscover(
 # This function is cluster-aware
 def get_host_services(
     host_name: HostName,
-    host_config: HostConfig,
+    *,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
-    config_cache = config.get_config_cache()
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
+        services = {
+            **_get_cluster_services(
+                host_name,
+                config_cache=config_cache,
+                parsed_sections_broker=parsed_sections_broker,
+                on_error=on_error,
+            )
+        }
     else:
         services = {
             **_get_node_services(
@@ -586,7 +607,7 @@ def get_host_services(
     services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
-    enforced_services = host_config.enforced_services_table()
+    enforced_services = config_cache.enforced_services_table(host_name)
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
@@ -675,16 +696,16 @@ def _group_by_transition(
 
 def _get_cluster_services(
     host_name: HostName,
+    *,
+    config_cache: ConfigCache,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
-    config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return {}
 
     cluster_items: ServicesTable[_BasicTransition] = {}
-    config_cache = config.get_config_cache()
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.

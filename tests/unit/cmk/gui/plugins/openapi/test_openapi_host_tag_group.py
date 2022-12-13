@@ -241,7 +241,7 @@ def test_openapi_host_tag_group_update_use_case(aut_user_auth_wsgi_app: WebTestA
 
 def test_openapi_host_tag_with_only_one_option(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_host: None,
+    with_host: list[str],
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     wsgi_app = aut_user_auth_wsgi_app
@@ -347,3 +347,39 @@ def test_openapi_host_tag_groups_all_props_in_schema(
     assert "id" in first_tag
     assert "topic" in first_tag["extensions"]
     assert "tags" in first_tag["extensions"]
+
+
+def test_openapi_host_tags_groups_without_topic_and_tags(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "group_id999",
+                "title": "Kubernetes",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    individual_resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + "/objects/host_tag_group/group_id999",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    assert individual_resp.json["extensions"]["topic"] == "Tags"
+
+    # Let's see if outward validation works here as well
+    aut_user_auth_wsgi_app.get(
+        base + "/domain-types/host_tag_group/collections/all",
+        headers={"Accept": "application/json"},
+        status=200,
+    )

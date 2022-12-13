@@ -7,14 +7,20 @@ description:
  This check monitors Filestore servers
 
  - disk usage in percent
+ - disk usage in bytes
+ - total disk space in bytes
  - read IOPS
  - write IOPS
+ - average read wait time
+ - average write wait time
+ - average latency (maximum average read/write time)
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.
 
- There are no default levels. Upper levels on the received bytes
+ Upper levels on disk usage, read/write IOPS and average wait times
  are configurable via the rule "GCP/Filestore".
+ Default levels are configured for disk usage: 80%/90% (Warn/Crit).
 
 discovery:
  One service is created for each NFS server.

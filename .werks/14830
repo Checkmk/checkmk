@@ -1,0 +1,23 @@
+Title: Time axes of graphs: Take shifts in local time zones into account
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1668582907
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When rendering graphs, Checkmk computes suitable steps for the ticks on the time axis based on the
+current zoom level. However, this computation did not take into account shifts in local time zones,
+such as switches from European summer to European winter time.
+
+For example, a suitable step size might be one day. Usually, this would correspond to 24 hours,
+unless the local time zone shifts in between. Before this werk, Checkmk did not take such shifts
+into account. In European time, this led to for example the 30th of October 2022 being shown twice
+as a time axis label (since 00:00h on the 30th and 00:00h on the 31st of October 2022 are 25 hours
+apart).
+
+As of this werk, Checkmk takes such local shifts into account. Hence, eg. the 30th of October 2022
+is now represented by 25 hours on the time axis and the 27th of March by 23 hours (according to the
+time zone configured on the Checkmk server rendering the Checkmk UI.).

@@ -93,10 +93,11 @@ def test_host_labels_ps_match() -> None:
         (["test", "ps"], "ps", "~.*t$", True),
         (["test", "ps"], "sp", "~.*t$", False),
         (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
+        ([None], None, "~.*y", False),
     ],
 )
-def test_process_matches(  # type:ignore[no-untyped-def]
-    ps_line, ps_pattern, user_pattern, result
+def test_process_matches(
+    ps_line: Sequence[str], ps_pattern: str, user_pattern: str | None, result: bool
 ) -> None:
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))

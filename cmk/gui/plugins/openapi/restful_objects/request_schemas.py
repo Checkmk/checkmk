@@ -15,6 +15,7 @@ from cmk.utils.livestatus_helpers import tables
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKInternalError
+from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -35,7 +36,7 @@ from cmk.gui.watolib import userroles
 from cmk.gui.watolib.activate_changes import activate_changes_start
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.groups import is_alias_used
-from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
+from cmk.gui.watolib.tags import tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
@@ -1667,32 +1668,6 @@ class Tags(fields.List):
             seen_ids.add(tag_id)
 
 
-class AuxTag(fields.String):
-    default_error_messages = {
-        "invalid": "The specified auxiliary tag id is not valid: {name!r}",
-    }
-
-    def __init__(
-        self,
-        example,
-        required=True,
-        validate=None,
-        **kwargs,
-    ):
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-        available_aux_tags = load_aux_tags()
-        if value not in available_aux_tags:
-            raise self.make_error("invalid", name=value)
-
-
 class HostTag(BaseSchema):
     ident = fields.String(
         required=False,
@@ -1707,9 +1682,7 @@ class HostTag(BaseSchema):
         description="The title of the tag",
     )
     aux_tags = fields.List(
-        AuxTag(
-            example="ip-v4",
-            description="An auxiliary tag id",
+        AuxTagIDField(
             required=False,
         ),
         description="The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
@@ -1732,7 +1705,6 @@ class InputHostTagGroup(BaseSchema):
         description="A title for the host tag",
     )
     topic = fields.String(
-        required=True,
         example="Data Sources",
         description="Different tags can be grouped in a topic",
     )

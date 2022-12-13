@@ -156,10 +156,10 @@ class Scenario:
 
         return tag_config
 
-    def set_option(self, varname, option) -> None:  # type:ignore[no-untyped-def]
+    def set_option(self, varname: str, option: object) -> None:
         self.config[varname] = option
 
-    def set_ruleset(self, varname: str, ruleset: object) -> None:  # type:ignore[no-untyped-def]
+    def set_ruleset(self, varname: str, ruleset: object) -> None:
         """Warning: This is used in more cases than setting rule sets."""
         self.config[varname] = ruleset
 

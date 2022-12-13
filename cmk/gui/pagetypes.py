@@ -131,7 +131,7 @@ class BaseSpec(_BaseSpecMandatory, total=False):
 
 
 class _OverridableSpecMandatory(BaseSpec):
-    owner: str
+    owner: UserId
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
 
 
@@ -791,7 +791,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         for name, page_dict in cls.builtin_pages().items():
             page_dict = cls._transform_old_spec(page_dict)
             new_page = cls(page_dict)
-            instances.add_instance((UserId(page_dict["owner"]), name), new_page)
+            instances.add_instance((page_dict["owner"], name), new_page)
 
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
@@ -1847,7 +1847,7 @@ def declare(page_ty: type[Overridable]) -> None:
     page_types[page_ty.type_name()] = page_ty
 
     for path, page_func in page_ty.page_handlers().items():
-        cmk.gui.pages.register_page_handler(path, page_func)
+        cmk.gui.pages.page_registry.register_page_handler(path, page_func)
 
 
 def page_type(page_type_name: str) -> type[Overridable]:
@@ -1972,7 +1972,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 20,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "monitoring": {
                 "name": "monitoring",
@@ -1981,7 +1981,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 30,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "problems": {
                 "name": "problems",
@@ -1990,7 +1990,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 40,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "history": {
                 "name": "history",
@@ -1999,7 +1999,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 50,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "analyze": {
                 "name": "analyze",
@@ -2008,7 +2008,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 60,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "events": {
                 "name": "events",
@@ -2017,7 +2017,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 70,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "bi": {
                 "name": "bi",
@@ -2027,7 +2027,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 80,
                 "public": True,
                 "hide": _no_bi_aggregate_active(),
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "applications": {
                 "name": "applications",
@@ -2036,7 +2036,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 85,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "inventory": {
                 "name": "inventory",
@@ -2045,7 +2045,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 90,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "network_statistics": {
                 "name": "network_statistics",
@@ -2055,7 +2055,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 95,
                 "public": True,
                 "hide": not is_ntop_configured(),
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "my_workplace": {
                 "name": "my_workplace",
@@ -2064,7 +2064,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 100,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
             "other": {
@@ -2074,7 +2074,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 105,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
         }
 

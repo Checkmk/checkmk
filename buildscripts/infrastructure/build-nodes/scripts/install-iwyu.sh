@@ -83,6 +83,7 @@ case $CLANG_VERSION in
     12) TAG_NAME="12" LIB_VERSION="12" ;;
     13) TAG_NAME="13" LIB_VERSION="13" ;;
     14) TAG_NAME="14" LIB_VERSION="14" ;;
+    15) TAG_NAME="15" LIB_VERSION="15" ;;
     *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
 esac
 

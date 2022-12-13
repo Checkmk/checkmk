@@ -14,9 +14,10 @@ from cmk.gui.ctx_stack import request_stack
 from cmk.gui.userdb import session
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 
 
-def flash(message: str | HTML) -> None:
+def flash(message: str | HTML | LazyString) -> None:
     """To handle both, HTML and str, correctly we need to a) escape the given str for HTML and
     cast the HTML objects to str. Before handing back the messages to the consumer, all need to
     converted back to HTML (see get_flashed_messages())

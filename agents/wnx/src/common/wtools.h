@@ -418,7 +418,7 @@ private:
     // output
     std::vector<char> data_;
     uint32_t exit_code_{STILL_ACTIVE};
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class Wtools;
     FRIEND_TEST(Wtools, AppRunner);
 #endif
@@ -539,7 +539,7 @@ private:
 
     SERVICE_STATUS status_ = {};
     SERVICE_STATUS_HANDLE status_handle_{nullptr};
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
+#if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ServiceControllerTest;
     FRIEND_TEST(ServiceControllerTest, CreateDelete);
     FRIEND_TEST(ServiceControllerTest, StartStop);

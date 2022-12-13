@@ -6,8 +6,9 @@ distribution: check_mk
 description:
  This check monitors the network of database servers and reports
 
- - average outgoing network bandwith used in the last minute
- - average incoming network bandwith used in the last minute
+ - average outgoing network bandwidth used in the last minute
+ - average incoming network bandwidth used in the last minute
+ - number of connections in the last minute (only available for MySQL and SQL Server databases)
 
  To make this check work you have to configure the related
  special agent {Google Cloud Platform (GCP)}.

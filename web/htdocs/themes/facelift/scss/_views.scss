@@ -736,11 +736,6 @@ div.avlegend.timeline div.state.chaos {
   background-color: $chaos;
 }
 
-/* #TODO: Reproduce this html element */
-div#avoptions_on {
-  margin-right: 3px;
-}
-
 table.data tr.data > td.timeline {
   width: 500px;
   padding: 0;
@@ -838,7 +833,7 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
   box-shadow: none;
 }
 
-/* #TODO: Reproduce this html element */
+// Timewarping table for BI availability timelines
 table.data.timewarp {
   width: 800px;
   margin-bottom: 20px;
@@ -896,12 +891,6 @@ div.avlegend {
 
 td.invtree {
   width: 100%;
-
-  /* TODO: Reproduce this html element */
-  b.treeangle.title {
-    font-weight: normal;
-    color: $font-color-black;
-  }
 
   ul.treeangle {
     margin: 0;
@@ -1002,43 +991,69 @@ table.data tr.data td.if_state {
   }
 }
 
-/* #TODO: Reproduce all .sla elements */
 table.data.headerleft.sla {
-  th {
-    width: 130px;
-    padding: 4px 5px;
+  tbody tr {
+    th {
+      width: 240px;
+      padding: 0.5 * $spacing;
 
-    &.sla_state {
-      width: 30px;
+      &.sla_state {
+        width: 30px;
+      }
     }
 
-    &.sla_duration {
-      text-align: left;
+    td {
+      &,
+      &.sla {
+        padding: 0.5 * $spacing $spacing;
+      }
+
+      &.sla_duration {
+        padding-right: 0.5 * $spacing;
+        text-align: right;
+      }
+
+      &.sla_output {
+        width: 70%;
+        padding-left: 0.5 * $spacing;
+      }
+
+      table.timeline.standalone,
+      &.sla table.timeline.standalone {
+        margin-bottom: 0;
+      }
+
+      &.sla_spec table {
+        margin: 0;
+        border: none;
+        border-spacing: 0;
+
+        tbody tr td {
+          padding-left: 0;
+
+          &.title {
+            width: 280px;
+            font-weight: $font-weight-bold;
+          }
+
+          table tbody tr td {
+            padding: 0;
+          }
+        }
+      }
+    }
+
+    th.sla_date,
+    td.sla_date {
+      width: 120px;
+      padding-right: 0.5 * $spacing;
     }
   }
 
-  td {
-    padding: 0;
-
-    &.sla_duration {
-      padding-right: 4px;
-      text-align: right;
-    }
-
-    &.sla_output {
-      width: 70%;
-      padding-left: 4px;
-    }
-  }
-
-  th.sla_date,
-  td.sla_date {
-    width: 120px;
-    padding-right: 4px;
-  }
-
-  a {
-    color: $font-color-white;
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
+    color: $font-color;
     text-decoration: underline;
   }
 }
@@ -1063,11 +1078,10 @@ table.data.headerleft.sla {
   }
 }
 
-table.data tr.sla_horizontal_line > td.sla_horizontal_line {
+table.data tr.data.sla_horizontal_line > td.sla_horizontal_line {
   height: 1px;
 
   &.black {
-    height: 1px;
     border-bottom: 1px solid $font-color;
   }
 }
@@ -1079,77 +1093,7 @@ table.data.oddeven > tbody > tr.sla_hilite {
   filter: brightness(70%);
 
   &.sla_error_hilite {
-    padding: 0;
-    border-style: none;
     filter: brightness(50%);
-  }
-}
-
-div.timelinerange.sla {
-  float: none;
-  width: auto;
-}
-
-table.data.headerleft.sla {
-  tbody tr {
-    td {
-      &,
-      &.sla {
-        padding: 4px 8px;
-      }
-
-      table.timeline.standalone,
-      &.sla table.timeline.standalone {
-        margin-bottom: 0;
-        box-shadow: none;
-
-        tbody tr td {
-          border-radius: 0;
-        }
-      }
-
-      &.sla_spec > table,
-      &.sla_spec table.sla_spec {
-        margin: 0;
-        border: none;
-        border-spacing: 0;
-        box-shadow: none;
-
-        tbody tr td {
-          padding-left: 0;
-          margin: 0;
-          vertical-align: baseline;
-
-          &.title {
-            display: table-cell;
-            width: 280px;
-            font-weight: $font-weight-bold;
-            color: $font-color;
-          }
-
-          table {
-            margin: 0;
-            border: none;
-            border-spacing: 0;
-            box-shadow: none;
-
-            tbody tr td {
-              padding: 0;
-            }
-          }
-        }
-      }
-    }
-
-    th {
-      width: 240px;
-    }
-  }
-
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span {
-    color: $font-color;
   }
 }
 

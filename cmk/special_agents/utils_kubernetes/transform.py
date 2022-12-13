@@ -16,60 +16,8 @@ from kubernetes import client  # type: ignore[import]
 
 from . import transform_json
 from .schemata import api
-from .schemata.api import Label, LabelName
+from .schemata.api import Label, LabelName, parse_frac_prefix, parse_resource_value
 from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
-
-
-def parse_frac_prefix(value: str) -> float:
-    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
-
-    Examples:
-       >>> parse_frac_prefix("359m")
-       0.359
-       >>> parse_frac_prefix("4k")
-       4000.0
-    """
-
-    if value.endswith("m"):
-        return 0.001 * float(value[:-1])
-    if value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    return float(value)
-
-
-def parse_memory(value: str) -> float:  # pylint: disable=too-many-branches
-    if value.endswith("Ki"):
-        return 1024**1 * float(value[:-2])
-    if value.endswith("Mi"):
-        return 1024**2 * float(value[:-2])
-    if value.endswith("Gi"):
-        return 1024**3 * float(value[:-2])
-    if value.endswith("Ti"):
-        return 1024**4 * float(value[:-2])
-    if value.endswith("Pi"):
-        return 1024**5 * float(value[:-2])
-    if value.endswith("Ei"):
-        return 1024**6 * float(value[:-2])
-
-    if value.endswith("K") or value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    if value.endswith("M"):
-        return 1e6 * float(value[:-1])
-    if value.endswith("G"):
-        return 1e9 * float(value[:-1])
-    if value.endswith("T"):
-        return 1e12 * float(value[:-1])
-    if value.endswith("P"):
-        return 1e15 * float(value[:-1])
-    if value.endswith("E"):
-        return 1e18 * float(value[:-1])
-
-    # millibytes are a useless, but valid option:
-    # https://github.com/kubernetes/kubernetes/issues/28741
-    if value.endswith("m"):
-        return 1e-3 * float(value[:-1])
-
-    return float(value)
 
 
 def parse_metadata_no_namespace(
@@ -104,12 +52,12 @@ def container_resources(container: client.V1Container) -> api.ContainerResources
     if container.resources is not None:
         if limits := container.resources.limits:
             parsed_limits = api.ResourcesRequirements(
-                memory=parse_memory(limits["memory"]) if "memory" in limits else None,
+                memory=parse_resource_value(limits["memory"]) if "memory" in limits else None,
                 cpu=parse_frac_prefix(limits["cpu"]) if "cpu" in limits else None,
             )
         if requests := container.resources.requests:
             parsed_requests = api.ResourcesRequirements(
-                memory=parse_memory(requests["memory"]) if "memory" in requests else None,
+                memory=parse_resource_value(requests["memory"]) if "memory" in requests else None,
                 cpu=parse_frac_prefix(requests["cpu"]) if "cpu" in requests else None,
             )
 
@@ -320,13 +268,13 @@ def node_resources(  # type:ignore[no-untyped-def]
     if capacity:
         resources["capacity"] = api.NodeResources(
             cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
-            memory=parse_memory(capacity.get("memory", 0.0)),
+            memory=parse_resource_value(capacity.get("memory", 0.0)),
             pods=capacity.get("pods", 0),
         )
     if allocatable:
         resources["allocatable"] = api.NodeResources(
             cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
-            memory=parse_memory(allocatable.get("memory", 0.0)),
+            memory=parse_resource_value(allocatable.get("memory", 0.0)),
             pods=allocatable.get("pods", 0),
         )
     return resources
@@ -649,7 +597,7 @@ def parse_resource_requirement(
             continue
         requirement_type = "limit" if "limits" in requirement else "request"
         requirements[requirement_type] = (
-            parse_frac_prefix(value) if resource == "cpu" else parse_memory(value)
+            parse_frac_prefix(value) if resource == "cpu" else parse_resource_value(value)
         )
 
     if not requirements:

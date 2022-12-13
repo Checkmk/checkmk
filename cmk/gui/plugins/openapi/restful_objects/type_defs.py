@@ -7,6 +7,8 @@ from typing import Any, Literal, TypedDict, Union
 
 from marshmallow import fields, Schema
 
+from cmk.utils.type_defs import HTTPMethod
+
 URL = str
 
 DomainType = Literal[
@@ -45,6 +47,7 @@ DomainType = Literal[
     "user",
     "user_config",
     "user_role",
+    "aux_tag",
 ]  # fmt: off
 
 DomainObject = dict[str, Any]
@@ -59,6 +62,7 @@ CmkEndpointName = Literal[
     "cmk/bulk_discovery",
     "cmk/bulk_update",
     "cmk/create",
+    "cmk/create_aux_tag",
     "cmk/create_host",
     "cmk/create_for_host",
     "cmk/create_service",
@@ -148,8 +152,6 @@ RestfulEndpointName = Literal[
 ]  # fmt: off
 
 LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
-
-HTTPMethod = Literal["get", "put", "post", "delete"]
 
 PropertyFormat = Literal[
     # String values

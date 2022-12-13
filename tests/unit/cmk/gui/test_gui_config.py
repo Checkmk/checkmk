@@ -165,6 +165,7 @@ def test_default_config_from_plugins() -> None:
             "agent_deployment_remote",
             "agent_signature_keys",
             "have_combined_graphs",
+            "licensing_settings",
             "reporting_use",
             "reporting_rangespec",
             "reporting_filename",

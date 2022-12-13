@@ -77,7 +77,13 @@ def summarize_failure(exit_spec: ExitSpec, exc: Exception) -> Sequence[ActiveChe
             return exit_spec.get("timeout", 2)
         return exit_spec.get("exception", 3)
 
-    return [ActiveCheckResult(extract_status(exc), str(exc))]
+    return [
+        ActiveCheckResult(
+            extract_status(exc),
+            str(exc).rsplit("\n", maxsplit=1)[-1],
+            str(exc).split("\n") if str(exc) else (),
+        )
+    ]
 
 
 def summarize_piggyback(

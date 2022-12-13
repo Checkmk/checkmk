@@ -65,7 +65,6 @@ import cmk.gui.background_job as background_job
 import cmk.gui.backup as backup
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-import cmk.gui.mkeventd
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
 import cmk.gui.plugins.watolib.utils
@@ -74,7 +73,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
-import cmk.gui.wato.mkeventd
 import cmk.gui.wato.pages.fetch_agent_output
 import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
@@ -194,7 +192,6 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
-syslog_facilities = cmk.gui.mkeventd.syslog_facilities
 from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
@@ -257,6 +254,37 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
     register_modules,
     WatoModule,
 )
+from cmk.gui.views.icon import IconRegistry
+from cmk.gui.views.painter.v0.base import PainterRegistry
+from cmk.gui.views.sorter import SorterRegistry
+
+from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
+from .views import (
+    PainterHostFilename,
+    PainterWatoFolderAbs,
+    PainterWatoFolderPlain,
+    PainterWatoFolderRel,
+    SorterWatoFolderAbs,
+    SorterWatoFolderPlain,
+    SorterWatoFolderRel,
+)
+
+
+def register(
+    painter_registry: PainterRegistry, sorter_registry: SorterRegistry, icon_registry: IconRegistry
+) -> None:
+    painter_registry.register(PainterHostFilename)
+    painter_registry.register(PainterWatoFolderAbs)
+    painter_registry.register(PainterWatoFolderRel)
+    painter_registry.register(PainterWatoFolderPlain)
+    sorter_registry.register(SorterWatoFolderAbs)
+    sorter_registry.register(SorterWatoFolderRel)
+    sorter_registry.register(SorterWatoFolderPlain)
+
+    icon_registry.register(DownloadAgentOutputIcon)
+    icon_registry.register(DownloadSnmpWalkIcon)
+    icon_registry.register(WatoIcon)
+
 
 # .
 #   .--Plugins-------------------------------------------------------------.
@@ -401,7 +429,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     for name in (
         "ConfigDomainCACertificates",
         "ConfigDomainCore",
-        "ConfigDomainEventConsole",
         "ConfigDomainGUI",
         "ConfigDomainOMD",
     ):

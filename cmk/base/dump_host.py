@@ -24,6 +24,7 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.check_table as check_table
@@ -32,7 +33,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.base.config import HostConfig
 
 
 def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
@@ -52,14 +52,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / fetcher.hostname)
 
     if isinstance(fetcher, ProgramFetcher):
-        response = [
-            "Program: %s"
-            % (
-                fetcher.cmdline
-                if isinstance(fetcher.cmdline, str)
-                else fetcher.cmdline.decode("utf8")
-            )
-        ]
+        response = [f"Program: {fetcher.cmdline}"]
         if fetcher.stdin:
             response.extend(["  Program stdin:", fetcher.stdin])
         return "\n".join(response)
@@ -111,7 +104,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        hostname, host_config, family=config_cache.default_address_family(hostname)
+        hostname, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
@@ -121,7 +114,6 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         try:
             secondary = _ip_address_for_dump_host(
                 hostname,
-                host_config,
                 family=config_cache.default_address_family(hostname),
             )
         except Exception:
@@ -148,13 +140,12 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     labels = [tag_template % ":".join(l) for l in sorted(host_config.labels.items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
-    # TODO: Clean this up once cluster parent handling has been moved to HostConfig
     if config_cache.is_cluster(hostname):
         parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
     else:
-        parents_list = host_config.parents
+        parents_list = config_cache.parents(hostname)
     if len(parents_list) > 0:
         out.output(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
@@ -163,31 +154,30 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         tty.yellow
         + "Host groups:            "
         + tty.normal
-        + ", ".join(host_config.hostgroups)
+        + ", ".join(config_cache.hostgroups(hostname))
         + "\n"
     )
     out.output(
         tty.yellow
         + "Contact groups:         "
         + tty.normal
-        + ", ".join(host_config.contactgroups)
+        + ", ".join(config_cache.contactgroups(hostname))
         + "\n"
     )
 
     agenttypes = [
         dump_source(source, fetcher)
-        for source, _file_cache, fetcher in sources.make_non_cluster_sources(
+        for source, _file_cache, fetcher in sources.make_sources(
             hostname,
             ipaddress,
+            file_cache_options=FileCacheOptions(),
+            config_cache=config_cache,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                hostname, config.snmp_without_sys_descr
-            ),
             file_cache_max_age=file_cache.MaxAge.none(),
         )
     ]
 
-    if host_config.is_ping_host:
+    if config_cache.is_ping_host(hostname):
         agenttypes.append("PING only")
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
@@ -236,12 +226,11 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
 
 def _ip_address_for_dump_host(
     host_name: HostName,
-    host_config: HostConfig,
     *,
     family: socket.AddressFamily,
 ) -> str | None:
     config_cache = config.get_config_cache()
     try:
-        return config.lookup_ip_address(host_config, family=family)
+        return config.lookup_ip_address(host_name, family=family)
     except Exception:
         return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)

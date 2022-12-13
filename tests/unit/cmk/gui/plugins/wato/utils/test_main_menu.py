@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
-from cmk.gui.watolib.main_menu import ModuleRegistry
+from cmk.gui.watolib.main_menu import MainModuleRegistry
 
 
 def test_register_modules(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    monkeypatch.setattr(main_menu, "main_module_registry", ModuleRegistry())
+    monkeypatch.setattr(main_menu, "main_module_registry", MainModuleRegistry())
     module = main_menu.WatoModule(
         mode_or_url="dang",
         description="descr",

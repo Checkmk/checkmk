@@ -31,7 +31,8 @@ from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
 # incompatible
-USER_SCHEME_SERIAL = 0
+# 0 -> 1 _remove_flexible_notifications() in 2.2
+USER_SCHEME_SERIAL = 1
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
@@ -325,22 +326,22 @@ class UserConnector(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def type(cls):
+    def type(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def title(cls):
+    def title(cls) -> str:
         """The string representing this connector to humans"""
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def short_title(cls):
+    def short_title(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def config_changed(cls):
+    def config_changed(cls) -> None:
         return
 
     #
@@ -371,17 +372,17 @@ class UserConnector(abc.ABC):
         only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
-    ):
+    ) -> None:
         pass
 
     # Optional: Tells whether or not the synchronization (using do_sync()
     # method) is needed.
-    def sync_is_needed(self):
+    def sync_is_needed(self) -> bool:
         return False
 
     # Optional: Hook function can be registered here to be xecuted
     # to save all users.
-    def save_users(self, users):
+    def save_users(self, users: dict[UserId, UserSpec]) -> None:
         pass
 
     # List of user attributes locked for all users attached to this

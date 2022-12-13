@@ -187,6 +187,18 @@ def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> Co
     return config_hooks
 
 
+def load_defaults(site: "SiteContext") -> dict[str, str]:
+    """Get the default values of all config hooks for the site configuration"""
+    if not site.hook_dir or not os.path.exists(site.hook_dir):
+        return {}
+
+    return {
+        hook_name: call_hook(site, hook_name, ["default"])[1]
+        for hook_name in sort_hooks(os.listdir(site.hook_dir))
+        if hook_name[0] != "."
+    }
+
+
 # Always sort CORE hook to the end because it runs "cmk -U" which
 # relies on files created by other hooks.
 def sort_hooks(hook_names: list[str]) -> Iterable[str]:

@@ -14,21 +14,21 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.painters.v0.base import Cell, EmptyCell
-from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
 
 from ..data_source import row_id
+from ..painter.v0.base import Cell, EmptyCell
+from ..painter.v1.helpers import is_stale
+from ..painter_options import PainterOptions
 from .base import Layout
 from .helpers import group_value, output_csv_headers
-from .registry import ViewLayoutRegistry
+from .registry import LayoutRegistry
 
 
-def register_layouts(registry: ViewLayoutRegistry) -> None:
+def register_layouts(registry: LayoutRegistry) -> None:
     registry.register(LayoutSingleDataset)
     registry.register(LayoutBalancedBoxes)
     registry.register(LayoutBalancedGraphBoxes)

@@ -5,20 +5,23 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
+import sys
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
+from types import TracebackType
 from typing import Any, Protocol
 
 import requests
 import typing_extensions
+from google.api_core.exceptions import PermissionDenied
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account  # type: ignore[import]
 from googleapiclient.discovery import build, Resource  # type: ignore[import]
-from googleapiclient.http import HttpRequest  # type: ignore[import]
+from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = gAggregation.Aligner
@@ -306,7 +309,23 @@ class HealthSection:
         return json.dumps(self.health_info)
 
 
-Section = AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection
+@dataclass(frozen=True)
+class ExceptionSection:
+    exc_type: type[BaseException] | None
+    exception: BaseException | None
+    traceback: TracebackType | None
+    name: str = "exception"
+    source: str | None = ""
+
+    def serialize(self) -> str | None:
+        if self.exc_type is None:
+            return None
+        return f"{self.exc_type.__name__}:{self.source}:{self.exception}".replace("\n", "")
+
+
+Section = (
+    AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection | ExceptionSection
+)
 
 #################
 # Serialization #
@@ -348,6 +367,12 @@ def _health_serializer(section: HealthSection) -> None:
         w.append(section.serialize())
 
 
+def _exception_serializer(section: ExceptionSection) -> None:
+    with SectionWriter("gcp_exceptions") as w:
+        if section.exc_type is not None:
+            w.append(section.serialize())
+
+
 def gcp_serializer(sections: Iterable[Section]) -> None:
     for section in sections:
         if isinstance(section, AssetSection):
@@ -360,6 +385,8 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _cost_serializer(section)
         elif isinstance(section, HealthSection):
             _health_serializer(section)
+        elif isinstance(section, ExceptionSection):
+            _exception_serializer(section)
         else:
             typing_extensions.assert_never(section)
 
@@ -397,6 +424,8 @@ def time_series(
         request = metric.request(interval, groupby=service.default_groupby, project=client.project)
         try:
             results = client.list_time_series(request=request)
+        except PermissionDenied:
+            raise
         except Exception as e:
             raise RuntimeError(metric.name) from e
         for ts in results:
@@ -521,13 +550,35 @@ def run(
     monitor_health: bool,
     piggy_back_prefix: str,
 ) -> None:
-    assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
-    serializer([assets])
-    serializer(run_metrics(client, services))
-    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-    serializer(run_cost(client, cost))
+    try:
+        assets = run_assets(
+            client, [s.name for s in services] + [s.name for s in piggy_back_services]
+        )
+        serializer([assets])
+    except PermissionDenied:
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
+        return
+
+    try:
+        serializer(run_metrics(client, services))
+        serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
+    except PermissionDenied:
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="Monitoring")])
+        return
+
+    try:
+        serializer(run_cost(client, cost))
+    except HttpError:
+        exc_type, exception, traceback = sys.exc_info()
+        serializer([ExceptionSection(exc_type, exception, traceback, source="BigQuery")])
+        return
+
     if monitor_health:
         serializer(run_health(client))
+
+    serializer([ExceptionSection(None, None, None)])
 
 
 #######################################################################
@@ -763,6 +814,12 @@ CLOUDSQL = Service(
             ),
         ),
         Metric(
+            name="cloudsql.googleapis.com/database/network/connections",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="cloudsql.googleapis.com/database/memory/utilization",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
@@ -800,6 +857,18 @@ CLOUDSQL = Service(
             ),
         ),
         Metric(
+            name="cloudsql.googleapis.com/database/disk/bytes_used",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="cloudsql.googleapis.com/database/disk/quota",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="cloudsql.googleapis.com/database/replication/replica_lag",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
@@ -828,6 +897,30 @@ FILESTORE = Service(
             name="file.googleapis.com/nfs/server/read_ops_count",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_RATE,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/average_read_latency",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/average_write_latency",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/free_bytes",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="file.googleapis.com/nfs/server/used_bytes",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
             ),
         ),
     ],
@@ -926,6 +1019,18 @@ HTTP_LOADBALANCER = Service(
     # this is shown as a "load balancer" in the cloud console
     default_groupby="resource.url_map_name",
     metrics=[
+        Metric(
+            name="loadbalancing.googleapis.com/https/total_latencies",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="loadbalancing.googleapis.com/https/total_latencies",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
+            ),
+        ),
         Metric(
             name="loadbalancing.googleapis.com/https/total_latencies",
             aggregation=Aggregation(
@@ -1077,7 +1182,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def agent_gcp_main(args: Args) -> None:
+def agent_gcp_main(args: Args) -> int:
     client = Client(json.loads(args.credentials), args.project, args.date)
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
@@ -1093,8 +1198,9 @@ def agent_gcp_main(args: Args) -> None:
         monitor_health=monitor_health,
         piggy_back_prefix=piggy_back_prefix,
     )
+    return 0
 
 
-def main() -> None:
+def main() -> int:
     """Main entry point to be used"""
-    special_agent_main(parse_arguments, agent_gcp_main)
+    return special_agent_main(parse_arguments, agent_gcp_main)

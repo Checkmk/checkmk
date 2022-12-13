@@ -107,7 +107,7 @@ class CREConfig:
 
     slow_views_duration_threshold: int = 60
 
-    multisite_users: dict = field(default_factory=dict)
+    multisite_users: dict[str, UserSpec] = field(default_factory=dict)
     multisite_hostgroups: dict = field(default_factory=dict)
     multisite_servicegroups: dict = field(default_factory=dict)
     multisite_contactgroups: dict = field(default_factory=dict)

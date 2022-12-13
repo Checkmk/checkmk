@@ -42,7 +42,10 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 
 # evaluate this only if needed, it slows down tab expansion otherwise.
 # asio-asio*, googletest* and __pycache__ are excluded because they are present during CI call
+# "_deps" and "build" is excluded as an owned by cmake build
 SHELL_FILES_REL = $(shell cd ..; grep -rl \
+    --exclude-dir="_deps" \
+    --exclude-dir="build" \
     --exclude-dir="asio-asio*" \
     --exclude-dir="googletest*" \
     --exclude-dir="__pycache__" \
@@ -55,7 +58,7 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     '^\#!/.*sh' [^.]* 2>/dev/null)
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
-# until we have a feasible solution or we drop the support for 2.6 completly.
+# until we have a feasible solution or we drop the support for 2.6 completely.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 BROWSER_ENGINES = "chromium" "firefox"
 
@@ -351,8 +354,8 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--map enterprise:cee managed:cme plus:cpe \
-		--packages cmk enterprise managed plus \
+		--threshold 0 \
+		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \
 		--verbose

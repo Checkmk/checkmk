@@ -139,13 +139,11 @@ class SNMPTrapEngine:
 
             for engine_id in spec.get("engine_ids", []):
                 self._logger.info(
-                    "adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s"
-                    % (
-                        user_id,
-                        ".".join(str(i) for i in auth_proto),
-                        ".".join(str(i) for i in priv_proto),
-                        engine_id,
-                    )
+                    "adding SNMPv3 user: userName=%s, authProtocol=%s, privProtocol=%s, securityEngineId=%s",
+                    user_id,
+                    ".".join(str(i) for i in auth_proto),
+                    ".".join(str(i) for i in priv_proto),
+                    engine_id,
                 )
                 pysnmp.entity.config.addV3User(
                     self.snmp_engine,

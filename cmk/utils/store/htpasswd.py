@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.utils.store as store
@@ -16,6 +17,10 @@ class Htpasswd:
 
     def __init__(self, path: Path) -> None:
         self._path = path
+
+    @staticmethod
+    def serialize_entries(entries: Sequence[tuple[UserId, str]]) -> str:
+        return "\n".join(f"{user_id}:{password_hash}" for user_id, password_hash in entries)
 
     def load(self, allow_missing_file: bool = False) -> Entries:
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary
@@ -44,8 +49,7 @@ class Htpasswd:
 
     def save_all(self, entries: Entries) -> None:
         """Save entries to the htpasswd file, overriding the original file"""
-        output = "\n".join(f"{user}:{hash_}" for user, hash_ in sorted(entries.items())) + "\n"
-        store.save_text_to_file(self._path, output)
+        store.save_text_to_file(self._path, self.serialize_entries(sorted(entries.items())) + "\n")
 
     def exists(self, user_id: UserId) -> bool:
         """Whether or not a user exists according to the htpasswd file"""

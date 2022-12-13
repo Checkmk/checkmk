@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import set_timezone
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kaspersky_av_kesl_updates import check_kaspersky_av_kesl_updates
+from cmk.base.plugins.agent_based.kaspersky_av_kesl_updates import (
+    check_kaspersky_av_kesl_updates,
+    Section,
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -34,5 +39,5 @@ def set_fixed_timezone():
         ),
     ],
 )
-def test_check_kaskpersky_av_client(section, results) -> None:  # type:ignore[no-untyped-def]
+def test_check_kaskpersky_av_client(section: Section, results: Sequence[Result]) -> None:
     assert list(check_kaspersky_av_kesl_updates(section)) == results

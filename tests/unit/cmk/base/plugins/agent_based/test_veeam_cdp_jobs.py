@@ -15,6 +15,7 @@ DATA = [
     ["Test 1", "1632216559.73749", "Running"],
     ["Test 2", "1632216559.87806", "Failed"],
     ["Test 3", "1632216559.87806", "Stopped"],
+    ["Test 4", "null", "Disabled"],
 ]
 
 
@@ -27,14 +28,15 @@ DATA = [
                 Service(item="Test 1"),
                 Service(item="Test 2"),
                 Service(item="Test 3"),
+                Service(item="Test 4"),
             ],
         ),
     ],
 )
-def test_veeam_cdp_jobs_discovery(  # type:ignore[no-untyped-def]
+def test_veeam_cdp_jobs_discovery(
     data: type_defs.StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
     assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(section)) == result
 
@@ -75,14 +77,22 @@ def test_veeam_cdp_jobs_discovery(  # type:ignore[no-untyped-def]
                 ),
             ],
         ),
+        (
+            "Test 4",
+            veeam_cdp_jobs.CheckParams(age=(60, 80)),
+            DATA,
+            [
+                Result(state=State.OK, summary="State: Disabled"),
+            ],
+        ),
     ],
 )
-def test_veeam_cdp_jobs_check(  # type:ignore[no-untyped-def]
+def test_veeam_cdp_jobs_check(
     item: str,
     params: veeam_cdp_jobs.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,
-):
+) -> None:
     with on_time(1632216660, "UTC"):
         section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
         assert list(veeam_cdp_jobs.check_veeam_cdp_jobs(item, params, section)) == result

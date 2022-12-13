@@ -123,10 +123,13 @@ class PostgresBase:
         self.pg_port = instance["pg_port"]
         self.pg_database = instance["pg_database"]
         self.pg_passfile = instance.get("pg_passfile", "")
+        self.pg_version = instance.get("pg_version")
         self.my_env = os.environ.copy()
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
-        self.psql, self.bin_path = self.get_psql_and_bin_path()
+        self.psql_binary_name = "psql"
+        self.psql_binary_path = self.get_psql_binary_path()
+        self.psql_binary_dirname = self.get_psql_binary_dirname()
         self.conn_time = ""  # For caching as conn_time and version are in one query
         self.process_match_patterns = process_match_patterns
 
@@ -138,7 +141,11 @@ class PostgresBase:
         """This method implements the system specific way to call the psql interface"""
 
     @abc.abstractmethod
-    def get_psql_and_bin_path(self):
+    def get_psql_binary_path(self):
+        """This method returns the system specific psql binary and its path"""
+
+    @abc.abstractmethod
+    def get_psql_binary_dirname(self):
         """This method returns the system specific psql binary and its path"""
 
     @abc.abstractmethod
@@ -280,7 +287,7 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],
+            ["%s%spg_isready" % (self.psql_binary_dirname, self.sep), "-p", self.pg_port],
         )
 
         sys.stdout.write("%s\n" % ensure_str(out))
@@ -414,7 +421,7 @@ class PostgresWin(PostgresBase):
         if mixed_cmd:
             cmd_str = 'cmd /c echo %s | cmd /c ""%s" -X %s -A -0 -F"%s" -U %s"' % (
                 sql_cmd,
-                self.psql,
+                self.psql_binary_path,
                 extra_args,
                 field_sep,
                 self.db_user,
@@ -422,7 +429,7 @@ class PostgresWin(PostgresBase):
 
         else:
             cmd_str = 'cmd /c ""%s" -X %s -A -0 -F"%s" -U %s -c "%s"" ' % (
-                self.psql,
+                self.psql_binary_path,
                 extra_args,
                 field_sep,
                 self.db_user,
@@ -462,24 +469,53 @@ class PostgresWin(PostgresBase):
         for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
             yield drive
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_binary_path(self):
+        # type: () -> str
         """This method returns the system specific psql interface binary as callable string"""
+        if self.pg_version is None:
+            # This is a fallback in case the user does not have any instances
+            # configured.
+            return self._default_psql_binary_path()
+        return self._psql_path(self.pg_version)
+
+    def _default_psql_binary_path(self):
+        # type: () -> str
+        for pg_version in self._supported_pg_versions:
+            try:
+                return self._psql_path(pg_version)
+            except IOError as e:
+                ioerr = e
+                continue
+        raise ioerr
+
+    def _psql_path(self, pg_version):
+        # type: (str) -> str
 
         # TODO: Make this more clever...
         for drive in self._logical_drives():
-            for pg_ver in self._supported_pg_versions:
-                for bin_path_pattern in (
-                    "%s:\\Program Files\\PostgreSQL\\%s\\bin",
-                    "%s:\\Program Files (x86)\\PostgreSQL\\%s\\bin",
-                    "%s:\\PostgreSQL\\%s\\bin",
-                ):
-                    bin_path = bin_path_pattern % (drive, pg_ver)
-                    psql_path = "%s\\psql.exe" % bin_path
-                    if os.path.isfile(psql_path):
-                        return psql_path, bin_path
+            for program_path in [
+                "Program Files\\PostgreSQL",
+                "Program Files (x86)\\PostgreSQL",
+                "PostgreSQL",
+            ]:
+                psql_path = (
+                    "{drive}:\\{program_path}\\{pg_version}\\bin\\{psql_binary_name}.exe".format(
+                        drive=drive,
+                        program_path=program_path,
+                        pg_version=pg_version.split(".", 1)[
+                            0
+                        ],  # Only the major version is relevant
+                        psql_binary_name=self.psql_binary_name,
+                    )
+                )
+                if os.path.isfile(psql_path):
+                    return psql_path
 
-        raise IOError("Could not determine psql bin and its path.")
+        raise IOError("Could not determine %s bin and its path." % self.psql_binary_name)
+
+    def get_psql_binary_dirname(self):
+        # type: () -> str
+        return self.psql_binary_path.rsplit("\\", 1)[0]
 
     def get_instances(self):
         # type: () -> str
@@ -717,7 +753,7 @@ class PostgresLinux(PostgresBase):
             )
             base_cmd_list[-1] = base_cmd_list[-1] % (
                 self.pg_passfile,
-                self.psql,
+                self.psql_binary_path,
                 extra_args,
                 field_sep,
                 "",
@@ -731,7 +767,7 @@ class PostgresLinux(PostgresBase):
         else:
             base_cmd_list[-1] = base_cmd_list[-1] % (
                 self.pg_passfile,
-                self.psql,
+                self.psql_binary_path,
                 extra_args,
                 field_sep,
                 ' -c "%s" ' % sql_cmd,
@@ -743,17 +779,38 @@ class PostgresLinux(PostgresBase):
 
         return _sanitize_sql_query(out)
 
-    def get_psql_and_bin_path(self):
-        # type: () -> Tuple[str, str]
+    def get_psql_binary_path(self):
+        # type: () -> str
+
+        if self.pg_version is None:
+            # This is a fallback in case the user does not have any instances
+            # configured. However, it may not work (see next comment).
+            return self._default_psql_binary_path()
+
+        # If possible, do not use the binary from PATH directly. This could
+        # lead to a generic binary that is not able to find the correct UNIX
+        # socket. See SUP-11729.
+        return "/{pg_database}/{pg_version}/bin/{psql_binary_name}".format(
+            pg_database=self.pg_database,
+            pg_version=self.pg_version,
+            psql_binary_name=self.psql_binary_name,
+        )
+
+    def _default_psql_binary_path(self):
+        # type: () -> str
         try:
-            proc = subprocess.Popen(  # pylint:disable=consider-using-with
-                ["which", "psql"], stdout=subprocess.PIPE
+            proc = subprocess.Popen(  # pylint: disable=consider-using-with
+                ["which", self.psql_binary_name], stdout=subprocess.PIPE
             )
             out = ensure_str(proc.communicate()[0])
         except subprocess.CalledProcessError:
-            raise RuntimeError("Could not determine psql executable.")
+            raise RuntimeError("Could not determine %s executable." % self.psql_binary_name)
 
-        return out.split("/")[-1].rstrip(), out.replace("psql", "").rstrip()
+        return out.strip()
+
+    def get_psql_binary_dirname(self):
+        # type: () -> str
+        return self.psql_binary_path.rsplit("/", 1)[0]
 
     def get_instances(self):
         # type: () -> str
@@ -980,7 +1037,7 @@ class PostgresLinux(PostgresBase):
 
 
 def postgres_factory(db_user, pg_instance):
-    # type: (str, Dict[str, str]) -> PostgresBase
+    # type: (str, Dict[str, Optional[str]]) -> PostgresBase
     if IS_LINUX:
         return PostgresLinux(db_user, pg_instance, LINUX_PROCESS_MATCH_PATTERNS)
     if IS_WINDOWS:
@@ -1082,22 +1139,25 @@ def open_env_file(file_to_open):
 
 
 def parse_env_file(env_file):
-    # type: (str) -> Tuple[str, str]
+    # type: (str) -> Tuple[str, str, Optional[str]]
     pg_port = None  # mandatory in env_file
     pg_database = "postgres"  # default value
+    pg_version = None
     for line in open_env_file(env_file):
         line = line.strip()
         if "PGDATABASE=" in line:
             pg_database = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
-        if "PGPORT=" in line:
+        elif "PGPORT=" in line:
             pg_port = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
+        elif "PGVERSION=" in line:
+            pg_version = re.sub(re.compile("#.*"), "", line.split("=")[-1]).strip()
     if pg_port is None:
         raise ValueError("PGPORT is not specified in %s" % env_file)
-    return pg_database, pg_port
+    return pg_database, pg_port, pg_version
 
 
 def parse_postgres_cfg(postgres_cfg, config_separator):
-    # type: (List[str], str) -> Tuple[str, List[Dict[str, str]]]
+    # type: (List[str], str) -> Tuple[str, List[Dict[str, Optional[str]]]]
     """
     Parser for Postgres config. x-Plattform compatible.
 
@@ -1118,7 +1178,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         if key == "INSTANCE":
             env_file, pg_user, pg_passfile = value.split(config_separator)
             env_file = env_file.strip()
-            pg_database, pg_port = parse_env_file(env_file)
+            pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
                     "name": env_file.split(os.sep)[-1].split(".")[0],
@@ -1126,6 +1186,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,
                     "pg_port": pg_port,
+                    "pg_version": pg_version,
                 }
             )
     if dbuser is None:
@@ -1162,7 +1223,7 @@ def main(argv=None):
         level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(opt.verbose, logging.DEBUG),
     )
 
-    instances = []  # type: List[Dict[str, str]]
+    instances = []  # type: List[Dict[str, Optional[str]]]
     try:
         postgres_cfg_path = os.path.join(
             os.getenv("MK_CONFDIR", helper.get_default_path()), "postgres.cfg"

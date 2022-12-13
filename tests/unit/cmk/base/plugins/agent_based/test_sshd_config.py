@@ -160,6 +160,7 @@ _STRING_TABLE_DEPRECATED = [
     ["MaxAuthTriesLog", "3"],
     ["PermitEmptyPasswords", "no"],
     ["PasswordAuthentication", "yes"],
+    ["ChallengeResponseAuthentication", "no"],
     ["PAMAuthenticationViaKBDInt", "yes"],
     ["PermitRootLogin", "without-password"],
     ["Subsystem", "sftp", "internal-sftp"],
@@ -214,6 +215,7 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Use pluggable authentication module: yes"),
                 Result(state=State.OK, summary="Permit root login: key-based"),
                 Result(state=State.OK, summary="Allow password authentication: yes"),
+                Result(state=State.OK, summary="Allow keyboard-interactive authentication: no"),
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(
@@ -227,7 +229,7 @@ def test_discovery(string_table: StringTable) -> None:
             {
                 "port": [22],
                 "passwordauthentication": "no",
-                "challengeresponseauthentication": "yes",
+                "kbdinteractiveauthentication": "yes",
             },
             [
                 Result(state=State.CRIT, summary="Ports: 22, 23 (expected 22)"),
@@ -236,15 +238,15 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(
                     state=State.CRIT, summary="Allow password authentication: yes (expected no)"
                 ),
+                Result(
+                    state=State.CRIT,
+                    summary="Allow keyboard-interactive authentication: no (expected yes)",
+                ),
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(
                     state=State.OK,
                     summary="Ciphers: aes128-ctr, aes128-gcm@openssh.com, aes192-ctr, aes256-ctr, aes256-gcm@openssh.com, chacha20-poly1305@openssh.com",
-                ),
-                Result(
-                    state=State.CRIT,
-                    summary="Allow challenge-response authentication: not present in SSH daemon configuration",
                 ),
             ],
         ),
@@ -257,8 +259,40 @@ def test_discovery(string_table: StringTable) -> None:
                 Result(state=State.OK, summary="Permit X11 forwarding: yes"),
                 Result(state=State.OK, summary="Permit empty passwords: no"),
                 Result(state=State.OK, summary="Allow password authentication: yes"),
+                Result(state=State.OK, summary="Allow challenge-response authentication: no"),
                 Result(state=State.OK, summary="Permit root login: key-based"),
                 Result(state=State.OK, summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr"),
+            ],
+        ),
+        pytest.param(
+            _STRING_TABLE_DEPRECATED,
+            {
+                "kbdinteractiveauthentication": "no",
+                "usepam": "yes",
+            },
+            [
+                Result(state=State.OK, summary="Ports: 22"),
+                Result(state=State.OK, summary="Protocols: 2"),
+                Result(state=State.OK, summary="Permit X11 forwarding: yes"),
+                Result(state=State.OK, summary="Permit empty passwords: no"),
+                Result(state=State.OK, summary="Allow password authentication: yes"),
+                Result(state=State.OK, summary="Allow challenge-response authentication: no"),
+                Result(state=State.OK, summary="Permit root login: key-based"),
+                Result(state=State.OK, summary="Ciphers: aes128-ctr, aes192-ctr, aes256-ctr"),
+                Result(
+                    state=State.CRIT,
+                    summary="Use pluggable authentication module: not present in SSH daemon configuration",
+                ),
+            ],
+        ),
+        pytest.param(
+            [],
+            {"kbdinteractiveauthentication": "no"},
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Allow keyboard-interactive/challenge-response authentication: not present in SSH daemon configuration",
+                )
             ],
         ),
     ],

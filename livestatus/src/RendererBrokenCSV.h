@@ -47,6 +47,7 @@ public:
         : Renderer(os, logger, data_encoding)
         , _separators(std::move(separators)) {}
 
+    [[nodiscard]] bool useSurrogatePairs() const override;
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;
     void outputString(const std::string &value) override;

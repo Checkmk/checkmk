@@ -84,10 +84,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_get_bulks,
     notification_replay,
 )
-from cmk.gui.watolib.global_settings import (
-    load_configuration_settings,
-    rulebased_notifications_enabled,
-)
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -651,29 +648,10 @@ class ModeNotifications(ABCNotificationsMode):
         )
 
     def page(self) -> None:
-        self._show_not_enabled_warning()
         self._show_no_fallback_contact_warning()
         self._show_bulk_notifications()
         self._show_notification_backlog()
         self._show_rules()
-
-    def _show_not_enabled_warning(self):
-        # Check setting of global notifications. Are they enabled? If not, display
-        # a warning here. Note: this is a main.mk setting, so we cannot access this
-        # directly.
-        if not rulebased_notifications_enabled():
-            url = "wato.py?mode=edit_configvar&varname=enable_rulebased_notifications"
-            html.show_warning(
-                _(
-                    "<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
-                    "The rules that you edit here will have affect only on notifications that are "
-                    "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
-                    "rule based notifications now."
-                    "<br><br>"
-                    'You can change this setting <a href="%s">here</a>.'
-                )
-                % url
-            )
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():

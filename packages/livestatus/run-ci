@@ -1,0 +1,179 @@
+#!/bin/bash
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+failure() {
+    test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
+usage() {
+    echo "usage: $(basename "$0") [OPTION]... [FILE]..."
+    echo "Run the CI pipeline or parts of it on the given FILEs or the whole component."
+    echo
+    echo "  -c, --clean                    remove artifacts first"
+    echo "  -F, --check-format             check for correct formatting"
+    echo "  -b, --build                    build the component"
+    echo "  -u, --unit-tests               run unit tests"
+    echo "  -i, --iwyu                     check C/C++ includes via include-what-you-use"
+    echo "  -t, --clang-tidy               check sources with clang-tidy linter"
+    echo "  -a, --all                      shortcut for -F -b -u -i -t"
+    echo "  -f, --format                   format sources with clang-format"
+    echo "  -D, --documentation            generate documentation"
+    echo "  -d, --transitive-dependencies  use transitive dependencies for the given FILEs"
+    echo "  -h, --help                     show this help"
+}
+
+# option parsing ###############################################################
+
+RUN_CLEAN=no
+RUN_CHECK_FORMAT=no
+RUN_BUILD=no
+RUN_UNIT_TESTS=no
+RUN_IWYU=no
+RUN_CLANG_TIDY=no
+RUN_FORMAT=no
+RUN_DOCUMENTATION=no
+TRANSITIVE_DEPENDENCIES=no
+
+if ! OPTIONS=$(getopt --options 'cFbuitafDdh' --long 'clean,check-format,build,unit-tests,iwyu,clang-tidy,all,format,documentation,transitive-dependencies,help' --name "$(basename "$0")" -- "$@"); then
+    usage >&2
+    failure
+fi
+eval set -- "$OPTIONS"
+unset OPTIONS
+
+while true; do
+    case "$1" in
+        '-c' | '--clean')
+            RUN_CLEAN=yes
+            shift
+            continue
+            ;;
+        '-F' | '--check-format')
+            RUN_CHECK_FORMAT=yes
+            shift
+            continue
+            ;;
+        '-b' | '--build')
+            RUN_BUILD=yes
+            shift
+            continue
+            ;;
+        '-u' | '--unit-tests')
+            RUN_UNIT_TESTS=yes
+            shift
+            continue
+            ;;
+        '-i' | '--iwyu')
+            RUN_IWYU=yes
+            shift
+            continue
+            ;;
+        '-t' | '--clang-tidy')
+            RUN_CLANG_TIDY=yes
+            shift
+            continue
+            ;;
+        '-a' | '--all')
+            RUN_CHECK_FORMAT=yes
+            RUN_BUILD=yes
+            RUN_UNIT_TESTS=yes
+            RUN_IWYU=yes
+            RUN_CLANG_TIDY=yes
+            shift
+            continue
+            ;;
+        '-f' | '--format')
+            RUN_FORMAT=yes
+            shift
+            continue
+            ;;
+        '-D' | '--documentation')
+            RUN_DOCUMENTATION=yes
+            shift
+            continue
+            ;;
+        '-d' | '--transitive-dependencies')
+            TRANSITIVE_DEPENDENCIES=yes
+            shift
+            continue
+            ;;
+        '-h' | '--help')
+            usage
+            exit 0
+            ;;
+        '--')
+            shift
+            FILES=("$@")
+            break
+            ;;
+        *) failure "internal error" ;;
+    esac
+done
+
+# start from scratch if asked to do so  ########################################
+
+if [ ${RUN_CLEAN} = yes ]; then
+    rm -rf build
+fi
+
+# make sure our CMake artifacts are up-to-date  ################################
+
+if [ "CMakeLists.txt" -nt "build/compile_commands.json" ]; then
+    # This can take 3-4s, even when there is nothing to do, so we need the guard above.
+    cmake -S . -B build
+fi
+
+# calculate dependencies #######################################################
+
+# TODO: Just for debugging, remove later
+echo "========== initial file arguments"
+for f in "${FILES[@]}"; do
+    echo "file argument: <$f>"
+done
+
+if [ ${TRANSITIVE_DEPENDENCIES} = yes ]; then
+    echo "calculating transitive dependencies of" "${FILES[@]}" # TODO
+fi
+
+# TODO: Just for debugging, remove later
+echo "========== final file arguments"
+for f in "${FILES[@]}"; do
+    echo "file argument: <$f>"
+done
+
+# the CI pipeline itself #######################################################
+
+if [ ${RUN_CHECK_FORMAT} = yes ]; then
+    echo "running check format..." # TODO
+fi
+
+if [ ${RUN_BUILD} = yes ]; then
+    cmake --build build --parallel 6 --target test # "test" already depends on "livestatus"
+fi
+
+if [ ${RUN_UNIT_TESTS} = yes ]; then
+    echo "running unit tests..." # TODO
+fi
+
+if [ ${RUN_IWYU} = yes ]; then
+    echo "running IWYU..." # TODO
+fi
+
+if [ ${RUN_CLANG_TIDY} = yes ]; then
+    echo "running clang-tidy..." # TODO
+fi
+
+# non-pipeline stuff: formatting/documentation #################################
+
+if [ ${RUN_FORMAT} = yes ]; then
+    echo "formatting sources..." # TODO
+fi
+
+if [ ${RUN_DOCUMENTATION} = yes ]; then
+    echo "generating documentation..." # TODO
+fi

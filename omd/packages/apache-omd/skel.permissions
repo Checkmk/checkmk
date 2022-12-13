@@ -1,5 +1,5 @@
-etc/init.d/apache 755
-etc/apache/php-wrapper 755
-tmp/php/session 775
-tmp/php/upload 775
-tmp/php/wsdl-cache 775
+etc/init.d/apache 750
+etc/apache/php-wrapper 750
+tmp/php/session 770
+tmp/php/upload 770
+tmp/php/wsdl-cache 770

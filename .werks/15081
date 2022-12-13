@@ -1,0 +1,13 @@
+Title: nutanix prism: increase password size limit for special agent rule
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1670847568
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the Nutanix Prism datasource program rule had the default limit of 25
+characters for the password. This werk increases the limit to 35.
+

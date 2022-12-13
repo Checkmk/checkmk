@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.testlib.rest_api_client import RestApiClient
+
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
@@ -20,19 +22,15 @@ import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
-def test_openapi_missing_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
-    assert resp.json_body == {
+def test_openapi_missing_host(api_client: RestApiClient) -> None:
+    resp = api_client.get_host("foobar", expect_ok=False)
+    resp.assert_status_code(404)
+    assert resp.json == {
         "detail": "These fields have problems: host_name",
         "fields": {"host_name": ["Host not found: 'foobar'"]},
         "status": 404,
@@ -41,72 +39,25 @@ def test_openapi_missing_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCM
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_cluster_host(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
+def test_openapi_cluster_host(api_client: RestApiClient) -> None:
+    api_client.create_host(host_name="foobar")
+    api_client.create_cluster(host_name="bazfoo", nodes=["foobar"])
+
+    api_client.get_host("bazfoozle", expect_ok=False).assert_status_code(404)
+    api_client.get_host("bazfoo")
+
+    api_client.edit_host_property(
+        "bazfoo", "nodes", {"nodes": ["not_existing"]}, expect_ok=False
+    ).assert_status_code(400)
+    api_client.edit_host_property(
+        "bazfoo", "nodes", {"nodes": ["example.com", "bazfoo"]}, expect_ok=False
+    ).assert_status_code(400)
+
+    api_client.edit_host_property("bazfoo", "nodes", {"nodes": ["example.com"]}).assert_status_code(
+        200
     )
 
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/clusters",
-        params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type='application/json; charset="utf-8"',
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/bazfoozle",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/bazfoo",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/bazfoo/properties/nodes",
-        params='{"nodes": ["not_existing"]}',
-        status=400,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/bazfoo/properties/nodes",
-        params='{"nodes": ["example.com", "bazfoo"]}',
-        status=400,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/bazfoo/properties/nodes",
-        params='{"nodes": ["example.com"]}',
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-        content_type="application/json",
-    )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/bazfoo",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    resp = api_client.get_host("bazfoo")
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
@@ -120,60 +71,40 @@ def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.mark.parametrize(
-    "query,called",
+    "bake_agent,called",
     [
-        ("?bake_agent=1", True),
-        ("?bake_agent=0", False),
-        ("", False),
+        (True, True),
+        (False, False),
+        (None, False),
     ],
 )
 def test_openapi_add_host_bake_agent_parameter(
-    base: str,
-    query: str,
+    bake_agent: bool | None,
     called: bool,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
     try_bake_agents_for_hosts: MagicMock,
+    api_client: RestApiClient,
 ) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all{query}",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
+    api_client.create_host(host_name="foobar", bake_agent=bake_agent)
+
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
     else:
         try_bake_agents_for_hosts.assert_not_called()
 
 
-def test_openapi_add_host_with_attributes(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    response = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all",
-        params=json.dumps(
-            {
-                "host_name": "foobar",
-                "folder": "/",
-                "attributes": {
-                    "alias": "ALIAS",
-                    "locked_by": {
-                        "site_id": "site_id",
-                        "program_id": "dcd",
-                        "instance_id": "connection_id",
-                    },
-                    "locked_attributes": ["alias"],
-                },
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
+def test_openapi_add_host_with_attributes(api_client: RestApiClient) -> None:
+    response = api_client.create_host(
+        host_name="foobar",
+        attributes={
+            "alias": "ALIAS",
+            "locked_by": {
+                "site_id": "site_id",
+                "program_id": "dcd",
+                "instance_id": "connection_id",
+            },
+            "locked_attributes": ["alias"],
+        },
+    ).assert_status_code(200)
 
     api_attributes = response.json["extensions"]["attributes"]
     assert api_attributes["alias"] == "ALIAS"
@@ -195,70 +126,42 @@ def test_openapi_add_host_with_attributes(
     )
 
 
-def test_openapi_bulk_add_hosts_with_attributes(  # type:ignore[no-untyped-def]
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
-    response = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/actions/bulk-create/invoke",
-        params=json.dumps(
-            {
-                "entries": [
-                    {
-                        "host_name": "ding",
-                        "folder": "/",
-                        "attributes": {"ipaddress": "127.0.0.2"},
-                    },
-                    {
-                        "host_name": "dong",
-                        "folder": "/",
-                        "attributes": {
-                            "ipaddress": "127.0.0.2",
-                            "site": "NO_SITE",
-                        },
-                    },
-                ]
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+def test_openapi_bulk_add_hosts_with_attributes(
+    api_client: RestApiClient,
+) -> None:
+    response = api_client.bulk_create_hosts(
+        {
+            "host_name": "ding",
+            "folder": "/",
+            "attributes": {"ipaddress": "127.0.0.2"},
+        },
+        {
+            "host_name": "dong",
+            "folder": "/",
+            "attributes": {
+                "ipaddress": "127.0.0.2",
+                "site": "NO_SITE",
+            },
+        },
+    ).assert_status_code(200)
     assert len(response.json["value"]) == 2
 
-    response = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/domain-types/host_config/actions/bulk-update/invoke",
-        params=json.dumps(
-            {
-                "entries": [
-                    {
-                        "host_name": "ding",
-                        "update_attributes": {
-                            "locked_by": {
-                                "site_id": "site_id",
-                                "program_id": "dcd",
-                                "instance_id": "connection_id",
-                            },
-                            "locked_attributes": ["alias"],
-                        },
-                    }
-                ],
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    api_client.bulk_edit_hosts(
+        {
+            "host_name": "ding",
+            "update_attributes": {
+                "locked_by": {
+                    "site_id": "site_id",
+                    "program_id": "dcd",
+                    "instance_id": "connection_id",
+                },
+                "locked_attributes": ["alias"],
+            },
+        }
+    ).assert_status_code(200)
 
     # verify attribute ipaddress is set corretly
-    response = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/ding",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    response = api_client.get_host(host_name="ding")
 
     api_attributes = response.json["extensions"]["attributes"]
     assert api_attributes["locked_by"] == {
@@ -270,28 +173,17 @@ def test_openapi_bulk_add_hosts_with_attributes(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize(
-    "query,called",
+    "bake_agent,called",
     [
-        ("?bake_agent=1", True),
-        ("?bake_agent=0", False),
-        ("", False),
+        (True, True),
+        (False, False),
+        (None, False),
     ],
 )
 def test_openapi_add_cluster_bake_agent_parameter(
-    base: str,
-    query: str,
-    called: bool,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    try_bake_agents_for_hosts: MagicMock,
+    bake_agent: bool, called: bool, try_bake_agents_for_hosts: MagicMock, api_client: RestApiClient
 ) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/all{query}",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
+    api_client.create_host(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
@@ -299,14 +191,9 @@ def test_openapi_add_cluster_bake_agent_parameter(
         try_bake_agents_for_hosts.assert_not_called()
     try_bake_agents_for_hosts.reset_mock()
 
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/collections/clusters{query}",
-        params='{"host_name": "bazfoo", "folder": "/", "nodes": ["foobar"]}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type='application/json; charset="utf-8"',
-    )
+    api_client.create_cluster(
+        host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
+    ).assert_status_code(200)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["bazfoo"])
@@ -364,27 +251,16 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
 
 
 def test_openapi_hosts(
-    base: str,
     monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    api_client: RestApiClient,
 ) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    resp = api_client.create_host(host_name="foobar").assert_status_code(200)
+
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "self",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    resp = api_client.follow_link(resp.json, "self")
+    resp.assert_status_code(200)
 
     attributes = {
         "ipaddress": "127.0.0.1",
@@ -393,79 +269,63 @@ def test_openapi_hosts(
             "community": "blah",
         },
     }
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
+    resp = api_client.follow_link(
+        resp.json,
         ".../update",
-        status=200,
-        params=json.dumps({"attributes": attributes}),
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
+        extra_params={"attributes": attributes},
+        headers={"If-Match": resp.headers["ETag"]},
     )
+
     got_attributes = resp.json["extensions"]["attributes"]
     assert list(attributes.items()) <= list(got_attributes.items())
 
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
+    resp = api_client.follow_link(
+        resp.json,
         ".../update",
-        status=200,
-        params='{"update_attributes": {"alias": "bar"}}',
+        extra_params={"update_attributes": {"alias": "bar"}},
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
     )
+    resp.assert_status_code(200)
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
 
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
+    resp = api_client.follow_link(
+        resp.json,
         ".../update",
-        status=200,
-        params='{"remove_attributes": ["alias"]}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
+        extra_params={"remove_attributes": ["alias"]},
+        headers={"If-Match": resp.headers["ETag"]},
     )
+
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
     assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    resp = aut_user_auth_wsgi_app.follow_link(
-        resp,
-        "self",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    api_client.follow_link(resp.json, "self").assert_status_code(200)
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
 
     # also try to update with wrong attribute
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
+    api_client.follow_link(
+        resp.json,
         ".../update",
-        status=400,
-        params='{"attributes": {"foobaz": "bar"}}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-    )
+        extra_params={"attributes": {"foobaz": "bar"}},
+        headers={"If-Match": resp.headers["ETag"]},
+        expect_ok=False,
+    ).assert_status_code(400)
 
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../delete",
-        status=204,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    api_client.follow_link(resp.json, ".../delete").assert_status_code(204)
 
 
 def test_openapi_host_update_after_move(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_host,
 ):
-
     aut_user_auth_wsgi_app.post(
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params='{"name": "new_folder", "title": "bar", "parent": "/"}',
@@ -748,7 +608,6 @@ def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]):  # type:ignor
 def test_openapi_host_created_timestamp(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
-
     json_data = {
         "folder": "/",
         "host_name": "foobar.com",
@@ -1396,3 +1255,51 @@ def test_openapi_host_with_invalid_snmp_community_option(
         content_type="application/json",
         headers={"Accept": "application/json"},
     )
+
+
+def test_openapi_all_hosts_with_non_existing_site(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_all_hosts_recursively(_cls):
+        return {
+            "foo": CREHost(
+                folder=CREFolder.root_folder(),
+                host_name="foo",
+                attributes={"site": "a_non_existing_site"},
+                cluster_nodes=None,
+            )
+        }
+
+    monkeypatch.setattr(CREFolder, "all_hosts_recursively", mock_all_hosts_recursively)
+
+    aut_user_auth_wsgi_app.get(
+        f"{base}/domain-types/host_config/collections/all",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+
+def test_openapi_host_with_non_existing_site(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def mock_host(_hostname):
+        return CREHost(
+            folder=CREFolder.root_folder(),
+            host_name="foo",
+            attributes={"site": "a_non_existing_site"},
+            cluster_nodes=None,
+        )
+
+    monkeypatch.setattr(Host, "host", mock_host)
+
+    resp = aut_user_auth_wsgi_app.get(
+        f"{base}/objects/host_config/foo",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+
+    assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"

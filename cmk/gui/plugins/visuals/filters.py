@@ -492,7 +492,7 @@ filter_registry.register(
         title=_l("Service Contact Group"),
         sort_index=206,
         description=_l("Optional selection of service contact group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
+        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
         query_filter=query_filters.MultipleQuery(
             ident="optservice_contactgroup",
             request_var="optservice_contact_group",
@@ -1044,11 +1044,16 @@ filter_registry.register(
 
 
 class MultipleSitesFilter(SiteFilter):
+    # Poor man's composition:  Renderer differs between CME and non-CME.
+    sites_options: Callable[[], list[tuple[str, str]]] | None = None
+
     def get_request_sites(self, value: FilterHTTPVariables) -> list[str]:
         return [x for x in value.get(self.htmlvars[0], "").strip().split("|") if x]
 
-    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
-        sites_vs = DualListChoice(choices=query_filters.sites_options(), rows=4)
+    def display(self, value: FilterHTTPVariables) -> None:
+        sites_options = type(self).sites_options
+        assert sites_options is not None
+        sites_vs = DualListChoice(choices=sites_options, rows=4)
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
@@ -1515,11 +1520,12 @@ class _FilterHostAuxTags(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         for num in range(self.query_filter.count):
             varname = "%s_%d" % (self.query_filter.var_prefix, num)
+            negate_varname = varname + "_neg"
             html.dropdown(
                 varname, self._options(), deflt=value.get(varname, ""), ordered=True, class_=["neg"]
             )
             html.open_nobr()
-            html.checkbox(varname + "_neg", bool(value.get(varname)), label=_("negate"))
+            html.checkbox(negate_varname, bool(value.get(negate_varname)), label=_("negate"))
             html.close_nobr()
 
     @staticmethod

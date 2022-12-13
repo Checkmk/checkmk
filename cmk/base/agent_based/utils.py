@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostKey, HostName, ParsedSectionName, ServiceState
+from cmk.utils.type_defs import ExitSpec, HostKey, ParsedSectionName, result, ServiceState
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.summarize import summarize
+from cmk.core_helpers.type_defs import SourceInfo
 
-from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
+from .data_provider import ParsedSectionContent, ParsedSectionsBroker
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
 
@@ -66,43 +68,43 @@ def get_section_cluster_kwargs(
 
 
 def summarize_host_sections(
+    host_sections: result.Result[HostSections, Exception],
+    source: SourceInfo,
     *,
-    source_results: SourceResults,
     include_ok_results: bool = False,
     override_non_ok_state: ServiceState | None = None,
-    exit_spec_cb: Callable[[HostName, str], ExitSpec],
-    time_settings_cb: Callable[[HostName], PiggybackTimeSettings],
+    exit_spec: ExitSpec,
+    time_settings: PiggybackTimeSettings,
     is_piggyback: bool,
 ) -> Iterable[ActiveCheckResult]:
-    for source, host_sections in source_results:
-        subresults = summarize(
-            source.hostname,
-            source.ipaddress,
-            host_sections,
-            exit_spec=exit_spec_cb(source.hostname, source.ident),
-            time_settings=time_settings_cb(source.hostname),
-            is_piggyback=is_piggyback,
-            fetcher_type=source.fetcher_type,
+    subresults = summarize(
+        source.hostname,
+        source.ipaddress,
+        host_sections,
+        exit_spec=exit_spec,
+        time_settings=time_settings,
+        is_piggyback=is_piggyback,
+        fetcher_type=source.fetcher_type,
+    )
+    if include_ok_results or any(s.state != 0 for s in subresults):
+        yield from (
+            ActiveCheckResult(
+                s.state if override_non_ok_state is None else override_non_ok_state,
+                f"[{source.ident}] {s.summary}",
+                s.details,
+                s.metrics,
+            )
+            for s in subresults[:1]
         )
-        if include_ok_results or any(s.state != 0 for s in subresults):
-            yield from (
-                ActiveCheckResult(
-                    s.state if override_non_ok_state is None else override_non_ok_state,
-                    f"[{source.ident}] {s.summary}",
-                    s.details,
-                    s.metrics,
-                )
-                for s in subresults[:1]
+        yield from (
+            ActiveCheckResult(
+                s.state if override_non_ok_state is None else override_non_ok_state,
+                s.summary,
+                s.details,
+                s.metrics,
             )
-            yield from (
-                ActiveCheckResult(
-                    s.state if override_non_ok_state is None else override_non_ok_state,
-                    s.summary,
-                    s.details,
-                    s.metrics,
-                )
-                for s in subresults[1:]
-            )
+            for s in subresults[1:]
+        )
 
 
 def check_parsing_errors(

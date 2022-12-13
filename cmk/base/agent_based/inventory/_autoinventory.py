@@ -6,9 +6,10 @@
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING
 
+from cmk.core_helpers.cache import FileCacheOptions
+
 import cmk.base.config as config
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
-from cmk.base.core_config import MonitoringCore
 
 from .active import execute_active_check_inventory
 
@@ -16,9 +17,10 @@ __all__ = ["inventorize_marked_hosts"]
 
 
 def inventorize_marked_hosts(
-    core: MonitoringCore,
     config_cache: config.ConfigCache,
     autoinventory_queue: AutoQueue,
+    *,
+    file_cache_options: FileCacheOptions,
 ) -> None:
     autoinventory_queue.cleanup(
         valid_hosts=config_cache.all_configured_hosts(),
@@ -35,9 +37,10 @@ def inventorize_marked_hosts(
     with TimeLimitFilter(limit=120, grace=10, label="hosts") as time_limited:
         for host_name in time_limited(autoinventory_queue.queued_hosts()):
             if host_name in process_hosts:
-                host_config = config_cache.make_host_config(host_name)
                 execute_active_check_inventory(
                     host_name,
-                    host_config,
-                    host_config.hwsw_inventory_parameters,
+                    config_cache=config_cache,
+                    file_cache_options=file_cache_options,
+                    inventory_parameters=config_cache.inventory_parameters,
+                    parameters=config_cache.hwsw_inventory_parameters(host_name),
                 )

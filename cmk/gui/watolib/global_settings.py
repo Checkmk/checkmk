@@ -5,17 +5,18 @@
 
 from typing import Any
 
-from livestatus import SiteGlobals
-
 import cmk.gui.watolib.config_domain_name as config_domain_name
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
-
-GlobalSettings = dict[str, Any]
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_registry,
+    UNREGISTERED_SETTINGS,
+)
+from cmk.gui.type_defs import GlobalSettings
 
 
 def load_configuration_settings(
     site_specific: bool = False, custom_site_path: str | None = None, full_config: bool = False
-) -> SiteGlobals:
+) -> GlobalSettings:
     settings = {}
     for domain in ABCConfigDomain.enabled_domains():
         if full_config:
@@ -27,12 +28,8 @@ def load_configuration_settings(
     return settings
 
 
-def rulebased_notifications_enabled() -> bool:
-    return load_configuration_settings().get("enable_rulebased_notifications", False)
-
-
 def save_global_settings(
-    vars_: dict[str, Any], site_specific: bool = False, custom_site_path: str | None = None
+    vars_: GlobalSettings, site_specific: bool = False, custom_site_path: str | None = None
 ) -> None:
     per_domain: dict[str, dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
@@ -46,11 +43,7 @@ def save_global_settings(
 
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
-    for varname in [
-        "wato_enabled",
-        "userdb_automatic_sync",
-        "user_login",
-    ]:
+    for varname in UNREGISTERED_SETTINGS:
         if varname in vars_:
             per_domain.setdefault(config_domain_name.GUI, {})[varname] = vars_[varname]
 
@@ -62,9 +55,11 @@ def save_global_settings(
             domain().save(domain_config, custom_site_path=custom_site_path)
 
 
-def load_site_global_settings(custom_site_path: str | None = None) -> SiteGlobals:
+def load_site_global_settings(custom_site_path: str | None = None) -> GlobalSettings:
     return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
 
 
-def save_site_global_settings(settings: SiteGlobals, custom_site_path: str | None = None) -> None:
+def save_site_global_settings(
+    settings: GlobalSettings, custom_site_path: str | None = None
+) -> None:
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

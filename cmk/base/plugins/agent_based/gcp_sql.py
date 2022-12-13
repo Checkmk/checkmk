@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
+
+import time
 from collections.abc import Mapping
 from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
     register,
     render,
     Result,
@@ -14,9 +17,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     ServiceLabel,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils import gcp
-
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
 
 def parse(string_table: StringTable) -> gcp.Section:
@@ -111,7 +118,7 @@ register.check_plugin(
         "PENDING_CREATE": int(State.UNKNOWN),
         "MAINTENANCE": int(State.UNKNOWN),
         "FAILED": int(State.CRIT),
-        "UNKOWN_STATE": int(State.CRIT),
+        "UNKNOWN_STATE": int(State.CRIT),
     },
 )
 
@@ -191,6 +198,11 @@ def check_gcp_sql_network(
             "Out",
             render.networkbandwidth,
         ),
+        "connections": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/network/connections",
+            "Active connections",
+            str,
+        ),
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -204,7 +216,7 @@ register.check_plugin(
     check_ruleset_name="gcp_sql_network",
     discovery_function=discover,
     check_function=check_gcp_sql_network,
-    check_default_parameters={"net_data_sent": None, "net_data_recv": None},
+    check_default_parameters={"net_data_sent": None, "net_data_recv": None, "connections": None},
 )
 
 
@@ -214,22 +226,35 @@ def check_gcp_sql_disk(
     section_gcp_service_cloud_sql: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
+    if section_gcp_service_cloud_sql is None or not gcp.item_in_section(
+        item, ASSET_TYPE, section_gcp_assets
+    ):
+        return
+
     metrics = {
-        "fs_used_percent": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/utilization",
-            "Disk utilization",
-            render.percent,
-            scale=1e2,
+        "utilization": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/utilization", "", str),
+        "read_ios": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/read_ops_count", "", str),
+        "write_ios": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/disk/write_ops_count", "", str
         ),
-        "disk_write_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/write_ops_count", "Write operations", str
-        ),
-        "disk_read_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/read_ops_count", "Read operations", str
+        "capacity": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/quota", "", str),
+        "used_capacity": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/disk/bytes_used", "", str
         ),
     }
-    yield from gcp.check(
-        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+
+    timeseries = section_gcp_service_cloud_sql.get(item, gcp.SectionItem(rows=[])).rows
+
+    disk_data = {
+        metric_name: gcp.get_value(timeseries, metric_spec)
+        for metric_name, metric_spec in metrics.items()
+    }
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk_data,
+        value_store=get_value_store(),
+        this_time=time.time(),
     )
 
 
@@ -241,7 +266,7 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check_gcp_sql_disk,
     check_default_parameters={
-        "fs_used_percent": (80.0, 90.0),
+        "disk_utilization": (80.0, 90.0),
         "disk_write_ios": None,
         "disk_read_ios": None,
     },

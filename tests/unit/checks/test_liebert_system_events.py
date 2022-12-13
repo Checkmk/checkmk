@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
 
 pytestmark = pytest.mark.checks
 
@@ -39,7 +44,7 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_parse_liebert_system_events(string_table, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_liebert_system_events(string_table: StringTable, section: Section) -> None:
     check = Check("liebert_system_events")
     assert check.run_parse(string_table) == section
 
@@ -68,8 +73,8 @@ def test_parse_liebert_system_events(string_table, section) -> None:  # type:ign
         ),
     ],
 )
-def test_discover_liebert_system_events(  # type:ignore[no-untyped-def]
-    string_table, discovered_item
+def test_discover_liebert_system_events(
+    string_table: Mapping[str, Mapping[str, str]], discovered_item: Sequence[object]
 ) -> None:
     check = Check("liebert_system_events")
     assert check.run_discovery(string_table) == discovered_item
@@ -109,8 +114,8 @@ def test_discover_liebert_system_events(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_liebert_system_events(  # type:ignore[no-untyped-def]
-    string_table, check_results
+def test_check_liebert_system_events(
+    string_table: Mapping[str, Mapping[str, str]], check_results: Sequence[tuple[int, str]]
 ) -> None:
     check = Check("liebert_system_events")
     assert list(check.run_check(None, {}, string_table)) == check_results

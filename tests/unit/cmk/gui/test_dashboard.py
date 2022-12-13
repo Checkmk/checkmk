@@ -9,18 +9,23 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
-import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
-from cmk.gui.plugins.dashboard.utils import DashboardConfig, DashletConfig
+from cmk.gui.plugins.dashboard.utils import (
+    DashboardConfig,
+    Dashlet,
+    dashlet_registry,
+    DashletConfig,
+)
 
 
 class DummyDashletConfig(DashletConfig):
     ...
 
 
-class DummyDashlet(dashboard.Dashlet[DummyDashletConfig]):
+class DummyDashlet(Dashlet[DummyDashletConfig]):
     @classmethod
     def type_name(cls):
         return "dummy"
@@ -91,7 +96,7 @@ def test_dashlet_registry_plugins() -> None:
             "inventory",
         ]
 
-    assert sorted(dashboard.dashlet_registry.keys()) == sorted(expected_plugins)
+    assert sorted(dashlet_registry.keys()) == sorted(expected_plugins)
 
 
 def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
@@ -135,7 +140,7 @@ TEST_DASHBOARD = DashboardConfig(
         "icon": "dashboard_problems",
         "description": "",
         "dashlets": [],
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "name": "problems",
         "hidden": False,
@@ -151,7 +156,7 @@ TEST_DASHBOARD = DashboardConfig(
 def test_dashlet_refresh_intervals(
     type_name: str, expected_refresh_interval: Literal[False] | int, monkeypatch: MonkeyPatch
 ) -> None:
-    dashlet_type = dashboard.dashlet_registry[type_name]
+    dashlet_type = dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
     dashlet_spec: DashletConfig = {
@@ -166,11 +171,11 @@ def test_dashlet_refresh_intervals(
             lambda g, d: [{"title": "1"}],
         )
 
-    monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
+    monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})
 
     dashlet = dashlet_type(
         dashboard_name="main",
-        dashboard=dashboard._add_context_to_dashboard(TEST_DASHBOARD),
+        dashboard=TEST_DASHBOARD.copy(),
         dashlet_id=1,
         dashlet=dashlet_spec,
     )
@@ -180,19 +185,19 @@ def test_dashlet_refresh_intervals(
 
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
-    assert dashboard.Dashlet.single_infos() == []
-    assert dashboard.Dashlet.is_selectable() is True
-    assert dashboard.Dashlet.is_resizable() is True
-    assert dashboard.Dashlet.is_iframe_dashlet() is False
-    assert dashboard.Dashlet.initial_size() == dashboard.Dashlet.minimum_size
-    assert dashboard.Dashlet.initial_position() == (1, 1)
-    assert dashboard.Dashlet.initial_refresh_interval() is False
-    assert dashboard.Dashlet.vs_parameters() is None
-    assert dashboard.Dashlet.opt_parameters() is False
-    assert dashboard.Dashlet.validate_parameters_func() is None
-    assert dashboard.Dashlet.styles() is None
-    assert dashboard.Dashlet.script() is None
-    assert dashboard.Dashlet.allowed_roles() == default_authorized_builtin_role_ids
+    assert Dashlet.single_infos() == []
+    assert Dashlet.is_selectable() is True
+    assert Dashlet.is_resizable() is True
+    assert Dashlet.is_iframe_dashlet() is False
+    assert Dashlet.initial_size() == Dashlet.minimum_size
+    assert Dashlet.initial_position() == (1, 1)
+    assert Dashlet.initial_refresh_interval() is False
+    assert Dashlet.vs_parameters() is None
+    assert Dashlet.opt_parameters() is False
+    assert Dashlet.validate_parameters_func() is None
+    assert Dashlet.styles() is None
+    assert Dashlet.script() is None
+    assert Dashlet.allowed_roles() == default_authorized_builtin_role_ids
 
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 
@@ -324,7 +329,7 @@ def test_dashlet_context_inheritance() -> None:
         "host": {"host": "bla", "neg_host": ""},
     }
 
-    dashboard_spec = dashboard._add_context_to_dashboard(test_dashboard)
+    dashboard_spec = test_dashboard
 
     dashlet_spec = {
         "type": "hoststats",
@@ -338,7 +343,7 @@ def test_dashlet_context_inheritance() -> None:
         "size": (30, 18),
     }
 
-    HostStats = dashboard.dashlet_registry["hoststats"]
+    HostStats = dashlet_registry["hoststats"]
     dashlet = HostStats(
         dashboard_name="bla", dashboard=dashboard_spec, dashlet_id=1, dashlet=dashlet_spec
     )

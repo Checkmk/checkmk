@@ -25,10 +25,17 @@ from livestatus import (
     UnixSocketInfo,
 )
 
-from cmk.utils.type_defs._misc import UserId
+from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
+from cmk.gui.i18n import _
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import site_is_local
+from cmk.gui.watolib.activate_changes import clear_site_replication_status
+from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
+from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import prepare_raw_site_config, SiteManagementFactory
 
 
@@ -578,3 +585,35 @@ class SitesApiMgr:
         sites = prepare_raw_site_config(SiteConfigurations({site_id: site_config}))
         self.all_sites.update(sites)
         self.site_mgmt.save_sites(self.all_sites)
+
+
+def add_changes_after_editing_site_connection(
+    *,
+    site_id: SiteId,
+    is_new_connection: bool,
+    replication_enabled: bool,
+) -> LogMessage:
+    change_message = (
+        _("Created new connection to site %s") % site_id
+        if is_new_connection
+        else _("Modified site connection %s") % site_id
+    )
+
+    # Don't know exactly what have been changed, so better issue a change
+    # affecting all domains
+    add_change(
+        "edit-sites",
+        change_message,
+        sites=[site_id],
+        domains=ABCConfigDomain.enabled_domains(),
+    )
+
+    # In case a site is not being replicated anymore, confirm all changes for this site!
+    if not replication_enabled and not site_is_local(site_id):
+        clear_site_replication_status(site_id)
+
+    if site_id != omd_site():
+        # On central site issue a change only affecting the GUI
+        add_change("edit-sites", change_message, sites=[omd_site()], domains=[ConfigDomainGUI])
+
+    return change_message

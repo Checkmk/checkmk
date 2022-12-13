@@ -8,10 +8,8 @@ from typing import NoReturn
 from unittest.mock import MagicMock
 
 import pytest
-from pydantic_factories import ModelFactory
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes import performance
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
@@ -30,10 +28,6 @@ from .factory import (
     PodSpecFactory,
     PodStatusFactory,
 )
-
-
-class PerformanceMetricFactory(ModelFactory):
-    __model__ = performance.PerformanceMetric
 
 
 def cluster_api_sections() -> Sequence[str]:
@@ -418,7 +412,6 @@ def test_create_correct_number_pod_names_for_cluster_host(
 
     pods_to_host = agent.determine_pods_to_host(
         monitored_objects=[],
-        monitored_pods=set(),
         composed_entities=composed_entities,
         monitored_namespaces=set(),
         api_pods=pods,
@@ -427,7 +420,6 @@ def test_create_correct_number_pod_names_for_cluster_host(
         api_cron_jobs=[],
         # This test is not supposed to generate any PiggyBack host:
         piggyback_formatter=_raise_error,  # type: ignore[arg-type]
-        piggyback_formatter_node=_raise_error,  # type: ignore[arg-type]
     )
     cluster_piggy_back = [p for p in pods_to_host.piggybacks if p.piggyback == ""]
 

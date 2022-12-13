@@ -14,6 +14,7 @@ import pytest
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -364,7 +365,7 @@ def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
 
 
 def test_openapi_create_folder_with_network_scan(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[str, str]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
     _create_criticality_tag(aut_user_auth_wsgi_app)
     user, _ = with_automation_user
@@ -428,7 +429,7 @@ def test_openapi_create_folder_with_network_scan(
 
 
 def test_openapi_show_folder_with_network_scan_result(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[str, str]
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
     _create_criticality_tag(aut_user_auth_wsgi_app)
     path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"

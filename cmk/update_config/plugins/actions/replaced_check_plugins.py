@@ -7,6 +7,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 REPLACED_CHECK_PLUGINS = {
     CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),
+    CheckPluginName("apc_power"): CheckPluginName("epower"),
     CheckPluginName("cisco_mem_asa"): CheckPluginName("cisco_mem"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem"),
     CheckPluginName("df_netapp32"): CheckPluginName("df_netapp"),
@@ -66,4 +67,5 @@ REPLACED_CHECK_PLUGINS = {
     CheckPluginName("fjdarye60_syscaps"): CheckPluginName("fjdarye_system_capacitors"),
     CheckPluginName("fjdarye60_thmls"): CheckPluginName("fjdarye_thermal_sensors"),
     CheckPluginName("hpux_lunstats"): CheckPluginName("diskstat_io"),
+    CheckPluginName("ups_power"): CheckPluginName("epower"),
 }

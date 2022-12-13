@@ -2,7 +2,7 @@ title: DOCSIS: Upstream Channels
 agents: snmp
 catalog: hw/network/docsis
 license: GPLv2
-distribution:
+distribution: check_mk
 description:
  This check monitors the signal/noise ratio, the corrected and
  uncorrectable errors and the registered and total number of modems

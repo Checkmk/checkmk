@@ -5,6 +5,7 @@
 
 #include "TableStateHistory.h"
 
+#include <cstddef>
 #include <optional>
 #include <ratio>
 #include <set>

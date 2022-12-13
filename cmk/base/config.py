@@ -2413,17 +2413,7 @@ class HostConfig:
     def __init__(self, config_cache: ConfigCache, hostname: HostName) -> None:
         super().__init__()
         self.hostname: Final = hostname
-
         self._config_cache: Final = config_cache
-
-    def checkmk_check_parameters(self) -> CheckmkCheckParameters:
-        return CheckmkCheckParameters(enabled=not self._config_cache.is_ping_host(self.hostname))
-
-    def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> dict:
-        default: Ruleset[object] = []
-        return self._config_cache.host_extra_conf_merged(
-            self.hostname, notification_parameters.get(plugin_name, default)
-        )
 
 
 def lookup_mgmt_board_ip_address(
@@ -2523,6 +2513,7 @@ class ConfigCache:
         self._disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self._labels: dict[HostName, Labels] = {}
         self._label_sources: dict[HostName, LabelSources] = {}
+        self._notification_plugin_parameters: dict[tuple[HostName, CheckPluginNameStr], dict] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2581,6 +2572,7 @@ class ConfigCache:
         self._disabled_snmp_sections.clear()
         self._labels.clear()
         self._label_sources.clear()
+        self._notification_plugin_parameters.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -2711,6 +2703,7 @@ class ConfigCache:
             del self._host_configs[hostname]
         except KeyError:
             pass
+        self._notification_plugin_parameters.clear()
 
     @staticmethod
     def _get_host_paths(config_host_paths: dict[HostName, str]) -> dict[HostName, str]:
@@ -3277,6 +3270,20 @@ class ConfigCache:
             "site": omd_site(),
             "address_family": "ip-v4-only",
         }
+
+    def checkmk_check_parameters(self, host_name: HostName) -> CheckmkCheckParameters:
+        return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name))
+
+    def notification_plugin_parameters(
+        self, host_name: HostName, plugin_name: CheckPluginNameStr
+    ) -> dict:
+        def _impl() -> dict:
+            default: Ruleset[object] = []
+            return self.host_extra_conf_merged(
+                host_name, notification_parameters.get(plugin_name, default)
+            )
+
+        return self._notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
 
     def labels(self, host_name: HostName) -> Labels:
         return self._labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))

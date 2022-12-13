@@ -1067,7 +1067,7 @@ def test_discovery_check_parameters(
         ),
     ],
 )
-def test_host_config_notification_plugin_parameters(
+def test_notification_plugin_parameters(
     monkeypatch: MonkeyPatch, hostname_str: str, result: dict[str, int]
 ) -> None:
     hostname = HostName(hostname_str)
@@ -1094,7 +1094,7 @@ def test_host_config_notification_plugin_parameters(
         },
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.make_host_config(hostname).notification_plugin_parameters("mail") == result
+    assert config_cache.notification_plugin_parameters(hostname, "mail") == result
 
 
 @pytest.mark.parametrize(

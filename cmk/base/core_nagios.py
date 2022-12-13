@@ -339,8 +339,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 ) -> dict[ServiceName, Labels]:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
-    host_config = config_cache.make_host_config(hostname)
-
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
     #   _____
@@ -437,7 +435,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         have_at_least_one_service = True
 
     # Active check for Check_MK
-    if host_config.checkmk_check_parameters().enabled:
+    if config_cache.checkmk_check_parameters(hostname).enabled:
         service_spec = {
             "use": config.active_service_template,
             "host_name": hostname,

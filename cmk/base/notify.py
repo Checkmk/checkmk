@@ -662,8 +662,8 @@ def rbn_finalize_plugin_parameters(
     if not isinstance(rule_parameters, dict):
         return rule_parameters
 
-    host_config = config.get_config_cache().make_host_config(hostname)
-    parameters = host_config.notification_plugin_parameters(plugin_name).copy()
+    config_cache = config.get_config_cache()
+    parameters = config_cache.notification_plugin_parameters(hostname, plugin_name).copy()
     parameters.update(rule_parameters)
 
     # Added in 2.0.0b8. Applies if no value is set either in the notification rule

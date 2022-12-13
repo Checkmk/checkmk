@@ -280,7 +280,10 @@ def _get_view_rows(
     view: View, all_active_filters: list[Filter], only_count: bool = False
 ) -> tuple[int, Rows]:
     with CPUTracker() as fetch_rows_tracker:
-        rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
+        rows, unfiltered_amount_of_rows = _fetch_rows_from_livestatus(
+            view, all_active_filters, only_count
+        )
+        _post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(rows, view.sorters)
@@ -301,18 +304,13 @@ def _get_view_rows(
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_view_rows(
+def _fetch_rows_from_livestatus(
     view: View, all_active_filters: list[Filter], only_count: bool
 ) -> tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
-    Besides gathering the information from livestatus it also joins the rows with other information.
-    For the moment this is:
-
-    - Livestatus table joining (e.g. Adding service row info to host rows (For join painters))
-    - Add HW/SW inventory data when needed
-    - Add SLA data when needed
-    """
+    Besides gathering the information from livestatus it performs livestatus table joining
+    (e.g. Adding service row info to host rows (For join painters))"""
     filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
     headers = filterheaders + view.spec.get("add_headers", "")
 
@@ -350,16 +348,26 @@ def _fetch_view_rows(
         if view.join_cells:
             _do_table_join(view, rows, filterheaders, view.sorters)
 
-        # If any painter, sorter or filter needs the information about the host's
-        # inventory, then we load it and attach it as column "host_inventory"
-        if _is_inventory_data_needed(view, all_active_filters):
-            _add_inventory_data(rows)
-
-        if not cmk_version.is_raw_edition():
-            _add_sla_data(view, rows)
-
         return rows, unfiltered_amount_of_rows
     return [], 0
+
+
+def _post_process_rows(view: View, all_active_filters: Sequence[Filter], rows: Rows) -> None:
+    """Extend the rows fetched from livestatus with additional information
+
+    - Add HW/SW inventory data when needed
+    - Add SLA data when needed
+    """
+    if not rows:
+        return
+
+    # If any painter, sorter or filter needs the information about the host's
+    # inventory, then we load it and attach it as column "host_inventory"
+    if _is_inventory_data_needed(view, all_active_filters):
+        _add_inventory_data(rows)
+
+    if not cmk_version.is_raw_edition():
+        _add_sla_data(view.row_cells, rows)
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
@@ -509,8 +517,7 @@ def _get_needed_join_columns(
     return list(join_columns)
 
 
-def _is_inventory_data_needed(view: View, all_active_filters: list[Filter]) -> bool:
-
+def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) -> bool:
     group_cells: list[Cell] = view.group_cells
     cells: list[Cell] = view.row_cells
     sorters: list[SorterEntry] = view.sorters
@@ -562,11 +569,11 @@ def _add_inventory_data(rows: Rows) -> None:
                 )
 
 
-def _add_sla_data(view: View, rows: Rows) -> None:
+def _add_sla_data(cells: Sequence[Cell], rows: Rows) -> None:
     import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
 
     sla_params = []
-    for cell in view.row_cells:
+    for cell in cells:
         if cell.painter_name() in ["sla_specific", "sla_fixed"]:
             sla_params.append(cell.painter_parameters())
     if sla_params:

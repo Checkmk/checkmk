@@ -304,8 +304,8 @@ class ModeParentScan(WatoMode):
     def name(cls) -> str:
         return "parentscan"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "parentscan"]
 
     def title(self) -> str:

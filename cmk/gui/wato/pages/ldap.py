@@ -710,8 +710,8 @@ class ModeLDAPConfig(LDAPMode):
     def name(cls) -> str:
         return "ldap_config"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @property
@@ -859,8 +859,8 @@ class ModeEditLDAPConnection(LDAPMode):
     def name(cls) -> str:
         return "edit_ldap_connection"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod

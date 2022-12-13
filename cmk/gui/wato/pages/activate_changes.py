@@ -69,8 +69,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
     def name(cls) -> str:
         return "changelog"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def __init__(self) -> None:

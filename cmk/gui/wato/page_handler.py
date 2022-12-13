@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Collection
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -24,6 +25,7 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -82,7 +84,7 @@ def page_handler() -> None:
 
     current_mode = request.var("mode") or "main"
     mode_class = mode_registry.get(current_mode, ModeNotImplemented)
-    _ensure_mode_permissions(mode_class)
+    _ensure_static_mode_permissions(mode_class.static_permissions())
 
     display_options.load_from_html(request, html)
 
@@ -158,8 +160,7 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _ensure_mode_permissions(mode_class: type[WatoMode]) -> None:
-    permissions = mode_class.permissions()
+def _ensure_static_mode_permissions(permissions: None | Collection[PermissionName]) -> None:
     if permissions is None:
         permissions = []
     else:

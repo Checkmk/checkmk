@@ -90,8 +90,8 @@ class ModeDiagnostics(WatoMode):
     def name(cls) -> str:
         return "diagnostics"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["diagnostics"]
 
     def _from_vars(self) -> None:

@@ -48,8 +48,8 @@ class ModeCheckPlugins(WatoMode):
     def name(cls) -> str:
         return "check_plugins"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     def _from_vars(self):
@@ -98,8 +98,8 @@ class ModeCheckPluginSearch(WatoMode):
     def name(cls) -> str:
         return "check_plugin_search"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -177,8 +177,8 @@ class ModeCheckPluginTopic(WatoMode):
     def name(cls) -> str:
         return "check_plugin_topic"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod
@@ -425,8 +425,8 @@ class ModeCheckManPage(WatoMode):
     def name(cls) -> str:
         return "check_manpage"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["check_plugins"]
 
     @classmethod

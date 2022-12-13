@@ -29,8 +29,8 @@ class ModeRandomHosts(WatoMode):
     def name(cls) -> str:
         return "random_hosts"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "random_hosts"]
 
     def title(self) -> str:

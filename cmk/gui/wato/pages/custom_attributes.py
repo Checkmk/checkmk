@@ -263,8 +263,8 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr):
     def name(cls) -> str:
         return "edit_user_attr"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @classmethod
@@ -336,8 +336,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
     def name(cls) -> str:
         return "edit_host_attr"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @classmethod
@@ -508,8 +508,8 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
     def name(cls) -> str:
         return "user_attrs"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users", "custom_attributes"]
 
     @property
@@ -542,8 +542,8 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def name(cls) -> str:
         return "host_attrs"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts", "custom_attributes"]
 
     @property

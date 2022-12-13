@@ -100,8 +100,8 @@ class ModeFolder(WatoMode):
     def name(cls) -> str:
         return "folder"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     def __init__(self) -> None:
@@ -1325,8 +1325,8 @@ class ModeEditFolder(ABCFolderMode):
     def name(cls) -> str:
         return "editfolder"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     def _init_folder(self):
@@ -1345,8 +1345,8 @@ class ModeCreateFolder(ABCFolderMode):
     def name(cls) -> str:
         return "newfolder"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
     def _init_folder(self):

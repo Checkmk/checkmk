@@ -37,8 +37,8 @@ class ModeBulkEdit(WatoMode):
     def name(cls) -> str:
         return "bulkedit"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod
@@ -120,8 +120,8 @@ class ModeBulkCleanup(WatoMode):
     def name(cls) -> str:
         return "bulkcleanup"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "edit_hosts"]
 
     @classmethod

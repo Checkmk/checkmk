@@ -49,8 +49,8 @@ class ModeDiagHost(WatoMode):
     def name(cls) -> str:
         return "diag_host"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "diag_host"]
 
     @classmethod

@@ -494,8 +494,8 @@ class ModeNotifications(ABCNotificationsMode):
     def name(cls) -> str:
         return "notifications"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     def __init__(self) -> None:
@@ -963,8 +963,8 @@ class ModeUserNotifications(ABCUserNotificationsMode):
     def name(cls) -> str:
         return "user_notifications"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -1050,8 +1050,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def name(cls) -> str:
         return "user_notifications_p"
 
-    @classmethod
-    def permissions(cls) -> None | Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> None:
         return None
 
     def __init__(self) -> None:
@@ -1656,8 +1656,8 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
     def name(cls) -> str:
         return "notification_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1722,8 +1722,8 @@ class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
     def name(cls) -> str:
         return "user_notification_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
     @classmethod
@@ -1752,8 +1752,8 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePersonalUserNotifications
 
-    @classmethod
-    def permissions(cls) -> None | Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> None:
         return None
 
     def __init__(self) -> None:

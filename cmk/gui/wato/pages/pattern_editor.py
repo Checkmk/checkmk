@@ -55,8 +55,8 @@ class ModePatternEditor(WatoMode):
     def name(cls) -> str:
         return "pattern_editor"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["pattern_editor"]
 
     @classmethod

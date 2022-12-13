@@ -49,8 +49,8 @@ class ModeObjectParameters(WatoMode):
     def name(cls) -> str:
         return "object_parameters"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "rulesets"]
 
     @classmethod

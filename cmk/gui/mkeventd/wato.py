@@ -1603,8 +1603,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_rule_packs"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     def title(self) -> str:
@@ -2071,8 +2071,8 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_rules"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2448,8 +2448,8 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_edit_rule_pack"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2564,8 +2564,8 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_edit_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.edit"]
 
     @classmethod
@@ -2757,8 +2757,8 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_status"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod
@@ -2864,8 +2864,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
     def name(cls) -> str:
         return "mkeventd_config"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -2990,8 +2990,8 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def name(cls) -> str:
         return "mkeventd_edit_configvar"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -3029,8 +3029,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_mibs"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod
@@ -3219,8 +3219,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
     def name(cls) -> str:
         return "mkeventd_upload_mibs"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["mkeventd.config"]
 
     @classmethod

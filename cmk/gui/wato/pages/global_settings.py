@@ -417,8 +417,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def name(cls) -> str:
         return "globalvars"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     def __init__(self) -> None:
@@ -538,8 +538,8 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
     def name(cls) -> str:
         return "edit_configvar"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod

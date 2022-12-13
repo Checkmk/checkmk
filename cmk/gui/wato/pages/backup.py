@@ -31,8 +31,8 @@ class ModeBackup(backup.PageBackup, WatoMode):
     def name(cls) -> str:
         return "backup"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     def __init__(self) -> None:
@@ -54,8 +54,8 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def name(cls) -> str:
         return "backup_targets"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -92,8 +92,8 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     def name(cls) -> str:
         return "edit_backup_target"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -110,8 +110,8 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     def name(cls) -> str:
         return "edit_backup_job"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -160,8 +160,8 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     def jobs(self):
@@ -195,8 +195,8 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
     def name(cls) -> str:
         return "backup_keys"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -216,8 +216,8 @@ class ModeBackupEditKey(backup.PageBackupEditKey, WatoMode):
     def name(cls) -> str:
         return "backup_edit_key"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -234,8 +234,8 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
     def name(cls) -> str:
         return "backup_upload_key"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -256,8 +256,8 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
     def name(cls) -> str:
         return "backup_download_key"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod
@@ -277,8 +277,8 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def name(cls) -> str:
         return "backup_restore"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
     @classmethod

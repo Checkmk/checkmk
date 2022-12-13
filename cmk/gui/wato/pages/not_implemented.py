@@ -18,8 +18,8 @@ class ModeNotImplemented(WatoMode):
     def name(cls) -> str:
         return ""
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:

@@ -115,8 +115,8 @@ class ModeTags(ABCTagMode):
     def name(cls) -> str:
         return "tags"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
     def title(self) -> str:
@@ -453,8 +453,8 @@ class ModeTags(ABCTagMode):
 
 
 class ABCEditTagMode(ABCTagMode, abc.ABC):
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
     def __init__(self) -> None:
@@ -523,8 +523,8 @@ class ModeTagUsage(ABCTagMode):
     def name(cls) -> str:
         return "tag_usage"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
     @classmethod

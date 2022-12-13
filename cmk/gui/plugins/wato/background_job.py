@@ -78,8 +78,8 @@ class ModeBackgroundJobsOverview(WatoMode):
     def name(cls) -> str:
         return "background_jobs_overview"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["background_jobs.manage_jobs"]
 
     def title(self) -> str:
@@ -107,8 +107,8 @@ class ModeBackgroundJobDetails(WatoMode):
     def name(cls) -> str:
         return "background_job_details"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod

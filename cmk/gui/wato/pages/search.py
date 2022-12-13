@@ -27,8 +27,8 @@ class ModeSearch(WatoMode):
     def name(cls) -> str:
         return "search"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod

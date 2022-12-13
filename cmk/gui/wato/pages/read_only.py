@@ -36,8 +36,8 @@ class ModeManageReadOnly(WatoMode):
     def name(cls) -> str:
         return "read_only"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["set_read_only"]
 
     def __init__(self) -> None:

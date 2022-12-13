@@ -85,8 +85,8 @@ class ModeUsers(WatoMode):
     def name(cls) -> str:
         return "users"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     def __init__(self) -> None:
@@ -548,8 +548,8 @@ class ModeEditUser(WatoMode):
     def name(cls) -> str:
         return "edit_user"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod

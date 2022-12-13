@@ -26,10 +26,12 @@ class WatoMode(abc.ABC):
         super().__init__()
         self._from_vars()
 
-    @classmethod
+    @staticmethod
     @abc.abstractmethod
-    def permissions(cls) -> None | Collection[PermissionName]:
-        """permissions = None -> every user can use this mode, permissions
+    def static_permissions() -> None | Collection[PermissionName]:
+        """Static permissions needed to access this mode
+
+        static_permissions = None -> every user can use this mode, permissions
         are checked by the mode itself. Otherwise the user needs at
         least wato.use and - if he makes actions - wato.edit. Plus wato.*
         for each permission in the list."""

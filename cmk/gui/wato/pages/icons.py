@@ -34,8 +34,8 @@ class ModeIcons(WatoMode):
     def name(cls) -> str:
         return "icons"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["icons"]
 
     def title(self) -> str:

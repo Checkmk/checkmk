@@ -58,8 +58,8 @@ class ModePasswords(SimpleListMode):
     def name(cls) -> str:
         return "passwords"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
     def __init__(self) -> None:
@@ -128,8 +128,8 @@ class ModeEditPassword(SimpleEditMode):
     def name(cls) -> str:
         return "edit_password"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
     @classmethod

@@ -106,8 +106,8 @@ class ModeEditSite(WatoMode):
     def name(cls) -> str:
         return "edit_site"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -531,8 +531,8 @@ class ModeDistributedMonitoring(WatoMode):
     def name(cls) -> str:
         return "sites"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["sites"]
 
     def __init__(self) -> None:
@@ -1055,8 +1055,8 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def name(cls) -> str:
         return "edit_site_globals"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod
@@ -1198,8 +1198,8 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def name(cls) -> str:
         return "edit_site_configvar"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @classmethod
@@ -1244,8 +1244,8 @@ class ModeSiteLivestatusEncryption(WatoMode):
     def name(cls) -> str:
         return "site_livestatus_encryption"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["sites"]
 
     @classmethod

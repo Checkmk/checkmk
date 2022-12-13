@@ -169,8 +169,8 @@ class ABCRulesetMode(WatoMode):
     Besides the simple listing, it is also responsible for displaying rule search results.
     """
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     def __init__(self) -> None:
@@ -719,8 +719,8 @@ class ModeEditRuleset(WatoMode):
     def name(cls) -> str:
         return "edit_ruleset"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod
@@ -1402,8 +1402,8 @@ class ModeRuleSearchForm(WatoMode):
     def name(cls) -> str:
         return "rule_search_form"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod
@@ -2687,8 +2687,8 @@ class ModeEditRule(ABCEditRuleMode):
     def name(cls) -> str:
         return "edit_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def _save_rule(self) -> None:
@@ -2703,8 +2703,8 @@ class ModeCloneRule(ABCEditRuleMode):
     def name(cls) -> str:
         return "clone_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2728,8 +2728,8 @@ class ModeNewRule(ABCEditRuleMode):
     def name(cls) -> str:
         return "new_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:
@@ -2815,8 +2815,8 @@ class ModeExportRule(ABCEditRuleMode):
     def name(cls) -> str:
         return "export_rule"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def title(self) -> str:

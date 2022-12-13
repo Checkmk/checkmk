@@ -302,8 +302,8 @@ class ModeHostgroups(ModeGroups):
     def name(cls) -> str:
         return "host_groups"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
@@ -333,8 +333,8 @@ class ModeServicegroups(ModeGroups):
     def name(cls) -> str:
         return "service_groups"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
@@ -364,8 +364,8 @@ class ModeContactgroups(ModeGroups):
     def name(cls) -> str:
         return "contact_groups"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
@@ -426,8 +426,8 @@ class ModeEditServicegroup(ABCModeEditGroup):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeServicegroups
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
@@ -453,8 +453,8 @@ class ModeEditHostgroup(ABCModeEditGroup):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeHostgroups
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["groups"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
@@ -480,8 +480,8 @@ class ModeEditContactgroup(ABCModeEditGroup):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeContactgroups
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     def _load_groups(self) -> dict[GroupName, GroupSpec]:

@@ -69,8 +69,8 @@ class ModeRoles(WatoMode):
     def name(cls) -> str:
         return "roles"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     def title(self) -> str:
@@ -187,8 +187,8 @@ class ModeEditRole(WatoMode):
     def name(cls) -> str:
         return "edit_role"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod
@@ -347,8 +347,8 @@ class ModeRoleMatrix(WatoMode):
     def name(cls) -> str:
         return "role_matrix"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
     @classmethod

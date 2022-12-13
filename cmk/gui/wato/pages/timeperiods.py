@@ -79,8 +79,8 @@ class ModeTimeperiods(WatoMode):
     def name(cls) -> str:
         return "timeperiods"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
     def __init__(self) -> None:
@@ -373,8 +373,8 @@ class ModeTimeperiodImportICal(WatoMode):
     def name(cls) -> str:
         return "import_ical"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod
@@ -689,8 +689,8 @@ class ModeEditTimeperiod(WatoMode):
     def name(cls) -> str:
         return "edit_timeperiod"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
     @classmethod

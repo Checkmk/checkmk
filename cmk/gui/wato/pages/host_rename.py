@@ -96,8 +96,8 @@ class ModeBulkRenameHost(WatoMode):
     def name(cls) -> str:
         return "bulk_rename_host"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod
@@ -413,8 +413,8 @@ class ModeRenameHost(WatoMode):
     def name(cls) -> str:
         return "rename_host"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     @classmethod

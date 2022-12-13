@@ -299,8 +299,8 @@ class ModeEditHost(ABCHostMode):
     def name(cls) -> str:
         return "edit_host"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     # pylint does not understand this overloading
@@ -660,8 +660,8 @@ class ModeCreateHost(CreateHostMode):
     def name(cls) -> str:
         return "newhost"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def title(self) -> str:
@@ -694,8 +694,8 @@ class ModeCreateCluster(CreateHostMode):
     def name(cls) -> str:
         return "newcluster"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_hosts"]
 
     def _is_cluster(self) -> bool:

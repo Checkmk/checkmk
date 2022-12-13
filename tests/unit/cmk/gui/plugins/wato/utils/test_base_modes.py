@@ -22,8 +22,8 @@ module_registry = MainModuleRegistry()
 
 
 class SomeWatoMode(WatoMode):
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     @classmethod

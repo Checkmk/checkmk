@@ -97,8 +97,8 @@ class ModePredefinedConditions(SimpleListMode):
     def name(cls) -> str:
         return "predefined_conditions"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     def __init__(self) -> None:
@@ -202,8 +202,8 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def name(cls) -> str:
         return "edit_predefined_condition"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
     @classmethod

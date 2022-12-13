@@ -218,8 +218,8 @@ class ModeSAML2Config(WatoMode):
     def name(cls) -> str:
         return "saml_config"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["global"]
 
     @property

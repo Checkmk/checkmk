@@ -57,8 +57,8 @@ class ModeAuditLog(WatoMode):
     def name(cls) -> str:
         return "auditlog"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["auditlog"]
 
     def __init__(self) -> None:

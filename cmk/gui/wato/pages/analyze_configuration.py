@@ -81,8 +81,8 @@ class ModeAnalyzeConfig(WatoMode):
     def name(cls) -> str:
         return "analyze_config"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return []
 
     def __init__(self) -> None:

@@ -102,8 +102,8 @@ class ModeDiscovery(WatoMode):
     def name(cls) -> str:
         return "inventory"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
     @classmethod

@@ -43,8 +43,8 @@ class ModeBulkDiscovery(WatoMode):
     def name(cls) -> str:
         return "bulkinventory"
 
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "services"]
 
     @classmethod

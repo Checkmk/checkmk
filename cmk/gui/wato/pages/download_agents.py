@@ -31,8 +31,8 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 
 
 class ABCModeDownloadAgents(WatoMode):
-    @classmethod
-    def permissions(cls) -> Collection[PermissionName]:
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
         return ["download_agents"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

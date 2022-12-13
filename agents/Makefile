@@ -20,6 +20,7 @@ DEB_TOPDIR := $(AGENTS_DIR)/debian
 DEB_BUILDDIR := $(AGENTS_DIR)/debian/.build
 
 AGENT_CTL := $(AGENTS_DIR)/linux/cmk-agent-ctl
+AGENT_CTL_GZ := $(AGENTS_DIR)/linux/cmk-agent-ctl.gz
 AGENT_CTL_CARGO_OUT := cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl
 AGENT_CTL_DEPS := cmk-agent-ctl/Cargo.lock \
 	cmk-agent-ctl/Cargo.toml \
@@ -32,7 +33,7 @@ BUILDROOT_DEPS := \
 	conffiles/super-server.cfg \
 	check_mk_agent.linux \
 	check_mk_caching_agent.linux \
-	$(AGENT_CTL) \
+	$(AGENT_CTL_GZ) \
 	mk-job \
 	waitmax \
 	$(shell find scripts/ -type f)
@@ -85,7 +86,7 @@ setversion:
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
 
-controller: $(AGENT_CTL)
+controller: $(AGENT_CTL_GZ)
 
 $(AGENT_CTL_CARGO_OUT): $(AGENT_CTL_DEPS)
 	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release)
@@ -95,7 +96,9 @@ $(AGENT_CTL): $(AGENT_CTL_CARGO_OUT)
 	mkdir -p linux
 	install -m 755 $(AGENT_CTL_CARGO_OUT) $(AGENT_CTL)
 	strip $(AGENT_CTL)
-	which upx >/dev/null 2>&1 && upx $(AGENT_CTL) || true
+
+$(AGENT_CTL_GZ): $(AGENT_CTL)
+	gzip --best --keep --force $(AGENT_CTL)
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 deb: $(DEB_PACKAGE)
@@ -151,4 +154,4 @@ $(BUILDROOT_STAMP): $(BUILDROOT_DEPS)
 	touch $@
 
 clean:
-	rm -rf *~ waitmax *.rpm *.deb $(AGENT_CTL) "$(BUILDROOT)" "$(BUILDROOT_STAMP)" "$(DEB_BUILDDIR)" "$(RPM_BUILDDIR)" "$(RPM_TOPDIR)"
+	rm -rf *~ waitmax *.rpm *.deb $(AGENT_CTL) $(AGENT_CTL_GZ) "$(BUILDROOT)" "$(BUILDROOT_STAMP)" "$(DEB_BUILDDIR)" "$(RPM_BUILDDIR)" "$(RPM_TOPDIR)"

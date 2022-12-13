@@ -20,7 +20,8 @@ LIVESTATUS_INTERMEDIATE_ARCHIVE := \
 SOURCE_BUILT_LINUX_AGENTS := \
 	$(REPO_PATH)/agents/check-mk-agent-$(VERSION)-1.noarch.rpm \
 	$(REPO_PATH)/agents/check-mk-agent_$(VERSION)-1_all.deb \
-	$(REPO_PATH)/agents/linux/cmk-agent-ctl
+	$(REPO_PATH)/agents/linux/cmk-agent-ctl \
+	$(REPO_PATH)/agents/linux/cmk-agent-ctl.gz
 ifeq ($(ENTERPRISE),yes)
 SOURCE_BUILT_AGENT_UPDATER := \
 	$(REPO_PATH)/agents/plugins/cmk-update-agent \

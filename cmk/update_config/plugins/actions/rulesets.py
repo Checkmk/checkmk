@@ -5,6 +5,7 @@
 
 from collections.abc import Container, Mapping, Sequence
 from datetime import time as dt_time
+from itertools import chain
 from logging import Logger
 
 from cmk.utils import debug
@@ -214,7 +215,7 @@ def _remove_removed_check_plugins_from_ignored_checks(
             )
 
 
-def _transform_fileinfo_timeofday_to_timeperiods(all_rulesets: RulesetCollection) -> None:
+def _transform_fileinfo_timeofday_to_timeperiods(collection: RulesetCollection) -> None:
     """Transforms the deprecated timeofday parameter to timeperiods
 
     In the general case, timeperiods shouldn't be specified if timeofday is used.
@@ -225,8 +226,11 @@ def _transform_fileinfo_timeofday_to_timeperiods(all_rulesets: RulesetCollection
 
     This transformation is introduced in v2.2 and can be removed in v2.3.
     """
-    ruleset = all_rulesets.get_rulesets()["checkgroup_parameters:fileinfo"]
-    for _folder, _folder_index, rule in ruleset.get_rules():
+    all_rulesets = collection.get_rulesets()
+    rulesets = [all_rulesets[f"checkgroup_parameters:{c}"] for c in ("fileinfo", "fileinfo-groups")]
+    rules = [r.get_rules() for r in rulesets]
+
+    for _folder, _folder_index, rule in chain(*rules):
         # in case there are timeperiods, look at default timepriod params
         rule_params = rule.value.get("tp_default_value", rule.value)
 

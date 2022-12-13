@@ -353,14 +353,78 @@ def test_create_timeperiod() -> None:
     ],
 )
 @pytest.mark.usefixtures("request_context")
-def test_transform_fileinfo_timeofday_to_timeperiods(
+def test_transform_fileinfo_timeofday_to_timeperiods_fileinfo_ruleset(
     old_param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    ruleset = _instantiate_ruleset("checkgroup_parameters:fileinfo", old_param_value)
-    rulesets = RulesetCollection({"checkgroup_parameters:fileinfo": ruleset})
+    fileinfo_ruleset = _instantiate_ruleset("checkgroup_parameters:fileinfo", old_param_value)
+    empty_ruleset = Ruleset("checkgroup_parameters:fileinfo-groups", {})
+
+    rulesets = RulesetCollection(
+        {
+            "checkgroup_parameters:fileinfo": fileinfo_ruleset,
+            "checkgroup_parameters:fileinfo-groups": empty_ruleset,
+        }
+    )
 
     rulesets_updater._transform_fileinfo_timeofday_to_timeperiods(rulesets)
 
     ruleset = rulesets.get_rulesets()["checkgroup_parameters:fileinfo"]
+    assert ruleset.get_rules()[0][2].value == transformed_param_value
+
+
+@pytest.mark.parametrize(
+    "old_param_value, transformed_param_value",
+    [
+        pytest.param(
+            {"timeofday": [((8, 0), (16, 0)), ((17, 0), (20, 0))], "minage": (2, 1)},
+            {
+                "tp_default_value": {},
+                "tp_values": [("timeofday_0800-1600_1700-2000", {"minage": (2, 1)})],
+            },
+            id="without_timeperiods",
+        ),
+        pytest.param(
+            {
+                "tp_default_value": {"timeofday": [((8, 0), (16, 0))], "minage": (2, 1)},
+                "tp_values": [("24x7", {"maxage": (200, 1000)})],
+            },
+            {
+                "tp_default_value": {},
+                "tp_values": [("timeofday_0800-1600", {"minage": (2, 1)})],
+            },
+            id="timeofday_in_default_timeperiod",
+        ),
+        pytest.param(
+            {
+                "tp_default_value": {"minage": (2, 1)},
+                "tp_values": [("24x7", {"timeofday": [((8, 0), (16, 0))], "minage": (2, 1)})],
+            },
+            {
+                "tp_default_value": {"minage": (2, 1)},
+                "tp_values": [("24x7", {"minage": (2, 1)})],
+            },
+            id="timeofday_in_nondefault_timeperiod",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_transform_fileinfo_timeofday_to_timeperiods_fileinfo_groups_ruleset(
+    old_param_value: RuleValue,
+    transformed_param_value: RuleValue,
+) -> None:
+    empty_ruleset = Ruleset("checkgroup_parameters:fileinfo", {})
+    fileinfo_group_ruleset = _instantiate_ruleset(
+        "checkgroup_parameters:fileinfo-groups", old_param_value
+    )
+    rulesets = RulesetCollection(
+        {
+            "checkgroup_parameters:fileinfo": empty_ruleset,
+            "checkgroup_parameters:fileinfo-groups": fileinfo_group_ruleset,
+        }
+    )
+
+    rulesets_updater._transform_fileinfo_timeofday_to_timeperiods(rulesets)
+
+    ruleset = rulesets.get_rulesets()["checkgroup_parameters:fileinfo-groups"]
     assert ruleset.get_rules()[0][2].value == transformed_param_value

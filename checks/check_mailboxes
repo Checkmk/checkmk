@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""This is the command line generator for the `check_mailboxes` active check.
+It defines active_check_info["mailboxes"]
+
+"""
+
+# Technically this doesn't have to be imported for 'reasons' but I prefer
+# ignoring this warning
+# pylint:disable=cmk-module-layer-violation
 from cmk.base.check_api import passwordstore_get_cmdline
 
 
@@ -12,7 +20,7 @@ def check_mailboxes_arguments(params):
     ...     'service_description': 'SD',
     ...     'fetch': ('EWS', {
     ...       'server': 'srv', 'connection': {},
-    ...       'auth': ('usr', ('password', 'pw')),
+    ...       'auth': ('basic', ('usr', 'pw')),
     ...       'email_address': 'usr@srv.com',
     ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
     ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
@@ -33,16 +41,17 @@ def check_mailboxes_arguments(params):
     --mailbox=abc
     --mailbox=def
     """
+    # pylint:disable=too-many-branches
     try:
         fetch_protocol, fetch_params = params["fetch"]
         connection_params = fetch_params["connection"]
-        username, password = fetch_params["auth"]
+        auth_type, auth_data = fetch_params["auth"]
     except KeyError as exc:
         raise ValueError(
             f"Params for check_mailboxes are faulty (missing {exc}), did you update the config?"
         )
 
-    args = [
+    args: list[str | tuple[str, str, str]] = [
         f"--fetch-protocol={fetch_protocol}",
         f"--fetch-server={fetch_params.get('server', '$HOSTADDRESS$')}",
     ]
@@ -58,8 +67,25 @@ def check_mailboxes_arguments(params):
     if (fetch_port := connection_params.get("tcp_port")) is not None:
         args.append(f"--fetch-port={fetch_port}")
 
-    args.append(f"--fetch-username={username}")
-    args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
+    if auth_type == "basic":
+        username, password = auth_data
+        assert isinstance(username, str)
+        assert isinstance(password, str)
+        args += [
+            f"--fetch-username={username}",
+            passwordstore_get_cmdline("--fetch-password=%s", password),
+        ]
+
+    else:
+        client_id, client_secret, tenant_id = auth_data
+        assert isinstance(client_id, str)
+        assert isinstance(client_secret, str)
+        assert isinstance(tenant_id, str)
+        args += [
+            f"--fetch-client-id={client_id}",
+            passwordstore_get_cmdline("--fetch-client-secret=%s", client_secret),
+            f"--fetch-tenant-id={tenant_id}",
+        ]
 
     if "email_address" in fetch_params:
         args.append(f"--fetch-email-address={fetch_params['email_address']}")
@@ -88,7 +114,7 @@ def check_mailboxes_arguments(params):
     return args
 
 
-active_check_info["mailboxes"] = {
+active_check_info["mailboxes"] = {  # pylint:disable=undefined-variable
     "command_line": "check_mailboxes $ARG1$",
     "argument_function": check_mailboxes_arguments,
     "service_description": lambda params: params["service_description"],

@@ -830,13 +830,13 @@ class EventServer(ECServerThread):
                         "exception while handling an SNMP trap, skipping this one"
                     )
 
-            try:
-                # process the first spool file we get
-                spool_file = next(self.settings.paths.spool_dir.value.glob("[!.]*"))
-                self.process_raw_lines(spool_file.read_bytes(), None)
-                spool_file.unlink()
+            if spool_files := sorted(
+                self.settings.paths.spool_dir.value.glob("[!.]*"), key=lambda x: x.stat().st_mtime
+            ):
+                self.process_raw_lines(spool_files[0].read_bytes(), None)
+                spool_files[0].unlink()
                 select_timeout = 0  # enable fast processing to process further files
-            except StopIteration:
+            else:
                 select_timeout = 1  # restore default select timeout
 
     def process_raw_data(self, handler: Callable[[], None]) -> None:

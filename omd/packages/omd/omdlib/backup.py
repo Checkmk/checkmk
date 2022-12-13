@@ -247,7 +247,11 @@ class BackupTarFile(tarfile.TarFile):
 
 def get_site_and_version_from_backup(tar: tarfile.TarFile) -> Tuple[str, str]:
     """Get the first file of the tar archive. Expecting <site>/version symlink
-    for validation reasons."""
+    for validation reasons.
+
+    Please note: mkbackup of the Appliance is also using this logic to get the version of a site
+    backup archive. In case you change the logic here, you need to have a look at the appliance
+    code."""
     site_tarinfo = tar.next()
     if site_tarinfo is None:
         raise Exception("Failed to detect version of backed up site.")

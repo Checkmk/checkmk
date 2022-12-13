@@ -57,6 +57,7 @@ from cmk.gui.views.data_source import data_source_registry
 from . import availability
 from .painter.v0.base import Cell, JoinCell
 from .painter_options import PainterOptions
+from .row_post_processing import post_process_rows
 from .sorter import SorterEntry
 from .store import get_all_views, get_permitted_views
 
@@ -352,7 +353,11 @@ def _fetch_rows_from_livestatus(
     return [], 0
 
 
-def _post_process_rows(view: View, all_active_filters: Sequence[Filter], rows: Rows) -> None:
+def _post_process_rows(
+    view: View,
+    all_active_filters: Sequence[Filter],
+    rows: Rows,
+) -> None:
     """Extend the rows fetched from livestatus with additional information
 
     - Add HW/SW inventory data when needed
@@ -368,6 +373,8 @@ def _post_process_rows(view: View, all_active_filters: Sequence[Filter], rows: R
 
     if not cmk_version.is_raw_edition():
         _add_sla_data(view.row_cells, rows)
+
+    post_process_rows(view, all_active_filters, rows)
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:

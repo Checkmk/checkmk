@@ -181,6 +181,21 @@ def test_diagnostics_element_local_files_json() -> None:
     )
 
 
+def _create_test_package(name: str) -> packaging.Manifest:
+    check_dir = Path(packaging.PackagePart.CHECKS.path)
+    check_dir.mkdir(parents=True, exist_ok=True)
+
+    (check_dir / name).touch()
+
+    manifest = packaging.manifest_template(packaging.PackageName(name))
+    manifest.files = {
+        "checks": [name],
+    }
+
+    packaging.create(manifest)
+    return manifest
+
+
 def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped-def]
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
@@ -194,23 +209,8 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
 
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
-    def create_test_package(name: packaging.PackageName) -> packaging.Manifest:
-        check_dir = cmk.utils.paths.local_checks_dir
-        check_dir.mkdir(parents=True, exist_ok=True)
-
-        with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
-            f.write("test-check\n")
-
-        manifest = packaging.manifest_template(name)
-        manifest.files = {
-            "checks": [name],
-        }
-
-        packaging.create(manifest)
-        return manifest
-
     packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
-    manifest = create_test_package(packaging.PackageName("test-package-json"))
+    manifest = _create_test_package("test-package-json")
 
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath))
@@ -317,22 +317,9 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
     diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
     check_dir = cmk.utils.paths.local_checks_dir
 
-    def create_test_package(name):
-        check_dir.mkdir(parents=True, exist_ok=True)
-
-        with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
-            f.write("test-check\n")
-
-        manifest = packaging.manifest_template(name)
-        manifest.files = {
-            "checks": [name],
-        }
-
-        packaging.create(manifest)
-
     packaging._installed.PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
     name = "test-package-csv"
-    create_test_package(name)
+    _manifest = _create_test_package(name)
 
     tmppath = Path(tmp_path).joinpath("tmp")
     filepath = next(diagnostics_element.add_or_get_files(tmppath))

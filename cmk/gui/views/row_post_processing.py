@@ -24,6 +24,9 @@ def post_process_rows(
         - Add HW/SW inventory data when needed
         - Add SLA data when needed (Enterprise editions only)
     """
+    if not rows:
+        return
+
     for func in _ROW_POST_PROCESSORS:
         func(view, all_active_filters, rows)
 

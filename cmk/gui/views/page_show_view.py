@@ -15,10 +15,8 @@ from typing import Any
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.log as log
@@ -31,11 +29,6 @@ from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.inventory import (
-    get_short_inventory_filepath,
-    load_filtered_and_merged_tree,
-    LoadStructuredDataError,
-)
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
@@ -49,7 +42,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
 )
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.views.data_source import data_source_registry
@@ -284,7 +276,7 @@ def _get_view_rows(
         rows, unfiltered_amount_of_rows = _fetch_rows_from_livestatus(
             view, all_active_filters, only_count
         )
-        _post_process_rows(view, all_active_filters, rows)
+        post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(rows, view.sorters)
@@ -351,30 +343,6 @@ def _fetch_rows_from_livestatus(
 
         return rows, unfiltered_amount_of_rows
     return [], 0
-
-
-def _post_process_rows(
-    view: View,
-    all_active_filters: Sequence[Filter],
-    rows: Rows,
-) -> None:
-    """Extend the rows fetched from livestatus with additional information
-
-    - Add HW/SW inventory data when needed
-    - Add SLA data when needed
-    """
-    if not rows:
-        return
-
-    # If any painter, sorter or filter needs the information about the host's
-    # inventory, then we load it and attach it as column "host_inventory"
-    if _is_inventory_data_needed(view, all_active_filters):
-        _add_inventory_data(rows)
-
-    if not cmk_version.is_raw_edition():
-        _add_sla_data(view.row_cells, rows)
-
-    post_process_rows(view, all_active_filters, rows)
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
@@ -522,72 +490,6 @@ def _get_needed_join_columns(
         pass
 
     return list(join_columns)
-
-
-def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) -> bool:
-    group_cells: list[Cell] = view.group_cells
-    cells: list[Cell] = view.row_cells
-    sorters: list[SorterEntry] = view.sorters
-
-    for cell in cells:
-        if cell.has_tooltip():
-            if cell.tooltip_painter_name().startswith("inv_"):
-                return True
-
-    for entry in sorters:
-        if entry.sorter.load_inv:
-            return True
-
-    for cell in group_cells + cells:
-        if cell.painter().load_inv:
-            return True
-
-    for filt in all_active_filters:
-        if filt.need_inventory(view.context.get(filt.ident, {})):
-            return True
-
-    return False
-
-
-def _add_inventory_data(rows: Rows) -> None:
-    corrupted_inventory_files = []
-    for row in rows:
-        if "host_name" not in row:
-            continue
-
-        try:
-            row["host_inventory"] = load_filtered_and_merged_tree(row)
-        except LoadStructuredDataError:
-            # The inventory row may be joined with other rows (perf-o-meter, ...).
-            # Therefore we initialize the corrupt inventory tree with an empty tree
-            # in order to display all other rows.
-            row["host_inventory"] = StructuredDataNode()
-            corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
-
-            if corrupted_inventory_files:
-                user_errors.add(
-                    MKUserError(
-                        "load_structured_data_tree",
-                        _(
-                            "Cannot load HW/SW inventory trees %s. Please remove the corrupted files."
-                        )
-                        % ", ".join(sorted(corrupted_inventory_files)),
-                    )
-                )
-
-
-def _add_sla_data(cells: Sequence[Cell], rows: Rows) -> None:
-    import cmk.gui.cee.sla as sla  # pylint: disable=no-name-in-module,import-outside-toplevel
-
-    sla_params = []
-    for cell in cells:
-        if cell.painter_name() in ["sla_specific", "sla_fixed"]:
-            sla_params.append(cell.painter_parameters())
-    if sla_params:
-        sla_configurations_container = sla.SLAConfigurationsContainerFactory.create_from_cells(
-            sla_params, rows
-        )
-        sla.SLAProcessor(sla_configurations_container).add_sla_data_to_rows(rows)
 
 
 def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:

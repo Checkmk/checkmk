@@ -27,9 +27,11 @@ from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views.command import command_registry
 from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.icon import icon_and_action_registry
+from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
+from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
@@ -87,3 +89,4 @@ bi.register(
     painter_option_registry,
 )
 register_sites_options()
+register_row_post_processor(inventory_row_post_processor)

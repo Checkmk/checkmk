@@ -1,4 +1,4 @@
-Title: Change calculation of host and service labels
+Title: Improved notification processing performance
 Class: fix
 Compatible: compat
 Component: notifications
@@ -9,10 +9,11 @@ Level: 1
 State: unknown
 Version: 2.1.0p18
 
-Host and service labels are now written to
-~var/check_mk/core/helper_config/latest/notify/labels/ on core configuration
-generation.
+In larger setups, notification processing could slow down as the configuration
+grew.
 
-These files are used to add labels to the notification context in a more
-performant way than the previous implementation. Especially in larger
-configurations, the performance gain should be visible.
+The reason was in particular the determination of labels for a host or service,
+which needed the current configuration to be loaded.
+
+This configuration load is now no longer needed and the monitoring core creates
+the needed information on configuration generation.

@@ -390,8 +390,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     config_cache = config.get_config_cache()
     assert ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.make_host_config(hn).ip_lookup_config()
-            for hn in config_cache.all_active_hosts()
+            config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
         ),
         configured_ipv4_addresses={},
         configured_ipv6_addresses={},

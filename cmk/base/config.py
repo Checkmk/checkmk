@@ -2417,19 +2417,6 @@ class HostConfig:
             hostname
         )
 
-    def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
-        return ip_lookup.IPLookupConfig(
-            hostname=self.hostname,
-            is_ipv4_host=ConfigCache.is_ipv4_host(self.hostname),
-            is_ipv6_host=ConfigCache.is_ipv6_host(self.hostname),
-            is_no_ip_host=ConfigCache.is_no_ip_host(self.hostname),
-            is_snmp_host=self._config_cache.is_snmp_host(self.hostname),
-            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
-            default_address_family=self._config_cache.default_address_family(self.hostname),
-            management_address=self._config_cache.management_address(self.hostname),
-            is_dyndns_host=self._config_cache.is_dyndns_host(self.hostname),
-        )
-
     @staticmethod
     def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
@@ -2770,6 +2757,19 @@ class ConfigCache:
     def get_tag_to_group_map() -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
+
+    def ip_lookup_config(self, host_name: HostName) -> ip_lookup.IPLookupConfig:
+        return ip_lookup.IPLookupConfig(
+            hostname=host_name,
+            is_ipv4_host=ConfigCache.is_ipv4_host(host_name),
+            is_ipv6_host=ConfigCache.is_ipv6_host(host_name),
+            is_no_ip_host=ConfigCache.is_no_ip_host(host_name),
+            is_snmp_host=self.is_snmp_host(host_name),
+            snmp_backend=self.get_snmp_backend(host_name),
+            default_address_family=self.default_address_family(host_name),
+            management_address=self.management_address(host_name),
+            is_dyndns_host=self.is_dyndns_host(host_name),
+        )
 
     def make_snmp_config(
         self, host_name: HostName, ip_address: HostAddress | None

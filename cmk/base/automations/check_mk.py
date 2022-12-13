@@ -1688,8 +1688,7 @@ class AutomationUpdateDNSCache(Automation):
         return automation_results.UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
                 ip_lookup_configs=(
-                    config_cache.make_host_config(hn).ip_lookup_config()
-                    for hn in config_cache.all_active_hosts()
+                    config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
                 ),
                 configured_ipv4_addresses=config.ipaddresses,
                 configured_ipv6_addresses=config.ipv6addresses,

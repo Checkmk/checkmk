@@ -74,13 +74,13 @@ def _commandline_checking(
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_name)
+        ipaddress = config.lookup_ip_address(config_cache, host_name)
 
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ipaddress)]
     else:
-        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
     fetched = fetch_all(
         *(

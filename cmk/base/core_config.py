@@ -953,10 +953,10 @@ def _verify_cluster_datasource(
 
 
 def ip_address_of(host_name: HostName, family: socket.AddressFamily) -> str | None:
+    config_cache = config.get_config_cache()
     try:
-        return config.lookup_ip_address(host_name, family=family)
+        return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
-        config_cache = config.get_config_cache()
         if config_cache.is_cluster(host_name):
             return ""
 

@@ -27,7 +27,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(
     hostname = HostName("hostname")
     ts = Scenario()
     ts.add_host(hostname)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(
         config,
@@ -37,8 +37,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(
         },
     )
 
-    host_config = config.get_config_cache().make_host_config(hostname)
-    assert config.lookup_mgmt_board_ip_address(host_config) is None
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None
 
 
 @pytest.fixture(name="check_plugin")

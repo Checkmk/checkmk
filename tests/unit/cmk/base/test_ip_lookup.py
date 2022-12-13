@@ -435,8 +435,9 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(
     hostname = HostName(hostname_str)
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    host_config = ts.apply(monkeypatch).make_host_config(hostname)
-    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
+
+    config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
 
 
 @pytest.mark.parametrize(
@@ -457,8 +458,9 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(
             "address_family": "ip-v6-only",
         },
     )
-    host_config = ts.apply(monkeypatch).make_host_config(hostname)
-    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
+
+    config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
 
 
 @pytest.mark.parametrize(
@@ -479,8 +481,9 @@ def test_lookup_mgmt_board_ip_address_dual_host(
             "address_family": "ip-v4v6",
         },
     )
-    host_config = ts.apply(monkeypatch).make_host_config(hostname)
-    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
+
+    config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) == result_address
 
 
 @pytest.mark.parametrize(
@@ -513,5 +516,6 @@ def test_lookup_mgmt_board_ip_address_unresolveable(
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
-    host_config = ts.apply(monkeypatch).make_host_config(hostname)
-    assert config.lookup_mgmt_board_ip_address(host_config) is None
+
+    config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None

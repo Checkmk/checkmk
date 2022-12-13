@@ -1290,7 +1290,7 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = config.lookup_ip_address(hostname)
+                resolved_address = config.lookup_ip_address(config_cache, hostname)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1720,7 +1720,7 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(hostname)
+            ipaddress = config.lookup_ip_address(config_cache, hostname)
             if ty == "agent":
                 for source, file_cache, fetcher in sources.make_sources(
                     hostname,

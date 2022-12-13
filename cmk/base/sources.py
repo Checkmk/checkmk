@@ -423,7 +423,7 @@ class _Builder:
             return
 
         self._initialize_snmp_plugin_store()
-        ip_address = config.lookup_mgmt_board_ip_address(self.host_config)
+        ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
         if ip_address is None:
             # HostAddress is not Optional.
             #

@@ -2427,7 +2427,7 @@ class HostConfig:
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
             default_address_family=self._config_cache.default_address_family(self.hostname),
             management_address=self._config_cache.management_address(self.hostname),
-            is_dyndns_host=self.is_dyndns_host,
+            is_dyndns_host=self._config_cache.is_dyndns_host(self.hostname),
         )
 
     @staticmethod
@@ -2563,14 +2563,10 @@ class HostConfig:
             self.hostname, notification_parameters.get(plugin_name, default)
         )
 
-    @property
-    def is_dyndns_host(self) -> bool:
-        return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
-
-def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
-    host_name: Final = host_config.hostname
-    config_cache = get_config_cache()
+def lookup_mgmt_board_ip_address(
+    config_cache: ConfigCache, host_name: HostName
+) -> HostAddress | None:
     mgmt_address: Final = config_cache.management_address(host_name)
     try:
         mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
@@ -2589,7 +2585,7 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
                 and (config_cache.management_protocol(host_name) == "snmp")
             ),
             override_dns=fake_dns,
-            is_dyndns_host=host_config.is_dyndns_host,
+            is_dyndns_host=config_cache.is_dyndns_host(host_name),
             is_no_ip_host=False,
             force_file_cache_renewal=not use_dns_cache,
         )
@@ -2598,12 +2594,11 @@ def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
 
 
 def lookup_ip_address(
+    config_cache: ConfigCache,
     host_name: HostName,
     *,
     family: socket.AddressFamily | None = None,
 ) -> HostAddress | None:
-    config_cache = get_config_cache()
-    host_config = config_cache.make_host_config(host_name)
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
@@ -2618,7 +2613,7 @@ def lookup_ip_address(
             and config_cache.is_snmp_host(host_name)
         ),
         override_dns=fake_dns,
-        is_dyndns_host=host_config.is_dyndns_host,
+        is_dyndns_host=config_cache.is_dyndns_host(host_name),
         is_no_ip_host=config_cache.is_no_ip_host(host_name),
         force_file_cache_renewal=not use_dns_cache,
     )
@@ -3084,6 +3079,9 @@ class ConfigCache:
             or self.is_agent_host(host_name)
             or self.has_management_board(host_name)
         )
+
+    def is_dyndns_host(self, host_name: HostName) -> bool:
+        return self.in_binary_hostlist(host_name, dyndns_hosts)
 
     def is_dual_host(self, host_name: HostName) -> bool:
         return self.is_tcp_host(host_name) and self.is_snmp_host(host_name)

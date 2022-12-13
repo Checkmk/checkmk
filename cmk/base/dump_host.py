@@ -231,6 +231,6 @@ def _ip_address_for_dump_host(
 ) -> str | None:
     config_cache = config.get_config_cache()
     try:
-        return config.lookup_ip_address(host_name, family=family)
+        return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
         return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)

@@ -68,7 +68,11 @@ def get_check_preview(
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
-    ip_address = None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_name)
+    ip_address = (
+        None
+        if config_cache.is_cluster(host_name)
+        else config.lookup_ip_address(config_cache, host_name)
+    )
     host_attrs = get_host_attributes(host_name, config_cache)
 
     # The code below this line is duplicated in automation_discovery()
@@ -76,7 +80,7 @@ def get_check_preview(
     if nodes is None:
         hosts = [(host_name, ip_address)]
     else:
-        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
     fetched: Sequence[
         tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]

@@ -75,9 +75,9 @@ def commandline_discovery(
     for host_name in sorted(host_names):
         nodes = config_cache.nodes_of(host_name)
         if nodes is None:
-            hosts = [(host_name, config.lookup_ip_address(host_name))]
+            hosts = [(host_name, config.lookup_ip_address(config_cache, host_name))]
         else:
-            hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+            hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
         section.section_begin(host_name)
         try:
@@ -259,13 +259,13 @@ def _commandline_check_discovery(
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not config_cache.is_cluster(host_name):
-        ipaddress = config.lookup_ip_address(host_name)
+        ipaddress = config.lookup_ip_address(config_cache, host_name)
 
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         hosts = [(host_name, ipaddress)]
     else:
-        hosts = [(node, config.lookup_ip_address(node)) for node in nodes]
+        hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
     fetched = fetch_all(
         *(

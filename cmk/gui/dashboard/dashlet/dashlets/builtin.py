@@ -6,11 +6,12 @@
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.dashboard import builtin_dashboards, DashboardConfig, GROW, MAX
-from cmk.gui.dashboard.dashlet.dashlets.view import LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.i18n import _, _l
-from cmk.gui.plugins.dashboard.stats import StatsDashletConfig
 from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
+
+from ...builtin_dashboards import builtin_dashboards, DashboardConfig, GROW, MAX
+from .stats import StatsDashletConfig
+from .view import LinkedViewDashletConfig, ViewDashletConfig
 
 builtin_dashboards["problems"] = DashboardConfig(
     {

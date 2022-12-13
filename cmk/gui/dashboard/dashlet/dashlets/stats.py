@@ -12,15 +12,16 @@ from livestatus import MKLivestatusNotFoundError
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.dashboard.dashlet.base import DashletConfig
-from cmk.gui.dashboard.dashlet.figure_dashlet import ABCFigureDashlet
-from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
+
+from ..base import DashletConfig
+from ..figure_dashlet import ABCFigureDashlet
+from ..registry import dashlet_registry
 
 
 def view_url(url_vars: HTTPVariables) -> str:

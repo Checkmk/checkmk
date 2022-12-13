@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterable, Mapping
+
 import cmk.gui.mkeventd as mkeventd
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
@@ -18,12 +21,14 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     EmailAddress,
     FixedValue,
     HostAddress,
     Integer,
     ListOfStrings,
+    Migrate,
     RegExp,
     TextInput,
     Transform,
@@ -31,7 +36,35 @@ from cmk.gui.valuespec import (
 )
 
 
-def _common_email_parameters(protocol, port_defaults):
+def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
+    credentials_basic: tuple[str, str, Tuple] = (
+        "basic",
+        _("Username/Password"),
+        Tuple(
+            title=_("Authentication"),
+            elements=[
+                TextInput(title=_("Username"), allow_empty=False),
+                MigrateToIndividualOrStoredPassword(
+                    title=_("Password"), allow_empty=False, size=12
+                ),
+            ],
+        ),
+    )
+    credentials_oauth2: tuple[str, str, Tuple] = (
+        "oauth2",
+        _("OAuth2 (ClientID/TenantID)"),
+        Tuple(
+            title=_("Authentication"),
+            elements=[
+                TextInput(title=_("ClientID"), allow_empty=False),
+                MigrateToIndividualOrStoredPassword(
+                    title=_("Client Secret"), allow_empty=False, size=12
+                ),
+                TextInput(title=_("TenantID"), allow_empty=False),
+            ],
+        ),
+    )
+
     return Dictionary(
         title=protocol,
         optional_keys=["server", "email_address"],
@@ -79,14 +112,10 @@ def _common_email_parameters(protocol, port_defaults):
             ),
             (
                 "auth",
-                Tuple(
-                    title=_("Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False),
-                        MigrateToIndividualOrStoredPassword(
-                            title=_("Password"), allow_empty=False, size=12
-                        ),
-                    ],
+                CascadingDropdown(
+                    title=_("Authentication types"),
+                    choices=[credentials_basic]
+                    + ([credentials_oauth2] if protocol == "EWS" else []),
                 ),
             ),
         ]
@@ -109,10 +138,20 @@ def _common_email_parameters(protocol, port_defaults):
             if protocol == "EWS"
             else []
         ),  # type: ignore[arg-type]
+        validate=validate_common_email_parameters,
     )
 
 
-def _mail_receiving_params(supported_protocols):
+def validate_common_email_parameters(params: Mapping[str, tuple], varprefix: str) -> None:
+    if params["auth"][0] == "oauth2" and "email_address" not in params:
+        raise MKUserError(
+            varprefix,
+            "With authentication type set to 'OAuth2' an 'Email address used for"
+            " account identification' must be specified.",
+        )
+
+
+def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntry:
     return (
         "fetch",
         CascadingDropdown(
@@ -139,6 +178,10 @@ def apply_fetch(params, fetch_param, allowed_keys):
     }
 
 
+def update_auth(old_auth: tuple[str, tuple]) -> tuple[str, tuple[str, ...]]:
+    return old_auth if isinstance(old_auth[1][1], tuple) else ("basic", old_auth)
+
+
 def update_fetch(old_fetch):
     """Create a new 'fetch' element out of an old one"""
     return {
@@ -148,136 +191,228 @@ def update_fetch(old_fetch):
             for k, v in zip(("disable_tls", "tcp_port"), old_fetch["ssl"])
             if v is not None
         },
-        "auth": old_fetch["auth"],
+        "auth": update_auth(old_fetch["auth"]),
     }
 
 
-def _valuespec_active_checks_mail_loop() -> Dictionary:
-    return Dictionary(
-        title=_("Check Email Delivery"),
-        help=_(
-            "This active check sends out special E-Mails to a defined mail address using "
-            "the SMTP protocol and then tries to receive these mails back by querying the "
-            "inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole "
-            "mail delivery progress is working."
-        ),
-        optional_keys=[
-            "subject",
-            "smtp_server",
-            "smtp_tls",
-            "smtp_port",
-            "smtp_auth",
-            "connect_timeout",
-            "delete_messages",
-            "duration",
-        ],
-        elements=[
-            (
-                "item",
-                TextInput(
-                    title=_("Name"),
-                    help=_("The service name will be <b>Mail Loop</b> plus this name"),
-                    allow_empty=False,
-                ),
+def migrate_check_mail_loop_params(params):
+    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
+    >>> transformed = migrate_check_mail_loop_params({  # v2.0.0 / IMAP
+    ...     'item': 'SD',
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'srv',
+    ...       'ssl': (False, 143),
+    ...       'auth': ('usr_imap', ('password', 'pw_imap')),
+    ...     }),
+    ...     'connect_timeout': 23,
+    ...     'subject': 'Some subject',
+    ...     'smtp_server': 'smtp.gmx.de',
+    ...     'smtp_tls': True,
+    ...     'imap_tls': True,
+    ...     'smtp_port': 25,
+    ...     'smtp_auth': ('usr_smtp', ('password', 'pw_smtp')),
+    ...     'mail_from': 'me_from@gmx.de',
+    ...     'mail_to': 'me_to@gmx.de',
+    ...     'duration': (93780, 183840),
+    ... })
+    >>> assert migrate_check_mail_loop_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    connect_timeout: 23
+    duration: !!python/tuple
+    - 93780
+    - 183840
+    fetch: !!python/tuple
+    - IMAP
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr_imap
+        - !!python/tuple
+          - password
+          - pw_imap
+      connection:
+        disable_tls: false
+        tcp_port: 143
+      server: srv
+    item: SD
+    mail_from: me_from@gmx.de
+    mail_to: me_to@gmx.de
+    smtp_auth: !!python/tuple
+    - usr_smtp
+    - !!python/tuple
+      - password
+      - pw_smtp
+    smtp_port: 25
+    smtp_server: smtp.gmx.de
+    smtp_tls: true
+    subject: Some subject
+    """
+    allowed_keys = {
+        "item",  # instead of "service_description"
+        "fetch",
+        "connect_timeout",
+        "subject",
+        "smtp_server",
+        "smtp_tls",
+        "smtp_port",
+        "smtp_auth",
+        "mail_from",
+        "mail_to",
+        "duration",
+        "delete_messages",
+    }
+    if not params.keys() <= allowed_keys | {"imap_tls"}:
+        raise ValueError(f"{params.keys() - allowed_keys}")
+
+    if "fetch" not in params:
+        raise ValueError(f"Cannot transform {params} - 'fetch' element is missing")
+
+    fetch_protocol, fetch_params = params["fetch"]
+    if fetch_protocol in {"IMAP", "POP3"} and {"connection", "auth"} <= fetch_params.keys():
+        # newest schema (2.1 and up) - do nothing
+        return params
+    if fetch_protocol in {"IMAP", "POP3"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+        # old format (2.0 and below)
+        if params.get("imap_tls"):
+            fetch_params["ssl"] = (True, fetch_params["ssl"][1])
+        return apply_fetch(
+            params,
+            (fetch_protocol, update_fetch(fetch_params)),
+            allowed_keys,
+        )
+
+    raise ValueError(f"Cannot transform {params}")
+
+
+def _valuespec_active_checks_mail_loop() -> Migrate:
+    return Migrate(
+        Dictionary(
+            title=_("Check Email Delivery"),
+            help=_(
+                "This active check sends out special E-Mails to a defined mail address using "
+                "the SMTP protocol and then tries to receive these mails back by querying the "
+                "inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole "
+                "mail delivery progress is working."
             ),
-            (
+            optional_keys=[
                 "subject",
-                TextInput(
-                    title=_("Subject"),
-                    allow_empty=False,
-                    help=_(
-                        "Here you can specify the subject text "
-                        "instead of default text 'Check_MK-Mail-Loop'."
-                    ),
-                ),
-            ),
-            (
                 "smtp_server",
-                TextInput(
-                    title=_("SMTP Server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
                 "smtp_tls",
-                FixedValue(
-                    value=True,
-                    title=_("Use TLS over SMTP"),
-                    totext=_("Encrypt SMTP communication using TLS"),
-                ),
-            ),
-            (
                 "smtp_port",
-                Integer(
-                    title=_("SMTP TCP Port to connect to"),
-                    help=_(
-                        "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
-                    ),
-                    default_value=25,
-                ),
-            ),
-            (
                 "smtp_auth",
-                Tuple(
-                    title=_("SMTP Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        MigrateToIndividualOrStoredPassword(
-                            title=_("Password"), allow_empty=False, size=12
-                        ),
-                    ],
-                ),
-            ),
-            _mail_receiving_params({"IMAP", "POP3"}),
-            (
-                "mail_from",
-                EmailAddress(
-                    title=_("From: email address"),
-                ),
-            ),
-            (
-                "mail_to",
-                EmailAddress(
-                    title=_("Destination email address"),
-                ),
-            ),
-            (
                 "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "duration",
-                Tuple(
-                    title=_("Loop duration"),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
-                ),
-            ),
-            (
                 "delete_messages",
-                FixedValue(
-                    value=True,
-                    title=_("Delete processed messages"),
-                    totext=_("Delete all processed message belonging to this check"),
-                    help=_(
-                        "Delete all messages identified as being related to this "
-                        "check. This is disabled by default, which will make "
-                        "your mailbox grow when you do not clean it up on your own."
+                "duration",
+            ],
+            elements=[
+                (
+                    "item",
+                    TextInput(
+                        title=_("Name"),
+                        help=_("The service name will be <b>Mail Loop</b> plus this name"),
+                        allow_empty=False,
                     ),
                 ),
-            ),
-        ],
+                (
+                    "subject",
+                    TextInput(
+                        title=_("Subject"),
+                        allow_empty=False,
+                        help=_(
+                            "Here you can specify the subject text "
+                            "instead of default text 'Check_MK-Mail-Loop'."
+                        ),
+                    ),
+                ),
+                (
+                    "smtp_server",
+                    TextInput(
+                        title=_("SMTP Server"),
+                        allow_empty=False,
+                        help=_(
+                            "You can specify a hostname or IP address different from the IP address "
+                            "of the host this check will be assigned to."
+                        ),
+                    ),
+                ),
+                (
+                    "smtp_tls",
+                    FixedValue(
+                        value=True,
+                        title=_("Use TLS over SMTP"),
+                        totext=_("Encrypt SMTP communication using TLS"),
+                    ),
+                ),
+                (
+                    "smtp_port",
+                    Integer(
+                        title=_("SMTP TCP Port to connect to"),
+                        help=_(
+                            "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
+                        ),
+                        default_value=25,
+                    ),
+                ),
+                (
+                    "smtp_auth",
+                    Tuple(
+                        title=_("SMTP Authentication"),
+                        elements=[
+                            TextInput(title=_("Username"), allow_empty=False, size=24),
+                            MigrateToIndividualOrStoredPassword(
+                                title=_("Password"), allow_empty=False, size=12
+                            ),
+                        ],
+                    ),
+                ),
+                _mail_receiving_params({"IMAP", "POP3"}),
+                (
+                    "mail_from",
+                    EmailAddress(
+                        title=_("From: email address"),
+                    ),
+                ),
+                (
+                    "mail_to",
+                    EmailAddress(
+                        title=_("Destination email address"),
+                    ),
+                ),
+                (
+                    "connect_timeout",
+                    Integer(
+                        title=_("Connect Timeout"),
+                        minvalue=1,
+                        default_value=10,
+                        unit=_("sec"),
+                    ),
+                ),
+                (
+                    "duration",
+                    Tuple(
+                        title=_("Loop duration"),
+                        elements=[
+                            Age(title=_("Warning at")),
+                            Age(title=_("Critical at")),
+                        ],
+                    ),
+                ),
+                (
+                    "delete_messages",
+                    FixedValue(
+                        value=True,
+                        title=_("Delete processed messages"),
+                        totext=_("Delete all processed message belonging to this check"),
+                        help=_(
+                            "Delete all messages identified as being related to this "
+                            "check. This is disabled by default, which will make "
+                            "your mailbox grow when you do not clean it up on your own."
+                        ),
+                    ),
+                ),
+            ],
+        ),
+        migrate=migrate_check_mail_loop_params,
     )
 
 
@@ -291,210 +426,309 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_active_checks_mail() -> Dictionary:
-    return Dictionary(
-        title=_("Check Email"),
-        help=_(
-            "The basic function of this check is to log in into an IMAP or POP3 mailbox to "
-            "monitor whether or not the login is possible. A extended feature is, that the "
-            "check can fetch all (or just some) from the mailbox and forward them as events "
-            "to the Event Console."
-        ),
-        required_keys=["service_description", "fetch"],
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service name"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
+def migrate_check_mail_params(params):
+    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
+    >>> transformed = migrate_check_mail_params({  # v2.0.0 / IMAP
+    ...     'service_description': 'SD',
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'srv',
+    ...       'ssl': (False, 143),
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...     }),
+    ...     'connect_timeout': 12,
+    ...     'forward': {'match_subject': 'test'},
+    ... })
+    >>> assert migrate_check_mail_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    connect_timeout: 12
+    fetch: !!python/tuple
+    - IMAP
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr
+        - !!python/tuple
+          - password
+          - pw
+      connection:
+        disable_tls: true
+        tcp_port: 143
+      server: srv
+    forward:
+      match_subject: test
+    service_description: SD
+    >>> transformed = migrate_check_mail_params({  # v2.0.0 / POP3
+    ...     'service_description': 'SD',
+    ...     'fetch': ('POP3', {
+    ...       'server': 'srv',
+    ...       'ssl': (False, 110),
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...     }),
+    ...     'connect_timeout': 12,
+    ...     'forward': {'match_subject': 'test'},
+    ... })
+    >>> assert migrate_check_mail_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    connect_timeout: 12
+    fetch: !!python/tuple
+    - POP3
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr
+        - !!python/tuple
+          - password
+          - pw
+      connection:
+        disable_tls: true
+        tcp_port: 110
+      server: srv
+    forward:
+      match_subject: test
+    service_description: SD
+    """
+
+    if not params.keys() <= {
+        "service_description",
+        "fetch",
+        "connect_timeout",
+        "forward",
+    }:
+        raise ValueError(f"{params.keys()}")
+
+    if "fetch" in params:
+        fetch_protocol, fetch_params = params["fetch"]
+        if (
+            fetch_protocol in {"IMAP", "POP3", "EWS"}
+            and {"connection", "auth"} <= fetch_params.keys()
+        ):
+            # newest schema (2.1 and up) - do nothing
+            return params
+        if fetch_protocol in {"IMAP", "POP3"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+            # old format (2.0 and below)
+            return apply_fetch(
+                params,
+                (fetch_protocol, update_fetch(fetch_params)),
+                {"service_description", "forward", "connect_timeout"},
+            )
+
+    raise ValueError(f"Cannot transform {params}")
+
+
+def _valuespec_active_checks_mail() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Check Email"),
+            help=_(
+                "The basic function of this check is to log in into an IMAP or POP3 mailbox to "
+                "monitor whether or not the login is possible. A extended feature is, that the "
+                "check can fetch all (or just some) from the mailbox and forward them as events "
+                "to the Event Console."
+            ),
+            required_keys=["service_description", "fetch"],
+            elements=[
+                (
+                    "service_description",
+                    TextInput(
+                        title=_("Service name"),
+                        help=_(
+                            "Please make sure that this is unique per host "
+                            "and does not collide with other services."
+                        ),
+                        allow_empty=False,
+                        default_value="Email",
                     ),
-                    allow_empty=False,
-                    default_value="Email",
                 ),
-            ),
-            _mail_receiving_params({"IMAP", "POP3"}),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
+                _mail_receiving_params({"IMAP", "POP3"}),
+                (
+                    "connect_timeout",
+                    Integer(
+                        title=_("Connect Timeout"),
+                        minvalue=1,
+                        default_value=10,
+                        unit=_("sec"),
+                    ),
                 ),
-            ),
-            (
-                "forward",
-                Dictionary(
-                    title=_("Forward mails as events to Event Console"),
-                    elements=[
-                        (
-                            "method",
-                            Alternative(
-                                title=_("Forwarding Method"),
-                                elements=[
-                                    Alternative(
-                                        title=_("Send events to local event console"),
-                                        elements=[
-                                            FixedValue(
-                                                value="",
-                                                totext=_("Directly forward to event console"),
-                                                title=_(
-                                                    "Send events to local event console in same OMD site"
+                (
+                    "forward",
+                    Dictionary(
+                        title=_("Forward mails as events to Event Console"),
+                        elements=[
+                            (
+                                "method",
+                                Alternative(
+                                    title=_("Forwarding Method"),
+                                    elements=[
+                                        Alternative(
+                                            title=_("Send events to local event console"),
+                                            elements=[
+                                                FixedValue(
+                                                    value="",
+                                                    totext=_("Directly forward to event console"),
+                                                    title=_(
+                                                        "Send events to local event console in same OMD site"
+                                                    ),
                                                 ),
-                                            ),
-                                            TextInput(
-                                                title=_(
-                                                    "Send events to local event console into unix socket"
-                                                ),
-                                                allow_empty=False,
-                                            ),
-                                            FixedValue(
-                                                value="spool:",
-                                                totext=_("Spool to event console"),
-                                                title=_(
-                                                    "Spooling: Send events to local event console in same OMD site"
-                                                ),
-                                            ),
-                                            Transform(
-                                                valuespec=TextInput(
+                                                TextInput(
+                                                    title=_(
+                                                        "Send events to local event console into unix socket"
+                                                    ),
                                                     allow_empty=False,
                                                 ),
-                                                title=_(
-                                                    "Spooling: Send events to local event console into given spool directory"
+                                                FixedValue(
+                                                    value="spool:",
+                                                    totext=_("Spool to event console"),
+                                                    title=_(
+                                                        "Spooling: Send events to local event console in same OMD site"
+                                                    ),
                                                 ),
-                                                # remove prefix
-                                                to_valuespec=lambda x: x[6:],
-                                                from_valuespec=lambda x: "spool:" + x,  # add prefix
-                                            ),
-                                        ],
-                                        match=lambda x: x
-                                        and (
-                                            x == "spool:" and 2 or x.startswith("spool:") and 3 or 1
-                                        )
-                                        or 0,
-                                    ),
-                                    Tuple(
-                                        title=_("Send events to remote syslog host"),
-                                        elements=[
-                                            DropdownChoice(
-                                                choices=[
-                                                    ("udp", _("UDP")),
-                                                    ("tcp", _("TCP")),
-                                                ],
-                                                title=_("Protocol"),
-                                            ),
-                                            TextInput(
-                                                title=_("Address"),
-                                                allow_empty=False,
-                                            ),
-                                            Integer(
-                                                title=_("Port"),
-                                                default_value=514,
-                                                minvalue=1,
-                                                maxvalue=65535,
-                                                size=6,
-                                            ),
-                                        ],
-                                    ),
-                                ],
-                            ),
-                        ),
-                        (
-                            "match_subject",
-                            RegExp(
-                                title=_("Only process mails with matching subject"),
-                                help=_(
-                                    "Use this option to not process all messages found in the inbox, "
-                                    "but only the those whose subject matches the given regular expression."
-                                ),
-                                mode=RegExp.prefix,
-                            ),
-                        ),
-                        (
-                            "facility",
-                            DropdownChoice(
-                                title=_("Events: Syslog facility"),
-                                help=_("Use this syslog facility for all created events"),
-                                choices=mkeventd.syslog_facilities,
-                                default_value=2,  # mail
-                            ),
-                        ),
-                        (
-                            "application",
-                            Alternative(
-                                title=_("Events: Syslog application"),
-                                help=_("Use this syslog application for all created events"),
-                                elements=[
-                                    FixedValue(
-                                        value=None,
-                                        title=_("Use the mail subject"),
-                                        totext=_("The mail subject is used as syslog appliaction"),
-                                    ),
-                                    TextInput(
-                                        title=_("Specify the application"),
-                                        help=_(
-                                            "Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
-                                            "here when you configured <i>subject matching</i> in this rule with a regular expression "
-                                            "that declares match groups (using braces)."
+                                                Transform(
+                                                    valuespec=TextInput(
+                                                        allow_empty=False,
+                                                    ),
+                                                    title=_(
+                                                        "Spooling: Send events to local event console into given spool directory"
+                                                    ),
+                                                    # remove prefix
+                                                    to_valuespec=lambda x: x[6:],
+                                                    from_valuespec=lambda x: "spool:"
+                                                    + x,  # add prefix
+                                                ),
+                                            ],
+                                            match=lambda x: x
+                                            and (
+                                                x == "spool:"
+                                                and 2
+                                                or x.startswith("spool:")
+                                                and 3
+                                                or 1
+                                            )
+                                            or 0,
                                         ),
-                                        allow_empty=False,
-                                    ),
-                                ],
-                            ),
-                        ),
-                        (
-                            "host",
-                            TextInput(
-                                title=_("Events: Hostname"),
-                                help=_(
-                                    "Use this hostname for all created events instead of the name of the mailserver"
-                                ),
-                            ),
-                        ),
-                        (
-                            "body_limit",
-                            Integer(
-                                title=_("Limit length of mail body"),
-                                help=_(
-                                    "When forwarding mails from the mailbox to the event console, the "
-                                    "body of the mail is limited to the given number of characters."
-                                ),
-                                default_value=1000,
-                            ),
-                        ),
-                        (
-                            "cleanup",
-                            Alternative(
-                                title=_("Cleanup messages"),
-                                help=_(
-                                    "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
-                                    "deleting them or moving them to a subfolder. By default nothing is cleaned up."
-                                ),
-                                elements=[
-                                    FixedValue(
-                                        value=True,
-                                        title=_("Delete messages"),
-                                        totext=_(
-                                            "Delete all processed message belonging to this check"
+                                        Tuple(
+                                            title=_("Send events to remote syslog host"),
+                                            elements=[
+                                                DropdownChoice(
+                                                    choices=[
+                                                        ("udp", _("UDP")),
+                                                        ("tcp", _("TCP")),
+                                                    ],
+                                                    title=_("Protocol"),
+                                                ),
+                                                TextInput(
+                                                    title=_("Address"),
+                                                    allow_empty=False,
+                                                ),
+                                                Integer(
+                                                    title=_("Port"),
+                                                    default_value=514,
+                                                    minvalue=1,
+                                                    maxvalue=65535,
+                                                    size=6,
+                                                ),
+                                            ],
                                         ),
-                                    ),
-                                    TextInput(
-                                        title=_("Move to subfolder"),
-                                        help=_(
-                                            "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
-                                            "<tt>INBOX/Processed_Mails</tt>."
-                                        ),
-                                        allow_empty=False,
-                                    ),
-                                ],
+                                    ],
+                                ),
                             ),
-                        ),
-                    ],
+                            (
+                                "match_subject",
+                                RegExp(
+                                    title=_("Only process mails with matching subject"),
+                                    help=_(
+                                        "Use this option to not process all messages found in the inbox, "
+                                        "but only the those whose subject matches the given regular expression."
+                                    ),
+                                    mode=RegExp.prefix,
+                                ),
+                            ),
+                            (
+                                "facility",
+                                DropdownChoice(
+                                    title=_("Events: Syslog facility"),
+                                    help=_("Use this syslog facility for all created events"),
+                                    choices=mkeventd.syslog_facilities,
+                                    default_value=2,  # mail
+                                ),
+                            ),
+                            (
+                                "application",
+                                Alternative(
+                                    title=_("Events: Syslog application"),
+                                    help=_("Use this syslog application for all created events"),
+                                    elements=[
+                                        FixedValue(
+                                            value=None,
+                                            title=_("Use the mail subject"),
+                                            totext=_(
+                                                "The mail subject is used as syslog appliaction"
+                                            ),
+                                        ),
+                                        TextInput(
+                                            title=_("Specify the application"),
+                                            help=_(
+                                                "Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
+                                                "here when you configured <i>subject matching</i> in this rule with a regular expression "
+                                                "that declares match groups (using braces)."
+                                            ),
+                                            allow_empty=False,
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "host",
+                                TextInput(
+                                    title=_("Events: Hostname"),
+                                    help=_(
+                                        "Use this hostname for all created events instead of the name of the mailserver"
+                                    ),
+                                ),
+                            ),
+                            (
+                                "body_limit",
+                                Integer(
+                                    title=_("Limit length of mail body"),
+                                    help=_(
+                                        "When forwarding mails from the mailbox to the event console, the "
+                                        "body of the mail is limited to the given number of characters."
+                                    ),
+                                    default_value=1000,
+                                ),
+                            ),
+                            (
+                                "cleanup",
+                                Alternative(
+                                    title=_("Cleanup messages"),
+                                    help=_(
+                                        "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
+                                        "deleting them or moving them to a subfolder. By default nothing is cleaned up."
+                                    ),
+                                    elements=[
+                                        FixedValue(
+                                            value=True,
+                                            title=_("Delete messages"),
+                                            totext=_(
+                                                "Delete all processed message belonging to this check"
+                                            ),
+                                        ),
+                                        TextInput(
+                                            title=_("Move to subfolder"),
+                                            help=_(
+                                                "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
+                                                "<tt>INBOX/Processed_Mails</tt>."
+                                            ),
+                                            allow_empty=False,
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-        ],
+            ],
+        ),
+        migrate=migrate_check_mail_params,
     )
 
 
@@ -508,72 +742,217 @@ rulespec_registry.register(
 )
 
 
-def _valuespec_active_checks_mailboxes() -> Dictionary:
-    return Dictionary(
-        title=_("Check IMAP/EWS Mailboxes"),
-        help=_("This check monitors count and age of mails in mailboxes."),
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service name"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
+def migrate_check_mailbox_params(params):
+    """Transforms rule sets from 2.0 and below format to current (2.1 and up)
+    >>> transformed = migrate_check_mailbox_params({  # v2.0.0 / IMAP
+    ...     'service_description': 'SD',
+    ...     'imap_parameters': {
+    ...       'server': 'srv', 'ssl': (True, 7), 'auth': ('usr', ('password', 'pw'))},
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def'],
+    ... })
+    >>> assert migrate_check_mailbox_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    age: !!python/tuple
+    - 1
+    - 2
+    age_newest: !!python/tuple
+    - 3
+    - 4
+    count: !!python/tuple
+    - 5
+    - 6
+    fetch: !!python/tuple
+    - IMAP
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr
+        - !!python/tuple
+          - password
+          - pw
+      connection:
+        disable_tls: false
+        tcp_port: 7
+      server: srv
+    mailboxes:
+    - abc
+    - def
+    service_description: SD
+    >>> transformed = migrate_check_mailbox_params({  # v2.1.0b / IMAP
+    ...     'service_description': 'SD',
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'srv', 'ssl': (True, None), 'auth': ('usr', ('password', 'pw'))}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def'],
+    ...     'connect_timeout': 12,
+    ... })
+    >>> assert migrate_check_mailbox_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    age: !!python/tuple
+    - 1
+    - 2
+    age_newest: !!python/tuple
+    - 3
+    - 4
+    connect_timeout: 12
+    count: !!python/tuple
+    - 5
+    - 6
+    fetch: !!python/tuple
+    - IMAP
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr
+        - !!python/tuple
+          - password
+          - pw
+      connection:
+        disable_tls: false
+      server: srv
+    mailboxes:
+    - abc
+    - def
+    service_description: SD
+    >>> transformed = migrate_check_mailbox_params({  # v2.1.0 / EWS
+    ...     'service_description': 'SD',
+    ...     'fetch': ('EWS', {
+    ...       'server': 'srv', 'connection': {},
+    ...       'auth': ('usr', ('password', 'pw')),
+    ...       'connection': {'disable_tls': False, 'disable_cert_validation': False, 'tcp_port': 123}}),
+    ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
+    ...     'mailboxes': ['abc', 'def'],
+    ... })
+    >>> assert migrate_check_mailbox_params(transformed) == transformed
+    >>> import yaml; print(yaml.dump(transformed).strip())
+    age: !!python/tuple
+    - 1
+    - 2
+    age_newest: !!python/tuple
+    - 3
+    - 4
+    count: !!python/tuple
+    - 5
+    - 6
+    fetch: !!python/tuple
+    - EWS
+    - auth: !!python/tuple
+      - basic
+      - !!python/tuple
+        - usr
+        - !!python/tuple
+          - password
+          - pw
+      connection:
+        disable_cert_validation: false
+        disable_tls: false
+        tcp_port: 123
+      server: srv
+    mailboxes:
+    - abc
+    - def
+    service_description: SD
+    """
+    allowed_keys = {
+        "service_description",
+        "age",
+        "age_newest",
+        "count",
+        "mailboxes",
+        "connect_timeout",
+    }
+    if not params.keys() <= allowed_keys | {"imap_parameters", "fetch"}:
+        raise ValueError(f"{params.keys()}")
+
+    if "fetch" in params:
+        fetch_protocol, fetch_params = params["fetch"]
+        if fetch_protocol in {"IMAP", "EWS"} and {"connection", "auth"} <= fetch_params.keys():
+            # newest schema (2.1 and up) - do nothing
+            fetch_params["auth"] = update_auth(fetch_params["auth"])
+            return params
+        if fetch_protocol in {"IMAP"} and {"server", "ssl", "auth"} <= fetch_params.keys():
+            # temporary 2.1.0b format - just update the connection element
+            return apply_fetch(params, ("IMAP", update_fetch(fetch_params)), allowed_keys)
+
+    if "imap_parameters" in params:
+        # v2.0.0 and below
+        fetch_params = params["imap_parameters"]
+        return apply_fetch(params, ("IMAP", update_fetch(fetch_params)), allowed_keys)
+
+    # no known format recognized
+    raise ValueError(f"Cannot migrate {params}")
+
+
+def _valuespec_active_checks_mailboxes() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Check IMAP/EWS Mailboxes"),
+            help=_("This check monitors count and age of mails in mailboxes."),
+            elements=[
+                (
+                    "service_description",
+                    TextInput(
+                        title=_("Service name"),
+                        help=_(
+                            "Please make sure that this is unique per host "
+                            "and does not collide with other services."
+                        ),
+                        allow_empty=False,
+                        default_value="Mailboxes",
                     ),
-                    allow_empty=False,
-                    default_value="Mailboxes",
                 ),
-            ),
-            _mail_receiving_params({"IMAP", "EWS"}),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "age",
-                Tuple(
-                    title=_("Message Age of oldest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "age_newest",
-                Tuple(
-                    title=_("Message Age of newest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "count",
-                Tuple(
-                    title=_("Message Count"),
-                    elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
-                ),
-            ),
-            (
-                "mailboxes",
-                ListOfStrings(
-                    title=_("Check only the listed mailboxes"),
-                    help=_(
-                        "By default, all mailboxes are checked with these parameters. "
-                        "If you specify mailboxes here, only those are monitored."
+                _mail_receiving_params({"IMAP", "EWS"}),
+                (
+                    "connect_timeout",
+                    Integer(
+                        title=_("Connect Timeout"),
+                        minvalue=1,
+                        default_value=10,
+                        unit=_("sec"),
                     ),
                 ),
-            ),
-        ],
-        required_keys=["service_description", "fetch"],
+                (
+                    "age",
+                    Tuple(
+                        title=_("Message Age of oldest messages"),
+                        elements=[
+                            Age(title=_("Warning if older than")),
+                            Age(title=_("Critical if older than")),
+                        ],
+                    ),
+                ),
+                (
+                    "age_newest",
+                    Tuple(
+                        title=_("Message Age of newest messages"),
+                        elements=[
+                            Age(title=_("Warning if older than")),
+                            Age(title=_("Critical if older than")),
+                        ],
+                    ),
+                ),
+                (
+                    "count",
+                    Tuple(
+                        title=_("Message Count"),
+                        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
+                    ),
+                ),
+                (
+                    "mailboxes",
+                    ListOfStrings(
+                        title=_("Check only the listed mailboxes"),
+                        help=_(
+                            "By default, all mailboxes are checked with these parameters. "
+                            "If you specify mailboxes here, only those are monitored."
+                        ),
+                    ),
+                ),
+            ],
+            required_keys=["service_description", "fetch"],
+        ),
+        migrate=migrate_check_mailbox_params,
     )
 
 

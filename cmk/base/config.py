@@ -2426,7 +2426,7 @@ class HostConfig:
             is_snmp_host=self._config_cache.is_snmp_host(self.hostname),
             snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
             default_address_family=self._config_cache.default_address_family(self.hostname),
-            management_address=self.management_address,
+            management_address=self._config_cache.management_address(self.hostname),
             is_dyndns_host=self.is_dyndns_host,
         )
 
@@ -2564,104 +2564,19 @@ class HostConfig:
         )
 
     @property
-    def management_address(self) -> HostAddress | None:
-        mgmt_host_address = host_attributes.get(self.hostname, {}).get("management_address")
-        if mgmt_host_address:
-            return mgmt_host_address
-
-        if self._config_cache.is_ipv6_primary(self.hostname):
-            return ipv6addresses.get(self.hostname)
-
-        return ipaddresses.get(self.hostname)
-
-    @property
-    def management_credentials(self) -> ManagementCredentials | None:
-        protocol = self._config_cache.management_protocol(self.hostname)
-        credentials_variable: Mapping[HostName, ManagementCredentials]
-        default_value: ManagementCredentials | None = None
-        if protocol == "snmp":
-            credentials_variable = management_snmp_credentials
-            default_value = snmp_default_community
-        elif protocol == "ipmi":
-            credentials_variable = management_ipmi_credentials
-            default_value = None
-        elif protocol is None:
-            return None
-        else:
-            raise NotImplementedError()
-
-        # First try to use the explicit configuration of the host
-        # (set directly for a host or via folder inheritance in WATO)
-        try:
-            return credentials_variable[self.hostname]
-        except KeyError:
-            pass
-
-        # If a rule matches, use the first rule for the management board protocol of the host
-        rule_settings = self._config_cache.host_extra_conf(self.hostname, management_board_config)
-        for rule_protocol, credentials in rule_settings:
-            if rule_protocol == protocol:
-                return credentials
-
-        return default_value
-
-    @property
-    def ipmi_credentials(self) -> IPMICredentials:
-        credentials = self.management_credentials
-        if credentials is None:
-            return {}
-        # The cast is required because host_config.management_credentials
-        # has type `None | str | tuple[str, ...] | dict[str, str]]`
-        return cast(IPMICredentials, credentials)
-
-    @property
-    def management_snmp_config(self) -> SNMPHostConfig:
-        if self._config_cache.management_protocol(self.hostname) != "snmp":
-            raise MKGeneralException("Management board is not configured to be contacted via SNMP")
-
-        address = self.management_address
-        if address is None:
-            raise MKGeneralException("Management board address is not configured")
-
-        return SNMPHostConfig(
-            is_ipv6_primary=self._config_cache.is_ipv6_primary(self.hostname),
-            hostname=self.hostname,
-            ipaddress=address,
-            credentials=cast(SNMPCredentials, self.management_credentials),
-            port=self._config_cache._snmp_port(self.hostname),
-            is_bulkwalk_host=self._config_cache.in_binary_hostlist(
-                self.hostname, management_bulkwalk_hosts
-            ),
-            is_snmpv2or3_without_bulkwalk_host=self._config_cache.in_binary_hostlist(
-                self.hostname, snmpv2c_hosts
-            ),
-            bulk_walk_size_of=self._config_cache._bulk_walk_size(self.hostname),
-            timing=self._config_cache._snmp_timing(self.hostname),
-            oid_range_limits={
-                SectionName(name): rule
-                for name, rule in reversed(
-                    self._config_cache.host_extra_conf(self.hostname, snmp_limit_oid_range)
-                )
-            },
-            snmpv3_contexts=self._config_cache.host_extra_conf(self.hostname, snmpv3_contexts),
-            character_encoding=self._config_cache._snmp_character_encoding(self.hostname),
-            snmp_backend=self._config_cache.get_snmp_backend(self.hostname),
-        )
-
-    @property
     def is_dyndns_host(self) -> bool:
         return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
 
 def lookup_mgmt_board_ip_address(host_config: HostConfig) -> HostAddress | None:
-    mgmt_address: Final = host_config.management_address
     host_name: Final = host_config.hostname
+    config_cache = get_config_cache()
+    mgmt_address: Final = config_cache.management_address(host_name)
     try:
         mgmt_ipa = None if mgmt_address is None else HostAddress(ipaddress.ip_address(mgmt_address))
     except (ValueError, TypeError):
         mgmt_ipa = None
 
-    config_cache = get_config_cache()
     try:
         return ip_lookup.lookup_ip_address(
             # host name is ignored, if mgmt_ipa is trueish.
@@ -3016,6 +2931,81 @@ class ConfigCache:
 
     def has_management_board(self, host_name: HostName) -> bool:
         return self.management_protocol(host_name) is not None
+
+    def management_address(self, host_name: HostName) -> HostAddress | None:
+        mgmt_host_address = host_attributes.get(host_name, {}).get("management_address")
+        if mgmt_host_address:
+            return mgmt_host_address
+
+        if self.is_ipv6_primary(host_name):
+            return ipv6addresses.get(host_name)
+
+        return ipaddresses.get(host_name)
+
+    def management_credentials(self, host_name: HostName) -> ManagementCredentials | None:
+        protocol = self.management_protocol(host_name)
+        credentials_variable: Mapping[HostName, ManagementCredentials]
+        default_value: ManagementCredentials | None = None
+        if protocol == "snmp":
+            credentials_variable = management_snmp_credentials
+            default_value = snmp_default_community
+        elif protocol == "ipmi":
+            credentials_variable = management_ipmi_credentials
+            default_value = None
+        elif protocol is None:
+            return None
+        else:
+            raise NotImplementedError()
+
+        # First try to use the explicit configuration of the host
+        # (set directly for a host or via folder inheritance in WATO)
+        try:
+            return credentials_variable[host_name]
+        except KeyError:
+            pass
+
+        # If a rule matches, use the first rule for the management board protocol of the host
+        rule_settings = self.host_extra_conf(host_name, management_board_config)
+        for rule_protocol, credentials in rule_settings:
+            if rule_protocol == protocol:
+                return credentials
+
+        return default_value
+
+    def ipmi_credentials(self, host_name: HostName) -> IPMICredentials:
+        credentials = self.management_credentials(host_name)
+        if credentials is None:
+            return {}
+        # The cast is required because `management_credentials`
+        # has type `None | str | tuple[str, ...] | dict[str, str]]`
+        return cast(IPMICredentials, credentials)
+
+    def management_snmp_config_UNUSED(self, host_name: HostName) -> SNMPHostConfig:
+        if self.management_protocol(host_name) != "snmp":
+            raise MKGeneralException("Management board is not configured to be contacted via SNMP")
+
+        address = self.management_address(host_name)
+        if address is None:
+            raise MKGeneralException("Management board address is not configured")
+
+        return SNMPHostConfig(
+            is_ipv6_primary=self.is_ipv6_primary(host_name),
+            hostname=host_name,
+            ipaddress=address,
+            credentials=cast(SNMPCredentials, self.management_credentials(host_name)),
+            port=self._snmp_port(host_name),
+            is_bulkwalk_host=self.in_binary_hostlist(host_name, management_bulkwalk_hosts),
+            is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(host_name, snmpv2c_hosts),
+            bulk_walk_size_of=self._bulk_walk_size(host_name),
+            timing=self._snmp_timing(host_name),
+            oid_range_limits={
+                SectionName(name): rule
+                for name, rule in reversed(self.host_extra_conf(host_name, snmp_limit_oid_range))
+            },
+            snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
+            character_encoding=self._snmp_character_encoding(host_name),
+            snmp_backend=self.get_snmp_backend(host_name),
+        )
 
     def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
         def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:

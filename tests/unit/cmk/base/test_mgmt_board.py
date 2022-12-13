@@ -47,10 +47,8 @@ def test_mgmt_explicit_settings(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.1"
-    assert host_config.management_credentials == credentials
+    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_credentials(host) == credentials
 
 
 def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
@@ -65,10 +63,8 @@ def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.2"
-    assert host_config.management_credentials == "public"
+    assert config_cache.management_address(host) == "127.0.0.2"
+    assert config_cache.management_credentials(host) == "public"
 
 
 def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
@@ -84,10 +80,8 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host) is False
     assert config_cache.management_protocol(host) is None
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.1"
-    assert host_config.management_credentials is None
+    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_credentials(host) is None
 
 
 @pytest.mark.parametrize(
@@ -131,10 +125,8 @@ def test_mgmt_config_ruleset(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.1"
-    assert host_config.management_credentials == ruleset_credentials
+    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_credentials(host) == ruleset_credentials
 
 
 @pytest.mark.parametrize(
@@ -183,10 +175,8 @@ def test_mgmt_config_ruleset_order(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.1"
-    assert host_config.management_credentials == "RULESET1"
+    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_credentials(host) == "RULESET1"
 
 
 @pytest.mark.parametrize(
@@ -231,10 +221,8 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
-
-    host_config = config_cache.make_host_config(host)
-    assert host_config.management_address == "127.0.0.1"
-    assert host_config.management_credentials == host_credentials
+    assert config_cache.management_address(host) == "127.0.0.1"
+    assert config_cache.management_credentials(host) == host_credentials
 
 
 @pytest.mark.parametrize(
@@ -452,7 +440,5 @@ def test_mgmt_board_ip_addresses(
     config_cache = ts.apply(monkeypatch)
     assert config_cache.has_management_board(hostname)
     assert config_cache.management_protocol(hostname) == protocol
-
-    host_config = config_cache.make_host_config(hostname)
-    assert host_config.management_address == ip_address_result
-    assert host_config.management_credentials == credentials
+    assert config_cache.management_address(hostname) == ip_address_result
+    assert config_cache.management_credentials(hostname) == credentials

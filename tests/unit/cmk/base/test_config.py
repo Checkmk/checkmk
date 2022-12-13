@@ -379,9 +379,9 @@ def test_host_config_management_address(
     ts.add_host(hostname)
     ts.set_option("ipaddresses", {hostname: "127.0.1.1"})
     ts.set_option("host_attributes", {hostname: attrs})
-    config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.make_host_config(hostname).management_address == result
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.management_address(hostname) == result
 
 
 def _management_config_ruleset() -> list[dict[str, Any]]:
@@ -438,14 +438,9 @@ def test_host_config_management_credentials(
             raise NotImplementedError()
 
     ts.set_ruleset("management_board_config", ruleset)
+
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config(hostname)
-
-    assert host_config.management_credentials == expected_result
-
-    # Test management_snmp_config on the way...
-    if protocol == "snmp":
-        assert host_config.management_snmp_config.credentials == expected_result
+    assert config_cache.management_credentials(hostname) == expected_result
 
 
 @pytest.mark.parametrize(

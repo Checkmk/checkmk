@@ -493,8 +493,8 @@ class _Builder:
                 source,
                 IPMIFetcher(
                     address=source.ipaddress,
-                    username=self.host_config.ipmi_credentials.get("username"),
-                    password=self.host_config.ipmi_credentials.get("password"),
+                    username=self.config_cache.ipmi_credentials(self.host_name).get("username"),
+                    password=self.config_cache.ipmi_credentials(self.host_name).get("password"),
                 ),
                 AgentFileCache(
                     source.hostname,

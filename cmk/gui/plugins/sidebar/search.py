@@ -55,13 +55,7 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib.search import (
-    IndexNotFoundException,
-    IndexSearcher,
-    PermissionsHandler,
-    URLChecker,
-)
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -1405,7 +1399,7 @@ class MenuSearchResultsRenderer:
             )
         if search_type == "setup":
             return (
-                IndexSearcher(PermissionsHandler(URLChecker[ModeEditHost](ModeEditHost))).search,
+                IndexSearcher(PermissionsHandler()).search,
                 80,
             )
         raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")

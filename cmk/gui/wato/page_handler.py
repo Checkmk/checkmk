@@ -79,8 +79,8 @@ def page_handler() -> None:
         raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
 
     current_mode = request.var("mode") or "main"
-    mode_class = mode_registry.get(current_mode, ModeNotImplemented)
-    mode_class.ensure_static_permissions()
+    mode_instance = mode_registry.get(current_mode, ModeNotImplemented)()
+    mode_instance.ensure_permissions()
 
     display_options.load_from_html(request, html)
 
@@ -90,9 +90,9 @@ def page_handler() -> None:
     # If we do an action, we acquire an exclusive lock on the complete WATO.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
-            _wato_page_handler(current_mode, mode_class())
+            _wato_page_handler(current_mode, mode_instance)
     else:
-        _wato_page_handler(current_mode, mode_class())
+        _wato_page_handler(current_mode, mode_instance)
 
 
 def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:

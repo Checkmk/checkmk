@@ -22,6 +22,7 @@ from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 
 
 class WatoMode(abc.ABC):
@@ -42,7 +43,7 @@ class WatoMode(abc.ABC):
 
     @final
     @classmethod
-    def ensure_static_permissions(cls) -> None:
+    def _ensure_static_permissions(cls) -> None:
         permissions = cls.static_permissions()
         if permissions is None:
             permissions = []
@@ -54,6 +55,10 @@ class WatoMode(abc.ABC):
             permissions = []
         for pname in permissions:
             user.need_permission(pname if "." in pname else ("wato." + pname))
+
+    def ensure_permissions(self) -> None:
+        """Overwrite this method to additionally check request-specific permissions if needed."""
+        self._ensure_static_permissions()
 
     @classmethod
     @abc.abstractmethod
@@ -173,8 +178,13 @@ class WatoMode(abc.ABC):
 
 
 class ModeRegistry(Registry[type[WatoMode]]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: type[WatoMode]) -> str:
         return instance.name()
+
+    def register(self, instance: type[WatoMode]) -> type[WatoMode]:
+        super().register(instance)
+        mode_permissions_ensurance_registry.register(instance)
+        return instance
 
 
 mode_registry = ModeRegistry()

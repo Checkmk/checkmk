@@ -12,7 +12,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
 from time import sleep
-from typing import Final, Generic, TypeVar
+from typing import Final
 
 import redis
 
@@ -37,6 +37,7 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
+from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 
@@ -244,14 +245,8 @@ class IndexBuilder:
         return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 
-T = TypeVar("T")
-
-
-class URLChecker(Generic[T]):
-    # TODO(ml): This is not a real class.  It does not have a single useful method.
-    def __init__(self, mode: type[T]) -> None:
-        self._mode_edit_host = mode
-
+# TODO(ml): This is not a real class.  It does not have a single useful method.
+class URLChecker:
     @staticmethod
     def _set_query_vars(query_vars: QueryVars) -> None:
         for name, vals in query_vars.items():
@@ -267,19 +262,18 @@ class URLChecker(Generic[T]):
 
     def is_permitted(self, url: str) -> bool:
         file_name, query_vars = file_name_and_query_vars_from_url(url)
-        URLChecker[T]._set_query_vars(query_vars)
+        URLChecker._set_query_vars(query_vars)
 
-        is_host_url = "mode=edit_host" in url
-        if is_host_url:
-            URLChecker[T]._set_current_folder(
-                query_vars.get("folder", [""])[0]
-            )  # "" means root dir
+        mode = modes[0] if (modes := query_vars.get("mode", [])) else None
+
+        if mode == "edit_host":
+            URLChecker._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
 
         try:
-            if is_host_url:
-                self._try_host()
+            if mode:
+                mode_permissions_ensurance_registry[mode]().ensure_permissions()
             else:
-                URLChecker[T]._try_page(file_name)
+                URLChecker._try_page(file_name)
             return True
         except MKAuthException:
             return False
@@ -292,14 +286,9 @@ class URLChecker(Generic[T]):
                 page_handler()
                 output_funnel.drain()
 
-    # TODO: Find a better solution here. We treat hosts separately because calling the page takes
-    #  very long in this case and is not necessary (the initializer already throws an exception).
-    def _try_host(self) -> None:
-        self._mode_edit_host()
-
 
 class PermissionsHandler:
-    def __init__(self, url_checker: URLChecker[T]) -> None:
+    def __init__(self) -> None:
         self._category_permissions = {
             "global_settings": user.may("wato.global") or user.may("wato.seeall"),
             "folders": user.may("wato.hosts"),
@@ -308,7 +297,7 @@ class PermissionsHandler:
             "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
             "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
         }
-        self._url_checker = url_checker
+        self._url_checker = URLChecker()
 
     @staticmethod
     def _permissions_rule(url: str) -> bool:

@@ -2980,33 +2980,6 @@ class ConfigCache:
         # has type `None | str | tuple[str, ...] | dict[str, str]]`
         return cast(IPMICredentials, credentials)
 
-    def management_snmp_config_UNUSED(self, host_name: HostName) -> SNMPHostConfig:
-        if self.management_protocol(host_name) != "snmp":
-            raise MKGeneralException("Management board is not configured to be contacted via SNMP")
-
-        address = self.management_address(host_name)
-        if address is None:
-            raise MKGeneralException("Management board address is not configured")
-
-        return SNMPHostConfig(
-            is_ipv6_primary=self.is_ipv6_primary(host_name),
-            hostname=host_name,
-            ipaddress=address,
-            credentials=cast(SNMPCredentials, self.management_credentials(host_name)),
-            port=self._snmp_port(host_name),
-            is_bulkwalk_host=self.in_binary_hostlist(host_name, management_bulkwalk_hosts),
-            is_snmpv2or3_without_bulkwalk_host=self.in_binary_hostlist(host_name, snmpv2c_hosts),
-            bulk_walk_size_of=self._bulk_walk_size(host_name),
-            timing=self._snmp_timing(host_name),
-            oid_range_limits={
-                SectionName(name): rule
-                for name, rule in reversed(self.host_extra_conf(host_name, snmp_limit_oid_range))
-            },
-            snmpv3_contexts=self.host_extra_conf(host_name, snmpv3_contexts),
-            character_encoding=self._snmp_character_encoding(host_name),
-            snmp_backend=self.get_snmp_backend(host_name),
-        )
-
     def explicit_host_attributes(self, host_name: HostName) -> ObjectAttributes:
         def make_explicit_host_attributes() -> Iterator[tuple[str, str]]:
             for key, mapping in explicit_host_conf.items():

@@ -1,0 +1,13 @@
+Title: Fix possible KeyError on service graphs view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1670916476
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+If a user had no permission "Services - Service (service)" and tried to open
+the view "Service graphs" (service_graphs) an error like "KeyError (service)"
+occurred.

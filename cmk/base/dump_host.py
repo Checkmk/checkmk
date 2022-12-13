@@ -33,6 +33,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.config import ConfigCache
 
 
 def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
@@ -87,6 +88,19 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
     return type(fetcher).__name__
 
 
+def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
+    if config_cache.is_all_agents_host(host_name):
+        return "Normal Checkmk agent, all configured special agents"
+
+    if config_cache.is_all_special_agents_host(host_name):
+        return "No Checkmk agent, all configured special agents"
+
+    if config_cache.is_tcp_host(host_name):
+        return "Normal Checkmk agent, or special agent if configured"
+
+    return "No agent"
+
+
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
     host_config = config_cache.make_host_config(hostname)
@@ -108,7 +122,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     addresses: str | None = ""
-    if not config.ConfigCache.is_ipv4v6_host(hostname):
+    if not ConfigCache.is_ipv4v6_host(hostname):
         addresses = ipaddress
     else:
         try:
@@ -181,7 +195,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         agenttypes.append("PING only")
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
-    out.output(config_cache.agent_description(hostname) + "\n")
+    out.output(_agent_description(config_cache, hostname) + "\n")
 
     out.output(tty.yellow + "Type of agent:          " + tty.normal)
     if len(agenttypes) == 1:

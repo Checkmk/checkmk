@@ -4052,18 +4052,6 @@ class ConfigCache:
             settings[0] if (settings := self.host_extra_conf(host_name, agent_encryption)) else None
         )
 
-    def agent_description(self, host_name: HostName) -> str:
-        if self.is_all_agents_host(host_name):
-            return "Normal Checkmk agent, all configured special agents"
-
-        if self.is_all_special_agents_host(host_name):
-            return "No Checkmk agent, all configured special agents"
-
-        if self.is_tcp_host(host_name):
-            return "Normal Checkmk agent, or special agent if configured"
-
-        return "No agent"
-
     def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
         settings = self.host_extra_conf(host_name, agent_exclude_sections)
         if not settings:

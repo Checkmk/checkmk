@@ -1171,7 +1171,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
         else:
             contact_headers = [
                 (
-                    _("Contact Selection"),
+                    _("Contact selection"),
                     [
                         "contact_all",
                         "contact_all_with_email",
@@ -1401,10 +1401,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         headers_part1: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = [
             (
-                _("Rule Properties"),
+                _("Rule properties"),
                 ["description", "comment", "disabled", "docu_url", "allow_disable"],
             ),
-            (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
+            (_("Notification method"), ["notify_plugin", "notify_method", "bulk"]),
         ]
 
         headers_part2: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = [

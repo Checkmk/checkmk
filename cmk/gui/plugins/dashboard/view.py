@@ -132,7 +132,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         Callable[[DashletId, ViewDashletConfig, ViewDashletConfig], ViewDashletConfig],
     ]:
         def _render_input(dashlet: ViewDashletConfig) -> None:
-            render_view_config(dashlet)
+            render_view_config(view_spec_from_view_dashlet(dashlet))
 
         def _handle_input(
             ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig
@@ -170,6 +170,41 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             return list(data_source_registry[ds_name]().infos)  # TODO: Hmmm...
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
+
+
+def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
+    """Should be aligned with copy_view_into_dashlet"""
+    # Sadly there is currently no less verbose way of doing this
+    return ViewSpec(
+        {
+            "datasource": dashlet["datasource"],
+            "group_painters": dashlet["group_painters"],
+            "layout": dashlet["layout"],
+            "painters": dashlet["painters"],
+            "single_infos": dashlet["single_infos"],
+            "context": dashlet["context"],
+            "sorters": dashlet["sorters"],
+            "title": dashlet["title"],
+            "browser_reload": dashlet["browser_reload"],
+            "column_headers": dashlet["column_headers"],
+            "description": dashlet["description"],
+            "hidden": dashlet["hidden"],
+            "hidebutton": dashlet["hidebutton"],
+            "mustsearch": dashlet["mustsearch"],
+            "name": dashlet["name"],
+            "num_columns": dashlet["num_columns"],
+            "owner": dashlet["owner"],
+            "play_sounds": dashlet["play_sounds"],
+            "public": dashlet["public"],
+            "topic": dashlet["topic"],
+            "sort_index": dashlet["sort_index"],
+            "icon": dashlet["icon"],
+            "user_sortable": dashlet["user_sortable"],
+            "link_from": dashlet["link_from"],
+            "add_context_to_title": dashlet["add_context_to_title"],
+            "is_show_more": dashlet["is_show_more"],
+        }
+    )
 
 
 @dashlet_registry.register

@@ -12,7 +12,6 @@ from typing import Any, Literal, NamedTuple, overload
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
-from cmk.gui.dashboard import ViewDashletConfig
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -492,9 +491,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(
-    view_spec: ViewDashletConfig | ViewSpec, general_properties: bool = True
-) -> None:
+def render_view_config(view_spec: ViewSpec, general_properties: bool = True) -> None:
     value = _transform_view_to_valuespec_value(view_spec)
 
     # TODO: This and the modification of the view_spec should not be here. Find a better place
@@ -523,7 +520,7 @@ def render_view_config(
 # the valuespec This needs to perform the inverted steps of the
 # _transform_valuespec_value_to_view() function. FIXME: One day we should
 # rewrite this to make no transform needed anymore
-def _transform_view_to_valuespec_value(view: ViewDashletConfig | ViewSpec) -> dict[str, Any]:
+def _transform_view_to_valuespec_value(view: ViewSpec) -> dict[str, Any]:
     value: dict[str, Any] = {**view}
     value["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well

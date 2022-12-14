@@ -76,11 +76,13 @@ while true; do
             continue
             ;;
         '-i' | '--iwyu')
+            RUN_BUILD=yes # TODO: Remove when googletest is wired in differently
             RUN_IWYU=yes
             shift
             continue
             ;;
         '-t' | '--clang-tidy')
+            RUN_BUILD=yes # TODO: Remove when googletest is wired in differently
             RUN_CLANG_TIDY=yes
             shift
             continue

@@ -3,23 +3,23 @@
 
 ## Requirements
 
-- CMake 3.20 or better
+- CMake 3.24 or better: you may manual installation
 - C++17
 - Git
 
 ## Build using CMAKE
 
-To configure:
+To configure(this step is now quite optional):
 
 ```bash
 cmake -S . -B build
 ```
 
 To build:
-
 ```bash
-cmake --build build
+./run_ci --build
 ```
+
 
 ## Build using Bazel
 

@@ -339,7 +339,7 @@ def _fetch_rows_from_livestatus(
 
         # Now add join information, if there are join columns
         if view.join_cells:
-            _do_table_join(view, rows, filterheaders, view.sorters)
+            _do_table_join(view, rows, filterheaders)
 
         return rows, unfiltered_amount_of_rows
     return [], 0
@@ -504,13 +504,18 @@ JoinMasterKey = tuple[SiteId, str]
 JoinSlaveKey = str
 
 
-def _do_table_join(
-    view: View, master_rows: Rows, master_filters: str, sorters: list[SorterEntry]
-) -> None:
-    assert view.datasource.join is not None
-    join_table, join_master_column = view.datasource.join
+def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
+    sorters = view.sorters
+
+    if not (isinstance(join := view.datasource.join, tuple) and len(join) == 2):
+        raise ValueError()
+
+    join_table, join_master_column = join
     slave_ds = data_source_registry[join_table]()
-    assert slave_ds.join_key is not None
+
+    if slave_ds.join_key is None:
+        raise ValueError()
+
     join_slave_column = slave_ds.join_key
     join_cells = view.join_cells
     join_columns = _get_needed_join_columns(join_cells, sorters)
@@ -539,22 +544,17 @@ def _do_table_join(
         rows = row_data
 
     per_master_entry: dict[JoinMasterKey, dict[JoinSlaveKey, Row]] = {}
-    current_key: JoinMasterKey | None = None
-    current_entry: dict[JoinSlaveKey, Row] | None = None
     for row in rows:
-        master_key = (row["site"], row[join_master_column])
-        if master_key != current_key:
-            current_key = master_key
-            current_entry = {}
-            per_master_entry[current_key] = current_entry
-        assert current_entry is not None
+        current_entry = per_master_entry.setdefault(_make_master_key(row, join_master_column), {})
         current_entry[row[join_slave_column]] = row
 
     # Add this information into master table in artificial column "JOIN"
     for row in master_rows:
-        key = (row["site"], row[join_master_column])
-        joininfo = per_master_entry.get(key, {})
-        row["JOIN"] = joininfo
+        row["JOIN"] = per_master_entry.get(_make_master_key(row, join_master_column), {})
+
+
+def _make_master_key(row: Row, join_master_column: str) -> JoinMasterKey:
+    return (SiteId(row["site"]), row[join_master_column])
 
 
 def save_state_for_playing_alarm_sounds(row: "Row") -> None:

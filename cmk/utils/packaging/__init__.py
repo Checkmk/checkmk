@@ -711,7 +711,7 @@ def _get_enabled_package_paths():
 
 def get_unpackaged_files() -> dict[PackagePart, list[str]]:
     return {
-        part: unpackaged_files_in_dir(part.ident, part.path)
+        part: _unpackaged_files_in_dir(part.ident, part.path)
         for part in PACKAGE_PARTS + CONFIG_PARTS
     }
 
@@ -768,7 +768,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
     return result
 
 
-def unpackaged_files_in_dir(part: PartName, directory: str) -> list[str]:
+def _unpackaged_files_in_dir(part: PartName, directory: str) -> list[str]:
     packaged = set(_packaged_files_in_dir(part))
     return [f for f in _files_in_dir(part, directory) if f not in packaged]
 

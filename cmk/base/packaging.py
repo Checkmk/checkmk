@@ -40,7 +40,6 @@ from cmk.utils.packaging import (
     PackageStore,
     PackageVersion,
     release,
-    unpackaged_files_in_dir,
     update_active_packages,
 )
 
@@ -196,16 +195,17 @@ def package_create(args: list[str]) -> None:
     if is_installed(pacname):
         raise PackageException(f"Package {pacname} already existing.")
 
+    unpackaged = get_unpackaged_files()
+
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = manifest_template(pacname)
-    filelists = package.files
     for part in PACKAGE_PARTS:
-        files = unpackaged_files_in_dir(part.ident, part.path)
-        filelists[part.ident] = files
-        if len(files) > 0:
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-            for f in files:
-                logger.log(VERBOSE, "    %s", f)
+        if not (files := unpackaged.get(part)):
+            continue
+        package.files[part.ident] = files
+        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+        for f in files:
+            logger.log(VERBOSE, "    %s", f)
 
     add_installed_manifest(package)
     logger.log(

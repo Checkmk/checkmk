@@ -80,6 +80,24 @@ class NodeExporterQuery(str, enum.Enum):
     node_memory_DirectMap4k_bytes = "node_memory_DirectMap4k_bytes/1024"
     node_memory_DirectMap2M_bytes = "node_memory_DirectMap2M_bytes/1024"
     node_memory_DirectMap1G_bytes = "node_memory_DirectMap1G_bytes/1024"
+    # From /proc/loadavg
+    node_load1 = "node_load1"
+    node_load5 = "node_load5"
+    node_load15 = "node_load15"
+    node_processes_threads = "node_processes_threads"  # Thread count
+    # Example rule from node exporter
+    instance_node_cpus_count = 'count(node_cpu_seconds_total{mode="idle"}) without (cpu,mode)'
+    # From /proc/sys/kernel/max-threads
+    node_processes_max_threads = "node_processes_max_threads"
+
+
+class CPULoad(pydantic.BaseModel):
+    """section: prometheus_cpu_v1"""
+
+    load1: float
+    load5: float
+    load15: float
+    num_cpus: int
 
 
 class Uptime(pydantic.BaseModel):
@@ -380,6 +398,27 @@ class NodeExporter:
 
     def _retrieve_uptime(self) -> list[PromQLMetric]:
         return self.get_promql(NodeExporterQuery.node_uptime_seconds)
+
+    def cpu_summary(self) -> dict[str, SectionStr]:
+        cpu = self._retrieve_cpu()
+        node_to_raw: dict[str, dict[str, float]] = {}
+        for key, samples in cpu:
+            for sample in samples:
+                instance = sample["labels"]["instance"]
+                raw = node_to_raw.setdefault(instance, {})
+                raw[key] = sample["value"]
+        return {
+            node: _create_section("prometheus_cpu_v1", [CPULoad.parse_obj(raw).json()])
+            for node, raw in node_to_raw.items()
+        }
+
+    def _retrieve_cpu(self) -> list[tuple[str, list[PromQLMetric]]]:
+        return [
+            ("load1", self.get_promql(NodeExporterQuery.node_load1)),
+            ("load5", self.get_promql(NodeExporterQuery.node_load5)),
+            ("load15", self.get_promql(NodeExporterQuery.node_load15)),
+            ("num_cpus", self.get_promql(NodeExporterQuery.instance_node_cpus_count)),
+        ]
 
 
 def _create_section(section_name: str, section_list: list[str]) -> SectionStr:

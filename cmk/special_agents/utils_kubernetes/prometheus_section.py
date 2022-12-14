@@ -103,6 +103,7 @@ def machine_sections(config: query.PrometheusSessionConfig) -> dict[str, str]:
         node_exporter.kernel_summary(),
         node_exporter.memory_summary(),
         node_exporter.uptime_summary(),
+        node_exporter.cpu_summary(),
     ]:
         for node, section_str in node_to_section.items():
             result_list.setdefault(node, []).append(section_str)

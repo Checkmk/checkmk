@@ -2,10 +2,12 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import enum
 import time
 import typing
 from collections.abc import Mapping
 
+import pydantic
 from typing_extensions import NotRequired
 
 SectionStr = typing.NewType("SectionStr", str)
@@ -20,6 +22,18 @@ class PromQLMetric(typing.TypedDict):
 class PromQLGetter(typing.Protocol):
     def __call__(self, promql_expression: str) -> list[PromQLMetric]:
         ...
+
+
+class NodeExporterQuery(str, enum.Enum):
+    # node_boot_time_seconds: btime for /proc/stats
+    # node_time_seconds: system time of the node, equal to btime + uptime from /proc/uptime
+    node_uptime_seconds = "(node_time_seconds - node_boot_time_seconds)"
+
+
+class Uptime(pydantic.BaseModel):
+    """section: prometheus_uptime_v1"""
+
+    seconds: int
 
 
 class FilesystemInfo:
@@ -300,6 +314,18 @@ class NodeExporter:
                 else:
                     node[entity_name] = {"value": metric_value}
         return result
+
+    def uptime_summary(self) -> dict[str, SectionStr]:
+        uptime_samples = self.get_promql(NodeExporterQuery.node_uptime_seconds)
+        return {
+            sample["labels"]["instance"]: _create_section(
+                "prometheus_uptime_v1", [Uptime.parse_obj({"seconds": sample["value"]}).json()]
+            )
+            for sample in uptime_samples
+        }
+
+    def _retrieve_uptime(self) -> list[PromQLMetric]:
+        return self.get_promql(NodeExporterQuery.node_uptime_seconds)
 
 
 def _create_section(section_name: str, section_list: list[str]) -> SectionStr:

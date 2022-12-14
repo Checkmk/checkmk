@@ -122,7 +122,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            store.aquire_lock(self._path)
+            store.acquire_lock(self._path)
 
             if self._path.stat().st_mtime == self._last_sync:
                 self._log_debug("already loaded")

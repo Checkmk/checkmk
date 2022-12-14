@@ -20,7 +20,7 @@ from cmk.utils.i18n import _
 from cmk.utils.paths import default_config_dir
 
 _all = [
-    "aquire_lock",
+    "acquire_lock",
     "cleanup_locks",
     "configuration_lockfile",
     "have_lock",
@@ -30,7 +30,7 @@ _all = [
     "MKConfigLockTimeout",
     "release_all_locks",
     "release_lock",
-    "try_aquire_lock",
+    "try_acquire_lock",
     "try_locked",
 ]
 
@@ -60,7 +60,7 @@ def configuration_lockfile() -> str:
 def lock_checkmk_configuration() -> Iterator[None]:
     path = configuration_lockfile()
     try:
-        aquire_lock(path)
+        acquire_lock(path)
     except MKTimeout as e:
         raise MKConfigLockTimeout(
             _(
@@ -79,7 +79,7 @@ def lock_checkmk_configuration() -> Iterator[None]:
 
 # TODO: Use lock_checkmk_configuration() and nuke this!
 def lock_exclusive() -> None:
-    aquire_lock(configuration_lockfile())
+    acquire_lock(configuration_lockfile())
 
 
 # .
@@ -102,7 +102,7 @@ LockDict = dict[str, int]
 _locks = threading.local()
 
 
-def _aquired_locks() -> dict[str, int]:
+def _acquired_locks() -> dict[str, int]:
     """Make access to global locking dict thread-safe.
 
     Only the thread which acquired the lock should see the file descriptor in the locking
@@ -119,39 +119,39 @@ def _aquired_locks() -> dict[str, int]:
 
 
 def _set_lock(name: str, fd: int) -> None:
-    _aquired_locks()[name] = fd
+    _acquired_locks()[name] = fd
 
 
 def _get_lock(name: str) -> int | None:
-    return _aquired_locks().get(name)
+    return _acquired_locks().get(name)
 
 
 def _del_lock(name: str) -> None:
-    _aquired_locks().pop(name, None)
+    _acquired_locks().pop(name, None)
 
 
 def _del_all_locks() -> None:
-    _aquired_locks().clear()
+    _acquired_locks().clear()
 
 
 def _get_lock_keys() -> list[str]:
-    return list(_aquired_locks())
+    return list(_acquired_locks())
 
 
 def _has_lock(name: str) -> bool:
-    return name in _aquired_locks()
+    return name in _acquired_locks()
 
 
 @contextmanager
 def locked(path: Path | str, blocking: bool = True) -> Iterator[None]:
     try:
-        aquire_lock(path, blocking)
+        acquire_lock(path, blocking)
         yield
     finally:
         release_lock(path)
 
 
-def aquire_lock(path: Path | str, blocking: bool = True) -> None:
+def acquire_lock(path: Path | str, blocking: bool = True) -> None:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -191,14 +191,14 @@ def aquire_lock(path: Path | str, blocking: bool = True) -> None:
 @contextmanager
 def try_locked(path: Path | str) -> Iterator[bool]:
     try:
-        yield try_aquire_lock(path)
+        yield try_acquire_lock(path)
     finally:
         release_lock(path)
 
 
-def try_aquire_lock(path: Path | str) -> bool:
+def try_acquire_lock(path: Path | str) -> bool:
     try:
-        aquire_lock(path, blocking=False)
+        acquire_lock(path, blocking=False)
         return True
     except OSError as e:
         if e.errno != errno.EAGAIN:  # Try again
@@ -232,7 +232,7 @@ def have_lock(path: str | Path) -> bool:
 
 def release_all_locks() -> None:
     logger.debug("Releasing all locks")
-    logger.debug("Acquired locks: %r", _aquired_locks())
+    logger.debug("Acquired locks: %r", _acquired_locks())
     for path in _get_lock_keys():
         release_lock(path)
     _del_all_locks()
@@ -247,7 +247,7 @@ def leave_locked_unless_exception(path: str | Path) -> Iterator[None]:
     In order to make this happen, every lock shall itself only be used as a context-manager.
     """
     try:
-        aquire_lock(path)
+        acquire_lock(path)
         yield
     except Exception:
         release_lock(path)

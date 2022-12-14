@@ -37,7 +37,7 @@ def parse_silverpeak(info):
     alarm_count, alarms = info
 
     # We currently do not know if any (alarm) OIDs will be delivered in case no alarm is active.
-    # Therefore aquire the alarm count in any case.
+    # Therefore acquire the alarm count in any case.
     if alarm_count[0][0]:
         parsed.setdefault("alarm_count", int(alarm_count[0][0]))
 

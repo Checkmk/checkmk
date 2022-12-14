@@ -25,7 +25,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password, password_hashing
 from cmk.utils.store import (
-    aquire_lock,
+    acquire_lock,
     load_from_mk_file,
     mkdir,
     save_text_to_file,
@@ -522,7 +522,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        aquire_lock(_contacts_filepath())
+        acquire_lock(_contacts_filepath())
 
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.

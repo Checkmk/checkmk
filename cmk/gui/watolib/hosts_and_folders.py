@@ -2017,7 +2017,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     @staticmethod
     def build_host_lookup_cache(cache_path):
-        store.aquire_lock(cache_path)
+        store.acquire_lock(cache_path)
         folder_lookup = {}
         for host_name, host in Folder.root_folder().all_hosts_recursively().items():
             folder_lookup[host_name] = host.folder().path()

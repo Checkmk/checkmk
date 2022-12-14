@@ -11,7 +11,7 @@ description:
 
  The status of the AirLaser should usually be normal.
  After power up the system performs some self-tests.
- This check aquires the results from the sysStatus OID in the
+ This check acquires the results from the sysStatus OID in the
  {CBL-AIRLASOR-IP1000-MIB}
 
  Minor airlaser problems are reported as a warning condition, major failures

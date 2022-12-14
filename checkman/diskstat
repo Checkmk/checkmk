@@ -14,7 +14,7 @@ description:
  summarized but with a separate check for read and write (this is how this
  check worked up to version 1.1.10).
 
- The check also gives info on the IO latency and IOPS (unmerged) aquired
+ The check also gives info on the IO latency and IOPS (unmerged) acquired
  from the kernels information in /proc.
 
  You can apply separate warning and critical levels for the read

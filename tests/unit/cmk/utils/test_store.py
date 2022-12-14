@@ -285,8 +285,8 @@ def test_save_to_mk_file(tmp_path: Path, path_type: type[str] | type[Path]) -> N
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_aquire_lock_not_existing(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
-    store.aquire_lock(path_type(tmp_path / "asd"))
+def test_acquire_lock_not_existing(tmp_path: Path, path_type: type[str] | type[Path]) -> None:
+    store.acquire_lock(path_type(tmp_path / "asd"))
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -330,7 +330,7 @@ def test_try_locked_fails(
     def _is_already_locked(path: Path, blocking: object) -> bool:
         raise IOError(errno.EAGAIN, "%s is already locked" % path)
 
-    monkeypatch.setattr(store._locks, "aquire_lock", _is_already_locked)
+    monkeypatch.setattr(store._locks, "acquire_lock", _is_already_locked)
 
     assert store.have_lock(path) is False
 
@@ -342,22 +342,22 @@ def test_try_locked_fails(
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_aquire_lock(locked_file: Path, path_type: type[str] | type[Path]) -> None:
+def test_acquire_lock(locked_file: Path, path_type: type[str] | type[Path]) -> None:
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_aquire_lock_twice(locked_file: Path, path_type: type[str] | type[Path]) -> None:
+def test_acquire_lock_twice(locked_file: Path, path_type: type[str] | type[Path]) -> None:
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
 
 
@@ -371,7 +371,7 @@ def test_release_lock(locked_file: Path, path_type: type[str] | type[Path]) -> N
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -382,7 +382,7 @@ def test_release_lock_already_closed(locked_file: Path, path_type: type[str] | t
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
 
     fd = store._locks._get_lock(str(path))
@@ -404,11 +404,11 @@ def test_release_all_locks(tmp_path: Path, path_type: type[str] | type[Path]) ->
     path2 = path_type(locked_file2)
 
     assert store.have_lock(path1) is False
-    store.aquire_lock(path1)
+    store.acquire_lock(path1)
     assert store.have_lock(path1) is True
 
     assert store.have_lock(path2) is False
-    store.aquire_lock(path2)
+    store.acquire_lock(path2)
     assert store.have_lock(path2) is True
 
     store.release_all_locks()
@@ -423,7 +423,7 @@ def test_release_all_locks_already_closed(
     path = path_type(locked_file)
 
     assert store.have_lock(path) is False
-    store.aquire_lock(path)
+    store.acquire_lock(path)
     assert store.have_lock(path) is True
 
     fd = store._locks._get_lock(str(path))
@@ -463,7 +463,7 @@ class LockTestThread(threading.Thread):
 
                 if job is LockTestJob.LOCK:
                     assert self.store.have_lock(self.path) is False
-                    self.store.aquire_lock(self.path)
+                    self.store.acquire_lock(self.path)
                     assert self.store.have_lock(self.path) is True
                     continue
 
@@ -578,7 +578,7 @@ def test_blocking_lock_from_multiple_threads(
         assert not store.have_lock(path)
         if debug:
             print(f"{n}: Trying lock\n")
-        store.aquire_lock(path, blocking=True)
+        store.acquire_lock(path, blocking=True)
         assert store.have_lock(path)
 
         # We check to see if the other threads are actually waiting.
@@ -622,7 +622,7 @@ def test_non_blocking_lock_from_multiple_threads(
     # Only one thread will ever be able to acquire this lock.
     def acquire(_):
         try:
-            store.aquire_lock(path, blocking=False)
+            store.acquire_lock(path, blocking=False)
             acquired.append(1)
             assert store.have_lock(path)
             store.release_lock(path)
@@ -671,7 +671,7 @@ def test_non_blocking_locking_without_previous_lock(
     path = path_type(locked_file)
 
     # Try to lock first
-    assert store.try_aquire_lock(path) is True
+    assert store.try_acquire_lock(path) is True
     assert store.have_lock(path) is True
     store.release_lock(path)
     assert store.have_lock(path) is False
@@ -688,7 +688,7 @@ def test_non_blocking_locking_while_already_locked(
     t1.lock()
 
     # And now try to get the lock (which should not be possible)
-    assert store.try_aquire_lock(path) is False
+    assert store.try_acquire_lock(path) is False
     assert store.have_lock(path) is False
 
 

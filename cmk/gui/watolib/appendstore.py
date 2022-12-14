@@ -70,7 +70,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
         path = self._path
 
         if lock:
-            store.aquire_lock(path)
+            store.acquire_lock(path)
 
         entries = []
         try:
@@ -101,7 +101,7 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def append(self, entry: _VT) -> None:
         path = self._path
         try:
-            store.aquire_lock(path)
+            store.acquire_lock(path)
 
             with path.open("ab+") as f:
                 f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")

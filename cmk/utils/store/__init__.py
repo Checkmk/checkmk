@@ -85,7 +85,7 @@ def load_mk_file(path: Path | str, default: Any = None, lock: bool = False) -> A
         )
 
     if lock:
-        aquire_lock(path)
+        acquire_lock(path)
 
     try:
         exec(path.read_bytes(), globals(), default)
@@ -231,7 +231,7 @@ def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = Fa
 
     if lock:
         # Lock the original file and try to return the pickled data
-        aquire_lock(path)
+        acquire_lock(path)
 
     try:
         relative_path = path.relative_to(cmk.utils.paths.omd_root)

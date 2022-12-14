@@ -76,9 +76,9 @@ def lock_with_pid_file(path: Path) -> None:
     Use this after daemonizing or in foreground mode to ensure there is only
     one process running.
     """
-    if not store.try_aquire_lock(str(path)):
+    if not store.try_acquire_lock(str(path)):
         raise MKGeneralException(
-            "Failed to aquire PID file lock: Another process is already running"
+            "Failed to acquire PID file lock: Another process is already running"
         )
 
     # Now that we have the lock we are allowed to write our pid to the file.

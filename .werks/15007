@@ -1,0 +1,12 @@
+Title: Fix missing separator for some values on effective parameters page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1671021046
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Some sections on the "Effective parameters" page like e.g. "Assignment of hosts
+to contact groups" showed their value without a separator.

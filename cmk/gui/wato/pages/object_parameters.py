@@ -541,8 +541,9 @@ class ModeObjectParameters(WatoMode):
             # We have a setting
             elif valuespec:
                 if ruleset.match_type() == "all":
-                    for s in setting:
-                        html.write_text(valuespec.value_to_html(s))
+                    html.write_text(
+                        HTML(", ").join([valuespec.value_to_html(value) for value in setting])
+                    )
                 else:
                     html.write_text(valuespec.value_to_html(setting))
 

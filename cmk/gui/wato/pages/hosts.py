@@ -93,8 +93,8 @@ class ABCHostMode(WatoMode, abc.ABC):
             return
 
         yield PageMenuEntry(
-            title=_("Save & go to service configuration"),
-            shortcut_title=_("Save & go to service configuration"),
+            title=_("Save & run service discovery"),
+            shortcut_title=_("Save & run service discovery"),
             icon_name="save_to_services",
             item=make_form_submit_link(form_name="edit_host", button_name="_save"),
             is_shortcut=True,
@@ -442,7 +442,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
 
     if mode_name != "inventory":
         yield PageMenuEntry(
-            title=_("Service configuration"),
+            title=_("Run service discovery"),
             icon_name="services",
             item=make_simple_link(
                 folder_preserving_link([("mode", "inventory"), ("host", host.name())])

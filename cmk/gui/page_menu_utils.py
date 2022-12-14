@@ -530,7 +530,7 @@ def page_menu_entries_host_setup(host_name: str) -> Iterator[PageMenuEntry]:
     )
 
     yield PageMenuEntry(
-        title=_("Service configuration"),
+        title=_("Run service discovery"),
         icon_name={
             "icon": "services",
             "emblem": "settings",

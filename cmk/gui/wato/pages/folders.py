@@ -279,7 +279,7 @@ class ModeFolder(WatoMode):
 
         if user.may("wato.services"):
             yield PageMenuEntry(
-                title=_("Discover services"),
+                title=_("Run bulk service discovery"),
                 icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
             )
@@ -399,7 +399,7 @@ class ModeFolder(WatoMode):
 
         if user.may("wato.services"):
             yield PageMenuEntry(
-                title=_("Discover services"),
+                title=_("Run bulk service discovery"),
                 icon_name="services",
                 item=make_form_submit_link(
                     form_name="hosts",
@@ -1057,7 +1057,7 @@ class ModeFolder(WatoMode):
 
         if host.may("read"):
             if user.may("wato.services"):
-                msg = _("Edit the services of this host, do a service discovery")
+                msg = _("Run service discovery")
             else:
                 msg = _("Display the services of this host")
             image = "services"

@@ -50,7 +50,7 @@ class WatoIcon(Icon):
             url = f"wato.py?folder={urlencode(folder)}&host={urlencode(hostname)}"
             if where == "inventory":
                 url += "&mode=inventory"
-                help_txt = _("Edit services")
+                help_txt = _("Run service discovery")
                 icon = "services"
             else:
                 url += "&mode=edit_host"

@@ -5030,7 +5030,8 @@ msgstr ""
 "tt>), absolute lokale URL's (beginnend met <tt>/</tt>) of relatieve URL's "
 "(die relatief zijn ten opzichte van <tt>check_mk/</tt>) gebruiken."
 
-msgid "An optional alias name for your mysql instance"
+#, fuzzy
+msgid "An optional alias name for your mysql socket"
 msgstr "Een optionele aliasnaam voor uw mysql-instance"
 
 msgid ""
@@ -10891,9 +10892,6 @@ msgstr "Contact Groepen"
 msgid "Contact Name"
 msgstr "Naam contactpersoon"
 
-msgid "Contact Selection"
-msgstr "Contact Selectie"
-
 msgid "Contact groups"
 msgstr "Contactgroepen"
 
@@ -10930,6 +10928,10 @@ msgstr "Contactgroepen in regel hebben voorrang"
 
 msgid "Contact person"
 msgstr "Contactpersoon"
+
+#, fuzzy
+msgid "Contact selection"
+msgstr "Contact Selectie"
 
 #, fuzzy
 msgid "Contact sensor type"
@@ -15745,6 +15747,10 @@ msgstr "Download dit pakket als een MKP-bestand"
 
 msgid "Download this report"
 msgstr "Dit verslag downloaden"
+
+#, fuzzy
+msgid "Download verification request"
+msgstr "Globale kennisgevingsregels"
 
 msgid "Downloaded Agent"
 msgstr "Gedownloade Agent"
@@ -25371,9 +25377,6 @@ msgstr "Instantie"
 msgid "Instance & tablespace name"
 msgstr "Instance & tablespace naam"
 
-msgid "Instance Alias Name"
-msgstr "Instance Alias Naam"
-
 msgid "Instance ID"
 msgstr "Instantie-ID"
 
@@ -27628,6 +27631,10 @@ msgstr "Licentiegebruik"
 
 #, fuzzy
 msgid "License verification"
+msgstr "SSL-certificaat verificatie"
+
+#, fuzzy
+msgid "License verification mode"
 msgstr "SSL-certificaat verificatie"
 
 #, fuzzy
@@ -30700,6 +30707,10 @@ msgstr "Modus gevonden tijdens inventarisatie"
 msgid "Mode of the Check"
 msgstr "Wijze van controle"
 
+#, fuzzy, python-format
+msgid "Mode: %s"
+msgstr "Map: %s"
+
 msgid "Model and revsion"
 msgstr "Model en revsion"
 
@@ -32895,6 +32906,10 @@ msgstr "Kennisgeving configuratie"
 
 msgid "Notification log level"
 msgstr "Niveau meldingslogboek"
+
+#, fuzzy
+msgid "Notification method"
+msgstr "Kennisgevingsmethode"
 
 msgid "Notification period for hosts"
 msgstr "Kennisgevingsperiode voor hosts"
@@ -39400,6 +39415,10 @@ msgstr "Eigenschappen regelpakket"
 msgid "Rule packs"
 msgstr "Regel pakken"
 
+#, fuzzy
+msgid "Rule properties"
+msgstr "Regeleigenschappen"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Weergave van de regel: %s"
@@ -42761,6 +42780,10 @@ msgid "Snapshot created with old version"
 msgstr "Snapshot gemaakt met oude versie"
 
 msgid "Socket"
+msgstr "Stopcontact"
+
+#, fuzzy
+msgid "Sockets"
 msgstr "Stopcontact"
 
 msgid "Soft query limit"
@@ -55647,10 +55670,6 @@ msgstr "Type van de waarde"
 msgid "Type of tree layout"
 msgstr "Type boom"
 
-#, fuzzy, python-format
-msgid "Type: %s"
-msgstr "Sjabloon: %s"
-
 msgid "Types of events that are being processed"
 msgstr "Soorten gebeurtenissen die worden verwerkt"
 
@@ -56462,6 +56481,10 @@ msgstr "Upload nieuw:"
 
 msgid "Upload package"
 msgstr "Pakket uploaden"
+
+#, fuzzy
+msgid "Upload verification response"
+msgstr "Globale kennisgevingsregels"
 
 #, fuzzy, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -58542,6 +58565,10 @@ msgstr "Bepaaldheid van logboekregistratie"
 msgid "Verfiy Certificates"
 msgstr "Verfiy Certificaten"
 
+#, fuzzy
+msgid "Verification"
+msgstr "Kennisgeving gebruiker"
+
 msgid "Verify certificates"
 msgstr "Certificaten verifiëren"
 
@@ -58656,9 +58683,6 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
-
-msgid "View changes"
-msgstr "Wijzigingen bekijken"
 
 msgid "View layout"
 msgstr "Bekijk lay-out"
@@ -64927,6 +64951,17 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Instance Alias Name"
+#~ msgstr "Instance Alias Naam"
+
+#, fuzzy, python-format
+#~| msgid "Template: %s"
+#~ msgid "Type: %s"
+#~ msgstr "Sjabloon: %s"
+
+#~ msgid "View changes"
+#~ msgstr "Wijzigingen bekijken"
 
 #~ msgid "APC Power Consumption"
 #~ msgstr "APC Stroomverbruik"

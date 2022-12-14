@@ -4762,7 +4762,7 @@ msgid ""
 "<tt>check_mk/</tt>)."
 msgstr ""
 
-msgid "An optional alias name for your mysql instance"
+msgid "An optional alias name for your mysql socket"
 msgstr ""
 
 msgid ""
@@ -10267,9 +10267,6 @@ msgstr ""
 msgid "Contact Name"
 msgstr ""
 
-msgid "Contact Selection"
-msgstr ""
-
 msgid "Contact groups"
 msgstr ""
 
@@ -10298,6 +10295,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Contact person"
+msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+msgid "Contact selection"
 msgstr "Adaugă informații despre contact"
 
 #, fuzzy
@@ -15279,6 +15280,10 @@ msgstr ""
 
 msgid "Download this report"
 msgstr ""
+
+#, fuzzy
+msgid "Download verification request"
+msgstr "Notificari"
 
 #, fuzzy
 msgid "Downloaded Agent"
@@ -23961,10 +23966,6 @@ msgid "Instance & tablespace name"
 msgstr "Nume tablespace"
 
 #, fuzzy
-msgid "Instance Alias Name"
-msgstr "Adaugă instanță NGINX"
-
-#, fuzzy
 msgid "Instance ID"
 msgstr "Adaugă instanță NGINX"
 
@@ -26300,6 +26301,10 @@ msgstr "% utilizare"
 
 #, fuzzy
 msgid "License verification"
+msgstr "Activare Configurare"
+
+#, fuzzy
+msgid "License verification mode"
 msgstr "Activare Configurare"
 
 #, fuzzy
@@ -29526,6 +29531,10 @@ msgstr ""
 msgid "Mode of the Check"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Mode: %s"
+msgstr "(altul: %s)"
+
 msgid "Model and revsion"
 msgstr ""
 
@@ -31757,6 +31766,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Notification log level"
+msgstr "Notificari"
+
+#, fuzzy
+msgid "Notification method"
 msgstr "Notificari"
 
 msgid "Notification period for hosts"
@@ -38317,6 +38330,10 @@ msgstr "Proprietatile Folderului"
 msgid "Rule packs"
 msgstr "Reguli"
 
+#, fuzzy
+msgid "Rule properties"
+msgstr "Proprietatile Folderului"
+
 #, fuzzy, python-format
 msgid "Rule representation: %s"
 msgstr "Numele Elementului"
@@ -41689,6 +41706,10 @@ msgstr ""
 
 msgid "Socket"
 msgstr ""
+
+#, fuzzy
+msgid "Sockets"
+msgstr "foloseste numele portului"
 
 msgid "Soft query limit"
 msgstr ""
@@ -52141,10 +52162,6 @@ msgstr ""
 msgid "Type of tree layout"
 msgstr ""
 
-#, python-format
-msgid "Type: %s"
-msgstr ""
-
 msgid "Types of events that are being processed"
 msgstr ""
 
@@ -52926,6 +52943,10 @@ msgstr ""
 
 msgid "Upload package"
 msgstr ""
+
+#, fuzzy
+msgid "Upload verification response"
+msgstr "Notificari"
 
 #, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -54981,6 +55002,10 @@ msgid "Verfiy Certificates"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Verification"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Verify certificates"
 msgstr " pe siteul de monitorizare: "
 
@@ -55092,9 +55117,6 @@ msgid "View and edit the parameters for this service"
 msgstr ""
 
 msgid "View and edit the rules and aggregations in this BI pack"
-msgstr ""
-
-msgid "View changes"
 msgstr ""
 
 #, fuzzy
@@ -60452,6 +60474,10 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+#, fuzzy
+#~ msgid "Instance Alias Name"
+#~ msgstr "Adaugă instanță NGINX"
+
 #~ msgid "APC Power Consumption"
 #~ msgstr "APC consum de Curent"
 
@@ -61995,10 +62021,6 @@ msgstr ""
 #~ msgstr "Nivel-urile absolute de licențe neutilizate"
 
 #, fuzzy
-#~ msgid "Notification phase"
-#~ msgstr "Notificari"
-
-#, fuzzy
 #~ msgid "Number of IP sets"
 #~ msgstr "licente nefolosite"
 
@@ -62468,10 +62490,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Youngest age"
 #~ msgstr "(selectează directorul)"
-
-#, fuzzy
-#~ msgid "vBuckets"
-#~ msgstr "foloseste numele portului"
 
 #, fuzzy
 #~ msgid "vSphere VMs"

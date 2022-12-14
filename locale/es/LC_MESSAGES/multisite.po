@@ -5054,7 +5054,8 @@ msgstr ""
 "absolutas (que comienzan con <tt>/</tt>) o URLs relativas (que son relativas "
 "a <tt>check_mk/</tt>)."
 
-msgid "An optional alias name for your mysql instance"
+#, fuzzy
+msgid "An optional alias name for your mysql socket"
 msgstr "Un nombre de alias opcional para su instancia de mysql"
 
 msgid ""
@@ -10968,9 +10969,6 @@ msgstr "Grupos de contacto"
 msgid "Contact Name"
 msgstr "Nombre de contacto"
 
-msgid "Contact Selection"
-msgstr "Selección de contactos"
-
 msgid "Contact groups"
 msgstr "Grupos de contacto"
 
@@ -11006,6 +11004,10 @@ msgstr "Los grupos de contacto en regla tienen prioridad"
 
 msgid "Contact person"
 msgstr "Persona de contacto"
+
+#, fuzzy
+msgid "Contact selection"
+msgstr "Selección de contactos"
 
 #, fuzzy
 msgid "Contact sensor type"
@@ -15868,6 +15870,10 @@ msgstr "Descargue este paquete como archivo MKP"
 
 msgid "Download this report"
 msgstr "Descargar este informe"
+
+#, fuzzy
+msgid "Download verification request"
+msgstr "Normas de notificación global"
 
 msgid "Downloaded Agent"
 msgstr "Agente descargado"
@@ -25574,9 +25580,6 @@ msgstr "Instancia"
 msgid "Instance & tablespace name"
 msgstr "Nombre de la instancia y del tablespace"
 
-msgid "Instance Alias Name"
-msgstr "Nombre del alias de la instancia"
-
 msgid "Instance ID"
 msgstr "ID de la instancia"
 
@@ -27839,6 +27842,10 @@ msgstr "Uso de la licencia"
 
 #, fuzzy
 msgid "License verification"
+msgstr "Verificación del certificado SSL"
+
+#, fuzzy
+msgid "License verification mode"
 msgstr "Verificación del certificado SSL"
 
 #, fuzzy
@@ -30942,6 +30949,10 @@ msgstr "Modo encontrado durante el inventario"
 msgid "Mode of the Check"
 msgstr "Modo de control"
 
+#, fuzzy, python-format
+msgid "Mode: %s"
+msgstr "Carpeta: %s"
+
 msgid "Model and revsion"
 msgstr "Modelo y revsiones"
 
@@ -33159,6 +33170,10 @@ msgstr "Configuración de las notificaciones"
 
 msgid "Notification log level"
 msgstr "Nivel de registro de notificaciones"
+
+#, fuzzy
+msgid "Notification method"
+msgstr "Método de notificación"
 
 msgid "Notification period for hosts"
 msgstr "Período de notificación para los anfitriones"
@@ -39743,6 +39758,10 @@ msgstr "Propiedades del paquete de reglas"
 msgid "Rule packs"
 msgstr "Paquetes de reglas"
 
+#, fuzzy
+msgid "Rule properties"
+msgstr "Propiedades de las reglas"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Representación de la regla: %s"
@@ -43137,6 +43156,10 @@ msgid "Snapshot created with old version"
 msgstr "Instantánea creada con la versión antigua"
 
 msgid "Socket"
+msgstr "Toma de corriente"
+
+#, fuzzy
+msgid "Sockets"
 msgstr "Toma de corriente"
 
 msgid "Soft query limit"
@@ -56109,10 +56132,6 @@ msgstr "Tipo de valor"
 msgid "Type of tree layout"
 msgstr "Tipo de disposición de los árboles"
 
-#, fuzzy, python-format
-msgid "Type: %s"
-msgstr "Plantilla: %s"
-
 msgid "Types of events that are being processed"
 msgstr "Tipos de eventos que se están procesando"
 
@@ -56933,6 +56952,10 @@ msgstr "Sube nuevo:"
 
 msgid "Upload package"
 msgstr "Cargar paquete"
+
+#, fuzzy
+msgid "Upload verification response"
+msgstr "Normas de notificación global"
 
 #, fuzzy, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -59041,6 +59064,10 @@ msgstr "Verbosidad del registro"
 msgid "Verfiy Certificates"
 msgstr "Certificados Verfiy"
 
+#, fuzzy
+msgid "Verification"
+msgstr "Notificación al usuario"
+
 msgid "Verify certificates"
 msgstr "Verificar los certificados"
 
@@ -59157,9 +59184,6 @@ msgstr "Ver y editar los parámetros de este servicio"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Ver y editar las reglas y agregaciones de este paquete de BI"
-
-msgid "View changes"
-msgstr "Ver cambios"
 
 msgid "View layout"
 msgstr "Ver diseño"
@@ -65454,6 +65478,17 @@ msgstr "%s es demasiado bajo. El valor mínimo permitido es %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Instance Alias Name"
+#~ msgstr "Nombre del alias de la instancia"
+
+#, fuzzy, python-format
+#~| msgid "Template: %s"
+#~ msgid "Type: %s"
+#~ msgstr "Plantilla: %s"
+
+#~ msgid "View changes"
+#~ msgstr "Ver cambios"
 
 #~ msgid "APC Power Consumption"
 #~ msgstr "Consumo de energía de APC"

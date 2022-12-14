@@ -5021,7 +5021,8 @@ msgstr ""
 "tt>), absolute lokale URLs (beginnend mit <tt>/</tt>) oder relative URLs "
 "(die relativ zu <tt>check_mk/</tt> sind) verwenden."
 
-msgid "An optional alias name for your mysql instance"
+#, fuzzy
+msgid "An optional alias name for your mysql socket"
 msgstr "Ein optionaler Alias für die mysql Instanz"
 
 msgid ""
@@ -10897,9 +10898,6 @@ msgstr "Kontaktgruppen"
 msgid "Contact Name"
 msgstr "Kontaktname"
 
-msgid "Contact Selection"
-msgstr "Kontaktauswahl"
-
 msgid "Contact groups"
 msgstr "Kontaktgruppen"
 
@@ -10935,6 +10933,10 @@ msgstr "Kontaktgruppen in Regel haben Priorität"
 
 msgid "Contact person"
 msgstr "Kontaktperson"
+
+#, fuzzy
+msgid "Contact selection"
+msgstr "Kontaktauswahl"
 
 #, fuzzy
 msgid "Contact sensor type"
@@ -15782,6 +15784,10 @@ msgstr "Dieses Paket als MKP herunterladen"
 
 msgid "Download this report"
 msgstr "Diesen Bericht herunterladen"
+
+#, fuzzy
+msgid "Download verification request"
+msgstr "Globale Alarmierungsregeln"
 
 msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
@@ -25433,9 +25439,6 @@ msgstr "Instanz"
 msgid "Instance & tablespace name"
 msgstr "Instanz-/Tablespace-Name"
 
-msgid "Instance Alias Name"
-msgstr "Alias der Instanz"
-
 msgid "Instance ID"
 msgstr "Instanz-ID"
 
@@ -27686,6 +27689,10 @@ msgstr "Lizenznutzung"
 
 #, fuzzy
 msgid "License verification"
+msgstr "SSL Zertifikats Überprüfung"
+
+#, fuzzy
+msgid "License verification mode"
 msgstr "SSL Zertifikats Überprüfung"
 
 #, fuzzy
@@ -30761,6 +30768,10 @@ msgstr "Mode, der während der Inventarisierung gefunden wurde"
 msgid "Mode of the Check"
 msgstr "Check-Modus"
 
+#, fuzzy, python-format
+msgid "Mode: %s"
+msgstr "Ordner: %s"
+
 msgid "Model and revsion"
 msgstr "Modell und Revision"
 
@@ -32960,6 +32971,10 @@ msgstr "Alarmierungskonfiguration"
 
 msgid "Notification log level"
 msgstr "Loglevel für die Alarmierung"
+
+#, fuzzy
+msgid "Notification method"
+msgstr "Alarmierungsmethode"
 
 msgid "Notification period for hosts"
 msgstr "Alarmierungsperiode für Hosts"
@@ -39518,6 +39533,10 @@ msgstr "Regelpaket-Eigenschaften"
 msgid "Rule packs"
 msgstr "Regelpakete"
 
+#, fuzzy
+msgid "Rule properties"
+msgstr "Regel Eigenschaften"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "Darstellung der Regel: %s"
@@ -42879,6 +42898,10 @@ msgid "Snapshot created with old version"
 msgstr "Mit alter Version erzeugte Sicherung "
 
 msgid "Socket"
+msgstr "Anschluss"
+
+#, fuzzy
+msgid "Sockets"
 msgstr "Anschluss"
 
 msgid "Soft query limit"
@@ -55733,10 +55756,6 @@ msgstr "Werttyp"
 msgid "Type of tree layout"
 msgstr "Typ der Baum-Ansicht"
 
-#, fuzzy, python-format
-msgid "Type: %s"
-msgstr "Vorlagen: %s"
-
 msgid "Types of events that are being processed"
 msgstr "Ereignis-Typen, die verarbeitet werden"
 
@@ -56556,6 +56575,10 @@ msgstr "Neues hochladen:"
 
 msgid "Upload package"
 msgstr "Paket hochladen"
+
+#, fuzzy
+msgid "Upload verification response"
+msgstr "Globale Alarmierungsregeln"
 
 #, fuzzy, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -58643,6 +58666,10 @@ msgstr "Log-Verbosität"
 msgid "Verfiy Certificates"
 msgstr "Verfiy-Zertifikate"
 
+#, fuzzy
+msgid "Verification"
+msgstr "Benutzeralarm"
+
 msgid "Verify certificates"
 msgstr "Überprüfen von Zertifikaten"
 
@@ -58758,9 +58785,6 @@ msgstr "Parameter für diesen Service ansehen und bearbeiten"
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Regeln und Aggregationen in diesem BI-Paket anzeigen und bearbeiten"
-
-msgid "View changes"
-msgstr "Änderungen anzeigen"
 
 msgid "View layout"
 msgstr "Ansicht Layout"
@@ -65020,6 +65044,17 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Instance Alias Name"
+#~ msgstr "Alias der Instanz"
+
+#, fuzzy, python-format
+#~| msgid "Template: %s"
+#~ msgid "Type: %s"
+#~ msgstr "Vorlagen: %s"
+
+#~ msgid "View changes"
+#~ msgstr "Änderungen anzeigen"
 
 #~ msgid "APC Power Consumption"
 #~ msgstr "USV Stromverbrauch"

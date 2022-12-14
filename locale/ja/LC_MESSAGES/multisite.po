@@ -4821,7 +4821,8 @@ msgstr ""
 "tt>で始まる)、絶対ローカルURL(<tt>/</tt>で始まる)、または相対URL(<tt> "
 "check_mk/に相対的)のいずれかを使用できます。 </tt>)。"
 
-msgid "An optional alias name for your mysql instance"
+#, fuzzy
+msgid "An optional alias name for your mysql socket"
 msgstr "mysqlインスタンスのオプションのエイリアス名"
 
 msgid ""
@@ -10390,9 +10391,6 @@ msgstr "連絡先グループ"
 msgid "Contact Name"
 msgstr "連絡先"
 
-msgid "Contact Selection"
-msgstr "連絡先の選択"
-
 msgid "Contact groups"
 msgstr "連絡先グループ"
 
@@ -10427,6 +10425,10 @@ msgstr "ルール内の連絡先グループが優先されます"
 
 msgid "Contact person"
 msgstr "コンタクトパーソン"
+
+#, fuzzy
+msgid "Contact selection"
+msgstr "連絡先の選択"
 
 #, fuzzy
 msgid "Contact sensor type"
@@ -15145,6 +15147,10 @@ msgstr "このパッケージをMKPファイルとしてダウンロードしま
 
 msgid "Download this report"
 msgstr "このレポートをダウンロードする"
+
+#, fuzzy
+msgid "Download verification request"
+msgstr "グローバル通知ルール"
 
 msgid "Downloaded Agent"
 msgstr "ダウンロードしたエージェント"
@@ -24260,9 +24266,6 @@ msgstr "インスタンス"
 msgid "Instance & tablespace name"
 msgstr "インスタンスとテーブルスペースの名前"
 
-msgid "Instance Alias Name"
-msgstr "インスタンスエイリアス名"
-
 msgid "Instance ID"
 msgstr "インスタンスID"
 
@@ -26460,6 +26463,10 @@ msgstr "ライセンスの使用法"
 
 #, fuzzy
 msgid "License verification"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
+msgid "License verification mode"
 msgstr "SSL証明書の検証"
 
 #, fuzzy
@@ -29459,6 +29466,10 @@ msgstr "インベントリ中にモードが見つかりました"
 msgid "Mode of the Check"
 msgstr "チェックのモード"
 
+#, fuzzy, python-format
+msgid "Mode: %s"
+msgstr "フォルダ: %s"
+
 msgid "Model and revsion"
 msgstr "モデルと改訂"
 
@@ -31596,6 +31607,10 @@ msgstr "通知設定"
 
 msgid "Notification log level"
 msgstr "通知ログレベル"
+
+#, fuzzy
+msgid "Notification method"
+msgstr "通知方法"
 
 msgid "Notification period for hosts"
 msgstr "ホストの通知期間"
@@ -37903,6 +37918,10 @@ msgstr "ルールパックのプロパティ"
 msgid "Rule packs"
 msgstr "ルールパック"
 
+#, fuzzy
+msgid "Rule properties"
+msgstr "ルールのプロパティ"
+
 #, python-format
 msgid "Rule representation: %s"
 msgstr "ルール表示 :%s"
@@ -41135,6 +41154,10 @@ msgid "Snapshot created with old version"
 msgstr "古いバージョンで作成されたスナップショット"
 
 msgid "Socket"
+msgstr "ソケット"
+
+#, fuzzy
+msgid "Sockets"
 msgstr "ソケット"
 
 msgid "Soft query limit"
@@ -52908,10 +52931,6 @@ msgstr "値のタイプ"
 msgid "Type of tree layout"
 msgstr "ツリーレイアウトのタイプ"
 
-#, fuzzy, python-format
-msgid "Type: %s"
-msgstr "テンプレート: %s"
-
 msgid "Types of events that are being processed"
 msgstr "処理されているイベントの種類"
 
@@ -53701,6 +53720,10 @@ msgstr "新規アップロード:"
 
 msgid "Upload package"
 msgstr "パッケージをアップロード"
+
+#, fuzzy
+msgid "Upload verification response"
+msgstr "グローバル通知ルール"
 
 #, fuzzy, python-format
 msgid "Uploaded custom GUI logo: %s"
@@ -55693,6 +55716,10 @@ msgstr "ロギングの冗長性"
 msgid "Verfiy Certificates"
 msgstr "証明書を確認する"
 
+#, fuzzy
+msgid "Verification"
+msgstr "ユーザー通知"
+
 msgid "Verify certificates"
 msgstr "証明書を確認する"
 
@@ -55800,9 +55827,6 @@ msgstr "このサービスのパラメーターを表示および編集します
 
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集します"
-
-msgid "View changes"
-msgstr "変更を表示"
 
 msgid "View layout"
 msgstr "レイアウトを表示"
@@ -61599,6 +61623,17 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Instance Alias Name"
+#~ msgstr "インスタンスエイリアス名"
+
+#, fuzzy, python-format
+#~| msgid "Template: %s"
+#~ msgid "Type: %s"
+#~ msgstr "テンプレート: %s"
+
+#~ msgid "View changes"
+#~ msgstr "変更を表示"
 
 #~ msgid "APC Power Consumption"
 #~ msgstr "APCの消費電力"

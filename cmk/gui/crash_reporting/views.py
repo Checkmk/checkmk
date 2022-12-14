@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 import livestatus
-from livestatus import OnlySites, SiteId
+from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
 
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -125,6 +125,8 @@ class CrashReportsRowTable(RowTable):
                     "Filter: id = %s"
                     % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
                 )
+            except MKLivestatusNotFoundError:
+                continue
             finally:
                 sites.live().set_only_sites(None)
                 sites.live().set_prepend_site(False)

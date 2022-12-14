@@ -8,27 +8,30 @@ item:
  The name of the active service
 
 description:
-  This is an active check that connects to a database server, sends an SQL
-  statement to that server, and checks for the following result:
+  This is an active check that connects to a database server.
+  It sends an SQL query to that server, and interprets the result in the following manner:
 
-  The query must return three columns, a number, a text, and optional
-  performance data in the third column. The columns are comma-separated.
-  Performance data must be in the standard format of nagios performance data.
-  If upper and lower levels are given, the number is checked
-  against these levels and the according state is being computed.
-  Otherwise the number ist treated as a Nagios state (0,1,2,3).
-  State, text and the performance data are being returned.
+  Only the first row of the result is considered, which must consist of one to three columns.
 
-  The check works with MySQL, Postgresql, MSSQL and Oracle databases using the
-  python drivers MySQLdb, psycopg2, pymssql and cx_Oracle. For cx_Oracle the
-  Oracle instantclient needs to be installed as well, and the
-  LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of
-  that package.
+  First column: A number.
+  If levels are provided, this number will be considered a measurement value, that is compared against those levels.
+  If no levels are provided, the number will be interpreted as the service state, where 0, 1, 2 and 3 represent `OK`, `WARN`, `CRIT` and `UNKNOWN`, respectively.
 
-  The oracle check supports procedure calls. It must return excactly one output
-  variable. The value of the variable must be in the same format as the return
-  value of the sql statement described above.
+  Second column: A text.
+  The text is used as the service output. If there is no second column, the number from the first column will be displayed.
 
-  This check can be configured by WATO.
+  Third column: Metrics.
+  Metrics must be in the standard format of nagios performance data.
+  If no third column is present, the service will not have any metrics.
 
-  See the {usage} page of the check for details about the invocation on the command line.
+  Currently the check works with MySQL, Postgresql, MSSQL, DB2, SQL Anywhere and Oracle databases.
+  For this to work, additional pyhton libraries must be installed (depending on the type of database one of {psycopg2}, {pymysql}, {pymssql}, {cx_Oracle}, {ibm_db}, {ibm_db_dbi} and {sqlanydb}).
+  For Oracle support the Oracle instantclient needs to be installed as well, and the LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of that package.
+
+  The oracle check supports procedure calls.
+  It must return excactly one output variable.
+  The value of the variable must be in the same format as the return value of the sql statement described above.
+
+  This check is configured by the WATO ruleset "Check SQL Database".
+
+  See the {usage} page of the check for details about the invocation on the command line ({check_sql --help}).

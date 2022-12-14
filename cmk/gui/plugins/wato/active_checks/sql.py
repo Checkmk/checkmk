@@ -27,12 +27,8 @@ def _valuespec_active_checks_sql() -> Dictionary:
         title=_("Check SQL Database"),
         help=_(
             "This check connects to the specified database, sends a custom SQL-statement "
-            "or starts a procedure, and checks that the result has a defined format "
-            "containing three columns, a number, a text, and performance data. Upper or "
-            "lower levels may be defined here.  If they are not defined the number is taken "
-            "as the state of the check.  If a procedure is used, input parameters of the "
-            "procedures may by given as comma separated list. "
-            "This check uses the active check <tt>check_sql</tt>."
+            "or starts a procedure, and checks that the result."
+            " Please refer to the man page of the active check <tt>check_sql</tt> for details."
         ),
         optional_keys=["levels", "levels_low", "perfdata", "port", "procedure", "text", "host"],
         elements=[

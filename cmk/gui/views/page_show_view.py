@@ -304,30 +304,27 @@ def _fetch_rows_from_livestatus(
 
     Besides gathering the information from livestatus it performs livestatus table joining
     (e.g. Adding service row info to host rows (For join painters))"""
-    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
-    headers = filterheaders + view.spec.get("add_headers", "")
-
     # Fetch data. Some views show data only after pressing [Search]
     if (
         only_count
         or (not view.spec.get("mustsearch"))
         or request.var("filled_in") in ["filter", "actions", "confirm", "painteroptions"]
     ):
-        columns = _get_needed_regular_columns(
-            all_active_filters,
-            view,
-        )
+        filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+
         # We test for limit here and not inside view.row_limit, because view.row_limit is used
         # for rendering limits.
-        query_row_limit = None if view.datasource.ignore_limit else view.row_limit
         row_data: Rows | tuple[Rows, int] = view.datasource.table.query(
             view.datasource,
             view.row_cells,
-            columns,
+            _get_needed_regular_columns(
+                all_active_filters,
+                view,
+            ),
             view.context,
-            headers,
+            filterheaders + view.spec.get("add_headers", ""),
             view.only_sites,
-            query_row_limit,
+            None if view.datasource.ignore_limit else view.row_limit,
             all_active_filters,
         )
 
@@ -500,13 +497,7 @@ def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:
     return columns
 
 
-JoinMasterKey = tuple[SiteId, str]
-JoinSlaveKey = str
-
-
 def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
-    sorters = view.sorters
-
     if not (isinstance(join := view.datasource.join, tuple) and len(join) == 2):
         raise ValueError()
 
@@ -516,23 +507,19 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
     if slave_ds.join_key is None:
         raise ValueError()
 
-    join_slave_column = slave_ds.join_key
-    join_cells = view.join_cells
-    join_columns = _get_needed_join_columns(join_cells, sorters)
-
-    # Create additional filters
-    join_filters = []
-    for cell in join_cells:
-        join_filters.append(cell.livestatus_filter(join_slave_column))
-
-    join_filters.append("Or: %d" % len(join_filters))
-    headers = "{}{}\n".format(master_filters, "\n".join(join_filters))
     row_data = slave_ds.table.query(
         view.datasource,
         view.row_cells,
-        columns=list(set([join_master_column, join_slave_column] + join_columns)),
+        columns=list(
+            set(
+                [join_master_column, slave_ds.join_key]
+                + _get_needed_join_columns(view.join_cells, view.sorters)
+            )
+        ),
         context=view.context,
-        headers=headers,
+        headers="{}{}\n".format(
+            master_filters, "\n".join(_make_join_filters(view.join_cells, slave_ds.join_key))
+        ),
         only_sites=view.only_sites,
         limit=None,
         all_active_filters=[],
@@ -543,17 +530,23 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
     else:
         rows = row_data
 
-    per_master_entry: dict[JoinMasterKey, dict[JoinSlaveKey, Row]] = {}
+    per_master_entry: dict[tuple[SiteId, str], dict[str, Row]] = {}
     for row in rows:
         current_entry = per_master_entry.setdefault(_make_master_key(row, join_master_column), {})
-        current_entry[row[join_slave_column]] = row
+        current_entry[row[slave_ds.join_key]] = row
 
     # Add this information into master table in artificial column "JOIN"
     for row in master_rows:
         row["JOIN"] = per_master_entry.get(_make_master_key(row, join_master_column), {})
 
 
-def _make_master_key(row: Row, join_master_column: str) -> JoinMasterKey:
+def _make_join_filters(join_cells: list[JoinCell], join_key: str) -> list[str]:
+    join_filters = [join_cell.livestatus_filter(join_key) for join_cell in join_cells]
+    join_filters.append("Or: %d" % len(join_filters))
+    return join_filters
+
+
+def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
     return (SiteId(row["site"]), row[join_master_column])
 
 

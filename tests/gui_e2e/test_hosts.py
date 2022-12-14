@@ -56,7 +56,7 @@ class TestHosts:
         logged_in_page.main_area.get_attribute_label("ipaddress").click()
         logged_in_page.main_area.get_input("ipaddress").fill(host.ip)
 
-        logged_in_page.main_area.get_suggestion("Save & go to service configuration").click()
+        logged_in_page.main_area.get_suggestion("Save & run service discovery").click()
         logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()

@@ -273,9 +273,17 @@ def _get_view_rows(
     view: View, all_active_filters: list[Filter], only_count: bool = False
 ) -> tuple[int, Rows]:
     with CPUTracker() as fetch_rows_tracker:
-        rows, unfiltered_amount_of_rows = _fetch_rows_from_livestatus(
-            view, all_active_filters, only_count
-        )
+        # Fetch data. Some views show data only after pressing [Search]
+        if (
+            only_count
+            or (not view.spec.get("mustsearch"))
+            or request.var("filled_in") in ["filter", "actions", "confirm", "painteroptions"]
+        ):
+            rows, unfiltered_amount_of_rows = _fetch_rows_from_livestatus(view, all_active_filters)
+        else:
+            rows = []
+            unfiltered_amount_of_rows = 0
+
         post_process_rows(view, all_active_filters, rows)
 
     # Sorting - use view sorters and URL supplied sorters
@@ -297,49 +305,40 @@ def _get_view_rows(
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_rows_from_livestatus(
-    view: View, all_active_filters: list[Filter], only_count: bool
-) -> tuple[Rows, int]:
+def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) -> tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
     Besides gathering the information from livestatus it performs livestatus table joining
     (e.g. Adding service row info to host rows (For join painters))"""
-    # Fetch data. Some views show data only after pressing [Search]
-    if (
-        only_count
-        or (not view.spec.get("mustsearch"))
-        or request.var("filled_in") in ["filter", "actions", "confirm", "painteroptions"]
-    ):
-        filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
 
-        # We test for limit here and not inside view.row_limit, because view.row_limit is used
-        # for rendering limits.
-        row_data: Rows | tuple[Rows, int] = view.datasource.table.query(
-            view.datasource,
-            view.row_cells,
-            _get_needed_regular_columns(
-                all_active_filters,
-                view,
-            ),
-            view.context,
-            filterheaders + view.spec.get("add_headers", ""),
-            view.only_sites,
-            None if view.datasource.ignore_limit else view.row_limit,
+    # We test for limit here and not inside view.row_limit, because view.row_limit is used
+    # for rendering limits.
+    row_data: Rows | tuple[Rows, int] = view.datasource.table.query(
+        view.datasource,
+        view.row_cells,
+        _get_needed_regular_columns(
             all_active_filters,
-        )
+            view,
+        ),
+        view.context,
+        filterheaders + view.spec.get("add_headers", ""),
+        view.only_sites,
+        None if view.datasource.ignore_limit else view.row_limit,
+        all_active_filters,
+    )
 
-        if isinstance(row_data, tuple):
-            rows, unfiltered_amount_of_rows = row_data
-        else:
-            rows = row_data
-            unfiltered_amount_of_rows = len(row_data)
+    if isinstance(row_data, tuple):
+        rows, unfiltered_amount_of_rows = row_data
+    else:
+        rows = row_data
+        unfiltered_amount_of_rows = len(row_data)
 
-        # Now add join information, if there are join columns
-        if view.join_cells:
-            _do_table_join(view, rows, filterheaders)
+    # Now add join information, if there are join columns
+    if view.join_cells:
+        _do_table_join(view, rows, filterheaders)
 
-        return rows, unfiltered_amount_of_rows
-    return [], 0
+    return rows, unfiltered_amount_of_rows
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:

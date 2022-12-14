@@ -23,6 +23,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
+from cmk.gui.backup import Job
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -537,10 +538,11 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
     def execute(self) -> Iterator[ACResult]:
         jobs = SiteBackupJobs()
         for job in jobs.objects.values():
+            assert isinstance(job, Job)
             if job.is_encrypted():
-                yield ACResultOK(_('The job "%s" is encrypted') % job.title())
+                yield ACResultOK(_('The job "%s" is encrypted') % job.title)
             else:
-                yield ACResultWARN(_('There job "%s" is not encrypted') % job.title())
+                yield ACResultWARN(_('There job "%s" is not encrypted') % job.title)
 
 
 @ac_test_registry.register

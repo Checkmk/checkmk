@@ -280,7 +280,7 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def title(self) -> str:
         if not self._target:
             return _("Site restore")
-        return _("Restore from target: %s") % self._target.title()
+        return _("Restore from target: %s") % self._target.title
 
     def targets(self):
         return SiteBackupTargets()

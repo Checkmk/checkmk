@@ -16,7 +16,7 @@ TargetId = NewType("TargetId", str)
 
 class ScheduleConfig(TypedDict):
     disabled: bool
-    period: str
+    period: Literal["day"] | tuple[Literal["week"], int] | tuple[Literal["month_begin"], int]
     timeofday: Sequence[tuple[int, int]]
 
 

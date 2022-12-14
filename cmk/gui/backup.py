@@ -22,12 +22,21 @@ import time
 from collections.abc import Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, cast, TypedDict
+from typing import Any, cast, Final, TypedDict, Union
+
+from typing_extensions import assert_never
 
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.backup.type_defs import BackupInfo, LocalTargetParams
+from cmk.utils.backup.type_defs import (
+    BackupInfo,
+    JobConfig,
+    LocalTargetParams,
+    ScheduleConfig,
+    TargetConfig,
+    TargetId,
+)
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
@@ -153,31 +162,16 @@ class Config:
 #   '----------------------------------------------------------------------'
 
 
-class BackupEntity:
-    def __init__(self, ident: str, config: ConfigData) -> None:
-        self._ident = ident
-        self._config: dict = {}
-
-        self.from_config(config)
-
-    def ident(self) -> str:
-        return self._ident
-
-    def config(self) -> ConfigData:
-        return self._config
-
-    def title(self) -> str:
-        return self._config["title"]
-
-    def to_config(self) -> ConfigData:
-        return self._config
-
-    def from_config(self, config: ConfigData) -> None:
-        self._config = config
+BackupEntity = Union["Target", "Job"]
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path: Path, cls: type, config_attr: str) -> None:
+    def __init__(
+        self,
+        config_file_path: Path,
+        cls: type["Target"] | type["Job"],
+        config_attr: str,
+    ) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -193,23 +187,21 @@ class BackupEntityCollection:
 
     def remove(self, obj: BackupEntity) -> None:
         try:
-            del self.objects[obj.ident()]
+            del self.objects[obj.ident]
         except KeyError:
             pass
 
     def choices(self) -> Sequence[tuple[str, str]]:
         return sorted(
-            [(ident, obj.title()) for ident, obj in self.objects.items()],
+            [(ident, obj.title) for ident, obj in self.objects.items()],
             key=lambda x_y: x_y[1].title(),
         )
 
     def add(self, obj: BackupEntity) -> None:
-        self.objects[obj.ident()] = obj
+        self.objects[obj.ident] = obj
 
     def save(self) -> None:
-        self._config[self._config_attr] = {
-            ident: obj.to_config() for ident, obj in self.objects.items()  #
-        }
+        self._config[self._config_attr] = {ident: obj.config for ident, obj in self.objects.items()}
         Config(self._config_path).save(self._config)
 
 
@@ -346,35 +338,44 @@ class MKBackupJob:
                     raise
 
 
-class Job(MKBackupJob, BackupEntity):
-    def target_ident(self) -> str:
-        return self._config["target"]
+class Job(MKBackupJob):
+    def __init__(self, ident: str, config: JobConfig) -> None:
+        self.ident: Final = ident
+        self.config: Final = config
 
-    def key_ident(self) -> str:
-        return self._config["encrypt"]
+    @property
+    def title(self) -> str:
+        return self.config["title"]
+
+    def target_ident(self) -> str:
+        return self.config["target"]
+
+    def key_ident(self) -> str | None:
+        return self.config["encrypt"]
 
     def is_encrypted(self) -> bool:
-        return self._config["encrypt"] is not None
+        return self.config["encrypt"] is not None
 
     def state_file_path(self) -> Path:
-        return omd_root / "var/check_mk/backup" / ("%s.state" % self.ident())
+        return omd_root / "var/check_mk/backup" / ("%s.state" % self.ident)
 
     def _start_command(self) -> Sequence[str | Path]:
-        return [mkbackup_path(), "backup", "--background", self.ident()]
+        return [mkbackup_path(), "backup", "--background", self.ident]
 
-    def schedule(self) -> dict[str, Any] | None:
-        return self._config["schedule"]
+    def schedule(self) -> ScheduleConfig | None:
+        return self.config["schedule"]
 
     def cron_config(self) -> list[str]:
-        if not self._config["schedule"] or self._config["schedule"]["disabled"]:
+        if not (schedule := self.config["schedule"]) or schedule["disabled"]:
             return []
         userspec = self._cron_userspec()
         cmdline = self._cron_cmdline()
-        return [f"{timespec} {userspec}{cmdline}" for timespec in self._cron_timespecs()]
+        return [f"{timespec} {userspec}{cmdline}" for timespec in self._cron_timespecs(schedule)]
 
-    def _cron_timespecs(self) -> Sequence[str]:
-        period = self._config["schedule"]["period"]
-        times = self._config["schedule"]["timeofday"]
+    @staticmethod
+    def _cron_timespecs(schedule: ScheduleConfig) -> Sequence[str]:
+        period = schedule["period"]
+        times = schedule["timeofday"]
 
         if period == "day":
             dayspec = "* * *"
@@ -388,7 +389,7 @@ class Job(MKBackupJob, BackupEntity):
             dayspec = "%d * *" % period[1]
 
         else:
-            raise NotImplementedError()
+            assert_never()
 
         # times: list of two element tuples (hours, minutes)
         timespecs = []
@@ -403,10 +404,7 @@ class Job(MKBackupJob, BackupEntity):
         return "root "
 
     def _cron_cmdline(self) -> str:
-        return "mkbackup backup %s >/dev/null" % self.ident()
-
-    def from_config(self, config: ConfigData) -> None:
-        self._config = config
+        return "mkbackup backup %s >/dev/null" % self.ident
 
 
 class Jobs(BackupEntityCollection):
@@ -421,6 +419,8 @@ class Jobs(BackupEntityCollection):
         with table_element(sortable=False, searchable=False) as table:
 
             for job_ident, job in sorted(self.objects.items()):
+                assert isinstance(job, Job)
+
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
@@ -476,7 +476,7 @@ class Jobs(BackupEntityCollection):
 
                     html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
-                table.cell(_("Name"), job.title())
+                table.cell(_("Name"), job.title)
 
                 css = "state0"
                 state_txt = job.state_name(state["state"])
@@ -535,7 +535,8 @@ class Jobs(BackupEntityCollection):
     def jobs_using_target(self, target: Target) -> Sequence[Job]:
         jobs = []
         for job in self.objects.values():
-            if job.target_ident() == target.ident():
+            assert isinstance(job, Job)
+            if job.target_ident() == target.ident:
                 jobs.append(job)
         return jobs
 
@@ -547,6 +548,7 @@ class Jobs(BackupEntityCollection):
         with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
+                assert isinstance(job, Job)
                 cron_config = job.cron_config()
                 if cron_config:
                     f.write("%s\n" % "\n".join(cron_config))
@@ -701,8 +703,8 @@ class PageEditBackupJob:
 
             self._new = False
             self._ident: str | None = job_ident
-            self._job_cfg = job.to_config()
-            self._title = _("Edit backup job: %s") % job.title()
+            self._job_cfg: JobConfig | dict[str, object] = job.config
+            self._title = _("Edit backup job: %s") % job.title
         else:
             self._new = True
             self._ident = None
@@ -890,18 +892,17 @@ class PageEditBackupJob:
 
         if "ident" in config:
             self._ident = config.pop("ident")
-        self._job_cfg = config
+        self._job_cfg = cast(JobConfig, config)
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")
 
         jobs = self.jobs()
-        if self._new:
-            job = Job(self._ident, self._job_cfg)
-            jobs.add(job)
-        else:
-            # TODO type the containers more generically
-            job = jobs.get(self._ident)  # type: ignore[assignment]
-            job.from_config(self._job_cfg)
+        jobs.add(
+            Job(
+                self._ident,
+                self._job_cfg,
+            )
+        )
 
         jobs.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
@@ -912,7 +913,7 @@ class PageEditBackupJob:
 
         vs = self.vs_backup_job()
 
-        vs.render_input("edit_job", self._job_cfg)
+        vs.render_input("edit_job", dict(self._job_cfg))
         vs.set_focus("edit_job")
         forms.end()
 
@@ -931,9 +932,9 @@ class PageAbstractBackupJobState:
 
     def title(self) -> str:
         # Our class hierarchy is totally screwed up here...
-        if not isinstance(self._job, BackupEntity):
-            raise Exception("incorrect job state: no backup entity")
-        return _("Job state: %s") % self._job.title()
+        if not isinstance(self._job, Job):
+            raise Exception("incorrect job state: no job")
+        return _("Job state: %s") % self._job.title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -1251,9 +1252,17 @@ class BackupTargetLocal(ABCBackupTargetType):
 #   '----------------------------------------------------------------------'
 
 
-class Target(BackupEntity):
+class Target:
+    def __init__(self, ident: TargetId, config: TargetConfig) -> None:
+        self.ident: Final = ident
+        self.config: Final = config
+
+    @property
+    def title(self) -> str:
+        return self.config["title"]
+
     def _target_type(self) -> ABCBackupTargetType:
-        target_type_ident, target_params = self._config["remote"]
+        target_type_ident, target_params = self.config["remote"]
         try:
             target_type = target_type_registry[target_type_ident]
         except KeyError:
@@ -1363,6 +1372,8 @@ class Targets(BackupEntityCollection):
         with table_element(sortable=False, searchable=False) as table:
 
             for target_ident, target in sorted(self.objects.items()):
+                assert isinstance(target, Target)
+
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
                 restore_url = makeuri_contextless(
@@ -1395,7 +1406,7 @@ class Targets(BackupEntityCollection):
                     html.icon_button(edit_url, _("Edit this backup target"), "edit")
                     html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-                table.cell(_("Title"), target.title())
+                table.cell(_("Title"), target.title)
                 table.cell(_("Destination"), target.render())
 
     def validate_target(self, value: str, varprefix: str) -> None:
@@ -1464,7 +1475,7 @@ class PageBackupTargets:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def _verify_not_used(self, target):
-        job_titles = [j.title() for j in self.jobs().jobs_using_target(target)]
+        job_titles = [j.title for j in self.jobs().jobs_using_target(target)]
         if job_titles:
             raise MKUserError(
                 "target",
@@ -1487,18 +1498,19 @@ class PageEditBackupTarget:
                 target = self.targets().get(target_ident)
             except KeyError:
                 raise MKUserError("target", _("This backup target does not exist."))
+            assert isinstance(target, Target)
 
             self._new = False
-            self._ident: str | None = target_ident
-            self._target_cfg = target.to_config()
-            self._title = _("Edit backup target: %s") % target.title()
+            self._ident: TargetId | None = TargetId(target_ident)
+            self._target_cfg: TargetConfig | dict[str, object] = target.config
+            self._title = _("Edit backup target: %s") % target.title
         else:
             self._new = True
             self._ident = None
             self._target_cfg = {}
             self._title = _("New backup target")
 
-    def targets(self):
+    def targets(self) -> Targets:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -1582,19 +1594,19 @@ class PageEditBackupTarget:
         vs.validate_value(config, "edit_target")
 
         if "ident" in config:
-            self._ident = config.pop("ident")
-        self._target_cfg = config
+            self._ident = TargetId(config.pop("ident"))
+        self._target_cfg = cast(TargetConfig, config)
 
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")
 
         targets = self.targets()
-        if self._new:
-            target = Target(self._ident, self._target_cfg)
-            targets.add(target)
-        else:
-            target = targets.get(self._ident)
-            target.from_config(self._target_cfg)
+        targets.add(
+            Target(
+                self._ident,
+                self._target_cfg,
+            )
+        )
 
         targets.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
@@ -1815,7 +1827,7 @@ class PageBackupRestore:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def targets(self):
+    def targets(self) -> Targets:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Final
 
 import cmk.utils.paths
 
 from ._manifest import Manifest, read_manifest_optionally
+from ._parts import PackagePart
 from ._type_defs import PackageName
 
 PACKAGES_DIR: Final = cmk.utils.paths.omd_root / "var/check_mk/packages"
@@ -31,6 +32,14 @@ def get_installed_manifests(log: logging.Logger | None = None) -> Sequence[Manif
         for name in _installed_names()
         if (manifest := get_installed_manifest(name, log)) is not None
     ]
+
+
+def get_packaged_files() -> Mapping[PackagePart, set[str]]:
+    packaged_files: dict[PackagePart, set[str]] = {p: set() for p in PackagePart}
+    for manifest in get_installed_manifests():
+        for part in PackagePart:
+            packaged_files[part].update(manifest.files.get(part.ident, ()))
+    return packaged_files
 
 
 def is_installed(name: PackageName) -> bool:

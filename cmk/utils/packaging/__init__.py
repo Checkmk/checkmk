@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
 from itertools import groupby
@@ -36,6 +36,7 @@ from ._installed import (
     add_installed_manifest,
     get_installed_manifest,
     get_installed_manifests,
+    get_packaged_files,
     is_installed,
     PACKAGES_DIR,
     remove_installed_manifest,
@@ -551,9 +552,10 @@ def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
 ) -> Iterable[tuple[str, str]]:
+    packaged_files = get_packaged_files()
     # Before installing check for conflicts
     for part in PACKAGE_PARTS + CONFIG_PARTS:
-        packaged = _packaged_files_in_dir(part.ident)
+        packaged = packaged_files.get(part, ())
 
         old_files = set(old_package.files.get(part.ident, [])) if old_package else set()
 
@@ -710,8 +712,9 @@ def _get_enabled_package_paths():
 
 
 def get_unpackaged_files() -> dict[PackagePart, list[str]]:
+    packaged = get_packaged_files()
     return {
-        part: _unpackaged_files_in_dir(part.ident, part.path)
+        part: _unpackaged_files_in_dir(part.ident, part.path, packaged.get(part, ()))
         for part in PACKAGE_PARTS + CONFIG_PARTS
     }
 
@@ -768,13 +771,8 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
     return result
 
 
-def _unpackaged_files_in_dir(part: PartName, directory: str) -> list[str]:
-    packaged = set(_packaged_files_in_dir(part))
+def _unpackaged_files_in_dir(part: PartName, directory: str, packaged: Container[str]) -> list[str]:
     return [f for f in _files_in_dir(part, directory) if f not in packaged]
-
-
-def _packaged_files_in_dir(part: PartName) -> list[str]:
-    return [file for manifest in get_installed_manifests() for file in manifest.files.get(part, [])]
 
 
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:

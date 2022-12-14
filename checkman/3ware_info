@@ -12,7 +12,7 @@ description:
 
  - serial number of all controllers
 
- The Linux agent sends the neccessary data if the command line utility
+ The Linux agent sends the necessary data if the command line utility
  {tw_cli} is found in the shells search path.
  The usual way is to install it into {/usr/local/bin} or {/usr/bin}.
 

@@ -54,7 +54,7 @@ def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
 
 
 def is_regex(pattern: str) -> bool:
-    """Checks if a string contains characters that make it neccessary
+    """Checks if a string contains characters that make it necessary
     to use regular expression logic to handle it correctly"""
     for c in pattern:
         if c in ".?*+^$|[](){}\\":

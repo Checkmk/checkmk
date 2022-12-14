@@ -185,7 +185,7 @@ def cluster_check_windows_services(
         yield Result(state=State(params.get("else", 2)), summary="service not found")
         return
 
-    # We take the best found state (neccessary for clusters)
+    # We take the best found state (necessary for clusters)
     best_state = State.best(*(result.state for _node, result in found))
     best_running_on, best_result = [(n, r) for n, r in found if r.state == best_state][-1]
 

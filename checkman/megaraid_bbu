@@ -12,7 +12,7 @@ description:
  using this RAID chip. It is tested against Intel, Dell, IBM and FSC models.
 
  The check works by matching the agent output against a dictionary of expected values.
- If you have MegaCli installed  and some values are not detected, it might be neccessary
+ If you have MegaCli installed  and some values are not detected, it might be necessary
  to update your version of MegaCli.
 
  {MegaCli} can be downloaded from LSI at the following URL

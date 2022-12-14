@@ -10,7 +10,7 @@ This can be used as a very efficient replacement for NSCA.
 Advantages:
 - Much more performant
 - Creates your Nagios configuration for the passive services
-- No obsess_over.. configuration neccessary on the source host
+- No obsess_over.. configuration necessary on the source host
 
 Disadvantages:
 - Introduces some latency
@@ -42,7 +42,7 @@ Now create a cronjob that does the following every 1 or 5 minutes:
    directory
 
 Nagios will now read in that file (which is containing all current
-host and service states). The filename is arbitrary, but has to be 
+host and service states). The filename is arbitrary, but has to be
 7 characters in length, starting with a "c".
 
 Filtering
@@ -50,7 +50,7 @@ Filtering
 In each operation mode livedump allows to filter the number of data
 to be dumped. This is done by adding options -H and -S for host
 and service livestatus headers. The following example will only dump
-hosts and services of the host group "foo". Please make sure that 
+hosts and services of the host group "foo". Please make sure that
 all hosts that are needed by the dumped services are also dumped:
 
 livedump -H "Filter: host_groups > foo"
@@ -59,7 +59,7 @@ Note: The -H headers will also be added to the service queries.
 Make sure that all columns are prefixed with host_ in these.
 
 If you are using this is in conjunction with NSCA transport and do not
-wish to transfer the templated configuration, you can use the filter 
+wish to transfer the templated configuration, you can use the filter
 to only export services that have "obsess_over_service = 1" set.
 
 Encrypted Transport (E-Mail)

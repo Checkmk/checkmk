@@ -10,5 +10,5 @@ a comment into the second line, e.g.:
 # Notify via Loudspeaker
 ...
 
-You script retrieves all neccessary information about the actual notification
+You script retrieves all necessary information about the actual notification
 in environment variables beginning with NOTIFY_.

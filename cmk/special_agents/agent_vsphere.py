@@ -1003,7 +1003,7 @@ def parse_arguments(argv):
         "-H",
         "--hostname",
         default=None,
-        help="""Specify a hostname. This is neccessary if this is different from HOST.
+        help="""Specify a hostname. This is necessary if this is different from HOST.
         It is being used when outputting the hosts power state.""",
     )
 

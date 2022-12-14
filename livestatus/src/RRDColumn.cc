@@ -200,7 +200,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     argv_s.push_back("CDEF:xxx=" + converted_rpn);
     argv_s.emplace_back("XPORT:xxx:");
 
-    // Make RRDTool flush the rrdcached if neccessary
+    // Make RRDTool flush the rrdcached if necessary
 
     // The cache deamon experiences long delays when queries extend over a
     // large time range and the underlying RRA are in high resolution.

@@ -551,7 +551,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 profile["email"]
             )
 
-    # This loop is only neccessary if someone has edited
+    # This loop is only necessary if someone has edited
     # contacts.mk manually. But we want to support that as
     # far as possible.
     for uid, contact in contacts.items():

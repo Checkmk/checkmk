@@ -4027,7 +4027,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         title=_("Automatically update service configuration"),
         help=_(
             "If active the check will not only notify about un-monitored services, "
-            "it will also automatically add/remove them as neccessary."
+            "it will also automatically add/remove them as necessary."
         ),
         elements=[
             (

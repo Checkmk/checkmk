@@ -216,7 +216,7 @@ def find_host_service_in_context(context: EventContext) -> str:
 
 
 # Fetch information about an objects contacts via Livestatus. This is
-# neccessary for notifications from Nagios, which does not send this
+# necessary for notifications from Nagios, which does not send this
 # information in macros.
 def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> ContactList | None:
     try:
@@ -362,7 +362,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
                 logger.info("Setting SERVICENOTIFICATIONNUMBER for notification from '0' to '1'")
             raw_context["SERVICENOTIFICATIONNUMBER"] = "1"
 
-        # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
+        # Add the previous hard state. This is necessary for notification rules that depend on certain transitions,
         # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
         # Nagios does not have this information and we try to deduct this.
         if "PREVIOUSHOSTHARDSTATE" not in raw_context and "LASTHOSTSTATE" in raw_context:

@@ -143,11 +143,11 @@ permission_registry.register(
         name="parentscan",
         title=_l("Perform network parent scan"),
         description=_l(
-            "This permission is neccessary for performing automatic "
+            "This permission is necessary for performing automatic "
             "scans for network parents of hosts (making use of traceroute). "
             "Please note, that for actually modifying the parents via the "
             "scan and for the creation of gateway hosts proper permissions "
-            "for host and folders are also neccessary."
+            "for host and folders are also necessary."
         ),
         defaults=["admin", "user"],
     )
@@ -239,7 +239,7 @@ permission_registry.register(
         name="update_dns_cache",
         title=_l("Update site DNS Cache"),
         description=_l(
-            "Updating the sites DNS cache is neccessary in order to reflect IP address "
+            "Updating the sites DNS cache is necessary in order to reflect IP address "
             "changes in hosts that are configured without an explicit address."
         ),
         defaults=["admin", "user"],

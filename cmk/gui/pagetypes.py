@@ -193,7 +193,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
         return self._
 
     # You always must override the following method. Not all phrases
-    # might be neccessary depending on the type of you page.
+    # might be necessary depending on the type of you page.
     # Possible phrases:
     # "title"        : Title of one instance
     # "title_plural" : Title in plural
@@ -254,7 +254,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
             )
         ]
 
-    # Define page handlers for the neccessary pages. This is being called (indirectly)
+    # Define page handlers for the necessary pages. This is being called (indirectly)
     # in index.py. That way we do not need to hard code page handlers for all types of
     # PageTypes in plugins/pages. It is simply sufficient to register a PageType and
     # all page handlers will exist :-)

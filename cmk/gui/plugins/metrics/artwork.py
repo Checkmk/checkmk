@@ -741,7 +741,7 @@ def _get_min_max_from_curves(
     min_value, max_value = None, None
 
     # Now make sure that all points are within the range.
-    # Enlarge a given range if neccessary.
+    # Enlarge a given range if necessary.
     for curve in layouted_curves:
         for point in curve["points"]:
 
@@ -774,7 +774,7 @@ def _get_min_max_from_curves(
     return min_value, max_value
 
 
-# Create labels for the neccessary range
+# Create labels for the necessary range
 def create_vertical_axis_labels(
     min_value: float,
     max_value: float,

@@ -13,7 +13,7 @@
 #   the contents of the cache file to servers that have not seen     #
 #   that output yet. No time criteria is needed, so this is working  #
 #   without configuration, regardless of your check interval. It     #
-#   is not even neccessary that all servers are polling with the     #
+#   is not even necessary that all servers are polling with the      #
 #   same interval.                                                   #
 #                                                                    #
 #   We apoplogize for the fact that this wrapper is running only     #

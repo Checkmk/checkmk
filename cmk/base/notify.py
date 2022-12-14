@@ -1817,7 +1817,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
     if unhandled_uuids:
         notify_bulk(dirname, unhandled_uuids)
 
-    # Remove directory. Not neccessary if emtpy
+    # Remove directory. Not necessary if emtpy
     try:
         os.rmdir(dirname)
     except Exception as e:

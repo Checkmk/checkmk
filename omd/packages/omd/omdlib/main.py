@@ -1063,7 +1063,7 @@ def update_file(  # pylint: disable=too-many-branches
         create_skeleton_file(new_skel, site.dir, relpath, replacements)
         sys.stdout.write(StateMarkers.good + " Updated        %s\n" % fn)
 
-    # 7) User changed, but accidentally exactly as we did -> no action neccessary
+    # 7) User changed, but accidentally exactly as we did -> no action necessary
     elif not differs:
         sys.stdout.write(StateMarkers.good + " Identical      %s\n" % fn)
 

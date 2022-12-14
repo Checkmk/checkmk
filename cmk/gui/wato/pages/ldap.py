@@ -474,8 +474,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "directories. But some directories do not have such attributes because the memberships "
                         "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
                         "regular search filter whenever possible and only use this filter when it is really "
-                        "neccessary. Finally you can say, you should not use this option when using Active Directory. "
-                        "This option is neccessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
+                        "necessary. Finally you can say, you should not use this option when using Active Directory. "
+                        "This option is necessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
                         "If using, give a plain distinguished name of a group here, e. g. "
                         "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"
                     ),

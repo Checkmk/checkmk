@@ -22,13 +22,14 @@ import time
 from collections.abc import Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, cast, TypedDict
 
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.backup.type_defs import BackupInfo
+from cmk.utils.backup.type_defs import BackupInfo, LocalTargetParams
 from cmk.utils.paths import default_config_dir, omd_root
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
@@ -76,7 +77,7 @@ from cmk.gui.valuespec import (
     SchedulePeriod,
     TextInput,
     Timeofday,
-    ValueSpec,
+    ValueSpecText,
 )
 
 # .
@@ -1037,64 +1038,69 @@ class PageBackupJobState(PageAbstractBackupJobState):
 
 
 class ABCBackupTargetType(abc.ABC):
+    @abc.abstractmethod
+    def __init__(self, params: Mapping[str, object]) -> None:
+        ...
+
     @property
     @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
+    def parameters(self) -> Mapping[str, object]:
+        ...
 
-    @classmethod
-    def choices(cls: Any) -> list[tuple[str, str, ValueSpec]]:
-        choices = []
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
-        for type_class in cls.__subclasses__():
-            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
-        return sorted(choices, key=lambda x: x[1])
+    @staticmethod
+    @abc.abstractmethod
+    def ident() -> str:
+        ...
 
-    @classmethod
-    def get_type(cls, type_ident: str) -> type["ABCBackupTargetType"] | None:
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():
-            # indent is an attribute in the implementations
-            if type_class.ident == type_ident:  # type: ignore[comparison-overlap]
-                return type_class
-        return None
-
-    @classmethod
-    def title(cls) -> str:
-        raise NotImplementedError()
-
-    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
-        self._params = params
+    @staticmethod
+    @abc.abstractmethod
+    def title() -> str:
+        ...
 
     @classmethod
     @abc.abstractmethod
     def valuespec(cls) -> Dictionary:
-        raise NotImplementedError()
+        ...
+
+    @abc.abstractmethod
+    def validate(self, varprefix: str) -> None:
+        ...
 
     @abc.abstractmethod
     def backups(self) -> Mapping[str, BackupInfo]:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_backup(self, backup_ident: str) -> BackupInfo:
-        raise NotImplementedError()
+        ...
 
     @abc.abstractmethod
     def remove_backup(self, backup_ident: str) -> None:
-        raise NotImplementedError()
+        ...
 
-    @classmethod
-    @abc.abstractmethod
-    def validate(cls, value, varprefix):
-        raise NotImplementedError()
+    def render(self) -> ValueSpecText:
+        return self.valuespec().value_to_html(dict(self.parameters))
 
 
+class TargetTypeRegistry(Registry[type[ABCBackupTargetType]]):
+    def plugin_name(self, instance: type[ABCBackupTargetType]) -> str:
+        return instance.ident()
+
+
+target_type_registry = TargetTypeRegistry()
+
+
+@target_type_registry.register
 class BackupTargetLocal(ABCBackupTargetType):
-    ident = "local"
+    def __init__(self, params: LocalTargetParams) -> None:
+        self._params = params
 
-    @classmethod
-    def title(cls) -> str:
+    @property
+    def parameters(self) -> LocalTargetParams:
+        return self._params
+
+    @staticmethod
+    def ident() -> str:
+        return "local"
+
+    @staticmethod
+    def title() -> str:
         return _("Local path")
 
     @classmethod
@@ -1112,7 +1118,6 @@ class BackupTargetLocal(ABCBackupTargetType):
                             "network share on your own."
                         ),
                         allow_empty=False,
-                        validate=cls.validate,
                         size=64,
                     ),
                 ),
@@ -1131,14 +1136,20 @@ class BackupTargetLocal(ABCBackupTargetType):
                 ),
             ],
             optional_keys=[],
+            validate=lambda params, varprefix: cls(cast(LocalTargetParams, params)).validate(
+                varprefix
+            ),
         )
 
-    @classmethod
-    def validate(cls, value, varprefix):
-        if not is_canonical(value):
+    def validate(self, varprefix: str) -> None:
+        self._validate_path(self.parameters["path"], varprefix)
+
+    @staticmethod
+    def _validate_path(path: str, varprefix: str) -> None:
+        if not is_canonical(path):
             raise MKUserError(varprefix, _("You have to provide a canonical path."))
 
-        if cmk_version.is_cma() and not value.startswith("/mnt/"):
+        if cmk_version.is_cma() and not path.startswith("/mnt/"):
             raise MKUserError(
                 varprefix,
                 _(
@@ -1147,7 +1158,7 @@ class BackupTargetLocal(ABCBackupTargetType):
                 ),
             )
 
-        if not os.path.isdir(value):
+        if not os.path.isdir(path):
             raise MKUserError(
                 varprefix,
                 _(
@@ -1158,7 +1169,7 @@ class BackupTargetLocal(ABCBackupTargetType):
 
         # Check write access for the site user
         try:
-            test_file_path = os.path.join(value, "write_test_%d" % time.time())
+            test_file_path = os.path.join(path, "write_test_%d" % time.time())
             with open(test_file_path, "wb"):
                 pass
             os.unlink(test_file_path)
@@ -1186,7 +1197,7 @@ class BackupTargetLocal(ABCBackupTargetType):
 
         self.verify_target_is_ready()
 
-        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
+        for path in glob.glob("%s/*/mkbackup.info" % self.parameters["path"]):
             try:
                 info = self._load_backup_info(path)
             except OSError as e:
@@ -1199,8 +1210,8 @@ class BackupTargetLocal(ABCBackupTargetType):
         return backups
 
     # TODO: Duplocate code with mkbackup
-    def verify_target_is_ready(self):
-        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
+    def verify_target_is_ready(self) -> None:
+        if self.parameters["is_mountpoint"] and not os.path.ismount(self.parameters["path"]):
             raise MKGeneralException(
                 "The backup target path is configured to be a mountpoint, "
                 "but nothing is mounted."
@@ -1220,13 +1231,9 @@ class BackupTargetLocal(ABCBackupTargetType):
 
         return info
 
-    def get_backup(self, backup_ident: str) -> BackupInfo:
-        backups = self.backups()
-        return backups[backup_ident]
-
     def remove_backup(self, backup_ident: str) -> None:
         self.verify_target_is_ready()
-        shutil.rmtree("{}/{}".format(self._params["path"], backup_ident))
+        shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
 
 
 # .
@@ -1245,22 +1252,20 @@ class BackupTargetLocal(ABCBackupTargetType):
 
 
 class Target(BackupEntity):
-    def type_ident(self) -> str:
-        return self._config["remote"][0]
-
-    def type_class(self) -> type[ABCBackupTargetType]:
-        tclass = ABCBackupTargetType.get_type(self.type_ident())
-        if tclass is not None:
-            return tclass
-        raise NotImplementedError(f"unkown type {self.type_ident()}")
-
-    def type_params(self) -> Mapping:
-        return self._config["remote"][1]
-
-    def type(self) -> ABCBackupTargetType:
-        if self.type_ident() != "local":
-            raise NotImplementedError()
-        return self.type_class()(self.type_params())
+    def _target_type(self) -> ABCBackupTargetType:
+        target_type_ident, target_params = self._config["remote"]
+        try:
+            target_type = target_type_registry[target_type_ident]
+        except KeyError:
+            raise MKUserError(
+                None,
+                _("Unknown target type: %s. Available types: %s.")
+                % (
+                    target_type_ident,
+                    ", ".join(target_type_registry),
+                ),
+            )
+        return target_type(target_params)
 
     def show_backup_list(self, only_type: str) -> None:
         with table_element(sortable=False, searchable=False) as table:
@@ -1328,13 +1333,16 @@ class Target(BackupEntity):
                             html.write_text(" (%s)" % _("Standby node"))
 
     def backups(self) -> Mapping[str, BackupInfo]:
-        return self.type().backups()
-
-    def get_backup(self, backup_ident: str) -> BackupInfo:
-        return self.type().get_backup(backup_ident)
+        return self._target_type().backups()
 
     def remove_backup(self, backup_ident: str) -> None:
-        self.type().remove_backup(backup_ident)
+        self._target_type().remove_backup(backup_ident)
+
+    def validate(self, varprefix: str) -> None:
+        self._target_type().validate(varprefix)
+
+    def render(self) -> ValueSpecText:
+        return self._target_type().render()
 
 
 class Targets(BackupEntityCollection):
@@ -1388,17 +1396,13 @@ class Targets(BackupEntityCollection):
                     html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
                 table.cell(_("Title"), target.title())
-
-                target_class = target.type_class()
-                vs_target = target_class(target.type_params()).valuespec()
-                table.cell(_("Destination"), vs_target.value_to_html(target.type_params()))
+                table.cell(_("Destination"), target.render())
 
     def validate_target(self, value: str, varprefix: str) -> None:
         target = self.get(value)
         if not isinstance(target, Target):
             raise MKGeneralException("I cannot use a job here")
-        path = target.type_params()["path"]
-        target.type().validate(path, varprefix)
+        target.validate(varprefix)
 
 
 class PageBackupTargets:
@@ -1549,7 +1553,14 @@ class PageEditBackupTarget:
                     "remote",
                     CascadingDropdown(
                         title=_("Destination"),
-                        choices=ABCBackupTargetType.choices,
+                        choices=[
+                            (
+                                target_type.ident(),
+                                target_type.title(),
+                                target_type.valuespec(),
+                            )
+                            for target_type in target_type_registry.values()
+                        ],
                     ),
                 ),
             ],
@@ -1907,7 +1918,7 @@ class PageBackupRestore:
     def _start_restore(self, backup_ident) -> ActionResult:  # type:ignore[no-untyped-def]
         if self._target is None:
             raise Exception("no backup target")
-        backup_info = self._target.get_backup(backup_ident)
+        backup_info = self._target.backups()[backup_ident]
         if backup_info["config"]["encrypt"] is not None:
             return self._start_encrypted_restore(backup_ident, backup_info)
         return self._start_unencrypted_restore(backup_ident)

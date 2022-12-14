@@ -155,9 +155,14 @@ fi
 
 # the CI pipeline itself #######################################################
 
+run-clang-format() {
+    # shellcheck disable=SC2086 # Yes, we want splitting for FILES.
+    find ${FILES:-src test include} -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
+        xargs -0 "clang-format-${CLANG_VERSION}" -style=file "$@"
+}
+
 if [ ${RUN_CHECK_FORMAT} = yes ]; then
-    find src test include -type f \( -name '*.h' -o -name '*.cc' \) -print0 |
-        xargs -0 clang-format-"$CLANG_VERSION" -Werror --dry-run -style=file
+    run-clang-format --dry-run -Werror
 fi
 
 if [ ${RUN_BUILD} = yes ]; then
@@ -197,8 +202,7 @@ fi
 # non-pipeline stuff: formatting/documentation #################################
 
 if [ ${RUN_FORMAT} = yes ]; then
-    find src test include -type f \( -name '*.h' -o -name '*.cc' \) -print0 |
-        xargs -0 clang-format-"$CLANG_VERSION" -i -style=file
+    run-clang-format -i
 fi
 
 if [ ${RUN_DOCUMENTATION} = yes ]; then

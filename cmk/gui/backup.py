@@ -5,10 +5,9 @@
 """
 This module implements generic functionality of the Check_MK backup
 system. It is used to configure the site and system backup.
-
-BE AWARE: This code is directly used by the appliance. So if you are
-about to refactor things, you will have to care about the appliance!
 """
+
+from __future__ import annotations
 
 import abc
 import errno
@@ -29,6 +28,7 @@ import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.type_defs import BackupInfo
+from cmk.utils.paths import default_config_dir, omd_root
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
@@ -94,27 +94,16 @@ from cmk.gui.valuespec import (
 #   '----------------------------------------------------------------------'
 
 
-def is_site() -> bool:
-    return "OMD_ROOT" in os.environ
-
-
-def mkbackup_path() -> str:
-    if not is_site():
-        return "/usr/sbin/mkbackup"
-    return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
+def mkbackup_path() -> Path:
+    return omd_root / "bin/mkbackup"
 
 
 def system_config_path() -> str:
     return "/etc/cma/backup.conf"
 
 
-def site_config_path(site_id: str | None = None) -> str:
-    if site_id is None:
-        if not is_site():
-            raise Exception(_("Not executed in OMD environment!"))
-        site_id = os.environ["OMD_SITE"]
-
-    return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
+def site_config_path() -> Path:
+    return Path(default_config_dir) / "backup.mk"
 
 
 def hostname() -> str:
@@ -136,7 +125,7 @@ ConfigData = dict
 
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: Path) -> None:
         self._file_path = file_path
 
     def load(self) -> ConfigData:
@@ -187,7 +176,7 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path: str, cls: type, config_attr: str) -> None:
+    def __init__(self, config_file_path: Path, cls: type, config_attr: str) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -325,7 +314,7 @@ class MKBackupJob:
         if completed_process.returncode != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
-    def _start_command(self) -> Sequence[str]:
+    def _start_command(self) -> Sequence[str | Path]:
         raise NotImplementedError()
 
     def stop(self) -> None:
@@ -366,34 +355,10 @@ class Job(MKBackupJob, BackupEntity):
     def is_encrypted(self) -> bool:
         return self._config["encrypt"] is not None
 
-    # TODO: Duplicated code with mkbackup (globalize_job_id())
-    def global_ident(self) -> str:
-        parts = []
-        site = os.environ.get("OMD_SITE")
-
-        if site:
-            parts.append("Check_MK")
-        else:
-            parts.append("Check_MK_Appliance")
-
-        parts.append(hostname())
-
-        if site:
-            parts.append(site)
-
-        parts.append(self._ident)
-
-        return "-".join([p.replace("-", "+") for p in parts])
-
     def state_file_path(self) -> Path:
-        if not is_site():
-            path = Path("/var/lib/mkbackup")
-        else:
-            path = Path(os.environ["OMD_ROOT"], "var/check_mk/backup")
+        return omd_root / "var/check_mk/backup" / ("%s.state" % self.ident())
 
-        return path / ("%s.state" % self.ident())
-
-    def _start_command(self) -> Sequence[str]:
+    def _start_command(self) -> Sequence[str | Path]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
     def schedule(self) -> dict[str, Any] | None:
@@ -449,7 +414,7 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path: str) -> None:
+    def __init__(self, config_file_path: Path) -> None:
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
@@ -571,7 +536,7 @@ class Jobs(BackupEntityCollection):
 
                     html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
-    def jobs_using_target(self, target: "Target") -> Sequence[Job]:
+    def jobs_using_target(self, target: Target) -> Sequence[Job]:
         jobs = []
         for job in self.objects.values():
             if job.target_ident() == target.ident():
@@ -614,9 +579,6 @@ class PageBackup:
         self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if not self._may_edit_config():
-            return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
-
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -665,18 +627,13 @@ class PageBackup:
             is_shortcut=True,
             is_suggested=True,
         )
-
-        if self._may_edit_config():
-            yield PageMenuEntry(
-                title=_("Add job"),
-                icon_name="new",
-                item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
-                is_shortcut=True,
-                is_suggested=True,
-            )
-
-    def _may_edit_config(self) -> bool:
-        return True
+        yield PageMenuEntry(
+            title=_("Add job"),
+            icon_name="new",
+            item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
+            is_shortcut=True,
+            is_suggested=True,
+        )
 
     def action(self) -> ActionResult:
         ident = request.var("_job")
@@ -694,7 +651,7 @@ class PageBackup:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-        if action == "delete" and self._may_edit_config():
+        if action == "delete":
             self._delete_job(job)
 
         elif action == "start":
@@ -725,7 +682,7 @@ class PageBackup:
 
     def page(self) -> None:
         show_key_download_warning(self.key_store.load())
-        self.jobs().show_list(editable=self._may_edit_config())
+        self.jobs().show_list(editable=True)
 
 
 class PageEditBackupJob:
@@ -759,7 +716,7 @@ class PageEditBackupJob:
     def jobs(self) -> Jobs:
         raise NotImplementedError()
 
-    def targets(self) -> "Targets":
+    def targets(self) -> Targets:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -893,19 +850,25 @@ class PageEditBackupJob:
                         ],
                     ),
                 ),
-            ]
-            + self.custom_job_attributes(),
+                (
+                    "no_history",
+                    Checkbox(
+                        title=_("Do not backup historical data"),
+                        help=_(
+                            "You may use this option to create a much smaller partial backup of the site."
+                        ),
+                        label=_(
+                            "Do not backup metric data (RRD files), the monitoring history and log files"
+                        ),
+                    ),
+                ),
+            ],
             optional_keys=[],
             render="form",
         )
 
     def _validate_target(self, value: Any, varprefix: str) -> None:
         self.targets().validate_target(value, varprefix)
-
-    # Can be overridden by subclasses to add custom attributes to the
-    # job configuration. e.g. system jobs can exclude sites optionally.
-    def custom_job_attributes(self) -> list[tuple[str, ValueSpec]]:
-        return []
 
     def _validate_backup_job_ident(self, value: str, varprefix: str) -> None:
         if value == "restore":
@@ -985,7 +948,7 @@ class PageAbstractBackupJobState:
         html.close_div()
         html.javascript(
             "cmk.backup.refresh_job_details('%s', '%s', %s)"
-            % (self._update_url(), self._ident, "true" if is_site() else "false")
+            % (self._update_url(), self._ident, "true")
         )
 
     def _update_url(self) -> str:
@@ -1074,7 +1037,7 @@ class PageBackupJobState(PageAbstractBackupJobState):
 #   |                    |___/                 |___/|_|                    |
 #   +----------------------------------------------------------------------+
 #   | A target type implements the handling of different protocols to use  |
-#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
+#   | for storing the backup.                                              |
 #   '----------------------------------------------------------------------'
 
 
@@ -1386,7 +1349,7 @@ class Targets(BackupEntityCollection):
     def show_list(self, title: str | None = None, editable: bool = True) -> None:
         title = title if title else _("Targets")
         html.h2(title)
-        if not editable and is_site():
+        if not editable:
             html.p(
                 _(
                     "These backup targets can not be edited here. You need to "
@@ -1454,8 +1417,6 @@ class PageBackupTargets:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if not self._may_edit_config():
-            return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -1515,9 +1476,6 @@ class PageBackupTargets:
     def page(self) -> None:
         self.targets().show_list()
         SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
-
-    def _may_edit_config(self):
-        return True
 
 
 class PageEditBackupTarget:
@@ -1808,8 +1766,6 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self) -> Path:
-        if not is_site():
-            return Path("/var/lib/mkbackup/restore.state")
         return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
 
     def complete(self):
@@ -1999,10 +1955,9 @@ class PageBackupRestore:
                 user_errors.add(e)
 
         # Special handling for Checkmk / CMA differences
-        if is_site():
-            title = _("Insert passphrase")
-            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
-            make_header(html, title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
+        title = _("Insert passphrase")
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
+        make_header(html, title, breadcrumb, PageMenu(dropdowns=[], breadcrumb=breadcrumb))
 
         html.show_user_errors()
         html.p(

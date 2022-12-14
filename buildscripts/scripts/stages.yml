@@ -269,6 +269,16 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
 
+    - NAME: 'Clang Tidy Lib Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_LIVESTATUS_FILES
+      DIR: 'packages/livestatus'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --clang-tidy &> ${RESULTS}/lib-livestatus-tidy.txt"
+      TEXT_ON_SKIP: 'No lib livestatus files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus-tidy.txt"
+
     - NAME: 'Clang Tidy Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
       DIR: 'tests'
@@ -290,6 +300,16 @@ STAGES:
       TEXT_ON_SKIP: 'No core files changed'
       RESULT_CHECK_TYPE: "CLANG"
       RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
+
+    - NAME: 'IWYU Lib Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES
+      DIR: 'packages/livestatus'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --iwyu &> ${RESULTS}/lib-livestatus-iwyu.txt"
+      TEXT_ON_SKIP: 'No lib livestatus files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus-iwyu.txt"
 
     - NAME: 'IWYU Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE

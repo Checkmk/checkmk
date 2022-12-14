@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 import threading
 import typing
-from collections.abc import Callable, Iterator
+import urllib.parse
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, ContextManager, Literal, NamedTuple
@@ -26,7 +27,13 @@ from mypy_extensions import KwArg
 from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
-from tests.testlib.rest_api_client import expand_rel, get_link
+from tests.testlib.rest_api_client import (
+    expand_rel,
+    get_link,
+    RequestHandler,
+    Response,
+    RestApiClient,
+)
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
@@ -508,3 +515,42 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
 @pytest.fixture()
 def flask_app() -> Flask:
     return session_wsgi_app(testing=True)
+
+
+@pytest.fixture(name="base")
+def fixture_base() -> str:
+    return "/NO_SITE/check_mk/api/1.0"
+
+
+class WebTestAppRequestHandler(RequestHandler):
+    def __init__(self, wsgi_app: WebTestAppForCMK):
+        self.app = wsgi_app
+
+    def set_credentials(self, username: str, password: str) -> None:
+        self.app.set_authorization(("Bearer", f"{username} {password}"))
+
+    def request(
+        self,
+        method: HTTPMethod,
+        url: str,
+        query_params: Mapping[str, str] | None = None,
+        body: str | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> Response:
+        if query_params is not None:
+            query_string = "?" + urllib.parse.urlencode(query_params)
+        else:
+            query_string = ""
+        resp = self.app.call_method(
+            method,
+            url + query_string,
+            params=body,
+            headers=dict(headers or {}),
+            expect_errors=True,
+        )
+        return Response(status_code=resp.status_code, body=resp.body, headers=resp.headers)
+
+
+@pytest.fixture()
+def api_client(aut_user_auth_wsgi_app: WebTestAppForCMK, base: str) -> RestApiClient:
+    return RestApiClient(WebTestAppRequestHandler(aut_user_auth_wsgi_app), base)

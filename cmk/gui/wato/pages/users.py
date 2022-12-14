@@ -660,7 +660,7 @@ class ModeEditUser(WatoMode):
 
         if not self._is_new_user:
             yield PageMenuEntry(
-                title=_("Disable two-factor authentication"),
+                title=_("Remove two-factor authentication"),
                 icon_name="2fa",
                 item=make_simple_link(
                     make_confirm_link(
@@ -672,7 +672,7 @@ class ModeEditUser(WatoMode):
                             ]
                         ),
                         message=_(
-                            "Do you really want to disable the two-factor authentication of %s?"
+                            "Do you really want to remove the two-factor authentication of %s?"
                         )
                         % self._user_id,
                     )

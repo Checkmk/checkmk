@@ -1,0 +1,23 @@
+Title: Add nvidia_smi agent plugin and check plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1671006769
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+Add new windows agent plugin nvidia_smi to monitor Nvidia graphics cards on windows.
+You can configure the path to the nvidia-smi.exe for this agent plugin.
+
+Add the following new check plugins:
+<ul>
+<li>nvidia_smi_temperature
+<li>nvidia_smi_power
+<li>nvidia_smi_memory_util
+<li>nvidia_smi_gpu_util
+<li>nvidia_smi_en_de_coder_util
+</ul>
+
+Please have a look at the respective manpages for further information.

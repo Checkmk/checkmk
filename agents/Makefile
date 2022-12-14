@@ -63,13 +63,12 @@ build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) controller
 
 controller:
 	rm -f linux/cmk-agent-ctl
+	rm -f linux/cmk-agent-ctl.gz
 	(cd cmk-agent-ctl; ../../scripts/run-cargo-command build --release) \
 	&& mkdir -p linux \
 	&& cp cmk-agent-ctl/target/x86_64-unknown-linux-musl/release/cmk-agent-ctl linux \
 	&& strip linux/cmk-agent-ctl ; \
-	which upx >/dev/null 2>&1 \
-	&& upx linux/cmk-agent-ctl \
-	|| true
+	gzip --best --keep --force linux/cmk-agent-ctl
 
 packages: $(DEB_PACKAGE) $(RPM_PACKAGE)
 

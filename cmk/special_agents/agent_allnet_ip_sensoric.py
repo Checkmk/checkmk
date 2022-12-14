@@ -9,34 +9,20 @@
 Special Agent for Allnet IP-Sensoric monitoring
 """
 import argparse
-import pprint
 import re
-import socket
 import sys
-import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import requests
-
-from cmk.utils.exceptions import MKException
 
 from cmk.special_agents.utils import vcrtrace
 
 _DEFAULT_TIMEOUT = 10
 
 
-class RequestError(MKException):
-    pass
+def parse_response_data(contents: str) -> Mapping[str, Mapping[str, str]]:
 
-
-def get_allnet_ip_sensoric_info(host_address, opt_debug):
-    contents = requests.get(
-        f"http://{host_address}/xml/sensordata.xml",
-        headers={"User-agent": "Checkmk Special Agent Allnet IP Sensoric"},
-    ).text
-
-    attrs = {}
-
+    parsed: dict[str, dict[str, str]] = {}
     context = None
     for line in contents.splitlines():
 
@@ -52,12 +38,9 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
 
         match = re.search(r"<(\w+)>(.+)</\w+>", line)
         if match and context:
-            attrs[f"{context}.{match.group(1)}"] = match.group(2)
+            parsed.setdefault(context, {})[match.group(1)] = match.group(2)
 
-    if opt_debug:
-        sys.stdout.write("Parsed: %s\n" % pprint.pformat(attrs))
-
-    return attrs
+    return parsed
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -88,27 +71,33 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def main(argv: Sequence[str] | None = None) -> None:
+def main(argv: Sequence[str] | None = None) -> int:
 
     if argv is None:
         argv = sys.argv[1:]
     args = parse_arguments(argv)
 
-    socket.setdefaulttimeout(args.timeout)
-
+    url = f"http://{args.host}/xml/sensordata.xml"
     try:
-        status = {}
-        try:
-            status.update(get_allnet_ip_sensoric_info(args.host, args.debug))
-        except Exception:
-            if args.debug:
-                raise
+        response = requests.get(
+            url,
+            headers={"User-agent": "Checkmk Special Agent Allnet IP Sensoric"},
+            timeout=args.timeout,
+        )
+    except requests.ConnectionError:
+        sys.stderr.write(f"Could not connect to host: {args.host}\n")
+        return 1
+    except requests.Timeout:
+        sys.stderr.write("Connection timed out")
+        return 1
 
-        sys.stdout.write("<<<allnet_ip_sensoric:sep(59)>>>\n")
-        for key, value in sorted(status.items()):
-            sys.stdout.write(f"{key};{value}\n")
+    if response.status_code != 200:
+        sys.stderr.write(f"{url}: {response.reason}")
+        return 1
 
-    except Exception:
-        if args.debug:
-            raise
-        sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
+    sys.stdout.write("<<<allnet_ip_sensoric:sep(59)>>>\n")
+    for sensor, readings in parse_response_data(response.text).items():
+        for key, value in readings.items():
+            sys.stdout.write(f"{sensor}.{key};{value}\n")
+
+    return 0

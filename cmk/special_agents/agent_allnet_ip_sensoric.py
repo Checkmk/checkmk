@@ -5,38 +5,24 @@
 
 # This agent uses UPNP API calls to the Fritz!Box to gather information
 # about connection configuration and status.
-
-import getopt
+"""
+Special Agent for Allnet IP-Sensoric monitoring
+"""
+import argparse
 import pprint
 import re
 import socket
 import sys
 import traceback
+from collections.abc import Sequence
 
 import requests
 
 from cmk.utils.exceptions import MKException
 
+from cmk.special_agents.utils import vcrtrace
 
-def usage():
-    sys.stderr.write(
-        """Check_MK ALLNET IP-Sensoric Agent
-
-USAGE: agent_allnet_ip_sensoric [OPTIONS] HOST
-       agent_allnet_ip_sensoric -h
-
-ARGUMENTS:
-  HOST                          Host name or IP address of your ALLNET IP-Sensoric
-
-OPTIONS:
-  -h, --help                    Show this help message and exit
-  -t, --timeout SEC             Set the network timeout to <SEC> seconds.
-                                Default is 10 seconds. Note: the timeout is not
-                                applied to the whole check, instead it is used for
-                                the http query only.
-  --debug                       Debug mode: let Python exceptions come through
-"""
-    )
+_DEFAULT_TIMEOUT = 10
 
 
 class RequestError(MKException):
@@ -74,49 +60,48 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
     return attrs
 
 
-def main(sys_argv=None):  # pylint: disable=too-many-branches
-    if sys_argv is None:
-        sys_argv = sys.argv[1:]
+def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.formatter_class = argparse.RawTextHelpFormatter
+    parser.add_argument(
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Enable debug mode (keep some exceptions unhandled)",
+    )
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
 
-    short_options = "h:t:d"
-    long_options = ["help", "timeout=", "debug"]
+    parser.add_argument(
+        "--timeout",
+        "-t",
+        type=int,
+        metavar="SEC",
+        default=_DEFAULT_TIMEOUT,
+        help=(
+            f"Set the network timeout to <SEC> seconds (default: {_DEFAULT_TIMEOUT}."
+            "Note:"
+            " The timeout is not applied to the whole check, it is used for the http query only."
+        ),
+    )
+    parser.add_argument("host", help="Host name or IP address of your ALLNET IP-Sensoric")
 
-    host_address = None
-    opt_debug = False
-    opt_timeout = 10
+    return parser.parse_args(argv)
 
-    try:
-        opts, args = getopt.getopt(sys_argv, short_options, long_options)
-    except getopt.GetoptError as err:
-        sys.stderr.write("%s\n" % err)
-        return 1
 
-    for o, a in opts:
-        if o in ["--debug"]:
-            opt_debug = True
-        elif o in ["-t", "--timeout"]:
-            opt_timeout = int(a)
-        elif o in ["-h", "--help"]:
-            usage()
-            sys.exit(0)
+def main(argv: Sequence[str] | None = None) -> None:
 
-    if len(args) == 1:
-        host_address = args[0]
-    elif not args:
-        sys.stderr.write("ERROR: No host given.\n")
-        return 1
-    else:
-        sys.stderr.write("ERROR: Please specify exactly one host.\n")
-        return 1
+    if argv is None:
+        argv = sys.argv[1:]
+    args = parse_arguments(argv)
 
-    socket.setdefaulttimeout(opt_timeout)
+    socket.setdefaulttimeout(args.timeout)
 
     try:
         status = {}
         try:
-            status.update(get_allnet_ip_sensoric_info(host_address, opt_debug))
+            status.update(get_allnet_ip_sensoric_info(args.host, args.debug))
         except Exception:
-            if opt_debug:
+            if args.debug:
                 raise
 
         sys.stdout.write("<<<allnet_ip_sensoric:sep(59)>>>\n")
@@ -124,7 +109,6 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
             sys.stdout.write(f"{key};{value}\n")
 
     except Exception:
-        if opt_debug:
+        if args.debug:
             raise
         sys.stderr.write("Unhandled error: %s" % traceback.format_exc())
-    return None

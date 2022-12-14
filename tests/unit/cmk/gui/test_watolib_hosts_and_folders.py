@@ -30,7 +30,11 @@ from cmk.gui.watolib.hosts_and_folders import Folder
         ([((0, 0), (2, 0)), ((20, 0), (22, 0))], 1515621600.0, 1515625200.0),
     ],
 )
-def test_next_network_scan_at(allowed, last_end, next_time) -> None:  # type:ignore[no-untyped-def]
+def test_next_network_scan_at(
+    allowed: object,
+    last_end: float | None,
+    next_time: float,
+) -> None:
     folder = Folder(
         name="bla",
         title="Bla",
@@ -54,7 +58,8 @@ def test_next_network_scan_at(allowed, last_end, next_time) -> None:  # type:ign
         assert folder.next_network_scan_at() == next_time
 
 
-def test_folder_times(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_folder_times() -> None:
     root = Folder.root_folder()
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):

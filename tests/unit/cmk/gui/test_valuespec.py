@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import on_time
@@ -25,7 +27,7 @@ from cmk.gui.http import request
         ((1546300800, -6, "m"), 1530403200),
     ],
 )
-def test_timehelper_add(args, result) -> None:  # type:ignore[no-untyped-def]
+def test_timehelper_add(args: tuple[int, int, str], result: int) -> None:
     with on_time("2019-09-05", "UTC"):
         assert vs.TimeHelper.add(*args) == result
 
@@ -39,9 +41,7 @@ def test_timehelper_add(args, result) -> None:  # type:ignore[no-untyped-def]
         (1850000000, "2028-08-16"),
     ],
 )
-def test_absolutedate_value_to_json_conversion(  # type:ignore[no-untyped-def]
-    value, result
-) -> None:
+def test_absolutedate_value_to_json_conversion(value: int, result: str) -> None:
     with on_time("2020-03-02", "UTC"):
         assert vs.AbsoluteDate().value_to_html(value) == result
         json_value = vs.AbsoluteDate().value_to_json(value)
@@ -57,7 +57,7 @@ def test_absolutedate_value_to_json_conversion(  # type:ignore[no-untyped-def]
         (527500, "6 days 2 hours 31 minutes 40 seconds"),
     ],
 )
-def test_age_value_to_json_conversion(value, result) -> None:  # type:ignore[no-untyped-def]
+def test_age_value_to_json_conversion(value: int, result: str) -> None:
     assert vs.Age().value_to_html(value) == result
     json_value = vs.Age().value_to_json(value)
     assert vs.Age().value_from_json(json_value) == value
@@ -74,11 +74,11 @@ def test_age_value_to_json_conversion(value, result) -> None:  # type:ignore[no-
         ),
     ],
 )
-def test_dropdownchoice_value_to_json_conversion(  # type:ignore[no-untyped-def]
-    choices, value, result
+def test_dropdownchoice_value_to_json_conversion(
+    choices: vs.DropdownChoices, value: object, result: vs.ValueSpecText
 ) -> None:
-    assert vs.DropdownChoice(choices=choices).value_to_html(value) == result
-    json_value = vs.DropdownChoice(choices=choices).value_to_json(value)
+    assert vs.DropdownChoice[object](choices=choices).value_to_html(value) == result
+    json_value = vs.DropdownChoice[object](choices=choices).value_to_json(value)
     assert vs.DropdownChoice(choices=choices).value_from_json(json_value) == value
 
 
@@ -97,8 +97,11 @@ def test_dropdownchoice_value_to_json_conversion(  # type:ignore[no-untyped-def]
         "invalid_choice_invalid_deprecated_choice",
     ],
 )
-def test_dropdownchoice_validate_datatype(  # type:ignore[no-untyped-def]
-    choices, deprecated_choices, value, is_valid_datatype
+def test_dropdownchoice_validate_datatype(
+    choices: vs.DropdownChoices,
+    deprecated_choices: Sequence[str | None],
+    value: int | None,
+    is_valid_datatype: bool,
 ) -> None:
     dropdown_choice = vs.DropdownChoice[int](
         choices=choices,
@@ -111,6 +114,7 @@ def test_dropdownchoice_validate_datatype(  # type:ignore[no-untyped-def]
             dropdown_choice.validate_datatype(value, "")
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "value, result_title",
     [
@@ -121,8 +125,10 @@ def test_dropdownchoice_validate_datatype(  # type:ignore[no-untyped-def]
         (3600 * 24 * 7 * 1.5, "Since a sesquiweek"),  # defaults are idents
     ],
 )
-def test_timerange_value_to_html_conversion(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch, value, result_title
+def test_timerange_value_to_html_conversion(
+    monkeypatch: pytest.MonkeyPatch,
+    value: vs.CascadingDropdownChoiceValue,
+    result_title: vs.ValueSpecText,
 ) -> None:
     monkeypatch.setattr(
         active_config,
@@ -137,7 +143,8 @@ def test_timerange_value_to_html_conversion(  # type:ignore[no-untyped-def]
     assert vs.Timerange().value_to_html(value) == result_title
 
 
-def test_timerange_value_to_json_conversion(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_timerange_value_to_json_conversion() -> None:
     with on_time("2020-03-02", "UTC"):
         for ident, title, _vs in vs.Timerange().choices():
             choice_value: vs.CascadingDropdownChoiceValue = ident
@@ -165,7 +172,7 @@ def test_timerange_value_to_json_conversion(request_context) -> None:  # type:ig
         "אሗ@test.de",  # non-ASCII characters
     ],
 )
-def test_email_validation(address) -> None:  # type:ignore[no-untyped-def]
+def test_email_validation(address: str) -> None:
     vs.EmailAddress().validate_value(address, "")
 
 
@@ -178,7 +185,7 @@ def test_email_validation(address) -> None:  # type:ignore[no-untyped-def]
         "ab@c..de",
     ],
 )
-def test_email_validation_non_compliance(address) -> None:  # type:ignore[no-untyped-def]
+def test_email_validation_non_compliance(address: str) -> None:
     # TODO: validate_value should raise an exception in these
     #       cases since subsequent dots without any ASCII
     #       character in between are not allowed in RFC5322.
@@ -215,7 +222,8 @@ class TestOptional:
         assert opt_vs.transform_value({"a": "text", "b": 10}) == {"a": "text", "b": 20}
 
 
-def test_password_from_html_vars_empty(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_empty() -> None:
     request.set_var("pw_orig", "")
     request.set_var("pw", "")
 
@@ -223,7 +231,8 @@ def test_password_from_html_vars_empty(request_context) -> None:  # type:ignore[
     assert pw.from_html_vars("pw") == ""
 
 
-def test_password_from_html_vars_not_set(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_not_set() -> None:
     pw = vs.Password()
     assert pw.from_html_vars("pw") == ""
 

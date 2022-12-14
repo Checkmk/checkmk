@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Literal
 
 import pytest
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
+from pytest import MonkeyPatch
 
 from tests.testlib import compare_html
 
@@ -44,7 +46,8 @@ def read_out_csv(text, separator):
     return data
 
 
-def test_basic(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_basic() -> None:
     table_id = 0
     title = " TEST "
 
@@ -61,7 +64,8 @@ def test_basic(request_context) -> None:  # type:ignore[no-untyped-def]
     assert read_out_simple_table(written_text) == [["A", "B"], ["1", "2"], ["1", "4"]]
 
 
-def test_cell_content_escaping(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_cell_content_escaping() -> None:
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -76,7 +80,8 @@ def test_cell_content_escaping(request_context) -> None:  # type:ignore[no-untyp
     assert "<b>C</b>" in written_text
 
 
-def test_cell_title_escaping(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_cell_title_escaping() -> None:
     with output_funnel.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
@@ -91,7 +96,8 @@ def test_cell_title_escaping(request_context) -> None:  # type:ignore[no-untyped
     assert "<b>C</b>" in written_text
 
 
-def test_plug(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_plug() -> None:
     table_id = 0
     title = " TEST "
 
@@ -112,7 +118,8 @@ def test_plug(request_context) -> None:  # type:ignore[no-untyped-def]
     assert read_out_simple_table(written_text) == [["A", "B"], ["1a", "2b"], ["1a", "4c"]]
 
 
-def test_context(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_context() -> None:
     table_id = 0
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
@@ -130,7 +137,8 @@ def test_context(request_context) -> None:  # type:ignore[no-untyped-def]
     assert data == rows
 
 
-def test_nesting(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_nesting() -> None:
     table_id = 0
     title = " TEST "
 
@@ -165,7 +173,8 @@ def test_nesting(request_context) -> None:  # type:ignore[no-untyped-def]
     ), written_text
 
 
-def test_nesting_context(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_nesting_context() -> None:
     table_id = 0
     title = " TEST "
 
@@ -202,12 +211,17 @@ def test_nesting_context(request_context) -> None:  # type:ignore[no-untyped-def
     ), written_text
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize("sortable", [True, False])
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])
 @pytest.mark.parametrize("output_format", ["html", "csv"])
-def test_table_cubical(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch, sortable, searchable, limit, output_format
+def test_table_cubical(
+    monkeypatch: MonkeyPatch,
+    sortable: bool,
+    searchable: bool,
+    limit: int | Literal[False] | None,
+    output_format: str,
 ) -> None:
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 

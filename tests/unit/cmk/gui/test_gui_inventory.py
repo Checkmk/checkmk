@@ -6,6 +6,7 @@
 from pathlib import Path
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
@@ -13,6 +14,7 @@ from cmk.utils.structured_data import StructuredDataNode
 
 import cmk.gui.inventory
 from cmk.gui.inventory import InventoryPath, TreeSource
+from cmk.gui.type_defs import Row
 
 
 @pytest.mark.parametrize(
@@ -138,8 +140,8 @@ def test_parse_tree_path(
         ),
     ],
 )
-def test__load_status_data_tree(  # type:ignore[no-untyped-def]
-    monkeypatch, hostname, row, expected_tree
+def test__load_status_data_tree(
+    monkeypatch: MonkeyPatch, hostname: str | None, row: Row, expected_tree: StructuredDataNode
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
@@ -164,8 +166,10 @@ _MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
         (_InvTree, _StatusDataTree, _MergedTree),
     ],
 )
-def test__merge_inventory_and_status_data_tree(  # type:ignore[no-untyped-def]
-    inventory_tree, status_data_tree, expected_tree
+def test__merge_inventory_and_status_data_tree(
+    inventory_tree: StructuredDataNode | None,
+    status_data_tree: StructuredDataNode | None,
+    expected_tree: StructuredDataNode | None,
 ) -> None:
     merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
         inventory_tree,

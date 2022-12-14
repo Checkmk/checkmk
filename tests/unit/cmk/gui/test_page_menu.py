@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.gui.page_menu import (
     make_external_link,
     make_form_submit_link,
@@ -47,7 +49,8 @@ def test_make_form_submit_link() -> None:
     )
 
 
-def test_simple_page_menu(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_simple_page_menu() -> None:
     pm = PageMenu(
         [
             PageMenuDropdown(

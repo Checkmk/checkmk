@@ -2392,30 +2392,6 @@ def _get_checkgroup_parameters(
         raise MKGeneralException(str(e) + f" (on host {host}, checkgroup {checkgroup})")
 
 
-# .
-#   .--Host Configuration--------------------------------------------------.
-#   |                         _   _           _                            |
-#   |                        | | | | ___  ___| |_                          |
-#   |                        | |_| |/ _ \/ __| __|                         |
-#   |                        |  _  | (_) \__ \ |_                          |
-#   |                        |_| |_|\___/|___/\__|                         |
-#   |                                                                      |
-#   |    ____             __ _                       _   _                 |
-#   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
-#   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
-#   |  | |__| (_) | | | |  _| | (_| | |_| | | | (_| | |_| | (_) | | | |    |
-#   |   \____\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|    |
-#   |                          |___/                                       |
-#   +----------------------------------------------------------------------+
-
-
-class HostConfig:
-    def __init__(self, config_cache: ConfigCache, hostname: HostName) -> None:
-        super().__init__()
-        self.hostname: Final = hostname
-        self._config_cache: Final = config_cache
-
-
 def lookup_mgmt_board_ip_address(
     config_cache: ConfigCache, host_name: HostName
 ) -> HostAddress | None:
@@ -2605,11 +2581,6 @@ class ConfigCache:
         # Caches for nodes and clusters
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_of_cache: dict[HostName, list[HostName]] = {}
-        self._initialize_host_config()
-
-    def _initialize_host_config(self) -> None:
-        # Keep HostConfig instances created with the current configuration cache
-        self._host_configs: dict[HostName, HostConfig] = {}
 
     def _discovered_labels_of_service(
         self,
@@ -2672,16 +2643,6 @@ class ConfigCache:
             ),
         )
 
-    def make_host_config(self, hostname: HostName) -> HostConfig:
-        """Returns a HostConfig instance for the given host
-
-        It lazy initializes the host config object and caches the objects during the livetime
-        of the ConfigCache."""
-        with contextlib.suppress(KeyError):
-            return self._host_configs[hostname]
-
-        return self._host_configs.setdefault(hostname, HostConfig(self, hostname))
-
     def invalidate_host_config(self, hostname: HostName) -> None:
         self._enforced_services_table.clear()
         self._is_piggyback_host.clear()
@@ -2699,10 +2660,6 @@ class ConfigCache:
         self._disabled_snmp_sections.clear()
         self._labels.clear()
         self._label_sources.clear()
-        try:
-            del self._host_configs[hostname]
-        except KeyError:
-            pass
         self._notification_plugin_parameters.clear()
 
     @staticmethod
@@ -3251,9 +3208,7 @@ class ConfigCache:
     # TODO: check all call sites and remove this or make it private?
     @staticmethod
     def tags(hostname: HostName) -> TaggroupIDToTagID:
-        """Returns the dict of all configured tag groups and values of a host
-
-        In case you have a HostConfig object available better use HostConfig.tag_groups"""
+        """Returns the dict of all configured tag groups and values of a host."""
         if hostname in host_tags:
             return host_tags[hostname]
 
@@ -4193,14 +4148,18 @@ def _boil_down_agent_rules(
 
 
 class CEEConfigCache(ConfigCache):
+    def _initialize_caches(self) -> None:
+        super()._initialize_caches()
+        self._initialize_host_config()
+
     def _initialize_host_config(self) -> None:
-        # Keep HostConfig instances created with the current configuration cache
+        # Keep CEEHostConfig instances created with the current configuration cache
         # This can be ignored for now -- it only is used privately as a cache, so the
         # contravariance is not a problem here.
         self._host_configs: dict[HostName, CEEHostConfig] = {}  # type: ignore[assignment]
 
     def make_cee_host_config(self, hostname: HostName) -> CEEHostConfig:
-        """Returns a HostConfig instance for the given host
+        """Returns a CEEHostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime
         of the ConfigCache."""

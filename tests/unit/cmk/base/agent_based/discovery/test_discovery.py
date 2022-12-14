@@ -59,7 +59,7 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesTable,
 )
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import CEEConfigCache, CEEHostConfig, ConfigCache
 from cmk.base.discovered_labels import HostLabel
 
 
@@ -991,7 +991,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
 class ClusterScenario(NamedTuple):
     config_cache: ConfigCache
-    host_config: HostConfig
+    host_config: CEEHostConfig
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
     node2_hostname: HostName
@@ -1020,7 +1020,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config(hostname)
+    assert isinstance(config_cache, CEEConfigCache)
+    host_config = config_cache.make_cee_host_config(hostname)
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),

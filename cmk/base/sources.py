@@ -263,7 +263,6 @@ class _Builder:
         super().__init__()
         self.host_name: Final = host_name
         self.config_cache: Final = config_cache
-        self.host_config: Final = self.config_cache.make_host_config(self.host_name)
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error

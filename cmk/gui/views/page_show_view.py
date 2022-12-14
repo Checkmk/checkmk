@@ -310,8 +310,6 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
 
     Besides gathering the information from livestatus it performs livestatus table joining
     (e.g. Adding service row info to host rows (For join painters))"""
-    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
-
     # We test for limit here and not inside view.row_limit, because view.row_limit is used
     # for rendering limits.
     row_data: Rows | tuple[Rows, int] = view.datasource.table.query(
@@ -322,7 +320,10 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
             view,
         ),
         view.context,
-        filterheaders + view.spec.get("add_headers", ""),
+        (
+            "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+            + view.spec.get("add_headers", "")
+        ),
         view.only_sites,
         None if view.datasource.ignore_limit else view.row_limit,
         all_active_filters,
@@ -336,7 +337,7 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
 
     # Now add join information, if there are join columns
     if view.join_cells:
-        _do_table_join(view, rows, filterheaders)
+        _do_table_join(view, all_active_filters, rows)
 
     return rows, unfiltered_amount_of_rows
 
@@ -496,7 +497,7 @@ def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:
     return columns
 
 
-def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
+def _do_table_join(view: View, all_active_filters: list[Filter], master_rows: Rows) -> None:
     if not (isinstance(join := view.datasource.join, tuple) and len(join) == 2):
         raise ValueError()
 
@@ -517,7 +518,8 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str) -> None:
         ),
         context=view.context,
         headers="{}{}\n".format(
-            master_filters, "\n".join(_make_join_filters(view.join_cells, slave_ds.join_key))
+            "".join(get_livestatus_filter_headers(view.context, all_active_filters)),
+            "\n".join(_make_join_filters(view.join_cells, slave_ds.join_key)),
         ),
         only_sites=view.only_sites,
         limit=None,

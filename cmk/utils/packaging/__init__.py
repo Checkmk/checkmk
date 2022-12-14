@@ -101,10 +101,6 @@ class PackagePartInfoElement(TypedDict):
 
 PackagePartInfo = dict[PartName, PackagePartInfoElement]
 
-package_ignored_files = {
-    "lib": ["nagios/plugins/README.txt"],
-}
-
 PACKAGE_EXTENSION: Final[str] = ".mkp"
 
 
@@ -750,10 +746,6 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
     files = os.listdir(directory)
     for f in files:
         if f in [".", ".."] or f.startswith(".") or f.endswith("~") or f.endswith(".pyc"):
-            continue
-
-        ignored = package_ignored_files.get(part, [])
-        if prefix + f in ignored:
             continue
 
         path = directory + "/" + f

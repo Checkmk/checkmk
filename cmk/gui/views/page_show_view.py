@@ -13,7 +13,6 @@ from itertools import chain
 from typing import Any
 
 import livestatus
-from livestatus import SiteId
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.site import omd_site
@@ -47,7 +46,7 @@ from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.views.data_source import data_source_registry
 
 from . import availability
-from .painter.v0.base import Cell, JoinCell
+from .painter.v0.base import Cell, columns_of_cells
 from .painter_options import PainterOptions
 from .row_post_processing import post_process_rows
 from .sorter import SorterEntry
@@ -335,10 +334,6 @@ def _fetch_rows_from_livestatus(view: View, all_active_filters: list[Filter]) ->
         rows = row_data
         unfiltered_amount_of_rows = len(row_data)
 
-    # Now add join information, if there are join columns
-    if view.join_cells:
-        _do_table_join(view, all_active_filters, rows)
-
     return rows, unfiltered_amount_of_rows
 
 
@@ -433,7 +428,7 @@ def _get_needed_regular_columns(
     if request.var("mode") == "availability" and "aggr" in view.datasource.infos:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
-    columns = columns_of_cells(view.group_cells + view.row_cells)
+    columns = columns_of_cells(view.group_cells + view.row_cells, get_permitted_views())
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()
@@ -468,87 +463,6 @@ def _get_needed_regular_columns(
         columns.add("host_labels")
 
     return list(columns)
-
-
-def _get_needed_join_columns(
-    join_cells: list[JoinCell], sorters: list[SorterEntry]
-) -> list[ColumnName]:
-    join_columns = columns_of_cells(join_cells)
-
-    # Columns needed for sorters
-    # TODO: Move sorter parsing and logic to something like Cells()
-    for entry in sorters:
-        join_columns.update(entry.sorter.columns)
-
-    # Remove (implicit) site column
-    try:
-        join_columns.remove("site")
-    except KeyError:
-        pass
-
-    return list(join_columns)
-
-
-def columns_of_cells(cells: Sequence[Cell]) -> set[ColumnName]:
-    columns: set[ColumnName] = set()
-    permitted_views = get_permitted_views()
-    for cell in cells:
-        columns.update(cell.needed_columns(permitted_views))
-    return columns
-
-
-def _do_table_join(view: View, all_active_filters: list[Filter], master_rows: Rows) -> None:
-    if not (isinstance(join := view.datasource.join, tuple) and len(join) == 2):
-        raise ValueError()
-
-    join_table, join_master_column = join
-    slave_ds = data_source_registry[join_table]()
-
-    if slave_ds.join_key is None:
-        raise ValueError()
-
-    row_data = slave_ds.table.query(
-        view.datasource,
-        view.row_cells,
-        columns=list(
-            set(
-                [join_master_column, slave_ds.join_key]
-                + _get_needed_join_columns(view.join_cells, view.sorters)
-            )
-        ),
-        context=view.context,
-        headers="{}{}\n".format(
-            "".join(get_livestatus_filter_headers(view.context, all_active_filters)),
-            "\n".join(_make_join_filters(view.join_cells, slave_ds.join_key)),
-        ),
-        only_sites=view.only_sites,
-        limit=None,
-        all_active_filters=[],
-    )
-
-    if isinstance(row_data, tuple):
-        rows, _unfiltered_amount_of_rows = row_data
-    else:
-        rows = row_data
-
-    per_master_entry: dict[tuple[SiteId, str], dict[str, Row]] = {}
-    for row in rows:
-        current_entry = per_master_entry.setdefault(_make_master_key(row, join_master_column), {})
-        current_entry[row[slave_ds.join_key]] = row
-
-    # Add this information into master table in artificial column "JOIN"
-    for row in master_rows:
-        row["JOIN"] = per_master_entry.get(_make_master_key(row, join_master_column), {})
-
-
-def _make_join_filters(join_cells: list[JoinCell], join_key: str) -> list[str]:
-    join_filters = [join_cell.livestatus_filter(join_key) for join_cell in join_cells]
-    join_filters.append("Or: %d" % len(join_filters))
-    return join_filters
-
-
-def _make_master_key(row: Row, join_master_column: str) -> tuple[SiteId, str]:
-    return (SiteId(row["site"]), row[join_master_column])
 
 
 def save_state_for_playing_alarm_sounds(row: "Row") -> None:

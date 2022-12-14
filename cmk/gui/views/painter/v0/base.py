@@ -37,6 +37,7 @@ from cmk.gui.type_defs import (
     PainterName,
     PainterParameters,
     PainterSpec,
+    PermittedViewSpecs,
     Row,
     Rows,
     SorterName,
@@ -305,6 +306,13 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
 
 def painter_exists(painter_spec: PainterSpec) -> bool:
     return painter_spec.name in painter_registry
+
+
+def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
+    columns: set[ColumnName] = set()
+    for cell in cells:
+        columns.update(cell.needed_columns(permitted_views))
+    return columns
 
 
 class Cell:

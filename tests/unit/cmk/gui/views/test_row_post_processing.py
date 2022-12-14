@@ -14,7 +14,10 @@ from cmk.gui.views.store import multisite_builtin_views
 
 def test_post_processor_registrations() -> None:
     names = [f.__name__ for f in _ROW_POST_PROCESSORS]
-    expected = ["inventory_row_post_processor"]
+    expected = [
+        "inventory_row_post_processor",
+        "join_service_row_post_processor",
+    ]
     if not cmk_version.is_raw_edition():
         expected.append("sla_row_post_processor")
     assert sorted(names) == sorted(expected)
@@ -28,7 +31,7 @@ def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
 
 def test_post_process_rows_adds_inventory_data() -> None:
     inv_view = inventory_view()
-    host_row = {"host_name": "ding"}
+    host_row = {"site": "ding", "host_name": "dong"}
     rows: Rows = [host_row]
     post_process_rows(inv_view, [], rows)
     assert rows == [host_row]

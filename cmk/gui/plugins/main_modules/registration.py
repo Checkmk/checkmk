@@ -30,6 +30,7 @@ from cmk.gui.views.command import command_registry
 from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
+from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
@@ -92,5 +93,6 @@ bi.register(
 )
 register_sites_options()
 register_row_post_processor(inventory_row_post_processor)
+register_row_post_processor(join_service_row_post_processor)
 saml2.connector.register(user_connector_registry)
 saml2.pages.register(cmk.gui.pages.page_registry)

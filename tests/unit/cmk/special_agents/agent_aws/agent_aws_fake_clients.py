@@ -3213,7 +3213,7 @@ class SNSListSubscriptionsIB(InstanceBuilder):
 
 class SNSListTopicsIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
-        return [Str("TopicArn")]
+        return [Str("TopicArn", value="arn:aws:sns:eu-west-1:710145618630:TopicName")]
 
 
 # .

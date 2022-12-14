@@ -16,11 +16,12 @@ import logging
 import sys
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from time import sleep
-from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
+from typing import Any, Literal, NamedTuple, Type, TypedDict, TypeVar
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -72,10 +73,15 @@ class MetricStat(TypedDict):
     Unit: NotRequired[str]
 
 
-class Metric(TypedDict):
+class MetricRequired(TypedDict):
     Id: str
     Label: str
+
+
+class Metric(MetricRequired, total=False):
+    Expression: str
     MetricStat: MetricStat
+    Period: int
 
 
 Metrics = list[Metric]
@@ -801,7 +807,8 @@ class AWSSection(DataCache):
     def _validate_result_content(self, content: list | dict) -> None:
         assert isinstance(content, list), "%s: Result content must be of type 'list'" % self.name
 
-    def _prepare_tags_for_api_response(self, tags: RawTags) -> Tags | None:
+    @staticmethod
+    def prepare_tags_for_api_response(tags: RawTags) -> Tags | None:
         """
         We need to change the format, in order to filter out instances with specific
         tags if and only if we already fetched instances, eg. by limits section.
@@ -927,8 +934,8 @@ class AWSSectionCloudwatch(AWSSection):
         or None.
         """
         for metric_specs, metric_contents in zip(metrics, raw_content):
-            metric_stat = metric_specs["MetricStat"]
-            if metric_stat["Stat"] == "Sum":
+            metric_stat = metric_specs.get("MetricStat", {})
+            if metric_stat.get("Stat") == "Sum":
                 period = metric_stat["Period"]
             else:
                 period = None
@@ -1394,7 +1401,7 @@ class EC2Summary(AWSSection):
         self, col_reservations: list
     ) -> list[Mapping[str, object]] | None:
         if col_reservations:
-            tags = self._prepare_tags_for_api_response(self._tags)
+            tags = self.prepare_tags_for_api_response(self._tags)
             return (
                 [
                     inst
@@ -1883,7 +1890,7 @@ class EBSSummary(AWSSection):
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
-            tags = self._prepare_tags_for_api_response(self._tags)
+            tags = self.prepare_tags_for_api_response(self._tags)
             if tags:
                 return [v for v in col_volumes for tag in v.get("Tags", []) if tag in tags]
 
@@ -2110,7 +2117,7 @@ class S3Summary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["s3_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["s3_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["s3_tags"])
 
     @property
     def name(self) -> str:
@@ -2426,9 +2433,7 @@ class GlacierSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["glacier_names"]
-        self._tags = self._prepare_tags_for_api_response(
-            self._config.service_config["glacier_tags"]
-        )
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["glacier_tags"])
 
     @property
     def name(self) -> str:
@@ -2668,7 +2673,7 @@ class ELBSummaryGeneric(AWSSection):
 
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["%s_names" % resource]
-        self._tags = self._prepare_tags_for_api_response(
+        self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["%s_tags" % resource]
         )
 
@@ -3572,7 +3577,7 @@ class RDSSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["rds_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["rds_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["rds_tags"])
 
     @property
     def name(self) -> str:
@@ -3771,7 +3776,7 @@ class CloudFrontSummary(AWSSection):
         super().__init__(client, region, config, distributor=distributor)
         self._tagging_client = tagging_client
         self._names = self._config.service_config["cloudfront_names"]
-        self._tags = self._prepare_tags_for_api_response(
+        self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["cloudfront_tags"]
         )
 
@@ -4157,7 +4162,7 @@ class DynamoDBSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["dynamodb_names"]
-        self._tags = self._prepare_tags_for_api_response(
+        self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["dynamodb_tags"]
         )
 
@@ -4467,7 +4472,7 @@ class WAFV2Summary(AWSSection):
         self._region_report = _validate_wafv2_scope_and_region(scope, self._region)
         self._scope = scope
         self._names = self._config.service_config["wafv2_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["wafv2_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["wafv2_tags"])
 
     @property
     def name(self) -> str:
@@ -4710,7 +4715,7 @@ class LambdaSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["lambda_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
 
     @property
     def name(self) -> str:
@@ -4952,7 +4957,7 @@ class LambdaCloudwatchInsights(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["lambda_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["lambda_tags"])
 
     @property
     def name(self) -> str:
@@ -5161,9 +5166,7 @@ class Route53HealthChecks(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["route53_names"]
-        self._tags = self._prepare_tags_for_api_response(
-            self._config.service_config["route53_tags"]
-        )
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["route53_tags"])
 
     @property
     def name(self) -> str:
@@ -5292,6 +5295,73 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
 # they are producing, so the cloudwatch section monitors detailed metrics about incoming traffic.
 
 
+@dataclass(frozen=True)
+class SNSTopic:
+    region: str
+    account_id: str
+    topic_name: str
+
+    @classmethod
+    def from_arn(cls: Type["SNSTopic"], arn_str: str) -> "SNSTopic":
+        """Example topic ARN: 'arn:aws:sns:eu-central-1:710145618630:TestTopicGiordano'"""
+        splitted_arn = arn_str.split(":")
+        return cls(region=splitted_arn[3], account_id=splitted_arn[4], topic_name=splitted_arn[5])
+
+    def to_arn(self) -> str:
+        return f"arn:aws:sns:{self.region}:{self.account_id}:{self.topic_name}"
+
+    def to_item_id(self) -> str:
+        """Return the item id of the CheckMK service."""
+        # !!!DO NOT CHANGE THE ITEM ID!!!!
+        # If you change the item id, it will create new services and lose all the data of the old
+        # services because the service name will change according to the item id
+
+        # SNS Topic name is unique per region so we need to include the region name in the service
+        # name to avoid considering 2 topics with the same name in different regions as the same
+        # topic
+        return f"{self.region} {self.topic_name}"
+
+
+class SNSTopicsFetcher:
+    """This class will fetch the topics matching the config criteria and cache them in memory"""
+
+    def __init__(
+        self,
+        client: BaseClient,
+        tagging_client: BaseClient,
+        region: str,
+        config: AWSConfig,
+    ):
+        self._client = client
+        self._tagging_client = tagging_client
+        self._region = region
+        self._names = config.service_config["sns_names"]
+        self._tags = AWSSection.prepare_tags_for_api_response(config.service_config["sns_tags"])
+
+    def fetch_all_topics(self) -> list[SNSTopic]:
+        return [
+            SNSTopic.from_arn(topic["TopicArn"])
+            for page in self._client.get_paginator("list_topics").paginate()
+            for topic in page["Topics"]
+        ]
+
+    def fetch_filtered_topics(self, all_topics_arns: list[str]) -> list[SNSTopic]:
+        unfiltered_topics = [SNSTopic.from_arn(arn) for arn in all_topics_arns]
+        filtered_topics = unfiltered_topics.copy()
+
+        if self._names:
+            filtered_topics = [t for t in unfiltered_topics if t.topic_name in self._names]
+
+        if self._tags:
+            topics_arn_matching_tags = fetch_resources_matching_tags(
+                self._tagging_client, self._tags, ["sns:topic"]
+            )
+            filtered_topics = [
+                t for t in unfiltered_topics if t.to_arn() in topics_arn_matching_tags
+            ]
+        return filtered_topics
+
+
 class SNSLimits(AWSSectionLimits):
     """
     AWS imposes the following per account limits.
@@ -5303,6 +5373,17 @@ class SNSLimits(AWSSectionLimits):
     various tasks, but these four limits above are the most account-relevant limits.
     This article might also be a valuable resource: https://www.serverless.com/guides/amazon-sns#:~:text=Amazon%20SNS%20limits,-%E2%80%8D&text=Both%20subscribe%20and%20unsubscribe%20transactions,the%20us%2Deast%2D1%20region
     """
+
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        sns_topics_fetcher: SNSTopicsFetcher,
+        distributor: ResultDistributor | None = None,
+    ):
+        super().__init__(client, region, config, distributor=distributor)
+        self._sns_topics_fetcher = sns_topics_fetcher
 
     @property
     def name(self) -> str:
@@ -5320,11 +5401,9 @@ class SNSLimits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping]:
-        topics = [
-            topic
-            for page in self._client.get_paginator("list_topics").paginate()
-            for topic in page["Topics"]
-        ]
+        # We don't want to filter by name and tags for the limits section since the filtered topics
+        # are considered in the AWS account limits
+        topics = self._sns_topics_fetcher.fetch_all_topics()
 
         num_of_subscriptions_by_topic = Counter(
             str(subscription["TopicArn"])
@@ -5334,9 +5413,9 @@ class SNSLimits(AWSSectionLimits):
 
         return [
             {
-                "arn": str(topic["TopicArn"]),
-                "is_fifo": str(topic["TopicArn"]).endswith(".fifo"),
-                "num_subscriptions": num_of_subscriptions_by_topic[str(topic["TopicArn"])],
+                "arn": topic.to_arn(),
+                "is_fifo": topic.topic_name.endswith(".fifo"),
+                "num_subscriptions": num_of_subscriptions_by_topic[topic.to_arn()],
             }
             for topic in topics
         ]
@@ -5368,6 +5447,134 @@ class SNSLimits(AWSSectionLimits):
         )
 
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+
+class SNSSMS(AWSSectionCloudwatch):
+    @property
+    def name(self) -> str:
+        return "sns_sms_cloudwatch"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
+        # The metrics of this class are grouped by AWS region because AWS doesn't provide SMS-relatd
+        # metrics on a per-topic level but only per-region
+        sms_success_rate_metric: Metric = {
+            "Id": self._create_id_for_metric_data_query(0, "SMSSuccessRate"),
+            "Label": self.region,
+            "Period": self.period,
+            "Expression": 'SELECT AVG(SMSSuccessRate) FROM SCHEMA("AWS/SNS", Country,SMSType)',
+        }
+        sms_spending_metric: Metric = {
+            "Id": self._create_id_for_metric_data_query(0, "SMSMonthToDateSpentUSD"),
+            "Label": self.region,
+            "MetricStat": {
+                "Metric": {
+                    "Namespace": "AWS/SNS",
+                    "MetricName": "SMSMonthToDateSpentUSD",
+                    "Dimensions": [],
+                },
+                "Period": self.period,
+                "Stat": "Maximum",
+                "Unit": "Count",
+            },
+        }
+        return [sms_success_rate_metric, sms_spending_metric]
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class SNS(AWSSectionCloudwatch):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        topics_fetcher: SNSTopicsFetcher,
+        distributor: ResultDistributor | None = None,
+    ):
+        super().__init__(client, region, config, distributor=distributor)
+        self.topics_fetcher = topics_fetcher
+
+    @property
+    def name(self) -> str:
+        return "sns_cloudwatch"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("sns_limits")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_filtered_topics(self, colleague_contents: AWSColleagueContents) -> list[SNSTopic]:
+        if colleague_contents.content:
+            unfiltered_topics = [topic["arn"] for topic in colleague_contents.content]
+        else:
+            unfiltered_topics = [topic.to_arn() for topic in self.topics_fetcher.fetch_all_topics()]
+        return self.topics_fetcher.fetch_filtered_topics(unfiltered_topics)
+
+    def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
+        # The metrics of this class are grouped by SNS topic
+        metrics = []
+        topics = self._get_filtered_topics(colleague_contents)
+        for idx, topic in enumerate(topics):
+            for metric_name, stat, unit in [
+                ("NumberOfMessagesPublished", "Sum", "Count"),
+                ("NumberOfNotificationsDelivered", "Sum", "Count"),
+                ("NumberOfNotificationsFailed", "Sum", "Count"),
+            ]:
+                metric: Metric = {
+                    "Id": self._create_id_for_metric_data_query(idx, metric_name),
+                    "Label": topic.to_item_id(),
+                    "MetricStat": {
+                        "Metric": {
+                            "Namespace": "AWS/SNS",
+                            "MetricName": metric_name,
+                            "Dimensions": [
+                                {
+                                    "Name": "TopicName",
+                                    "Value": topic.topic_name,
+                                }
+                            ],
+                        },
+                        "Period": self.period,
+                        "Stat": stat,
+                        "Unit": unit,
+                    },
+                }
+                metrics.append(metric)
+        return metrics
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
 
 
 # .
@@ -5525,7 +5732,7 @@ class ECSSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["ecs_names"]
-        self._tags = self._prepare_tags_for_api_response(self._config.service_config["ecs_tags"])
+        self._tags = self.prepare_tags_for_api_response(self._config.service_config["ecs_tags"])
 
     @property
     def name(self) -> str:
@@ -5839,7 +6046,7 @@ class ElastiCacheSummary(AWSSection):
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config["elasticache_names"]
-        self._tags = self._prepare_tags_for_api_response(
+        self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["elasticache_tags"]
         )
 
@@ -6198,6 +6405,7 @@ class AWSSectionsGeneric(AWSSections):
         distributor = ResultDistributor()
 
         cloudwatch_client = self._init_client("cloudwatch")
+        tagging_client = self._init_client("resourcegroupstaggingapi")
         ec2_client = self._init_client("ec2")
         ebs_summary = EBSSummary(ec2_client, region, config, distributor)
 
@@ -6399,9 +6607,21 @@ class AWSSectionsGeneric(AWSSections):
 
         if "sns" in services:
             sns_client = self._init_client("sns")
-            sns_limits = SNSLimits(sns_client, region, config, distributor)
+            sns_topics_fetcher = SNSTopicsFetcher(sns_client, tagging_client, region, config)
+            sns_cloudwatch = SNS(
+                cloudwatch_client, region, config, sns_topics_fetcher, distributor=distributor
+            )
+            sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
+                sns_limits = SNSLimits(
+                    sns_client, region, config, sns_topics_fetcher, distributor=distributor
+                )
+                distributor.add("sns_limits", sns_cloudwatch)
                 self._sections.append(sns_limits)
+            # sns_cloudwatch section should always be after sns_limits because it gets the data from
+            # there through the distributor
+            self._sections.append(sns_cloudwatch)
+            self._sections.append(sns_sms_cloudwatch)
 
         if "ecs" in services:
             ecs_client = self._init_client("ecs")

@@ -1658,7 +1658,7 @@ def test_host_config_parents(cluster_config: ConfigCache) -> None:
     assert cluster_config.parents(HostName("node1")) == []
     assert cluster_config.parents(HostName("host1")) == []
     # TODO: Move cluster/node parent handling to HostConfig
-    # assert cluster_config.make_cee_host_config("cluster1").parents == ["node1"]
+    # assert cluster_config.make_host_config("cluster1").parents == ["node1"]
     assert cluster_config.parents(HostName("cluster1")) == []
 
 

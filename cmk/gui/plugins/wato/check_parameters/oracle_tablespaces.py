@@ -99,6 +99,10 @@ def _parameter_valuespec_oracle_tablespaces():
                         (False, _("Ignore undo Tablespaces (Default)")),
                         (True, _("Apply rule to undo Tablespaces")),
                     ],
+                    help=_(
+                        "Please be aware that the monitoring of UNDO tablespaces is only useful in very rare situations with very specific preconditions."
+                        " If you don't have such a specific case, you should not activate the monitoring of UNDO."
+                    ),
                 ),
             ),
         ],

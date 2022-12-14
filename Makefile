@@ -482,7 +482,7 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
-	cd packages/livestatus && if [ ! -f build/Makefile ] ; then cmake -S . -B build ; fi  && cmake --build build
+	packages/livestatus/run-ci --build
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -492,14 +492,14 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	cd packages/livestatus && ./run-ci --clang-tidy
+	packages/livestatus/run-ci --clang-tidy
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	cd packages/livestatus && ./run-ci --iwyu
+	packages/livestatus/run-ci --iwyu
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu

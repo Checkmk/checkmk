@@ -5,11 +5,11 @@
 
 set -e
 
-REPO_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)/../..
-IWYU_TOOL="python3 ${REPO_DIR}/scripts/iwyu_tool.py"
-MAPPING_FILE="${REPO_DIR}/livestatus/iwyu-mappings/check_mk.imp"
 CLANG_VERSION=14
-TIDY_TOOL="python3 ${REPO_DIR}/scripts/run-clang-tidy.py -clang-tidy-binary=clang-tidy-${CLANG_VERSION} -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION}"
+
+# Change to the directory where this script resides, it makes many things easier
+# and we can call this script from everywhere.
+cd -- "${BASH_SOURCE%/*}"
 
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
@@ -70,6 +70,7 @@ while true; do
             continue
             ;;
         '-u' | '--unit-tests')
+            RUN_BUILD=yes
             RUN_UNIT_TESTS=yes
             shift
             continue
@@ -137,20 +138,20 @@ fi
 # calculate dependencies #######################################################
 
 # TODO: Just for debugging, remove later
-echo "========== initial file arguments"
-for f in "${FILES[@]}"; do
-    echo "file argument: <$f>"
-done
+# echo "========== initial file arguments"
+# for f in "${FILES[@]}"; do
+#     echo "file argument: <$f>"
+# done
 
 if [ ${TRANSITIVE_DEPENDENCIES} = yes ]; then
     echo "calculating transitive dependencies of" "${FILES[@]}" # TODO
 fi
 
 # TODO: Just for debugging, remove later
-echo "========== final file arguments"
-for f in "${FILES[@]}"; do
-    echo "file argument: <$f>"
-done
+# echo "========== final file arguments"
+# for f in "${FILES[@]}"; do
+#     echo "file argument: <$f>"
+# done
 
 # the CI pipeline itself #######################################################
 
@@ -163,7 +164,6 @@ if [ ${RUN_BUILD} = yes ]; then
 fi
 
 if [ ${RUN_UNIT_TESTS} = yes ]; then
-    cmake --build build --target test
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
         VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
     fi
@@ -171,13 +171,26 @@ if [ ${RUN_UNIT_TESTS} = yes ]; then
 fi
 
 if [ ${RUN_IWYU} = yes ]; then
-    # shellcheck disable=SC2086
-    ${IWYU_TOOL} --jobs=4 --output-format=clang -p build ${FILES:-src test} -- ${IWYU_EXTRA_ARGS} -Xiwyu "--mapping_file=${MAPPING_FILE}"
+    # shellcheck disable=SC2086 # Yes, we want splitting for FILES and IWYU_EXTRA_ARGS.
+    python3 ../../scripts/iwyu_tool.py \
+        --jobs=4 \
+        --output-format=clang \
+        -p build \
+        ${FILES:-src test} -- \
+        -Xiwyu "--mapping_file=$(realpath ../../livestatus/iwyu-mappings/check_mk.imp)" \
+        ${IWYU_EXTRA_ARGS}
 fi
 
 if [ ${RUN_CLANG_TIDY} = yes ]; then
-    # shellcheck disable=SC2086
-    ${TIDY_TOOL} ${CLANG_TIDY_EXTRA_ARGS} -quiet -j6 -p=build ${FILES:-src test}
+    # shellcheck disable=SC2086 # Yes, we want splitting for FILES and CLANG_TIDY_EXTRA_ARGS.
+    python3 ../../scripts/run-clang-tidy.py \
+        -clang-tidy-binary=clang-tidy-${CLANG_VERSION} \
+        -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION} \
+        -quiet \
+        -j6 \
+        -p=build \
+        ${CLANG_TIDY_EXTRA_ARGS} \
+        ${FILES:-src test}
 fi
 
 # non-pipeline stuff: formatting/documentation #################################

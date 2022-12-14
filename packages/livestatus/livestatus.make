@@ -4,7 +4,7 @@ LIVESTATUS_BUILD := $(BUILD_HELPER_DIR)/livestatus-build
 LIVESTATUS_INSTALL := $(BUILD_HELPER_DIR)/livestatus-install
 
 $(LIVESTATUS_BUILD):
-	cd $(LIVESTATUS_PACKAGE) && ./run-ci --build
+	$(LIVESTATUS_PACKAGE)/run-ci --build
 	$(TOUCH) $@
 
 $(LIVESTATUS_INSTALL): $(LIVESTATUS_BUILD)

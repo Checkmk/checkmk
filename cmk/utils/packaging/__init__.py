@@ -713,10 +713,8 @@ def _get_enabled_package_paths():
 
 def get_unpackaged_files() -> dict[PackagePart, list[str]]:
     packaged = get_packaged_files()
-    return {
-        part: _unpackaged_files_in_dir(part.ident, part.path, packaged.get(part, ()))
-        for part in PACKAGE_PARTS + CONFIG_PARTS
-    }
+    present = {part: _files_in_dir(part.ident, part.path) for part in PackagePart}
+    return {part: sorted(present[part] - (packaged.get(part) or set())) for part in present}
 
 
 def package_part_info() -> PackagePartInfo:
@@ -741,18 +739,18 @@ def package_num_files(package: Manifest) -> int:
     return sum(len(fl) for fl in package.files.values())
 
 
-def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
+def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
     if directory is None or not os.path.exists(directory):
-        return []
+        return set()
 
     # Handle case where one part-directory lies below another
     taboo_dirs = {p.path for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
     # os.path.realpath would resolve /omd to /opt/omd ...
     taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
     if directory in taboo_dirs:
-        return []
+        return set()
 
-    result: list[str] = []
+    result: set[str] = set()
     files = os.listdir(directory)
     for f in files:
         if f in [".", ".."] or f.startswith(".") or f.endswith("~") or f.endswith(".pyc"):
@@ -764,15 +762,10 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
 
         path = directory + "/" + f
         if os.path.isdir(path):
-            result += _files_in_dir(part, path, prefix + f + "/")
+            result.update(_files_in_dir(part, path, prefix + f + "/"))
         else:
-            result.append(prefix + f)
-    result.sort()
+            result.add(prefix + f)
     return result
-
-
-def _unpackaged_files_in_dir(part: PartName, directory: str, packaged: Container[str]) -> list[str]:
-    return [f for f in _files_in_dir(part, directory) if f not in packaged]
 
 
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:

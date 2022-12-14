@@ -6,10 +6,11 @@
 import ast
 import json
 import logging
+import re
 import warnings
 from collections.abc import Iterable
 from functools import lru_cache
-from itertools import chain, permutations
+from itertools import chain
 from pathlib import Path
 from typing import NewType
 
@@ -26,19 +27,17 @@ IGNORED_LIBS |= {"__future__", "typing_extensions"}  # other builtin stuff
 
 BUILD_DIRS = {repo_path() / "agent-receiver/build"}
 
-PACKAGE_REPLACEMENTS = ".-_"
-
-
 PackageName = NewType("PackageName", str)  # Name in Pip(file)
+NormalizedPackageName = NewType("NormalizedPackageName", str)
 ImportName = NewType("ImportName", str)  # Name in Source (import ...)
 
 
 @pytest.fixture(name="loaded_pipfile")
-def load_pipfile():
+def load_pipfile() -> Pipfile:
     return Pipfile.load(filename=str(repo_path() / "Pipfile"))
 
 
-def test_all_deployment_packages_pinned(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
+def test_all_deployment_packages_pinned(loaded_pipfile: Pipfile) -> None:
     unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
@@ -46,7 +45,7 @@ def test_all_deployment_packages_pinned(loaded_pipfile) -> None:  # type:ignore[
     ) % " ,".join(unpinned_packages)
 
 
-def test_pipfile_syntax(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
+def test_pipfile_syntax(loaded_pipfile: Pipfile) -> None:
     # pipenv is currently (e.g. in version 2022.1.8) accepting false Pipfile syntax like:
     # pysmb = "1.2"
     # So it will not throw an error or warning if the comparision operator is missing.
@@ -159,28 +158,34 @@ def get_imported_libs(repopath: Path) -> set[ImportName]:
     )
 
 
-def packagename_for(path: Path) -> PackageName:
-    """Check a METADATA file and return the PackageName"""
-    with path.open() as metadata:
-        for line in metadata.readlines():
-            if line.startswith("Name:"):
-                return PackageName(line[5:].strip())
+def normalize_packagename(name: str) -> NormalizedPackageName:
+    """there are some normalizations to make before comparing
+    https://peps.python.org/pep-0503/#normalized-names"""
 
-    raise NotImplementedError("No 'Name:' in METADATA file")
+    return NormalizedPackageName(re.sub(r"[-_.]+", "-", name).lower())
 
 
-def importnames_for(packagename: PackageName, path: Path) -> list[ImportName]:
-    """return a list of importable libs which belong to the package"""
-    top_level_txt_path = path.with_name("top_level.txt")
-    if not top_level_txt_path.is_file():
-        return [ImportName(packagename)]
-
-    with top_level_txt_path.open() as top_level_file:
-        return [ImportName(x.strip()) for x in top_level_file.readlines() if x.strip()]
-
-
-def packagenames_to_libnames(repopath: Path) -> dict[PackageName, list[ImportName]]:
+def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list[ImportName]]:
     """scan the site-packages folder for package infos"""
+
+    def packagename_for(path: Path) -> NormalizedPackageName:
+        """Check a METADATA file and return the PackageName"""
+        with path.open() as metadata:
+            for line in metadata.readlines():
+                if line.startswith("Name:"):
+                    return normalize_packagename(line[5:].strip())
+
+        raise NotImplementedError("No 'Name:' in METADATA file")
+
+    def importnames_for(packagename: NormalizedPackageName, path: Path) -> list[ImportName]:
+        """return a list of importable libs which belong to the package"""
+        top_level_txt_path = path.with_name("top_level.txt")
+        if not top_level_txt_path.is_file():
+            return [ImportName(packagename)]
+
+        with top_level_txt_path.open() as top_level_file:
+            return [ImportName(x.strip()) for x in top_level_file.readlines() if x.strip()]
+
     return {
         packagename: importnames_for(packagename, metadata_path)
         for metadata_path in repopath.glob(".venv/lib/python*/site-packages/*.dist-info/METADATA")
@@ -206,17 +211,11 @@ def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
             # Ignoring some of our own sub-packages e.g. agent-receiver
             continue
 
-        if name in site_packages:
-            pipfile_to_libs[name] = site_packages[name]
+        if normalize_packagename(name) in site_packages:
+            pipfile_to_libs[name] = site_packages[normalize_packagename(name)]
             continue
 
-        for char_to_be_replaced, replacement in permutations(PACKAGE_REPLACEMENTS, 2):
-            fuzzy_name = PackageName(name.replace(char_to_be_replaced, replacement))
-            if fuzzy_name in site_packages:
-                pipfile_to_libs[name] = site_packages[fuzzy_name]
-                break
-        else:
-            raise NotImplementedError("Could not find package %s in site_packages" % name)
+        raise NotImplementedError("Could not find package %s in site_packages" % name)
     return pipfile_to_libs
 
 
@@ -315,13 +314,13 @@ def test_dependencies_are_declared() -> None:
     )
 
 
-def _get_lockfile_hash(lockfile_path) -> str:  # type:ignore[no-untyped-def]
+def _get_lockfile_hash(lockfile_path: Path) -> str:
     lockfile = json.loads(lockfile_path.read_text())
     if "_meta" in lockfile and hasattr(lockfile, "keys"):
         return lockfile["_meta"].get("hash", {}).get("sha256")
     return ""
 
 
-def test_pipfile_lock_up_to_date(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
+def test_pipfile_lock_up_to_date(loaded_pipfile: Pipfile) -> None:
     lockfile_hash = _get_lockfile_hash(repo_path() / "Pipfile.lock")
     assert loaded_pipfile.hash == lockfile_hash

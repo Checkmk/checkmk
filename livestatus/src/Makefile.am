@@ -267,7 +267,8 @@ iwyu: compile_commands.json
 	@include-what-you-use $(IWYU_EXTRA_ARGS) --version
 	@include-what-you-use $(IWYU_EXTRA_ARGS) -v 2>&1 | grep -v "error: unable to handle compilation" || true
 	@echo include-what-you-use information end ======================================
-	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
+	$(IWYU_TOOL) -j4 --output-format=clang -p . $(FILES_TO_CHECK) -- $(IWYU_EXTRA_ARGS) -Xiwyu --error -Xiwyu --mapping_file=$(abs_top_srcdir)/livestatus/iwyu-mappings/check_mk.imp
+
 
 documentation: compile_commands.json
 	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile

@@ -183,6 +183,7 @@ if [ ${RUN_IWYU} = yes ]; then
         --output-format=clang \
         -p build \
         ${FILES:-src test} -- \
+        -Xiwyu --error \
         -Xiwyu "--mapping_file=$(realpath ../../livestatus/iwyu-mappings/check_mk.imp)" \
         ${IWYU_EXTRA_ARGS}
 fi

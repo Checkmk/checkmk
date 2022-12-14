@@ -59,7 +59,7 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     ServicesTable,
 )
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import ConfigCache
 from cmk.base.discovered_labels import HostLabel
 
 
@@ -990,8 +990,8 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
 
 class ClusterScenario(NamedTuple):
+    parent: HostName
     config_cache: ConfigCache
-    host_config: HostConfig
     parsed_sections_broker: ParsedSectionsBroker
     node1_hostname: HostName
     node2_hostname: HostName
@@ -1020,7 +1020,6 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.make_host_config(hostname)
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
@@ -1145,8 +1144,8 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
     )
 
     return ClusterScenario(
+        hostname,
         config_cache,
-        host_config,
         broker,
         node1_hostname,
         node2_hostname,
@@ -1557,7 +1556,7 @@ def test__discover_services_on_cluster(
 
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
-        scenario.host_config.hostname,
+        scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
@@ -1566,7 +1565,7 @@ def test__discover_services_on_cluster(
     )
 
     discovered_services = _get_cluster_services(
-        scenario.host_config.hostname,
+        scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         on_error=OnError.RAISE,
@@ -1585,7 +1584,7 @@ def test__perform_host_label_discovery_on_cluster(
     scenario = cluster_scenario
 
     host_label_result = discovery._host_labels.analyse_cluster_labels(
-        scenario.host_config.hostname,
+        scenario.parent,
         config_cache=scenario.config_cache,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
@@ -1600,7 +1599,7 @@ def test__perform_host_label_discovery_on_cluster(
     assert host_label_result.new == discovery_test_case.on_cluster.expected_new_host_labels
 
     assert (
-        DiscoveredHostLabelsStore(scenario.host_config.hostname).load()
+        DiscoveredHostLabelsStore(scenario.parent).load()
         == discovery_test_case.on_cluster.expected_stored_labels_cluster
     )
 

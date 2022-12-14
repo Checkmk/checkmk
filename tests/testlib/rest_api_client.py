@@ -445,3 +445,11 @@ class RestApiClient:
             "post",
             url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
         )
+
+    def create_verification_key(self, license_key: str, expect_ok: bool = False) -> Response:
+        return self._request(
+            "post",
+            url="/objects/licensing/key",
+            body={"key": license_key},
+            expect_ok=expect_ok,
+        )

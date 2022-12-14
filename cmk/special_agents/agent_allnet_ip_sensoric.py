@@ -12,7 +12,8 @@ import re
 import socket
 import sys
 import traceback
-import urllib.request
+
+import requests
 
 from cmk.utils.exceptions import MKException
 
@@ -43,34 +44,10 @@ class RequestError(MKException):
 
 
 def get_allnet_ip_sensoric_info(host_address, opt_debug):
-    url = "http://%s/xml/sensordata.xml" % host_address
-
-    headers = {
-        "User-agent": "Check_MK agent_allnet_ip_sensoric",
-    }
-
-    if opt_debug:
-        sys.stdout.write("============================\n")
-        sys.stdout.write("URL: %s\n" % url)
-
-    try:
-        req = urllib.request.Request(url, None, headers)
-        with urllib.request.urlopen(req) as handle:  # nosec B310 # BNS:28af27
-            infos = handle.info()
-            contents = handle.read().decode("utf-8")
-    except Exception:
-        if opt_debug:
-            sys.stdout.write("----------------------------\n")
-            sys.stdout.write(traceback.format_exc())
-            sys.stdout.write("============================\n")
-        raise RequestError("Error during http call")
-
-    if opt_debug:
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write("Server: %s\n" % infos["SERVER"])
-        sys.stdout.write("----------------------------\n")
-        sys.stdout.write(contents + "\n")
-        sys.stdout.write("============================\n")
+    contents = requests.get(
+        f"http://{host_address}/xml/sensordata.xml",
+        headers={"User-agent": "Checkmk Special Agent Allnet IP Sensoric"},
+    ).text
 
     attrs = {}
 

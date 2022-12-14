@@ -110,6 +110,8 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     )
     product_regex = [regex(el) for el in params["product_filter"]]
     region_regex = [regex(el) for el in params["region_filter"]]
+    if len(params["product_filter"]) != 0 or len(params["region_filter"]) != 0:
+        yield Result(state=State.OK, notice="We apply a filter to the monitored GCP services.")
     no_incident_found = True
     for incident in section.incidents:
         if report_incident(incident, reference_interval, product_regex, region_regex):

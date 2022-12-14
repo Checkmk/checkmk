@@ -214,6 +214,7 @@ def test_product_filter(section: gcp_health.Section) -> None:
         )
     )
     assert results == [
+        Result(state=State.OK, notice="We apply a filter to the monitored GCP services."),
         Result(
             state=State.WARN,
             summary="Secret Manager experienced service unavailability in europe-west2",
@@ -231,6 +232,7 @@ def test_region_filter(section: gcp_health.Section) -> None:
     )
     # global is special. It is the set of all regions. So it should always come through
     assert results == [
+        Result(state=State.OK, notice="We apply a filter to the monitored GCP services."),
         Result(
             state=State.WARN,
             summary="Secret Manager experienced service unavailability in europe-west2",

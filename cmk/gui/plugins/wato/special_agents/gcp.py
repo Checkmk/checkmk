@@ -99,7 +99,7 @@ def _valuespec_special_agents_gcp():
             (
                 "health",
                 Checkbox(
-                    title="Monitor GCP status", help="Monitor status of GCP products in any region"
+                    title="Monitor GCP health", help="Monitor health of GCP products in any region"
                 ),
             ),
         ],

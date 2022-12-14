@@ -17,6 +17,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.version as cmk_version
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
@@ -34,7 +35,7 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_utils import ConfiguredService
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, HostConfig
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -2220,6 +2221,38 @@ def test_config_cache_check_period_of_service(
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache.check_period_of_service(hostname, "CPU load") == result
+
+
+@pytest.mark.parametrize(
+    "edition,expected_cache_class_name,expected_host_class_name",
+    [
+        (cmk_version.Edition.CME, "CEEConfigCache", "CEEHostConfig"),
+        (cmk_version.Edition.CEE, "CEEConfigCache", "CEEHostConfig"),
+        (cmk_version.Edition.CRE, "ConfigCache", "HostConfig"),
+    ],
+)
+def test_config_cache_get_host_config(
+    monkeypatch: MonkeyPatch,
+    edition: cmk_version.Edition,
+    expected_cache_class_name: str,
+    expected_host_class_name: str,
+) -> None:
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
+
+    _config_cache.clear()
+
+    xyz_host = HostName("xyz")
+
+    ts = Scenario()
+    ts.add_host(xyz_host)
+    cache = ts.apply(monkeypatch)
+
+    assert cache.__class__.__name__ == expected_cache_class_name
+
+    host_config = cache.make_host_config(xyz_host)
+    assert host_config.__class__.__name__ == expected_host_class_name
+    assert isinstance(host_config, HostConfig)
+    assert host_config is cache.make_host_config(xyz_host)
 
 
 def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> None:

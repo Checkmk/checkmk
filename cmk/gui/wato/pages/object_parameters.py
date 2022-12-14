@@ -25,6 +25,7 @@ from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMen
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
@@ -547,8 +548,9 @@ class ModeObjectParameters(WatoMode):
             # We have a setting
             elif valuespec:
                 if ruleset.match_type() == "all":
-                    for s in setting:
-                        html.write_text(valuespec.value_to_html(s))
+                    html.write_text(
+                        HTML(", ").join([valuespec.value_to_html(value) for value in setting])
+                    )
                 else:
                     html.write_text(valuespec.value_to_html(setting))
 

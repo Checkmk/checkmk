@@ -2467,29 +2467,29 @@ def lookup_ip_address(
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
-        self.__enforced_services_table: dict[
+        self._enforced_services_table: dict[
             HostName,
             Mapping[
                 cmk.base.check_utils.ServiceID,
                 tuple[RulesetName, cmk.base.check_utils.ConfiguredService],
             ],
         ] = {}
-        self.__is_piggyback_host: dict[HostName, bool] = {}
-        self.__snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
-        self.__hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
-        self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
-        self.__computed_datasources: dict[HostName, ComputedDataSources] = {}
-        self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        self.__active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
-        self.__special_agents: dict[HostName, Sequence[tuple[str, dict]]] = {}
-        self.__hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
-        self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
-        self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
-        self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
-        self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
-        self.__labels: dict[HostName, Labels] = {}
-        self.__label_sources: dict[HostName, LabelSources] = {}
-        self.__notification_plugin_parameters: dict[tuple[HostName, CheckPluginNameStr], dict] = {}
+        self._is_piggyback_host: dict[HostName, bool] = {}
+        self._snmp_config: dict[tuple[HostName, HostAddress | None], SNMPHostConfig] = {}
+        self._hwsw_inventory_parameters: dict[HostName, HWSWInventoryParameters] = {}
+        self._explicit_host_attributes: dict[HostName, dict[str, str]] = {}
+        self._computed_datasources: dict[HostName, ComputedDataSources] = {}
+        self._discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
+        self._active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
+        self._special_agents: dict[HostName, Sequence[tuple[str, dict]]] = {}
+        self._hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
+        self._contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
+        self._explicit_check_command: dict[HostName, HostCheckCommand] = {}
+        self._snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
+        self._disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
+        self._labels: dict[HostName, Labels] = {}
+        self._label_sources: dict[HostName, LabelSources] = {}
+        self._notification_plugin_parameters: dict[tuple[HostName, CheckPluginNameStr], dict] = {}
         self._initialize_caches()
 
     def is_cluster(self, host_name: HostName) -> bool:
@@ -2532,23 +2532,23 @@ class ConfigCache:
         return self
 
     def _initialize_caches(self) -> None:
-        self.__enforced_services_table.clear()
-        self.__is_piggyback_host.clear()
-        self.__snmp_config.clear()
-        self.__hwsw_inventory_parameters.clear()
-        self.__explicit_host_attributes.clear()
-        self.__computed_datasources.clear()
-        self.__discovery_check_parameters.clear()
-        self.__active_checks.clear()
-        self.__special_agents.clear()
-        self.__hostgroups.clear()
-        self.__contactgroups.clear()
-        self.__explicit_check_command.clear()
-        self.__snmp_fetch_interval.clear()
-        self.__disabled_snmp_sections.clear()
-        self.__labels.clear()
-        self.__label_sources.clear()
-        self.__notification_plugin_parameters.clear()
+        self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
+        self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
+        self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
+        self._active_checks.clear()
+        self._special_agents.clear()
+        self._hostgroups.clear()
+        self._contactgroups.clear()
+        self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
+        self._labels.clear()
+        self._label_sources.clear()
+        self._notification_plugin_parameters.clear()
         self.check_table_cache = _config_cache.get("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
@@ -2617,7 +2617,7 @@ class ConfigCache:
     def make_snmp_config(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> SNMPHostConfig:
-        return self.__snmp_config.setdefault(
+        return self._snmp_config.setdefault(
             (host_name, ip_address),
             SNMPHostConfig(
                 is_ipv6_primary=self.is_ipv6_primary(host_name),
@@ -2644,23 +2644,23 @@ class ConfigCache:
         )
 
     def invalidate_host_config(self, hostname: HostName) -> None:
-        self.__enforced_services_table.clear()
-        self.__is_piggyback_host.clear()
-        self.__snmp_config.clear()
-        self.__hwsw_inventory_parameters.clear()
-        self.__explicit_host_attributes.clear()
-        self.__computed_datasources.clear()
-        self.__discovery_check_parameters.clear()
-        self.__active_checks.clear()
-        self.__special_agents.clear()
-        self.__hostgroups.clear()
-        self.__contactgroups.clear()
-        self.__explicit_check_command.clear()
-        self.__snmp_fetch_interval.clear()
-        self.__disabled_snmp_sections.clear()
-        self.__labels.clear()
-        self.__label_sources.clear()
-        self.__notification_plugin_parameters.clear()
+        self._enforced_services_table.clear()
+        self._is_piggyback_host.clear()
+        self._snmp_config.clear()
+        self._hwsw_inventory_parameters.clear()
+        self._explicit_host_attributes.clear()
+        self._computed_datasources.clear()
+        self._discovery_check_parameters.clear()
+        self._active_checks.clear()
+        self._special_agents.clear()
+        self._hostgroups.clear()
+        self._contactgroups.clear()
+        self._explicit_check_command.clear()
+        self._snmp_fetch_interval.clear()
+        self._disabled_snmp_sections.clear()
+        self._labels.clear()
+        self._label_sources.clear()
+        self._notification_plugin_parameters.clear()
 
     @staticmethod
     def _get_host_paths(config_host_paths: dict[HostName, str]) -> dict[HostName, str]:
@@ -2688,7 +2688,7 @@ class ConfigCache:
         Important if there are two rules for a host with the same combination of plugin name
         and item.
         """
-        return self.__enforced_services_table.setdefault(
+        return self._enforced_services_table.setdefault(
             hostname,
             {
                 ServiceID(check_plugin_name, item): (
@@ -2749,7 +2749,7 @@ class ConfigCache:
             # Convert legacy rules to current dict format (just like the valuespec)
             return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
 
-        return self.__hwsw_inventory_parameters.setdefault(
+        return self._hwsw_inventory_parameters.setdefault(
             host_name, get_hwsw_inventory_parameters()
         )
 
@@ -2813,7 +2813,7 @@ class ConfigCache:
                 with contextlib.suppress(KeyError):
                     yield key, mapping[host_name]
 
-        return self.__explicit_host_attributes.setdefault(
+        return self._explicit_host_attributes.setdefault(
             host_name, dict(make_explicit_host_attributes())
         )
 
@@ -2880,7 +2880,7 @@ class ConfigCache:
         return attrs
 
     def computed_datasources(self, host_name: HostName) -> ComputedDataSources:
-        return self.__computed_datasources.setdefault(
+        return self._computed_datasources.setdefault(
             host_name, cmk.utils.tags.compute_datasources(ConfigCache.tags(host_name))
         )
 
@@ -2900,7 +2900,7 @@ class ConfigCache:
             # Legacy automatic detection
             return self._has_piggyback_data(host_name)
 
-        return self.__is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
+        return self._is_piggyback_host.setdefault(host_name, get_is_piggyback_host())
 
     def is_agent_host(self, host_name: HostName) -> bool:
         return self.is_tcp_host(host_name) or self.is_piggyback_host(host_name)
@@ -2950,7 +2950,7 @@ class ConfigCache:
                 rediscovery=entry.get("inventory_rediscovery", {}),
             )
 
-        return self.__discovery_check_parameters.setdefault(
+        return self._discovery_check_parameters.setdefault(
             host_name, make_discovery_check_parameters()
         )
 
@@ -2989,7 +2989,7 @@ class ConfigCache:
 
             return configured_checks
 
-        return self.__active_checks.setdefault(host_name, make_active_checks())
+        return self._active_checks.setdefault(host_name, make_active_checks())
 
     def special_agents(self, host_name: HostName) -> Sequence[tuple[str, dict]]:
         def special_agents_impl() -> Sequence[tuple[str, dict]]:
@@ -3006,7 +3006,7 @@ class ConfigCache:
                     matched.append((agentname, params[0]))
             return matched
 
-        return self.__special_agents.setdefault(host_name, special_agents_impl())
+        return self._special_agents.setdefault(host_name, special_agents_impl())
 
     def hostgroups(self, host_name: HostName) -> Sequence[HostgroupName]:
         """Returns the list of hostgroups of this host
@@ -3020,7 +3020,7 @@ class ConfigCache:
                 return [default_host_group]
             return groups
 
-        return self.__hostgroups.setdefault(host_name, hostgroups_impl())
+        return self._hostgroups.setdefault(host_name, hostgroups_impl())
 
     def contactgroups(self, host_name: HostName) -> Sequence[ContactgroupName]:
         """Returns the list of contactgroups of this host"""
@@ -3055,7 +3055,7 @@ class ConfigCache:
 
             return list(set(cgrs))
 
-        return self.__contactgroups.setdefault(host_name, contactgroups_impl())
+        return self._contactgroups.setdefault(host_name, contactgroups_impl())
 
     def explicit_check_command(self, host_name: HostName) -> HostCheckCommand:
         def explicit_check_command_impl() -> HostCheckCommand:
@@ -3068,7 +3068,7 @@ class ConfigCache:
 
             return entries[0]
 
-        return self.__explicit_check_command.setdefault(host_name, explicit_check_command_impl())
+        return self._explicit_check_command.setdefault(host_name, explicit_check_command_impl())
 
     def host_check_command(
         self, host_name: HostName, default_host_check_command: HostCheckCommand
@@ -3107,7 +3107,7 @@ class ConfigCache:
 
             return None
 
-        return self.__snmp_fetch_interval.setdefault(
+        return self._snmp_fetch_interval.setdefault(
             (host_name, section_name), snmp_fetch_interval_impl()
         )
 
@@ -3128,7 +3128,7 @@ class ConfigCache:
                 if is_disabled
             )
 
-        return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
+        return self._disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts
@@ -3238,13 +3238,13 @@ class ConfigCache:
                 host_name, notification_parameters.get(plugin_name, default)
             )
 
-        return self.__notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
+        return self._notification_plugin_parameters.setdefault((host_name, plugin_name), _impl())
 
     def labels(self, host_name: HostName) -> Labels:
-        return self.__labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))
+        return self._labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))
 
     def label_sources(self, host_name: HostName) -> LabelSources:
-        return self.__label_sources.setdefault(
+        return self._label_sources.setdefault(
             host_name, self.ruleset_matcher.label_sources_of_host(host_name)
         )
 

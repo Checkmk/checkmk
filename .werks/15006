@@ -1,0 +1,13 @@
+Title: Fix possible error on view "Crash reports"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1671011216
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+In systems which created a lot of crash reports, an error like "No matching
+entries found for query: Get crashreports" could be shown if a user tries to
+open the view "Crash reports".

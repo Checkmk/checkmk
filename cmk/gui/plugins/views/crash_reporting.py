@@ -8,7 +8,7 @@ import json
 from typing import Dict, List, Optional
 
 import livestatus
-from livestatus import SiteId
+from livestatus import MKLivestatusNotFoundError, SiteId
 
 import cmk.gui.sites as sites
 from cmk.gui.globals import html, request
@@ -122,6 +122,8 @@ class CrashReportsRowTable(RowTable):
                     "Filter: id = %s"
                     % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
                 )
+            except MKLivestatusNotFoundError:
+                continue
             finally:
                 sites.live().set_only_sites(None)
                 sites.live().set_prepend_site(False)

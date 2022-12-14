@@ -4192,18 +4192,14 @@ def _boil_down_agent_rules(
     return boiled_down
 
 
-# TODO: Find a clean way to move this to cmk.base.cee. This will be possible once the
-# configuration settings are not held in cmk.base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
-    """Encapsulates the CEE specific functionality"""
-
     def _initialize_host_config(self) -> None:
         # Keep HostConfig instances created with the current configuration cache
         # This can be ignored for now -- it only is used privately as a cache, so the
         # contravariance is not a problem here.
         self._host_configs: dict[HostName, CEEHostConfig] = {}  # type: ignore[assignment]
 
-    def make_host_config(self, hostname: HostName) -> CEEHostConfig:
+    def make_cee_host_config(self, hostname: HostName) -> CEEHostConfig:
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime
@@ -4339,11 +4335,10 @@ class CEEConfigCache(ConfigCache):
         ]
 
 
-# TODO: Find a clean way to move this to cmk.base.cee. This will be possible once the
-# configuration settings are not held in cmk.base.config namespace anymore.
-# All the "disable=undefined-variable" can be cleaned up once this has been cleaned up
-class CEEHostConfig(HostConfig):
-    """Encapsulates the CEE specific functionality"""
+class CEEHostConfig:
+    def __init__(self, config_cache: CEEConfigCache, hostname: HostName) -> None:
+        self.hostname: Final = hostname
+        self._config_cache: Final = config_cache
 
     @property
     def rrd_config(self) -> RRDConfig | None:

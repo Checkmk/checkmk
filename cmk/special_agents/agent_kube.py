@@ -1052,6 +1052,16 @@ def pod_attached_persistent_volume_claim_names(pod: api.Pod) -> Iterator[str]:
         )
 
 
+def attached_pvc_namespaced_names_from_pods(pods: Sequence[api.Pod]) -> Sequence[str]:
+    return list(
+        {
+            namespaced_name
+            for pod in pods
+            for namespaced_name in pod_attached_persistent_volume_claim_names(pod)
+        }
+    )
+
+
 def filter_kubelet_volume_metrics(
     kubelet_metrics: Sequence[api.OpenMetricSample],
 ) -> Iterator[api.KubeletVolumeMetricSample]:
@@ -2156,6 +2166,15 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
+            api_persistent_volume_claims = {
+                namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
+                    **pvc.dict()
+                )
+                for pvc in api_data.persistent_volume_claims
+            }
+            attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
+                filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+            )
             piggyback_formatter = functools.partial(
                 piggyback_formatter_with_cluster_name, arguments.cluster
             )
@@ -2173,10 +2192,22 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 for deployment in kube_objects_from_namespaces(
                     composed_entities.deployments, monitored_namespace_names
                 ):
+                    deployment_piggyback_name = piggyback_formatter(deployment)
                     sections = create_deployment_api_sections(
                         deployment,
                         host_settings=checkmk_host_settings,
-                        piggyback_name=piggyback_formatter(deployment),
+                        piggyback_name=deployment_piggyback_name,
+                    )
+                    sections = chain(
+                        sections,
+                        create_pvc_sections(
+                            piggyback_name=deployment_piggyback_name,
+                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                deployment.pods
+                            ),
+                            api_persistent_volume_claims=api_persistent_volume_claims,
+                            attached_volumes=attached_volumes,
+                        ),
                     )
                     common.write_sections(sections)
 
@@ -2242,13 +2273,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     piggyback_formatter=piggyback_formatter,
                 )
 
-            api_persistent_volume_claims = {
-                namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
-                    **pvc.dict()
-                )
-                for pvc in api_data.persistent_volume_claims
-            }
-
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
                 unmonitored_pods = (
@@ -2257,9 +2281,6 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     else {}
                 )
 
-                attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
-                    filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
-                )
                 for pod in api_data.pods:
                     if pod_lookup_from_api_pod(pod) in unmonitored_pods:
                         continue

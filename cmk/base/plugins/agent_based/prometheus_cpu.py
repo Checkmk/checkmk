@@ -18,7 +18,11 @@ class CPULoad(pydantic.BaseModel):
 
 
 def parse(string_table: type_defs.StringTable) -> cpu.Section:
-    parsed_section = CPULoad.parse_obj(string_table[0][0])
+    """
+    >>> parse([['{"load1": 1.06, "load5": 1.68, "load15": 1.41, "num_cpus": 8}']])
+    Section(load=Load(load1=1.06, load5=1.68, load15=1.41), num_cpus=8, threads=None, type=<ProcessorType.unspecified: 0>)
+    """
+    parsed_section = CPULoad.parse_raw(string_table[0][0])
     return cpu.Section(
         cpu.Load(
             load1=parsed_section.load1,

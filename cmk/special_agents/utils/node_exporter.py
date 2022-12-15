@@ -327,7 +327,7 @@ class NodeExporter:
         for entity_name, promql_query in promql_list:
             for node_element in self.get_promql(promql_query):
                 node_mem = result.setdefault(node_element["labels"]["instance"], [])
-                node_mem.append("{}: {} kB".format(entity_name, node_element["value"]))
+                node_mem.append("{}: {} kB".format(entity_name, int(node_element["value"])))
         return {node: _create_section("mem", section_list) for node, section_list in result.items()}
 
     def kernel_summary(self) -> dict[str, SectionStr]:
@@ -391,7 +391,8 @@ class NodeExporter:
         uptime_samples = self.get_promql(NodeExporterQuery.node_uptime_seconds)
         return {
             sample["labels"]["instance"]: _create_section(
-                "prometheus_uptime_v1", [Uptime.parse_obj({"seconds": sample["value"]}).json()]
+                "prometheus_uptime_v1:sep(0)",
+                [Uptime.parse_obj({"seconds": sample["value"]}).json()],
             )
             for sample in uptime_samples
         }
@@ -408,7 +409,7 @@ class NodeExporter:
                 raw = node_to_raw.setdefault(instance, {})
                 raw[key] = sample["value"]
         return {
-            node: _create_section("prometheus_cpu_v1", [CPULoad.parse_obj(raw).json()])
+            node: _create_section("prometheus_cpu_v1:sep(0)", [CPULoad.parse_obj(raw).json()])
             for node, raw in node_to_raw.items()
         }
 

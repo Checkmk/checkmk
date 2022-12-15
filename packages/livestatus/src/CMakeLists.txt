@@ -23,8 +23,6 @@ if(${USE_ASIO_OMD})
     SOURCE_DIR src_dir
     BINARY_DIR bin_dir
     POPULATED done_var)
-  message("asio src: " ${src_dir})
-  message("asio bin: " ${bin_dir})
   set(asio_ext_include ${src_dir}/include)
 else()
   # Fallback to asio-cmake wrapper. To be removed after OMD version will be

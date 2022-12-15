@@ -94,7 +94,7 @@ class UUIDLinkManager:
         if create_target_dir:
             target_dir.mkdir(parents=True, exist_ok=True)
 
-        source.symlink_to(target_dir)
+        source.symlink_to(target_dir.relative_to(cmk.utils.paths.omd_root))
 
     def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> bool:
         for link in self:

@@ -5,8 +5,9 @@
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import Dashlet, DashletConfig
 from cmk.gui.valuespec import TextInput
+
+from ..base import Dashlet, DashletConfig
 
 
 class StaticTextDashletConfig(DashletConfig):

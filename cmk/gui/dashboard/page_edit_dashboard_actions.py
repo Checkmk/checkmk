@@ -9,13 +9,10 @@ from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.dashboard.utils import (
-    DashboardConfig,
-    dashlet_registry,
-    DashletConfig,
-    get_permitted_dashboards,
-    save_all_dashboards,
-)
+
+from .dashlet import dashlet_registry, DashletConfig
+from .store import get_permitted_dashboards, save_all_dashboards
+from .type_defs import DashboardConfig
 
 __all__ = ["ajax_dashlet_pos", "page_clone_dashlet", "page_delete_dashlet"]
 

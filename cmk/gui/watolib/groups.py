@@ -327,7 +327,7 @@ def _find_usages_of_contact_group_in_notification_rules(name: str) -> list[tuple
 def _find_usages_of_contact_group_in_dashboards(name: str) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
     # FIXME: This leads to a circular import otherwise.
-    from cmk.gui.plugins.dashboard.utils import get_all_dashboards
+    from cmk.gui.dashboard import get_all_dashboards
 
     for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
         public_value: bool | tuple[str, Sequence[str]] = board["public"]

@@ -8,8 +8,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.dashboard.utils import DashboardConfig, DashboardName, get_all_dashboards
 from cmk.gui.utils.urls import makeuri_contextless
+
+from .store import get_all_dashboards
+from .type_defs import DashboardConfig, DashboardName
 
 
 def page_edit_dashboards() -> None:

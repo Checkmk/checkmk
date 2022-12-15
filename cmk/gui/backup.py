@@ -31,9 +31,9 @@ import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.type_defs import (
-    BackupInfo,
     JobConfig,
     LocalTargetParams,
+    RawBackupInfo,
     ScheduleConfig,
     TargetConfig,
     TargetId,
@@ -1055,7 +1055,7 @@ class ABCBackupTargetType(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def backups(self) -> Mapping[str, BackupInfo]:
+    def backups(self) -> Mapping[str, RawBackupInfo]:
         ...
 
     @abc.abstractmethod
@@ -1180,7 +1180,7 @@ class BackupTargetLocal(ABCBackupTargetType):
             )
 
     # TODO: Duplicate code with mkbackup
-    def backups(self) -> Mapping[str, BackupInfo]:
+    def backups(self) -> Mapping[str, RawBackupInfo]:
         backups = {}
 
         self.verify_target_is_ready()
@@ -1206,7 +1206,7 @@ class BackupTargetLocal(ABCBackupTargetType):
             )
 
     # TODO: Duplicate code with mkbackup
-    def _load_backup_info(self, path: str) -> BackupInfo:
+    def _load_backup_info(self, path: str) -> RawBackupInfo:
         with Path(path).open(encoding="utf-8") as f:
             info = json.load(f)
 
@@ -1328,7 +1328,7 @@ class Target:
                         else:
                             html.write_text(" (%s)" % _("Standby node"))
 
-    def backups(self) -> Mapping[str, BackupInfo]:
+    def backups(self) -> Mapping[str, RawBackupInfo]:
         return self._target_type().backups()
 
     def remove_backup(self, backup_ident: str) -> None:

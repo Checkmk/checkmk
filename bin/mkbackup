@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import fcntl
 import getopt
 import glob
 import grp
 import json
 import os
-import pwd
 import re
-import shutil
 import signal
 import socket
 import subprocess
@@ -23,7 +20,6 @@ import time
 import traceback
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager, ExitStack
-from dataclasses import dataclass
 from hashlib import md5
 from pathlib import Path
 from typing import Any, IO, NamedTuple, NoReturn
@@ -38,14 +34,20 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.backup.config import Config
-from cmk.utils.backup.type_defs import BackupInfo as RawBackupInfo
-from cmk.utils.backup.type_defs import JobConfig, TargetId
+from cmk.utils.backup.targets.local import LocalTarget
+from cmk.utils.backup.type_defs import Backup, Job, JobConfig, SiteBackupInfo, TargetId
+from cmk.utils.backup.utils import (
+    current_site_id,
+    log,
+    makedirs,
+    set_permissions,
+    SITE_BACKUP_MARKER,
+)
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
 VERSION = "2.2.0i1"
 
-SITE_BACKUP_MARKER = "Check_MK"
 
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/
@@ -168,11 +170,6 @@ def stop_logging() -> None:
     g_stdout_log = None
 
 
-def log(s: str) -> None:
-    msg = "{} {}\n".format(time.strftime("%Y-%m-%d %H:%M:%S"), s)
-    sys.stdout.write(msg)
-
-
 def verbose(s):
     # type (str) -> None
     if opt_verbose > 0:
@@ -257,77 +254,6 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
         fd = backup_lock.fileno()
         fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
         yield backup_lock
-
-
-def set_permissions(
-    *, path: Path, uid: int | None = None, gid: int | None = None, mode: int | None = None
-) -> None:
-    try:
-        os.chown(path, uid if uid is not None else -1, gid if gid is not None else -1)
-    except OSError as e:
-        if e.errno == errno.EACCES:
-            pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
-            # are set, this is not possible. So skip over.
-        elif e.errno == errno.EPERM:
-            pass  # On NFS mounts where "" mount options are set, we get an
-            # "Operation not permitted" error when trying to change e.g.
-            # the group permission.
-        else:
-            raise
-
-    try:
-        if mode is not None:
-            os.chmod(path, mode)
-    except OSError as e:
-        if e.errno == errno.EACCES:
-            pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
-            # are set, this is not possible. So skip over.
-        elif e.errno == errno.EPERM:
-            pass  # On NFS mounts where "" mount options are set, we get an
-            # "Operation not permitted" error when trying to change e.g.
-            # the group permission.
-        else:
-            raise
-
-
-# TODO: Move to cmklib?
-def makedirs(
-    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
-) -> None:
-    head, tail = os.path.split(path)
-    if not tail:
-        head, tail = os.path.split(head)
-
-    if head and tail and not os.path.exists(head):
-        try:
-            makedirs(Path(head), user, group, mode)
-        except OSError as e:
-            # be happy if someone already created the path
-            if e.errno != errno.EEXIST:
-                raise
-        if tail == ".":  # xxx/newdir/. exists if xxx/newdir exists
-            return
-    makedir(path, user, group, mode)
-
-
-# TODO: Move to cmklib?
-def makedir(
-    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
-) -> None:
-    if os.path.exists(path):
-        return
-    os.mkdir(path)
-    uid = pwd.getpwnam(user).pw_uid if user is not None else None
-    gid = grp.getgrnam(group).gr_gid if group is not None else None
-    set_permissions(path=path, uid=uid, gid=gid, mode=mode)
-
-
-def file_checksum(path: Path) -> str:
-    hash_md5 = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -602,106 +528,6 @@ def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Seq
 ######################
 
 
-@dataclass
-class SiteBackupInfo:
-    config: JobConfig
-    filename: str
-    checksum: str
-    finished: float
-    hostname: str
-    job_id: str
-    site_id: str
-    site_version: str
-    size: int
-    backup_id: str | None
-
-
-@dataclass
-class Job:
-    config: JobConfig
-    local_id: str
-    id: str
-
-
-@dataclass
-class Backup:
-    info: SiteBackupInfo
-    id: str
-    _path: Path
-
-    @contextmanager
-    def open(self) -> Iterator[IO[bytes]]:
-        with self._path.open(mode="rb") as fh:
-            yield fh
-
-
-class LocalTarget:
-    def __init__(self, target_id: TargetId, params: Mapping[str, Any]) -> None:
-        self.id = target_id
-        self.path = Path(params["path"])
-        self.is_mountpoint = bool(params["is_mountpoint"])
-
-    def check_ready(self) -> None:
-        if not self.path.exists():
-            raise MKGeneralException(f"Local target path does not exist: {self.path}")
-        if self.is_mountpoint and not os.path.ismount(self.path):
-            raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, but nothing is mounted."
-            )
-
-    def list_backups(self) -> Iterator[tuple[str, SiteBackupInfo]]:
-        for backup_id in self.path.iterdir():
-            # if backup_id is a directory not owned by the current user
-            # any attempt to get information about files in the folder will
-            # result in a permission error. In that case do not show a backup
-            try:
-                if backup_id.is_dir() and (backup_id / "mkbackup.info").exists():
-                    try:
-                        yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
-                    except UnrecognizedBackupTypeError:
-                        continue
-            except PermissionError:
-                continue
-
-    def get_backup(self, backup_id: str) -> Backup:
-        backup_path = self.path / backup_id
-        info_path = backup_path / "mkbackup.info"
-        if not backup_path.exists() or not info_path.exists():
-            raise MKGeneralException(
-                f"This backup does not exist (Use 'mkbackup list {self.id}' to "
-                "show a list of available backups)."
-            )
-        info = load_backup_info(info_path)
-        archive_file = backup_path / info.filename
-        verify_backup_file(info, archive_file)
-        return Backup(info, backup_id, archive_file)
-
-    def _working_dir(self, job: Job) -> Path:
-        return self.path / f"{job.id}-incomplete"
-
-    def start_backup(self, job: Job) -> Path:
-        site = current_site_id()
-        working_dir = self._working_dir(job)
-        if working_dir.exists():
-            try:
-                shutil.rmtree(working_dir)
-            except OSError as e:
-                if e.errno == errno.EACCES:
-                    raise MKGeneralException(f"Failed to write the backup directory: {working_dir}")
-                raise
-        path = working_dir / f"site-{site}{archive_suffix(job.config)}"
-        makedirs(path.parent, group="omd", mode=0o775)
-        return path
-
-    def finish_backup(self, info: SiteBackupInfo, job: Job) -> None:
-        save_backup_info(info, self._working_dir(job) / "mkbackup.info")
-        completed_path = self.path / f"{job.id}-complete"
-        if completed_path.exists():
-            log("Cleaning up previously completed backup")
-            shutil.rmtree(completed_path)
-        os.rename(self._working_dir(job), completed_path)
-
-
 Target = LocalTarget
 target_classes = {"local": LocalTarget}
 
@@ -729,58 +555,9 @@ def restore_state() -> State:
     return State(path / name)
 
 
-def current_site_id() -> str:
-    return os.environ["OMD_SITE"]
-
-
 def site_version(site_id: str) -> str:
     linkpath = os.readlink("/omd/sites/%s/version" % site_id)
     return linkpath.split("/")[-1]
-
-
-class UnrecognizedBackupTypeError(Exception):
-    ...
-
-
-def load_backup_info(path: Path) -> SiteBackupInfo:
-    with open(path) as f:
-        raw_info: RawBackupInfo = json.load(f)
-    if (type_ := raw_info["type"]) != SITE_BACKUP_MARKER:
-        raise UnrecognizedBackupTypeError(f"Non-site backup type: {type_}")
-    # Load the backup_id from the second right path component. This is the
-    # base directory of the mkbackup.info file. The user might have moved
-    # the directory, e.g. for having multiple backups. Allow that.
-    # Maybe we need to changed this later when we allow multiple generations
-    # of backups.
-    filename, _, checksum = raw_info["files"][0]
-    return SiteBackupInfo(
-        config=raw_info["config"],
-        filename=filename,
-        checksum=checksum,
-        finished=raw_info["finished"],
-        hostname=raw_info["hostname"],
-        job_id=raw_info["job_id"],
-        site_id=raw_info["site_id"],
-        site_version=raw_info["site_version"],
-        size=raw_info["size"],
-        backup_id=os.path.basename(os.path.dirname(path)),
-    )
-
-
-def save_backup_info(info: SiteBackupInfo, path: Path) -> None:
-    raw_info: RawBackupInfo = {
-        "config": info.config,
-        "files": [(info.filename, info.size, info.checksum)],
-        "hostname": info.hostname,
-        "job_id": info.job_id,
-        "site_id": info.site_id,
-        "site_version": info.site_version,
-        "size": info.size,
-        "type": SITE_BACKUP_MARKER,
-        "finished": info.finished,
-    }
-    with path.open("w") as f:
-        json.dump(raw_info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
 #   List: Alle Backups auflisten
@@ -1017,26 +794,6 @@ def do_site_backup(backup_path: Path, job: Job, state: State) -> SiteBackupInfo:
         raise MKGeneralException("Site backup failed: %s" % err)
 
     return info.info(job, site_id=site)
-
-
-def archive_suffix(config: JobConfig) -> str:
-    suffix = ".tar"
-    if config["compress"]:
-        suffix += ".gz"
-    if config["encrypt"]:
-        suffix += ".enc"
-    return suffix
-
-
-def verify_backup_file(info: SiteBackupInfo, archive_path: Path) -> None:
-    checksum = info.checksum
-    this_checksum = file_checksum(archive_path)
-    if this_checksum != checksum:
-        raise MKGeneralException(
-            "The backup seems to be damaged and can not be restored. "
-            "The checksum of the archive %s is wrong (got %s but "
-            "expected %s)." % (archive_path, this_checksum, checksum)
-        )
 
 
 def complete_backup(state: State, info: SiteBackupInfo) -> None:

@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Literal, NewType
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from typing import IO, Literal, NewType
 
 # pydantic needs TypedDict from typing_extensions for < 3.11
 from typing_extensions import NotRequired, TypedDict
@@ -52,7 +55,7 @@ class CMACluster(TypedDict):
     is_inactive: bool
 
 
-class BackupInfo(TypedDict, total=False):
+class RawBackupInfo(TypedDict, total=False):
     config: JobConfig
     files: Sequence[tuple[str, int, str]]
     finished: float
@@ -65,3 +68,36 @@ class BackupInfo(TypedDict, total=False):
     backup_id: str
     cma_cluster: CMACluster
     cma_version: str
+
+
+@dataclass
+class SiteBackupInfo:
+    config: JobConfig
+    filename: str
+    checksum: str
+    finished: float
+    hostname: str
+    job_id: str
+    site_id: str
+    site_version: str
+    size: int
+    backup_id: str | None
+
+
+@dataclass
+class Job:
+    config: JobConfig
+    local_id: str
+    id: str
+
+
+@dataclass
+class Backup:
+    info: SiteBackupInfo
+    id: str
+    _path: Path
+
+    @contextmanager
+    def open(self) -> Iterator[IO[bytes]]:
+        with self._path.open(mode="rb") as fh:
+            yield fh

@@ -97,6 +97,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
+from cmk.core_helpers import IPMIFetcher
 from cmk.core_helpers.tcp import EncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2582,6 +2583,14 @@ class ConfigCache:
         self._clusters_of_cache: dict[HostName, list[HostName]] = {}
         self._nodes_of_cache: dict[HostName, list[HostName]] = {}
 
+    def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
+        ipmi_credentials = self._ipmi_credentials(host_name)
+        return IPMIFetcher(
+            address=ip_address,
+            username=ipmi_credentials.get("username"),
+            password=ipmi_credentials.get("password"),
+        )
+
     def _discovered_labels_of_service(
         self,
         hostname: HostName,
@@ -2799,7 +2808,7 @@ class ConfigCache:
 
         return default_value
 
-    def ipmi_credentials(self, host_name: HostName) -> IPMICredentials:
+    def _ipmi_credentials(self, host_name: HostName) -> IPMICredentials:
         credentials = self.management_credentials(host_name)
         if credentials is None:
             return {}

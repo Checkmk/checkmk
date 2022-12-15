@@ -28,7 +28,6 @@ from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, Ag
 from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.snmp import (
@@ -490,11 +489,7 @@ class _Builder:
             assert source.ipaddress
             self._add(
                 source,
-                IPMIFetcher(
-                    address=source.ipaddress,
-                    username=self.config_cache.ipmi_credentials(self.host_name).get("username"),
-                    password=self.config_cache.ipmi_credentials(self.host_name).get("password"),
-                ),
+                self.config_cache.make_ipmi_fetcher(self.host_name, source.ipaddress),
                 AgentFileCache(
                     source.hostname,
                     path_template=make_file_cache_path_template(

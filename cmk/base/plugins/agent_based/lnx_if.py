@@ -66,7 +66,7 @@ class EthtoolInterface:
 @dataclass
 class IPLinkInterface:
     state_infos: Sequence[str]
-    link: dict[str, str] = field(default_factory=dict)
+    link_ether: str | None = None
     inet: dict[str, list[str]] = field(default_factory=dict)
 
 
@@ -95,12 +95,11 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
         if not iface:
             continue
 
-        if line[0].startswith("link/"):
+        if line[0] == "link/ether":
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
             try:
-                iface.link[line[0]] = line[1]
-                iface.link[line[2]] = line[3]
+                iface.link_ether = line[1]
             except IndexError:
                 pass
 
@@ -222,7 +221,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                     alias=nic,
                     phys_address=_get_physical_address(
                         ethtool_interface.attributes.get("Address"),
-                        iplink_interface.link.get("link/ether"),
+                        iplink_interface.link_ether,
                     ),
                 ),
                 interfaces.Counters(

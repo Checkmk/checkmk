@@ -1,2 +1,0 @@
-build --disk_cache=~/.cache/bazel
-run --disk_cache=~/.cache/bazel

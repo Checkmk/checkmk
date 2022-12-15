@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from freezegun import freeze_time
 from saml2.config import SPConfig
-from saml2.validate import ResponseLifetimeExceed
+from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.type_defs import UserId
 
@@ -241,7 +241,7 @@ class TestInterface:
         assert parsed_response.relay_state == "index.py"
         assert parsed_response.user_id == UserId("user1")
 
-    def test_parse_authentication_request_response_outside_validity_window(
+    def test_parse_authentication_request_response_too_old(
         self,
         interface: Interface,
         request_id: str,
@@ -254,6 +254,23 @@ class TestInterface:
                     timestamp=current_timestamp,
                     valid_from=current_timestamp - timedelta(days=10),
                     valid_until=current_timestamp - timedelta(days=5),
+                ),
+                "index.py",
+            )
+
+    def test_parse_authentication_request_response_too_young(
+        self,
+        interface: Interface,
+        request_id: str,
+        current_timestamp: datetime,
+    ) -> None:
+        with pytest.raises(ToEarly):
+            interface.parse_authentication_request_response(
+                _authentication_request_response(
+                    response_id=request_id,
+                    timestamp=current_timestamp,
+                    valid_from=current_timestamp + timedelta(days=5),
+                    valid_until=current_timestamp + timedelta(days=10),
                 ),
                 "index.py",
             )

@@ -38,7 +38,6 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
-from cmk.core_helpers.tcp import TCPFetcher
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -585,14 +584,7 @@ class _Builder:
             )
             return (
                 source,
-                TCPFetcher(
-                    family=self.config_cache.default_address_family(self.host_name),
-                    address=(source.ipaddress, self.config_cache.agent_port(self.host_name)),
-                    host_name=source.hostname,
-                    timeout=self.config_cache.tcp_connect_timeout(self.host_name),
-                    encryption_handling=self.config_cache.encryption_handling(self.host_name),
-                    pre_shared_secret=self.config_cache.symmetric_agent_encryption(self.host_name),
-                ),
+                self.config_cache.make_tcp_fetcher(source.hostname, source.ipaddress),
                 AgentFileCache(
                     source.hostname,
                     path_template=make_file_cache_path_template(

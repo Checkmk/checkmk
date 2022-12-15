@@ -97,7 +97,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
-from cmk.core_helpers import IPMIFetcher
+from cmk.core_helpers import IPMIFetcher, TCPFetcher
 from cmk.core_helpers.tcp import EncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2591,6 +2591,16 @@ class ConfigCache:
             password=ipmi_credentials.get("password"),
         )
 
+    def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress | None) -> TCPFetcher:
+        return TCPFetcher(
+            host_name=host_name,
+            address=(ip_address, self._agent_port(host_name)),
+            family=self.default_address_family(host_name),
+            timeout=self._tcp_connect_timeout(host_name),
+            encryption_handling=self._encryption_handling(host_name),
+            pre_shared_secret=self._symmetric_agent_encryption(host_name),
+        )
+
     def _discovered_labels_of_service(
         self,
         hostname: HostName,
@@ -3993,21 +4003,21 @@ class ConfigCache:
             return "Check_MK Discovery"
         return "Check_MK inventory"
 
-    def agent_port(self, host_name: HostName) -> int:
+    def _agent_port(self, host_name: HostName) -> int:
         ports = self.host_extra_conf(host_name, agent_ports)
         if not ports:
             return agent_port
 
         return ports[0]
 
-    def tcp_connect_timeout(self, host_name: HostName) -> float:
+    def _tcp_connect_timeout(self, host_name: HostName) -> float:
         timeouts = self.host_extra_conf(host_name, tcp_connect_timeouts)
         if not timeouts:
             return tcp_connect_timeout
 
         return timeouts[0]
 
-    def encryption_handling(self, host_name: HostName) -> EncryptionHandling:
+    def _encryption_handling(self, host_name: HostName) -> EncryptionHandling:
         if not (settings := self.host_extra_conf(host_name, encryption_handling)):
             return EncryptionHandling.ANY_AND_PLAIN
         match settings[0]["accept"]:
@@ -4019,7 +4029,7 @@ class ConfigCache:
                 return EncryptionHandling.ANY_AND_PLAIN
         raise ValueError("Unknown setting: %r" % settings[0])
 
-    def symmetric_agent_encryption(self, host_name: HostName) -> str | None:
+    def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:
         return (
             settings[0] if (settings := self.host_extra_conf(host_name, agent_encryption)) else None
         )

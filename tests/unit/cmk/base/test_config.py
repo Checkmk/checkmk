@@ -194,7 +194,7 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.agent_port(hostname) == result
+    assert config_cache._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -630,7 +630,7 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname_str: str, result: int) ->
         [{"condition": {"host_name": ["testhost2"]}, "value": 1337, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.agent_port(hostname) == result
+    assert config_cache._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -649,7 +649,7 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname_str: str, result
         [{"condition": {"host_name": ["testhost2"]}, "value": 12.0, "options": {}}],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.tcp_connect_timeout(hostname) == result
+    assert config_cache._tcp_connect_timeout(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -675,7 +675,7 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.encryption_handling(hostname) is result
+    assert config_cache._encryption_handling(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -701,7 +701,7 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.symmetric_agent_encryption(hostname) is result
+    assert config_cache._symmetric_agent_encryption(hostname) is result
 
 
 @pytest.mark.parametrize(

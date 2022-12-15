@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import replace
-from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence, Union
+from collections.abc import MutableMapping
+from dataclasses import dataclass, field, replace
+from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import bonding, interfaces
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
-from .utils.lnx_if import Section, SectionInventory
+from .utils.lnx_if import InterfaceWithCounters
 
 # Example output from agent:
 
@@ -55,6 +56,25 @@ from .utils.lnx_if import Section, SectionInventory
 #         Link detected: yes
 
 
+@dataclass
+class EthtoolInterface:
+    ethtool_index: str | None = None
+    counters: Sequence[int] = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    attributes: MutableMapping[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class IPLinkInterface:
+    state_infos: Sequence[str]
+    link: dict[str, str] = field(default_factory=dict)
+    inet: dict[str, list[str]] = field(default_factory=dict)
+
+
+EthtoolSection = Mapping[str, EthtoolInterface]
+SectionInventory = dict[str, IPLinkInterface]
+Section = tuple[Sequence[InterfaceWithCounters], SectionInventory]
+
+
 def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     ip_stats: SectionInventory = {}
     iface = None
@@ -66,9 +86,10 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # Some (docker) interfaces have suffix "@..." but ethtool does not show this suffix.
             # 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default ...
             # 5: veth6a06585@if4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue ...
-            iface = ip_stats.setdefault(line[1][:-1].split("@")[0], {})
+            iface = ip_stats.setdefault(
+                line[1][:-1].split("@")[0], IPLinkInterface(state_infos=line[2][1:-1].split(","))
+            )
             # The interface flags are summarized in the angle brackets.
-            iface["state_infos"] = line[2][1:-1].split(",")
             continue
 
         if not iface:
@@ -78,8 +99,8 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
             try:
-                iface[line[0]] = line[1]
-                iface[line[2]] = line[3]
+                iface.link[line[0]] = line[1]
+                iface.link[line[2]] = line[3]
             except IndexError:
                 pass
 
@@ -88,15 +109,15 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
                 continue
             # inet 127.0.0.1/8 scope host lo
             # inet6 ::1/128 scope host
-            inet_data = iface.setdefault(line[0], [])
-            assert isinstance(inet_data, list)
-            inet_data.append(line[1])
+            iface.inet.setdefault(line[0], []).append(line[1])
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table: type_defs.StringTable):  # type:ignore[no-untyped-def]
+def _parse_lnx_if_sections(
+    string_table: type_defs.StringTable,
+) -> tuple[SectionInventory, EthtoolSection]:
     ip_stats = {}
-    ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
+    ethtool_stats: Dict[str, EthtoolInterface] = {}
     iface = None
     lines = iter(string_table)
     ethtool_index = 0
@@ -108,27 +129,23 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):  # type:ignore[
         elif len(line) == 2 and len(line[1].strip().split()) >= 16:
             # Parse '/proc/net/dev'
             # IFACE_NAME: VAL VAL VAL ...
-            iface = ethtool_stats.setdefault(line[0], {})
-            iface.update({"counters": list(map(int, line[1].strip().split()))})
-            continue
-
+            iface = ethtool_stats.setdefault(line[0], EthtoolInterface())
+            iface.counters = list(map(int, line[1].strip().split()))
         elif line[0].startswith("[") and line[0].endswith("]"):
             # Parse 'ethtool' output
             # [IF_NAME]
             #       KEY: VAL
             #       KEY: VAL
             #       ...
-            iface = ethtool_stats.setdefault(line[0][1:-1], {})
             ethtool_index += 1
-            iface["ethtool_index"] = ethtool_index
-            continue
-
-        if iface is not None:
+            iface = ethtool_stats.setdefault(line[0][1:-1], EthtoolInterface())
+            iface.ethtool_index = str(ethtool_index)
+        elif iface is not None:
             stripped_line0 = line[0].strip()
             if stripped_line0 == "Address":
-                iface[stripped_line0] = ":".join(line[1:]).strip()
+                iface.attributes[stripped_line0] = ":".join(line[1:]).strip()
             else:
-                iface[stripped_line0] = " ".join(line[1:]).strip()
+                iface.attributes[stripped_line0] = " ".join(line[1:]).strip()
     return ip_stats, ethtool_stats
 
 
@@ -147,7 +164,7 @@ def _get_speed(speed_text: str | None) -> int:
 
 
 def _get_oper_status(
-    link_detected: str | None, state_infos: list[str] | None, ifInOctets: int
+    link_detected: str | None, state_infos: Sequence[str], ifInOctets: int
 ) -> Literal["1", "2", "4"]:
     # Link state from ethtool. If ethtool has no information about
     # this NIC, we set the state to unknown.
@@ -185,68 +202,42 @@ def _get_physical_address(address: str | None, link_ether: str | None) -> str:
 def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
-    nic_info = []
-    for iface_name, iface in sorted(ethtool_stats.items()):
-        iface.update(ip_stats.get(iface_name, {}))
-        nic_info.append((iface_name, iface))
-
     if_table = []
-    for index, (nic, attr) in enumerate(nic_info):
-        counters = attr.get("counters", [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-        ifIndex = attr.get("ethtool_index", index + 1)
-        ifDescr = nic
-        ifAlias = nic
-
-        # Guess type from name of interface
-        if nic == "lo":
-            ifType = 24
-        else:
-            ifType = 6
-
-        # Performance counters
-        ifInOctets = counters[0]
-        inucast = counters[1] + counters[7]
-        inmcast = counters[7]
-        inbcast = 0
-        ifInDiscards = counters[3]
-        ifInErrors = counters[2]
-        ifOutOctets = counters[8]
-        outucast = counters[9]
-        outmcast = 0
-        outbcast = 0
-        ifOutDiscards = counters[11]
-        ifOutErrors = counters[10]
-        ifOutQLen = counters[12]
-
+    for index, (nic, ethtool_interface) in enumerate(sorted(ethtool_stats.items())):
+        ifInOctets = ethtool_interface.counters[0]
+        iplink_interface = ip_stats.get(nic, IPLinkInterface(state_infos=[]))
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(
-                    index=str(ifIndex),
-                    descr=str(ifDescr),
-                    type=str(ifType),
-                    speed=_get_speed(attr.get("Speed")),
+                    index=ethtool_interface.ethtool_index or str(index + 1),
+                    descr=nic,
+                    type="24" if nic == "lo" else "6",  # Guess type from name of interface
+                    speed=_get_speed(ethtool_interface.attributes.get("Speed")),
                     oper_status=_get_oper_status(
-                        attr.get("Link detected"), attr.get("state_infos"), ifInOctets
+                        ethtool_interface.attributes.get("Link detected"),
+                        iplink_interface.state_infos,
+                        ifInOctets,
                     ),
-                    out_qlen=ifOutQLen,
-                    alias=ifAlias,
+                    out_qlen=ethtool_interface.counters[12],
+                    alias=nic,
                     phys_address=_get_physical_address(
-                        attr.get("Address"), attr.get("link/ether", "")
+                        ethtool_interface.attributes.get("Address"),
+                        iplink_interface.link.get("link/ether"),
                     ),
                 ),
                 interfaces.Counters(
                     in_octets=ifInOctets,
-                    in_ucast=inucast,
-                    in_mcast=inmcast,
-                    in_bcast=inbcast,
-                    in_disc=ifInDiscards,
-                    in_err=ifInErrors,
-                    out_octets=ifOutOctets,
-                    out_ucast=outucast,
-                    out_mcast=outmcast,
-                    out_bcast=outbcast,
-                    out_disc=ifOutDiscards,
-                    out_err=ifOutErrors,
+                    in_ucast=ethtool_interface.counters[1] + ethtool_interface.counters[7],
+                    in_mcast=ethtool_interface.counters[7],
+                    in_bcast=0,
+                    in_disc=ethtool_interface.counters[3],
+                    in_err=ethtool_interface.counters[2],
+                    out_octets=ethtool_interface.counters[8],
+                    out_ucast=ethtool_interface.counters[9],
+                    out_mcast=0,
+                    out_bcast=0,
+                    out_disc=ethtool_interface.counters[11],
+                    out_err=ethtool_interface.counters[10],
                 ),
             )
         )
@@ -422,13 +413,13 @@ def inventory_lnx_if(
     yield from _inventorize_addresses(ip_stats)
 
 
-def _inventorize_addresses(ip_stats: Mapping[str, Mapping[str, Any]]) -> InventoryResult:
-    for if_name, attrs in ip_stats.items():
+def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
+    for if_name, interface in ip_stats.items():
         for key, ty in [
             ("inet", "ipv4"),
             ("inet6", "ipv6"),
         ]:
-            for network in attrs.get(key, []):
+            for network in interface.inet.get(key, []):
                 yield TableRow(
                     path=["networking", "addresses"],
                     key_columns={

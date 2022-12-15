@@ -1,0 +1,17 @@
+Title: Resetting password expiry, change enforcement for automation users
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1671110709
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+When changing the password for an automation user the time of the last password change was not set.
+If the global setting <i>Maximum age of passwords</i> was enabled and the password retired, the login was not possible even if the password was newly set.
+
+When a automation user is forced to change the password (e.g. through Werk #14391), being set by an administrator was not honored.
+
+This is now fixed.

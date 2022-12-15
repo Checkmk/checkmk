@@ -743,6 +743,9 @@ class ModeEditUser(WatoMode):
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
                 increase_serial = True  # password changed, reflect in auth serial
+                # automation users cannot set the passwords themselves.
+                user_attrs["last_pw_change"] = int(time.time())
+                user_attrs.pop("enforce_pw_change", None)
             elif "automation_secret" not in user_attrs and "password" in user_attrs:
                 del user_attrs["password"]
 
@@ -1019,6 +1022,7 @@ class ModeEditUser(WatoMode):
             size=30,
             id_="automation_secret",
             placeholder="******" if "automation_secret" in self._user else "",
+            autocomplete="off",
         )
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])

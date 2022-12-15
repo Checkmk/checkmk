@@ -7,6 +7,8 @@ ExternalProject_Add(
   URL_HASH
     SHA256=f69e29721c09b3a4b9820a76236b7f230aef157527951eb4e8a3a6ec601fda22
   PREFIX "${gtest_prefix}"
+  PATCH_COMMAND patch -p1 <
+                ${root_repo_dir}/omd/packages/googletest/googletest.diff
   INSTALL_COMMAND "" DOWNLOAD_EXTRACT_TIMESTAMP no)
 
 set(gtest_libs "${gtest_prefix}/src/gtest-external-build/lib")

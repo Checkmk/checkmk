@@ -9,7 +9,17 @@
 from functools import partial
 
 import cmk.gui.pages
-from cmk.gui import autocompleters, bi, crash_reporting, dashboard, mkeventd, mobile, views, wato
+from cmk.gui import (
+    autocompleters,
+    bi,
+    crash_reporting,
+    dashboard,
+    mkeventd,
+    mobile,
+    views,
+    visuals,
+    wato,
+)
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.dashboard.utils import dashlet_registry
@@ -48,6 +58,7 @@ def register_sites_options() -> None:
     )
 
 
+visuals.register(cmk.gui.pages.page_registry)
 views.register(
     permission_section_registry,
     cmk.gui.pages.page_registry,

@@ -27,7 +27,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.forms as forms
-import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.query_filters as query_filters
 import cmk.gui.userdb as userdb
@@ -56,7 +55,7 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.pages import page_registry
+from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import declare_permission, permission_registry
 from cmk.gui.plugins.visuals.utils import (
     active_filter_flag,
@@ -127,6 +126,15 @@ from cmk.gui.valuespec import (
 
 T = TypeVar("T", bound=Visual)
 CustomUserVisuals = dict[tuple[UserId, VisualName], T]
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_visual_filter_list_get_choice")(
+        PageAjaxVisualFilterListGetChoice
+    )
+    page_registry.register_page_handler("ajax_popup_add_visual", ajax_popup_add)
+    page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
+
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -1858,7 +1866,6 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     return context
 
 
-@page_registry.register_page("ajax_visual_filter_list_get_choice")
 class PageAjaxVisualFilterListGetChoice(ABCPageListOfMultipleGetChoice):
     def _get_choices(self, api_request):
         infos = api_request["infos"]
@@ -2279,7 +2286,6 @@ def may_add_site_hint(
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("ajax_popup_add_visual")
 def ajax_popup_add() -> None:
     # name is unused at the moment in this, hand over as empty name
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
@@ -2382,7 +2388,6 @@ def set_page_context(page_context: VisualContext) -> None:
     g.page_context = page_context
 
 
-@cmk.gui.pages.register("ajax_add_visual")
 def ajax_add_visual() -> None:
     check_csrf_token()
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...

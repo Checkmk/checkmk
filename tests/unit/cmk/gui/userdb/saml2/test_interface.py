@@ -8,10 +8,11 @@ import re
 import xml
 import zlib
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Iterable
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from freezegun import freeze_time
 from saml2.config import SPConfig
 from saml2.validate import ResponseLifetimeExceed
 
@@ -34,15 +35,19 @@ def _encode(string: str) -> str:
 
 
 def _authentication_request_response(
-    response_id: str, timestamp: datetime | None = None, valid_until: datetime | None = None
+    response_id: str,
+    timestamp: datetime,
+    *,
+    valid_from: datetime | None = None,
+    valid_until: datetime | None = None,
 ) -> str:
     timestamp_fmt = "%Y-%m-%dT%H:%M:%SZ"
-    now = datetime.utcnow()
 
-    if not timestamp:
-        timestamp = now
+    if not valid_from:
+        valid_from = timestamp - timedelta(days=5)
+
     if not valid_until:
-        valid_until = now + timedelta(days=5)
+        valid_until = timestamp + timedelta(days=5)
 
     return _encode(
         f"""<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -115,7 +120,7 @@ def _authentication_request_response(
                                                       />
                     </saml:SubjectConfirmation>
                 </saml:Subject>
-                <saml:Conditions NotBefore="{datetime.strftime(timestamp, timestamp_fmt)}"
+                <saml:Conditions NotBefore="{datetime.strftime(valid_from, timestamp_fmt)}"
                                  NotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
                                  >
                     <saml:AudienceRestriction>
@@ -162,6 +167,12 @@ def bla(s, d, i, *args, **kwargs):
 
 
 class TestInterface:
+    @pytest.fixture
+    def current_timestamp(self) -> Iterable[datetime]:
+        current_timestamp = datetime.utcnow()
+        with freeze_time(current_timestamp, tz_offset=0):
+            yield current_timestamp
+
     @pytest.fixture(autouse=True)
     def ignore_signature(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -218,30 +229,35 @@ class TestInterface:
         )
         assert re.search(VALID_AUTHENTICATION_REQUEST_PATTERN, saml_request_decoded)
 
-    @pytest.mark.skip
     def test_parse_successful_authentication_request_response(
-        self, interface: Interface, request_id: str
+        self, interface: Interface, request_id: str, current_timestamp: datetime
     ) -> None:
         parsed_response = interface.parse_authentication_request_response(
-            _authentication_request_response(request_id), "index.py"
+            _authentication_request_response(response_id=request_id, timestamp=current_timestamp),
+            "index.py",
         )
         assert isinstance(parsed_response, Authenticated)
         assert parsed_response.in_response_to_id == request_id
         assert parsed_response.relay_state == "index.py"
         assert parsed_response.user_id == UserId("user1")
 
-    @pytest.mark.skip
     def test_parse_authentication_request_response_outside_validity_window(
-        self, interface: Interface, request_id: str
+        self,
+        interface: Interface,
+        request_id: str,
+        current_timestamp: datetime,
     ) -> None:
-        now = datetime.utcnow()
         with pytest.raises(ResponseLifetimeExceed):
             interface.parse_authentication_request_response(
-                _authentication_request_response(request_id, now, now - timedelta(days=5)),
+                _authentication_request_response(
+                    response_id=request_id,
+                    timestamp=current_timestamp,
+                    valid_from=current_timestamp - timedelta(days=10),
+                    valid_until=current_timestamp - timedelta(days=5),
+                ),
                 "index.py",
             )
 
-    @pytest.mark.skip
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception) as e:
             interface.parse_authentication_request_response(
@@ -249,7 +265,6 @@ class TestInterface:
             )
         assert e.value.args[0] == "Unknown response type"
 
-    @pytest.mark.skip
     def test_parse_garbage_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(xml.etree.ElementTree.ParseError):
             interface.parse_authentication_request_response(_encode("aardvark"), "index.py")

@@ -1790,6 +1790,7 @@ def call_scripts(site: SiteContext, phase: str) -> None:
                 sys.stdout.write(tty.ok + "\n")
             else:
                 sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+                raise SystemExit(1)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:

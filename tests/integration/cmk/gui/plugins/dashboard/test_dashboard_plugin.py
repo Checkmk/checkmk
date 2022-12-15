@@ -17,6 +17,10 @@ def plugin_path(site: Site) -> Iterator[str]:
     site.write_text_file(
         path,
         """
+# Initialize the UI environment to make loading of the dashlet possible.
+from cmk.gui import main_modules
+main_modules.load_plugins()
+
 from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
 
 @dashlet_registry.register
@@ -57,6 +61,7 @@ def fixture_test_script(site: Site) -> Iterator[str]:
         """
 from cmk.gui import main_modules
 main_modules.load_plugins()
+
 from cmk.gui.plugins.dashboard.utils import dashlet_registry
 print("test" in dashlet_registry)
     """,

@@ -55,9 +55,6 @@ $(MSITOOLS_INTERMEDIATE_INSTALL): $(MSITOOLS_BUILD)
 
 	$(MKDIR) $(MSITOOLS_INSTALL_DIR)/lib
 	install -m 755 $(MSITOOLS_BUILD_DIR)/libmsi/.libs/libmsi.so* $(MSITOOLS_INSTALL_DIR)/lib
-
-	$(MKDIR) $(MSITOOLS_INSTALL_DIR)/share/check_mk/agents/windows
-	install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(MSITOOLS_INSTALL_DIR)/share/check_mk/agents/windows
 	$(TOUCH) $@
 
 $(MSITOOLS_INSTALL): $(MSITOOLS_CACHE_PKG_PROCESS)

@@ -249,6 +249,7 @@ omd.spec: omd.spec.in
 # Called by our release system to build RPM packages
 # To make incremental builds possible, e.g. for testing, remove the install-clean target
 rpm: install-clean omd.spec
+	env
 	$(MKDIR) $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	# NO_BRP_STALE_LINK_ERROR ignores errors when symlinking from skel to
 	# share,lib,bin because the link has a invalid target until the site is created
@@ -291,6 +292,7 @@ debian/control: debian/control.in
 # b) drop the "clean" argument for newer distros
 # c) remove the dh_prep from debian/rules
 deb: debian/changelog debian/control
+	env
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \

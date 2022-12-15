@@ -14,8 +14,9 @@ from cmk.utils.type_defs import UserId
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _u
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -50,8 +51,7 @@ from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
 from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
-from .store import get_all_views
-from .view_choices import view_choices
+from .store import get_all_views, get_permitted_views
 
 
 def page_edit_view() -> None:
@@ -71,6 +71,48 @@ def page_edit_view() -> None:
         create_handler=create_view_from_valuespec,
         info_handler=get_view_infos,
     )
+
+
+def view_choices(only_with_hidden=False, allow_empty=True):
+    choices = []
+    if allow_empty:
+        choices.append(("", ""))
+    for name, view in get_permitted_views().items():
+        if not only_with_hidden or view["single_infos"]:
+            title = format_view_title(name, view)
+            choices.append(("%s" % name, title))
+    return choices
+
+
+def format_view_title(name, view):
+    title_parts = []
+
+    if view.get("mobile", False):
+        title_parts.append(_("Mobile"))
+
+    # Don't use the data source title because it does not really look good here
+    datasource = data_source_registry[view["datasource"]]()
+    infos = datasource.infos
+    if "event" in infos:
+        title_parts.append(_("Event Console"))
+    elif view["datasource"].startswith("inv"):
+        title_parts.append(_("HW/SW inventory"))
+    elif "aggr" in infos:
+        title_parts.append(_("BI"))
+    elif "log" in infos:
+        title_parts.append(_("Log"))
+    elif "service" in infos:
+        title_parts.append(_("Services"))
+    elif "host" in infos:
+        title_parts.append(_("Hosts"))
+    elif "hostgroup" in infos:
+        title_parts.append(_("Host groups"))
+    elif "servicegroup" in infos:
+        title_parts.append(_("Service groups"))
+
+    title_parts.append("{} ({})".format(_u(view["title"]), name))
+
+    return " - ".join(map(str, title_parts))
 
 
 def view_editor_options():

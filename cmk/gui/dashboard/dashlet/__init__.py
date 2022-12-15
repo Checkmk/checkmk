@@ -3,44 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .base import (
-    Dashlet,
-    DashletConfig,
-    DashletId,
-    DashletPosition,
-    DashletRefreshAction,
-    DashletRefreshInterval,
-    DashletSize,
-    IFrameDashlet,
-)
-from .dashlets import (
-    copy_view_into_dashlet,
-    LinkedViewDashletConfig,
-    register_dashlets,
-    StaticTextDashlet,
-    StaticTextDashletConfig,
-    ViewDashletConfig,
-)
-from .figure_dashlet import ABCFigureDashlet, FigureDashletPage
-from .registry import dashlet_registry, DashletRegistry
+from .dashlets import register_dashlets, StaticTextDashlet, StaticTextDashletConfig
 
 __all__ = [
-    "DashletId",
-    "DashletRefreshInterval",
-    "DashletRefreshAction",
-    "DashletSize",
-    "DashletPosition",
     "register_dashlets",
     "StaticTextDashletConfig",
     "StaticTextDashlet",
-    "DashletRegistry",
-    "dashlet_registry",
-    "Dashlet",
-    "IFrameDashlet",
-    "DashletConfig",
-    "ViewDashletConfig",
-    "LinkedViewDashletConfig",
-    "copy_view_into_dashlet",
-    "FigureDashletPage",
-    "ABCFigureDashlet",
 ]

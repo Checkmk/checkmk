@@ -9,10 +9,10 @@ import time
 
 from cmk.gui import visuals
 from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard.utils import DashboardConfig
 from cmk.gui.valuespec import Checkbox, Dictionary
 
 from .store import get_all_dashboards
-from .type_defs import DashboardConfig
 
 __all__ = ["page_edit_dashboard"]
 

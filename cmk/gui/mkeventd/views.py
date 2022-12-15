@@ -14,13 +14,17 @@ from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
-from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.dashboard.utils import (
+    DashletConfig,
+    LinkedViewDashletConfig,
+    ViewDashletConfig,
+)
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (
     ColumnName,

@@ -3,17 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ..registry import DashletRegistry
+from cmk.gui.plugins.dashboard.utils import DashletRegistry
+
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
-from .view import copy_view_into_dashlet, LinkedViewDashletConfig, ViewDashletConfig
 
 __all__ = [
     "register_dashlets",
     "StaticTextDashletConfig",
     "StaticTextDashlet",
-    "ViewDashletConfig",
-    "LinkedViewDashletConfig",
-    "copy_view_into_dashlet",
 ]
 
 

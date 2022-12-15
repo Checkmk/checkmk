@@ -39,7 +39,11 @@ from .layout import layout_registry, register_layouts
 from .page_ajax_filters import AjaxInitialViewFilters
 from .page_ajax_reschedule import PageRescheduleCheck
 from .page_create_view import page_create_view
-from .page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
+from .page_edit_view import (
+    format_view_title,
+    page_edit_view,
+    PageAjaxCascadingRenderPainterParameters,
+)
 from .page_edit_views import page_edit_views
 from .page_show_view import page_show_view
 from .painter.v0 import painters
@@ -47,7 +51,6 @@ from .painter.v0.base import painter_registry, register_painter
 from .painter_options import painter_option_registry
 from .sorter import register_sorter, register_sorters, sorter_registry
 from .store import multisite_builtin_views
-from .view_choices import format_view_title
 from .visual_type import VisualTypeViews
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error

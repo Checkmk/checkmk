@@ -7,29 +7,34 @@ from collections.abc import Callable
 from typing import TypeVar
 
 import cmk.gui.visuals as visuals
-from cmk.gui.dashboard.dashlet.base import DashletId, DashletSize, IFrameDashlet
-from cmk.gui.dashboard.dashlet.dashlets.view import (
-    ABCViewDashletConfig,
-    LinkedViewDashletConfig,
-    ViewDashletConfig,
-)
-from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard.utils import (
+    ABCViewDashletConfig,
+    dashlet_registry,
+    DashletId,
+    DashletSize,
+    IFrameDashlet,
+    LinkedViewDashletConfig,
+    ViewDashletConfig,
+)
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.views.data_source import data_source_registry
-from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view_config
+from cmk.gui.views.page_edit_view import (
+    create_view_from_valuespec,
+    render_view_config,
+    view_choices,
+)
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.painter_options import PainterOptions
 from cmk.gui.views.store import get_permitted_views
-from cmk.gui.views.view_choices import view_choices
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 

@@ -17,22 +17,10 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
+from cmk.gui.plugins.dashboard.utils import builtin_dashboards, DashletRegistry
 from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
 
-from .builtin_dashboards import builtin_dashboards, GROW, MAX
-from .dashlet import (
-    ABCFigureDashlet,
-    Dashlet,
-    dashlet_registry,
-    DashletConfig,
-    DashletRegistry,
-    FigureDashletPage,
-    IFrameDashlet,
-    LinkedViewDashletConfig,
-    register_dashlets,
-    StaticTextDashletConfig,
-    ViewDashletConfig,
-)
+from .dashlet import register_dashlets, StaticTextDashletConfig
 from .page_create_dashboard import page_create_dashboard
 from .page_create_view_dashlet import (
     page_create_link_view_dashlet,
@@ -49,29 +37,15 @@ from .page_show_dashboard import (
     get_topology_view_and_filters,
     page_dashboard,
 )
-from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
-from .title_macros import render_title_with_macros_string
-from .type_defs import DashboardConfig
+from .store import get_dashlet
 from .visual_type import VisualTypeDashboards
 
 __all__ = [
     "register",
     "load_plugins",
-    "DashletConfig",
-    "DashboardConfig",
-    "builtin_dashboards",
-    "MAX",
-    "GROW",
-    "dashlet_registry",
-    "LinkedViewDashletConfig",
-    "ViewDashletConfig",
     "StaticTextDashletConfig",
     "get_dashlet",
     "get_topology_view_and_filters",
-    "get_all_dashboards",
-    "get_permitted_dashboards",
-    "render_title_with_macros_string",
-    "ABCFigureDashlet",
 ]
 
 
@@ -84,7 +58,6 @@ def register(
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PermissionSectionDashboard)
 
-    page_registry.register_page("ajax_figure_dashlet_data")(FigureDashletPage)
     page_registry.register_page("ajax_initial_dashboard_filters")(AjaxInitialDashboardFilters)
     page_registry.register_page("edit_dashlet")(EditDashletPage)
     page_registry.register_page_handler("delete_dashlet", page_delete_dashlet)
@@ -169,13 +142,13 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.dashboard as api_module
     import cmk.gui.plugins.dashboard.utils as plugin_utils
 
-    for name, val in (
-        ("ABCFigureDashlet", ABCFigureDashlet),
-        ("builtin_dashboards", builtin_dashboards),
-        ("Dashlet", Dashlet),
-        ("dashlet_registry", dashlet_registry),
-        ("GROW", GROW),
-        ("IFrameDashlet", IFrameDashlet),
-        ("MAX", MAX),
+    for name in (
+        "ABCFigureDashlet",
+        "builtin_dashboards",
+        "Dashlet",
+        "dashlet_registry",
+        "GROW",
+        "IFrameDashlet",
+        "MAX",
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name] = val
+        api_module.__dict__[name] = plugin_utils.__dict__[name]

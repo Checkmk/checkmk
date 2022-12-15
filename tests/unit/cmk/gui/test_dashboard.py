@@ -12,8 +12,13 @@ import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.dashboard import DashboardConfig, Dashlet, dashlet_registry, DashletConfig
 from cmk.gui.htmllib.html import html
+from cmk.gui.plugins.dashboard.utils import (
+    DashboardConfig,
+    Dashlet,
+    dashlet_registry,
+    DashletConfig,
+)
 
 
 class DummyDashletConfig(DashletConfig):

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import replace
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
@@ -132,9 +132,57 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):  # type:ignore[
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(  # pylint: disable=too-many-branches
-    string_table: type_defs.StringTable,
-) -> Section:
+def _get_speed(speed_text: str | None) -> int:
+    if speed_text is None:
+        return 0
+    if speed_text == "65535Mb/s":  # unknown
+        return 0
+    if speed_text.endswith("Kb/s"):
+        return int(float(speed_text[:-4])) * 1000
+    if speed_text.endswith("Mb/s"):
+        return int(float(speed_text[:-4])) * 1000_000
+    if speed_text.endswith("Gb/s"):
+        return int(float(speed_text[:-4])) * 1000_000_000
+    return 0
+
+
+def _get_oper_status(
+    link_detected: str | None, state_infos: list[str] | None, ifInOctets: int
+) -> Literal["1", "2", "4"]:
+    # Link state from ethtool. If ethtool has no information about
+    # this NIC, we set the state to unknown.
+    if link_detected == "yes":
+        return "1"
+    if link_detected == "no":
+        return "2"
+
+    # Assumption:
+    # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
+    # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
+    # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
+    if state_infos is not None:
+        if "UP" in state_infos and "LOWER_UP" in state_infos:
+            return "1"
+        return "2"
+
+    # No information from ethtool. We consider interfaces up
+    # if they have been used at least some time since the
+    # system boot.
+    if ifInOctets > 0:
+        return "1"  # assume up
+    return "4"  # unknown (NIC has never been used)
+
+
+def _get_physical_address(address: str | None, link_ether: str | None) -> str:
+    raw_phys_address = address or link_ether or ""
+    if ":" in raw_phys_address:
+        # We saw interface entries of tunnels for the address
+        # is an integer, eg. '1910236'; especially on OpenBSD.
+        return interfaces.mac_address_from_hexstring(raw_phys_address)
+    return ""
+
+
+def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []
@@ -155,22 +203,6 @@ def parse_lnx_if(  # pylint: disable=too-many-branches
         else:
             ifType = 6
 
-        # Compute speed
-        speed_text = attr.get("Speed")
-        if speed_text is None:
-            ifSpeed = 0
-        else:
-            if speed_text == "65535Mb/s":  # unknown
-                ifSpeed = 0
-            elif speed_text.endswith("Kb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000
-            elif speed_text.endswith("Mb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000000
-            elif speed_text.endswith("Gb/s"):
-                ifSpeed = int(float(speed_text[:-4])) * 1000000000
-            else:
-                ifSpeed = 0
-
         # Performance counters
         ifInOctets = counters[0]
         inucast = counters[1] + counters[7]
@@ -186,52 +218,21 @@ def parse_lnx_if(  # pylint: disable=too-many-branches
         ifOutErrors = counters[10]
         ifOutQLen = counters[12]
 
-        # Link state from ethtool. If ethtool has no information about
-        # this NIC, we set the state to unknown.
-        ld = attr.get("Link detected")
-        if ld == "yes":
-            ifOperStatus = 1
-        elif ld == "no":
-            ifOperStatus = 2
-        else:
-            # No information from ethtool. We consider interfaces up
-            # if they have been used at least some time since the
-            # system boot.
-            state_infos = attr.get("state_infos")
-            if state_infos is None:
-                if ifInOctets > 0:
-                    ifOperStatus = 1  # assume up
-                else:
-                    ifOperStatus = 4  # unknown (NIC has never been used)
-            else:
-                # Assumption:
-                # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
-                # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
-                # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
-                if "UP" in state_infos and "LOWER_UP" in state_infos:
-                    ifOperStatus = 1
-                else:
-                    ifOperStatus = 2
-
-        raw_phys_address = attr.get("Address", attr.get("link/ether", ""))
-        if ":" in raw_phys_address:
-            # We saw interface entries of tunnels for the address
-            # is an integer, eg. '1910236'; especially on OpenBSD.
-            ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
-        else:
-            ifPhysAddress = ""
-
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(
                     index=str(ifIndex),
                     descr=str(ifDescr),
                     type=str(ifType),
-                    speed=ifSpeed,
-                    oper_status=str(ifOperStatus),
+                    speed=_get_speed(attr.get("Speed")),
+                    oper_status=_get_oper_status(
+                        attr.get("Link detected"), attr.get("state_infos"), ifInOctets
+                    ),
                     out_qlen=ifOutQLen,
                     alias=ifAlias,
-                    phys_address=ifPhysAddress,
+                    phys_address=_get_physical_address(
+                        attr.get("Address"), attr.get("link/ether", "")
+                    ),
                 ),
                 interfaces.Counters(
                     in_octets=ifInOctets,

@@ -79,6 +79,10 @@ def legacy_plugin_path(site: Site) -> Iterator[str]:
     site.write_text_file(
         path,
         """
+# Initialize the UI environment to make loading of the dashlet possible.
+from cmk.gui import main_modules
+main_modules.load_plugins()
+
 from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 
 @dashlet_registry.register

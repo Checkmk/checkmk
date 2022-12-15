@@ -151,6 +151,9 @@ RUN touch /etc/fstab
 RUN groupadd -g 1000 jenkins \
     && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
 
+RUN mkdir -p /home/jenkins/.cache/ \
+    && chown jenkins:jenkins /home/jenkins/.cache/
+
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
 

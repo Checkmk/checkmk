@@ -26,3 +26,6 @@ RUN pip3 install boto3
 # jobs will be executed as this user in the container
 RUN groupadd -g 1000 jenkins \
     && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
+
+RUN mkdir -p /home/jenkins/.cache/ \
+    && chown jenkins:jenkins /home/jenkins/.cache/

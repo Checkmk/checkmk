@@ -50,7 +50,7 @@ def main() {
             "DISTROS_TESTBUILD",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
-            ["NEXUS_BUILD_CACHE_URL=''", "PYTHON_ENABLE_OPTIMIZATIONS=''"],
+            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
@@ -492,9 +492,9 @@ def copy_source_package(package_path, archive_path) {
 def build_package(package_type, build_dir, env) {
     print("FN build_package(package_type=${package_type}, build_dir=${build_dir}, env=${env})");
     dir(build_dir) {
-        withEnv(env) {
-            sh("DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
-        }
+        // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
+        // see also: https://issues.jenkins.io/browse/JENKINS-43632
+        sh("${env} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
     }
 }
 

@@ -1061,13 +1061,12 @@ def serialize_attached_volumes_from_kubelet_metrics(
     return volumes
 
 
-def create_pod_pvc_sections(
-    pod: api.Pod,
-    pod_piggyback_name: str,
+def create_pvc_sections(
+    piggyback_name: str,
+    attached_pvc_namespaced_names: Sequence[str],
     api_persistent_volume_claims: Mapping[str, section.PersistentVolumeClaim],
     attached_volumes: Mapping[str, section.AttachedVolume],
 ) -> Iterator[WriteableSection]:
-    attached_pvc_namespaced_names = list(pod_attached_persistent_volume_claim_names(pod))
     if not attached_pvc_namespaced_names:
         return
 
@@ -1077,7 +1076,7 @@ def create_pod_pvc_sections(
     }
 
     yield WriteableSection(
-        piggyback_name=pod_piggyback_name,
+        piggyback_name=piggyback_name,
         section_name=SectionName("kube_pvc_v1"),
         section=section.PersistentVolumeClaims(claims=attached_pvcs),
     )
@@ -1090,7 +1089,7 @@ def create_pod_pvc_sections(
     if pvc_attached_volumes:
         pvc_attached_volumes = {}
         yield WriteableSection(
-            piggyback_name=pod_piggyback_name,
+            piggyback_name=piggyback_name,
             section_name=SectionName("kube_pvc_volumes_v1"),
             section=section.PersistentVolumeClaimAttachedVolumes(volumes=pvc_attached_volumes),
         )
@@ -2237,9 +2236,11 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
                     sections = chain(
                         sections,
-                        create_pod_pvc_sections(
-                            pod=pod,
-                            pod_piggyback_name=pod_piggyback_name,
+                        create_pvc_sections(
+                            piggyback_name=pod_piggyback_name,
+                            attached_pvc_namespaced_names=list(
+                                pod_attached_persistent_volume_claim_names(pod)
+                            ),
                             api_persistent_volume_claims=api_persistent_volume_claims,
                             attached_volumes=attached_volumes,
                         ),

@@ -64,25 +64,27 @@ test_systemd_sufficient_fail_for_218() {
     assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
 }
 
-test_systemd_sufficient_fail_for_219() {
+test_deploy_fail_for_219() {
     systemctl() { echo "systemd 219 (foobar)"; }
     _systemd_present() { :; }
     _destination() { :; }
-    _is_controller_setup() { false; }
+    _deploy_controller() { false; }
+    _deploy_systemd_units() { :; }
 
-    ERRMSG=$(_systemd_sufficient 2>&1)
+    ERRMSG=$(deploy 2>&1)
 
     assertFalse "$?"
     assertContains "${ERRMSG}" $'The Checkmk agent may need to know the IP address of the querying site.'
 }
 
-test_systemd_sufficient_ok_for_219() {
+test_deploy_ok_for_219() {
     systemctl() { echo "systemd 219 (foobar)"; }
     _systemd_present() { :; }
     _destination() { :; }
-    _is_controller_setup() { true; }
+    _deploy_controller() { true; }
+    _deploy_systemd_units() { :; }
 
-    _systemd_sufficient 2>&1
+    deploy 2>&1
     assertTrue "$?"
 }
 

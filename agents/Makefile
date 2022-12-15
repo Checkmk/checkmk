@@ -141,7 +141,7 @@ $(BUILDROOT_STAMP): $(BUILDROOT_DEPS)
 	mkdir -p "$(BUILDROOT)/var/lib/cmk-agent"
 	install -m 755 check_mk_agent.linux "$(BUILDROOT)/usr/bin/check_mk_agent"
 	install -m 755 check_mk_caching_agent.linux "$(BUILDROOT)/usr/bin/check_mk_caching_agent"
-	install -m 755 $(AGENT_CTL) "$(BUILDROOT)/usr/bin/cmk-agent-ctl"
+	install -m 640 $(AGENT_CTL_GZ) "$(BUILDROOT)/var/lib/cmk-agent/cmk-agent-ctl.gz"
 	install -m 755 mk-job "$(BUILDROOT)/usr/bin/mk-job"
 	install -m 755 waitmax "$(BUILDROOT)/usr/bin/waitmax"
 	mkdir -p "$(BUILDROOT)/usr/lib/check_mk_agent/local"

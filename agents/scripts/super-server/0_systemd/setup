@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 RESOURCES="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
+CONTROLLER_TARGET="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
 
 _usage() {
     cat >&2 <<HERE
@@ -64,13 +65,28 @@ _need_ip_access_list() {
     grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback"
 }
 
-_is_controller_setup() {
-    "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl --version >/dev/null 2>&1 || cmk-agent-ctl --version >/dev/null 2>&1
+_deploy_controller() {
+    printf "Deploying agent controller: %s\n" "${CONTROLLER_TARGET}"
+    gunzip --keep --force --quiet "/var/lib/cmk-agent/cmk-agent-ctl.gz" || {
+        printf "%s\n" "...Failed to unpack with gzip."
+        return 1
+    }
+    install -m 755 "/var/lib/cmk-agent/cmk-agent-ctl" "${CONTROLLER_TARGET}" || {
+        printf "%s\n" "...Failed to move to target location."
+        return 1
+    }
+    rm -f "/var/lib/cmk-agent/cmk-agent-ctl"
+    # Test rightaway. It might be dysfunctional (e.g., wrong architecture)
+    "${CONTROLLER_TARGET}" --version >/dev/null 2>&1 || {
+        printf "%s\n" "...Not running on this system. Falling back to legacy systemd setup."
+        rm -f "${CONTROLLER_TARGET}"
+        return 1
+    }
+    return 0
 }
 
 _systemd_sufficient() {
     _systemd_present || return 1
-
     _destination >/dev/null || return 1
 
     # version 219 is used on RHEL7 -- if we use the controller, that's sufficient.
@@ -83,10 +99,11 @@ HERE
         return 1
     fi
 
-    _is_controller_setup && return 0
+    return 0
+}
 
-    # Setup w/o controller.
-    # (We're in the TCP socket fallback situation.)
+_legacy_setup_supported() {
+    # TCP socket fallback situation.
 
     # We need version 220 (REMOTE_ADDR is only available from 220 onwards)
     if [ "$(_systemd_version)" -lt 220 ]; then
@@ -114,27 +131,21 @@ _unit_files() {
     find "${ROOT}${RESOURCES}" -name '*.socket' -o -name '*.service' -o -name '*.timer' | sed 's|.*/||'
 }
 
-deploy() {
-    _systemd_sufficient || return
-
-    if _is_controller_setup; then
-        fallback=""
-    else
-        fallback=".fallback"
-    fi
+_deploy_systemd_units() {
+    fallback_suffix="${1}"
 
     dest="${ROOT}$(_destination)"
     printf "Deploying systemd units:"
 
     for unit in $(_unit_files); do
 
-        [ -n "${fallback}" ] && [ -z "${unit##*cmk-agent-ctl*}" ] && continue
+        [ -n "${fallback_suffix}" ] && [ -z "${unit##*cmk-agent-ctl*}" ] && continue
 
         src="${ROOT}${RESOURCES}/${unit}"
 
-        if [ -e "${src}${fallback}" ]; then
-            printf " %s" "${unit}${fallback}"
-            install -m 644 "${src}${fallback}" "${dest}/${unit}"
+        if [ -e "${src}${fallback_suffix}" ]; then
+            printf " %s" "${unit}${fallback_suffix}"
+            install -m 644 "${src}${fallback_suffix}" "${dest}/${unit}"
         else
             printf " %s" "${unit}"
             install -m 644 "${src}" "${dest}/${unit}"
@@ -142,10 +153,21 @@ deploy() {
 
     done
     printf "\n"
+}
 
+deploy() {
+    _systemd_sufficient || return 1
+    _deploy_controller && _deploy_systemd_units "" && return 0
+    _legacy_setup_supported && _deploy_systemd_units ".fallback" && return 0
+    return 1
 }
 
 cleanup() {
+    [ -e "${CONTROLLER_TARGET}" ] && {
+        printf "Removing agent controller: %s\n" "${CONTROLLER_TARGET}"
+        rm -f "${CONTROLLER_TARGET}"
+    }
+
     prefix="Removing deployed systemd units:"
     _destination --all | while read -r dest; do
         for unit in $(_unit_files); do

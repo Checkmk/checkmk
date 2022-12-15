@@ -41,11 +41,11 @@ define __spec_install_pre %{___build_pre} &&\
 %config(noreplace) /etc/check_mk/xinetd-service-template.cfg
 /usr/bin/check_mk_agent
 /usr/bin/check_mk_caching_agent
-/usr/bin/cmk-agent-ctl
 /usr/bin/mk-job
 /usr/bin/waitmax
 /usr/lib/check_mk_agent
 /var/lib/check_mk_agent
+/var/lib/cmk-agent/cmk-agent-ctl.gz
 /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent-async.service
 /var/lib/cmk-agent/scripts/super-server/0_systemd/check-mk-agent.socket

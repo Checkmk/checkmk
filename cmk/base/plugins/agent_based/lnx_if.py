@@ -60,13 +60,14 @@ from .utils.lnx_if import InterfaceWithCounters
 class EthtoolInterface:
     ethtool_index: str | None = None
     counters: Sequence[int] = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    address: str = ""
     attributes: MutableMapping[str, str] = field(default_factory=dict)
 
 
 @dataclass
 class IPLinkInterface:
     state_infos: Sequence[str]
-    link_ether: str | None = None
+    link_ether: str = ""
     inet: dict[str, list[str]] = field(default_factory=dict)
 
 
@@ -95,13 +96,10 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
         if not iface:
             continue
 
-        if line[0] == "link/ether":
+        if len(line) > 1 and line[0] == "link/ether":
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
-            try:
-                iface.link_ether = line[1]
-            except IndexError:
-                pass
+            iface.link_ether = _get_physical_address(line[1])
 
         elif line[0].startswith("inet"):
             if "temporary" in line and "dynamic" in line:
@@ -142,7 +140,7 @@ def _parse_lnx_if_sections(
         elif iface is not None:
             stripped_line0 = line[0].strip()
             if stripped_line0 == "Address":
-                iface.attributes[stripped_line0] = ":".join(line[1:]).strip()
+                iface.address = _get_physical_address(":".join(line[1:]).strip())
             else:
                 iface.attributes[stripped_line0] = " ".join(line[1:]).strip()
     return ip_stats, ethtool_stats
@@ -189,12 +187,11 @@ def _get_oper_status(
     return "4"  # unknown (NIC has never been used)
 
 
-def _get_physical_address(address: str | None, link_ether: str | None) -> str:
-    raw_phys_address = address or link_ether or ""
-    if ":" in raw_phys_address:
+def _get_physical_address(address: str) -> str:
+    if ":" in address:
         # We saw interface entries of tunnels for the address
         # is an integer, eg. '1910236'; especially on OpenBSD.
-        return interfaces.mac_address_from_hexstring(raw_phys_address)
+        return interfaces.mac_address_from_hexstring(address)
     return ""
 
 
@@ -219,10 +216,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                     ),
                     out_qlen=ethtool_interface.counters[12],
                     alias=nic,
-                    phys_address=_get_physical_address(
-                        ethtool_interface.attributes.get("Address"),
-                        iplink_interface.link_ether,
-                    ),
+                    phys_address=ethtool_interface.address or iplink_interface.link_ether,
                 ),
                 interfaces.Counters(
                     in_octets=ifInOctets,

@@ -116,6 +116,7 @@ CmkEndpointName = Literal[
     "cmk/update",
     "cmk/update_and_acknowledge",
     "cmk/change_state",
+    "cmk/verify",
 ]
 
 RestfulEndpointName = Literal[

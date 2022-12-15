@@ -451,3 +451,10 @@ class RestApiClient:
             "post",
             url=f"/objects/aux_tag/{tag_id}/actions/delete/invoke",
         )
+
+    def call_online_verification(self, expect_ok: bool = False) -> Response:
+        return self._request(
+            "post",
+            url="/domain-types/licensing/actions/verify/invoke",
+            expect_ok=expect_ok,
+        )

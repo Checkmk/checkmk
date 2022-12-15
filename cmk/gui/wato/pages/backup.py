@@ -15,14 +15,9 @@ from cmk.gui.i18n import _
 from cmk.gui.key_mgmt import Key
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import mode_registry, SiteBackupJobs, WatoMode
+from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
-
-
-class SiteBackupTargets(backup.Targets):
-    def __init__(self) -> None:
-        super().__init__(backup.site_config_path())
 
 
 @mode_registry.register
@@ -40,9 +35,6 @@ class ModeBackup(backup.PageBackup, WatoMode):
 
     def title(self) -> str:
         return _("Site backup")
-
-    def jobs(self):
-        return SiteBackupJobs()
 
     def home_button(self):
         pass
@@ -65,26 +57,6 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     def title(self) -> str:
         return _("Site backup targets")
 
-    def targets(self):
-        return SiteBackupTargets()
-
-    def jobs(self):
-        return SiteBackupJobs()
-
-    def page(self) -> None:
-        backup.show_target_list(
-            (t for t in self.targets().objects.values() if isinstance(t, backup.Target)),
-            False,
-        )
-        backup.show_target_list(
-            (
-                t
-                for t in backup.SystemBackupTargetsReadOnly().objects.values()
-                if isinstance(t, backup.Target)
-            ),
-            False,
-        )
-
 
 @mode_registry.register
 class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
@@ -99,9 +71,6 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupTargets
-
-    def targets(self):
-        return SiteBackupTargets()
 
 
 @mode_registry.register
@@ -121,34 +90,6 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
 
-    def jobs(self):
-        return SiteBackupJobs()
-
-    def targets(self):
-        return SiteBackupTargets()
-
-    def backup_target_choices(self):
-        choices = self.targets().choices()
-
-        # Only add system wide defined targets that don't conflict with
-        # the site specific backup targets
-        choice_dict = dict(choices)
-        for key, title in backup.SystemBackupTargetsReadOnly().choices():
-            if key not in choice_dict:
-                choices.append((key, _("%s (system wide)") % title))
-
-        return sorted(choices, key=lambda x_y: x_y[1].title())
-
-    def _validate_target(self, value, varprefix):
-        targets = self.targets()
-        try:
-            targets.get(value)
-        except KeyError:
-            backup.SystemBackupTargetsReadOnly().validate_target(value, varprefix)
-            return
-
-        targets.validate_target(value, varprefix)
-
 
 @mode_registry.register
 class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
@@ -163,9 +104,6 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
-
-    def jobs(self):
-        return SiteBackupJobs()
 
 
 @page_registry.register_page("ajax_backup_job_state")
@@ -205,9 +143,6 @@ class ModeBackupKeyManagement(backup.PageBackupKeyManagement, WatoMode):
 
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
-
-    def jobs(self):
-        return SiteBackupJobs()
 
 
 @mode_registry.register
@@ -290,28 +225,8 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
             return _("Site restore")
         return _("Restore from target: %s") % self._target.title
 
-    def targets(self):
-        return SiteBackupTargets()
-
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
-
-    def _get_target(self, target_ident):
-        try:
-            return self.targets().get(target_ident)
-        except KeyError:
-            return backup.SystemBackupTargetsReadOnly().get(target_ident)
-
-    def _show_target_list(self) -> None:
-        super()._show_target_list()
-        backup.show_target_list(
-            (
-                t
-                for t in backup.SystemBackupTargetsReadOnly().objects.values()
-                if isinstance(t, backup.Target)
-            ),
-            False,
-        )
 
     def _show_backup_list(self) -> None:
         assert self._target is not None

@@ -23,11 +23,10 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
-from cmk.gui.backup import Job
+from cmk.gui.backup import Config as BackupConfig
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import SiteBackupJobs
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import (
     get_site_config,
@@ -509,9 +508,9 @@ class ACTestBackupConfigured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACResult]:
-        jobs = SiteBackupJobs()
-        if jobs.choices():
-            yield ACResultOK(_("You have configured %d backup jobs") % len(jobs.choices()))
+        n_configured_jobs = len(BackupConfig.load().jobs)
+        if n_configured_jobs:
+            yield ACResultOK(_("You have configured %d backup jobs") % n_configured_jobs)
         else:
             yield ACResultWARN(_("There is no backup job configured"))
 
@@ -536,9 +535,7 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return True
 
     def execute(self) -> Iterator[ACResult]:
-        jobs = SiteBackupJobs()
-        for job in jobs.objects.values():
-            assert isinstance(job, Job)
+        for job in BackupConfig.load().jobs.values():
             if job.is_encrypted():
                 yield ACResultOK(_('The job "%s" is encrypted') % job.title)
             else:

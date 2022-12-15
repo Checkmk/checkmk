@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Literal, NewType, TypedDict
+from typing import Literal, NewType
+
+# pydantic needs TypedDict from typing_extensions for < 3.11
+from typing_extensions import NotRequired, TypedDict
 
 #########################################
 # Schemas to share with CMA Backup tool #
@@ -27,7 +30,9 @@ class JobConfig(TypedDict):
     compress: bool
     schedule: ScheduleConfig | None
     no_history: bool
-    without_sites: bool
+    # CMA jobs only, which we do not load, so we will never encounter this field. However, it's good
+    # to know about it.
+    without_sites: NotRequired[bool]
 
 
 class LocalTargetParams(TypedDict):
@@ -41,11 +46,6 @@ LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
 class TargetConfig(TypedDict):
     title: str
     remote: LocalTargetConfig
-
-
-class Config(TypedDict):
-    targets: dict[str, TargetConfig]
-    jobs: dict[str, JobConfig]
 
 
 class CMACluster(TypedDict):

@@ -9,7 +9,6 @@
 import abc
 import json
 import re
-import subprocess
 import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager, nullcontext
@@ -20,7 +19,6 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.gui.backup as backup
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -1770,26 +1768,6 @@ def some_host_hasnt_set(folder, attrname):
             return True
 
     return False
-
-
-class SiteBackupJobs(backup.Jobs):
-    def __init__(self) -> None:
-        super().__init__(backup.site_config_path())
-
-    def _apply_cron_config(self):
-        completed_process = subprocess.run(
-            ["omd", "restart", "crontab"],
-            close_fds=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            check=False,
-        )
-        if completed_process.returncode:
-            raise MKGeneralException(
-                _("Failed to apply the cronjob config: %s") % completed_process.stdout
-            )
 
 
 # TODO: Kept for compatibility with pre-1.6 WATO plugins

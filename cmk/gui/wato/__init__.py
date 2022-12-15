@@ -411,7 +411,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "SimpleEditMode",
         "SimpleListMode",
         "SimpleModeType",
-        "SiteBackupJobs",
         "sort_sites",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",

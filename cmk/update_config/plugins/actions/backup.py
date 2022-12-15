@@ -5,7 +5,7 @@
 
 from logging import Logger
 
-from cmk.gui.backup import Config, site_config_path
+from cmk.utils.backup.config import Config
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -15,14 +15,13 @@ class UpdateBackupConfig(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
         # compatibility.
-        backup_config = Config(site_config_path()).load()
-        for job_config in backup_config["jobs"].values():
-            schedule = job_config.get("schedule", {})
-            if schedule and "timeofday" in schedule:
+        backup_config = Config.load()
+        for job_config in backup_config.site.jobs.values():
+            if (schedule := job_config["schedule"]) and "timeofday" in schedule:
                 job_config["schedule"]["timeofday"] = [
                     e for e in schedule["timeofday"] if e is not None
                 ]
-        Config(site_config_path()).save(backup_config)
+        backup_config.save()
 
 
 update_action_registry.register(

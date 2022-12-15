@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import errno
 import fcntl
 import getopt
@@ -38,8 +37,9 @@ import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
+from cmk.utils.backup.config import Config
 from cmk.utils.backup.type_defs import BackupInfo as RawBackupInfo
-from cmk.utils.backup.type_defs import Config, JobConfig, TargetId
+from cmk.utils.backup.type_defs import JobConfig, TargetId
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
@@ -707,7 +707,7 @@ target_classes = {"local": LocalTarget}
 
 
 def load_target(config: Config, target_id: TargetId) -> Target:
-    target_config = config["targets"][target_id]
+    target_config = config.all_targets[target_id]
     target_type, params = target_config["remote"]
     try:
         return target_classes[target_type](target_id, params)
@@ -736,37 +736,6 @@ def current_site_id() -> str:
 def site_version(site_id: str) -> str:
     linkpath = os.readlink("/omd/sites/%s/version" % site_id)
     return linkpath.split("/")[-1]
-
-
-def system_config_path() -> Path:
-    return Path("/etc/cma/backup.conf")
-
-
-def site_config_path() -> Path:
-    return Path(os.environ["OMD_ROOT"]) / "etc" / "check_mk" / "backup.mk"
-
-
-def load_config() -> Config:
-    def load_file(path: Path) -> Any:
-        with path.open("r", encoding="utf-8") as f:
-            return ast.literal_eval(f.read())
-
-    config = load_file(site_config_path())
-
-    try:
-        system_targets = load_file(system_config_path())["targets"]
-
-        # only load non conflicting targets
-        for target_ident, target_config in system_targets.items():
-            if target_ident not in config["targets"]:
-                config["targets"][target_ident] = target_config
-
-    except OSError:
-        # Not existing system wide config is OK. In this case there
-        # are only backup targets from site config available.
-        pass
-
-    return config
 
 
 class UnrecognizedBackupTypeError(Exception):
@@ -1087,10 +1056,10 @@ def complete_backup(state: State, info: SiteBackupInfo) -> None:
 def load_job(local_job_id: str, config: Config) -> Job:
     g_job_id = globalize_job_id(local_job_id)
 
-    if local_job_id not in config["jobs"]:
+    if local_job_id not in config.site.jobs:
         raise MKGeneralException("This backup job does not exist.")
 
-    job = Job(config=config["jobs"][local_job_id], local_id=local_job_id, id=g_job_id)
+    job = Job(config=config.site.jobs[local_job_id], local_id=local_job_id, id=g_job_id)
     return job
 
 
@@ -1244,10 +1213,10 @@ def complete_restore(state: State) -> None:
 
 
 def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
-    if target_id not in config["targets"]:
+    if target_id not in config.all_targets:
         raise MKGeneralException(
             "This backup target does not exist. Choose one of: %s"
-            % ", ".join(config["targets"].keys())
+            % ", ".join(config.all_targets.keys())
         )
     target = load_target(config, TargetId(target_id))
     target.check_ready()
@@ -1276,7 +1245,7 @@ def mode_jobs(opts: Mapping[str, str], config: Config) -> None:
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
-    for job_id, job_cfg in sorted(config["jobs"].items(), key=lambda x_y: x_y[0]):
+    for job_id, job_cfg in sorted(config.site.jobs.items(), key=lambda x_y: x_y[0]):
         sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
@@ -1284,7 +1253,7 @@ def mode_targets(opts: dict[str, str], config: Config) -> None:
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
-    for job_id, job_cfg in sorted(config["targets"].items(), key=lambda x_y1: x_y1[0]):
+    for job_id, job_cfg in sorted(config.all_targets.items(), key=lambda x_y1: x_y1[0]):
         sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
@@ -1396,12 +1365,7 @@ def parse_arguments():
 
 def main() -> None:
     register_signal_handlers()
-    try:
-        config = load_config()
-    except OSError:
-        if opt_debug:
-            raise
-        raise MKGeneralException("mkbackup is not configured yet.")
+    config = Config.load()
     mode, mode_args, mode_opts, opts = parse_arguments()
     try:
         current_site_id()

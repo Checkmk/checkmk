@@ -10,6 +10,7 @@ system. It is used to configure the site and system backup.
 from __future__ import annotations
 
 import abc
+import contextlib
 import errno
 import glob
 import json
@@ -22,13 +23,13 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, cast, Final, TypedDict, Union
+from typing import cast, Final, TypedDict
 
 from typing_extensions import assert_never
 
 import cmk.utils.render as render
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.type_defs import (
     BackupInfo,
     JobConfig,
@@ -37,7 +38,7 @@ from cmk.utils.backup.type_defs import (
     TargetConfig,
     TargetId,
 )
-from cmk.utils.paths import default_config_dir, omd_root
+from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
@@ -108,14 +109,6 @@ def mkbackup_path() -> Path:
     return omd_root / "bin/mkbackup"
 
 
-def system_config_path() -> str:
-    return "/etc/cma/backup.conf"
-
-
-def site_config_path() -> Path:
-    return Path(default_config_dir) / "backup.mk"
-
-
 def hostname() -> str:
     return socket.gethostname()
 
@@ -129,80 +122,100 @@ def is_canonical(directory: str) -> bool:  # type:ignore[no-untyped-def]
     )
 
 
-# TODO narrow type!
-ConfigData = dict
-
-
-# TODO: Locking!
 class Config:
-    def __init__(self, file_path: Path) -> None:
-        self._file_path = file_path
+    def __init__(self, config: RawConfig) -> None:
+        self._config = config
+        self._cronjob_path = omd_root / "etc/cron.d/mkbackup"
 
-    def load(self) -> ConfigData:
-        return store.load_object_from_file(
-            self._file_path,
-            default={
-                "targets": {},
-                "jobs": {},
-            },
-        )
+    @classmethod
+    def load(cls) -> Config:
+        return cls(RawConfig.load())
 
-    def save(self, config: ConfigData) -> None:
-        store.save_object_to_file(self._file_path, config)
-
-
-# .
-#   .--Abstract------------------------------------------------------------.
-#   |                 _    _         _                  _                  |
-#   |                / \  | |__  ___| |_ _ __ __ _  ___| |_                |
-#   |               / _ \ | '_ \/ __| __| '__/ _` |/ __| __|               |
-#   |              / ___ \| |_) \__ \ |_| | | (_| | (__| |_                |
-#   |             /_/   \_\_.__/|___/\__|_|  \__,_|\___|\__|               |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-BackupEntity = Union["Target", "Job"]
-
-
-class BackupEntityCollection:
-    def __init__(
-        self,
-        config_file_path: Path,
-        cls: type["Target"] | type["Job"],
-        config_attr: str,
-    ) -> None:
-        self._config_path = config_file_path
-        self._config = Config(config_file_path).load()
-        self._cls = cls
-        self._config_attr = config_attr
-        self.objects = {
-            ident: cls(ident, config) for ident, config in self._config[config_attr].items()
+    @property
+    def jobs(self) -> dict[str, Job]:
+        return {
+            job_id: Job(
+                job_id,
+                job_config,
+            )
+            for job_id, job_config in self._config.site.jobs.items()
         }
 
-    def get(self, ident: str | None) -> BackupEntity:
-        if ident is None:
-            raise KeyError
-        return self.objects[ident]
+    @property
+    def site_targets(self) -> dict[TargetId, Target]:
+        return {
+            target_id: Target(
+                target_id,
+                target_config,
+            )
+            for target_id, target_config in self._config.site.targets.items()
+        }
 
-    def remove(self, obj: BackupEntity) -> None:
-        try:
-            del self.objects[obj.ident]
-        except KeyError:
-            pass
+    @property
+    def cma_system_targets(self) -> dict[TargetId, Target]:
+        return {
+            target_id: Target(
+                target_id,
+                target_config,
+            )
+            for target_id, target_config in self._config.cma_system.targets.items()
+        }
 
-    def choices(self) -> Sequence[tuple[str, str]]:
-        return sorted(
-            [(ident, obj.title) for ident, obj in self.objects.items()],
-            key=lambda x_y: x_y[1].title(),
+    @property
+    def all_targets(self) -> dict[TargetId, Target]:
+        return {
+            target_id: Target(
+                target_id,
+                target_config,
+            )
+            for target_id, target_config in self._config.all_targets.items()
+        }
+
+    def add_target(self, target: Target) -> None:
+        self._config.site.targets[target.ident] = target.config
+        self._config.save()
+
+    def delete_target(self, target_id: TargetId) -> None:
+        del self._config.site.targets[target_id]
+        self._config.save()
+
+    def add_job(self, job: "Job") -> None:
+        self._config.site.jobs[job.ident] = job.config
+        self._config.save()
+        self._save_cronjobs()
+
+    def delete_job(self, job_id: str) -> None:
+        del self._config.site.jobs[job_id]
+        self._config.save()
+        self._save_cronjobs()
+
+    def _save_cronjobs(self) -> None:
+        with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
+            self._write_cronjob_header(f)
+            for job in self.jobs.values():
+                cron_config = job.cron_config()
+                if cron_config:
+                    f.write("%s\n" % "\n".join(cron_config))
+
+        self._apply_cron_config()
+
+    def _write_cronjob_header(self, f: TextIOWrapper) -> None:
+        f.write("# Written by mkbackup configuration\n")
+
+    def _apply_cron_config(self):
+        completed_process = subprocess.run(
+            ["omd", "restart", "crontab"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            check=False,
         )
-
-    def add(self, obj: BackupEntity) -> None:
-        self.objects[obj.ident] = obj
-
-    def save(self) -> None:
-        self._config[self._config_attr] = {ident: obj.config for ident, obj in self.objects.items()}
-        Config(self._config_path).save(self._config)
+        if completed_process.returncode:
+            raise MKGeneralException(
+                _("Failed to apply the cronjob config: %s") % completed_process.stdout
+            )
 
 
 # .
@@ -347,7 +360,7 @@ class Job(MKBackupJob):
     def title(self) -> str:
         return self.config["title"]
 
-    def target_ident(self) -> str:
+    def target_ident(self) -> TargetId:
         return self.config["target"]
 
     def key_ident(self) -> str | None:
@@ -407,48 +420,8 @@ class Job(MKBackupJob):
         return "mkbackup backup %s >/dev/null" % self.ident
 
 
-class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path: Path) -> None:
-        super().__init__(config_file_path, cls=Job, config_attr="jobs")
-
-        etc_path = os.path.dirname(os.path.dirname(config_file_path))
-        self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
-
-    def jobs_using_target(self, target: Target) -> Sequence[Job]:
-        jobs = []
-        for job in self.objects.values():
-            assert isinstance(job, Job)
-            if job.target_ident() == target.ident:
-                jobs.append(job)
-        return jobs
-
-    def save(self) -> None:
-        super().save()
-        self.save_cronjobs()
-
-    def save_cronjobs(self) -> None:
-        with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
-            self._write_cronjob_header(f)
-            for job in self.objects.values():
-                assert isinstance(job, Job)
-                cron_config = job.cron_config()
-                if cron_config:
-                    f.write("%s\n" % "\n".join(cron_config))
-
-        self._apply_cron_config()
-
-    def _write_cronjob_header(self, f: TextIOWrapper) -> None:
-        f.write("# Written by mkbackup configuration\n")
-
-    def _apply_cron_config(self) -> None:
-        pass
-
-
 class PageBackup:
     def title(self) -> str:
-        raise NotImplementedError()
-
-    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def home_button(self) -> None:
@@ -516,15 +489,13 @@ class PageBackup:
         )
 
     def action(self) -> ActionResult:
-        ident = request.var("_job")
-        jobs = self.jobs()
+        if (ident := request.var("_job")) is None:
+            raise MKUserError("_job", _("Missing job ID."))
+
         try:
-            job = jobs.get(ident)
+            job = Config.load().jobs[ident]
         except KeyError:
             raise MKUserError("_job", _("This backup job does not exist."))
-
-        if not isinstance(job, Job):
-            raise MKGeneralException("Wow this should have been a job object")
 
         action = request.var("_action")
 
@@ -547,9 +518,10 @@ class PageBackup:
             raise MKUserError("_job", _("This job is currently running."))
 
         job.cleanup()
-        jobs = self.jobs()
-        jobs.remove(job)
-        jobs.save()
+
+        with contextlib.suppress(KeyError):
+            Config.load().delete_job(job.ident)
+
         flash(_("The job has been deleted."))
 
     def _start_job(self, job: Job) -> None:
@@ -568,9 +540,7 @@ class PageBackup:
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
-            for job in sorted(self.jobs().objects.values(), key=lambda j: j.ident):
-                assert isinstance(job, Job)
-
+            for job in sorted(Config.load().jobs.values(), key=lambda j: j.ident):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
                 delete_url = make_confirm_link(
@@ -691,12 +661,9 @@ class PageEditBackupJob:
 
         if job_ident is not None:
             try:
-                job = self.jobs().get(job_ident)
+                job = Config.load().jobs[job_ident]
             except KeyError:
                 raise MKUserError("target", _("This backup job does not exist."))
-
-            if not isinstance(job, Job):
-                raise MKGeneralException("this is impossible. Why would this page have targets?")
 
             if job.is_running():
                 raise MKUserError("_job", _("This job is currently running."))
@@ -710,12 +677,6 @@ class PageEditBackupJob:
             self._ident = None
             self._job_cfg = {}
             self._title = _("New backup job")
-
-    def jobs(self) -> Jobs:
-        raise NotImplementedError()
-
-    def targets(self) -> Targets:
-        raise NotImplementedError()
 
     def title(self) -> str:
         return self._title
@@ -766,7 +727,7 @@ class PageEditBackupJob:
             ],
         )
 
-    def vs_backup_job(self) -> Dictionary:
+    def vs_backup_job(self, config: Config) -> Dictionary:
         if self._new:
             ident_attr = [
                 (
@@ -779,7 +740,11 @@ class PageEditBackupJob:
                         ),
                         allow_empty=False,
                         size=12,
-                        validate=self._validate_backup_job_ident,
+                        validate=lambda ident, varprefix: self._validate_backup_job_ident(
+                            config,
+                            ident,
+                            varprefix,
+                        ),
                     ),
                 )
             ]
@@ -807,8 +772,13 @@ class PageEditBackupJob:
                     "target",
                     DropdownChoice(
                         title=_("Target"),
-                        choices=self.backup_target_choices,
-                        validate=self._validate_target,
+                        # TODO: understand why mypy complains
+                        choices=self.backup_target_choices(config),  # type: ignore[misc]
+                        validate=lambda target_id, varprefix: self._validate_target(
+                            config,
+                            target_id,
+                            varprefix,
+                        ),
                         invalid_choice="complain",
                     ),
                 ),
@@ -865,53 +835,68 @@ class PageEditBackupJob:
             render="form",
         )
 
-    def _validate_target(self, value: Any, varprefix: str) -> None:
-        self.targets().validate_target(value, varprefix)
+    def _validate_target(
+        self,
+        config: Config,
+        target_id: TargetId | None,
+        varprefix: str,
+    ) -> None:
+        if not target_id:
+            raise MKUserError(varprefix, _("You need to provide an ID"))
+        config.all_targets[target_id].validate(varprefix)
 
-    def _validate_backup_job_ident(self, value: str, varprefix: str) -> None:
+    def _validate_backup_job_ident(self, config: Config, value: str, varprefix: str) -> None:
         if value == "restore":
             raise MKUserError(varprefix, _("You need to choose another ID."))
 
-        if value in self.jobs().objects:
+        if value in config.jobs:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
     def backup_key_choices(self) -> Sequence[tuple[str, str]]:
         return self.key_store.choices()
 
-    def backup_target_choices(self) -> Sequence[tuple[str, str]]:
-        return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
+    def backup_target_choices(self, config: Config) -> Sequence[tuple[TargetId, str]]:
+        return [
+            (
+                target.ident,
+                target.title,
+            )
+            for target in sorted(
+                config.all_targets.values(),
+                key=lambda t: t.ident,
+            )
+        ]
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-        vs = self.vs_backup_job()
+        backup_config = Config.load()
+        vs = self.vs_backup_job(backup_config)
 
-        config = vs.from_html_vars("edit_job")
-        vs.validate_value(config, "edit_job")
+        job_config = vs.from_html_vars("edit_job")
+        vs.validate_value(job_config, "edit_job")
 
-        if "ident" in config:
-            self._ident = config.pop("ident")
-        self._job_cfg = cast(JobConfig, config)
+        if "ident" in job_config:
+            self._ident = job_config.pop("ident")
+        self._job_cfg = cast(JobConfig, job_config)
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")
 
-        jobs = self.jobs()
-        jobs.add(
+        backup_config.add_job(
             Job(
                 self._ident,
                 self._job_cfg,
             )
         )
 
-        jobs.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self) -> None:
         html.begin_form("edit_job", method="POST")
         html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_job()
+        vs = self.vs_backup_job(Config.load())
 
         vs.render_input("edit_job", dict(self._job_cfg))
         vs.set_focus("edit_job")
@@ -926,9 +911,6 @@ class PageAbstractBackupJobState:
         super().__init__()
         self._job: MKBackupJob | None = None
         self._ident: str | None = None
-
-    def jobs(self) -> Jobs:
-        raise NotImplementedError()
 
     def title(self) -> str:
         # Our class hierarchy is totally screwed up here...
@@ -1012,9 +994,7 @@ class PageBackupJobState(PageAbstractBackupJobState):
         job_ident = request.var("job")
         if job_ident is not None:
             try:
-                tmp = self.jobs().get(job_ident)
-                if not isinstance(tmp, Job):
-                    raise MKGeneralException("Wow this should have been a job")
+                tmp = Config.load().jobs[job_ident]
                 self._job = tmp
             except KeyError:
                 raise MKUserError("job", _("This backup job does not exist."))
@@ -1354,7 +1334,13 @@ class Target:
         return self._target_type().render()
 
 
-def show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
+def _show_site_and_system_targets(config: Config) -> None:
+    _show_target_list(config.site_targets.values(), False)
+    if cmk_version.is_cma():
+        _show_target_list(config.cma_system_targets.values(), True)
+
+
+def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
     html.h2(_("System global targets") if targets_are_cma else _("Targets"))
     if targets_are_cma:
         html.p(
@@ -1367,8 +1353,6 @@ def show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
     with table_element(sortable=False, searchable=False) as table:
 
         for target in sorted(targets, key=lambda t: t.ident):
-            assert isinstance(target, Target)
-
             table.row()
             table.cell(_("Actions"), css=["buttons"])
             restore_url = makeuri_contextless(
@@ -1401,29 +1385,12 @@ def show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-            table.cell(_("Title"), target.title)
-            table.cell(_("Destination"), target.render())
-
-
-class Targets(BackupEntityCollection):
-    def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
-        super().__init__(config_file_path, cls=Target, config_attr="targets")
-
-    def validate_target(self, value: str, varprefix: str) -> None:
-        target = self.get(value)
-        if not isinstance(target, Target):
-            raise MKGeneralException("I cannot use a job here")
-        target.validate(varprefix)
+                table.cell(_("Title"), target.title)
+                table.cell(_("Destination"), target.render())
 
 
 class PageBackupTargets:
     def title(self) -> str:
-        raise NotImplementedError()
-
-    def targets(self) -> Targets:
-        raise NotImplementedError()
-
-    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1460,38 +1427,34 @@ class PageBackupTargets:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-        ident = request.var("target")
-        targets = self.targets()
+        if not (ident := request.var("target")):
+            raise MKUserError("target", _("This backup target does not exist."))
+
+        config = Config.load()
+
         try:
-            target = targets.get(ident)
+            target = config.site_targets[TargetId(ident)]
         except KeyError:
             raise MKUserError("target", _("This backup target does not exist."))
 
-        self._verify_not_used(target)
+        self._verify_not_used(config, target.ident)
 
-        targets.remove(target)
-        targets.save()
+        with contextlib.suppress(KeyError):
+            config.delete_target(target.ident)
+
         flash(_("The target has been deleted."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-    def _verify_not_used(self, target):
-        job_titles = [j.title for j in self.jobs().jobs_using_target(target)]
-        if job_titles:
+    def _verify_not_used(self, config: Config, target_id: TargetId) -> None:
+        if jobs := [job for job in config.jobs.values() if job.target_ident() == target_id]:
             raise MKUserError(
                 "target",
                 _("You can not delete this target because it is used by these backup jobs: %s")
-                % ", ".join(job_titles),
+                % ", ".join(job.title for job in jobs),
             )
 
     def page(self) -> None:
-        show_target_list(
-            (t for t in self.targets().objects.values() if isinstance(t, Target)),
-            False,
-        )
-        show_target_list(
-            (t for t in SystemBackupTargetsReadOnly().objects.values() if isinstance(t, Target)),
-            False,
-        )
+        _show_site_and_system_targets(Config.load())
 
 
 class PageEditBackupTarget:
@@ -1500,14 +1463,14 @@ class PageEditBackupTarget:
         target_ident = request.var("target")
 
         if target_ident is not None:
+            target_ident = TargetId(target_ident)
             try:
-                target = self.targets().get(target_ident)
+                target = Config.load().site_targets[target_ident]
             except KeyError:
                 raise MKUserError("target", _("This backup target does not exist."))
-            assert isinstance(target, Target)
 
             self._new = False
-            self._ident: TargetId | None = TargetId(target_ident)
+            self._ident: TargetId | None = target_ident
             self._target_cfg: TargetConfig | dict[str, object] = target.config
             self._title = _("Edit backup target: %s") % target.title
         else:
@@ -1515,9 +1478,6 @@ class PageEditBackupTarget:
             self._ident = None
             self._target_cfg = {}
             self._title = _("New backup target")
-
-    def targets(self) -> Targets:
-        raise NotImplementedError()
 
     def title(self) -> str:
         return self._title
@@ -1527,7 +1487,7 @@ class PageEditBackupTarget:
             _("Target"), breadcrumb, form_name="edit_target", button_name="_save"
         )
 
-    def vs_backup_target(self):
+    def vs_backup_target(self, config: Config) -> Dictionary:
         if self._new:
             ident_attr = [
                 (
@@ -1540,7 +1500,11 @@ class PageEditBackupTarget:
                         ),
                         allow_empty=False,
                         size=12,
-                        validate=self.validate_backup_target_ident,
+                        validate=lambda ident, varprefix: self.validate_backup_target_ident(
+                            config,
+                            ident,
+                            varprefix,
+                        ),
                     ),
                 ),
             ]
@@ -1586,54 +1550,48 @@ class PageEditBackupTarget:
             render="form",
         )
 
-    def validate_backup_target_ident(self, value, varprefix):
-        if value in self.targets().objects:
+    def validate_backup_target_ident(self, config: Config, value: str, varprefix: str) -> None:
+        if TargetId(value) in config.site_targets:
             raise MKUserError(varprefix, _("This ID is already used by another backup target."))
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
-        vs = self.vs_backup_target()
+        backup_config = Config.load()
+        vs = self.vs_backup_target(backup_config)
 
-        config = vs.from_html_vars("edit_target")
-        vs.validate_value(config, "edit_target")
+        target_config = vs.from_html_vars("edit_target")
+        vs.validate_value(target_config, "edit_target")
 
-        if "ident" in config:
-            self._ident = TargetId(config.pop("ident"))
-        self._target_cfg = cast(TargetConfig, config)
+        if "ident" in target_config:
+            self._ident = TargetId(target_config.pop("ident"))
+        self._target_cfg = cast(TargetConfig, target_config)
 
         if self._ident is None:
             raise MKGeneralException("Cannot create or modify job without identifier")
 
-        targets = self.targets()
-        targets.add(
+        backup_config.add_target(
             Target(
                 self._ident,
                 self._target_cfg,
             )
         )
 
-        targets.save()
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self) -> None:
         html.begin_form("edit_target", method="POST")
         html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_target()
+        vs = self.vs_backup_target(Config.load())
 
-        vs.render_input("edit_target", self._target_cfg)
+        vs.render_input("edit_target", dict(self._target_cfg))
         vs.set_focus("edit_target")
         forms.end()
 
         html.hidden_fields()
         html.end_form()
-
-
-class SystemBackupTargetsReadOnly(Targets):
-    def __init__(self) -> None:
-        super().__init__(system_config_path())
 
 
 # .
@@ -1658,9 +1616,6 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     upload_mode = "backup_upload_key"
     download_mode = "backup_download_key"
 
-    def jobs(self):
-        raise NotImplementedError()
-
     def title(self) -> str:
         return _("Keys for backups")
 
@@ -1669,9 +1624,8 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         super().page()
 
     def _key_in_use(self, key_id: int, key: key_mgmt.Key) -> bool:
-        for job in self.jobs().objects.values():
-            job_key_id = job.key_ident()
-            if job_key_id is not None and key_id == job_key_id:
+        for job in Config.load().jobs.values():
+            if (job_key_id := job.key_ident()) and str(key_id) == job_key_id:
                 return True
         return False
 
@@ -1815,20 +1769,17 @@ class PageBackupRestore:
             self._target = None
             return
 
-        self._target_ident = ident
+        self._target_ident = TargetId(ident)
 
         try:
             self._target = self._get_target(self._target_ident)
         except KeyError:
             raise MKUserError("target_p_target", _("This backup target does not exist."))
 
-    def _get_target(self, target_ident):
-        return self.targets().get(target_ident)
+    def _get_target(self, target_ident: TargetId) -> Target:
+        return Config.load().all_targets[target_ident]
 
     def title(self) -> str:
-        raise NotImplementedError()
-
-    def targets(self) -> Targets:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -2037,10 +1988,7 @@ class PageBackupRestore:
 
     def _show_target_list(self):
         html.p(_("Please choose a target to perform the restore from."))
-        show_target_list(
-            (t for t in self.targets().objects.values() if isinstance(t, Target)),
-            False,
-        )
+        _show_site_and_system_targets(Config.load())
 
     def _show_backup_list(self):
         raise NotImplementedError()
@@ -2053,4 +2001,5 @@ class PageBackupRestoreState(PageAbstractBackupJobState):
     def __init__(self) -> None:
         super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
+        self._ident = "restore"
         self._ident = "restore"

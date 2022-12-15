@@ -10,6 +10,7 @@ import string
 from collections.abc import Iterator
 
 import cmk.utils.paths
+from cmk.utils.crypto import PasswordHash
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
@@ -27,7 +28,9 @@ def _mk_user_obj(
 ) -> UserObject:
     # This dramatically improves the performance of the unit tests using this in fixtures
     precomputed_hashes = {
-        "Ischbinwischtisch": "$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9",
+        "Ischbinwischtisch": PasswordHash(
+            "$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9"
+        ),
     }
 
     if password not in precomputed_hashes:

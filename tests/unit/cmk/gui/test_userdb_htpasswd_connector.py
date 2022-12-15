@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import Password, password_hashing, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
@@ -112,7 +112,9 @@ def test_update_long_password(htpasswd_file: Path) -> None:
     htpasswd_connector = htpasswd.HtpasswdUserConnector({})
     usr = UserId("longcat")
     pw = 74 * "x"  # too long for bcrypt
-    pw_hash = "$5$rounds=1000$FwEKt/q2WUEYYjOm$EhgODZbqGIl8LcdDtGYYjfFLECubBN.xNSavUiP5.UB"
+    pw_hash = PasswordHash(
+        "$5$rounds=1000$FwEKt/q2WUEYYjOm$EhgODZbqGIl8LcdDtGYYjfFLECubBN.xNSavUiP5.UB"
+    )
     htpasswd_file.write_text(Htpasswd.serialize_entries([(usr, pw_hash)]))
 
     assert (

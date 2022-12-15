@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cmk.utils.crypto import PasswordHash
 from cmk.utils.store.htpasswd import Entries, Htpasswd
 from cmk.utils.type_defs import UserId
 
@@ -37,9 +38,9 @@ invalid🔥user:should be ignored
 def fixture_users() -> Entries:
     return {
         # Htpasswd doesn't care if the hash is valid or even sensible
-        UserId("non-unicode"): "",
-        UserId("abcä"): "bbbä",
-        UserId("$user"): "🙆🙅",
+        UserId("non-unicode"): PasswordHash(""),
+        UserId("abcä"): PasswordHash("bbbä"),
+        UserId("$user"): PasswordHash("🙆🙅"),
     }
 
 
@@ -102,7 +103,7 @@ def test_save_new_user(test_config: Htpasswd, user: str, password_hash: str) -> 
     user_id = UserId(user)
     before = test_config.load()
 
-    test_config.save(user_id, password_hash)
+    test_config.save(user_id, PasswordHash(password_hash))
 
     after = test_config.load()
     assert all(old_user in after for old_user in before)
@@ -114,7 +115,7 @@ def test_save_override_existing_user(test_config: Htpasswd) -> None:
     before = test_config.load()
 
     # test_config fixture added this user with a different hash already
-    test_config.save(UserId("$user"), "!now inactive")
+    test_config.save(UserId("$user"), PasswordHash("!now inactive"))
 
     after = test_config.load()
     assert all(old_user in after for old_user in before)

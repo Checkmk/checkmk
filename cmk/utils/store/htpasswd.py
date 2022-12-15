@@ -7,9 +7,10 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import cmk.utils.store as store
+from cmk.utils.crypto import PasswordHash
 from cmk.utils.type_defs import UserId
 
-Entries = dict[UserId, str]
+Entries = dict[UserId, PasswordHash]
 
 
 class Htpasswd:
@@ -19,7 +20,7 @@ class Htpasswd:
         self._path = path
 
     @staticmethod
-    def serialize_entries(entries: Sequence[tuple[UserId, str]]) -> str:
+    def serialize_entries(entries: Sequence[tuple[UserId, PasswordHash]]) -> str:
         return "\n".join(f"{user_id}:{password_hash}" for user_id, password_hash in entries)
 
     def load(self, allow_missing_file: bool = False) -> Entries:
@@ -40,7 +41,7 @@ class Htpasswd:
         for entry in filecontent:
             try:
                 user_id, pw_hash = entry.split(":", 1)
-                entries[UserId(user_id)] = pw_hash
+                entries[UserId(user_id)] = PasswordHash(pw_hash)
             except ValueError:
                 # ignore lines without ":" and invalid user names
                 continue
@@ -55,10 +56,10 @@ class Htpasswd:
         """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
-    def get_hash(self, user_id: UserId) -> None | str:
+    def get_hash(self, user_id: UserId) -> None | PasswordHash:
         return self.load().get(user_id)
 
-    def save(self, user_id: UserId, pw_hash: str) -> None:
+    def save(self, user_id: UserId, pw_hash: PasswordHash) -> None:
         entries = self.load()
         entries[user_id] = pw_hash
         self.save_all(entries)

@@ -22,7 +22,7 @@ import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module
 import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
 from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
-from cmk.utils.crypto import Password
+from cmk.utils.crypto import Password, PasswordHash
 from cmk.utils.exceptions import MKException
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
@@ -44,7 +44,7 @@ class PasswordInvalidError(MKException):
     """Indicates that the provided password could not be verified"""
 
 
-def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False) -> str:
+def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False) -> PasswordHash:
     """Hash a password using the preferred algorithm
 
     Uses bcrypt with 12 rounds to hash a password.
@@ -61,9 +61,11 @@ def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False)
     :raise: ValueError if the input password contains null bytes.
     """
     try:
-        return passlib_hash.bcrypt.using(
-            rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
-        ).hash(password.raw)
+        return PasswordHash(
+            passlib_hash.bcrypt.using(
+                rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
+            ).hash(password.raw)
+        )
     except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
 
@@ -84,7 +86,7 @@ _context = passlib.context.CryptContext(
 )
 
 
-def verify(password: Password[AnyStr], password_hash: str) -> None:
+def verify(password: Password[AnyStr], password_hash: PasswordHash) -> None:
     """Verify if a password matches a password hash.
 
     :param password: The password to check.
@@ -105,7 +107,7 @@ def verify(password: Password[AnyStr], password_hash: str) -> None:
         raise PasswordInvalidError
 
 
-def needs_update(password_hash: str) -> bool:
+def needs_update(password_hash: PasswordHash) -> bool:
     """Check if a password hash should be re-calculated because the hash algorithm is deprecated.
 
     See _context for the list of deprecated algorithms.
@@ -113,6 +115,6 @@ def needs_update(password_hash: str) -> bool:
     return _context.needs_update(password_hash)
 
 
-def is_insecure_hash(password_hash: str) -> bool:
+def is_insecure_hash(password_hash: PasswordHash) -> bool:
     """Is the hash algorithm used for this hash considered insecure"""
     return _context.identify(password_hash, required=False) in _insecure_algos

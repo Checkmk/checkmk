@@ -9,6 +9,7 @@ import pytest
 
 from cmk.utils.crypto import Password
 from cmk.utils.crypto import password_hashing as ph
+from cmk.utils.crypto import PasswordHash
 
 
 @pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72, b"bytes"])
@@ -49,7 +50,7 @@ def test_bcrypt_too_long(password: str) -> None:
     ],
 )
 def test_verify(valid_hash: str) -> None:
-    ph.verify(Password("foobar"), valid_hash)
+    ph.verify(Password("foobar"), PasswordHash(valid_hash))
 
 
 @pytest.mark.parametrize(
@@ -63,7 +64,7 @@ def test_verify(valid_hash: str) -> None:
 )
 def test_verify_invalid_password_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ph.PasswordInvalidError):
-        ph.verify(Password(password), password_hash)
+        ph.verify(Password(password), PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -76,7 +77,7 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
 )
 def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError, match="Invalid hash"):
-        ph.verify(Password(password), password_hash)
+        ph.verify(Password(password), PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -93,7 +94,7 @@ def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
 )
 def test_verify_null_bytes(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError):
-        ph.verify(Password(password), password_hash)
+        ph.verify(Password(password), PasswordHash(password_hash))
 
 
 @pytest.mark.parametrize(
@@ -109,7 +110,7 @@ def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
     indicate 5000 rounds.
     https://passlib.readthedocs.io/en/stable/lib/passlib.hash.sha256_crypt.html#passlib.hash.sha256_crypt
     """
-    ph.verify(Password("foobar"), pw_hash)
+    ph.verify(Password("foobar"), PasswordHash(pw_hash))
 
 
 @pytest.mark.parametrize(
@@ -127,7 +128,7 @@ def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
 )
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     with pytest.raises(ValueError, match="rounds"):
-        ph.verify(Password(password), pw_hash)
+        ph.verify(Password(password), PasswordHash(pw_hash))
 
 
 @pytest.mark.parametrize(
@@ -143,7 +144,7 @@ def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     ],
 )
 def test_verify_and_update(expects_update: bool, pw_hash: str) -> None:
-    assert expects_update == ph.needs_update(pw_hash)
+    assert expects_update == ph.needs_update(PasswordHash(pw_hash))
 
 
 @pytest.mark.parametrize(
@@ -159,4 +160,4 @@ def test_verify_and_update(expects_update: bool, pw_hash: str) -> None:
     ],
 )
 def test_is_insecure_hash(is_insecure: bool, pw_hash: str) -> None:
-    assert ph.is_insecure_hash(pw_hash) == is_insecure
+    assert ph.is_insecure_hash(PasswordHash(pw_hash)) == is_insecure

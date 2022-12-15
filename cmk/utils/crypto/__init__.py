@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import secrets
 import string
-from typing import AnyStr, Final, Generic
+from typing import AnyStr, Final, Generic, NewType
 
 from typing_extensions import assert_never
 
@@ -65,3 +65,6 @@ class Password(Generic[AnyStr]):
         if not isinstance(other, Password):
             return NotImplemented
         return secrets.compare_digest(self.raw_bytes, other.raw_bytes)
+
+
+PasswordHash = NewType("PasswordHash", str)

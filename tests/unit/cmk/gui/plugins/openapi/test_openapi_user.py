@@ -17,6 +17,7 @@ from pytest import MonkeyPatch
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
+from cmk.utils.crypto import PasswordHash
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -321,7 +322,9 @@ def test_openapi_user_internal_with_notifications(
                 "contactgroups": [],
                 "email": "",
                 "fallback_contact": False,
-                "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
+                "password": PasswordHash(
+                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+                ),
                 "last_pw_change": 1265013000,
                 "serial": 1,
                 "disable_notifications": {"timerange": (1577836800.0, 1577923200.0)},
@@ -487,7 +490,9 @@ def test_openapi_user_internal_auth_handling(
                 "contactgroups": [],
                 "email": "",
                 "fallback_contact": False,
-                "password": "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C",
+                "password": PasswordHash(
+                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+                ),
                 "last_pw_change": 1265011200,
                 "serial": 1,
                 "disable_notifications": {},

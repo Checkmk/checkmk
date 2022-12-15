@@ -14,6 +14,7 @@ from typing import Any, Literal, NamedTuple, TypedDict, Union
 from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.crypto import PasswordHash
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import (
     ContactgroupName,
@@ -80,7 +81,7 @@ class WebAuthnCredential(TypedDict):
 
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: dict[str, WebAuthnCredential]
-    backup_codes: list[str]  # Password Hashes
+    backup_codes: list[PasswordHash]
 
 
 SessionId = str
@@ -136,7 +137,7 @@ class UserSpec(TypedDict, total=False):
     notifications_enabled: bool | None
     num_failed_logins: int
     pager: str
-    password: str
+    password: PasswordHash
     roles: list[str]
     serial: int
     service_notification_options: str

@@ -23,7 +23,7 @@ from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import Password, password_hashing, PasswordHash
 from cmk.utils.store import (
     acquire_lock,
     load_from_mk_file,
@@ -270,7 +270,7 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes() -> list[tuple[Password, str]]:
+def make_two_factor_backup_codes() -> list[tuple[Password, PasswordHash]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
@@ -284,7 +284,7 @@ def make_two_factor_backup_codes() -> list[tuple[Password, str]]:
 def is_two_factor_backup_code_valid(user_id: UserId, code: Password) -> bool:
     """Verifies whether or not the given backup code is valid and invalidates the code"""
     credentials = load_two_factor_credentials(user_id)
-    matched_code = ""
+    matched_code = None
 
     for stored_code in credentials["backup_codes"]:
         try:
@@ -294,7 +294,7 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: Password) -> bool:
         except (password_hashing.PasswordInvalidError, ValueError):
             continue
 
-    if not matched_code:
+    if matched_code is None:
         return False
 
     # Invalidate the just used code
@@ -573,7 +573,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     for uid, password in htpwd_entries.items():
         if password.startswith("!"):
             locked = True
-            password = password[1:]
+            password = PasswordHash(password[1:])
         else:
             locked = False
 

@@ -21,7 +21,7 @@ from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import Password, password_hashing, PasswordHash
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
@@ -768,8 +768,8 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
                 ),
             },
             "backup_codes": [
-                "asdr2ar2a2ra2rara2",
-                "dddddddddddddddddd",
+                PasswordHash("asdr2ar2a2ra2rara2"),
+                PasswordHash("dddddddddddddddddd"),
             ],
         }
     )

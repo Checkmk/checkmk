@@ -94,9 +94,6 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' || $$P == 'plus' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
-	  if [[  ! -f $$inc_path ]] ; then \
-	  	inc_path=$(REPO_PATH)/packages/$$P/$$P.make; \
-	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
 	  egrep -h "^$$P_VAR\s+:=\s+" $$inc_path >> $@ ; \
 	  egrep -h "^$${P_VAR}_VERS\s+:=\s+" $$inc_path >> $@ ; \

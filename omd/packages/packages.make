@@ -45,11 +45,8 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	    PACKAGE_NAME="$$(echo "$*" | sed 's/-[0-9.]\+.*//')"; \
 	    PACKAGE_PATH="$(PACKAGE_DIR)/$$PACKAGE_NAME"; \
 	    if [ ! -d "$$PACKAGE_PATH" ]; then \
-	    PACKAGE_PATH="$(REPO_PATH)/packages/$$PACKAGE_NAME"; \
-	    if [ ! -d "$$PACKAGE_PATH" ]; then \
 		echo "ERROR: Package directory does not exist" ; \
 		exit 1; \
-	    fi ; \
 	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
 		tar cf - -C "$$PACKAGE_PATH/skel" \

@@ -61,6 +61,7 @@ class EthtoolInterface:
     ethtool_index: str | None = None
     counters: Sequence[int] = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     address: str = ""
+    speed: int = 0
     attributes: MutableMapping[str, str] = field(default_factory=dict)
 
 
@@ -141,6 +142,8 @@ def _parse_lnx_if_sections(
             stripped_line0 = line[0].strip()
             if stripped_line0 == "Address":
                 iface.address = _get_physical_address(":".join(line[1:]).strip())
+            elif stripped_line0 == "Speed":
+                iface.speed = _get_speed(" ".join(line[1:]).strip())
             else:
                 iface.attributes[stripped_line0] = " ".join(line[1:]).strip()
     return ip_stats, ethtool_stats
@@ -208,7 +211,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                     index=ethtool_interface.ethtool_index or str(index + 1),
                     descr=nic,
                     type="24" if nic == "lo" else "6",  # Guess type from name of interface
-                    speed=_get_speed(ethtool_interface.attributes.get("Speed")),
+                    speed=ethtool_interface.speed,
                     oper_status=_get_oper_status(
                         ethtool_interface.attributes.get("Link detected"),
                         iplink_interface.state_infos,

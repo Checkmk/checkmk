@@ -23,7 +23,7 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import cast, Final, TypedDict
+from typing import cast, Final, Generic, TypedDict, TypeVar
 
 from typing_extensions import assert_never
 
@@ -52,6 +52,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.key_mgmt import Key
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
@@ -242,7 +243,7 @@ class StateConfig(TypedDict, total=False):
 
 
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
-class MKBackupJob:
+class MKBackupJob(abc.ABC):
     @classmethod
     def state_name(cls, state: str | None) -> str:
         return {
@@ -252,8 +253,9 @@ class MKBackupJob:
             None: _("Never executed"),
         }[state]
 
+    @abc.abstractmethod
     def state_file_path(self) -> Path:
-        raise NotImplementedError()
+        ...
 
     def cleanup(self) -> None:
         try:
@@ -320,8 +322,9 @@ class MKBackupJob:
         if completed_process.returncode != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
+    @abc.abstractmethod
     def _start_command(self) -> Sequence[str | Path]:
-        raise NotImplementedError()
+        ...
 
     def stop(self) -> None:
         state = self.state()
@@ -422,10 +425,7 @@ class Job(MKBackupJob):
 
 class PageBackup:
     def title(self) -> str:
-        raise NotImplementedError()
-
-    def home_button(self) -> None:
-        raise NotImplementedError()
+        return _("Site backup")
 
     def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
@@ -906,17 +906,19 @@ class PageEditBackupJob:
         html.end_form()
 
 
-class PageAbstractBackupJobState:
-    def __init__(self) -> None:
-        super().__init__()
-        self._job: MKBackupJob | None = None
-        self._ident: str | None = None
+_TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
 
-    def title(self) -> str:
-        # Our class hierarchy is totally screwed up here...
-        if not isinstance(self._job, Job):
-            raise Exception("incorrect job state: no job")
-        return _("Job state: %s") % self._job.title
+
+class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def job(self) -> _TBackupJob:
+        ...
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -927,26 +929,23 @@ class PageAbstractBackupJobState:
         html.close_div()
         html.javascript(
             "cmk.backup.refresh_job_details('%s', '%s', %s)"
-            % (self._update_url(), self._ident, "true")
+            % (self._update_url(), self.ident, "true")
         )
 
     def _update_url(self) -> str:
-        return "ajax_backup_job_state.py?job=%s" % self._ident
+        return "ajax_backup_job_state.py?job=%s" % self.ident
 
     def show_job_details(self) -> None:
-        if self._job is None:
-            raise Exception("uninitialized PageAbstractBackupJobState")
-        job = self._job
-        state = job.state()
+        state = self.job.state()
 
         html.open_table(class_=["data", "backup_job"])
 
         if state["state"] is None:
             css = []
-            state_txt = job.state_name(state["state"])
+            state_txt = self.job.state_name(state["state"])
         elif state["state"] != "finished":
             css = ["state0"]
-            state_txt = job.state_name(state["state"])
+            state_txt = self.job.state_name(state["state"])
         elif state["success"]:
             css = ["state0"]
             state_txt = _("Finished")
@@ -985,23 +984,31 @@ class PageAbstractBackupJobState:
         html.close_table()
 
 
-class PageBackupJobState(PageAbstractBackupJobState):
+class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()
 
-    def _from_vars(self) -> None:
-        job_ident = request.var("job")
-        if job_ident is not None:
-            try:
-                tmp = Config.load().jobs[job_ident]
-                self._job = tmp
-            except KeyError:
-                raise MKUserError("job", _("This backup job does not exist."))
+    @property
+    def ident(self) -> str:
+        return self._ident
 
-            self._ident = job_ident
-        else:
+    @property
+    def job(self) -> Job:
+        return self._job
+
+    def title(self) -> str:
+        return _("Job state: %s") % self.job.title
+
+    def _from_vars(self) -> None:
+        if (job_ident := request.var("job")) is None:
             raise MKUserError("job", _("You need to specify a backup job."))
+        try:
+            tmp = Config.load().jobs[job_ident]
+        except KeyError:
+            raise MKUserError("job", _("This backup job does not exist."))
+        self._job = tmp
+        self._ident = job_ident
 
 
 # .
@@ -1391,7 +1398,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
 
 class PageBackupTargets:
     def title(self) -> str:
-        raise NotImplementedError()
+        return _("Site backup targets")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -1694,8 +1701,8 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
         keys[key_id].not_downloaded = True
         self.key_store.save(keys)
 
-    def _file_name(self, key_id: int, key: key_mgmt.Key) -> str:
-        raise NotImplementedError()
+    def _file_name(self, key_id: int, key: Key) -> str:
+        return f"Check_MK-{hostname()}-{omd_site()}-backup_key-{key_id}.pem"
 
 
 def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
@@ -1780,7 +1787,9 @@ class PageBackupRestore:
         return Config.load().all_targets[target_ident]
 
     def title(self) -> str:
-        raise NotImplementedError()
+        if not self._target:
+            return _("Site restore")
+        return _("Restore from target: %s") % self._target.title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(
@@ -1990,16 +1999,24 @@ class PageBackupRestore:
         html.p(_("Please choose a target to perform the restore from."))
         _show_site_and_system_targets(Config.load())
 
-    def _show_backup_list(self):
-        raise NotImplementedError()
+    def _show_backup_list(self) -> None:
+        assert self._target is not None
+        self._target.show_backup_list(only_type="Check_MK")
 
     def _show_restore_progress(self):
         PageBackupRestoreState().page()
 
 
-class PageBackupRestoreState(PageAbstractBackupJobState):
+class PageBackupRestoreState(PageAbstractMKBackupJobState[RestoreJob]):
     def __init__(self) -> None:
         super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
         self._ident = "restore"
-        self._ident = "restore"
+
+    @property
+    def ident(self) -> str:
+        return self._ident
+
+    @property
+    def job(self) -> RestoreJob:
+        return self._job

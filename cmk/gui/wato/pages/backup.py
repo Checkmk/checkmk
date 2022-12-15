@@ -7,12 +7,10 @@
 from collections.abc import Collection
 
 import cmk.utils.paths
-from cmk.utils.site import omd_site
 
 import cmk.gui.backup as backup
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.key_mgmt import Key
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
@@ -36,9 +34,6 @@ class ModeBackup(backup.PageBackup, WatoMode):
     def title(self) -> str:
         return _("Site backup")
 
-    def home_button(self):
-        pass
-
 
 @mode_registry.register
 class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
@@ -53,9 +48,6 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
-
-    def title(self) -> str:
-        return _("Site backup targets")
 
 
 @mode_registry.register
@@ -116,7 +108,7 @@ class ModeAjaxBackupJobState(AjaxPage):
     def page(self) -> PageResult:  # pylint: disable=useless-return
         user.need_permission("wato.backups")
         if request.var("job") == "restore":
-            page: backup.PageAbstractBackupJobState = backup.PageBackupRestoreState()
+            page: backup.PageAbstractMKBackupJobState = backup.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()
         page.show_job_details()
@@ -202,9 +194,6 @@ class ModeBackupDownloadKey(backup.PageBackupDownloadKey, WatoMode):
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
 
-    def _file_name(self, key_id: int, key: Key) -> str:
-        return f"Check_MK-{backup.hostname()}-{omd_site()}-backup_key-{key_id}.pem"
-
 
 @mode_registry.register
 class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
@@ -220,14 +209,5 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def title(self) -> str:
-        if not self._target:
-            return _("Site restore")
-        return _("Restore from target: %s") % self._target.title
-
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
-
-    def _show_backup_list(self) -> None:
-        assert self._target is not None
-        self._target.show_backup_list(only_type="Check_MK")

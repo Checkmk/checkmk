@@ -31,14 +31,18 @@ import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target as TargetProtocol
+from cmk.utils.backup.targets.remote_interface import RemoteTarget, TRemoteStorage
 from cmk.utils.backup.type_defs import (
     JobConfig,
     LocalTargetParams,
+    RemoteTargetParams,
     ScheduleConfig,
     SiteBackupInfo,
     TargetConfig,
     TargetId,
+    TRemoteParams,
 )
+from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.schedule import next_scheduled_time
@@ -1146,6 +1150,72 @@ class BackupTargetLocal(ABCBackupTargetType):
         shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
 
 
+class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteStorage]):
+    def __init__(self, params: RemoteTargetParams[TRemoteParams]) -> None:
+        self._params = params
+        self._target = self._instantiate_target(params)
+
+    @property
+    def parameters(self) -> RemoteTargetParams[TRemoteParams]:
+        return self._params
+
+    @property
+    def target(self) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
+        return self._target
+
+    @classmethod
+    def dictionary_elements(cls) -> DictionaryElements:
+        yield (
+            "remote",
+            Dictionary(
+                title=_("Remote configuration"),
+                elements=cls._remote_dictionary_elements(),
+                optional_keys=[],
+            ),
+        )
+        yield (
+            "temp_folder",
+            Dictionary(
+                elements=BackupTargetLocal.dictionary_elements(),
+                title=_("Temporary local destination"),
+                help=_(
+                    "This directory will be used for temporarily storing backups before "
+                    "uploading and after downloading. Please note that Checkmk will not "
+                    "clean up this directory."
+                ),
+                optional_keys=[],
+            ),
+        )
+
+    def remove_backup(self, backup_ident: str) -> None:
+        backup_info = self.backups()[backup_ident]
+        for remote_key in (
+            Path(backup_ident) / BACKUP_INFO_FILENAME,
+            Path(backup_ident) / backup_info.filename,
+        ):
+            try:
+                self.target.remote_storage.remove(remote_key)
+            except Exception as e:
+                raise MKGeneralException(
+                    f"Removal of {remote_key} in remote storage failed. Original error: {e}"
+                )
+
+    def validate(self, varprefix: str) -> None:
+        _validate_remote_target(self.target, varprefix)
+
+    @staticmethod
+    @abc.abstractmethod
+    def _instantiate_target(
+        params: RemoteTargetParams[TRemoteParams],
+    ) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
+        ...
+
+    @staticmethod
+    @abc.abstractmethod
+    def _remote_dictionary_elements() -> DictionaryElements:
+        ...
+
+
 def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
     try:
         target.check_ready()
@@ -1178,6 +1248,39 @@ def _validate_local_write_access(path: Path, varprefix: str) -> None:
                     "write the target directory. The recommended way is to make it writable by the "
                     'group "omd".'
                 ),
+            )
+
+
+def _validate_remote_target(
+    remote_target: RemoteTarget[TRemoteParams, TRemoteStorage],
+    varprefix: str,
+) -> None:
+    _check_if_target_ready(remote_target, varprefix=varprefix)
+    _validate_local_write_access(remote_target.local_target.path, varprefix)
+
+    with _write_access_test_file(remote_target.local_target.path) as local_test_file_path:
+        local_test_file_path.write_bytes(b"")
+        remote_key = Path(local_test_file_path.name)
+        try:
+            remote_target.remote_storage.upload(local_test_file_path, remote_key)
+        except Exception as e:
+            raise MKUserError(
+                varprefix,
+                _("File upload test for remote storage failed. Original error message: %s") % e,
+            )
+        try:
+            remote_target.remote_storage.download(remote_key, remote_target.local_target.path)
+        except Exception as e:
+            raise MKUserError(
+                varprefix,
+                _("File download test for remote storage failed. Original error message: %s") % e,
+            )
+        try:
+            remote_target.remote_storage.remove(remote_key)
+        except Exception as e:
+            raise MKUserError(
+                varprefix,
+                _("File removal test for remote storage failed. Original error message: %s") % e,
             )
 
 

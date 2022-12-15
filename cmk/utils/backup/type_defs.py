@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Literal, NewType
+from typing import Generic, IO, Literal, NewType, TypeVar
 
 # pydantic needs TypedDict from typing_extensions for < 3.11
 from typing_extensions import NotRequired, TypedDict
@@ -41,6 +41,14 @@ class JobConfig(TypedDict):
 class LocalTargetParams(TypedDict):
     path: str
     is_mountpoint: bool
+
+
+TRemoteParams = TypeVar("TRemoteParams", bound=Mapping[str, object])
+
+
+class RemoteTargetParams(TypedDict, Generic[TRemoteParams]):
+    remote: TRemoteParams
+    temp_folder: LocalTargetParams
 
 
 LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]

@@ -30,6 +30,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.mkeventd import syslog_facilities, syslog_priorities
 from cmk.gui.page_menu import (
     make_display_options_dropdown,
     make_simple_form_page_menu,
@@ -225,12 +226,12 @@ class ABCNotificationsMode(ABCEventsMode):
                                         elements=[
                                             DropdownChoice(
                                                 label=_("from:"),
-                                                choices=cmk.gui.mkeventd.syslog_priorities,
+                                                choices=syslog_priorities,
                                                 default_value=4,
                                             ),
                                             DropdownChoice(
                                                 label=_(" to:"),
-                                                choices=cmk.gui.mkeventd.syslog_priorities,
+                                                choices=syslog_priorities,
                                                 default_value=0,
                                             ),
                                         ],
@@ -244,7 +245,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                             "Make the rule match only if the event has a certain syslog facility. "
                                             "Messages not having a facility are classified as <tt>user</tt>."
                                         ),
-                                        choices=cmk.gui.mkeventd.syslog_facilities,
+                                        choices=syslog_facilities,
                                     ),
                                 ),
                                 (

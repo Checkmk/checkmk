@@ -57,7 +57,7 @@ HERE
 }
 
 test_systemd_sufficient_fail_for_219() {
-    systemctl() { echo "systemd 219 (foobar)"; }
+    systemctl() { echo "systemd 218 (foobar)"; }
     _systemd_present() { :; }
     _destination() { :; }
 
@@ -67,6 +67,29 @@ test_systemd_sufficient_fail_for_219() {
     assertContains "${ERRMSG}" $'The Checkmk agent may require features that are either buggy,\nor not even supported in systemd versions prior to 220.'
 }
 
+test_deploy_fail_for_219() {
+    systemctl() { echo "systemd 219 (foobar)"; }
+    _systemd_present() { :; }
+    _destination() { :; }
+    _deploy_controller() { false; }
+    _deploy_systemd_units() { :; }
+
+    ERRMSG=$(deploy 2>&1)
+
+    assertFalse "$?"
+    assertContains "${ERRMSG}" $'The Checkmk agent may need to know the IP address of the querying site.'
+}
+
+test_deploy_ok_for_219() {
+    systemctl() { echo "systemd 219 (foobar)"; }
+    _systemd_present() { :; }
+    _destination() { :; }
+    _deploy_controller() { true; }
+    _deploy_systemd_units() { :; }
+
+    deploy 2>&1
+    assertTrue "$?"
+}
 
 test__unit_deployed() {
     _populate_units

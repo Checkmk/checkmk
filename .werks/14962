@@ -1,0 +1,29 @@
+Title: Running cmk-agent-ctl leads to segfault on SELinux systems
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1670926302
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+When installing an RPM agent package including the agent controller
+(prepackaged agent package or agent bakery package), running the <tt>cmk-agent-ctl</tt>
+executable did fail on some systems with active SELinux.
+This lead to an installation without active controller, and thus without TLS encryption.
+
+Affected systems include, but are not limited to, RHEL9 and derivates.
+
+The root cause for this problem was that the controller was shipped as a UPX-compressed
+executable, which required text-relocation on execution. Further details can be found at
+this forum discussion: https://forum.checkmk.com/t/cmk-agent-ctl-segmentation-fault-on-rocky-linux-9/34909
+
+To fix this problem, we now avoid to compress the agent controller with UPX. Instead, the
+cmk-agent-ctl executable is shipped as a gzip-archive and gets uncompressed on package
+installation.
+
+You can fix your existing agent installations by updating with a new agent package. With activated
+automatic updates, this should happen automatically after baking agents.
+

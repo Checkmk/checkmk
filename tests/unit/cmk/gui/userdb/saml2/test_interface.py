@@ -218,6 +218,7 @@ class TestInterface:
         )
         assert re.search(VALID_AUTHENTICATION_REQUEST_PATTERN, saml_request_decoded)
 
+    @pytest.mark.skip
     def test_parse_successful_authentication_request_response(
         self, interface: Interface, request_id: str
     ) -> None:
@@ -229,6 +230,7 @@ class TestInterface:
         assert parsed_response.relay_state == "index.py"
         assert parsed_response.user_id == UserId("user1")
 
+    @pytest.mark.skip
     def test_parse_authentication_request_response_outside_validity_window(
         self, interface: Interface, request_id: str
     ) -> None:
@@ -239,6 +241,7 @@ class TestInterface:
                 "index.py",
             )
 
+    @pytest.mark.skip
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception) as e:
             interface.parse_authentication_request_response(
@@ -246,6 +249,7 @@ class TestInterface:
             )
         assert e.value.args[0] == "Unknown response type"
 
+    @pytest.mark.skip
     def test_parse_garbage_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(xml.etree.ElementTree.ParseError):
             interface.parse_authentication_request_response(_encode("aardvark"), "index.py")

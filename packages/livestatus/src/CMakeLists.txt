@@ -9,35 +9,16 @@ add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 
 include(FetchContent)
 
-set(USE_ASIO_OMD true) # set to false to use a fallback
-set(USE_ASIO_VERSION asio-1.24.0)
-
-if(${USE_ASIO_OMD})
-  FetchContent_Declare(
-    asio-omd
-    URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/${USE_ASIO_VERSION}.tar.gz
-        DOWNLOAD_EXTRACT_TIMESTAMP no)
-  FetchContent_MakeAvailable(asio-omd)
-  FetchContent_GetProperties(
-    asio-omd
-    SOURCE_DIR src_dir
-    BINARY_DIR bin_dir
-    POPULATED done_var)
-  set(asio_ext_include ${src_dir}/include)
-else()
-  # Fallback to asio-cmake wrapper. To be removed after OMD version will be
-  # proven as working.
-  FetchContent_Declare(
-    asio-cmake
-    GIT_REPOSITORY https://github.com/kingsamchen/asio-cmake.git
-    GIT_TAG origin/master)
-
-  # This wrapper requires us to specify asio version to correctly call
-  # `FetchContent_MakeAvailable`
-  set(ASIO_CMAKE_ASIO_TAG ${USE_ASIO_VERSION})
-  FetchContent_MakeAvailable(asio-cmake)
-  set(asio_ext_lib asio)
-endif()
+FetchContent_Declare(
+  asio-omd URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/asio-1.24.0.tar.gz
+               DOWNLOAD_EXTRACT_TIMESTAMP no)
+FetchContent_MakeAvailable(asio-omd)
+FetchContent_GetProperties(
+  asio-omd
+  SOURCE_DIR src_dir
+  BINARY_DIR bin_dir
+  POPULATED done_var)
+set(asio_ext_include ${src_dir}/include)
 
 target_include_directories(livestatus PUBLIC ../include/livestatus
                                              ${asio_ext_include})

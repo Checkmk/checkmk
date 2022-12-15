@@ -38,19 +38,7 @@ class UUIDLink(NamedTuple):
         return HostName(self.target.name)
 
     def unlink(self) -> None:
-        self.unlink_source()
-        self.unlink_target()
-
-    def unlink_source(self) -> None:
         self.source.unlink(missing_ok=True)
-
-    def unlink_target(self) -> None:
-        try:
-            for filepath in self.target.iterdir():
-                filepath.unlink(missing_ok=True)
-            self.target.rmdir()
-        except FileNotFoundError:  # from iterdir
-            pass
 
 
 class UUIDLinkManager:
@@ -65,10 +53,10 @@ class UUIDLinkManager:
         for source in self._received_outputs_dir.iterdir():
             yield UUIDLink(source=source, target=source.readlink())
 
-    def unlink_sources(self, host_names: Container[HostName]) -> None:
+    def unlink(self, host_names: Container[HostName]) -> None:
         for link in self:
             if link.hostname in host_names:
-                link.unlink_source()
+                link.unlink()
 
     def get_uuid(self, host_name: HostName) -> UUID | None:
         for link in self:
@@ -76,7 +64,7 @@ class UUIDLinkManager:
                 return link.uuid
         return None
 
-    def create_link(self, hostname: HostName, uuid: UUID, *, create_target_dir: bool) -> None:
+    def create_link(self, hostname: HostName, uuid: UUID, *, push_configured: bool) -> None:
         """Create a link for encryption or push agent
 
         Make '<self._received_outputs_dir>/<uuid>' the only (!) symlink pointing to the folder
@@ -84,26 +72,30 @@ class UUIDLinkManager:
 
         For push agents we need to create the target dir; otherwise not.
         """
-        if self._find_and_cleanup_existing_links(hostname, uuid):
+        existing_link = self._find_and_cleanup_existing_links(hostname, uuid)
+        target_dir = self._data_source_dir / (
+            f"{hostname}" if push_configured else f"inactive/{hostname}"
+        )
+
+        if existing_link is not None and existing_link.target == target_dir:
             return
 
         self._received_outputs_dir.mkdir(parents=True, exist_ok=True)
         source = self._received_outputs_dir / f"{uuid}"
 
-        target_dir = self._data_source_dir / f"{hostname}"
-        if create_target_dir:
-            target_dir.mkdir(parents=True, exist_ok=True)
-
+        source.unlink(missing_ok=True)
         source.symlink_to(target_dir)
 
-    def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> bool:
+    def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> UUIDLink | None:
+        found: UUIDLink | None = None
         for link in self:
             if link.hostname != hostname:
                 continue
-            if link.uuid == uuid:
-                return True
-            link.unlink_source()
-        return False
+            if link.uuid != uuid:
+                link.unlink()
+                continue
+            found = link
+        return found
 
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, Any]]) -> None:
         for link in self:
@@ -114,12 +106,11 @@ class UUIDLinkManager:
                     continue
                 link.unlink()
             else:
-                if host_config.get("cmk_agent_connection", "") == "push-agent":
-                    target_dir = self._data_source_dir / link.hostname
-                    target_dir.mkdir(parents=True, exist_ok=True)
-                else:
-                    # Symlink must be kept for the pull case: we need the uuid<->hostname mapping.
-                    link.unlink_target()
+                self.create_link(
+                    link.hostname,
+                    link.uuid,
+                    push_configured=host_config.get("cmk_agent_connection", "") == "push-agent",
+                )
 
     @staticmethod
     def _is_ready_or_discoverable(uuid: UUID) -> bool:
@@ -135,12 +126,13 @@ class UUIDLinkManager:
         renamed: list[tuple[HostName, HostName]] = []
         for link in self:
             old_name = link.hostname
-            if (new_name := from_old_to_new.get(old_name)) is not None:
-                create_target_dir = (self._data_source_dir / old_name).exists()
+            if (new_name := from_old_to_new.get(old_name)) is None:
+                continue
 
-                link.unlink_source()
-                self.create_link(new_name, link.uuid, create_target_dir=create_target_dir)
-
-                renamed.append((old_name, new_name))
+            link.unlink()
+            self.create_link(
+                new_name, link.uuid, push_configured=link.target.parent == self._data_source_dir
+            )
+            renamed.append((old_name, new_name))
 
         return sorted(renamed)

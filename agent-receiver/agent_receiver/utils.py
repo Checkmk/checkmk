@@ -35,7 +35,7 @@ class Host:
         if not target_path:
             return None
 
-        return HostTypeEnum.PUSH if target_path.exists() else HostTypeEnum.PULL
+        return HostTypeEnum.PUSH if target_path.parent.name == "push-agent" else HostTypeEnum.PULL
 
     @property
     def source_path(self) -> Path:

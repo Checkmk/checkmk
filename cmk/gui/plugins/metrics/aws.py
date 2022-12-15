@@ -943,6 +943,7 @@ metric_info["aws_sns_topics_fifo"] = {
     "unit": "count",
     "color": "46/a",
 }
+
 metric_info["aws_cloudfront_requests"] = {
     "title": _l("Requests"),
     "unit": "count",

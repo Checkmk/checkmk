@@ -648,6 +648,36 @@ metric_info["memory_reservation"] = {
     "color": "36/a",
 }
 
+metric_info["delivered_notifications"] = {
+    "title": _l("Delivered notifications"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["failed_notifications"] = {
+    "title": _l("Failed notifications"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["num_topics"] = {
+    "title": _l("Number of topics live"),
+    "unit": "count",
+    "color": "26/a",
+}
+
+metric_info["sms_spend"] = {
+    "title": _l("SMS spending"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["sms_success_rate"] = {
+    "title": _l("SMS success rate"),
+    "unit": "%",
+    "color": "35/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -720,4 +750,14 @@ graph_info["firewall_users"] = {
 graph_info["mobileiron_compliances"] = {
     "title": _l("Total non-compliant devices"),
     "metrics": [("mobileiron_non_compliant", "stack"), ("mobileiron_devices_total", "line")],
+}
+
+
+graph_info["messages"] = {
+    "title": _l("Messages"),
+    "metrics": [
+        ("failed_notifications", "line"),
+        ("delivered_notifications", "line"),
+        ("messages_publish", "line"),
+    ],
 }

@@ -1,0 +1,21 @@
+Title: Add AWS/SNS check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1672233693
+Edition: cpe
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk adds the AWS/SNS check.
+
+With this check you can monitor the following SNS metrics:
+
+LI: For each SNS topic: published messages, delivered and failed notifications.
+LI: For each AWS region: month-to-date SMS spending and SMS success rate.
+
+A new service will be created for each SNS topic and you can filter the
+topics to monitor by topic name or by AWS tag.
+Also 2 services will be created for each AWS region (SMS spending and
+SMS success rate).

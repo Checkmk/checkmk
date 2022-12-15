@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableMapping
 from dataclasses import dataclass, field, replace
 from typing import Any, Dict, Iterable, Literal, Mapping, Optional, Sequence
 
@@ -62,7 +61,7 @@ class EthtoolInterface:
     counters: Sequence[int] = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     address: str = ""
     speed: int = 0
-    attributes: MutableMapping[str, str] = field(default_factory=dict)
+    link_detected: str | None = None
 
 
 @dataclass
@@ -143,15 +142,13 @@ def _parse_lnx_if_sections(
             if stripped_line0 == "Address":
                 iface.address = _get_physical_address(":".join(line[1:]).strip())
             elif stripped_line0 == "Speed":
-                iface.speed = _get_speed(" ".join(line[1:]).strip())
-            else:
-                iface.attributes[stripped_line0] = " ".join(line[1:]).strip()
+                iface.speed = _get_speed(line[1].strip())
+            elif stripped_line0 == "Link detected":
+                iface.link_detected = line[1].strip()
     return ip_stats, ethtool_stats
 
 
-def _get_speed(speed_text: str | None) -> int:
-    if speed_text is None:
-        return 0
+def _get_speed(speed_text: str) -> int:
     if speed_text == "65535Mb/s":  # unknown
         return 0
     if speed_text.endswith("Kb/s"):
@@ -213,7 +210,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                     type="24" if nic == "lo" else "6",  # Guess type from name of interface
                     speed=ethtool_interface.speed,
                     oper_status=_get_oper_status(
-                        ethtool_interface.attributes.get("Link detected"),
+                        ethtool_interface.link_detected,
                         iplink_interface.state_infos,
                         ifInOctets,
                     ),

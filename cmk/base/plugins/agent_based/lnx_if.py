@@ -68,7 +68,8 @@ class EthtoolInterface:
 class IPLinkInterface:
     state_infos: Sequence[str]
     link_ether: str = ""
-    inet: dict[str, list[str]] = field(default_factory=dict)
+    inet: list[str] = field(default_factory=list)
+    inet6: list[str] = field(default_factory=list)
 
 
 EthtoolSection = Mapping[str, EthtoolInterface]
@@ -101,12 +102,14 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             # link/none
             iface.link_ether = _get_physical_address(line[1])
 
-        elif line[0].startswith("inet"):
-            if "temporary" in line and "dynamic" in line:
-                continue
+        if "temporary" in line and "dynamic" in line:
+            continue
+        if line[0] == "inet":
             # inet 127.0.0.1/8 scope host lo
+            iface.inet.append(line[1])
+        elif line[0] == "inet6":
             # inet6 ::1/128 scope host
-            iface.inet.setdefault(line[0], []).append(line[1])
+            iface.inet6.append(line[1])
     return ip_stats
 
 
@@ -408,11 +411,11 @@ def inventory_lnx_if(
 
 def _inventorize_addresses(ip_stats: SectionInventory) -> InventoryResult:
     for if_name, interface in ip_stats.items():
-        for key, ty in [
-            ("inet", "ipv4"),
-            ("inet6", "ipv6"),
+        for networks, ty in [
+            (interface.inet, "ipv4"),
+            (interface.inet6, "ipv6"),
         ]:
-            for network in interface.inet.get(key, []):
+            for network in networks:
                 yield TableRow(
                     path=["networking", "addresses"],
                     key_columns={

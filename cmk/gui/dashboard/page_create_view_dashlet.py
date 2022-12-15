@@ -18,26 +18,24 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.dashboard.utils import (
-    copy_view_into_dashlet,
-    DashboardName,
-    dashlet_registry,
-    DashletConfig,
-    DashletId,
-    get_permitted_dashboards,
-    LinkedViewDashletConfig,
-    ViewDashletConfig,
-)
 from cmk.gui.type_defs import ViewName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.datasource_selection import show_create_view_dialog
-from cmk.gui.views.page_edit_view import view_choices
+from cmk.gui.views.view_choices import view_choices
 
+from .dashlet import (
+    copy_view_into_dashlet,
+    dashlet_registry,
+    DashletConfig,
+    LinkedViewDashletConfig,
+    ViewDashletConfig,
+)
 from .page_edit_dashlet import dashlet_editor_breadcrumb
-from .store import add_dashlet
+from .store import add_dashlet, get_permitted_dashboards
+from .type_defs import DashboardName, DashletId
 
 __all__ = ["page_create_link_view_dashlet", "page_create_view_dashlet"]
 

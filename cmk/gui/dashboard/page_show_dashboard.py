@@ -41,21 +41,6 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.dashboard.utils import (
-    ABCFigureDashlet,
-    dashboard_breadcrumb,
-    DashboardConfig,
-    DashboardName,
-    Dashlet,
-    dashlet_registry,
-    DashletConfig,
-    DashletId,
-    DashletRefreshAction,
-    DashletRefreshInterval,
-    get_permitted_dashboards,
-    GROW,
-    MAX,
-)
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -67,8 +52,21 @@ from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
-from .dashlet import StaticTextDashlet, StaticTextDashletConfig
-from .store import load_dashboard_with_cloning
+from .breadcrumb import dashboard_breadcrumb
+from .builtin_dashboards import GROW, MAX
+from .dashlet import (
+    ABCFigureDashlet,
+    Dashlet,
+    dashlet_registry,
+    DashletConfig,
+    DashletId,
+    DashletRefreshAction,
+    DashletRefreshInterval,
+    StaticTextDashlet,
+    StaticTextDashletConfig,
+)
+from .store import get_permitted_dashboards, load_dashboard_with_cloning
+from .type_defs import DashboardConfig, DashboardName
 
 __all__ = ["page_dashboard", "ajax_dashlet", "AjaxInitialDashboardFilters"]
 

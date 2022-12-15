@@ -11,13 +11,13 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
+from cmk.gui.dashboard import get_permitted_dashboards
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.node_visualization import ParentChildTopologyPage
-from cmk.gui.plugins.dashboard.utils import get_permitted_dashboards
 from cmk.gui.plugins.sidebar import search
 from cmk.gui.plugins.sidebar.utils import (
     footnotelinks,

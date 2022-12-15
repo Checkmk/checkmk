@@ -21,8 +21,8 @@ from cmk.gui import (
     wato,
 )
 from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.plugins.dashboard.utils import dashlet_registry
 from cmk.gui.plugins.userdb.utils import user_connector_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry

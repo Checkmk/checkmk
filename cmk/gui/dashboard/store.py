@@ -5,23 +5,73 @@
 
 import copy
 import time
+from typing import Any
 
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.dashboard.utils import (
-    DashboardConfig,
-    DashboardName,
-    DashletConfig,
-    DashletId,
-    get_all_dashboards,
-    get_permitted_dashboards,
-    save_all_dashboards,
-)
+from cmk.gui.views.store import internal_view_to_runtime_view
+
+from .builtin_dashboards import builtin_dashboards
+from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
+
+
+# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
+class DashboardStore:
+    @classmethod
+    @request_memoize()
+    def get_instance(cls):
+        """Load dashboards only once for each request"""
+        return cls()
+
+    def __init__(self) -> None:
+        self.all = self._load_all()
+        self.permitted = self._load_permitted(self.all)
+
+    def _load_all(self) -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+        """Loads all definitions from disk and returns them"""
+        return visuals.load(
+            "dashboards",
+            builtin_dashboards,
+            _internal_dashboard_to_runtime_dashboard,
+        )
+
+    def _load_permitted(
+        self, all_dashboards: dict[tuple[UserId, DashboardName], DashboardConfig]
+    ) -> dict[DashboardName, DashboardConfig]:
+        """Returns all defitions that a user is allowed to use"""
+        return visuals.available("dashboards", all_dashboards)
+
+
+def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
+    return {
+        # Need to assume that we are right for now. We will have to introduce parsing there to do a
+        # real conversion in one of the following typing steps
+        **raw_dashboard,  # type: ignore[misc]
+        "dashlets": [
+            internal_view_to_runtime_view(dashlet_spec)
+            if dashlet_spec["type"] == "view"
+            else dashlet_spec
+            for dashlet_spec in raw_dashboard["dashlets"]
+        ],
+    }
+
+
+def save_all_dashboards() -> None:
+    visuals.save("dashboards", get_all_dashboards())
+
+
+def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
+    return DashboardStore.get_instance().all
+
+
+def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:
+    return DashboardStore.get_instance().permitted
 
 
 def load_dashboard_with_cloning(

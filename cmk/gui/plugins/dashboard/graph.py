@@ -14,20 +14,14 @@ from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
+from cmk.gui.dashboard import Dashlet, dashlet_registry
+from cmk.gui.dashboard.dashlet import DashletId, DashletSize
+from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
+from cmk.gui.dashboard.title_macros import macro_mapping_from_context
+from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import (
-    ABCGraphDashletConfig,
-    DashboardConfig,
-    DashboardName,
-    Dashlet,
-    dashlet_registry,
-    DashletId,
-    DashletSize,
-    macro_mapping_from_context,
-    make_mk_missing_data_error,
-)
 from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,

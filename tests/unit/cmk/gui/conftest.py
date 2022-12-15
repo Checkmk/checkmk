@@ -39,10 +39,10 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
+from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.plugins.dashboard.utils import dashlet_registry
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app

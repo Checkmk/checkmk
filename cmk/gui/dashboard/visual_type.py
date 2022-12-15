@@ -13,18 +13,12 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.plugins.dashboard.utils import (
-    ABCGraphDashletConfig,
-    copy_view_into_dashlet,
-    dashlet_registry,
-    DashletConfig,
-    get_permitted_dashboards,
-    ViewDashletConfig,
-)
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.visuals import VisualType
 
-from .store import add_dashlet, load_dashboard_with_cloning
+from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
+from .store import add_dashlet, get_permitted_dashboards, load_dashboard_with_cloning
+from .type_defs import ABCGraphDashletConfig
 
 
 class VisualTypeDashboards(VisualType):

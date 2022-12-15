@@ -9,22 +9,8 @@ import pytest
 
 from cmk.utils.macros import MacroMapping
 
-from cmk.gui.plugins.dashboard import utils
+from cmk.gui.dashboard import title_macros
 from cmk.gui.type_defs import SingleInfos, VisualContext
-
-
-@pytest.mark.parametrize(
-    "entry, result",
-    [
-        pytest.param(
-            {"svc_status_display": {"some": "content"}, "some": "other stuff"},
-            {"status_display": {"some": "content"}, "some": "other stuff"},
-            id="2.0.0->2.1.0i1",
-        ),
-    ],
-)
-def test_migrate_dashlet_status_display(entry: dict[str, object], result: str) -> None:
-    assert utils.ABCFigureDashlet._migrate_vs(entry) == result
 
 
 @pytest.mark.parametrize(
@@ -126,12 +112,12 @@ def test_macro_mapping_from_context(
     additional_macros: dict[str, str],
 ) -> None:
     monkeypatch.setattr(
-        utils,
+        title_macros,
         "get_alias_of_host",
         lambda _site, _host_name: "alias",
     )
     assert (
-        utils.macro_mapping_from_context(
+        title_macros.macro_mapping_from_context(
             context,
             single_infos,
             title,
@@ -165,7 +151,7 @@ def test_macro_mapping_from_context(
 def test_get_title_macros_from_single_infos(
     single_infos: SingleInfos, result: Sequence[str]
 ) -> None:
-    assert list(utils._get_title_macros_from_single_infos(single_infos)) == result
+    assert list(title_macros._get_title_macros_from_single_infos(single_infos)) == result
 
 
 @pytest.mark.parametrize(
@@ -220,4 +206,4 @@ def test_get_title_macros_from_single_infos(
 def test_title_help_text_for_macros(
     single_infos: SingleInfos, additional_macros: Iterable[str], result: str
 ) -> None:
-    assert utils._title_help_text_for_macros(single_infos, additional_macros) == result
+    assert title_macros.title_help_text_for_macros(single_infos, additional_macros) == result

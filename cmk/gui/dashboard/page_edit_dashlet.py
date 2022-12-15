@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable
+
 import cmk.gui.visuals as visuals
 from cmk.gui import forms
 from cmk.gui.breadcrumb import (
@@ -21,22 +23,28 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.dashboard.utils import (
-    DashboardConfig,
-    dashlet_registry,
-    dashlet_vs_general_settings,
-    DashletConfig,
-    DashletHandleInputFunc,
-    DashletInputFunc,
-    get_permitted_dashboards,
-    save_all_dashboards,
-)
 from cmk.gui.plugins.visuals.utils import visual_info_registry
 from cmk.gui.type_defs import SingleInfos
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import Dictionary, Transform, ValueSpec
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    TextInput,
+    Transform,
+    ValueSpec,
+)
+
+from .dashlet import Dashlet, dashlet_registry, DashletConfig, DashletId
+from .store import get_permitted_dashboards, save_all_dashboards
+from .title_macros import title_help_text_for_macros
+from .type_defs import DashboardConfig
 
 __all__ = ["EditDashletPage"]
+
+DashletInputFunc = Callable[[DashletConfig], None]
+DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
 
 class EditDashletPage(Page):
@@ -215,6 +223,82 @@ class EditDashletPage(Page):
 
         html.footer()
         return None
+
+
+def dashlet_vs_general_settings(
+    dashlet_type: type[Dashlet], single_infos: SingleInfos
+) -> Dictionary:
+    return Dictionary(
+        title=_("General Settings"),
+        render="form",
+        optional_keys=["title", "title_url"],
+        elements=[
+            (
+                "type",
+                FixedValue(
+                    value=dashlet_type.type_name(),
+                    totext=dashlet_type.title(),
+                    title=_("Element type"),
+                ),
+            ),
+            visuals.single_infos_spec(single_infos),
+            (
+                "background",
+                Checkbox(
+                    title=_("Colored background"),
+                    label=_("Render background"),
+                    help=_("Render gray background color behind the elements content."),
+                    default_value=True,
+                ),
+            ),
+            (
+                "show_title",
+                DropdownChoice(
+                    title=_("Show title header"),
+                    help=_("Render the titlebar including title and link above the element."),
+                    choices=[
+                        (False, _("Don't show any header")),
+                        (True, _("Show header with highlighted background")),
+                        ("transparent", _("Show title without any background")),
+                    ],
+                    default_value=True,
+                ),
+            ),
+            (
+                "title",
+                TextInput(
+                    title=_("Custom title") + "<sup>*</sup>",
+                    placeholder=_(
+                        "This option is macro-capable, please check the inline help for more "
+                        "information."
+                    ),
+                    help=" ".join(
+                        (
+                            _(
+                                "Most elements have a hard coded static title and some are aware of their "
+                                "content and set the title dynamically, like the view snapin, which "
+                                "displays the title of the view. If you like to use any other title, set it "
+                                "here."
+                            ),
+                            title_help_text_for_macros(
+                                dashlet_type.single_infos(),
+                                dashlet_type.get_additional_title_macros(),
+                            ),
+                        )
+                    ),
+                    size=75,
+                ),
+            ),
+            (
+                "title_url",
+                TextInput(
+                    title=_("Link of Title"),
+                    help=_("The URL of the target page the link of the element should link to."),
+                    size=50,
+                ),
+            ),
+        ],
+    )
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:

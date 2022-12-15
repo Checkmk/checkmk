@@ -1451,32 +1451,46 @@ def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
 
 
-def write_daemon_sets_api_sections(
-    api_daemon_sets: Sequence[DaemonSet],
-    host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    """Write the daemon set relevant sections based on k8 API information"""
-
-    def output_sections(cluster_daemon_set: DaemonSet) -> None:
-        sections = {
-            "kube_pod_resources_v1": cluster_daemon_set.pod_resources,
-            "kube_memory_resources_v1": cluster_daemon_set.memory_resources,
-            "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
-            "kube_daemonset_info_v1": lambda: daemonset_info(
-                cluster_daemon_set,
+def create_daemon_set_api_sections(
+    api_daemonset: DaemonSet, host_settings: CheckmkHostSettings, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_daemonset.pod_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_daemonset.memory_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_daemonset.cpu_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_daemonset_info_v1"),
+            section=daemonset_info(
+                api_daemonset,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
             ),
-            "kube_update_strategy_v1": lambda: controller_strategy(cluster_daemon_set),
-            "kube_daemonset_replicas_v1": lambda: daemonset_replicas(cluster_daemon_set),
-        }
-        _write_sections(sections)
-
-    for daemon_set in api_daemon_sets:
-        with ConditionalPiggybackSection(piggyback_formatter(daemon_set)):
-            output_sections(daemon_set)
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_update_strategy_v1"),
+            section=controller_strategy(api_daemonset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_daemonset_replicas_v1"),
+            section=daemonset_replicas(api_daemonset),
+        ),
+    )
 
 
 def write_statefulsets_api_sections(
@@ -2240,13 +2254,15 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
-                write_daemon_sets_api_sections(
-                    kube_objects_from_namespaces(
-                        composed_entities.daemonsets, monitored_namespace_names
-                    ),
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                for daemonset in kube_objects_from_namespaces(
+                    composed_entities.daemonsets, monitored_namespace_names
+                ):
+                    daemonset_sections = create_daemon_set_api_sections(
+                        daemonset,
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=piggyback_formatter(daemonset),
+                    )
+                    common.write_sections(daemonset_sections)
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")

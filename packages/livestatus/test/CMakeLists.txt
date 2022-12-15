@@ -4,6 +4,8 @@ set(gtest_prefix "${CMAKE_CURRENT_BINARY_DIR}/gtest")
 ExternalProject_Add(
   gtest-external
   URL ${root_repo_dir}/omd/packages/googletest/googletest-9c332145b7.tar.gz
+  URL_HASH
+    SHA256=f69e29721c09b3a4b9820a76236b7f230aef157527951eb4e8a3a6ec601fda22
   PREFIX "${gtest_prefix}"
   INSTALL_COMMAND "" DOWNLOAD_EXTRACT_TIMESTAMP no)
 

@@ -48,7 +48,7 @@ logger = logging.getLogger("cmk.base.packaging")
 
 def packaging_usage() -> None:
     sys.stdout.write(
-        """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
+        f"""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
    create NAME             ...  Collect unpackaged files into new package NAME
@@ -69,9 +69,8 @@ Available commands are:
 
    -v  enables verbose output
 
-Package files are located in %s.
+Package files are located in {PACKAGES_DIR}.
 """
-        % PACKAGES_DIR
     )
 
 
@@ -118,16 +117,15 @@ def package_list(args: list[str]) -> None:
             show_package_contents(PackageName(name))
             return
 
-    table = []
-    for manifest in get_installed_manifests():
-        table.append(
-            [
-                manifest.name,
-                manifest.version,
-                manifest.title,
-                str(package_num_files(manifest)),
-            ]
-        )
+    table = [
+        [
+            manifest.name,
+            manifest.version,
+            manifest.title,
+            str(package_num_files(manifest)),
+        ]
+        for manifest in get_installed_manifests()
+    ]
 
     if logger.isEnabledFor(VERBOSE):
         tty.print_table(["Name", "Version", "Title", "Files"], [tty.bold, "", ""], table)
@@ -161,21 +159,21 @@ def show_package(name: str, show_info: bool = False) -> None:
         raise PackageException("No such package: %s" % name)
 
     if show_info:
-        sys.stdout.write("Name:                          %s\n" % package.name)
-        sys.stdout.write("Version:                       %s\n" % package.version)
-        sys.stdout.write("Packaged on Checkmk Version:   %s\n" % package.version_packaged)
-        sys.stdout.write("Required Checkmk Version:      %s\n" % package.version_min_required)
+        sys.stdout.write(f"Name:                          {package.name}\n")
+        sys.stdout.write(f"Version:                       {package.version}\n")
+        sys.stdout.write(f"Packaged on Checkmk Version:   {package.version_packaged}\n")
+        sys.stdout.write(f"Required Checkmk Version:      {package.version_min_required}\n")
         valid_until_text = package.version_usable_until or "No version limitation"
-        sys.stdout.write("Valid until Checkmk version:   %s\n" % valid_until_text)
-        sys.stdout.write("Title:                         %s\n" % package.title)
-        sys.stdout.write("Author:                        %s\n" % package.author)
-        sys.stdout.write("Download-URL:                  %s\n" % package.download_url)
+        sys.stdout.write(f"Valid until Checkmk version:   {valid_until_text}\n")
+        sys.stdout.write(f"Title:                         {package.title}\n")
+        sys.stdout.write(f"Author:                        {package.author}\n")
+        sys.stdout.write(f"Download-URL:                  {package.download_url}\n")
         files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package.files.items()])
-        sys.stdout.write("Files:                         %s\n" % files)
-        sys.stdout.write("Description:\n  %s\n" % package.description)
+        sys.stdout.write(f"Files:                         {files}\n")
+        sys.stdout.write(f"Description:\n  {package.description}\n")
     else:
         if logger.isEnabledFor(VERBOSE):
-            sys.stdout.write("Files in package %s:\n" % name)
+            sys.stdout.write(f"Files in package {name}:\n")
             for part in PACKAGE_PARTS:
                 if part_files := package.files.get(part.ident, []):
                     sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")

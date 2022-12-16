@@ -533,9 +533,9 @@ def _raise_for_installability(
 
     Note: this currently ignores the packages "max version".
     """
-    _raise_for_too_old_cmk_version(package, site_version)
+    _raise_for_too_old_cmk_version(package.version_min_required, site_version)
     if not allow_outdated:
-        _raise_for_too_new_cmk_version(package, cmk_version.__version__)
+        _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
     _raise_for_conflicts(package, old_package)
 
 
@@ -621,57 +621,48 @@ def _validate_package_files_part(
                     )
 
 
-def _raise_for_too_old_cmk_version(package: Manifest, site_version: str) -> None:
-    """Checks whether or not the minimum required Check_MK version is older than the
-    current Check_MK version. Raises an exception if not. When the Check_MK version
-    can not be parsed or is a daily build, the check is simply passing without error."""
+def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
+    """Raise PackageException if the site is too old for this package
 
-    if is_daily_build_of_master(package.version_min_required) or is_daily_build_of_master(
-        site_version
+    If the sites version can not be parsed or is a daily build, the check is simply passing without error.
+    """
+    if is_daily_build_of_master(min_version) or is_daily_build_of_master(site_version):
+        return  # can not check exact version
+
+    try:
+        too_old = parse_check_mk_version(site_version) < parse_check_mk_version(min_version)
+    except Exception:
+        # Be compatible: When a version can not be parsed, then skip this check
+        return
+
+    if too_old:
+        raise PackageException(
+            f"Package requires Checkmk version {min_version} (this is {site_version})"
+        )
+
+
+def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str) -> None:
+    """Raise PackageException if the site is too new for this package
+
+    If the sites version can not be parsed or is a daily build, the check is simply passing without error.
+    """
+    if (
+        until_version is None
+        or is_daily_build_of_master(site_version)
+        or is_daily_build_of_master(until_version)
     ):
         return  # can not check exact version
 
-    compatible = True
     try:
-        compatible = parse_check_mk_version(package.version_min_required) <= parse_check_mk_version(
-            site_version
-        )
+        too_new = parse_check_mk_version(site_version) >= parse_check_mk_version(until_version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
-    if not compatible:
+    if too_new:
         raise PackageException(
-            f"Package requires Checkmk version {package.version_min_required} (this is {site_version})"
+            f"Package requires Checkmk version below {until_version} (this is {site_version})"
         )
-
-
-def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
-    """Raise an exception if a package is considered outated for the Checmk version"""
-    until_version = manifest.version_usable_until
-
-    if until_version is None:
-        return
-
-    if is_daily_build_of_master(version):
-        return
-
-    if is_daily_build_of_master(until_version):
-        return
-
-    try:
-        is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
-    except Exception:
-        # Be compatible: When a version can not be parsed, then skip this check
-        return
-
-    msg = "Package is {}: {} >= {}".format(
-        "outdated" if is_outdated else "not outdated",
-        version,
-        until_version,
-    )
-    if is_outdated:
-        raise PackageException(msg)
 
 
 def get_optional_manifests(
@@ -862,7 +853,7 @@ def disable_outdated() -> None:
         g_logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
 
         try:
-            _raise_for_too_new_cmk_version(manifest, cmk_version.__version__)
+            _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
         except PackageException as exc:
             g_logger.log(
                 VERBOSE,

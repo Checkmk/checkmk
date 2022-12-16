@@ -333,31 +333,29 @@ def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
 
 
 @pytest.mark.parametrize(
-    "manifest, site_version",
+    "until_version, site_version",
     [
-        (_get_test_manifest({"version_usable_until": "1.6.0"}), "2.0.0i1"),
-        (_get_test_manifest({"version_usable_until": "2.0.0i1"}), "2.0.0i2"),
-        (_get_test_manifest({"version_usable_until": "2.0.0"}), "2.0.0"),
-        (_get_test_manifest({"version_usable_until": "1.6.0"}), "1.6.0-2010.02.01"),
+        ("1.6.0", "2.0.0i1"),
+        ("2.0.0i1", "2.0.0i2"),
+        ("2.0.0", "2.0.0"),
+        ("1.6.0", "1.6.0-2010.02.01"),
     ],
 )
-def test_raise_for_too_new_cmk_version_raises(
-    manifest: packaging.Manifest, site_version: str
-) -> None:
+def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_version: str) -> None:
     with pytest.raises(packaging.PackageException):
-        packaging._raise_for_too_new_cmk_version(manifest, site_version)
+        packaging._raise_for_too_new_cmk_version(until_version, site_version)
 
 
 @pytest.mark.parametrize(
-    "manifest, site_version",
+    "until_version, site_version",
     [
-        (_get_test_manifest({"version_usable_until": None}), "2.0.0i1"),
-        (_get_test_manifest({"version_usable_until": "2.0.0"}), "2.0.0i1"),
-        (_get_test_manifest({"version_usable_until": "2.0.0"}), "2010.02.01"),
-        (_get_test_manifest({"version_usable_until": ""}), "1.6.0"),
-        (_get_test_manifest({"version_usable_until": "1.6.0"}), ""),
-        (_get_test_manifest({"version_usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
+        (None, "2.0.0i1"),
+        ("2.0.0", "2.0.0i1"),
+        ("2.0.0", "2010.02.01"),
+        ("", "1.6.0"),
+        ("1.6.0", ""),
+        ("1.6.0-2010.02.01", "1.6.0"),
     ],
 )
-def test_raise_for_too_new_cmk_version_ok(manifest: packaging.Manifest, site_version: str) -> None:
-    packaging._raise_for_too_new_cmk_version(manifest, site_version)
+def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_version: str) -> None:
+    packaging._raise_for_too_new_cmk_version(until_version, site_version)

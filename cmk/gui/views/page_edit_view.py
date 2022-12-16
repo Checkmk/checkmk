@@ -27,6 +27,8 @@ from cmk.gui.type_defs import (
     SorterSpec,
     ViewSpec,
     VisualLinkSpec,
+    VisualName,
+    VisualTypeName,
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
@@ -252,7 +254,7 @@ def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[Va
 
 _RawColumnPainterSpec = tuple[
     PainterName | tuple[PainterName, PainterParameters],
-    VisualLinkSpec | None,
+    tuple[VisualTypeName, VisualName] | None,
     ColumnName | None,
 ]
 
@@ -261,7 +263,7 @@ _RawJoinColumnPainterSpec = tuple[
     PainterName | tuple[PainterName, PainterParameters],
     ColumnName,
     str,
-    VisualLinkSpec | None,
+    tuple[VisualTypeName, VisualName] | None,
     ColumnName | None,
 ]
 
@@ -292,7 +294,11 @@ def _view_editor_spec(
             name = name_or_parameters
             parameters = None
 
-        link_spec = inner_value[-2]
+        link_spec = (
+            None
+            if (raw_link_spec := inner_value[-2]) is None
+            else VisualLinkSpec.from_raw(raw_link_spec)
+        )
         tooltip = inner_value[-1]
 
         if column_type == "column":
@@ -331,12 +337,14 @@ def _view_editor_spec(
         if painter_spec is None:
             return None
 
+        raw_link_spec = None if painter_spec.link_spec is None else painter_spec.link_spec.to_raw()
+
         if painter_spec.column_type == "column" and painter_spec.join_index is None:
             return (
                 painter_spec.column_type,
                 (
                     _get_name_or_params(painter_spec),
-                    painter_spec.link_spec,
+                    raw_link_spec,
                     painter_spec.tooltip,
                 ),
             )
@@ -352,7 +360,7 @@ def _view_editor_spec(
                     _get_name_or_params(painter_spec),
                     painter_spec.join_index,
                     painter_spec.column_title,
-                    painter_spec.link_spec,
+                    raw_link_spec,
                     painter_spec.tooltip,
                 ),
             )

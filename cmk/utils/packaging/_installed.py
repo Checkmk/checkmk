@@ -5,6 +5,7 @@
 
 import logging
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
@@ -16,6 +17,10 @@ from ._type_defs import PackageName
 PACKAGES_DIR: Final = cmk.utils.paths.omd_root / "var/check_mk/packages"
 
 
+def _path_for(name: PackageName) -> Path:
+    return PACKAGES_DIR / str(name)
+
+
 def _installed_names() -> Sequence[PackageName]:
     return sorted(PackageName(p.name) for p in PACKAGES_DIR.iterdir())
 
@@ -23,7 +28,7 @@ def _installed_names() -> Sequence[PackageName]:
 def get_installed_manifest(
     package_name: PackageName, log: logging.Logger | None = None
 ) -> Manifest | None:
-    return read_manifest_optionally(PACKAGES_DIR / str(package_name), log)
+    return read_manifest_optionally(_path_for(package_name), log)
 
 
 def get_installed_manifests(log: logging.Logger | None = None) -> Sequence[Manifest]:
@@ -43,12 +48,12 @@ def get_packaged_files() -> Mapping[PackagePart, set[str]]:
 
 
 def is_installed(name: PackageName) -> bool:
-    return (PACKAGES_DIR / str(name)).exists()
+    return _path_for(name).exists()
 
 
 def add_installed_manifest(manifest: Manifest) -> None:
-    (PACKAGES_DIR / str(manifest.name)).write_text(manifest.file_content())
+    _path_for(manifest.name).write_text(manifest.file_content())
 
 
 def remove_installed_manifest(name: PackageName) -> None:
-    (PACKAGES_DIR / str(name)).unlink(missing_ok=True)
+    _path_for(name).unlink(missing_ok=True)

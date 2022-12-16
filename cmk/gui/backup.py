@@ -405,11 +405,6 @@ class Job(MKBackupJob, BackupEntity):
         return "mkbackup backup %s >/dev/null" % self.ident()
 
     def from_config(self, config: ConfigData) -> None:
-        # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
-        # compatibility.
-        schedule = config.get("schedule", {})
-        if schedule and "timeofday" in schedule:
-            config["schedule"]["timeofday"] = [e for e in schedule["timeofday"] if e is not None]
         self._config = config
 
 

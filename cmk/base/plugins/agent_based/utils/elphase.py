@@ -34,6 +34,18 @@ def check_elphase(  # pylint: disable=too-many-branches
     if params is None:
         params = {}
 
+    if "name" in section[item]:
+        yield Result(
+            state=State.OK,
+            summary="Name: %s" % section[item]["name"],
+        )
+
+    if "type" in section[item]:
+        yield Result(
+            state=State.OK,
+            summary="Type: %s" % section[item]["type"],
+        )
+
     if "device_state" in section[item]:
         device_state, device_state_readable = section[item]["device_state"]
         if "map_device_states" in params:

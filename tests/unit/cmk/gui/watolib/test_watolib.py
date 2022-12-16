@@ -71,6 +71,7 @@ def test_registered_automation_commands() -> None:
             "execute-dcd-command",
             "get-agent-requests",
             "update-agent-requests",
+            "distribute-verification-response",
         ]
 
     registered = sorted(automation_command_registry.keys())

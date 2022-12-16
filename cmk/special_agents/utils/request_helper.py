@@ -98,7 +98,10 @@ class HTTPSAuthRequester(Requester):
     ) -> None:
         self._req_headers = {
             "Authorization": "Basic "
-            + base64.encodebytes((f"{username}:{password}").encode()).strip().decode()
+            + base64.encodebytes((f"{username}:{password}").encode())
+            .strip()
+            .decode()
+            .replace("\n", "")
         }
         self._base_url = "https://%s:%d/%s" % (server, port, base_url)
         self._opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))

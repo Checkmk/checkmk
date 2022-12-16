@@ -6,7 +6,17 @@
 
 from typing import Callable, Dict, Iterable, List, Union
 
-from .agent_based_api.v1 import contains, IgnoreResults, Metric, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    contains,
+    IgnoreResults,
+    Metric,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.elphase import check_elphase
 from .utils.humidity import check_humidity

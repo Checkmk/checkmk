@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
+
 import pytest
 
 from cmk.gui.plugins.metrics import valuespecs
@@ -29,8 +32,19 @@ from cmk.gui.plugins.metrics import valuespecs
         ),
     ],
 )
-def test_migrate_graph_render_options_title_format(  # type:ignore[no-untyped-def]
-    entry, result
+def test_migrate_graph_render_options_title_format(
+    entry: Literal["plain"]
+    | Literal["add_host_name"]
+    | Literal["add_host_alias"]
+    | tuple[
+        Literal["add_title_infos"],
+        list[
+            Literal["add_host_name"]
+            | Literal["add_host_alias"]
+            | Literal["add_service_description"]
+        ],
+    ],
+    result: Sequence[str],
 ) -> None:
     assert valuespecs.migrate_graph_render_options_title_format(entry) == result
 
@@ -54,5 +68,7 @@ def test_migrate_graph_render_options_title_format(  # type:ignore[no-untyped-de
         ),
     ],
 )
-def test_migrate_graph_render_options(entry, result) -> None:  # type:ignore[no-untyped-def]
+def test_migrate_graph_render_options(
+    entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
+) -> None:
     assert valuespecs.migrate_graph_render_options(entry) == result

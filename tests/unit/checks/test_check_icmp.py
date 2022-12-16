@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
@@ -168,7 +170,9 @@ HOST_CONFIG = HostAddressConfiguration(
         ),
     ],
 )
-def test_generate_icmp_services(params, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_generate_icmp_services(
+    params: Mapping[str, object], expected_result: Sequence[tuple[str, str]]
+) -> None:
     active_check = ActiveCheck("check_icmp")
     services = list(active_check.run_generate_icmp_services(HOST_CONFIG, params))
     assert services == expected_result

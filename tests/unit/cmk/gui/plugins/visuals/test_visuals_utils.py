@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from livestatus import SiteId
 
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
+from cmk.gui.type_defs import VisualContext
 
 
 @pytest.mark.parametrize(
@@ -30,5 +33,7 @@ from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
         ),
     ],
 )
-def test_get_only_sites_from_context(context, result) -> None:  # type:ignore[no-untyped-def]
+def test_get_only_sites_from_context(
+    context: VisualContext, result: None | Sequence[SiteId]
+) -> None:
     assert get_only_sites_from_context(context) == result

@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from _pytest.monkeypatch import MonkeyPatch
+
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 
 
-def test_register_modules(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_register_modules(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(main_menu, "main_module_registry", MainModuleRegistry())
     module = main_menu.WatoModule(
         mode_or_url="dang",

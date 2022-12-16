@@ -4,10 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from unittest.mock import MagicMock
 
+import pytest
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from cmk.gui import hooks
 
 
-def test_hooks(logged_in_wsgi_app, mock_livestatus) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("mock_livestatus")
+def test_hooks(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     start_func = MagicMock()
     end_func = MagicMock()
     hooks.register("request-start", start_func)

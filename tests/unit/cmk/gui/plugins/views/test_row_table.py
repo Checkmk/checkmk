@@ -2,12 +2,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
+
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.gui.view import View
 from cmk.gui.views.data_source import RowTableLivestatus
 from cmk.gui.views.store import multisite_builtin_views
 
 
-def test_row_table_object(mock_livestatus, request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_row_table_object(mock_livestatus: MockLiveStatusConnection) -> None:
     live = mock_livestatus
     live.add_table(
         "hosts",

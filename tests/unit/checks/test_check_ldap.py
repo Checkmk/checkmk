@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
@@ -29,7 +31,9 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_check_ldap_argument_parsing(params, expected_args) -> None:  # type:ignore[no-untyped-def]
+def test_check_ldap_argument_parsing(
+    params: tuple[str, str, Mapping[str, str | float]], expected_args: Sequence[str]
+) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_ldap")
     assert active_check.run_argument_function(params) == expected_args

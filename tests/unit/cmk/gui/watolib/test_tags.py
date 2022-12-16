@@ -5,10 +5,11 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 import cmk.utils.tags as tags
 
@@ -57,7 +58,7 @@ def _tag_test_cfg():
 
 
 @pytest.fixture()
-def test_cfg() -> Generator:
+def test_cfg() -> Iterator[tags.TagConfig]:
     multisite_dir = Path(cmk.gui.watolib.utils.multisite_dir())
     tags_mk = multisite_dir / "tags.mk"
     hosttags_mk = multisite_dir / "hosttags.mk"
@@ -83,13 +84,13 @@ wato_tags = %s
         tags_mk.unlink()
 
 
-def test_tag_config_load(test_cfg) -> None:  # type:ignore[no-untyped-def]
+def test_tag_config_load(test_cfg: tags.TagConfig) -> None:
     assert len(test_cfg.tag_groups) == 2
     assert len(test_cfg.aux_tag_list.get_tags()) == 1
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_tag_config_save(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_tag_config_save(mocker: MockerFixture) -> None:
     export_mock = mocker.patch.object(cmk.gui.watolib.tags, "_export_hosttags_to_php")
 
     config_file = TagConfigFile()

@@ -5,6 +5,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import os
+from collections.abc import Sequence
 
 import pytest
 import vcr  # type: ignore[import]
@@ -25,8 +26,8 @@ from cmk.special_agents import agent_innovaphone
         )
     ],
 )
-def test_agent_innovaphone_main(  # type:ignore[no-untyped-def]
-    args, expected_stdout, capsys
+def test_agent_innovaphone_main(
+    args: Sequence[str], expected_stdout: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
     filepath = "%s/_innovaphone_vcrtrace" % os.path.dirname(__file__)
     with vcr.use_cassette(filepath, record_mode="none"):

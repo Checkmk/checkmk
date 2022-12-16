@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib import on_time
 
@@ -196,8 +199,11 @@ import cmk.gui.availability as availability
         )
     ],
 )
-def test_reclassify_by_annotations(  # type:ignore[no-untyped-def]
-    monkeypatch, av_rawdata, annotations, result
+def test_reclassify_by_annotations(
+    monkeypatch: MonkeyPatch,
+    av_rawdata: availability.AVRawData,
+    annotations: availability.AVAnnotations,
+    result: availability.AVRawData,
 ) -> None:
     monkeypatch.setattr(availability, "load_annotations", lambda: annotations)
     assert availability.reclassify_by_annotations("service", av_rawdata) == result
@@ -216,8 +222,8 @@ def test_reclassify_by_annotations(  # type:ignore[no-untyped-def]
         (61, 70, False),
     ],
 )
-def test_relevant_annotation_times(  # type:ignore[no-untyped-def]
-    annotation_from, annotation_until, result
+def test_relevant_annotation_times(
+    annotation_from: int, annotation_until: int, result: bool
 ) -> None:
     with on_time(1572253746, "CET"):
         assert (
@@ -247,8 +253,8 @@ def test_relevant_annotation_times(  # type:ignore[no-untyped-def]
         ([(1543446000 + 82800, 1543446000 + 172800)], cmk.utils.render.date_and_time),
     ],
 )
-def test_get_annotation_date_render_function(  # type:ignore[no-untyped-def]
-    annotation_times, result
+def test_get_annotation_date_render_function(
+    annotation_times: Sequence[tuple[int, int]], result: str
 ) -> None:
     annotations = [((None, None, None), {"from": s, "until": e}) for s, e in annotation_times]
     with on_time(1572253746, "CET"):
@@ -431,8 +437,11 @@ def test_get_annotation_date_render_function(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_get_relevant_annotations(  # type:ignore[no-untyped-def]
-    annotations, by_host, avoptions, result
+def test_get_relevant_annotations(
+    annotations: Mapping[tuple[str, str, None | str], Sequence[object]],
+    by_host: availability.AVRawData,
+    avoptions: Mapping[str, object],
+    result: Sequence[tuple[object, object]],
 ) -> None:
     assert (
         availability.get_relevant_annotations(annotations, by_host, "service", avoptions) == result

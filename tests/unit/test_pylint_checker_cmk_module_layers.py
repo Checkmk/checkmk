@@ -29,9 +29,9 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
         ("cmk.core_helpers", "agent", 1, True, "cmk.core_helpers.agent"),
     ],
 )
-def test__get_absolute_importee(  # type:ignore[no-untyped-def]
+def test__get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
-):
+) -> None:
     assert (
         _get_absolute_importee(
             root_name=root_name,
@@ -44,7 +44,7 @@ def test__get_absolute_importee(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_allowed_import_ok(component) -> None:  # type:ignore[no-untyped-def]
+def test_allowed_import_ok(component: Component) -> None:
     for importee in (
         "cmk",
         "cmk.utils",
@@ -91,9 +91,7 @@ def test_allowed_import_ok(component) -> None:  # type:ignore[no-untyped-def]
         ("cmk/gui", "cmk.gui.y", "cmk.automations.b", True),
     ],
 )
-def test__is_import_allowed(  # type:ignore[no-untyped-def]
-    module_path, importer, importee, allowed
-) -> None:
+def test__is_import_allowed(module_path: str, importer: str, importee: str, allowed: bool) -> None:
     assert allowed is CHECKER._is_import_allowed(
         ModulePath(module_path),
         ModuleName(importer),

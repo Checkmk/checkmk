@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import ActiveCheck
@@ -13,8 +15,8 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args", [(("foo", 60, ()), ["-r", 60]), (("foo", 60, (20, 50)), ["-r", 60])]
 )
-def test_check_notify_count_argument_parsing(  # type:ignore[no-untyped-def]
-    params, expected_args
+def test_check_notify_count_argument_parsing(
+    params: tuple[str, float, object], expected_args: Sequence[int | str]
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_notify_count")

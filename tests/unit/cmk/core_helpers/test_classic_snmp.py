@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import NamedTuple
 
 import pytest
@@ -24,7 +25,7 @@ from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
         (1234, ":1234"),
     ],
 )
-def test_snmp_port_spec(port, expected) -> None:  # type:ignore[no-untyped-def]
+def test_snmp_port_spec(port: int, expected: str) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=False,
         hostname=HostName("localhost"),
@@ -43,6 +44,7 @@ def test_snmp_port_spec(port, expected) -> None:  # type:ignore[no-untyped-def]
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected
 
 
+@pytest.mark.usefixtures("monkeypatch")
 @pytest.mark.parametrize(
     "is_ipv6,expected",
     [
@@ -50,7 +52,7 @@ def test_snmp_port_spec(port, expected) -> None:  # type:ignore[no-untyped-def]
         (False, ""),
     ],
 )
-def test_snmp_proto_spec(monkeypatch, is_ipv6, expected) -> None:  # type:ignore[no-untyped-def]
+def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
     snmp_config = SNMPHostConfig(
         is_ipv6_primary=is_ipv6,
         hostname=HostName("localhost"),
@@ -74,6 +76,7 @@ class SNMPSettings(NamedTuple):
     context_name: str | None
 
 
+@pytest.mark.usefixtures("monkeypatch")
 @pytest.mark.parametrize(
     "settings,expected",
     [
@@ -277,7 +280,7 @@ class SNMPSettings(NamedTuple):
         ),
     ],
 )
-def test_snmp_walk_command(monkeypatch, settings, expected) -> None:  # type:ignore[no-untyped-def]
+def test_snmp_walk_command(settings: SNMPSettings, expected: Sequence[str]) -> None:
     backend = ClassicSNMPBackend(settings.snmp_config, logger)
     assert backend._snmp_walk_command(settings.context_name) == expected
 
@@ -293,7 +296,7 @@ def test_snmp_walk_command(monkeypatch, settings, expected) -> None:  # type:ign
         ("SHA-512", "SHA-512"),
     ],
 )
-def test_auth_proto(proto, result) -> None:  # type:ignore[no-untyped-def]
+def test_auth_proto(proto: str, result: str) -> None:
     assert classic_snmp._auth_proto_for(proto) == result
 
 
@@ -309,7 +312,7 @@ def test_auth_proto_unknown() -> None:
         ("AES", "AES"),
     ],
 )
-def test_priv_proto(proto, result) -> None:  # type:ignore[no-untyped-def]
+def test_priv_proto(proto: str, result: str) -> None:
     assert classic_snmp._priv_proto_for(proto) == result
 
 
@@ -325,6 +328,6 @@ def test_priv_proto(proto, result) -> None:  # type:ignore[no-untyped-def]
         "AES-256-Blumenthal",
     ],
 )
-def test_priv_proto_unknown(proto) -> None:  # type:ignore[no-untyped-def]
+def test_priv_proto_unknown(proto: str) -> None:
     with pytest.raises(MKGeneralException):
         classic_snmp._priv_proto_for(proto)

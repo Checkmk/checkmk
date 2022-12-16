@@ -61,8 +61,8 @@ class TestCheckmkAutomationBackgroundJob:
         )
 
     @staticmethod
-    def _check_mk_local_automation_serialized(  # type:ignore[no-untyped-def]
-        **_kwargs,
+    def _check_mk_local_automation_serialized(
+        **_kwargs: object,
     ) -> tuple[Sequence[str], str]:
         return (
             ["x", "y", "z"],

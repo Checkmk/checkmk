@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
+
 import pytest
 
 from tests.unit.cmk.gui.conftest import SetConfig
@@ -11,7 +13,14 @@ import cmk.utils.version
 
 import cmk.gui.metrics as metrics
 from cmk.gui.plugins.metrics import utils
-from cmk.gui.plugins.metrics.utils import UnitConversionError
+from cmk.gui.plugins.metrics.utils import (
+    Atom,
+    HorizontalRule,
+    NormalizedPerfData,
+    StackElement,
+    TranslationInfo,
+    UnitConversionError,
+)
 from cmk.gui.type_defs import Perfdata
 
 
@@ -23,10 +32,11 @@ from cmk.gui.type_defs import Perfdata
         ("hé ßß", ["hé", "ßß"]),
     ],
 )
-def test_split_perf_data(data_string, result) -> None:  # type:ignore[no-untyped-def]
+def test_split_perf_data(data_string: str, result: Sequence[str]) -> None:
     assert utils._split_perf_data(data_string) == result
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.mark.parametrize(
     "perf_str, check_command, result",
     [
@@ -74,8 +84,10 @@ def test_split_perf_data(data_string, result) -> None:  # type:ignore[no-untyped
         ),
     ],
 )
-def test_parse_perf_data(  # type:ignore[no-untyped-def]
-    request_context, perf_str, check_command, result
+def test_parse_perf_data(
+    perf_str: str,
+    check_command: str | None,
+    result: tuple[Perfdata, str],
 ) -> None:
     assert utils.parse_perf_data(perf_str, check_command) == result
 
@@ -97,9 +109,7 @@ def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
         ("fake", "check_mk-imaginary", {"auto_graph": True, "name": "fake", "scale": 1.0}),
     ],
 )
-def test_perfvar_translation(  # type:ignore[no-untyped-def]
-    perf_name, check_command, result
-) -> None:
+def test_perfvar_translation(perf_name: str, check_command: str, result: TranslationInfo) -> None:
     assert utils.perfvar_translation(perf_name, check_command) == result
 
 
@@ -136,8 +146,8 @@ def test_perfvar_translation(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_normalize_perf_data(  # type:ignore[no-untyped-def]
-    perf_data, check_command, result
+def test_normalize_perf_data(
+    perf_data: Perfdata, check_command: str, result: tuple[str, NormalizedPerfData]
 ) -> None:
     assert utils.normalize_perf_data(perf_data, check_command) == result
 
@@ -165,8 +175,11 @@ def test_normalize_perf_data(  # type:ignore[no-untyped-def]
     ],
 )
 def test_reverse_translation_metric_name(
-    monkeypatch, canonical_name, perf_data_names, on_cmk_version
-):
+    monkeypatch: pytest.MonkeyPatch,
+    canonical_name: str,
+    perf_data_names: Sequence[tuple[str, int]],
+    on_cmk_version: str,
+) -> None:
     utils.reverse_translate_metric_name.clear()  # clear memoized cache, to incorporate version
     monkeypatch.setattr(cmk.utils.version, "__version__", on_cmk_version)
     assert utils.reverse_translate_metric_name(canonical_name) == perf_data_names
@@ -220,8 +233,8 @@ def test_reverse_translation_metric_name(
         ),
     ],
 )
-def test_get_graph_templates(  # type:ignore[no-untyped-def]
-    metric_names, check_command, graph_ids
+def test_get_graph_templates(
+    metric_names: Sequence[str], check_command: str, graph_ids: Sequence[str]
 ) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
@@ -246,7 +259,7 @@ def test_replace_expression() -> None:
         ("fs_size,fs_used,-@kb#e3fff9", ("fs_size,fs_used,-", "kb", "e3fff9")),
     ],
 )
-def test_extract_rpn(text, out) -> None:  # type:ignore[no-untyped-def]
+def test_extract_rpn(text: str, out: tuple[str, str | None, str | None]) -> None:
     assert utils.split_expression(text) == out
 
 
@@ -316,8 +329,12 @@ def test_evaluate() -> None:
         ),
     ],
 )
-def test_stack_resolver(  # type:ignore[no-untyped-def]
-    elements, is_operator, apply_operator, apply_element, result
+def test_stack_resolver(
+    elements: list[Atom],
+    is_operator: Callable[[Atom], bool],
+    apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
+    apply_element: Callable[[Atom], StackElement],
+    result: StackElement,
 ) -> None:
     assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
 
@@ -362,8 +379,8 @@ def test_graph_titles() -> None:
         ),
     ],
 )
-def test_horizontal_rules_from_thresholds(  # type:ignore[no-untyped-def]
-    perf_string, result
+def test_horizontal_rules_from_thresholds(
+    perf_string: str, result: Sequence[HorizontalRule]
 ) -> None:
     assert (
         utils.horizontal_rules_from_thresholds(

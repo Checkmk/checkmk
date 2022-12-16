@@ -356,7 +356,8 @@ expected_attributes = {
 }
 
 
-def test_registered_host_attributes(load_config) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("load_config")
+def test_registered_host_attributes() -> None:
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
 
@@ -379,8 +380,8 @@ def test_registered_host_attributes(load_config) -> None:  # type:ignore[no-unty
         assert spec["from_config"] == attr.from_config()
 
 
-def test_legacy_register_rulegroup_with_defaults(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_legacy_register_rulegroup_with_defaults(
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
@@ -410,8 +411,8 @@ def test_legacy_register_rulegroup_with_defaults(  # type:ignore[no-untyped-def]
     assert attr.from_config() is False
 
 
-def test_legacy_register_rulegroup_without_defaults(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_legacy_register_rulegroup_without_defaults(
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(attrs, "host_attribute_registry", attrs.HostAttributeRegistry())
 
@@ -467,7 +468,7 @@ def test_legacy_register_rulegroup_without_defaults(  # type:ignore[no-untyped-d
         ("xyz_unknown", "custom_attributes"),
     ],
 )
-def test_custom_host_attribute_transform(old, new) -> None:  # type:ignore[no-untyped-def]
+def test_custom_host_attribute_transform(old: str, new: str) -> None:
     attributes = [
         {
             "add_custom_macro": True,
@@ -494,7 +495,7 @@ def test_custom_host_attribute_transform(old, new) -> None:  # type:ignore[no-un
         "bulk",
     ],
 )
-def test_host_attribute_topics(for_what) -> None:  # type:ignore[no-untyped-def]
+def test_host_attribute_topics(for_what: str) -> None:
     assert attrs.get_sorted_host_attribute_topics(for_what=for_what, new=False) == [
         ("basic", "Basic settings"),
         ("address", "Network address"),

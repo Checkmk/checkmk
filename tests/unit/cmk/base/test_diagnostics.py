@@ -6,8 +6,8 @@
 import csv
 import json
 import shutil
-from pathlib import Path
-from typing import NamedTuple
+from pathlib import Path, PurePath
+from typing import NamedTuple, Type
 
 import pytest
 import requests
@@ -108,8 +108,8 @@ def test_diagnostics_element_general() -> None:
     )
 
 
-def test_diagnostics_element_general_content(  # type:ignore[no-untyped-def]
-    tmp_path,
+def test_diagnostics_element_general_content(
+    tmp_path: PurePath,
 ) -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
@@ -151,8 +151,8 @@ def test_diagnostics_element_hw_info() -> None:
     assert diagnostics_element.description == ("Hardware information of the Checkmk Server")
 
 
-def test_diagnostics_element_hw_info_content(  # type:ignore[no-untyped-def]
-    tmp_path,
+def test_diagnostics_element_hw_info_content(
+    tmp_path: PurePath,
 ) -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     tmppath = Path(tmp_path).joinpath("tmp")
@@ -198,8 +198,8 @@ def _create_test_package(name: str) -> packaging.Manifest:
     return manifest
 
 
-def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped-def]
-    monkeypatch: pytest.MonkeyPatch, tmp_path
+def test_diagnostics_element_local_files_json_content(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
 
     monkeypatch.setattr(
@@ -305,8 +305,8 @@ def test_diagnostics_element_local_files_csv() -> None:
     )
 
 
-def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-def]
-    monkeypatch: pytest.MonkeyPatch, tmp_path
+def test_diagnostics_element_local_files_csv_content(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
 
     monkeypatch.setattr(
@@ -375,8 +375,8 @@ def test_diagnostics_element_environment() -> None:
     assert diagnostics_element.description == ("Variables set in the site user's environment")
 
 
-def test_diagnostics_element_environment_content(  # type:ignore[no-untyped-def]
-    monkeypatch, tmp_path
+def test_diagnostics_element_environment_content(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: PurePath
 ) -> None:
 
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
@@ -408,9 +408,8 @@ def test_diagnostics_element_filesize() -> None:
     assert diagnostics_element.description == ("List of all files in the site including their size")
 
 
-def test_diagnostics_element_filesize_content(  # type:ignore[no-untyped-def]
-    monkeypatch, tmp_path
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
 
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
@@ -456,8 +455,8 @@ def test_diagnostics_element_omd_config() -> None:
     )
 
 
-def test_diagnostics_element_omd_config_content(  # type:ignore[no-untyped-def]
-    tmp_path,
+def test_diagnostics_element_omd_config_content(
+    tmp_path: PurePath,
 ) -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement()
 
@@ -727,8 +726,11 @@ def test_diagnostics_element_checkmk_overview_content(
         ),
     ],
 )
-def test_diagnostics_element_checkmk_files(  # type:ignore[no-untyped-def]
-    diag_elem, ident, title, description
+def test_diagnostics_element_checkmk_files(
+    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
+    ident: str,
+    title: str,
+    description: str,
 ) -> None:
     files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
     diagnostics_element = diag_elem(files)
@@ -744,8 +746,10 @@ def test_diagnostics_element_checkmk_files(  # type:ignore[no-untyped-def]
         diagnostics.CheckmkLogFilesDiagnosticsElement,
     ],
 )
-def test_diagnostics_element_checkmk_files_error(  # type:ignore[no-untyped-def]
-    tmp_path, diag_elem
+def test_diagnostics_element_checkmk_files_error(
+    tmp_path: PurePath,
+    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
+    | Type[diagnostics.CheckmkLogFilesDiagnosticsElement],
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])

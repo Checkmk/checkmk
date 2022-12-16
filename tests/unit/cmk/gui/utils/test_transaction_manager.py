@@ -7,6 +7,7 @@ import time
 from typing import Generator
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.gui.http import request
 from cmk.gui.utils.transaction_manager import TransactionManager, transactions
@@ -36,13 +37,14 @@ def test_request_context_integration() -> None:
     assert callable(transactions.check_transaction)
 
 
-def test_transaction_new_id(tm) -> None:  # type:ignore[no-untyped-def]
+def test_transaction_new_id(tm: TransactionManager) -> None:
     assert tm._new_transids == []
     trans_id = tm.get()
     assert isinstance(trans_id, str)
     assert tm._new_transids == [trans_id]
 
 
+@pytest.mark.usefixtures("mocker")
 @pytest.mark.parametrize(
     "transid,ignore_transids,result,is_existing",
     [
@@ -60,8 +62,13 @@ def test_transaction_new_id(tm) -> None:  # type:ignore[no-untyped-def]
         ("%d/abc" % time.time(), False, True, True),
     ],
 )
-def test_transaction_valid(  # type:ignore[no-untyped-def]
-    transaction_ids, tm, transid, ignore_transids, result, mocker, is_existing
+def test_transaction_valid(
+    transaction_ids: list[str],
+    tm: TransactionManager,
+    transid: str | None,
+    ignore_transids: bool,
+    result: bool,
+    is_existing: bool,
 ) -> None:
     assert tm._ignore_transids is False
     if ignore_transids:
@@ -74,23 +81,26 @@ def test_transaction_valid(  # type:ignore[no-untyped-def]
         assert request.var("_transid") == transid
 
     if is_existing:
+        assert transid is not None
         transaction_ids.append(transid)
 
     assert tm.transaction_valid() == result
 
 
-def test_is_transaction(tm) -> None:  # type:ignore[no-untyped-def]
+def test_is_transaction(tm: TransactionManager) -> None:
     assert not tm.is_transaction()
     request.set_var("_transid", "123")
     assert tm.is_transaction()
 
 
-def test_check_transaction_invalid(tm, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("monkeypatch")
+def test_check_transaction_invalid(tm: TransactionManager) -> None:
     assert tm.check_transaction() is False
 
 
-def test_check_transaction_valid(  # type:ignore[no-untyped-def]
-    transaction_ids, tm, monkeypatch, mocker
+@pytest.mark.usefixtures("monkeypatch")
+def test_check_transaction_valid(
+    transaction_ids: list[str], tm: TransactionManager, mocker: MockerFixture
 ) -> None:
     valid_transid = "%d/abc" % time.time()
     request.set_var("_transid", valid_transid)
@@ -101,9 +111,8 @@ def test_check_transaction_valid(  # type:ignore[no-untyped-def]
     invalidate.assert_called_once_with(valid_transid)
 
 
-def test_check_transaction_automation(  # type:ignore[no-untyped-def]
-    tm, monkeypatch, mocker
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_check_transaction_automation(tm: TransactionManager, mocker: MockerFixture) -> None:
     tm.ignore()
     request.set_var("_transid", "-1")
 

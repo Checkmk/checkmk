@@ -28,7 +28,7 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.site_changes import SiteChanges
+from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
 
 class TestObjectRef:
@@ -74,34 +74,34 @@ class TestAuditLogStore:
     def fixture_store(self, tmp_path):
         return AuditLogStore(tmp_path / "audit.log")
 
-    def test_read_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_read_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_clear_not_existing(self, store: AuditLogStore) -> None:
         assert not store.exists()
         store.clear()
 
-    def test_append(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_append(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_append_multiple(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_append_multiple(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         store.append(entry)
         assert list(store.read()) == [entry, entry]
 
     @pytest.mark.usefixtures("request_context")
-    def test_transport_html(self, store, request_context) -> None:  # type:ignore[no-untyped-def]
+    def test_transport_html(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(
             int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
         )
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_clear(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
         store.append(entry)
         assert list(store.read()) == [entry]
@@ -112,9 +112,7 @@ class TestAuditLogStore:
         archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
         assert archive_path.exists()
 
-    def test_clear_produced_archive_file_per_clear(  # type:ignore[no-untyped-def]
-        self, store
-    ) -> None:
+    def test_clear_produced_archive_file_per_clear(self, store: AuditLogStore) -> None:
         entry = AuditLogStore.Entry(int(time.time()), None, "user", "action", "Mässädsch", None)
 
         for n in range(5):
@@ -153,15 +151,15 @@ class TestSiteChanges:
             "need_restart": True,
         }
 
-    def test_read_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_read_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
         assert list(store.read()) == []
 
-    def test_clear_not_existing(self, store) -> None:  # type:ignore[no-untyped-def]
+    def test_clear_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
         store.clear()
 
-    def test_write(self, store, entry) -> None:  # type:ignore[no-untyped-def]
+    def test_write(self, store: SiteChanges, entry: ChangeSpec) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -171,11 +169,11 @@ class TestSiteChanges:
         store.write([entry2])
         assert list(store.read()) == [entry2]
 
-    def test_append(self, store, entry) -> None:  # type:ignore[no-untyped-def]
+    def test_append(self, store: SiteChanges, entry: ChangeSpec) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-    def test_clear(self, store, entry) -> None:  # type:ignore[no-untyped-def]
+    def test_clear(self, store: SiteChanges, entry: ChangeSpec) -> None:
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -191,8 +189,8 @@ class TestSiteChanges:
             ("CMEFolder", ObjectRefType.Folder),
         ],
     )
-    def test_read_pre_20_host_change(  # type:ignore[no-untyped-def]
-        self, store, old_type, ref_type
+    def test_read_pre_20_host_change(
+        self, store: SiteChanges, old_type: str, ref_type: ObjectRefType
     ) -> None:
         with store._path.open("wb") as f:
             f.write(

@@ -8,6 +8,8 @@ from typing import Any, Literal
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
@@ -2489,8 +2491,8 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
-def test_view_page(  # type:ignore[no-untyped-def]
-    logged_in_admin_wsgi_app, mock_livestatus
+def test_view_page(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 

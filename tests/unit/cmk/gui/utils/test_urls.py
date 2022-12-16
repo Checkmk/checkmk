@@ -6,6 +6,7 @@
 import pytest
 
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlencode_vars
 
 
@@ -25,7 +26,7 @@ from cmk.gui.utils.urls import doc_reference_url, DocReference, urlencode, urlen
         ([("a", None)], "a="),
     ],
 )
-def test_urlencode_vars(inp, out) -> None:  # type:ignore[no-untyped-def]
+def test_urlencode_vars(inp: HTTPVariables, out: str) -> None:
     assert urlencode_vars(inp) == out
 
 
@@ -43,7 +44,7 @@ def test_urlencode_vars(inp, out) -> None:  # type:ignore[no-untyped-def]
         ("/", "%2F"),
     ],
 )
-def test_urlencode(inp, out) -> None:  # type:ignore[no-untyped-def]
+def test_urlencode(inp: str | None, out: str) -> None:
     assert urlencode(inp) == out
 
 

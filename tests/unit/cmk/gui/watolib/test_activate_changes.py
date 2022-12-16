@@ -183,9 +183,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     return expected
 
 
-def test_get_replication_paths_defaults(  # type:ignore[no-untyped-def]
-    edition, monkeypatch
-) -> None:
+@pytest.mark.usefixtures("monkeypatch")
+def test_get_replication_paths_defaults(edition: cmk_version.Edition) -> None:
     expected = _expected_replication_paths(edition)
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
@@ -541,7 +540,7 @@ def _get_test_file_infos():
     return remote, central
 
 
-def test_get_sync_archive(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_get_sync_archive(tmp_path: Path) -> None:
     sync_archive = _get_test_sync_archive(tmp_path)
     with tarfile.TarFile(mode="r", fileobj=io.BytesIO(sync_archive)) as f:
         assert sorted(f.getnames()) == sorted(

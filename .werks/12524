@@ -1,6 +1,6 @@
 Title: CME: Allow two custom logo uploads
 Class: feature
-Compatible: compat
+Compatible: incomp
 Component: multisite
 Date: 1667815477
 Edition: cme

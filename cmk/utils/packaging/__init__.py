@@ -47,7 +47,7 @@ from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 g_logger = logging.getLogger("cmk.utils.packaging")
 
 
-def _get_permissions(path: str) -> int:
+def _get_permissions(path: Path) -> int:
     """Determine permissions by the first matching beginning of 'path'"""
 
     # order matters! See function _get_permissions
@@ -80,7 +80,7 @@ def _get_permissions(path: str) -> int:
         (str(ec.mkp_rule_pack_dir()), 0o644),
     )
     for path_begin, perm in perm_map:
-        if path.startswith(path_begin):
+        if path.is_relative_to(path_begin):
             return perm
     raise PackageException("could not determine permissions for %r" % path)
 
@@ -484,9 +484,9 @@ def _install(  # pylint: disable=too-many-branches
 
             # Fix permissions of extracted files
             for filename in filenames:
-                path = str(part.path / filename)
+                path = part.path / filename
                 desired_perm = _get_permissions(path)
-                has_perm = os.stat(path).st_mode & 0o7777
+                has_perm = path.stat().st_mode & 0o7777
                 if has_perm != desired_perm:
                     g_logger.log(
                         VERBOSE,
@@ -495,7 +495,7 @@ def _install(  # pylint: disable=too-many-branches
                         has_perm,
                         desired_perm,
                     )
-                    os.chmod(path, desired_perm)
+                    path.chmod(desired_perm)
 
             if part.ident == "ec_rule_packs":
                 ec.add_rule_pack_proxies(filenames)
@@ -507,12 +507,11 @@ def _install(  # pylint: disable=too-many-branches
             old_files = set(old_manifest.files.get(part.ident, []))
             remove_files = old_files - new_files
             for fn in remove_files:
-                path = str(part.path / fn)
+                path = part.path / fn
                 g_logger.log(VERBOSE, "Removing outdated file %s.", path)
                 try:
-                    with suppress(FileNotFoundError):
-                        os.remove(path)
-                except Exception as e:
+                    path.unlink(missing_ok=True)
+                except OSError as e:
                     g_logger.error("Error removing %s: %s", path, e)
 
             if part.ident == "ec_rule_packs":
@@ -724,7 +723,7 @@ def package_part_info() -> PackagePartInfo:
 
         part_info[part.ident] = {
             "title": part.ui_title,
-            "permissions": [_get_permissions(os.path.join(part.path, f)) for f in files],
+            "permissions": [_get_permissions(part.path / f) for f in files],
             "path": str(part.path),
             "files": files,
         }

@@ -649,6 +649,8 @@ class ModeEditUser(WatoMode):
             user_attrs["automation_secret"] = secret
             user_attrs["password"] = hash_password(secret)
             increase_serial = True  # password changed, reflect in auth serial
+            user_attrs["last_pw_change"] = int(time.time())
+            user_attrs.pop("enforce_pw_change", None)
 
         else:
             password = html.request.get_str_input_mandatory("_password_" + self._pw_suffix(), '')
@@ -907,7 +909,8 @@ class ModeEditUser(WatoMode):
         html.text_input("_auth_secret",
                         self._user.get("automation_secret", ""),
                         size=30,
-                        id_="automation_secret")
+                        id_="automation_secret",
+                        autocomplete="off")
         html.write_text(" ")
         html.open_b(style=["position: relative", "top: 4px;"])
         html.write(" &nbsp;")

@@ -7,8 +7,6 @@ import abc
 import http.client as http_client
 from datetime import datetime
 
-from cmk.utils.site import url_prefix
-
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException
@@ -119,7 +117,10 @@ class AssertionConsumerService(Page):
             raise MKSaml2Exception("Got no response from IdP")
 
         authn_response = self._interface.parse_authentication_request_response(
-            saml_response=saml_response, relay_state=request.form["RelayState"]
+            saml_response=saml_response,
+            relay_state=request.get_url_input(
+                "RelayState"
+            ),  # make sure RelayState is an allowed URL
         )
 
         if isinstance(authn_response, NotAuthenticated):
@@ -137,11 +138,7 @@ class AssertionConsumerService(Page):
         # should be displayed after the redirect to the login page.
         create_auth_session(authn_response.user_id, session_id)
 
-        # TODO (CMK-11890): Decide whether it is necessary to validate relay state
-        if authn_response.relay_state == "check_mk":
-            raise HTTPRedirect(f"{url_prefix()}{authn_response.relay_state}")
-
-        raise HTTPRedirect(f"{url_prefix()}check_mk/{authn_response.relay_state}")
+        raise HTTPRedirect(authn_response.relay_state)
 
 
 def register(page_registry: PageRegistry) -> None:

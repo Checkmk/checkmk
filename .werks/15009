@@ -1,0 +1,22 @@
+Title: Fix "invalid syntax" error on adding metrics to custom graphs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1671201363
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+If you added metrics via "Add all metrics of this graph to" - "New custom
+graph..." an error like "Cannot load custom_graph from
+/omd/sites/MYSITE/var/check_mk/web/MYUSER/user_custom_graphs.mk: invalid syntax
+(<unknown>, line)" was shown.
+
+We have seen this especially while adding CPU utilization metrics of windows
+hosts.
+
+A workaround was to edit the file
+"/omd/sites/MYSITE/var/check_mk/web/MYUSER/user_custom_graphs.mk" and change
+entries like "'help': l'CPU time spent in user space'" to "'help': 'CPU time
+spent in user space'".

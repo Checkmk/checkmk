@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
-from .agent_based_api.v1 import contains, register, Metric, OIDEnd, Result, SNMPTree, Service, State
-from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult
+
+from .agent_based_api.v1 import contains, Metric, OIDEnd, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.elphase import check_elphase
 from .utils.humidity import check_humidity
 from .utils.temperature import check_temperature

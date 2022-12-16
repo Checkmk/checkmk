@@ -2295,6 +2295,11 @@ handle_custom_sql_errors() {
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+get_sqlplus_version_with_precision() {
+    precision="$1"
+    "${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
+}
+
 print_dummy_sections() {
     for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS; do
         echo "<<<oracle_${section}>>>"
@@ -2888,7 +2893,7 @@ execute_queries_for_sid() {
         return
     fi
 
-    set_ora_version "$("${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-2)"
+    set_ora_version "$(get_sqlplus_version_with_precision 2)"
     logging "[${sid}] [local]" \
         "ORACLE_SID      : ${ORACLE_SID}" \
         "ORACLE_HOME     : ${ORACLE_HOME}" \

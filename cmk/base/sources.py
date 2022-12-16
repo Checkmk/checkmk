@@ -9,7 +9,7 @@
 
 import logging
 import os.path
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from functools import partial
 from pathlib import Path
 from typing import Final
@@ -26,7 +26,6 @@ from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
 from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
-from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.snmp import (
@@ -73,27 +72,29 @@ def parse(
 def _make_parser(
     config_cache: ConfigCache, source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger
 ) -> Parser:
+    hostname = source.hostname
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
-            source.hostname,
+            hostname,
             SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
-            **_make_snmp_parser_config(
-                config_cache, source.hostname, keep_outdated=keep_outdated
-            )._asdict(),
+            check_intervals={
+                section_name: config_cache.snmp_fetch_interval(hostname, section_name)
+                for section_name in _make_checking_sections(
+                    hostname, selected_sections=NO_SELECTION
+                )
+            },
+            keep_outdated=keep_outdated,
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(
-        config_cache, source.hostname, keep_outdated=keep_outdated
-    )
     return AgentParser(
-        source.hostname,
+        hostname,
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
-        check_interval=agent_parser_config.check_interval,
-        keep_outdated=agent_parser_config.keep_outdated,
-        translation=agent_parser_config.translation,
-        encoding_fallback=agent_parser_config.encoding_fallback,
-        simulation=agent_parser_config.agent_simulator,  # name mismatch
+        check_interval=config_cache.check_mk_check_interval(hostname),
+        keep_outdated=keep_outdated,
+        translation=config.get_piggyback_translations(hostname),
+        encoding_fallback=config.fallback_agent_output_encoding,
+        simulation=config.agent_simulator,  # name mismatch
         logger=logger,
     )
 
@@ -136,35 +137,6 @@ def make_file_cache_path_template(
     }[fetcher_type]
 
 
-def _make_agent_parser_config(
-    config_cache: ConfigCache, hostname: HostName, *, keep_outdated: bool
-) -> AgentParserConfig:
-    # Move to `cmk.base.config` once the direction of the dependencies
-    # has been fixed (ie, as little components as possible get the full,
-    # global config instead of whatever they need to work).
-    return AgentParserConfig(
-        check_interval=config_cache.check_mk_check_interval(hostname),
-        encoding_fallback=config.fallback_agent_output_encoding,
-        keep_outdated=keep_outdated,
-        translation=config.get_piggyback_translations(hostname),
-        agent_simulator=config.agent_simulator,
-    )
-
-
-def _make_snmp_parser_config(
-    config_cache: ConfigCache, hostname: HostName, *, keep_outdated: bool
-) -> SNMPParserConfig:
-    # Move to `cmk.base.config` once the direction of the dependencies
-    # has been fixed (ie, as little components as possible get the full,
-    # global config instead of whatever they need to work).
-    return SNMPParserConfig(
-        check_intervals=make_check_intervals(
-            config_cache, hostname, selected_sections=NO_SELECTION
-        ),
-        keep_outdated=keep_outdated,
-    )
-
-
 def _make_inventory_sections() -> frozenset[SectionName]:
     return frozenset(
         s
@@ -190,18 +162,6 @@ def make_plugin_store() -> SNMPPluginStore:
             for s in agent_based_register.iter_all_snmp_sections()
         }
     )
-
-
-def make_check_intervals(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    *,
-    selected_sections: SectionNameCollection,
-) -> Mapping[SectionName, int | None]:
-    return {
-        section_name: config_cache.snmp_fetch_interval(host_name, section_name)
-        for section_name in _make_checking_sections(host_name, selected_sections=selected_sections)
-    }
 
 
 def make_sections(

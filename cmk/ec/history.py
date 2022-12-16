@@ -451,10 +451,10 @@ def _expire_logfiles(
                         "Deleting log file %s (age %s)", path, date_and_time(path.stat().st_mtime)
                     )
                     path.unlink()
-        except Exception:
+        except Exception as e:
             if settings.options.debug:
                 raise
-            logger.exception("Error expiring log files")
+            logger.warning(f"Error expiring log files: {e}")
 
 
 # Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.

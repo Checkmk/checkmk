@@ -22,7 +22,12 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     check_checkmk_agent,
     discover_checkmk_agent,
 )
-from cmk.base.plugins.agent_based.utils.checkmk import ControllerSection, Plugin, PluginSection
+from cmk.base.plugins.agent_based.utils.checkmk import (
+    Connection,
+    ControllerSection,
+    Plugin,
+    PluginSection,
+)
 
 # TODO: make this more blackboxy once API vialoations are reduced!
 
@@ -187,7 +192,9 @@ def test_check_tranport_ls_ok(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
-            ControllerSection(allow_legacy_pull=False, ip_allowlist=(), socket_ready=True),
+            ControllerSection(
+                allow_legacy_pull=False, ip_allowlist=(), socket_ready=True, connections=[]
+            ),
             fail_state,
         )
     ]
@@ -198,7 +205,9 @@ def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
     assert not [
         *_check_transport(
             False,
-            ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=False),
+            ControllerSection(
+                allow_legacy_pull=True, ip_allowlist=(), socket_ready=False, connections=[]
+            ),
             fail_state,
         )
     ]
@@ -208,7 +217,9 @@ def test_check_tranport_no_tls_controller_not_in_use(fail_state: State) -> None:
 def test_check_tranport_no_tls(fail_state: State) -> None:
     (result,) = _check_transport(
         False,
-        ControllerSection(allow_legacy_pull=True, ip_allowlist=(), socket_ready=True),
+        ControllerSection(
+            allow_legacy_pull=True, ip_allowlist=(), socket_ready=True, connections=[]
+        ),
         fail_state,
     )
     assert isinstance(result, Result)
@@ -742,3 +753,75 @@ def test_check_plugins(
         )
         == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    [
+        "controller_section",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                socket_ready=True,
+                ip_allowlist=(),
+                connections=[],
+            ),
+            [],
+            id="No data about the certificate available.",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                socket_ready=True,
+                ip_allowlist=(),
+                connections=[
+                    Connection(site_id="localhost/heute", valid_for_seconds=31504213431.635986)
+                ],
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until controller certificate for 'localhost/heute' expires: 998 years 362 days",
+                )
+            ],
+            id="Certificate valid for more than 30 days -> Result is OK.",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                socket_ready=True,
+                ip_allowlist=(),
+                connections=[Connection(site_id="localhost/heute", valid_for_seconds=2505600)],
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Time until controller certificate for 'localhost/heute' expires: 29 days 0 hours (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                )
+            ],
+            id="Certificate valid for less than 30 days -> Result is WARN.",
+        ),
+        pytest.param(
+            ControllerSection(
+                allow_legacy_pull=False,
+                socket_ready=True,
+                ip_allowlist=(),
+                connections=[Connection(site_id="localhost/heute", valid_for_seconds=31231)],
+            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Time until controller certificate for 'localhost/heute' expires: 8 hours 40 minutes (warn/crit below 30 days 0 hours/15 days 0 hours)",
+                )
+            ],
+            id="Certificate valid for less than 15 days -> Result is CRIT.",
+        ),
+    ],
+)
+def test_certificate_validity(
+    controller_section: ControllerSection,
+    expected_result: CheckResult,
+) -> None:
+    assert list(check_checkmk_agent({}, None, None, controller_section)) == expected_result

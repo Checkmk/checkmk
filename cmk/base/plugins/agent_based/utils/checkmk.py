@@ -20,8 +20,14 @@ class PluginSection(NamedTuple):
     local_checks: Sequence[Plugin]
 
 
+class Connection(NamedTuple):
+    site_id: str
+    valid_for_seconds: float
+
+
 class ControllerSection(NamedTuple):
     # Currently this is all we need. Extend on demand...
     allow_legacy_pull: bool
     socket_ready: bool
     ip_allowlist: tuple[str, ...]
+    connections: Sequence[Connection]

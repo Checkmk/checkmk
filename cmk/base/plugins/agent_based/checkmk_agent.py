@@ -387,6 +387,17 @@ def _check_duplicates(
             )
 
 
+def _check_controller_cert_validity(section: ControllerSection) -> CheckResult:
+    for connection in section.connections:
+        yield from check_levels(
+            connection.valid_for_seconds,
+            levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
+            render_func=render.timespan,
+            label=f"Time until controller certificate for '{connection.site_id}' expires",
+            notice_only=True,
+        )
+
+
 def check_checkmk_agent(
     params: Mapping[str, Any],
     section_check_mk: Optional[CheckmkSection],
@@ -401,6 +412,9 @@ def check_checkmk_agent(
 
     if section_checkmk_agent_plugins is not None:
         yield from _check_plugins(params, section_checkmk_agent_plugins)
+
+    if section_cmk_agent_ctl_status:
+        yield from _check_controller_cert_validity(section_cmk_agent_ctl_status)
 
 
 register.check_plugin(

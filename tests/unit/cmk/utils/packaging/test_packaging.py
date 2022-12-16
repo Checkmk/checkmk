@@ -359,3 +359,28 @@ def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_ve
 )
 def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_version: str) -> None:
     packaging._raise_for_too_new_cmk_version(until_version, site_version)
+
+
+def _path(raw: str) -> Path:  # mypy, remind me when the argument is a path by itself.
+    return Path(raw)
+
+
+def _setup_local_files_structure() -> None:
+    """Let's hope this gets easier during the upcomming changes."""
+    for part in packaging.PackagePart:
+        part_path = _path(part.path)
+        subdir = part_path / "subdir"
+        subdir.mkdir(parents=True)
+        (part_path / f"regular_file_of_{part.ident}.py").touch()
+        (part_path / f".hidden_file_of_{part.ident}.py").touch()
+        (part_path / f"editor_file_of_{part.ident}.py~").touch()
+        (part_path / f"compiled_file_of_{part.ident}.pyc").touch()
+        (subdir / f"subdir_file_of_{part.ident}.py").touch()
+
+
+def test_get_local_files_by_part() -> None:
+    _setup_local_files_structure()
+    assert packaging.get_local_files_by_part() == {
+        p: {f"regular_file_of_{p.ident}.py", f"subdir/subdir_file_of_{p.ident}.py"}
+        for p in packaging.PackagePart
+    }

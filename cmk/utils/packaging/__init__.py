@@ -703,7 +703,7 @@ def _get_enabled_package_paths():
 
 def get_unpackaged_files() -> dict[PackagePart, list[str]]:
     packaged = get_packaged_files()
-    present = {part: _files_in_dir(part.ident, part.path) for part in PackagePart}
+    present = get_local_files_by_part()
     return {part: sorted(present[part] - (packaged.get(part) or set())) for part in present}
 
 
@@ -729,8 +729,12 @@ def package_num_files(package: Manifest) -> int:
     return sum(len(fl) for fl in package.files.values())
 
 
+def get_local_files_by_part() -> Mapping[PackagePart, set[str]]:
+    return {part: _files_in_dir(part.ident, part.path) for part in PackagePart}
+
+
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
-    if directory is None or not os.path.exists(directory):
+    if not os.path.exists(directory):
         return set()
 
     # Handle case where one part-directory lies below another

@@ -101,6 +101,7 @@ def commandline_discovery(
                 mode=mode,
             )
             host_sections, _results = parse_messages(
+                config_cache,
                 ((f[0], f[1]) for f in fetched),
                 selected_sections=selected_sections,
                 keep_outdated=file_cache_options.keep_outdated,

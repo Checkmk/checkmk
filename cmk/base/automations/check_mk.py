@@ -1734,6 +1734,7 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
+                        config_cache,
                         source,
                         raw_data,
                         selection=NO_SELECTION,

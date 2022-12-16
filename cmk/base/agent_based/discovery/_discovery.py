@@ -56,6 +56,7 @@ def execute_check_discovery(
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
     host_sections, source_results = parse_messages(
+        config_cache,
         ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
         keep_outdated=keep_outdated,

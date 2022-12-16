@@ -258,6 +258,7 @@ def _fetch_real_host_data(
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
     host_sections, results = parse_messages(
+        config_cache,
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,

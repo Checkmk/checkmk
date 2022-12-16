@@ -102,6 +102,7 @@ def execute_checkmk_checks(
         ),
     )
     host_sections, source_results = parse_messages(
+        config_cache,
         ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
         keep_outdated=keep_outdated,

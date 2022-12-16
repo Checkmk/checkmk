@@ -29,6 +29,7 @@ from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.config import ConfigCache
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
@@ -279,6 +280,7 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
+    config_cache: ConfigCache,
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
@@ -308,6 +310,7 @@ def parse_messages(
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(
+            config_cache,
             source,
             raw_data,
             selection=selected_sections,

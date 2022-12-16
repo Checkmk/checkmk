@@ -55,6 +55,7 @@ __all__ = [
 
 
 def parse(
+    config_cache: ConfigCache,
     source: SourceInfo,
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
@@ -62,23 +63,29 @@ def parse(
     keep_outdated: bool,
     logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    parser = _make_parser(source, keep_outdated=keep_outdated, logger=logger)
+    parser = _make_parser(config_cache, source, keep_outdated=keep_outdated, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger) -> Parser:
+def _make_parser(
+    config_cache: ConfigCache, source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger
+) -> Parser:
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             source.hostname,
             SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
-            **_make_snmp_parser_config(source.hostname, keep_outdated=keep_outdated)._asdict(),
+            **_make_snmp_parser_config(
+                config_cache, source.hostname, keep_outdated=keep_outdated
+            )._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(source.hostname, keep_outdated=keep_outdated)
+    agent_parser_config = _make_agent_parser_config(
+        config_cache, source.hostname, keep_outdated=keep_outdated
+    )
     return AgentParser(
         source.hostname,
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
@@ -129,11 +136,12 @@ def make_file_cache_path_template(
     }[fetcher_type]
 
 
-def _make_agent_parser_config(hostname: HostName, *, keep_outdated: bool) -> AgentParserConfig:
+def _make_agent_parser_config(
+    config_cache: ConfigCache, hostname: HostName, *, keep_outdated: bool
+) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
-    config_cache = config.get_config_cache()
     return AgentParserConfig(
         check_interval=config_cache.check_mk_check_interval(hostname),
         encoding_fallback=config.fallback_agent_output_encoding,
@@ -143,11 +151,12 @@ def _make_agent_parser_config(hostname: HostName, *, keep_outdated: bool) -> Age
     )
 
 
-def _make_snmp_parser_config(hostname: HostName, *, keep_outdated: bool) -> SNMPParserConfig:
+def _make_snmp_parser_config(
+    config_cache: ConfigCache, hostname: HostName, *, keep_outdated: bool
+) -> SNMPParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
-    config_cache = config.get_config_cache()
     return SNMPParserConfig(
         check_intervals=make_check_intervals(
             config_cache, hostname, selected_sections=NO_SELECTION

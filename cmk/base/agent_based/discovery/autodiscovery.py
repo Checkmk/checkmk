@@ -161,6 +161,7 @@ def automation_discovery(
             mode=Mode.DISCOVERY,
         )
         host_sections, _results = parse_messages(
+            config_cache,
             ((f[0], f[1]) for f in fetched),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,

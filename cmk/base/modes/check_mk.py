@@ -443,6 +443,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
 
             raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
+                config_cache,
                 source,
                 raw_data,
                 keep_outdated=file_cache_options.keep_outdated,

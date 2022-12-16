@@ -651,6 +651,54 @@ def _raise_for_too_old_cmk_version(package: Manifest, site_version: str) -> None
         )
 
 
+def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
+    """Raise an exception if a package is considered outated for the Checmk version"""
+    until_version = manifest.version_usable_until
+
+    if until_version is None:
+        g_logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
+        return
+
+    # Normalize daily versions to branch version
+    version = _normalize_daily_version(version)
+    if version == "master":
+        g_logger.log(
+            VERBOSE,
+            "[%s]: This is a daily build of master branch, can not decide",
+            manifest.name,
+        )
+        return
+
+    until_version = _normalize_daily_version(until_version)
+    if until_version == "master":
+        g_logger.log(
+            VERBOSE, "[%s]: Until daily build of master branch, can not decide", manifest.name
+        )
+        return
+
+    try:
+        is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
+    except Exception:
+        g_logger.log(
+            VERBOSE,
+            "[%s]: Could not compare until version %r with current version %r",
+            manifest.name,
+            until_version,
+            version,
+            exc_info=True,
+        )
+        return
+
+    msg = "Package is {}: {} >= {}".format(
+        "outdated" if is_outdated else "not outdated",
+        version,
+        until_version,
+    )
+    g_logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
+    if is_outdated:
+        raise PackageException(msg)
+
+
 def _normalize_daily_version(version: str) -> str:
     """Convert daily build versions to their branch name
 
@@ -875,54 +923,6 @@ def disable_outdated() -> None:
             disable(manifest.name, manifest.version)
         else:
             g_logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
-
-
-def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
-    """Raise an exception if a package is considered outated for the Checmk version"""
-    until_version = manifest.version_usable_until
-
-    if until_version is None:
-        g_logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
-        return
-
-    # Normalize daily versions to branch version
-    version = _normalize_daily_version(version)
-    if version == "master":
-        g_logger.log(
-            VERBOSE,
-            "[%s]: This is a daily build of master branch, can not decide",
-            manifest.name,
-        )
-        return
-
-    until_version = _normalize_daily_version(until_version)
-    if until_version == "master":
-        g_logger.log(
-            VERBOSE, "[%s]: Until daily build of master branch, can not decide", manifest.name
-        )
-        return
-
-    try:
-        is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
-    except Exception:
-        g_logger.log(
-            VERBOSE,
-            "[%s]: Could not compare until version %r with current version %r",
-            manifest.name,
-            until_version,
-            version,
-            exc_info=True,
-        )
-        return
-
-    msg = "Package is {}: {} >= {}".format(
-        "outdated" if is_outdated else "not outdated",
-        version,
-        until_version,
-    )
-    g_logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
-    if is_outdated:
-        raise PackageException(msg)
 
 
 def _execute_post_package_change_actions(package: Manifest | None) -> None:

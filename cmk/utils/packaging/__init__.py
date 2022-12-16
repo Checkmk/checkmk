@@ -653,34 +653,18 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
     until_version = manifest.version_usable_until
 
     if until_version is None:
-        g_logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
         return
 
     if is_daily_build_of_master(version):
-        g_logger.log(
-            VERBOSE,
-            "[%s]: This is a daily build of master branch, can not decide",
-            manifest.name,
-        )
         return
 
     if is_daily_build_of_master(until_version):
-        g_logger.log(
-            VERBOSE, "[%s]: Until daily build of master branch, can not decide", manifest.name
-        )
         return
 
     try:
         is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
     except Exception:
-        g_logger.log(
-            VERBOSE,
-            "[%s]: Could not compare until version %r with current version %r",
-            manifest.name,
-            until_version,
-            version,
-            exc_info=True,
-        )
+        # Be compatible: When a version can not be parsed, then skip this check
         return
 
     msg = "Package is {}: {} >= {}".format(
@@ -688,7 +672,6 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
         version,
         until_version,
     )
-    g_logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
     if is_outdated:
         raise PackageException(msg)
 

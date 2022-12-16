@@ -494,7 +494,8 @@ def build_package(package_type, build_dir, env) {
     dir(build_dir) {
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632
-        sh("${env} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
+        def env_str = env.join(" ")
+        sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
     }
 }
 

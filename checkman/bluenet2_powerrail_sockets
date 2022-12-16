@@ -1,0 +1,19 @@
+title: Bachmann Bluenet2 Powerrail: Output Sockets
+agents: snmp
+catalog: hw/environment/bachmann
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage, current, active and apparent power
+ and frequency of Bachmann Bluenet2 Powerrail PDU sockets which supports
+ the BACHMANN-BLUENET2-MIB.
+
+ The device sends the state itsself.
+ There are no default levels set.
+
+inventory:
+ One service per socket is created.
+
+item:
+ The socket name and identifier.
+

@@ -773,9 +773,9 @@ class PostgresLinux(PostgresBase):
                 "(.*)bin/postgres(.*)",
                 "(.*)bin/postmaster(.*)",
                 "(.*)bin/edb-postgres(.*)",
-                "^[0-9]+ postgres (.*)",
-                "^[0-9]+ postmaster (.*)",
-                "^[0-9]+ edb-postgres (.*)",
+                "^[0-9]+ postgres(.*)",
+                "^[0-9]+ postmaster(.*)",
+                "^[0-9]+ edb-postgres(.*)",
             ]
         ]
 

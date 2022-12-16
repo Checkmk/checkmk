@@ -97,7 +97,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
-from cmk.core_helpers import IPMIFetcher, TCPFetcher
+from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, TCPFetcher
 from cmk.core_helpers.tcp import EncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2589,6 +2589,15 @@ class ConfigCache:
             address=ip_address,
             username=ipmi_credentials.get("username"),
             password=ipmi_credentials.get("password"),
+        )
+
+    def make_piggyback_fetcher(
+        self, host_name: HostName, ip_address: HostAddress | None
+    ) -> PiggybackFetcher:
+        return PiggybackFetcher(
+            hostname=host_name,
+            address=ip_address,
+            time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
         )
 
     def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress | None) -> TCPFetcher:

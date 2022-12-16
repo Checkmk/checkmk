@@ -28,7 +28,6 @@ from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, Ag
 from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.snmp import (
     SectionMeta,
@@ -327,13 +326,7 @@ class _Builder:
             )
             self._add(
                 source,
-                PiggybackFetcher(
-                    hostname=source.hostname,
-                    address=source.ipaddress,
-                    time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
-                        piggybacked_hostname=self.host_name
-                    ),
-                ),
+                self.config_cache.make_piggyback_fetcher(source.hostname, source.ipaddress),
                 AgentFileCache(
                     source.hostname,
                     path_template=make_file_cache_path_template(

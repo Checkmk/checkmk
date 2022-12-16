@@ -339,7 +339,6 @@ def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
         (_get_test_manifest({"version_usable_until": "2.0.0i1"}), "2.0.0i2"),
         (_get_test_manifest({"version_usable_until": "2.0.0"}), "2.0.0"),
         (_get_test_manifest({"version_usable_until": "1.6.0"}), "1.6.0-2010.02.01"),
-        (_get_test_manifest({"version_usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
     ],
 )
 def test_raise_for_too_new_cmk_version_raises(
@@ -357,6 +356,7 @@ def test_raise_for_too_new_cmk_version_raises(
         (_get_test_manifest({"version_usable_until": "2.0.0"}), "2010.02.01"),
         (_get_test_manifest({"version_usable_until": ""}), "1.6.0"),
         (_get_test_manifest({"version_usable_until": "1.6.0"}), ""),
+        (_get_test_manifest({"version_usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
     ],
 )
 def test_raise_for_too_new_cmk_version_ok(manifest: packaging.Manifest, site_version: str) -> None:

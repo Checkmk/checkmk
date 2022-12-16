@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import tarfile
 import time
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from io import BytesIO
 from itertools import groupby
@@ -19,7 +19,6 @@ from typing import Final, TypedDict
 from typing_extensions import assert_never
 
 import cmk.utils.debug
-import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -27,7 +26,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.werks
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
-from cmk.utils.version import parse_check_mk_version
+from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -627,17 +626,16 @@ def _raise_for_too_old_cmk_version(package: Manifest, site_version: str) -> None
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
 
-    min_version = _normalize_daily_version(package.version_min_required)
-    if min_version == "master":
-        return  # can not check exact version
-
-    version = _normalize_daily_version(site_version)
-    if version == "master":
+    if is_daily_build_of_master(package.version_min_required) or is_daily_build_of_master(
+        site_version
+    ):
         return  # can not check exact version
 
     compatible = True
     try:
-        compatible = parse_check_mk_version(min_version) <= parse_check_mk_version(version)
+        compatible = parse_check_mk_version(package.version_min_required) <= parse_check_mk_version(
+            site_version
+        )
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         if cmk.utils.debug.enabled():
@@ -646,8 +644,7 @@ def _raise_for_too_old_cmk_version(package: Manifest, site_version: str) -> None
 
     if not compatible:
         raise PackageException(
-            "The package requires Check_MK version %s, "
-            "but you have %s installed." % (min_version, version)
+            f"Package requires Checkmk version {package.version_min_required} (this is {site_version})"
         )
 
 
@@ -659,9 +656,7 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
         g_logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
         return
 
-    # Normalize daily versions to branch version
-    version = _normalize_daily_version(version)
-    if version == "master":
+    if is_daily_build_of_master(version):
         g_logger.log(
             VERBOSE,
             "[%s]: This is a daily build of master branch, can not decide",
@@ -669,8 +664,7 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
         )
         return
 
-    until_version = _normalize_daily_version(until_version)
-    if until_version == "master":
+    if is_daily_build_of_master(until_version):
         g_logger.log(
             VERBOSE, "[%s]: Until daily build of master branch, can not decide", manifest.name
         )
@@ -697,30 +691,6 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
     g_logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
     if is_outdated:
         raise PackageException(msg)
-
-
-def _normalize_daily_version(version: str) -> str:
-    """Convert daily build versions to their branch name
-
-    >>> n = _normalize_daily_version
-    >>> n("2019.10.10")
-    'master'
-
-    >>> n("2019.10.10")
-    'master'
-
-    >>> n("1.2.4p1")
-    '1.2.4p1'
-
-    >>> n("1.5.0-2010.02.01")
-    '1.5.0'
-
-    >>> n("2.5.0-2010.02.01")
-    '2.5.0'
-    """
-    if cmk.utils.misc.is_daily_build_version(version):
-        return cmk.utils.misc.branch_of_daily_build(version)
-    return version
 
 
 def get_optional_manifests(

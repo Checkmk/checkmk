@@ -398,8 +398,7 @@ register.check_plugin(
         yield from check_elphase(item, params, section["sockets"])
     ),
     check_ruleset_name="ups_outphase",
-    check_default_parameters={
-    },
+    check_default_parameters={},
 )
 
 # .
@@ -418,15 +417,12 @@ register.check_plugin(
     name="bluenet2_powerrail_fuses",
     sections=["bluenet2_powerrail"],
     service_name="Fuse %s",
-    discovery_function=lambda section: (
-        yield from discover_bluenet2_powerrail()(section["fuses"])
-    ),
+    discovery_function=lambda section: (yield from discover_bluenet2_powerrail()(section["fuses"])),
     check_function=lambda item, params, section: (
         yield from check_elphase(item, params, section["fuses"])
     ),
     check_ruleset_name="ups_outphase",
-    check_default_parameters={
-    },
+    check_default_parameters={},
 )
 
 # .
@@ -525,9 +521,7 @@ register.check_plugin(
     name="bluenet2_powerrail_inlet",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
-    discovery_function=lambda section: (
-        yield from discover_bluenet2_powerrail()(section["inlet"])
-    ),
+    discovery_function=lambda section: (yield from discover_bluenet2_powerrail()(section["inlet"])),
     check_function=lambda item, params, section: (
         yield from check_elphase(item, params, section["inlet"])
     ),

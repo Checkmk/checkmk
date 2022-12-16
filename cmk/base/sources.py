@@ -21,34 +21,27 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, SourceType
 
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
 from cmk.core_helpers.agent import AgentFileCache, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.snmp import (
-    SectionMeta,
-    SNMPFetcher,
-    SNMPFileCache,
-    SNMPParser,
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-)
+from cmk.core_helpers.snmp import SectionMeta, SNMPFetcher, SNMPFileCache, SNMPParser
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 
 __all__ = [
     "do_fetch",
     "fetch_all",
     "make_sources",
-    "make_plugin_store",
     "parse",
     "make_parser",
 ]
@@ -128,33 +121,6 @@ def make_file_cache_path_template(
         FetcherType.PUSH_AGENT: os.path.join(base_dir, ident, "{hostname}", "agent_output"),
         FetcherType.TCP: os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}"),
     }[fetcher_type]
-
-
-def _make_inventory_sections() -> frozenset[SectionName]:
-    return frozenset(
-        s
-        for s in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(),
-            inventory_plugin_names=(
-                p.name for p in agent_based_register.iter_all_inventory_plugins()
-            ),
-        )
-        if agent_based_register.is_registered_snmp_section_plugin(s)
-    )
-
-
-def make_plugin_store() -> SNMPPluginStore:
-    inventory_sections = _make_inventory_sections()
-    return SNMPPluginStore(
-        {
-            s.name: SNMPPluginStoreItem(
-                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
-                SNMPDetectSpec(s.detect_spec),
-                s.name in inventory_sections,
-            )
-            for s in agent_based_register.iter_all_snmp_sections()
-        }
-    )
 
 
 def make_sections(

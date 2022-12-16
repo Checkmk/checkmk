@@ -638,8 +638,6 @@ def _raise_for_too_old_cmk_version(package: Manifest, site_version: str) -> None
         )
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
-        if cmk.utils.debug.enabled():
-            raise
         return
 
     if not compatible:

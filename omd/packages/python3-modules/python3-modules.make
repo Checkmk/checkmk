@@ -50,6 +50,8 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
+	    export PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" ; \
+	    export PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \

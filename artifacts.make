@@ -42,3 +42,14 @@ SOURCE_BUILT_AGENTS := \
 	$(SOURCE_BUILT_AGENT_UPDATER) \
 	$(SOURCE_BUILT_OHM) \
 	$(SOURCE_BUILT_WINDOWS)
+
+ifeq ($(ENTERPRISE),yes)
+PROTO_PYTHON_OUT := $(REPO_PATH)/enterprise/cmc_proto
+CMC_PROTO_MODULES := \
+    $(PROTO_PYTHON_OUT)/config/v1/types_pb2.py \
+    $(PROTO_PYTHON_OUT)/cycletime/v1/types_pb2.py \
+    $(PROTO_PYTHON_OUT)/state/v1/types_pb2.py
+else
+PROTO_PYTHON_OUT :=
+CMC_PROTO_MODULES :=
+endif

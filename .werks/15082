@@ -1,0 +1,17 @@
+Title: mk_postgres.py: adjustment of LINUX process match patterns
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1671173216
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Prior to this werk, the postgres instances check occasionally did not
+discover any services due to too restrictive match patterns. This werk
+resolves this issue.
+
+The user is required to reinstall the plugin in order to benefit from this
+change.
+

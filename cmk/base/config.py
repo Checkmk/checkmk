@@ -10,6 +10,7 @@ import contextlib
 import copy
 import ipaddress
 import itertools
+import logging
 import marshal
 import os
 import pickle
@@ -98,6 +99,8 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 
 import cmk.core_helpers.cache as cache_file
 from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, TCPFetcher
+from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
+from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.tcp import EncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2608,6 +2611,25 @@ class ConfigCache:
             timeout=self._tcp_connect_timeout(host_name),
             encryption_handling=self._encryption_handling(host_name),
             pre_shared_secret=self._symmetric_agent_encryption(host_name),
+        )
+
+    def make_agent_parser(
+        self,
+        host_name: HostName,
+        section_store: SectionStore[AgentRawDataSection],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> AgentParser:
+        return AgentParser(
+            host_name,
+            section_store,
+            keep_outdated=keep_outdated,
+            check_interval=self.check_mk_check_interval(host_name),
+            translation=get_piggyback_translations(host_name),
+            encoding_fallback=fallback_agent_output_encoding,
+            simulation=agent_simulator,  # name mismatch
+            logger=logger,
         )
 
     def _discovered_labels_of_service(

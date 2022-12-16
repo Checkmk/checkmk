@@ -24,7 +24,7 @@ from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, Sour
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
-from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
+from cmk.core_helpers.agent import AgentFileCache, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.program import ProgramFetcher
@@ -87,14 +87,10 @@ def _make_parser(
             logger=logger,
         )
 
-    return AgentParser(
+    return config_cache.make_agent_parser(
         hostname,
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
-        check_interval=config_cache.check_mk_check_interval(hostname),
         keep_outdated=keep_outdated,
-        translation=config.get_piggyback_translations(hostname),
-        encoding_fallback=config.fallback_agent_output_encoding,
-        simulation=config.agent_simulator,  # name mismatch
         logger=logger,
     )
 

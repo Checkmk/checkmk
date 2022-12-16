@@ -28,6 +28,16 @@ oneTimeSetUp () {
 
     set_os_env
 
+    # Fake the sqlplus binary
+    ORACLE_HOME=${SHUNIT_TMPDIR}/ora_home
+    FAKE_SQLPLUS=${ORACLE_HOME}/bin/sqlplus
+    mkdir -p "${ORACLE_HOME}"/bin
+    cat <<EOF >"${FAKE_SQLPLUS}"
+echo "SQL*Plus: Release 19.2.3.4.5 - Production
+Version 19.3.0.0.0"
+EOF
+    chmod +x "${FAKE_SQLPLUS}"
+
     # Overwrite functions from mk_oracle which cannot/won't be unit tested for now
     mk_ora_sqlplus () { true; }
     run_cached () { true; }
@@ -83,6 +93,14 @@ tearDown () {
 # .
 
 #   ---helpers-------------------------------------------------------------
+
+test_get_sqlplus_version_with_precision() {
+    sqlplus_version="$(get_sqlplus_version_with_precision 5)"
+    assertEquals "19.2.3.4.5" "${sqlplus_version}"
+
+    sqlplus_version="$(get_sqlplus_version_with_precision 2)"
+    assertEquals "19.2" "${sqlplus_version}"
+}
 
 test_mk_oracle_set_ora_version() {
     # Get version via sqlplus

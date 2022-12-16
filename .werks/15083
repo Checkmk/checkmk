@@ -1,0 +1,15 @@
+Title: agent_prism: remove newline during authorization header generation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1671176412
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+Prior to this werk, the Prism special agent added a newline to the auth
+header value depending on the length of the password. This werk removes
+this addition.
+

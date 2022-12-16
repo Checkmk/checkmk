@@ -91,6 +91,13 @@ class MatchPriority(NamedTuple):
     has_canceling_match: bool
 
 
+class PackedEventStatus(TypedDict):
+    next_event_id: int
+    events: list[Event]
+    rule_stats: dict[str, int]
+    interval_starts: dict[str, int]
+
+
 # TODO: Make this total.
 class SlaveStatus(TypedDict, total=False):
     last_master_down: float | None
@@ -2813,7 +2820,7 @@ class StatusServer(ECServerThread):
         save_slave_status(self.settings, self._slave_status)
         self._logger.info("Switched replication mode to '%s' by external command.", new_mode)
 
-    def handle_replicate(self, argument: str, client_ip: str) -> dict[str, Any]:
+    def handle_replicate(self, argument: str, client_ip: str) -> Response:
         # Last time our slave got a config update
         try:
             last_update = int(argument)
@@ -3046,7 +3053,7 @@ class EventStatus:
             time.time() - next_start,
         )
 
-    def pack_status(self) -> dict[str, Any]:
+    def pack_status(self) -> PackedEventStatus:
         return {
             "next_event_id": self._next_event_id,
             "events": self._events,
@@ -3054,7 +3061,7 @@ class EventStatus:
             "interval_starts": self._interval_starts,
         }
 
-    def unpack_status(self, status: Mapping[str, Any]) -> None:
+    def unpack_status(self, status: PackedEventStatus) -> None:
         self._next_event_id = status["next_event_id"]
         self._events = status["events"]
         self._rule_stats = status["rule_stats"]

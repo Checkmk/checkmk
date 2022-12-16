@@ -41,7 +41,7 @@ from ._installed import (
     remove_installed_manifest,
 )
 from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
-from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName, PartPath
+from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 g_logger = logging.getLogger("cmk.utils.packaging")
@@ -174,7 +174,16 @@ def create_mkp_object(manifest: Manifest) -> bytes:
             for f in filenames:
                 g_logger.log(VERBOSE, "    %s", f)
             subdata = subprocess.check_output(
-                ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames
+                [
+                    "tar",
+                    "cf",
+                    "-",
+                    "--dereference",
+                    "--force-local",
+                    "-C",
+                    str(part.path),
+                    *filenames,
+                ]
             )
             add_file(part.ident + ".tar", subdata)
 
@@ -193,7 +202,7 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         for fn in filenames:
             g_logger.log(VERBOSE, "    %s", fn)
             try:
-                file_path = Path(part.path) / fn
+                file_path = part.path / fn
                 file_path.unlink(missing_ok=True)
             except Exception as e:
                 if cmk.utils.debug.enabled():
@@ -448,9 +457,9 @@ def _install(  # pylint: disable=too-many-branches
                 g_logger.log(VERBOSE, "    %s", fn)
 
             # make sure target directory exists
-            if not os.path.exists(part.path):
+            if not part.path.exists():
                 g_logger.log(VERBOSE, "    Creating directory %s", part.path)
-                os.makedirs(part.path)
+                part.path.mkdir(parents=True, exist_ok=True)
 
             tarsource = tar.extractfile(part.ident + ".tar")
             if tarsource is None:
@@ -459,7 +468,7 @@ def _install(  # pylint: disable=too-many-branches
             # Important: Do not preserve the tared timestamp. Checkmk needs to know when the files
             # been installed for cache invalidation.
             with subprocess.Popen(
-                ["tar", "xf", "-", "--touch", "-C", part.path] + filenames,
+                ["tar", "xf", "-", "--touch", "-C", str(part.path), *filenames],
                 stdin=subprocess.PIPE,
                 shell=False,
                 close_fds=True,
@@ -475,7 +484,7 @@ def _install(  # pylint: disable=too-many-branches
 
             # Fix permissions of extracted files
             for filename in filenames:
-                path = os.path.join(part.path, filename)
+                path = str(part.path / filename)
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 0o7777
                 if has_perm != desired_perm:
@@ -498,7 +507,7 @@ def _install(  # pylint: disable=too-many-branches
             old_files = set(old_manifest.files.get(part.ident, []))
             remove_files = old_files - new_files
             for fn in remove_files:
-                path = os.path.join(part.path, fn)
+                path = str(part.path / fn)
                 g_logger.log(VERBOSE, "Removing outdated file %s.", path)
                 try:
                     with suppress(FileNotFoundError):
@@ -558,7 +567,7 @@ def _conflicting_files(
         for fn in package.files.get(part.ident, []):
             if fn in old_files:
                 continue
-            path = os.path.join(part.path, fn)
+            path = str(part.path / fn)
             if fn in packaged:
                 yield path, "part of another package"
             elif os.path.exists(path):
@@ -594,7 +603,7 @@ def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
 
     for part in PACKAGE_PARTS:
         _validate_package_files_part(
-            packages, pacname, part.ident, part.path, files.get(part.ident, [])
+            packages, pacname, part.ident, str(part.path), files.get(part.ident, [])
         )
 
 
@@ -602,7 +611,7 @@ def _validate_package_files_part(
     packages: Packages,
     pacname: PackageName,
     part: PartName,
-    directory: PartPath,
+    directory: str,
     rel_paths: PartFiles,
 ) -> None:
     for rel_path in rel_paths:
@@ -709,14 +718,14 @@ def package_part_info() -> PackagePartInfo:
     part_info: PackagePartInfo = {}
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         try:
-            files = os.listdir(part.path)
+            files = os.listdir(str(part.path))
         except OSError:
             files = []
 
         part_info[part.ident] = {
             "title": part.ui_title,
             "permissions": [_get_permissions(os.path.join(part.path, f)) for f in files],
-            "path": part.path,
+            "path": str(part.path),
             "files": files,
         }
 
@@ -728,7 +737,7 @@ def package_num_files(package: Manifest) -> int:
 
 
 def get_local_files_by_part() -> Mapping[PackagePart, set[str]]:
-    return {part: _files_in_dir(part.ident, part.path) for part in PackagePart}
+    return {part: _files_in_dir(part.ident, str(part.path)) for part in PackagePart}
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
@@ -736,7 +745,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
         return set()
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = {p.path for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
+    taboo_dirs = {str(p.path) for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
     # os.path.realpath would resolve /omd to /opt/omd ...
     taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
     if directory in taboo_dirs:
@@ -762,24 +771,21 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-
-    def mkp_of(rule_pack_file: str) -> PackageName | None:
-        """Find the MKP for the given file"""
-        return next(
-            (
-                manifest.name
-                for manifest in get_installed_manifests()
-                if rule_pack_file in manifest.files.get("ec_rule_packs", [])
-            ),
-            None,
-        )
-
-    _ = PackagePart.EC_RULE_PACKS.path.lower()  # make mypy complain when this is a Path instance
-
-    if not (rule_pack_path := Path(PackagePart.EC_RULE_PACKS.path)).exists():
+    try:
+        rel_files = [
+            f.relative_to(PackagePart.EC_RULE_PACKS.path)
+            for f in PackagePart.EC_RULE_PACKS.path.iterdir()
+        ]
+    except FileNotFoundError:
         return {}
 
-    return {f.stem: mkp_of(str(f)) for f in rule_pack_path.iterdir()}
+    package_map = {
+        file: manifest.name
+        for manifest in get_installed_manifests()
+        for file in manifest.files.get("ec_rule_packs", ())
+    }
+
+    return {f.stem: package_map.get(str(f)) for f in rel_files}
 
 
 def update_active_packages(log: logging.Logger) -> None:

@@ -182,7 +182,7 @@ def show_package(name: str, show_info: bool = False) -> None:
         else:
             for part in PACKAGE_PARTS:
                 for fn in package.files.get(part.ident, []):
-                    sys.stdout.write(part.path + "/" + fn + "\n")
+                    sys.stdout.write(f"{part.path / fn}\n")
 
 
 def package_create(args: list[str]) -> None:
@@ -256,7 +256,10 @@ def package_pack(args: list[str]) -> None:
 
     # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.utils.paths.var_dir] + [p.path for p in PACKAGE_PARTS + CONFIG_PARTS]:
+    for directory in [
+        cmk.utils.paths.var_dir,
+        *(str(p.path) for p in PACKAGE_PARTS + CONFIG_PARTS),
+    ]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException(
                 "You are in %s!\n"

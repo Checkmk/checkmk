@@ -45,7 +45,7 @@ from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, 
 from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartFiles, PartName, PartPath
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
-logger = logging.getLogger("cmk.utils.packaging")
+g_logger = logging.getLogger("cmk.utils.packaging")
 
 
 def _get_permissions(path: str) -> int:
@@ -126,14 +126,14 @@ def release(pacname: PackageName) -> None:
     if (manifest := get_installed_manifest(pacname)) is None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
-    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
+    g_logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := manifest.files.get(part.ident, [])):
             continue
 
-        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+        g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in filenames:
-            logger.log(VERBOSE, "    %s", f)
+            g_logger.log(VERBOSE, "    %s", f)
         if part.ident == "ec_rule_packs":
             ec.release_packaged_rule_packs(filenames)
 
@@ -174,9 +174,9 @@ def create_mkp_object(manifest: Manifest) -> bytes:
             if not (filenames := manifest.files.get(part.ident, [])):
                 continue
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for f in filenames:
-                logger.log(VERBOSE, "    %s", f)
+                g_logger.log(VERBOSE, "    %s", f)
             subdata = subprocess.check_output(
                 ["tar", "cf", "-", "--dereference", "--force-local", "-C", part.path] + filenames
             )
@@ -190,12 +190,12 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         if not (filenames := manifest.files.get(part.ident, [])):
             continue
 
-        logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
+        g_logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
         if part.ident == "ec_rule_packs":
             _remove_packaged_rule_packs(filenames)
             continue
         for fn in filenames:
-            logger.log(VERBOSE, "    %s", fn)
+            g_logger.log(VERBOSE, "    %s", fn)
             try:
                 file_path = Path(part.path) / fn
                 file_path.unlink(missing_ok=True)
@@ -429,7 +429,7 @@ def _install(  # pylint: disable=too-many-branches
     manifest = extract_manifest(mkp)
 
     if old_manifest := get_installed_manifest(manifest.name):
-        logger.log(
+        g_logger.log(
             VERBOSE,
             "Updating %s from version %s to %s.",
             manifest.name,
@@ -437,7 +437,7 @@ def _install(  # pylint: disable=too-many-branches
             manifest.version,
         )
     else:
-        logger.log(VERBOSE, "Installing %s version %s.", manifest.name, manifest.version)
+        g_logger.log(VERBOSE, "Installing %s version %s.", manifest.name, manifest.version)
 
     _raise_for_installability(manifest, old_manifest, cmk_version.__version__, allow_outdated)
 
@@ -447,13 +447,13 @@ def _install(  # pylint: disable=too-many-branches
             if not (filenames := manifest.files.get(part.ident, [])):
                 continue
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+            g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
             for fn in filenames:
-                logger.log(VERBOSE, "    %s", fn)
+                g_logger.log(VERBOSE, "    %s", fn)
 
             # make sure target directory exists
             if not os.path.exists(part.path):
-                logger.log(VERBOSE, "    Creating directory %s", part.path)
+                g_logger.log(VERBOSE, "    Creating directory %s", part.path)
                 os.makedirs(part.path)
 
             tarsource = tar.extractfile(part.ident + ".tar")
@@ -483,7 +483,7 @@ def _install(  # pylint: disable=too-many-branches
                 desired_perm = _get_permissions(path)
                 has_perm = os.stat(path).st_mode & 0o7777
                 if has_perm != desired_perm:
-                    logger.log(
+                    g_logger.log(
                         VERBOSE,
                         "    Fixing permissions of %s: %04o -> %04o",
                         path,
@@ -503,12 +503,12 @@ def _install(  # pylint: disable=too-many-branches
             remove_files = old_files - new_files
             for fn in remove_files:
                 path = os.path.join(part.path, fn)
-                logger.log(VERBOSE, "Removing outdated file %s.", path)
+                g_logger.log(VERBOSE, "Removing outdated file %s.", path)
                 try:
                     with suppress(FileNotFoundError):
                         os.remove(path)
                 except Exception as e:
-                    logger.error("Error removing %s: %s", path, e)
+                    g_logger.error("Error removing %s: %s", path, e)
 
             if part.ident == "ec_rule_packs":
                 _remove_packaged_rule_packs(list(remove_files), delete_export=False)
@@ -699,7 +699,7 @@ def _get_manifests(
     return {
         manifest.id: manifest
         for pkg_path in paths
-        if (manifest := extract_manifest_optionally(pkg_path, logger if log is None else log))
+        if (manifest := extract_manifest_optionally(pkg_path, g_logger if log is None else log))
         is not None
     }
 
@@ -859,13 +859,13 @@ def disable_outdated() -> None:
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
-    for manifest in get_installed_manifests(logger):
-        logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
+    for manifest in get_installed_manifests(g_logger):
+        g_logger.log(VERBOSE, "[%s %s]: Is it outdated?", manifest.name, manifest.version)
 
         try:
             _raise_for_too_new_cmk_version(manifest, cmk_version.__version__)
         except PackageException as exc:
-            logger.log(
+            g_logger.log(
                 VERBOSE,
                 "[%s %s]: Disable outdated package: %s",
                 manifest.name,
@@ -874,7 +874,7 @@ def disable_outdated() -> None:
             )
             disable(manifest.name, manifest.version)
         else:
-            logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
+            g_logger.log(VERBOSE, "[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
 def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
@@ -882,13 +882,13 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
     until_version = manifest.version_usable_until
 
     if until_version is None:
-        logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
+        g_logger.log(VERBOSE, '[%s]: "Until version" is not set', manifest.name)
         return
 
     # Normalize daily versions to branch version
     version = _normalize_daily_version(version)
     if version == "master":
-        logger.log(
+        g_logger.log(
             VERBOSE,
             "[%s]: This is a daily build of master branch, can not decide",
             manifest.name,
@@ -897,7 +897,7 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
 
     until_version = _normalize_daily_version(until_version)
     if until_version == "master":
-        logger.log(
+        g_logger.log(
             VERBOSE, "[%s]: Until daily build of master branch, can not decide", manifest.name
         )
         return
@@ -905,7 +905,7 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
     try:
         is_outdated = parse_check_mk_version(version) >= parse_check_mk_version(until_version)
     except Exception:
-        logger.log(
+        g_logger.log(
             VERBOSE,
             "[%s]: Could not compare until version %r with current version %r",
             manifest.name,
@@ -920,7 +920,7 @@ def _raise_for_too_new_cmk_version(manifest: Manifest, version: str) -> None:
         version,
         until_version,
     )
-    logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
+    g_logger.log(VERBOSE, "[%s]: %s", manifest.name, msg)
     if is_outdated:
         raise PackageException(msg)
 
@@ -951,4 +951,4 @@ def _reload_apache() -> None:
             check=True,
         )
     except subprocess.CalledProcessError:
-        logger.error("Error reloading apache", exc_info=True)
+        g_logger.error("Error reloading apache", exc_info=True)

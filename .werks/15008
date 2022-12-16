@@ -1,0 +1,13 @@
+Title: Fix macro usage in host check command "Use the status of the service..."
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1671176668
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+If you used the CMC as core, the host check command "Use the status of the
+service..." did not translate the "$HOSTNAME$" macro as stated in the inline
+help.

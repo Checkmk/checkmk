@@ -635,15 +635,23 @@ set_ora_env() {
 
 set_ora_version() {
     if [ "$MK_ORA_TESTVERSION" ]; then
-        ORACLE_VERSION="$MK_ORA_TESTVERSION"
-        logging -o -e "[${sid}] [set_ora_version]" "Custom ORACLE_VERSION: ${ORACLE_VERSION}"
+        # TODO: How is MK_ORA_TESTVERSION used? How many digits does it have?
+        ORACLE_VERSION_FOUR_PARTS="$MK_ORA_TESTVERSION"
+        logging -o -e "[${sid}] [set_ora_version]" "Custom ORACLE_VERSION: ${ORACLE_VERSION_SHORT}"
+    elif [ "$1" ]; then
+        # Used for REMOTE_INSTANCES
+        ORACLE_VERSION_FOUR_PARTS="$1"
     else
-        ORACLE_VERSION="$1"
+        # Get the sql version by call sqlplus
+        ORACLE_VERSION_FOUR_PARTS="$(get_sqlplus_version_with_precision 4)"
     fi
 
-    NUMERIC_ORACLE_VERSION=${ORACLE_VERSION//./}
-    export NUMERIC_ORACLE_VERSION
+    ORACLE_VERSION_SHORT=$(echo "${ORACLE_VERSION_FOUR_PARTS}" | cut -d"." -f-2)
 
+    NUMERIC_ORACLE_VERSION=${ORACLE_VERSION_SHORT//./}
+    NUMERIC_ORACLE_VERSION_FOUR_PARTS=${ORACLE_VERSION_FOUR_PARTS//./}
+    export NUMERIC_ORACLE_VERSION
+    export NUMERIC_ORACLE_VERSION_FOUR_PARTS
 }
 
 # .
@@ -1721,7 +1729,10 @@ sql_instance() {
                      || '|' || i.instance_name
                 from v\$instance i;"
 
-    elif [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
+    # The next query is special: recovery_status is only available from 12.1.0.2 on, that's why we need
+    # a higher precision oracle version
+    # https://docs.oracle.com/database/121/REFRN/GUID-A399F608-36C8-4DF0-9A13-CEE25637653E.htm#REFRN30652
+    elif [ "$NUMERIC_ORACLE_VERSION_FOUR_PARTS" -ge 12102 ]; then
         echo "select upper(instance_name)
                          || '|' || version
                          || '|' || status
@@ -2893,13 +2904,14 @@ execute_queries_for_sid() {
         return
     fi
 
-    set_ora_version "$(get_sqlplus_version_with_precision 2)"
+    set_ora_version
     logging "[${sid}] [local]" \
         "ORACLE_SID      : ${ORACLE_SID}" \
         "ORACLE_HOME     : ${ORACLE_HOME}" \
         "TNS_ADMIN       : ${TNS_ADMIN}" \
         "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}" \
-        "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
+        "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})" \
+        "ORACLE_VERSION_FOUR_PARTS  : ${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
     # MK_SID is feauture replacement for sid
     export MK_SID=$sid

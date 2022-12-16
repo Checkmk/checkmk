@@ -70,6 +70,7 @@ from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.sources import make_parser
 from cmk.base.sources import parse as parse_raw_data
 from cmk.base.submitters import get_submitter, Submitter
 
@@ -443,12 +444,14 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
 
             raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
-                config_cache,
-                source,
+                make_parser(
+                    config_cache,
+                    source,
+                    keep_outdated=file_cache_options.keep_outdated,
+                    logger=log.logger,
+                ),
                 raw_data,
-                keep_outdated=file_cache_options.keep_outdated,
                 selection=NO_SELECTION,
-                logger=log.logger,
             )
             source_results = summarize(
                 source.hostname,

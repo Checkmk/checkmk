@@ -50,26 +50,23 @@ __all__ = [
     "make_sources",
     "make_plugin_store",
     "parse",
+    "make_parser",
 ]
 
 
 def parse(
-    config_cache: ConfigCache,
-    source: SourceInfo,
+    parser: Parser,
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
-    keep_outdated: bool,
-    logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    parser = _make_parser(config_cache, source, keep_outdated=keep_outdated, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(
+def make_parser(
     config_cache: ConfigCache, source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger
 ) -> Parser:
     hostname = source.hostname

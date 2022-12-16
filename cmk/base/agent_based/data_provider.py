@@ -31,6 +31,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.crash_reporting import create_section_crash_dump
+from cmk.base.sources import make_parser
 from cmk.base.sources import parse as parse_raw_data
 
 _CacheInfo = tuple[int, int]
@@ -310,12 +311,14 @@ def parse_messages(
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(
-            config_cache,
-            source,
+            make_parser(
+                config_cache,
+                source,
+                keep_outdated=keep_outdated,
+                logger=logger,
+            ),
             raw_data,
             selection=selected_sections,
-            keep_outdated=keep_outdated,
-            logger=logger,
         )
         results.append((source, source_result))
         if source_result.is_ok():

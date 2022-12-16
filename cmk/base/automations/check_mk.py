@@ -96,6 +96,7 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.discovered_labels import HostLabel
+from cmk.base.sources import make_parser
 from cmk.base.sources import parse as parse_raw_data
 
 HistoryFile = str
@@ -1734,12 +1735,14 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
-                        config_cache,
-                        source,
+                        make_parser(
+                            config_cache,
+                            source,
+                            keep_outdated=file_cache_options.keep_outdated,
+                            logger=logging.getLogger("cmk.base.checking"),
+                        ),
                         raw_data,
                         selection=NO_SELECTION,
-                        keep_outdated=file_cache_options.keep_outdated,
-                        logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(
                         source.hostname,

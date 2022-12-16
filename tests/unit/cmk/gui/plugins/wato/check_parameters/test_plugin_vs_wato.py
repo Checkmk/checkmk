@@ -387,7 +387,6 @@ class ErrorReporter:
         ),
         ("check", "barracuda_mail_latency", "checkgroup_parameters:mail_latency"),
         ("check", "blade_bx_powerfan", "checkgroup_parameters:hw_fans_perc"),
-        ("check", "bluenet2_powerrail_rcm", "checkgroup_parameters:el_inphase"),
         ("check", "brocade_fan", "checkgroup_parameters:hw_fans"),
         ("check", "brocade_mlx_module_mem", "checkgroup_parameters:memory_multiitem"),
         ("check", "brocade_optical", "checkgroup_parameters:brocade_optical"),

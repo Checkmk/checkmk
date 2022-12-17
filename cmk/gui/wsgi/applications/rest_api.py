@@ -44,6 +44,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.session import UserContext
+from cmk.gui.utils.json import patch_json
 from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
@@ -213,7 +214,8 @@ class EndpointAdapter:
         return f"<EndpointAdapter {self.endpoint!r}>"
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
+        with patch_json(json):
+            return self.wsgi_app(environ, start_response)
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]

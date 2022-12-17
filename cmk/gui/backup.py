@@ -19,7 +19,7 @@ import signal
 import socket
 import subprocess
 import time
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, cast, Final, TypedDict, Union
@@ -414,124 +414,6 @@ class Jobs(BackupEntityCollection):
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
-    def show_list(self, editable: bool = True) -> None:  # pylint: disable=too-many-branches
-        html.h3(_("Jobs"))
-        with table_element(sortable=False, searchable=False) as table:
-
-            for job_ident, job in sorted(self.objects.items()):
-                assert isinstance(job, Job)
-
-                table.row()
-                table.cell(_("Actions"), css=["buttons"])
-                delete_url = make_confirm_link(
-                    url=makeactionuri_contextless(
-                        request,
-                        transactions,
-                        [("mode", "backup"), ("_action", "delete"), ("_job", job_ident)],
-                    ),
-                    message=_("Do you really want to delete this job?"),
-                )
-                edit_url = makeuri_contextless(
-                    request,
-                    [("mode", "edit_backup_job"), ("job", job_ident)],
-                )
-                state_url = makeuri_contextless(
-                    request,
-                    [("mode", "backup_job_state"), ("job", job_ident)],
-                )
-
-                state = job.state()
-
-                if editable and not job.is_running():
-                    html.icon_button(edit_url, _("Edit this backup job"), "edit")
-                    html.icon_button(delete_url, _("Delete this backup job"), "delete")
-
-                if state["state"] is not None:
-                    html.icon_button(
-                        state_url, _("Show current / last state of this backup job"), "backup_state"
-                    )
-
-                if not job.is_running():
-                    start_url = makeactionuri_contextless(
-                        request,
-                        transactions,
-                        [
-                            ("mode", "backup"),
-                            ("_action", "start"),
-                            ("_job", job_ident),
-                        ],
-                    )
-
-                    html.icon_button(start_url, _("Manually start this backup"), "backup_start")
-                else:
-                    stop_url = makeactionuri_contextless(
-                        request,
-                        transactions,
-                        [
-                            ("mode", "backup"),
-                            ("_action", "stop"),
-                            ("_job", job_ident),
-                        ],
-                    )
-
-                    html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
-
-                table.cell(_("Name"), job.title)
-
-                css = "state0"
-                state_txt = job.state_name(state["state"])
-                if state["state"] == "finished":
-                    if not state["success"]:
-                        css = "state2"
-                        state_txt = _("Failed")
-                    else:
-                        state_txt = _("Finished")
-                elif state["state"] is None:
-                    css = ""
-
-                table.cell(_("State"), css=[css])
-                html.write_html(HTMLWriter.render_span(state_txt))
-
-                table.cell(_("Runtime"))
-                if state["started"]:
-                    html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
-                    duration = time.time() - state["started"]
-                    if state["state"] == "finished":
-                        html.write_text(
-                            ", Finished at %s" % render.date_and_time(state["finished"])
-                        )
-                        duration = state["finished"] - state["started"]
-
-                    if "size" in state:
-                        size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
-                    else:
-                        size_txt = ""
-
-                    html.write_text(
-                        _(" (Duration: %s, %sIO: %s/s)")
-                        % (
-                            render.timespan(duration),
-                            size_txt,
-                            render.fmt_bytes(state["bytes_per_second"]),
-                        )
-                    )
-
-                table.cell(_("Next run"))
-                schedule = job.schedule()
-                if not schedule:
-                    html.write_text(_("Only execute manually"))
-
-                elif schedule["disabled"]:
-                    html.write_text(_("Disabled"))
-
-                elif schedule["timeofday"]:
-                    # find the next time of all configured times
-                    times = []
-                    for timespec in schedule["timeofday"]:
-                        times.append(next_scheduled_time(schedule["period"], timespec))
-
-                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
-
     def jobs_using_target(self, target: Target) -> Sequence[Job]:
         jobs = []
         for job in self.objects.values():
@@ -680,7 +562,125 @@ class PageBackup:
 
     def page(self) -> None:
         show_key_download_warning(self.key_store.load())
-        self.jobs().show_list(editable=True)
+        self._show_job_list()
+
+    def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
+        html.h3(_("Jobs"))
+        with table_element(sortable=False, searchable=False) as table:
+
+            for job in sorted(self.jobs().objects.values(), key=lambda j: j.ident):
+                assert isinstance(job, Job)
+
+                table.row()
+                table.cell(_("Actions"), css=["buttons"])
+                delete_url = make_confirm_link(
+                    url=makeactionuri_contextless(
+                        request,
+                        transactions,
+                        [("mode", "backup"), ("_action", "delete"), ("_job", job.ident)],
+                    ),
+                    message=_("Do you really want to delete this job?"),
+                )
+                edit_url = makeuri_contextless(
+                    request,
+                    [("mode", "edit_backup_job"), ("job", job.ident)],
+                )
+                state_url = makeuri_contextless(
+                    request,
+                    [("mode", "backup_job_state"), ("job", job.ident)],
+                )
+
+                state = job.state()
+
+                if not job.is_running():
+                    html.icon_button(edit_url, _("Edit this backup job"), "edit")
+                    html.icon_button(delete_url, _("Delete this backup job"), "delete")
+
+                if state["state"] is not None:
+                    html.icon_button(
+                        state_url, _("Show current / last state of this backup job"), "backup_state"
+                    )
+
+                if not job.is_running():
+                    start_url = makeactionuri_contextless(
+                        request,
+                        transactions,
+                        [
+                            ("mode", "backup"),
+                            ("_action", "start"),
+                            ("_job", job.ident),
+                        ],
+                    )
+
+                    html.icon_button(start_url, _("Manually start this backup"), "backup_start")
+                else:
+                    stop_url = makeactionuri_contextless(
+                        request,
+                        transactions,
+                        [
+                            ("mode", "backup"),
+                            ("_action", "stop"),
+                            ("_job", job.ident),
+                        ],
+                    )
+
+                    html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
+
+                table.cell(_("Name"), job.title)
+
+                css = "state0"
+                state_txt = job.state_name(state["state"])
+                if state["state"] == "finished":
+                    if not state["success"]:
+                        css = "state2"
+                        state_txt = _("Failed")
+                    else:
+                        state_txt = _("Finished")
+                elif state["state"] is None:
+                    css = ""
+
+                table.cell(_("State"), css=[css])
+                html.write_html(HTMLWriter.render_span(state_txt))
+
+                table.cell(_("Runtime"))
+                if state["started"]:
+                    html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
+                    duration = time.time() - state["started"]
+                    if state["state"] == "finished":
+                        html.write_text(
+                            ", Finished at %s" % render.date_and_time(state["finished"])
+                        )
+                        duration = state["finished"] - state["started"]
+
+                    if "size" in state:
+                        size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
+                    else:
+                        size_txt = ""
+
+                    html.write_text(
+                        _(" (Duration: %s, %sIO: %s/s)")
+                        % (
+                            render.timespan(duration),
+                            size_txt,
+                            render.fmt_bytes(state["bytes_per_second"]),
+                        )
+                    )
+
+                table.cell(_("Next run"))
+                schedule = job.schedule()
+                if not schedule:
+                    html.write_text(_("Only execute manually"))
+
+                elif schedule["disabled"]:
+                    html.write_text(_("Disabled"))
+
+                elif schedule["timeofday"]:
+                    # find the next time of all configured times
+                    times = []
+                    for timespec in schedule["timeofday"]:
+                        times.append(next_scheduled_time(schedule["period"], timespec))
+
+                    html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
 
 class PageEditBackupJob:
@@ -1354,60 +1354,60 @@ class Target:
         return self._target_type().render()
 
 
+def show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
+    html.h2(_("System global targets") if targets_are_cma else _("Targets"))
+    if targets_are_cma:
+        html.p(
+            _(
+                "These backup targets can not be edited here. You need to "
+                "open the device backup management."
+            )
+        )
+
+    with table_element(sortable=False, searchable=False) as table:
+
+        for target in sorted(targets, key=lambda t: t.ident):
+            assert isinstance(target, Target)
+
+            table.row()
+            table.cell(_("Actions"), css=["buttons"])
+            restore_url = makeuri_contextless(
+                request,
+                [("mode", "backup_restore"), ("target", target.ident)],
+            )
+            html.icon_button(
+                restore_url,
+                _("Restore from this backup target"),
+                {
+                    "icon": "backup",
+                    "emblem": "refresh",
+                },
+            )
+
+            if not targets_are_cma:
+                delete_url = make_confirm_link(
+                    url=makeactionuri_contextless(
+                        request,
+                        transactions,
+                        [("mode", "backup_targets"), ("target", target.ident)],
+                    ),
+                    message=_("Do you really want to delete this target?"),
+                )
+                edit_url = makeuri_contextless(
+                    request,
+                    [("mode", "edit_backup_target"), ("target", target.ident)],
+                )
+
+                html.icon_button(edit_url, _("Edit this backup target"), "edit")
+                html.icon_button(delete_url, _("Delete this backup target"), "delete")
+
+            table.cell(_("Title"), target.title)
+            table.cell(_("Destination"), target.render())
+
+
 class Targets(BackupEntityCollection):
     def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
         super().__init__(config_file_path, cls=Target, config_attr="targets")
-
-    def show_list(self, title: str | None = None, editable: bool = True) -> None:
-        title = title if title else _("Targets")
-        html.h2(title)
-        if not editable:
-            html.p(
-                _(
-                    "These backup targets can not be edited here. You need to "
-                    "open the device backup management."
-                )
-            )
-
-        with table_element(sortable=False, searchable=False) as table:
-
-            for target_ident, target in sorted(self.objects.items()):
-                assert isinstance(target, Target)
-
-                table.row()
-                table.cell(_("Actions"), css=["buttons"])
-                restore_url = makeuri_contextless(
-                    request,
-                    [("mode", "backup_restore"), ("target", target_ident)],
-                )
-                html.icon_button(
-                    restore_url,
-                    _("Restore from this backup target"),
-                    {
-                        "icon": "backup",
-                        "emblem": "refresh",
-                    },
-                )
-
-                if editable:
-                    delete_url = make_confirm_link(
-                        url=makeactionuri_contextless(
-                            request,
-                            transactions,
-                            [("mode", "backup_targets"), ("target", target_ident)],
-                        ),
-                        message=_("Do you really want to delete this target?"),
-                    )
-                    edit_url = makeuri_contextless(
-                        request,
-                        [("mode", "edit_backup_target"), ("target", target_ident)],
-                    )
-
-                    html.icon_button(edit_url, _("Edit this backup target"), "edit")
-                    html.icon_button(delete_url, _("Delete this backup target"), "delete")
-
-                table.cell(_("Title"), target.title)
-                table.cell(_("Destination"), target.render())
 
     def validate_target(self, value: str, varprefix: str) -> None:
         target = self.get(value)
@@ -1484,8 +1484,14 @@ class PageBackupTargets:
             )
 
     def page(self) -> None:
-        self.targets().show_list()
-        SystemBackupTargetsReadOnly().show_list(editable=False, title=_("System global targets"))
+        show_target_list(
+            (t for t in self.targets().objects.values() if isinstance(t, Target)),
+            False,
+        )
+        show_target_list(
+            (t for t in SystemBackupTargetsReadOnly().objects.values() if isinstance(t, Target)),
+            False,
+        )
 
 
 class PageEditBackupTarget:
@@ -1628,11 +1634,6 @@ class PageEditBackupTarget:
 class SystemBackupTargetsReadOnly(Targets):
     def __init__(self) -> None:
         super().__init__(system_config_path())
-
-    # Only show the list on CMA devices
-    def show_list(self, title=None, editable=True):
-        if cmk_version.is_cma():
-            super().show_list(title, editable)
 
 
 # .
@@ -2036,7 +2037,10 @@ class PageBackupRestore:
 
     def _show_target_list(self):
         html.p(_("Please choose a target to perform the restore from."))
-        self.targets().show_list()
+        show_target_list(
+            (t for t in self.targets().objects.values() if isinstance(t, Target)),
+            False,
+        )
 
     def _show_backup_list(self):
         raise NotImplementedError()

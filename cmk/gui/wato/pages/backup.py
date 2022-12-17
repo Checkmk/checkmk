@@ -72,9 +72,17 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
         return SiteBackupJobs()
 
     def page(self) -> None:
-        self.targets().show_list()
-        backup.SystemBackupTargetsReadOnly().show_list(
-            editable=False, title=_("System global targets")
+        backup.show_target_list(
+            (t for t in self.targets().objects.values() if isinstance(t, backup.Target)),
+            False,
+        )
+        backup.show_target_list(
+            (
+                t
+                for t in backup.SystemBackupTargetsReadOnly().objects.values()
+                if isinstance(t, backup.Target)
+            ),
+            False,
         )
 
 
@@ -296,8 +304,13 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 
     def _show_target_list(self) -> None:
         super()._show_target_list()
-        backup.SystemBackupTargetsReadOnly().show_list(
-            editable=False, title=_("System global targets")
+        backup.show_target_list(
+            (
+                t
+                for t in backup.SystemBackupTargetsReadOnly().objects.values()
+                if isinstance(t, backup.Target)
+            ),
+            False,
         )
 
     def _show_backup_list(self) -> None:

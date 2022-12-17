@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import functools
 import http.client as http_client
-import json
 import traceback
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -37,7 +36,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.urls import requested_file_name
 from cmk.gui.wsgi.applications.utils import (
     AbstractWSGIApp,
@@ -194,7 +192,7 @@ class CheckmkApp(AbstractWSGIApp):
 
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         """Is called by the WSGI server to serve the current page"""
-        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections(), patch_json(json):
+        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 

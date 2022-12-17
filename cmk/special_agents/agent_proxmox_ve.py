@@ -528,7 +528,8 @@ def agent_proxmox_ve_main(args: Args) -> int:
     snapshot_data = {}
 
     for node in data["nodes"]:
-        node_timezones[node["node"]] = node["time"]["timezone"]
+        if (timezone := node["time"].get("timezone")) is not None:
+            node_timezones[node["node"]] = timezone
         # only lxc and qemu can have snapshots
         for vm in node.get("lxc", []) + node.get("qemu", []):
             snapshot_data[str(vm["vmid"])] = {

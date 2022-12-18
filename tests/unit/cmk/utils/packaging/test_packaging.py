@@ -260,13 +260,13 @@ def test_unpackaged_files() -> None:
         f.write("huhu\n")
 
     assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
-        "agent_based": ["dada"],
+        "agent_based": [Path("dada")],
         "agents": [],
         "alert_handlers": [],
         "bin": [],
         "checkman": [],
-        "checks": ["abc"],
-        "doc": ["docxx"],
+        "checks": [Path("abc")],
+        "doc": [Path("docxx")],
         "ec_rule_packs": [],
         "inventory": [],
         "lib": [],
@@ -376,6 +376,6 @@ def _setup_local_files_structure() -> None:
 def test_get_local_files_by_part() -> None:
     _setup_local_files_structure()
     assert packaging.get_local_files_by_part() == {
-        p: {f"regular_file_of_{p.ident}.py", f"subdir/subdir_file_of_{p.ident}.py"}
+        p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
         for p in packaging.PackagePart
     }

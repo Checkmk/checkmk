@@ -200,7 +200,7 @@ def package_create(args: list[str]) -> None:
     for part in PACKAGE_PARTS:
         if not (files := unpackaged.get(part)):
             continue
-        package.files[part.ident] = files
+        package.files[part.ident] = [str(f) for f in files]
         logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in files:
             logger.log(VERBOSE, "    %s", f)

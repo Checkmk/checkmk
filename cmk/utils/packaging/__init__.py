@@ -552,6 +552,11 @@ def _raise_for_conflicts(
         raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
 
 
+def _path(raw: str) -> Path:
+    """let mypy remind us, when raw is a path by itself."""
+    return Path(raw)
+
+
 def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
@@ -567,7 +572,7 @@ def _conflicting_files(
             if fn in old_files:
                 continue
             path = str(part.path / fn)
-            if fn in packaged:
+            if _path(fn) in packaged:
                 yield path, "part of another package"
             elif os.path.exists(path):
                 yield path, "already existing"
@@ -706,7 +711,7 @@ def _get_enabled_package_paths():
         return []
 
 
-def get_unpackaged_files() -> dict[PackagePart, list[str]]:
+def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
     packaged = get_packaged_files()
     present = get_local_files_by_part()
     return {part: sorted(present[part] - (packaged.get(part) or set())) for part in present}
@@ -735,11 +740,11 @@ def package_num_files(package: Manifest) -> int:
     return sum(len(fl) for fl in package.files.values())
 
 
-def get_local_files_by_part() -> Mapping[PackagePart, set[str]]:
+def get_local_files_by_part() -> Mapping[PackagePart, set[Path]]:
     return {part: _files_in_dir(part.ident, str(part.path)) for part in PackagePart}
 
 
-def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
+def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[Path]:
     if not os.path.exists(directory):
         return set()
 
@@ -750,7 +755,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
     if directory in taboo_dirs:
         return set()
 
-    result: set[str] = set()
+    result: set[Path] = set()
     files = os.listdir(directory)
     for f in files:
         if f in [".", ".."] or f.startswith(".") or f.endswith("~") or f.endswith(".pyc"):
@@ -760,7 +765,7 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[str]:
         if os.path.isdir(path):
             result.update(_files_in_dir(part, path, prefix + f + "/"))
         else:
-            result.add(prefix + f)
+            result.add(Path(prefix + f))
     return result
 
 

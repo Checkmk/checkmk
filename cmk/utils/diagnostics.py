@@ -280,7 +280,8 @@ def get_all_package_infos() -> AllPackageInfos:
     return {
         "installed": packaging.get_installed_manifests(),
         "unpackaged": {
-            part.ident: files for part, files in packaging.get_unpackaged_files().items()
+            part.ident: [str(f) for f in files]
+            for part, files in packaging.get_unpackaged_files().items()
         },
         "parts": packaging.package_part_info(),
         "optional_packages": packaging.get_optional_manifests(store),

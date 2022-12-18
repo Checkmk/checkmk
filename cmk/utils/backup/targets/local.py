@@ -107,13 +107,14 @@ class LocalTarget:
         makedirs(path.parent, group="omd", mode=0o775)
         return path
 
-    def finish_backup(self, info: SiteBackupInfo, job: Job) -> None:
+    def finish_backup(self, info: SiteBackupInfo, job: Job) -> Path:
         save_backup_info(info, self._working_dir(job) / "mkbackup.info")
         completed_path = self.path / f"{job.id}-complete"
         if completed_path.exists():
             log("Cleaning up previously completed backup")
             shutil.rmtree(completed_path)
         os.rename(self._working_dir(job), completed_path)
+        return completed_path
 
 
 def _is_canonical_directory(directory: str) -> bool:

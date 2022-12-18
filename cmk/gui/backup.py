@@ -30,6 +30,7 @@ import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
 from cmk.utils.backup.targets.local import LocalTarget
+from cmk.utils.backup.targets.protocol import Target as TargetProtocol
 from cmk.utils.backup.type_defs import (
     JobConfig,
     LocalTargetParams,
@@ -1029,6 +1030,11 @@ class ABCBackupTargetType(abc.ABC):
     def parameters(self) -> Mapping[str, object]:
         ...
 
+    @property
+    @abc.abstractmethod
+    def target(self) -> TargetProtocol:
+        ...
+
     @staticmethod
     @abc.abstractmethod
     def ident() -> str:
@@ -1048,9 +1054,9 @@ class ABCBackupTargetType(abc.ABC):
     def validate(self, varprefix: str) -> None:
         ...
 
-    @abc.abstractmethod
     def backups(self) -> Mapping[str, SiteBackupInfo]:
-        ...
+        _check_if_target_ready(self.target)
+        return dict(self.target.list_backups())
 
     @abc.abstractmethod
     def remove_backup(self, backup_ident: str) -> None:
@@ -1077,6 +1083,10 @@ class BackupTargetLocal(ABCBackupTargetType):
     @property
     def parameters(self) -> LocalTargetParams:
         return self._params
+
+    @property
+    def target(self) -> LocalTarget:
+        return self._local_target
 
     @staticmethod
     def ident() -> str:
@@ -1125,7 +1135,7 @@ class BackupTargetLocal(ABCBackupTargetType):
         )
 
     def validate(self, varprefix: str) -> None:
-        _check_if_target_ready(self._local_target)
+        _check_if_target_ready(self.target)
         self._check_write_access(self.parameters["path"], varprefix)
 
     @staticmethod
@@ -1153,16 +1163,12 @@ class BackupTargetLocal(ABCBackupTargetType):
                 ),
             )
 
-    def backups(self) -> Mapping[str, SiteBackupInfo]:
-        _check_if_target_ready(self._local_target)
-        return dict(self._local_target.list_backups())
-
     def remove_backup(self, backup_ident: str) -> None:
-        _check_if_target_ready(self._local_target)
+        _check_if_target_ready(self.target)
         shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
 
 
-def _check_if_target_ready(target: LocalTarget, varprefix: str | None = None) -> None:
+def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
     try:
         target.check_ready()
     except MKGeneralException as e:

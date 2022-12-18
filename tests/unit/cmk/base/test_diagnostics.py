@@ -189,7 +189,7 @@ def _create_test_package(name: str) -> packaging.Manifest:
 
     manifest = packaging.manifest_template(packaging.PackageName(name))
     manifest.files = {
-        "checks": [name],
+        packaging.PackagePart.CHECKS: [Path(name)],
     }
 
     packaging.create(manifest)

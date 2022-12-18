@@ -353,14 +353,24 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
     for (module, items) in infos["unpackaged"].items():
         files = _deep_update(files, _parse_mkp_files(items, module, None, "unpackaged", "N/A"))
     for package, (contents, _is_local) in infos["optional_packages"].items():
-        for (module, items) in contents.files.items():
+        for module, files_list in contents.files.items():
             files = _deep_update(
-                files, _parse_mkp_files(items, module, contents, "optional_packages", package.name)
+                files,
+                _parse_mkp_files(
+                    [str(f) for f in files_list],
+                    module,
+                    contents,
+                    "optional_packages",
+                    package.name,
+                ),
             )
     for manifest in infos["installed"]:
         for (part, files_list) in manifest.files.items():
             files = _deep_update(
-                files, _parse_mkp_files(files_list, part, manifest, "installed", manifest.name)
+                files,
+                _parse_mkp_files(
+                    [str(f) for f in files_list], part, manifest, "installed", manifest.name
+                ),
             )
     for (module, data) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(data))

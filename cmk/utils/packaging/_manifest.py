@@ -8,6 +8,7 @@ from __future__ import annotations
 import ast
 import pprint
 import tarfile
+from collections.abc import Mapping
 from functools import lru_cache
 from io import BytesIO
 from logging import Logger
@@ -17,6 +18,7 @@ from pydantic import BaseModel, Extra, Field
 
 from cmk.utils import version as cmk_version
 
+from ._parts import PackagePart
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 
@@ -30,14 +32,18 @@ class Manifest(BaseModel):
     version_usable_until: str | None = Field(None, alias="version.usable_until")
     author: str
     download_url: str
-    files: dict[str, list[str]]
+    files: Mapping[PackagePart, list[Path]]
 
     class Config:
         allow_population_by_field_name = True
         extra = Extra.allow  # we used to have 'num_files' :-(
 
     def file_content(self) -> str:
-        return f"{pprint.pformat(self.dict(by_alias=True))}\n"
+        raw = {
+            **self.dict(by_alias=True),
+            "files": {str(p.ident): [str(f) for f in files] for p, files in self.files.items()},
+        }
+        return f"{pprint.pformat(raw)}\n"
 
     def json_file_content(self) -> str:
         return self.json(by_alias=True)

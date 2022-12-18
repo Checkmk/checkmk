@@ -48,7 +48,7 @@ def get_packaged_files() -> Mapping[PackagePart, set[Path]]:
     packaged_files: dict[PackagePart, set[Path]] = {p: set() for p in PackagePart}
     for manifest in get_installed_manifests():
         for part in PackagePart:
-            packaged_files[part].update(_path(p) for p in manifest.files.get(part.ident, ()))
+            packaged_files[part].update(manifest.files.get(part, ()))
     return packaged_files
 
 

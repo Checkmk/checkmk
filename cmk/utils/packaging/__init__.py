@@ -124,14 +124,14 @@ def release(pacname: PackageName) -> None:
 
     g_logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part.ident, [])):
+        if not (filenames := manifest.files.get(part, [])):
             continue
 
         g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in filenames:
             g_logger.log(VERBOSE, "    %s", f)
-        if part.ident == "ec_rule_packs":
-            ec.release_packaged_rule_packs(filenames)
+        if part == PackagePart.EC_RULE_PACKS:
+            ec.release_packaged_rule_packs([str(f) for f in filenames])
 
     remove_installed_manifest(pacname)
 
@@ -167,7 +167,7 @@ def create_mkp_object(manifest: Manifest) -> bytes:
 
         # Now pack the actual files into sub tars
         for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part.ident, [])):
+            if not (filenames := manifest.files.get(part, [])):
                 continue
 
             g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
@@ -192,7 +192,7 @@ def create_mkp_object(manifest: Manifest) -> bytes:
 
 def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> None:
     for part in PACKAGE_PARTS + CONFIG_PARTS:
-        if not (filenames := manifest.files.get(part.ident, [])):
+        if not (filenames := manifest.files.get(part, [])):
             continue
 
         g_logger.log(VERBOSE, "  %s%s%s", tty.bold, part.ui_title, tty.normal)
@@ -449,7 +449,7 @@ def _install(  # pylint: disable=too-many-branches
     with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
         for part in PACKAGE_PARTS + CONFIG_PARTS:
-            if not (filenames := manifest.files.get(part.ident, [])):
+            if not (filenames := manifest.files.get(part, [])):
                 continue
 
             g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
@@ -497,14 +497,14 @@ def _install(  # pylint: disable=too-many-branches
                     )
                     path.chmod(desired_perm)
 
-            if part.ident == "ec_rule_packs":
-                ec.add_rule_pack_proxies(filenames)
+            if part is PackagePart.EC_RULE_PACKS:
+                ec.add_rule_pack_proxies([str(f) for f in filenames])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
         for part in PACKAGE_PARTS + CONFIG_PARTS:
-            new_files = set(manifest.files.get(part.ident, []))
-            old_files = set(old_manifest.files.get(part.ident, []))
+            new_files = set(manifest.files.get(part, []))
+            old_files = set(old_manifest.files.get(part, []))
             remove_files = old_files - new_files
             for fn in remove_files:
                 path = part.path / fn
@@ -514,7 +514,7 @@ def _install(  # pylint: disable=too-many-branches
                 except OSError as e:
                     g_logger.error("Error removing %s: %s", path, e)
 
-            if part.ident == "ec_rule_packs":
+            if part is PackagePart.EC_RULE_PACKS:
                 _remove_packaged_rule_packs(list(remove_files), delete_export=False)
 
         remove_enabled_mark(old_manifest)
@@ -552,11 +552,6 @@ def _raise_for_conflicts(
         raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
 
 
-def _path(raw: str) -> Path:
-    """let mypy remind us, when raw is a path by itself."""
-    return Path(raw)
-
-
 def _conflicting_files(
     package: Manifest,
     old_package: Manifest | None,
@@ -566,19 +561,19 @@ def _conflicting_files(
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         packaged = packaged_files.get(part, ())
 
-        old_files = set(old_package.files.get(part.ident, [])) if old_package else set()
+        old_files = set(old_package.files.get(part, [])) if old_package else set()
 
-        for fn in package.files.get(part.ident, []):
+        for fn in package.files.get(part, []):
             if fn in old_files:
                 continue
             path = str(part.path / fn)
-            if _path(fn) in packaged:
+            if fn in packaged:
                 yield path, "part of another package"
             elif os.path.exists(path):
                 yield path, "already existing"
 
 
-def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool = True) -> None:
+def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool = True) -> None:
     """
     This function synchronizes the rule packs in rules.mk and the packaged rule packs
     of a MKP upon deletion of that MKP. When a modified or an unmodified MKP is
@@ -589,7 +584,7 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
     rule_packs = list(ec.load_rule_packs())
     rule_pack_ids = [rp["id"] for rp in rule_packs]
-    affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
+    affected_ids = [fn.stem for fn in file_names]
 
     for id_ in affected_ids:
         index = rule_pack_ids.index(id_)
@@ -601,33 +596,31 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
     ec.save_rule_packs(rule_packs)
 
 
-def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
+def _validate_package_files(
+    pacname: PackageName, files: Mapping[PackagePart, Sequence[Path]]
+) -> None:
     """Packaged files must either be unpackaged or already belong to that package"""
     packages = {manifest.name: manifest for manifest in get_installed_manifests()}
 
     for part in PACKAGE_PARTS:
-        _validate_package_files_part(
-            packages, pacname, part.ident, str(part.path), files.get(part.ident, [])
-        )
+        _validate_package_files_part(packages, pacname, part, files.get(part, []))
 
 
 def _validate_package_files_part(
     packages: Packages,
     pacname: PackageName,
-    part: PartName,
-    directory: str,
-    rel_paths: PartFiles,
+    part: PackagePart,
+    rel_paths: Iterable[Path],
 ) -> None:
     for rel_path in rel_paths:
-        path = os.path.join(directory, rel_path)
-        if not os.path.exists(path):
-            raise PackageException("File %s does not exist." % path)
+        if not (full_path := part.path / rel_path).exists():
+            raise PackageException("File %s does not exist." % full_path)
 
         for other_pacname, other_manifest in packages.items():
             for other_rel_path in other_manifest.files.get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
                     raise PackageException(
-                        f"File {path} does already belong to package {other_pacname}"
+                        f"File {full_path} does already belong to package {other_pacname}"
                     )
 
 
@@ -786,10 +779,10 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     package_map = {
         file: manifest.name
         for manifest in get_installed_manifests()
-        for file in manifest.files.get("ec_rule_packs", ())
+        for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
     }
 
-    return {f.stem: package_map.get(str(f)) for f in rel_files}
+    return {f.stem: package_map.get(f) for f in rel_files}
 
 
 def update_active_packages(log: logging.Logger) -> None:

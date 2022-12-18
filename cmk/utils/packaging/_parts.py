@@ -21,7 +21,7 @@ PartFiles = list[str]
 
 
 @enum.unique
-class PackagePart(enum.Enum):
+class PackagePart(str, enum.Enum):
     EC_RULE_PACKS = "ec_rule_packs"
     AGENT_BASED = "agent_based"
     CHECKS = "checks"

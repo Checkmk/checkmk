@@ -175,14 +175,14 @@ def show_package(name: str, show_info: bool = False) -> None:
         if logger.isEnabledFor(VERBOSE):
             sys.stdout.write(f"Files in package {name}:\n")
             for part in PACKAGE_PARTS:
-                if part_files := package.files.get(part.ident, []):
+                if part_files := package.files.get(part, []):
                     sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")
                     for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
             for part in PACKAGE_PARTS:
-                for fn in package.files.get(part.ident, []):
-                    sys.stdout.write(f"{part.path / fn}\n")
+                for fn in package.files.get(part, []):
+                    sys.stdout.write(f"{part / fn}\n")
 
 
 def package_create(args: list[str]) -> None:
@@ -197,10 +197,8 @@ def package_create(args: list[str]) -> None:
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
     package = manifest_template(pacname)
-    for part in PACKAGE_PARTS:
-        if not (files := unpackaged.get(part)):
-            continue
-        package.files[part.ident] = [str(f) for f in files]
+    package.files = {part: files for part in PACKAGE_PARTS if (files := unpackaged.get(part))}
+    for part, files in package.files.items():
         logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in files:
             logger.log(VERBOSE, "    %s", f)

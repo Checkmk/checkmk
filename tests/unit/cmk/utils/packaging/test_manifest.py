@@ -19,7 +19,7 @@ TEST_MANIFEST = Manifest(
     version_usable_until="2.2.0",
     author="myself",
     download_url="https://boulderbugle.com/c4zzwmjs",
-    files={p.ident: ["example-file.py"] for p in PackagePart},
+    files={p: [Path("example-file.py")] for p in PackagePart},
 )
 
 

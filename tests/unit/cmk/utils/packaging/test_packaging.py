@@ -104,7 +104,7 @@ def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Man
     manifest = packaging.manifest_template(pacname)
 
     manifest.files = {
-        "checks": [pacname],
+        packaging.PackagePart.CHECKS: [Path(pacname)],
     }
 
     packaging.create(manifest)
@@ -180,7 +180,7 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
     assert packaging.is_installed(packaging.PackageName("aaa")) is True
     manifest = _read_manifest(packaging.PackageName("aaa"))
     assert manifest.version == "1.0.0"
-    assert manifest.files["checks"] == ["aaa"]
+    assert manifest.files[packaging.PackagePart.CHECKS] == [Path("aaa")]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
@@ -260,22 +260,22 @@ def test_unpackaged_files() -> None:
         f.write("huhu\n")
 
     assert {part.ident: files for part, files in packaging.get_unpackaged_files().items()} == {
-        "agent_based": [Path("dada")],
-        "agents": [],
-        "alert_handlers": [],
-        "bin": [],
-        "checkman": [],
-        "checks": [Path("abc")],
-        "doc": [Path("docxx")],
-        "ec_rule_packs": [],
-        "inventory": [],
-        "lib": [],
-        "locales": [],
-        "mibs": [],
-        "notifications": [],
-        "pnp-templates": [],
-        "web": [],
-        "gui": [],
+        packaging.PackagePart.AGENT_BASED: [Path("dada")],
+        packaging.PackagePart.AGENTS: [],
+        packaging.PackagePart.ALERT_HANDLERS: [],
+        packaging.PackagePart.BIN: [],
+        packaging.PackagePart.CHECKMAN: [],
+        packaging.PackagePart.CHECKS: [Path("abc")],
+        packaging.PackagePart.DOC: [Path("docxx")],
+        packaging.PackagePart.EC_RULE_PACKS: [],
+        packaging.PackagePart.HASI: [],
+        packaging.PackagePart.LIB: [],
+        packaging.PackagePart.LOCALES: [],
+        packaging.PackagePart.MIBS: [],
+        packaging.PackagePart.NOTIFICATIONS: [],
+        packaging.PackagePart.PNP_TEMPLATES: [],
+        packaging.PackagePart.WEB: [],
+        packaging.PackagePart.GUI: [],
     }
 
 
@@ -309,7 +309,7 @@ def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_in
 
 def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(packaging.PackageName("ding"))
-    package.files = {"gui": ["a"]}
+    package.files = {packaging.PackagePart.GUI: [Path("a")]}
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
@@ -318,7 +318,7 @@ def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index:
 
 def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(packaging.PackageName("ding"))
-    package.files = {"web": ["a"]}
+    package.files = {packaging.PackagePart.WEB: [Path("a")]}
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()

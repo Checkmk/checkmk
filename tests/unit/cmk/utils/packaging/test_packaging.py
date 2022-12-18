@@ -8,7 +8,7 @@ import json
 import logging
 import shutil
 import tarfile
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock
@@ -76,7 +76,7 @@ def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Mock:
 
 
 @pytest.fixture(name="reload_apache")
-def fixture_reload_apache(mocker: MockerFixture) -> Callable[[], None]:
+def fixture_reload_apache(mocker: MockerFixture) -> Mock:
     return mocker.patch(
         "cmk.utils.packaging._reload_apache",
         side_effect=lambda: None,
@@ -95,7 +95,7 @@ def test_get_permissions_unknown_path() -> None:
         (str(cmk.utils.paths.local_bin_dir), 0o755),
     ],
 )
-def test_get_permissions(path, expected) -> None:  # type:ignore[no-untyped-def]
+def test_get_permissions(path: str, expected: int) -> None:
     assert packaging._get_permissions(path) == expected
 
 
@@ -279,10 +279,6 @@ def test_unpackaged_files() -> None:
     }
 
 
-# TODO:
-# def test_package_part_info()
-
-
 def test_get_optional_manifests_none() -> None:
     assert packaging.get_optional_manifests(packaging.PackageStore()) == {}
 
@@ -304,18 +300,14 @@ def test_get_optional_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     }
 
 
-def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
-    reload_apache, build_setup_search_index
-) -> None:
+def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(packaging.PackageName("ding"))
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
 
 
-def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
-    reload_apache, build_setup_search_index
-) -> None:
+def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(packaging.PackageName("ding"))
     package.files = {"gui": ["a"]}
 
@@ -324,9 +316,7 @@ def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
     reload_apache.assert_called_once()
 
 
-def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
-    reload_apache, build_setup_search_index
-) -> None:
+def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
     package = packaging.manifest_template(packaging.PackageName("ding"))
     package.files = {"web": ["a"]}
 

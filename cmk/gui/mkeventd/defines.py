@@ -8,17 +8,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.i18n import _, _l
 from cmk.gui.valuespec import DropdownChoiceEntries
 
-syslog_priorities: DropdownChoiceEntries = [
-    (0, "emerg"),
-    (1, "alert"),
-    (2, "crit"),
-    (3, "err"),
-    (4, "warning"),
-    (5, "notice"),
-    (6, "info"),
-    (7, "debug"),
-]
-
+syslog_priorities: DropdownChoiceEntries = list(ec.SyslogPriority.NAMES.items())
 syslog_facilities: DropdownChoiceEntries = list(ec.SyslogFacility.NAMES.items())
 
 phase_names = {

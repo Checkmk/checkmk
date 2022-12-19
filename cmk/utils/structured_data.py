@@ -53,8 +53,6 @@ SDRow = dict[SDKey, SDValue]
 SDRows = dict[SDRowIdent, SDRow]
 LegacyRows = list[SDRow]
 
-SDNodes = dict[SDNodeName, "StructuredDataNode"]
-
 SDEncodeAs = Callable
 SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
@@ -294,7 +292,7 @@ class StructuredDataNode:
         self.path = path if path else tuple()
         self.attributes = Attributes(path=path)
         self.table = Table(path=path)
-        self._nodes: SDNodes = {}
+        self._nodes: dict[SDNodeName, StructuredDataNode] = {}
 
     def set_path(self, path: SDPath) -> None:
         self.path = path

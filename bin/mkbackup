@@ -45,6 +45,8 @@ from cmk.utils.paths import mkbackup_lock_dir
 
 VERSION = "2.2.0i1"
 
+SITE_BACKUP_MARKER = "Check_MK"
+
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/
 
@@ -601,7 +603,7 @@ def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Seq
 
 
 @dataclass
-class BackupInfo:
+class SiteBackupInfo:
     config: JobConfig
     filename: str
     checksum: str
@@ -612,7 +614,6 @@ class BackupInfo:
     site_version: str
     size: int
     backup_id: str | None
-    type: str = "Check_MK"
 
 
 @dataclass
@@ -624,7 +625,7 @@ class Job:
 
 @dataclass
 class Backup:
-    info: BackupInfo
+    info: SiteBackupInfo
     id: str
     _path: Path
 
@@ -648,14 +649,17 @@ class LocalTarget:
                 "The backup target path is configured to be a mountpoint, but nothing is mounted."
             )
 
-    def list_backups(self) -> Iterator[tuple[str, BackupInfo]]:
+    def list_backups(self) -> Iterator[tuple[str, SiteBackupInfo]]:
         for backup_id in self.path.iterdir():
             # if backup_id is a directory not owned by the current user
             # any attempt to get information about files in the folder will
             # result in a permission error. In that case do not show a backup
             try:
                 if backup_id.is_dir() and (backup_id / "mkbackup.info").exists():
-                    yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
+                    try:
+                        yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
+                    except UnrecognizedBackupTypeError:
+                        continue
             except PermissionError:
                 continue
 
@@ -689,7 +693,7 @@ class LocalTarget:
         makedirs(path.parent, group="omd", mode=0o775)
         return path
 
-    def finish_backup(self, info: BackupInfo, job: Job) -> None:
+    def finish_backup(self, info: SiteBackupInfo, job: Job) -> None:
         save_backup_info(info, self._working_dir(job) / "mkbackup.info")
         completed_path = self.path / f"{job.id}-complete"
         if completed_path.exists():
@@ -765,16 +769,22 @@ def load_config() -> Config:
     return config
 
 
-def load_backup_info(path: Path) -> BackupInfo:
+class UnrecognizedBackupTypeError(Exception):
+    ...
+
+
+def load_backup_info(path: Path) -> SiteBackupInfo:
     with open(path) as f:
         raw_info: RawBackupInfo = json.load(f)
+    if (type_ := raw_info["type"]) != SITE_BACKUP_MARKER:
+        raise UnrecognizedBackupTypeError(f"Non-site backup type: {type_}")
     # Load the backup_id from the second right path component. This is the
     # base directory of the mkbackup.info file. The user might have moved
     # the directory, e.g. for having multiple backups. Allow that.
     # Maybe we need to changed this later when we allow multiple generations
     # of backups.
     filename, _, checksum = raw_info["files"][0]
-    return BackupInfo(
+    return SiteBackupInfo(
         config=raw_info["config"],
         filename=filename,
         checksum=checksum,
@@ -788,7 +798,7 @@ def load_backup_info(path: Path) -> BackupInfo:
     )
 
 
-def save_backup_info(info: BackupInfo, path: Path) -> None:
+def save_backup_info(info: SiteBackupInfo, path: Path) -> None:
     raw_info: RawBackupInfo = {
         "config": info.config,
         "files": [(info.filename, info.size, info.checksum)],
@@ -797,7 +807,7 @@ def save_backup_info(info: BackupInfo, path: Path) -> None:
         "site_id": info.site_id,
         "site_version": info.site_version,
         "size": info.size,
-        "type": info.type,
+        "type": SITE_BACKUP_MARKER,
         "finished": info.finished,
     }
     with path.open("w") as f:
@@ -985,8 +995,8 @@ class InfoCalculator:
         self.hash.update(chunk)
         self.size += len(chunk)
 
-    def info(self, job: Job, site_id: str) -> BackupInfo:
-        return BackupInfo(
+    def info(self, job: Job, site_id: str) -> SiteBackupInfo:
+        return SiteBackupInfo(
             config=job.config,
             filename=self.filename,
             checksum=self.hash.hexdigest(),
@@ -1000,7 +1010,7 @@ class InfoCalculator:
         )
 
 
-def do_site_backup(backup_path: Path, job: Job, state: State) -> BackupInfo:
+def do_site_backup(backup_path: Path, job: Job, state: State) -> SiteBackupInfo:
     cmd = ["omd", "backup"]
     if not job.config["compress"]:
         cmd.append("--no-compression")
@@ -1049,7 +1059,7 @@ def archive_suffix(config: JobConfig) -> str:
     return suffix
 
 
-def verify_backup_file(info: BackupInfo, archive_path: Path) -> None:
+def verify_backup_file(info: SiteBackupInfo, archive_path: Path) -> None:
     checksum = info.checksum
     this_checksum = file_checksum(archive_path)
     if this_checksum != checksum:
@@ -1060,7 +1070,7 @@ def verify_backup_file(info: BackupInfo, archive_path: Path) -> None:
         )
 
 
-def complete_backup(state: State, info: BackupInfo) -> None:
+def complete_backup(state: State, info: SiteBackupInfo) -> None:
     state.save({"size": info.size})
     state_content = state.load()
     duration = time.time() - state_content["started"]
@@ -1085,7 +1095,7 @@ def load_job(local_job_id: str, config: Config) -> Job:
 
 
 def globalize_job_id(local_job_id: str) -> str:
-    parts = ["Check_MK", hostname(), current_site_id(), local_job_id]
+    parts = [SITE_BACKUP_MARKER, hostname(), current_site_id(), local_job_id]
     return "-".join(p.replace("-", "+") for p in parts)
 
 
@@ -1242,14 +1252,14 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
     target = load_target(config, TargetId(target_id))
     target.check_ready()
 
-    fmt = "%-9s %-20s %-16s %52s\n"
+    fmt = "%-20s %-16s %52s\n"
     fmt_detail = (" " * 30) + " %-20s %48s\n"
-    sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
+    sys.stdout.write(fmt % ("Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 100))
     for backup_id, info in target.list_backups():
         from_info = info.hostname
         from_info += " (Site: %s)" % info.site_id
-        sys.stdout.write(fmt % (info.type, info.job_id, "Backup-ID:", backup_id))
+        sys.stdout.write(fmt % (info.job_id, "Backup-ID:", backup_id))
 
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info.finished)))

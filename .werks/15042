@@ -1,0 +1,16 @@
+Title: <tt>mkbackup</tt>: Do not list system backups (appliance only)
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1671518376
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When running in the Checkmk Appliance, the command line tool for administrating site backups also
+listed system backups (<tt>mkbackup</tt> executed as a site user). This is no longer the case, since
+system backups cannot be used for a site restore. This is consistent with the user interface, which
+also lists site backups only.
+
+Note that this does not impact the option use system backup targets for site backup jobs.

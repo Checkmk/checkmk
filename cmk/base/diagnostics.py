@@ -469,7 +469,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
         # Get the information from the proc files
 
-        hw_info: DiagnosticsElementJSONResult = {}
+        hw_info: dict[str, dict[str, str]] = {}
 
         for procfile, parser in [
             ("meminfo", self._meminfo_proc_parser),

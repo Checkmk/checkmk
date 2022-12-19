@@ -7,18 +7,28 @@ import os
 from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from livestatus import SiteId
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
 
+# This is an awful type, but just putting `Any` and hoping for the best is no solution.
+_JSONSerializable = Union[
+    str,
+    list[str],
+    list[tuple[str, bool]],
+    Mapping[str, str],
+    Mapping[str, list[str]],
+    packaging.PackagePartInfo,
+]
+
 DiagnosticsCLParameters = list[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
 CheckmkFilesMap = dict[str, Path]
-DiagnosticsElementJSONResult = dict[str, Any]
+DiagnosticsElementJSONResult = Mapping[str, _JSONSerializable]
 DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 

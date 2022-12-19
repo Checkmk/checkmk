@@ -92,9 +92,10 @@ Packages = dict[PackageName, Manifest]
 
 
 class PackagePartInfoElement(TypedDict):
+    # Whatch out! This is used in diagnostics (only) and must remain JSON dumpable!
     title: str
     permissions: Sequence[int]
-    path: PartPath
+    path: str
     files: Sequence[str]
 
 

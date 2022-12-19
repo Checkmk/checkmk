@@ -43,7 +43,7 @@ public:
                                     queue_overflow_strategy strategy);
     std::optional<value_type> pop(
         queue_pop_strategy pop_strategy = queue_pop_strategy::blocking,
-        std::optional<std::chrono::milliseconds> timeout = std::nullopt);
+        std::optional<std::chrono::nanoseconds> timeout = std::nullopt);
     void join();
     [[nodiscard]] bool joinable() const;
 
@@ -153,7 +153,7 @@ queue_status Queue<T, Q>::push(value_type &&elem,
 template <typename T, typename Q>
 std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop(
     queue_pop_strategy pop_strategy,
-    std::optional<std::chrono::milliseconds> timeout) {
+    std::optional<std::chrono::nanoseconds> timeout) {
     std::unique_lock<std::mutex> lock(mutex_);
     if (pop_strategy == queue_pop_strategy::blocking) {
         if (timeout) {

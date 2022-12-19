@@ -402,21 +402,18 @@ class StructuredDataNode:
             self.table.add_row(ident, row)
 
     def get_node(self, path: SDPath) -> StructuredDataNode | None:
-        return self._get_node(path)
-
-    def get_table(self, path: SDPath) -> Table | None:
-        node = self._get_node(path)
-        return None if node is None else node.table
-
-    def get_attributes(self, path: SDPath) -> Attributes | None:
-        node = self._get_node(path)
-        return None if node is None else node.attributes
-
-    def _get_node(self, path: SDPath) -> StructuredDataNode | None:
         if not path:
             return self
         node = self._nodes.get(path[0])
-        return None if node is None else node._get_node(path[1:])
+        return None if node is None else node.get_node(path[1:])
+
+    def get_table(self, path: SDPath) -> Table | None:
+        node = self.get_node(path)
+        return None if node is None else node.table
+
+    def get_attributes(self, path: SDPath) -> Attributes | None:
+        node = self.get_node(path)
+        return None if node is None else node.attributes
 
     #   ---representation-------------------------------------------------------
 
@@ -604,7 +601,7 @@ class StructuredDataNode:
 
         for f in filters:
             # First check if node exists
-            node = self._get_node(f.path)
+            node = self.get_node(f.path)
             if node is None:
                 continue
 

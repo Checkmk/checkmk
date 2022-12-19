@@ -9,7 +9,7 @@ This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
 """
 
-__version__ = "2.0.0p32"
+__version__ = "2.0.0p33"
 
 import io
 import subprocess

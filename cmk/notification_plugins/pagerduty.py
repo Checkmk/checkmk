@@ -11,6 +11,8 @@ from typing import Any
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,
+    post_request,
+    process_by_status_code,
     retrieve_from_passwordstore,
     service_url_from_context,
 )
@@ -47,7 +49,7 @@ def _notification_source_from_context(context: dict[str, str]) -> str:
     return context.get("HOSTADDRESS") or context.get("HOSTNAME") or "Undeclared Host identifier"
 
 
-def pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
+def _pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
     """Build the PagerDuty incident payload"""
 
     if context.get("WHAT") == "SERVICE":
@@ -82,3 +84,9 @@ def pagerduty_msg(context: dict[str, str]) -> dict[str, Any]:
         msg_payload.update({"client": "Check_MK", "client_url": incident_url})
 
     return msg_payload
+
+
+def main() -> int:
+    # PagerDuty replies with 202 because the request is further processed
+    # by them. Thus their reply only includes field validation checks.
+    return process_by_status_code(post_request(_pagerduty_msg), success_code=202)

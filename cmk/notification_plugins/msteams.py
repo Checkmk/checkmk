@@ -14,6 +14,8 @@ from cmk.utils.ms_teams_constants import (
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,
+    post_request,
+    process_by_status_code,
     service_url_from_context,
     substitute_context,
 )
@@ -37,7 +39,7 @@ MAP_TYPES: dict[str, str] = {
 }
 
 
-def msteams_msg(
+def _msteams_msg(
     context: dict[str, str],
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
@@ -125,3 +127,7 @@ def _get_theme_color(context: dict[str, str], notify_what: str) -> str:
         if notify_what == "SERVICE"
         else MAP_STATES[context["HOSTSTATE"]]
     )
+
+
+def main() -> int:
+    return process_by_status_code(post_request(_msteams_msg))

@@ -7,6 +7,7 @@
 
 from os import environ
 
+from cmk.notification_plugins.utils import post_request, process_by_result_map
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
 from cmk.notification_plugins.utils import StateInfo
 
@@ -17,12 +18,12 @@ RESULT_MAP = {
 }
 
 
-def signl4_url() -> str:
+def _signl4_url() -> str:
     password = passwords(environ["NOTIFY_PARAMETER_PASSWORD"])
     return f"https://connect.signl4.com/webhook/{password}"
 
 
-def signl4_msg(context: dict[str, str]) -> dict[str, object]:
+def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
     host_name = context["HOSTNAME"]
     notification_type = context["NOTIFICATIONTYPE"]
     host_problem_id = context.get("HOSTPROBLEMID", "")
@@ -60,3 +61,13 @@ def signl4_msg(context: dict[str, str]) -> dict[str, object]:
         + service_problem_id,
         "X-S4-Status": s4_status,
     }
+
+
+def main() -> int:
+    return process_by_result_map(
+        response=post_request(
+            message_constructor=_signl4_msg,
+            url=_signl4_url(),
+        ),
+        result_map=RESULT_MAP,
+    )

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.notification_plugins.pagerduty import _notification_source_from_context, pagerduty_msg
+from cmk.notification_plugins.pagerduty import _notification_source_from_context, _pagerduty_msg
 
 
 @pytest.mark.parametrize(
@@ -162,5 +162,5 @@ def test_pagerduty_message(
     context: dict[str, str],
     result: dict[str, str | dict[str, str | dict[str, str | dict[str, str]]]],
 ) -> None:
-    msg = pagerduty_msg(context)
+    msg = _pagerduty_msg(context)
     assert msg == result

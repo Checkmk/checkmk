@@ -8,10 +8,16 @@ Send notification messages to Cisco Webex Teams
 
 Use a Cisco Webex Teams webhook to send notification messages
 """
-import cmk.notification_plugins.utils as utils
+from cmk.notification_plugins.utils import (
+    format_link,
+    host_url_from_context,
+    post_request,
+    process_by_status_code,
+    service_url_from_context,
+)
 
 
-def cisco_webex_teams_msg(context: dict) -> dict:
+def _cisco_webex_teams_msg(context: dict) -> dict:
     """Build the message for Cisco Webex Teams. We use the Markdown markup language, see
     https://developer.webex.com/docs/api/basics. For example, we need two spaces before a newline
     character."""
@@ -22,11 +28,9 @@ def cisco_webex_teams_msg(context: dict) -> dict:
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
         host_service_info = "Host: {} (IP: {})  \nService: {}".format(
-            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
             context["HOSTADDRESS"],
-            utils.format_link(
-                "<%s|%s>", utils.service_url_from_context(context), context["SERVICEDESC"]
-            ),
+            format_link("<%s|%s>", service_url_from_context(context), context["SERVICEDESC"]),
         )
         state = "State: %s" % context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
@@ -35,7 +39,7 @@ def cisco_webex_teams_msg(context: dict) -> dict:
     else:
         monitored_type = "Host"
         host_service_info = "Host: {} (IP: {})".format(
-            utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
+            format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
             context["HOSTADDRESS"],
         )
         state = "State: %s" % context["HOSTSTATE"]
@@ -59,3 +63,7 @@ def cisco_webex_teams_msg(context: dict) -> dict:
     )
 
     return {"markdown": markdown}
+
+
+def main() -> int:
+    return process_by_status_code(post_request(_cisco_webex_teams_msg))

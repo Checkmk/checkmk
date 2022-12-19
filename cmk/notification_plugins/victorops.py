@@ -9,10 +9,15 @@ Send notification messages to Splunk On-Call
 Create a JSON message to be sent to Splunk On-Call REST API
 """
 
-from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context
+from cmk.notification_plugins.utils import (
+    host_url_from_context,
+    post_request,
+    process_by_status_code,
+    service_url_from_context,
+)
 
 
-def translate_states(state: str) -> str:
+def _translate_states(state: str) -> str:
     if state in ["OK", "UP"]:
         return "RECOVERY"
     if state in ["CRITICAL", "DOWN"]:
@@ -22,18 +27,18 @@ def translate_states(state: str) -> str:
     return state  # This is WARNING
 
 
-def victorops_msg(context: dict[str, str]) -> dict[str, object]:
+def _victorops_msg(context: dict[str, str]) -> dict[str, object]:
     """Build the message for VictorOps"""
 
     if context.get("WHAT") == "SERVICE":
-        state = translate_states(context["SERVICESTATE"])
+        state = _translate_states(context["SERVICESTATE"])
         entity_id = "{SERVICEDESC}/{HOSTNAME}:{HOSTADDRESS}".format(**context).replace(" ", "")
         title = "{SERVICEDESC} on {HOSTNAME}".format(**context)
         text = "{SERVICEOUTPUT}\n\n{service_url}".format(
             service_url=service_url_from_context(context), **context
         )
     else:
-        state = translate_states(context["HOSTSTATE"])
+        state = _translate_states(context["HOSTSTATE"])
         entity_id = "{HOSTNAME}:{HOSTADDRESS}".format(**context).replace(" ", "")
         title = "{HOSTNAME} is {HOSTSTATE}".format(**context)
         text = "{HOSTOUTPUT}\n\n{host_url}".format(
@@ -49,3 +54,7 @@ def victorops_msg(context: dict[str, str]) -> dict[str, object]:
         "host_name": hostname,
         "monitoring_tool": "Check_MK notification",
     }
+
+
+def main() -> int:
+    return process_by_status_code(post_request(_victorops_msg))

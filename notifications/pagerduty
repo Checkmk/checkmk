@@ -5,11 +5,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.notification_plugins.pagerduty import pagerduty_msg
-from cmk.notification_plugins.utils import post_request, process_by_status_code
+import sys
+
+from cmk.notification_plugins.pagerduty import main
 
 if __name__ == "__main__":
-    # PagerDuty replies with 202 because the request is further processed
-    # by them. Thus their reply only includes field validation checks.
-    response = post_request(pagerduty_msg)
-    process_by_status_code(response, success_code=202)
+    sys.exit(main())

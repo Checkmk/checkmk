@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.notification_plugins.cisco_webex_teams import cisco_webex_teams_msg
+from cmk.notification_plugins.cisco_webex_teams import _cisco_webex_teams_msg
 
 
 @pytest.mark.parametrize(
@@ -66,5 +66,5 @@ from cmk.notification_plugins.cisco_webex_teams import cisco_webex_teams_msg
     ],
 )
 def test_cisco_webex_teams_message(context: dict[str, str], result: dict[str, str]) -> None:
-    msg = cisco_webex_teams_msg(context)
+    msg = _cisco_webex_teams_msg(context)
     assert msg == result

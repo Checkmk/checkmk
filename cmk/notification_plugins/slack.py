@@ -8,7 +8,13 @@ Send notification messages to Slack
 
 Use a slack webhook to send notification messages
 """
-import cmk.notification_plugins.utils as utils
+from cmk.notification_plugins.utils import (
+    format_link,
+    host_url_from_context,
+    post_request,
+    process_by_status_code,
+    service_url_from_context,
+)
 
 COLORS = {
     "CRITICAL": "#EE0000",
@@ -21,18 +27,16 @@ COLORS = {
 }
 
 
-def slack_msg(context: dict) -> dict[str, object]:
+def _slack_msg(context: dict) -> dict[str, object]:
     """Build the message for slack"""
 
     if context.get("WHAT", None) == "SERVICE":
         color = COLORS.get(context["SERVICESTATE"])
         title = "Service {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nService: {service_link}\nState: {SERVICESTATE}".format(
-            host_link=utils.format_link(
-                "<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]
-            ),
-            service_link=utils.format_link(
-                "<%s|%s>", utils.service_url_from_context(context), context["SERVICEDESC"]
+            host_link=format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
+            service_link=format_link(
+                "<%s|%s>", service_url_from_context(context), context["SERVICEDESC"]
             ),
             **context,
         )
@@ -41,9 +45,7 @@ def slack_msg(context: dict) -> dict[str, object]:
         color = COLORS.get(context["HOSTSTATE"])
         title = "Host {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(
-            host_link=utils.format_link(
-                "<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]
-            ),
+            host_link=format_link("<%s|%s>", host_url_from_context(context), context["HOSTNAME"]),
             **context,
         )
         output = context["HOSTOUTPUT"]
@@ -67,3 +69,7 @@ def slack_msg(context: dict) -> dict[str, object]:
             },
         ]
     }
+
+
+def main() -> int:
+    return process_by_status_code(post_request(_slack_msg))

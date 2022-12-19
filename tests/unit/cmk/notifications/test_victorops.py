@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.notification_plugins.victorops import victorops_msg
+from cmk.notification_plugins.victorops import _victorops_msg
 
 
 @pytest.mark.parametrize(
@@ -62,5 +62,5 @@ from cmk.notification_plugins.victorops import victorops_msg
     ],
 )
 def test_victorops_message(context: dict[str, str], result: dict[str, str]) -> None:
-    msg = victorops_msg(context)
+    msg = _victorops_msg(context)
     assert msg == result

@@ -320,7 +320,7 @@ def retrieve_from_passwordstore(parameter: str) -> str:
 
 
 def post_request(
-    message_constructor: Callable[[dict[str, str]], dict[str, object]],
+    message_constructor: Callable[[dict[str, str]], dict[str, str | object]],
     url: str | None = None,
     headers: dict[str, str] | None = None,
 ) -> requests.Response:
@@ -355,19 +355,18 @@ def post_request(
     return response
 
 
-def process_by_status_code(response: requests.Response, success_code: int = 200) -> NoReturn:
+def process_by_status_code(response: requests.Response, success_code: int = 200) -> int:
     status_code = response.status_code
     summary = f"{status_code}: {http_responses[status_code]}"
 
     if status_code == success_code:
         sys.stderr.write(summary)
-        sys.exit(0)
-    elif 500 <= status_code <= 599:
+        return 0
+    if 500 <= status_code <= 599:
         sys.stderr.write(summary)
-        sys.exit(1)  # Checkmk gives a retry if exited with 1. Makes sense in case of a server error
-    else:
-        sys.stderr.write(f"Failed to send notification.\nResponse: {response.text}\n{summary}")
-        sys.exit(2)
+        return 1  # Checkmk gives a retry if exited with 1. Makes sense in case of a server error
+    sys.stderr.write(f"Failed to send notification.\nResponse: {response.text}\n{summary}")
+    return 2
 
 
 class StateInfo(NamedTuple):

@@ -94,6 +94,7 @@ mkeventd.register(
     config_variable_registry,
     rulespec_group_registry,
     rulespec_registry,
+    autocompleter_registry,
 )
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry, icon_and_action_registry)

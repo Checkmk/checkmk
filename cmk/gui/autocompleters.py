@@ -11,7 +11,6 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.type_defs import MetricName
 
-import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -53,11 +52,6 @@ def __live_query_to_choices(
     if (value, value) not in choices and params["strict"] is False:
         choices.insert(0, (value, value))  # User is allowed to enter anything they want
     return choices
-
-
-def _filter_choices(value: str, choices: Choices) -> Choices:
-    value_to_search = value.lower()
-    return [(value, title) for value, title in choices if value_to_search in title.lower()]
 
 
 def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choices:
@@ -144,24 +138,6 @@ def check_command_autocompleter(value: str, params: dict) -> Choices:
     ]
     empty_choices: Choices = [("", "")]
     return empty_choices + choices
-
-
-@autocompleter_registry.register_expression("service_levels")
-def service_levels_autocompleter(value: str, params: dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    choices: Choices = [(str(level), descr) for level, descr in mkeventd.service_levels()]
-    empty_choices: Choices = [("", "")]
-    return empty_choices + _filter_choices(value, choices)
-
-
-@autocompleter_registry.register_expression("syslog_facilities")
-def syslog_facilities_autocompleter(value: str, params: dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
-    empty_choices: Choices = [("", "")]
-    return empty_choices + _filter_choices(value, choices)
 
 
 @autocompleter_registry.register_expression("monitored_service_description")

@@ -18,6 +18,7 @@ enum class queue_status { ok, overflow, joinable };
 enum class queue_overflow_strategy { wait, pop_oldest, dont_push };
 // queue_join_strategy::shutdown_pop does not seem useful.
 enum class queue_join_strategy { shutdown_push_pop, shutdown_push };
+enum class queue_pop_strategy { blocking, nonblocking };
 
 template <typename T, typename Q = std::deque<T>>
 class Queue {
@@ -40,8 +41,9 @@ public:
                                     queue_overflow_strategy strategy);
     [[nodiscard]] queue_status push(value_type &&elem,
                                     queue_overflow_strategy strategy);
-    std::optional<value_type> try_pop();
-    std::optional<value_type> pop();
+    std::optional<value_type> pop(
+        queue_pop_strategy pop_strategy = queue_pop_strategy::blocking,
+        std::optional<std::chrono::milliseconds> timeout = std::nullopt);
     void join();
     [[nodiscard]] bool joinable() const;
 
@@ -149,21 +151,18 @@ queue_status Queue<T, Q>::push(value_type &&elem,
 }
 
 template <typename T, typename Q>
-std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::try_pop() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (q_.empty() || done()) {
-        return std::nullopt;
-    }
-    auto elem = std::move(q_.front());
-    q_.pop_front();
-    not_full_.notify_one();
-    return elem;
-};
-
-template <typename T, typename Q>
-std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop() {
+std::optional<typename Queue<T, Q>::value_type> Queue<T, Q>::pop(
+    queue_pop_strategy pop_strategy,
+    std::optional<std::chrono::milliseconds> timeout) {
     std::unique_lock<std::mutex> lock(mutex_);
-    not_empty_.wait(lock, [&] { return !q_.empty() || joinable_; });
+    if (pop_strategy == queue_pop_strategy::blocking) {
+        if (timeout) {
+            not_empty_.wait_for(lock, *timeout,
+                                [&] { return !q_.empty() || joinable_; });
+        } else {
+            not_empty_.wait(lock, [&] { return !q_.empty() || joinable_; });
+        }
+    }
     if (q_.empty() || done()) {
         return std::nullopt;
     }

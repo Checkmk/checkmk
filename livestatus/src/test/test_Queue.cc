@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <chrono>
 #include <cstddef>
 #include <optional>
 #include <string>
@@ -10,6 +11,8 @@
 
 #include "Queue.h"
 #include "gtest/gtest.h"
+
+using namespace std::chrono_literals;
 
 class UnboundedQueueTest
     : public ::testing::TestWithParam<queue_overflow_strategy> {
@@ -30,18 +33,18 @@ TEST_P(UnboundedQueueTest, PushAndPopDontOverflow) {
     EXPECT_EQ(queue_status::ok, queue.push(42, strategy));
     EXPECT_EQ(3UL, queue.approx_size());
 
-    EXPECT_EQ(1, queue.try_pop());
-    EXPECT_EQ(2, queue.try_pop());
-    EXPECT_EQ(42, queue.try_pop());
+    EXPECT_EQ(1, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(2, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(42, queue.pop(queue_pop_strategy::nonblocking));
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
 TEST_P(UnboundedQueueTest, PopFromEmptyReturnsNullOpt) {
     EXPECT_EQ(0UL, queue.approx_size());
-    EXPECT_EQ(std::nullopt, queue.try_pop());
-    EXPECT_EQ(std::nullopt, queue.try_pop());
-    EXPECT_EQ(std::nullopt, queue.try_pop());
-    EXPECT_EQ(std::nullopt, queue.try_pop());
+    EXPECT_EQ(std::nullopt, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(std::nullopt, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(std::nullopt, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(std::nullopt, queue.pop(queue_pop_strategy::nonblocking));
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
@@ -81,11 +84,11 @@ TEST_F(BoundedQueueTest, PopOldestWhenFull) {
 
     // The first five elements should be gone.
 
-    EXPECT_EQ(6, queue.try_pop());
-    EXPECT_EQ(7, queue.try_pop());
-    EXPECT_EQ(8, queue.try_pop());
-    EXPECT_EQ(9, queue.try_pop());
-    EXPECT_EQ(0, queue.try_pop());
+    EXPECT_EQ(6, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(7, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(8, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(9, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(0, queue.pop(queue_pop_strategy::nonblocking));
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
@@ -111,11 +114,11 @@ TEST_F(BoundedQueueTest, DontPushWhenFull) {
 
     // The last five elements should not be there.
 
-    EXPECT_EQ(1, queue.try_pop());
-    EXPECT_EQ(2, queue.try_pop());
-    EXPECT_EQ(3, queue.try_pop());
-    EXPECT_EQ(4, queue.try_pop());
-    EXPECT_EQ(5, queue.try_pop());
+    EXPECT_EQ(1, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(2, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(3, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(4, queue.pop(queue_pop_strategy::nonblocking));
+    EXPECT_EQ(5, queue.pop(queue_pop_strategy::nonblocking));
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
@@ -142,10 +145,14 @@ TEST_F(MoveOnlyQueueTest, MoveOnlyTest) {
 
     EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"1st"}, strategy));
     EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"2nd"}, strategy));
+    EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"3rd"}, strategy));
 
-    auto o1 = queue.try_pop();
+    auto o1 = queue.pop(queue_pop_strategy::nonblocking);
     EXPECT_EQ("1st", o1->id());
 
-    auto o2 = queue.pop();
+    auto o2 = queue.pop(queue_pop_strategy::blocking);
     EXPECT_EQ("2nd", o2->id());
+
+    auto o3 = queue.pop(queue_pop_strategy::blocking, 0ms);
+    EXPECT_EQ("3rd", o3->id());
 }

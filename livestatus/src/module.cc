@@ -420,7 +420,8 @@ void terminate_threads() {
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
-        while (auto fd = fl_client_queue->try_pop()) {
+        while (auto fd =
+                   fl_client_queue->pop(queue_pop_strategy::nonblocking)) {
             ::close(*fd);
         }
         for (const auto &info : fl_thread_info) {

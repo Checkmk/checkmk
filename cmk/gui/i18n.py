@@ -9,11 +9,9 @@ import gettext as gettext_module
 from pathlib import Path
 from typing import NamedTuple
 
-from flask import g
-
 import cmk.utils.paths
 
-from cmk.gui.ctx_stack import request_local_attr, set_global_var
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
@@ -36,11 +34,13 @@ class Translation(NamedTuple):
     name: str
 
 
-translation = request_local_attr("translation", Translation)
-
-
 def _translation() -> Translation | None:
-    return translation
+    try:
+        return request_local_attr().translation
+    except RuntimeError:
+        # TODO: Once we cleaned up all wrong _() to _l(), we can clean this up
+        pass
+    return None
 
 
 @request_memoize()
@@ -48,7 +48,7 @@ def _(message: str, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings.
     """
-    if _translation():
+    if translation := _translation():
         return translation.translation.gettext(message)
     return str(message)
 
@@ -64,7 +64,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     Positional-only argument to simplify additional linting of localized strings
     """
-    if _translation():
+    if translation := _translation():
         return translation.translation.ngettext(singular, plural, n)
     if n == 1:
         return str(singular)
@@ -72,7 +72,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
 
 
 def get_current_language() -> str:
-    if _translation():
+    if translation := _translation():
         return translation.name
     return "en"
 
@@ -136,22 +136,21 @@ def get_languages() -> list[tuple[str, str]]:
 
 
 def _unlocalize() -> None:
-    set_global_var("translation", None)
+    request_local_attr().translation = None
 
 
 def localize(lang: str) -> None:
     _.cache_clear()  # type:ignore[attr-defined]
     if lang == "en":
         _unlocalize()
-        return None
+        return
 
     gettext_translation = _init_language(lang)
     if not gettext_translation:
         _unlocalize()
-        return None
+        return
 
-    set_global_var("translation", Translation(translation=gettext_translation, name=lang))
-    return None
+    request_local_attr().translation = Translation(translation=gettext_translation, name=lang)
 
 
 def _init_language(lang: str) -> gettext_module.NullTranslations | None:
@@ -162,7 +161,7 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     translations: list[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            g.translation = gettext_module.translation(
+            translation = gettext_module.translation(
                 "multisite", str(locale_base_dir), languages=[lang]
             )
 
@@ -171,8 +170,8 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
 
         # Create a chain of fallback translations
         if translations:
-            g.translation.add_fallback(translations[-1])
-        translations.append(g.translation)
+            translation.add_fallback(translations[-1])
+        translations.append(translation)
 
     if not translations:
         return None
@@ -208,7 +207,7 @@ def _u(text: str) -> str:
         if current_language == "en":
             return text
         return ldict.get(current_language, text)
-    if _translation():
+    if translation := _translation():
         return translation.translation.gettext(text)
     return text
 

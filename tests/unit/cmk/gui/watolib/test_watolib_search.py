@@ -13,13 +13,12 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import GetConfigurationResult
 
-from cmk.gui.logged_in import LoggedInNobody, user
+from cmk.gui.logged_in import _UserContext, LoggedInNobody, user
 from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainApache,
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.session import _UserContext
 from cmk.gui.type_defs import SearchResult
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib import search

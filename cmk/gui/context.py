@@ -8,7 +8,22 @@
 
 from __future__ import annotations
 
+import logging
+
 from werkzeug.local import LocalStack
+
+from cmk.gui import http
+from cmk.gui.config import Config
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.i18n import Translation
+from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.userdb.session import Session
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.timeout_manager import TimeoutManager
+from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.utils.user_errors import UserErrors
 
 _sentinel = object()
 
@@ -60,6 +75,103 @@ class AppContext:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
+        self._stack.pop()
+
+
+class RequestContext:
+    """
+    The request context keeps track of the request-level data during a request. Rather than passing
+    the request object to each function that runs during a request, the request and session proxies
+    are accessed instead.
+
+    This is similar to the The Application Context, which keeps track of the application-level data
+    independent of a request. A corresponding application context is pushed when a request context is
+    pushed.
+
+    When a Flask application begins handling a request, it pushes a request context, which also
+    pushes an The Application Context. When the request ends it pops the request context then the
+    application context.
+
+    The context is unique to each thread (or other worker type). request cannot be passed to another
+    thread, the other thread will have a different context stack and will not know about the request
+    the parent thread was pointing to.
+
+    See:
+
+        https://flask.palletsprojects.com/en/1.1.x/appcontext/
+        https://flask.palletsprojects.com/en/1.1.x/reqcontext/
+    """
+
+    def __init__(
+        self,
+        req: http.Request,
+        resp: http.Response,
+        funnel: OutputFunnel,
+        config_obj: Config,
+        user: LoggedInUser,  # pylint: disable=redefined-outer-name
+        html_obj: HTMLGenerator | None = None,
+        timeout_manager: TimeoutManager | None = None,  # pylint: disable=redefined-outer-name
+        theme: Theme = Theme(),  # pylint: disable=redefined-outer-name
+        display_options: DisplayOptions | None = None,  # pylint: disable=redefined-outer-name
+        prefix_logs_with_url: bool = True,
+        *,
+        stack: LocalStack,
+        url_filter: logging.Filter,
+    ):
+        self.html = html_obj
+        self.auth_type: str | None = None
+        self.timeout_manager = timeout_manager
+        self.theme = theme
+        self.display_options = display_options
+        self.session: Session | None = None
+        self.flashes: list[str] | None = None
+        self.translation: Translation | None = None
+        self._prefix_logs_with_url = prefix_logs_with_url
+
+        self.request = req
+        self.response = resp
+        self.output_funnel = funnel
+        self.config = config_obj
+        self._user = user
+        self.user_errors = UserErrors()
+
+        self._prepend_url_filter = url_filter
+        self._web_log_handler: logging.Handler | None = None
+
+        self._stack = stack
+
+    @property
+    def user(self) -> LoggedInUser:
+        return self._user
+
+    @user.setter
+    def user(self, user_obj: LoggedInUser) -> None:
+        self._user = user_obj
+
+    @property
+    def transactions(self) -> TransactionManager:
+        return self._user.transactions
+
+    def __enter__(self):
+        self._stack.push(self)
+        # TODO: Move this plus the corresponding cleanup code to hooks.
+        if self._prefix_logs_with_url:
+            self._web_log_handler = logging.getLogger().handlers[0]
+            self._web_log_handler.addFilter(self._prepend_url_filter)
+
+        _call_hook("request-context-enter")
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if self._web_log_handler is not None:
+            self._web_log_handler.removeFilter(self._prepend_url_filter)
+
+        if self.timeout_manager is not None:
+            self.timeout_manager.disable_timeout()
+
+        _call_hook("request-context-exit")
+
         self._stack.pop()
 
 

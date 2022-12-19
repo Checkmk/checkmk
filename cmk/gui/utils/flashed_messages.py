@@ -10,27 +10,23 @@ simplicity. In case we have such a generic thing, it will be easy to switch to i
 """
 
 
-import flask
-
+from cmk.gui.ctx_stack import request_stack
+from cmk.gui.userdb import active_user_session
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
 def flash(message: str | HTML | LazyString) -> None:
-    """To handle both, HTML and str, correctly we need to
-
-        a) escape the given str for HTML and
-        b) cast the HTML objects to str.
-
-    Before handing back the messages to the consumer, all need to converted back to HTML
-    (see get_flashed_messages())
+    """To handle both, HTML and str, correctly we need to a) escape the given str for HTML and
+    cast the HTML objects to str. Before handing back the messages to the consumer, all need to
+    converted back to HTML (see get_flashed_messages())
     """
     if isinstance(message, str):
         normalized = escape_text(message)
     else:
         normalized = str(message)
-    flask.flash(normalized)
+    active_user_session.session_info.flashes.append(normalized)
 
 
 def get_flashed_messages() -> list[HTML]:
@@ -39,13 +35,19 @@ def get_flashed_messages() -> list[HTML]:
     Move the flashes from the session object to the current request once and
     cache them for the current request.
     """
-    # NOTE
-    # This whole loop/if is only there because get_flashed_messages returns a Union.
-    # If the flask developers were to put in proper @overloads, we can simplify here.
-    result = []
-    for _flash in flask.get_flashed_messages(with_categories=False):
-        if isinstance(_flash, tuple):
-            result.append(HTML(_flash[1]))
+    top = request_stack().top
+    if top is None:
+        return []
+
+    flashes = top.flashes
+    if flashes is None:
+        if (
+            not hasattr(active_user_session, "session_info")
+            or not active_user_session.session_info.flashes
+        ):
+            top.flashes = []
         else:
-            result.append(HTML(_flash))
-    return result
+            top.flashes = active_user_session.session_info.flashes
+            active_user_session.session_info.flashes = []
+
+    return [HTML(s) for s in top.flashes]

@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import base64
 import binascii
-import contextlib
 import functools
 import http.client
 import json
@@ -17,33 +16,35 @@ import re
 import traceback
 import urllib.parse
 from collections.abc import Callable, Mapping
+from contextlib import nullcontext
 from datetime import datetime
-from typing import Any, Generator, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
-from flask import g
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
+import cmk.utils.store
 from cmk.utils import crash_reporting, paths
+from cmk.utils.crypto import Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.session
-from cmk.gui import config, userdb
-from cmk.gui.auth import (
-    automation_auth,
-    check_auth_by_cookie,
-    gui_user_auth,
-    rfc7662_subject,
-    user_from_bearer_header,
-)
+from cmk.gui import config, sites, userdb
+from cmk.gui.context import AppContext, RequestContext
+from cmk.gui.ctx_stack import app_stack, request_stack
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Request, Response
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInNobody, user
+from cmk.gui.login import check_auth_by_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
+from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.session import UserContext
+from cmk.gui.utils.logging_filters import PrependURLFilter
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
+from cmk.gui.wsgi.middleware import OverrideRequestMethod
 from cmk.gui.wsgi.wrappers import ParameterDict
 
 if TYPE_CHECKING:
@@ -124,7 +125,7 @@ def _verify_user(  # pylint: disable=too-many-branches
                 f"{user_id} has two-factor authentication enabled, which can only be used in "
                 "interactive GUI sessions."
             )
-        if not cmk.gui.session.is_two_factor_completed():
+        if not userdb.is_two_factor_completed():
             raise MKAuthException("The two-factor authentication needs to be passed first.")
 
     return final_candidate
@@ -176,28 +177,37 @@ def user_from_basic_header(auth_header: str) -> tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-class Authenticate:
-    """Authenticate all URLs going into the wrapped WSGI application"""
+def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password[str]]:
+    """
 
-    def __init__(self, app: WSGIApplication) -> None:
-        self.app = app
+    Examples:
 
-    def __repr__(self) -> str:
-        return f"<Authenticate {self.app!r}>"
+        >>> username, password = user_from_bearer_header("Bearer username password")
+        >>> (username, password.raw)
+        ('username', 'password')
 
-    def __get__(self, instance, owner=None):
-        return functools.partial(self.wsgi_app, instance)
+    Args:
+        auth_header:
 
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
+    Returns:
 
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        try:
-            rfc7662 = _verify_user(environ, datetime.now())
-        except MKException as exc:
-            return problem(status=401, title=str(exc))(environ, start_response)
-        with set_user_context(rfc7662["sub"], rfc7662):
-            return self.app(environ, start_response)
+    """
+    try:
+        _, token = auth_header.split("Bearer ", 1)
+    except ValueError:
+        raise MKAuthException(f"Not a valid Bearer token: {auth_header}")
+    try:
+        user_id, secret = token.strip().split(" ", 1)
+    except ValueError:
+        raise MKAuthException("No user/password combination in Bearer token.")
+    if not secret:
+        raise MKAuthException("Empty password not allowed.")
+    if not user_id:
+        raise MKAuthException("Empty user not allowed.")
+    if "/" in user_id:
+        raise MKAuthException("No slashes / allowed in username.")
+
+    return UserId(user_id), Password(secret)
 
 
 class EndpointAdapter:
@@ -210,19 +220,11 @@ class EndpointAdapter:
         self.endpoint = endpoint
 
     def __repr__(self) -> str:
-        return f"<EndpointAdapter {self.endpoint!r}>"
+        return f"<Authenticate {self.endpoint!r}>"
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
-
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
-
-        # Create the response
-        with self.endpoint.register_permission_tracking():
-            wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
-
-        # Serve the response
+        wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
         return wsgi_app(environ, start_response)
 
 
@@ -314,9 +316,6 @@ class ServeSpec:
         self.extension = extension
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
-
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         serializers = {"yaml": dict_to_yaml, "json": json.dumps}
         content_types = {
             "json": "application/json",
@@ -401,9 +400,6 @@ class CheckmkRESTAPI:
             "doc-yaml": ServeSpec("doc", "yaml"),
             "doc-json": ServeSpec("doc", "json"),
         }
-        self._url_map: Map | None = None
-
-    def _build_url_map(self) -> Map:
         rules: list[Rule] = []
         endpoint: Endpoint
         for endpoint in ENDPOINT_REGISTRY:
@@ -420,7 +416,7 @@ class CheckmkRESTAPI:
             )
             self.endpoints[endpoint.ident] = EndpointAdapter(endpoint)
 
-        return Map(
+        self.url_map = Map(
             [
                 Submount(
                     "/<path:_path>",
@@ -436,23 +432,22 @@ class CheckmkRESTAPI:
                 )
             ]
         )
+        self.wsgi_app: WSGIApplication = OverrideRequestMethod(self._wsgi_app).wsgi_app
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.wsgi_app(environ, start_response)
 
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+    def _wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        urls = self.url_map.bind_to_environ(environ)
+        endpoint: Endpoint | None
         try:
-            if self._url_map is None:
-                # NOTE: This needs to be executed in a Request context because it depends on
-                # the configuration
-                self._url_map = self._build_url_map()
-
-            urls = self._url_map.bind_to_environ(environ)
             result: tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
             endpoint_ident, matched_path_args = result  # pylint: disable=unpacking-non-sequence
             wsgi_app = self.endpoints[endpoint_ident]
             if isinstance(wsgi_app, EndpointAdapter):
-                g.endpoint = wsgi_app.endpoint
+                endpoint = wsgi_app.endpoint
+            else:
+                endpoint = None
 
             # Remove _path again (see Submount above), so the validators don't go crazy.
             path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
@@ -461,7 +456,34 @@ class CheckmkRESTAPI:
             # function at setup-time.
             environ[ARGS_KEY] = path_args
 
-            return wsgi_app(environ, start_response)
+            req = Request(environ)
+            resp = Response()
+            with AppContext(self, stack=app_stack()), RequestContext(
+                req=req,
+                resp=resp,
+                funnel=OutputFunnel(resp),
+                config_obj=config.make_config_object(config.get_default_config()),
+                user=LoggedInNobody(),
+                display_options=DisplayOptions(),
+                stack=request_stack(),
+                url_filter=PrependURLFilter(),
+            ), cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
+                config.initialize()
+                load_dynamic_permissions()
+
+                # Authenticate the user for all endpoints and sub-applications.
+                try:
+                    rfc7662 = _verify_user(environ, datetime.now())
+                except MKException as exc:
+                    return problem(
+                        status=401,
+                        title=str(exc),
+                    )(environ, start_response)
+
+                with set_user_context(rfc7662["sub"], rfc7662), (
+                    endpoint.register_permission_tracking() if endpoint else nullcontext(None)
+                ):
+                    return wsgi_app(environ, start_response)
         except ProblemException as exc:
             return exc(environ, start_response)
         except HTTPException as exc:
@@ -523,12 +545,3 @@ class APICrashReport(crash_reporting.ABCCrashReport):
     @classmethod
     def type(cls):
         return "rest_api"
-
-
-@contextlib.contextmanager
-def set_user_context(user_id: UserId, token_info: RFC7662) -> Generator[None, None, None]:
-    if user_id and token_info and user_id == token_info.get("sub"):
-        with UserContext(user_id):
-            yield
-    else:
-        raise MKAuthException("Unauthorized by verify_user")

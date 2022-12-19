@@ -542,33 +542,3 @@ def on_time(utctime, timezone: str):  # type:ignore[no-untyped-def]
 
     with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
-
-
-__all__ = [
-    "cmc_path",
-    "cme_path",
-    "cmk_path",
-    "add_python_paths",
-    "create_linux_test_host",
-    "fake_version_and_paths",
-    "skip_unwanted_test_types",
-    "wait_until_liveproxyd_ready",
-    "wait_until",
-    "on_time",
-    "set_timezone",
-    "Site",
-    "SiteFactory",
-    "Check",
-    "MissingCheckInfoError",
-    "CMKEventConsole",
-    "CMKEventConsoleStatus",
-    "import_module_hack",
-    "APIError",
-    "CMKWebSession",
-    "compare_html",
-    "current_branch_name",
-    "get_cmk_download_credentials",
-    "repo_path",
-    "site_id",
-    "virtualenv_path",
-]

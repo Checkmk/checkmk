@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Detect whether the client is a mobile client"""
+"""Detect whether or not the client is a mobile client"""
 
 import re
 
@@ -12,13 +12,13 @@ from cmk.gui.http import Request, Response
 
 @request_memoize()
 def is_mobile(request: Request, response: Response) -> bool:
-    if "mobile" in request.args:
-        mobile = request.args.get("mobile", type=bool, default=False)
+    if request.has_var("mobile"):
+        mobile = bool(request.var("mobile"))
         # Persist the explicitly set state in a cookie to have it maintained through further requests
         response.set_http_cookie("mobile", str(int(mobile)), secure=request.is_secure)
         return mobile
 
-    if "mobile" in request.cookies:
+    if request.has_cookie("mobile"):
         return request.cookie("mobile", "0") == "1"
 
     return _is_mobile_client(request.user_agent.string)

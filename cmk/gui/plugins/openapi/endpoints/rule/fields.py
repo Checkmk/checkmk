@@ -84,8 +84,7 @@ class MoveRuleTo(marshmallow_oneofschema.OneOfSchema):
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
 
         >>> schema = MoveRuleTo()
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
+        >>> with application_and_request_context():
         ...     schema.load({"position": "top_of_folder", "folder": "/"})
         {'position': 'top_of_folder', 'folder': Folder('', 'Main')}
 
@@ -686,14 +685,13 @@ class RuleExtensions(base.BaseSchema):
 
         >>> ext = RuleExtensions()
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
+        >>> with application_and_request_context():
         ...     ext.load({
         ...        'folder': '/',
         ...     })
         {'folder': Folder('', 'Main')}
 
-        >>> with mock_site(), application_and_request_context():
+        >>> with application_and_request_context():
         ...     rv = ext.load({
         ...        'folder': '/',
         ...        'conditions': {
@@ -774,8 +772,7 @@ class InputRuleObject(base.BaseSchema):
 
         >>> s = InputRuleObject()
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.livestatus_utils.testing import mock_site
-        >>> with mock_site(), application_and_request_context():
+        >>> with application_and_request_context():
         ...     rv = s.load({
         ...         'folder': '~',
         ...         'ruleset': 'host',

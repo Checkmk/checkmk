@@ -12,9 +12,9 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.unit.cmk.gui.conftest import SetConfig
 
 import cmk.gui.main
+from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
-from cmk.gui.session import session
 
 RequestContextFixture = Iterator[None]
 
@@ -31,17 +31,18 @@ def test_get_start_url_default_config(
         assert cmk.gui.main._get_start_url() == "bla.py"
 
 
-def test_get_start_url_user_config(set_config: SetConfig) -> None:
+def test_get_start_url_user_config(
+    monkeypatch: MonkeyPatch, request_context: RequestContextFixture, set_config: SetConfig
+) -> None:
     class MockUser:
-        ident = id = "17"  # session wants us to have an id to be able to set it there
-
         @property
         def start_url(self) -> str:
-            return "correct_url.py"
+            return "user_url.py"
 
-    with set_config(start_url="wrong_url.py"):
-        session.user = MockUser()  # type: ignore[assignment]
-        assert cmk.gui.main._get_start_url() == "correct_url.py"
+    local = request_local_attr()
+    monkeypatch.setattr(local, "user", MockUser())
+    with set_config(start_url="bla.py"):
+        assert cmk.gui.main._get_start_url() == "user_url.py"
 
 
 def test_get_start_url(request_context: RequestContextFixture) -> None:

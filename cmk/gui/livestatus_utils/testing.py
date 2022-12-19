@@ -5,7 +5,6 @@
 
 import contextlib
 import os
-import sys
 from collections.abc import Iterator
 from unittest import mock
 
@@ -19,7 +18,6 @@ from cmk.utils.livestatus_helpers.testing import (
 from cmk.utils.site import omd_site
 
 from cmk.gui import sites
-from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 
@@ -31,16 +29,9 @@ def mock_livestatus() -> Iterator[MockLiveStatusConnection]:
         yield mock_live
 
 
-def running_in_pytest():
-    assert "pytest" in sys.modules, "This code should never be run. This is a bug, please report."
-    return True
-
-
 @contextlib.contextmanager
 def mock_site() -> Iterator[None]:
-    assert running_in_pytest()
-    env_vars = {"OMD_ROOT": "/", "OMD_SITE": os.environ.get("OMD_SITE", "NO_SITE")}
-    with mock.patch.dict(os.environ, env_vars):
+    with mock.patch.dict(os.environ, {"OMD_ROOT": "/", "OMD_SITE": "NO_SITE"}):
         # We don't want to be polluted by other tests.
         omd_site.cache_clear()
         try:
@@ -81,12 +72,7 @@ def simple_expect(
         ...    _ = _live.query("GET hosts")
 
     """
-    with (
-        mock_site(),
-        application_and_request_context(),
-        mock_livestatus() as mock_live,
-        SuperUserContext(),
-    ):
+    with application_and_request_context(), mock_site(), mock_livestatus() as mock_live:
         if query:
             mock_live.expect_query(query, match_type=match_type)
         with mock_live(expect_status_query=expect_status_query):

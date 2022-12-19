@@ -10,9 +10,7 @@ import pprint
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, overload, Union
-
-from flask import current_app, session
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -223,18 +221,19 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in self._default_javascripts + list(javascripts):
-            filename_for_browser = self.javascript_filename_for_browser(js)
+            filename_for_browser = HTMLGenerator.javascript_filename_for_browser(js)
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
         self.set_js_csrf_token()
 
         if self.browser_reload != 0.0:
-            self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload,))
+            self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload))
 
         self.close_head()
 
     def set_js_csrf_token(self) -> None:
+        session = request_local_attr("session")
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
         if not hasattr(session, "session_info"):
             return
@@ -266,43 +265,36 @@ class HTMLGenerator(HTMLWriter):
         return plugin_stylesheets
 
     # Make the browser load specified javascript files. We have some special handling here:
-    # a) files which can not be found shall not be loaded
+    # a) files which can not be found shal not be loaded
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
-    def javascript_filename_for_browser(self, jsname: str) -> str | None:
+    @staticmethod
+    def javascript_filename_for_browser(jsname: str) -> str | None:
         filename_for_browser = None
+        rel_path = "share/check_mk/web/htdocs/js"
         if active_config.debug:
             min_parts = ["", "_min"]
         else:
             min_parts = ["_min", ""]
 
         for min_part in min_parts:
-            fname = f"htdocs/js/{jsname}{min_part}.js"
-            try:
-                HTMLGenerator._exists_in_web_dirs(fname)
-            except FileNotFoundError:
-                continue
-
-            filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
-            break
-
-        if filename_for_browser is None and current_app.debug:
-            raise RuntimeError(f"{jsname} could not be found.")
+            fname = f"{jsname}{min_part}.js"
+            if (cmk.utils.paths.omd_root / rel_path / fname).exists() or (
+                cmk.utils.paths.omd_root / "local" / rel_path / fname
+            ).exists():
+                filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
+                break
 
         return filename_for_browser
 
     @staticmethod
-    def _exists_in_web_dirs(file_name: str) -> None:
-        path = _path(cmk.utils.paths.web_dir) / file_name
-        local_path = _path(cmk.utils.paths.local_web_dir) / file_name
-        file_missing = not (path.exists() or local_path.exists())
-        if file_missing and current_app.debug:
-            raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
-
-    @staticmethod
     def _css_filename_for_browser(css: str) -> str | None:
-        HTMLGenerator._exists_in_web_dirs(f"htdocs/{css}.css")
-        return f"{css}-{cmk_version.__version__}.css"
+        rel_path = f"share/check_mk/web/htdocs/{css}.css"
+        if (cmk.utils.paths.omd_root / rel_path).exists() or (
+            cmk.utils.paths.omd_root / "local" / rel_path
+        ).exists():
+            return f"{css}-{cmk_version.__version__}.css"
+        return None
 
     def html_head(
         self, title: str, javascripts: Sequence[str] | None = None, force: bool = False
@@ -373,6 +365,7 @@ class HTMLGenerator(HTMLWriter):
             enctype="multipart/form-data" if method.lower() == "post" else None,
         )
 
+        session = request_local_attr("session")
         if hasattr(session, "session_info"):
             self.hidden_field("csrf_token", session.session_info.csrf_token)
 
@@ -1364,21 +1357,4 @@ class HTMLGenerator(HTMLWriter):
         )
 
 
-@overload
-def _path(path_or_str: Path) -> Path:
-    ...
-
-
-@overload
-def _path(path_or_str: str) -> Path:
-    ...
-
-
-def _path(path_or_str: Union[Path, str]) -> Path:
-    if isinstance(path_or_str, str):  # pylint: disable=no-else-return
-        return Path(path_or_str)
-    else:
-        return path_or_str
-
-
-html = request_local_attr("html", HTMLGenerator)
+html: HTMLGenerator = request_local_attr("html")

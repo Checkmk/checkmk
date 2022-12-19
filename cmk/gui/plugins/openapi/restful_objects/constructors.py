@@ -16,7 +16,6 @@ from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request
-from cmk.gui.livestatus_utils.testing import mock_site
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionItem,
@@ -34,9 +33,12 @@ from cmk.gui.plugins.openapi.utils import ProblemException
 
 @contextlib.contextmanager
 def _request_context(secure=True):
+    import os
+    from unittest import mock
+
     from werkzeug.test import create_environ
 
-    from cmk.gui.utils.script_helpers import application_and_request_context
+    from cmk.gui.utils.script_helpers import request_context
 
     if secure:
         protocol = "https"
@@ -44,7 +46,7 @@ def _request_context(secure=True):
         protocol = "http"
     # Previous tests already set the site to "heute", which makes this test fail.
     omd_site.cache_clear()
-    with mock_site(), application_and_request_context(
+    with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}), request_context(
         create_environ(base_url=f"{protocol}://localhost:5000/")
     ):
         yield

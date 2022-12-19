@@ -77,7 +77,7 @@ ifneq ("$(wildcard $(PY_PATH))","")
 endif
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
+        clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
         documentation-quick format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
@@ -314,8 +314,6 @@ clean:
 	       web/htdocs/themes/*/theme.css \
 	       .werks/werks \
 	       ChangeLog
-
-css: .ran-webpack
 
 EXCLUDE_PROPER= \
 	    --exclude="**/.vscode" \

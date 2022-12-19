@@ -9,7 +9,6 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
 from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from pydantic import BaseModel
@@ -101,37 +100,11 @@ class SessionInfo:
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: object = None
 
-    logged_out: bool = field(default=False)
-    auth_type: AuthType | None = None
-
     def to_json(self) -> dict:
         # We assume here that asdict() does the right thing for the
         # webauthn_action_state field. This can be the case, but it's not very
         # obvious.
         return asdict(self)
-
-    def invalidate(self) -> None:
-        """Called when a user logged out"""
-        self.auth_type = None
-        self.logged_out = True
-
-    def refresh(self, now: datetime | None = None) -> None:
-        """Called on any user activity.
-
-        >>> now = datetime(2022, 1, 1, 0, 0, 0)
-        >>> info = SessionInfo(session_id="", started_at=0, last_activity=0)
-        >>> info.refresh(now)
-        >>> assert info.last_activity == int(now.timestamp())
-
-        Args:
-            now:
-
-        Returns:
-
-        """
-        if now is None:
-            now = datetime.now()
-        self.last_activity = int(now.timestamp())
 
 
 class UserSpec(TypedDict, total=False):

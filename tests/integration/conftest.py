@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import os
 
 import pytest
 
@@ -16,10 +15,6 @@ from tests.testlib.web_session import CMKWebSession
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True, name="site")
 def fixture_site() -> Site:
-    if os.environ.get("RUNNING_IN_IDE") in ["yes", "1", "t", "true"]:
-        # launch docker container
-        # mount
-        raise Exception
     sf = get_site_factory(prefix="int_", update_from_git=True, install_test_python_modules=True)
     return sf.get_existing_site("test")
 

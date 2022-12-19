@@ -12,9 +12,6 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
 
-from flask import current_app
-from flask.ctx import RequestContext
-
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
@@ -37,6 +34,7 @@ from cmk.gui.background_job import (
     job_registry,
 )
 from cmk.gui.config import load_config
+from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -166,9 +164,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
-        with (
-            request_context := make_request_context(current_app)
-        ):  # pylint: disable=superfluous-parens
+        with (request_context := make_request_context()):  # pylint: disable=superfluous-parens
             load_config()
 
         with ThreadPool(20) as pool:

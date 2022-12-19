@@ -2,64 +2,43 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 from functools import partial
-from typing import Any, Literal, TypeVar
+from typing import Any
 
-from flask import g, session  # pylint: disable=unused-import
-from typing_extensions import assert_never
-from werkzeug.local import LocalProxy
+from werkzeug.local import LocalProxy, LocalStack
 
-T = TypeVar("T")
+#####################################################################
+# application context
 
-
-def set_global_var(name: str, obj: Any) -> None:
-    setattr(g, name, obj)
+_app_ctx_stack: LocalStack = LocalStack()
 
 
-def session_attr(
-    name: str | tuple[Literal["user"], Literal["transactions"]], type_class: type[T]
-) -> T:
-    def get_attr_or_item(obj, key):
-        if hasattr(obj, key):
-            return getattr(obj, key)
+def app_stack() -> LocalStack:
+    return _app_ctx_stack
 
-        try:
-            return obj[key]
-        except TypeError:
-            return None
 
-    def maybe_tuple_lookup(attr_names: tuple[str, ...]) -> T | None:
-        rv = session
-        for attr in attr_names:
-            rv = get_attr_or_item(rv, attr)
+def _lookup_app_object(name):
+    top = _app_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of application context.")
+    return getattr(top, name)
 
-        if rv is None:
-            return None
 
-        if not isinstance(rv, type_class):
-            raise ValueError(f"Object g.{'.'.join(attr_names)} is not of type {type_class}")
+current_app = LocalProxy(partial(_lookup_app_object, "app"))
+g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
-        return rv
+_request_ctx_stack: LocalStack = LocalStack()
 
-    def maybe_str_lookup(_name: str) -> T | None:
-        return getattr(session, _name)
 
-    if isinstance(name, tuple):  # pylint: disable=no-else-return
-        return LocalProxy(partial(maybe_tuple_lookup, name))  # type: ignore
-    if isinstance(name, str):
-        return LocalProxy(partial(maybe_str_lookup, name))  # type: ignore
-
-    assert_never(name)
+def request_stack() -> LocalStack:
+    return _request_ctx_stack
 
 
 # NOTE: Flask offers the proxies below, and we should go into that direction,
 # too. But currently our html class is a swiss army knife with tons of
 # responsibilities which we should really, really split up...
-
-
-def request_local_attr(name: str, type_class: type[T]) -> T:
+def request_local_attr(name=None):
     """Delegate access to the corresponding attribute on RequestContext
 
     When the returned object is accessed, the Proxy will fetch the current
@@ -68,25 +47,19 @@ def request_local_attr(name: str, type_class: type[T]) -> T:
     Args:
         name (str): The name of the attribute on RequestContext
 
-        type_class (type): The type of the return value. No checking is done.
-
     Returns:
         A proxy which wraps the value stored on RequestContext.
 
     """
+    return LocalProxy(partial(_lookup_req_object, name))
 
-    def maybe_str_lookup(_name: str) -> T | None:
-        try:
-            rv = getattr(g, _name)
-        except AttributeError:
-            return None
 
-        if rv is None:
-            return rv
+def _lookup_req_object(name):
+    top = _request_ctx_stack.top
+    if top is None:
+        raise RuntimeError("Working outside of request context.")
 
-        if not isinstance(rv, type_class):
-            raise ValueError(f"Object g.{_name} ({rv!r}) is not of type {type_class}")
+    if name is None:
+        return top
 
-        return rv
-
-    return LocalProxy(partial(maybe_str_lookup, name))  # type: ignore
+    return getattr(top, name)

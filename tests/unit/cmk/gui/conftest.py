@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import threading
-import typing
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
@@ -21,9 +20,7 @@ import webtest  # type: ignore[import]
 
 # TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
 from _pytest.monkeypatch import MonkeyPatch
-from flask import Flask
 from mypy_extensions import KwArg
-from werkzeug.test import create_environ
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.rest_api_client import expand_rel, get_link
@@ -40,16 +37,15 @@ import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
-from cmk.gui import hooks, http, main_modules, userdb
+from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
+from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from cmk.gui.session import session, SuperUserContext, UserContext
-from cmk.gui.type_defs import SessionInfo
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 
 SPEC_LOCK = threading.Lock()
@@ -72,23 +68,11 @@ HTTPMethod = Literal[
 ]  # fmt: off
 
 
-@pytest.fixture(autouse=True)
-def gui_cleanup_after_test():
-    yield
-
-    # In case some tests use @request_memoize but don't use the request context, we'll emit the
-    # clear event after each request.
-    hooks.call("request-end")
-
-
-@pytest.mark.usefixtures("patch_omd_site")
 @pytest.fixture()
-def request_context(flask_app: Flask) -> Iterator[None]:
+def request_context() -> Iterator[None]:
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    with flask_app.test_request_context():
-        flask_app.preprocess_request()
+    with application_and_request_context():
         yield
-        flask_app.process_response(http.Response())
 
 
 @pytest.fixture()
@@ -135,10 +119,11 @@ def set_config_fixture() -> SetConfig:
 
 @contextmanager
 def set_config(**kwargs: Any) -> Iterator[None]:
-    """Patch the config
+    """Patch the GUI config for the current test
 
-    This works even in WSGI tests, where the config is (re-)loaded by the app itself,
-    through the registered callback.
+    In normal tests, if you want to patch the GUI config, you can simply monkeypatch the
+    attribute of your choice. But with the webtest, the config is read during the request
+    handling in the test. This needs a special handling.
     """
 
     def _set_config():
@@ -184,8 +169,8 @@ def with_user(request_context: None, load_config: None) -> Iterator[tuple[UserId
 
 @pytest.fixture()
 def with_user_login(with_user: tuple[UserId, str]) -> Iterator[UserId]:
-    user_id = UserId(with_user[0])
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    user_id = with_user[0]
+    with login.UserSessionContext(user_id):
         yield user_id
 
 
@@ -198,7 +183,7 @@ def with_admin(request_context: None, load_config: None) -> Iterator[tuple[UserI
 @pytest.fixture()
 def with_admin_login(with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
-    with login.UserSessionContext(user_id, require_auth_type=False):
+    with login.UserSessionContext(user_id):
         yield user_id
 
 
@@ -322,74 +307,19 @@ class WebTestAppForCMK(webtest.TestApp):
         return resp
 
 
-def _make_webtest(debug: bool = True, testing: bool = True) -> WebTestAppForCMK:
+def _make_webtest(debug):
     cookies = CookieJar()
-    return WebTestAppForCMK(session_wsgi_app(debug=debug, testing=testing), cookiejar=cookies)
+    return WebTestAppForCMK(session_wsgi_app(debug), cookiejar=cookies)
 
 
 @pytest.fixture()
-def auth_request(with_user: tuple[UserId, str]) -> typing.Generator[http.Request, None, None]:
-    # NOTE:
-    # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
-    # environment dict. When however a Request is passed in, the environment of the Request will
-    # not be touched.
-    user_id, _ = with_user
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
+def wsgi_app(monkeypatch, request_context):
+    return _make_webtest(debug=True)
 
 
 @pytest.fixture()
-def admin_auth_request(
-    with_admin: tuple[UserId, str]
-) -> typing.Generator[http.Request, None, None]:
-    # NOTE:
-    # REMOTE_USER will be omitted by `flask_app.test_client()` if only passed via an
-    # environment dict. When however a Request is passed in, the environment of the Request will
-    # not be touched.
-    user_id, _ = with_admin
-    yield http.Request(dict(**create_environ(), REMOTE_USER=str(user_id)))
-
-
-class SingleRequest(typing.Protocol):
-    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
-        ...
-
-
-@pytest.fixture(scope="function")
-def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleRequest:
-
-    """Do a single authenticated request, thereby persisting the session to disk."""
-
-    def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
-        with flask_app.test_client() as client:
-            client.get(auth_request)
-            infos = userdb.load_session_infos(session.user.ident)
-
-            # When `in_the_past` is a positive integer, the resulting session will have happened
-            # that many seconds in the past.
-            session.session_info.last_activity -= in_the_past
-            session.session_info.started_at -= in_the_past
-
-            session_id = session.session_info.session_id
-            user_id = auth_request.environ["REMOTE_USER"]
-            userdb.session.save_session_infos(
-                user_id, session_infos={session_id: session.session_info}
-            )
-            assert session.user.id == user_id
-            return session.user.id, infos[session_id]
-
-    return caller
-
-
-@pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
-def wsgi_app() -> WebTestAppForCMK:
-    return _make_webtest(debug=False, testing=True)
-
-
-@pytest.fixture()
-@pytest.mark.usefixtures("monkeypatch")
-def wsgi_app_debug_off() -> WebTestAppForCMK:
-    return _make_webtest(debug=False, testing=False)
+def wsgi_app_debug_off(monkeypatch):
+    return _make_webtest(debug=False)
 
 
 @pytest.fixture(autouse=True)
@@ -503,8 +433,3 @@ def run_as_superuser() -> Callable[[], ContextManager[None]]:
             yield None
 
     return _run_as_superuser
-
-
-@pytest.fixture()
-def flask_app() -> Flask:
-    return session_wsgi_app(testing=True)

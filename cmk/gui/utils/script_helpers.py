@@ -7,59 +7,75 @@
 The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
-import typing
-import warnings
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Any, Iterator
+from typing import Any
 
-from flask import Flask
-from flask.ctx import RequestContext
 from werkzeug.test import create_environ
 
-from cmk.gui import http
-
-Environments = typing.Literal["production", "testing", "development"]
+from cmk.gui.config import get_default_config, load_config, make_config_object
+from cmk.gui.context import AppContext, RequestContext
+from cmk.gui.ctx_stack import app_stack, request_stack
+from cmk.gui.display_options import DisplayOptions
+from cmk.gui.htmllib.html import HTMLGenerator
+from cmk.gui.http import Request, Response
+from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.utils.logging_filters import PrependURLFilter
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
+from cmk.gui.utils.timeout_manager import TimeoutManager
 
 
 @lru_cache
-def session_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
+def session_wsgi_app(debug):
     # TODO: Temporary hack. Can be removed once #12954 has been ported from 2.0.0
-    from cmk.gui.wsgi.app import make_wsgi_app
+    from cmk.gui.wsgi import make_app
 
-    return make_wsgi_app(debug=debug, testing=testing)
-
-
-def make_request_context(app: Flask, environ: dict[str, Any] | None = None) -> RequestContext:
-    if environ is None:
-        environ = create_environ()
-    return app.request_context(environ)
+    return make_app(debug=debug)
 
 
 @contextmanager
-def request_context(app: Flask, environ: dict[str, Any] | None = None) -> Iterator[None]:
-    with make_request_context(app, environ):
-        app.preprocess_request()
+def application_context() -> Iterator[None]:
+    with AppContext(session_wsgi_app(debug=False), stack=app_stack()):
         yield
-        app.process_response(http.Response())
 
 
-@contextmanager
-def application_and_request_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
-    warnings.warn(
-        "Please either use the `request_context` fixture or the `flask_app` fixture from now "
-        "on. Using `flask_app` you can have access to the test client as well. "
-        "See https://flask.palletsprojects.com/en/latest/testing/ and examples in our tests.",
-        DeprecationWarning,
+def make_request_context(environ: Mapping[str, Any] | None = None) -> RequestContext:
+    req = Request(dict(create_environ(), REQUEST_URI="") if environ is None else environ)
+    resp = Response(mimetype="text/html")
+    funnel = OutputFunnel(resp)
+    return RequestContext(
+        req=req,
+        resp=resp,
+        funnel=funnel,
+        config_obj=make_config_object(get_default_config()),
+        user=LoggedInNobody(),
+        html_obj=HTMLGenerator(req, funnel, output_format="html", mobile=is_mobile(req, resp)),
+        display_options=DisplayOptions(),
+        timeout_manager=TimeoutManager(),
+        theme=Theme(),
+        prefix_logs_with_url=False,
+        stack=request_stack(),
+        url_filter=PrependURLFilter(),
     )
 
-    app = session_wsgi_app(testing=True)
-    with app.app_context(), request_context(app, environ):
+
+@contextmanager
+def request_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
+    with make_request_context(environ=environ):
         yield
 
 
 @contextmanager
-def gui_context(environ: dict[str, Any] | None = None) -> Iterator[None]:
-    app = session_wsgi_app(testing=True)
-    with app.app_context(), make_request_context(app, environ):
+def application_and_request_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
+    with application_context(), request_context(environ):
+        yield
+
+
+@contextmanager
+def gui_context(environ: Mapping[str, Any] | None = None) -> Iterator[None]:
+    with application_context(), request_context(environ):
+        load_config()
         yield

@@ -29,7 +29,7 @@ from cmk.gui.config import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
-from cmk.gui.session import UserContext
+from cmk.gui.logged_in import UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 

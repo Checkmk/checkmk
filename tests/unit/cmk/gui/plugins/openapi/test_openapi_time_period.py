@@ -7,9 +7,9 @@ import json
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-
 from cmk.gui.watolib.timeperiods import load_timeperiod
+
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -373,9 +373,7 @@ def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_excluding_exclude(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
+def test_openapi_timeperiod_excluding_exclude(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",
@@ -390,9 +388,9 @@ def test_openapi_timeperiod_excluding_exclude(
                         ],
                     }
                 ],
-                "alias": "Test All days 8x5 - 2",
+                "alias": "Test All days 8x5",
                 "exceptions": [],
-                "name": "test_all_8x5_2",
+                "name": "test_all_8x5",
             }
         ),
         headers={"Accept": "application/json"},
@@ -402,7 +400,7 @@ def test_openapi_timeperiod_excluding_exclude(
 
     resp = aut_user_auth_wsgi_app.call_method(
         "get",
-        base + "/objects/time_period/test_all_8x5_2",
+        base + "/objects/time_period/test_all_8x5",
         headers={"Accept": "application/json"},
         status=200,
     )
@@ -416,7 +414,7 @@ def test_openapi_timeperiod_excluding_exclude(
                 ],
             }
         ],
-        "alias": "Test All days 8x5 - 2",
+        "alias": "Test All days 8x5",
         "exceptions": [],
         "exclude": [],
     }

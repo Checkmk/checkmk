@@ -25,7 +25,7 @@ from typing import Any
 from cmk.utils import version
 
 from cmk.gui.http import Response
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -47,7 +47,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
-from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.groups import (
     add_group,
     check_modify_group_permissions,

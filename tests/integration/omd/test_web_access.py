@@ -84,9 +84,9 @@ def test_cmk_run_cron(site: Site) -> None:
     web.get("/%s/check_mk/run_cron.py" % site.id)
 
 
-def test_cmk_pnp_template_removed(site: Site) -> None:
+def test_cmk_pnp_template(site: Site) -> None:
     web = CMKWebSession(site)
-    web.get("/%s/check_mk/pnp_template.py" % site.id, expected_code=404)
+    web.get("/%s/check_mk/pnp_template.py" % site.id)
 
 
 def test_cmk_ajax_graph_images(site: Site) -> None:

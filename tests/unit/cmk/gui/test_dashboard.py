@@ -147,12 +147,9 @@ TEST_DASHBOARD = DashboardConfig(
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-@pytest.mark.usefixtures("mock_livestatus")
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_refresh_intervals(
-    type_name: str,
-    expected_refresh_interval: Literal[False] | int,
-    monkeypatch: MonkeyPatch,
+    type_name: str, expected_refresh_interval: Literal[False] | int, monkeypatch: MonkeyPatch
 ) -> None:
     dashlet_type = dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval

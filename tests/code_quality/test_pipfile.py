@@ -239,6 +239,7 @@ def get_undeclared_dependencies() -> Iterable[ImportName]:
 
 CEE_UNUSED_PACKAGES = [
     "Cython",
+    "Flask",
     "MarkupSafe",
     "PyMySQL",
     "PyNaCl",

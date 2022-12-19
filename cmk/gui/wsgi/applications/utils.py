@@ -2,53 +2,29 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
-import abc
 import functools
 from collections.abc import Callable
-from datetime import datetime
-from typing import Any, final, TYPE_CHECKING
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.site import url_prefix
 
-import cmk.gui.auth
-import cmk.gui.session
-from cmk.gui import login, pages, userdb
+from cmk.gui import login, pages
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import request, response, Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.session import session
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
-from cmk.gui.wsgi.type_defs import WSGIResponse
-
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import StartResponse, WSGIEnvironment
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.
-
-
-class AbstractWSGIApp(abc.ABC):
-    def __init__(self, debug: bool = False) -> None:
-        self.debug = debug
-
-    @final
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
-
-    @abc.abstractmethod
-    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        raise NotImplementedError
 
 
 def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]:
@@ -57,39 +33,16 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
     # user objects.
     @functools.wraps(func)
     def _call_auth() -> Response:
-        with login.authenticate() as authenticated:
+        with login.authenticate(request) as authenticated:
             if not authenticated:
                 return _handle_not_authenticated()
-
-            user_id = session.user.ident
-            if requested_file_name(request) != "user_change_pw":
-                if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
-                    raise HTTPRedirect(
-                        f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
-                    )
-
-            two_factor_ok = requested_file_name(request) in (
-                "user_login_two_factor",
-                "user_webauthn_login_begin",
-                "user_webauthn_login_complete",
-            )
-
-            if (
-                not two_factor_ok
-                and userdb.is_two_factor_login_enabled(user_id)
-                and not cmk.gui.session.is_two_factor_completed()
-            ):
-                raise HTTPRedirect(
-                    "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
-                )
 
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to
             # show the correct message for the current user.
             g.may_see_crash_reports = user.may("general.see_crash_reports")
 
-            # This may raise an exception with error messages, which will then be displayed to
-            # the user.
+            # This may raise an exception with error messages, which will then be displayed to the user.
             _ensure_general_access()
 
             # Initialize the multisite cmk.gui.i18n. This will be replaced by
@@ -147,7 +100,7 @@ def _ensure_general_access() -> None:
         )
     )
 
-    if session.session_info.auth_type == "cookie":
+    if login.auth_type == "cookie":
         reason.append(
             _("<p>You have been logged out. Please reload the page to re-authenticate.</p>")
         )

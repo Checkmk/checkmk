@@ -190,10 +190,3 @@ def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
 def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     # Should be 403 in integration test.
     wsgi_app.options("/", status=404)
-
-
-def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
-    # This got removed some time ago and "Not found" pages are 404 now.
-    resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)
-    assert "Page not found" in resp.text
-    assert "page_menu_bar" in resp.text

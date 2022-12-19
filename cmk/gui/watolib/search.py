@@ -30,9 +30,8 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import get_page_handler
-from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars

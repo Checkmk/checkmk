@@ -27,9 +27,8 @@ from cmk.gui.exceptions import MKAuthException, MKGeneralException
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import SuperUserContext, user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,

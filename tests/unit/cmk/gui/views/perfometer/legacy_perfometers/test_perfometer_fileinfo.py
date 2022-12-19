@@ -25,9 +25,9 @@ from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_file
                 "1 Tot / 5.00 s",
                 HTML(
                     '<div class="stacked"><table><tr><td style="width: 10%; background-color: #aabb50" class="inner"></td>'
-                    '<td style="width: 90%; background-color: #bdbdbd" class="inner"></td></tr></table>'
+                    '<td style="width: 90%; background-color: #ffffff" class="inner"></td></tr></table>'
                     '<table><tr><td style="width: 21%; background-color: #ccff50" class="inner"></td>'
-                    '<td style="width: 78%; background-color: #bdbdbd" class="inner"></td></tr></table></div>'
+                    '<td style="width: 78%; background-color: #ffffff" class="inner"></td></tr></table></div>'
                 ),
             ),
         ),
@@ -37,7 +37,7 @@ from cmk.gui.views.perfometer.legacy_perfometers.check_mk import perfometer_file
                 "0 Tot",
                 HTML(
                     '<div class="stacked"><table><tr><td style="width: 0%; background-color: #aabb50" class="inner">'
-                    '</td><td style="width: 100%; background-color: #bdbdbd" class="inner"></td></tr></table></div>'
+                    '</td><td style="width: 100%; background-color: #ffffff" class="inner"></td></tr></table></div>'
                 ),
             ),
         ),

@@ -2,12 +2,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from __future__ import annotations
 
 import contextlib
+import hmac
 import http.client
+import traceback
 from collections.abc import Iterator
+from contextlib import suppress
 from datetime import datetime
+from pathlib import Path
+
+from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -17,31 +22,47 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb
-from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
+from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.exceptions import (
+    FinalizeRequest,
+    HTTPRedirect,
+    MKAuthException,
+    MKInternalError,
+    MKUserError,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.log import logger
+from cmk.gui.logged_in import user, UserContext
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
-from cmk.gui.session import get_session_id_from_cookie, session, UserContext
-from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value
+from cmk.gui.type_defs import AuthType
+from cmk.gui.userdb.session import (
+    auth_cookie_name,
+    create_auth_session,
+    generate_auth_hash,
+    on_succeeded_login,
+    set_auth_cookie,
+)
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 
+auth_logger = logger.getChild("auth")
+
 
 @contextlib.contextmanager
-def authenticate() -> Iterator[bool]:
+def authenticate(req: Request) -> Iterator[bool]:
     """Perform the user authentication
 
     This is called by index.py to ensure user
@@ -53,37 +74,29 @@ def authenticate() -> Iterator[bool]:
 
     Otherwise, we check / ask for the cookie authentication or eventually the
     automation secret authentication."""
-    if isinstance(session.user, LoggedInNobody):
+
+    user_id = _check_auth(req)
+    if not user_id:
         yield False
         return
 
-    with UserSessionContext(session.user.ident):
+    with UserSessionContext(user_id):
         yield True
 
 
 @contextlib.contextmanager
-def UserSessionContext(user_id: UserId, require_auth_type: bool = True) -> Iterator[None]:
-    """Managing context of authenticated user session with cleanup before logout.
-
-    Args:
-        user_id:
-            The username.
-
-        require_auth_type:
-            Used for testing. If the auth_type is not relevant. Don't use in production.
-    """
-    if require_auth_type:
-        assert session.session_info.auth_type
+def UserSessionContext(user_id: UserId) -> Iterator[None]:
+    """Managing context of authenticated user session with cleanup before logout."""
     with UserContext(user_id):
         # Auth with automation secret succeeded before - mark transid as
         # unneeded in this case
-        if session.session_info.auth_type == "automation":
+        if auth_type == "automation":
             transactions.ignore()
         try:
             yield
         finally:
-            transactions.unignore()
             transactions.store_new()
+            userdb.on_end_of_request(user_id, datetime.now())
 
 
 def del_auth_cookie() -> None:
@@ -94,6 +107,11 @@ def del_auth_cookie() -> None:
     response.unset_http_cookie(cookie_name)
 
 
+def _invalidate_auth_session() -> None:
+    del_auth_cookie()
+    del_language_cookie(response)
+
+
 def update_auth_cookie(username: UserId) -> None:
     """Is called during password change to set a new cookie
 
@@ -101,13 +119,107 @@ def update_auth_cookie(username: UserId) -> None:
     on the server side. Skip validation in this case, this is fine. The cookie was valdiated
     before accessing this page.
     """
-    _set_auth_cookie(username, get_session_id_from_cookie(username, revalidate_cookie=False))
+    set_auth_cookie(username, _get_session_id_from_cookie(username, revalidate_cookie=False))
 
 
-def _set_auth_cookie(username: UserId, session_id: str) -> None:
-    response.set_http_cookie(
-        auth_cookie_name(), auth_cookie_value(username, session_id), secure=request.is_secure
-    )
+def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
+    try:
+        username, session_id, cookie_hash = raw_cookie.split(":", 2)
+    except ValueError:
+        raise MKAuthException("Invalid auth cookie.")
+
+    # Refuse pre 2.0 cookies: These held the "issue time" in the 2nd field.
+    with suppress(ValueError):
+        float(session_id)
+        raise MKAuthException("Refusing pre 2.0 auth cookie")
+
+    return UserId(username), session_id, cookie_hash
+
+
+def _get_session_id_from_cookie(username: UserId, revalidate_cookie: bool) -> str:
+    cookie_username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(auth_cookie_name()))
+
+    # Has been checked before, but validate before using that information, just to be sure
+    if revalidate_cookie:
+        check_parsed_auth_cookie(username, session_id, cookie_hash)
+
+    if cookie_username != username:
+        auth_logger.error("Invalid session: (User: %s, Session: %s)", username, session_id)
+        return ""
+
+    return session_id
+
+
+def _check_auth_cookie(cookie_name: str) -> UserId | None:
+    username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
+    check_parsed_auth_cookie(username, session_id, cookie_hash)
+
+    now = datetime.now()
+    try:
+        # Here we finally check if the session exists...
+        userdb.on_access(username, session_id, now)
+    except MKAuthException:
+        del_auth_cookie()
+        raise
+
+    _redirect_for_password_change(username, now)
+    _redirect_for_two_factor_authentication(username)
+
+    # Return the authenticated username
+    return username
+
+
+def _redirect_for_password_change(user_id: UserId, now: datetime) -> None:
+    if requested_file_name(request) in (
+        "user_login_two_factor",
+        "user_webauthn_login_begin",
+        "user_webauthn_login_complete",
+        "user_change_pw",
+    ):
+        return
+
+    if change_reason := userdb.need_to_change_pw(user_id, now):
+        raise HTTPRedirect(
+            f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
+        )
+
+
+def _redirect_for_two_factor_authentication(user_id: UserId) -> None:
+    if requested_file_name(request) in (
+        "user_login_two_factor",
+        "user_webauthn_login_begin",
+        "user_webauthn_login_complete",
+    ):
+        return
+
+    if userdb.is_two_factor_login_enabled(user_id) and not userdb.is_two_factor_completed():
+        raise HTTPRedirect(
+            "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
+        )
+
+
+def _fetch_cookie(cookie_name: str) -> str:
+    raw_cookie = request.cookie(cookie_name, "::")
+    assert raw_cookie is not None
+    return raw_cookie
+
+
+def check_parsed_auth_cookie(username: UserId, session_id: str, cookie_hash: str) -> None:
+    if not userdb.user_exists(username):
+        raise MKAuthException(_("Username is unknown"))
+
+    if not hmac.compare_digest(cookie_hash, generate_auth_hash(username, session_id)):
+        raise MKAuthException(_("Invalid credentials"))
+
+
+def auth_cookie_is_valid(cookie_text: str) -> bool:
+    try:
+        check_parsed_auth_cookie(*user_from_cookie(cookie_text))
+        return True
+    except MKAuthException:
+        return False
+    except Exception:
+        return False
 
 
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not
@@ -118,9 +230,147 @@ def _set_auth_cookie(username: UserId, session_id: str) -> None:
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
+def _check_auth(req: Request) -> UserId | None:
+    user_id = _check_auth_web_server(req)
+
+    if req.var("_secret"):
+        user_id = _check_auth_automation()
+
+    elif auth_by_http_header := active_config.auth_by_http_header:
+        if not active_config.user_login:
+            return None
+        user_id = _check_auth_http_header(auth_by_http_header)
+
+    if user_id is None:
+        if not active_config.user_login and not _is_site_login():
+            return None
+        user_id = check_auth_by_cookie()
+
+    # This was the last chance to obtain a user ID; if we don't have any yet, we can give up.
+    # After that we'll do some extra checks.
+    if user_id is None:
+        return None
+
+    if user_id == UserId.builtin():
+        raise MKInternalError(_("Invalid user authentication"))
+
+    if not userdb.is_customer_user_allowed_to_login(user_id):
+        # A CME not assigned with the current sites customer
+        # is not allowed to login
+        auth_logger.debug("User '%s' is not allowed to authenticate: Invalid customer" % user_id)
+        return None
+
+    if auth_type in ("http_header", "web_server"):
+        _check_auth_cookie_for_web_server_auth(user_id)
+
+    return user_id
 
 
-# Ignored because mypy doesn't recognize AuthType as a type. It's a Literal[...]
+def verify_automation_secret(user_id: UserId, secret: str) -> bool:
+    if not secret:
+        return False
+
+    if user_id == "" or "/" in user_id:
+        # Note: the intention here is not to check for UserId.builtin() but to ensure the UserId
+        # plays nicely in the path below.
+        return False
+
+    path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
+    if not path.is_file():
+        return False
+
+    with path.open(encoding="utf-8") as f:
+        return f.read().strip() == secret
+
+
+def _check_auth_automation() -> UserId:
+    secret = request.get_str_input_mandatory("_secret", "").strip()
+    user_id = request.get_validated_type_input_mandatory(UserId, "_username", UserId.builtin())
+
+    request.del_var_from_env("_username")
+    request.del_var_from_env("_secret")
+
+    if not verify_automation_secret(user_id, secret):
+        raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
+
+    set_auth_type("automation")
+    return user_id
+
+
+def _check_auth_http_header(auth_by_http_header: str) -> UserId | None:
+    """When http header auth is enabled, try to read the user_id from the var"""
+    if user_id := request.get_request_header(auth_by_http_header):
+        set_auth_type("http_header")
+        return UserId(user_id)
+    return None
+
+
+def _check_auth_web_server(req: Request) -> UserId | None:
+    """Try to get the authenticated user from the HTTP request
+
+    The user may have configured (basic) authentication by the web server. In
+    case a user is provided, we trust that user.
+    """
+    # ? type of Request.remote_user attribute is unclear
+    if user_id := req.remote_user:
+        set_auth_type("web_server")
+        return UserId(user_id)
+    return None
+
+
+def check_auth_by_cookie() -> UserId | None:
+    """check if session cookie exists and if it is valid
+
+    Returns None if not authenticated. If a user was successful authenticated the UserId is returned"""
+
+    cookie_name = auth_cookie_name()
+    if not request.has_cookie(cookie_name):
+        return None
+
+    try:
+        set_auth_type("cookie")
+        return _check_auth_cookie(cookie_name)
+    except HTTPRedirect:
+        # Reraising redirects
+        raise
+    except Exception:
+        # Suppress cookie validation errors from other sites cookies
+        auth_logger.debug(
+            f"Exception while checking cookie {cookie_name}: {traceback.format_exc()}"
+        )
+
+    return None
+
+
+def _check_auth_cookie_for_web_server_auth(user_id: UserId) -> None:
+    """Session handling also has to be initialized when the authentication is done
+    by the web server.
+
+    The authentication is already done on web server level. We accept the provided
+    username as authenticated and create our cookie here.
+    """
+    now = datetime.now()
+    if auth_cookie_name() not in request.cookies:
+        session_id = on_succeeded_login(user_id, now)
+        create_auth_session(user_id, session_id)
+        return
+
+    # Refresh the existing auth cookie and update the session info
+    cookie_name = auth_cookie_name()
+    try:
+        _check_auth_cookie(cookie_name)
+    except Exception:
+        # Suppress cookie validation errors from other sites cookies
+        auth_logger.debug(
+            f"Exception while checking cookie {cookie_name}: {traceback.format_exc()}"
+        )
+
+
+def set_auth_type(_auth_type: AuthType) -> None:
+    request_local_attr().auth_type = _auth_type
+
+
+auth_type: AuthType | LocalProxy = LocalProxy(lambda: request_local_attr().auth_type)
 
 
 @page_registry.register_page("login")
@@ -149,12 +399,12 @@ class LoginPage(Page):
         self._show_login_page()
 
     def _do_login(self) -> None:
-        """handle the login form"""
+        """handle the sent login form"""
         if not request.var("_login"):
             return
 
         try:
-            if not active_config.user_login and not is_site_login():
+            if not active_config.user_login and not _is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 
             # Login via the GET method is allowed only after manually
@@ -182,18 +432,20 @@ class LoginPage(Page):
                 origtarget = default_origtarget
 
             now = datetime.now()
-            if result := userdb.check_credentials(username, password, now):
+            result = userdb.check_credentials(username, password, now)
+            if result:
                 # use the username provided by the successful login function, this function
                 # might have transformed the username provided by the user. e.g. switched
                 # from mixed case to lower case.
                 username = result
 
+                session_id = on_succeeded_login(username, now)
+
                 # The login succeeded! Now:
                 # a) Set the auth cookie
                 # b) Unset the login vars in further processing
                 # c) Redirect to really requested page
-                session.user = LoggedInUser(username)
-                session.persist()
+                create_auth_session(username, session_id)
 
                 # This must happen before the enforced password change is
                 # checked in order to have the redirects correct...
@@ -240,7 +492,7 @@ class LoginPage(Page):
         )
 
         # When someone calls the login page directly and is already authed redirect to main page
-        if requested_file_name(request) == "login" and session.user.id:
+        if requested_file_name(request) == "login" and _check_auth(request):
             raise HTTPRedirect(origtarget)
 
         html.open_div(id_="login")
@@ -275,6 +527,8 @@ class LoginPage(Page):
         html.open_div(id_="button_text")
         html.button("_login", _("Login"), cssclass="hot")
         html.close_div()
+        # TODO (CMK-11847): add a button to click for SAML2 auth that shows
+        # when it is configured
         html.close_div()
 
         html.open_div(id_="foot")
@@ -321,15 +575,36 @@ class LoginPage(Page):
         html.footer()
 
 
+def _is_site_login() -> bool:
+    """Determine if login is a site login for connecting central and remote
+    site. This login has to be allowed even if site login on remote site is not
+    permitted by rule "Direct login to Web GUI allowed" """
+    if requested_file_name(request) == "login":
+        if (origtarget_var := request.var("_origtarget")) is None:
+            return False
+        return (
+            origtarget_var.startswith("automation_login.py")
+            and "_version=" in origtarget_var
+            and "_edition_short=" in origtarget_var
+        )
+
+    if requested_file_name(request) == "automation_login":
+        return bool(request.var("_edition_short") and request.var("_version"))
+
+    return False
+
+
 @page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
         assert user.id is not None
 
-        session.invalidate()
-        session.persist()
+        _invalidate_auth_session()
 
-        if session.session_info.auth_type == "cookie":
+        session_id = _get_session_id_from_cookie(user.id, revalidate_cookie=True)
+        userdb.on_logout(user.id, session_id)
+
+        if auth_type == "cookie":
             raise HTTPRedirect(url_prefix() + "check_mk/login.py")
 
         # Implement HTTP logout with cookie hack

@@ -10,9 +10,6 @@ from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, NamedTuple
 
-from flask import current_app
-from flask.ctx import RequestContext
-
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.type_defs import UserId
@@ -21,6 +18,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config, load_config
+from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -71,9 +69,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     states = sites.states()
 
-    with (
-        request_context := make_request_context(current_app)
-    ):  # pylint: disable=superfluous-parens
+    with (request_context := make_request_context()):  # pylint: disable=superfluous-parens
         load_config()
 
     pool = ThreadPool()

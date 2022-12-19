@@ -21,7 +21,6 @@ from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint, Wrapped
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.wsgi.blueprints import checkmk, rest_api
 
 from cmk import fields
 
@@ -71,15 +70,10 @@ class SomeSchema(BaseSchema):
     permission = fields.String(description="smth", example="smth")
 
 
-@pytest.fixture(name="fresh_app_instance", scope="function")
-def _fresh_app_instance():
-    session_wsgi_app.cache_clear()
-    rest_api.app_instance.cache_clear()
-    checkmk.app_instance.cache_clear()
-
-
 @pytest.fixture(name="test_endpoint")
-def install_endpoint(fresh_app_instance):
+def install_endpoint():
+    session_wsgi_app.cache_clear()
+
     @Endpoint(
         path="/unitest-endpoint-test-that-is-not-cleaned-up",
         method="post",
@@ -138,7 +132,9 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")
-def install_endpoint_raise(fresh_app_instance):
+def install_endpoint_raise():
+    session_wsgi_app.cache_clear()
+
     @Endpoint(
         path="/raise_exception",
         method="get",

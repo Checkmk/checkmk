@@ -30,7 +30,7 @@ from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
 from cmk.gui.log import logger as gui_logger
-from cmk.gui.session import SuperUserContext
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context

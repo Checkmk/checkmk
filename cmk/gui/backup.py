@@ -12,7 +12,6 @@ from __future__ import annotations
 import abc
 import contextlib
 import errno
-import glob
 import json
 import os
 import shutil
@@ -30,11 +29,12 @@ from typing_extensions import assert_never
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
+from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.type_defs import (
     JobConfig,
     LocalTargetParams,
-    RawBackupInfo,
     ScheduleConfig,
+    SiteBackupInfo,
     TargetConfig,
     TargetId,
 )
@@ -113,15 +113,6 @@ def mkbackup_path() -> Path:
 
 def hostname() -> str:
     return socket.gethostname()
-
-
-def is_canonical(directory: str) -> bool:  # type:ignore[no-untyped-def]
-    if not directory.endswith("/"):
-        directory += "/"
-    return (
-        os.path.isabs(directory)
-        and os.path.commonprefix([os.path.realpath(directory) + "/", directory]) == directory
-    )
 
 
 class Config:
@@ -1058,7 +1049,7 @@ class ABCBackupTargetType(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def backups(self) -> Mapping[str, RawBackupInfo]:
+    def backups(self) -> Mapping[str, SiteBackupInfo]:
         ...
 
     @abc.abstractmethod
@@ -1081,6 +1072,7 @@ target_type_registry = TargetTypeRegistry()
 class BackupTargetLocal(ABCBackupTargetType):
     def __init__(self, params: LocalTargetParams) -> None:
         self._params = params
+        self._local_target = LocalTarget(TargetId(""), params)
 
     @property
     def parameters(self) -> LocalTargetParams:
@@ -1133,32 +1125,11 @@ class BackupTargetLocal(ABCBackupTargetType):
         )
 
     def validate(self, varprefix: str) -> None:
-        self._validate_path(self.parameters["path"], varprefix)
+        _check_if_target_ready(self._local_target)
+        self._check_write_access(self.parameters["path"], varprefix)
 
     @staticmethod
-    def _validate_path(path: str, varprefix: str) -> None:
-        if not is_canonical(path):
-            raise MKUserError(varprefix, _("You have to provide a canonical path."))
-
-        if cmk_version.is_cma() and not path.startswith("/mnt/"):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "You can only use mountpoints below the <tt>/mnt</tt> "
-                    "directory as backup targets."
-                ),
-            )
-
-        if not os.path.isdir(path):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "The path does not exist or is not a directory. You "
-                    "need to specify an already existing directory."
-                ),
-            )
-
-        # Check write access for the site user
+    def _check_write_access(path: str, varprefix: str) -> None:
         try:
             test_file_path = os.path.join(path, "write_test_%d" % time.time())
             with open(test_file_path, "wb"):
@@ -1182,49 +1153,20 @@ class BackupTargetLocal(ABCBackupTargetType):
                 ),
             )
 
-    # TODO: Duplicate code with mkbackup
-    def backups(self) -> Mapping[str, RawBackupInfo]:
-        backups = {}
-
-        self.verify_target_is_ready()
-
-        for path in glob.glob("%s/*/mkbackup.info" % self.parameters["path"]):
-            try:
-                info = self._load_backup_info(path)
-            except OSError as e:
-                if e.errno == errno.EACCES:
-                    continue  # Silently skip not permitted files
-                raise
-
-            backups[info["backup_id"]] = info
-
-        return backups
-
-    # TODO: Duplocate code with mkbackup
-    def verify_target_is_ready(self) -> None:
-        if self.parameters["is_mountpoint"] and not os.path.ismount(self.parameters["path"]):
-            raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, "
-                "but nothing is mounted."
-            )
-
-    # TODO: Duplicate code with mkbackup
-    def _load_backup_info(self, path: str) -> RawBackupInfo:
-        with Path(path).open(encoding="utf-8") as f:
-            info = json.load(f)
-
-        # Load the backup_id from the second right path component. This is the
-        # base directory of the mkbackup.info file. The user might have moved
-        # the directory, e.g. for having multiple backups. Allow that.
-        # Maybe we need to changed this later when we allow multiple generations
-        # of backups.
-        info["backup_id"] = os.path.basename(os.path.dirname(path))
-
-        return info
+    def backups(self) -> Mapping[str, SiteBackupInfo]:
+        _check_if_target_ready(self._local_target)
+        return dict(self._local_target.list_backups())
 
     def remove_backup(self, backup_ident: str) -> None:
-        self.verify_target_is_ready()
+        _check_if_target_ready(self._local_target)
         shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
+
+
+def _check_if_target_ready(target: LocalTarget, varprefix: str | None = None) -> None:
+    try:
+        target.check_ready()
+    except MKGeneralException as e:
+        raise MKUserError(varprefix, str(e))
 
 
 # .
@@ -1266,13 +1208,10 @@ class Target:
             )
         return target_type(target_params)
 
-    def show_backup_list(self, only_type: str) -> None:
+    def show_backup_list(self) -> None:
         with table_element(sortable=False, searchable=False) as table:
 
             for backup_ident, info in sorted(self.backups().items()):
-                if info["type"] != only_type:
-                    continue
-
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
 
@@ -1301,37 +1240,18 @@ class Target:
                     },
                 )
 
-                from_info = info["hostname"]
-                if "site_id" in info:
-                    from_info += " (Site: {}, Version: {})".format(
-                        info["site_id"],
-                        info["site_version"],
-                    )
-                else:
-                    from_info += " (Version: %s)" % info["cma_version"]
-
+                from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
                 table.cell(_("Backup-ID"), backup_ident)
                 table.cell(_("From"), from_info)
-                table.cell(_("Finished"), render.date_and_time(info["finished"]))
-                table.cell(_("Size"), render.fmt_bytes(info["size"]))
+                table.cell(_("Finished"), render.date_and_time(info.finished))
+                table.cell(_("Size"), render.fmt_bytes(info.size))
                 table.cell(_("Encrypted"))
-                if info["config"]["encrypt"] is not None:
-                    html.write_text(info["config"]["encrypt"])
+                if (encrypt := info.config["encrypt"]) is not None:
+                    html.write_text(encrypt)
                 else:
                     html.write_text(_("No"))
 
-                if info["type"] == "Appliance":
-                    table.cell(_("Clustered"))
-                    if "cma_cluster" not in info:
-                        html.write_text(_("Standalone"))
-                    else:
-                        html.write_text(_("Clustered"))
-                        if not info["cma_cluster"]["is_inactive"]:
-                            html.write_text(" (%s)" % _("Active node"))
-                        else:
-                            html.write_text(" (%s)" % _("Standby node"))
-
-    def backups(self) -> Mapping[str, RawBackupInfo]:
+    def backups(self) -> Mapping[str, SiteBackupInfo]:
         return self._target_type().backups()
 
     def remove_backup(self, backup_ident: str) -> None:
@@ -1895,18 +1815,16 @@ class PageBackupRestore:
         if self._target is None:
             raise Exception("no backup target")
         backup_info = self._target.backups()[backup_ident]
-        if backup_info["config"]["encrypt"] is not None:
-            return self._start_encrypted_restore(backup_ident, backup_info)
+        if (key_digest := backup_info.config["encrypt"]) is not None:
+            return self._start_encrypted_restore(backup_ident, key_digest)
         return self._start_unencrypted_restore(backup_ident)
 
     def _complete_restore(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
         RestoreJob(self._target_ident, None).complete()
 
     def _start_encrypted_restore(  # type:ignore[no-untyped-def]
-        self, backup_ident, backup_info
+        self, backup_ident, key_digest: str
     ) -> ActionResult:
-        key_digest = backup_info["config"]["encrypt"]
-
         try:
             _key_id, key = self.key_store.get_key_by_digest(key_digest)
         except KeyError:
@@ -2004,7 +1922,7 @@ class PageBackupRestore:
 
     def _show_backup_list(self) -> None:
         assert self._target is not None
-        self._target.show_backup_list(only_type="Check_MK")
+        self._target.show_backup_list()
 
     def _show_restore_progress(self):
         PageBackupRestoreState().page()

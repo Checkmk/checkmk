@@ -10,32 +10,8 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
-import cmk.gui.backup as backup
 import cmk.gui.wato as wato
 from cmk.gui.logged_in import user
-
-
-@pytest.mark.parametrize(
-    "path, expected",
-    [
-        ("/", True),
-        ("/a", True),
-        ("/a/", True),
-        ("/a/b", True),
-        ("a/b", False),
-        ("/a//", False),
-        ("/a//b", False),
-        ("/a/.", False),
-        ("/a/./b", False),
-        ("/a/..", False),
-        ("/a/b/../../etc/shadow", False),
-    ],
-)
-def test_is_canonical(monkeypatch, path, expected) -> None:  # type:ignore[no-untyped-def]
-    monkeypatch.setattr("os.getcwd", lambda: "/test")
-    monkeypatch.setattr("os.path.islink", lambda x: False)
-
-    assert backup.is_canonical(path) == expected
 
 
 @pytest.mark.usefixtures("request_context")

@@ -752,7 +752,6 @@ class InfoCalculator:
             site_id=site_id,
             site_version=site_version(site_id),
             size=self.size,
-            backup_id=None,
         )
 
 

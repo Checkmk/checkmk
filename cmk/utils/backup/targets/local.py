@@ -6,11 +6,17 @@
 import errno
 import os
 import shutil
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
-from cmk.utils.backup.type_defs import Backup, Job, JobConfig, SiteBackupInfo, TargetId
+from cmk.utils.backup.type_defs import (
+    Backup,
+    Job,
+    JobConfig,
+    LocalTargetParams,
+    SiteBackupInfo,
+    TargetId,
+)
 from cmk.utils.backup.utils import (
     current_site_id,
     load_backup_info,
@@ -21,6 +27,7 @@ from cmk.utils.backup.utils import (
     verify_backup_file,
 )
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.version import is_cma
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -33,17 +40,27 @@ def archive_suffix(config: JobConfig) -> str:
 
 
 class LocalTarget:
-    def __init__(self, target_id: TargetId, params: Mapping[str, Any]) -> None:
+    def __init__(self, target_id: TargetId, params: LocalTargetParams) -> None:
         self.id = target_id
         self.path = Path(params["path"])
         self.is_mountpoint = bool(params["is_mountpoint"])
 
     def check_ready(self) -> None:
-        if not self.path.exists():
-            raise MKGeneralException(f"Local target path does not exist: {self.path}")
+        if not _is_canonical_directory(str(self.path)):
+            raise MKGeneralException(f"You have to provide a canonical path: {self.path}")
+        if not self.path.is_dir():
+            raise MKGeneralException(
+                f"Local target path does not exist or is not a directory: {self.path}"
+            )
         if self.is_mountpoint and not os.path.ismount(self.path):
             raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, but nothing is mounted."
+                "The backup target path is configured to be a mountpoint, but nothing is mounted: "
+                f"{self.path}"
+            )
+        if is_cma() and not str(self.path).startswith("/mnt/"):
+            raise MKGeneralException(
+                "You can only use mountpoints below the <tt>/mnt</tt> directory as backup targets: "
+                f"{self.path}"
             )
 
     def list_backups(self) -> Iterator[tuple[str, SiteBackupInfo]]:
@@ -97,3 +114,12 @@ class LocalTarget:
             log("Cleaning up previously completed backup")
             shutil.rmtree(completed_path)
         os.rename(self._working_dir(job), completed_path)
+
+
+def _is_canonical_directory(directory: str) -> bool:
+    if not directory.endswith("/"):
+        directory += "/"
+    return (
+        os.path.isabs(directory)
+        and os.path.commonprefix([os.path.realpath(directory) + "/", directory]) == directory
+    )

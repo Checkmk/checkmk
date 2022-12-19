@@ -70,7 +70,7 @@ class RawBackupInfo(TypedDict, total=False):
     cma_version: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SiteBackupInfo:
     config: JobConfig
     filename: str
@@ -81,7 +81,6 @@ class SiteBackupInfo:
     site_id: str
     site_version: str
     size: int
-    backup_id: str | None
 
 
 @dataclass

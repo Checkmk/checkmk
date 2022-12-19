@@ -114,7 +114,6 @@ def load_backup_info(path: Path) -> SiteBackupInfo:
         site_id=raw_info["site_id"],
         site_version=raw_info["site_version"],
         size=raw_info["size"],
-        backup_id=os.path.basename(os.path.dirname(path)),
     )
 
 

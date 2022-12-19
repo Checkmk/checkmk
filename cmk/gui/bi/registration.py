@@ -4,13 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.views.data_source import DataSourceRegistry
 
 from .permissions import PermissionBISeeAll, PermissionSectionBI
+from .view import (
+    DataSourceBIAggregations,
+    DataSourceBIHostAggregations,
+    DataSourceBIHostnameAggregations,
+    DataSourceBIHostnameByGroupAggregations,
+)
 
 
 def register(
+    data_source_registry: DataSourceRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
+    data_source_registry.register(DataSourceBIAggregations)
+    data_source_registry.register(DataSourceBIHostAggregations)
+    data_source_registry.register(DataSourceBIHostnameAggregations)
+    data_source_registry.register(DataSourceBIHostnameByGroupAggregations)
+
     permission_section_registry.register(PermissionSectionBI)
     permission_registry.register(PermissionBISeeAll)

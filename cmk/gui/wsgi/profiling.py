@@ -70,6 +70,9 @@ class ProfileSwitcher:
         self.profiled_app.profiler = profile.Profile()
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        return self.wsgi_app(environ, start_response)
+
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         if _profiling_enabled(environ):
             self._create_dump_script()
             if not self.accumulate:

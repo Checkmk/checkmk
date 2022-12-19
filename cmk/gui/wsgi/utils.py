@@ -6,6 +6,14 @@ from __future__ import annotations
 
 import typing as t
 
+from flask import make_response, Response
+
+
+def render_string_template(template_string: str, **kwargs: str) -> Response:
+    """Renders a text formatted with Python's `string.format`"""
+    return make_response(template_string.format(**kwargs))
+
+
 T = t.TypeVar("T")
 Self = t.TypeVar("Self", bound="dict_property")
 Inst = dict[str, t.Any]

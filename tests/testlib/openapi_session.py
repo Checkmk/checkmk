@@ -56,8 +56,7 @@ class UnexpectedResponse(RestSessionException):
 
 
 class AuthorizationFailed(RestSessionException):
-    def __init__(self, header: str, site: str) -> None:
-        super().__init__(f"Authorization header {header!r} on site {site!r} failed")
+    pass
 
 
 class Redirect(RestSessionException):
@@ -113,7 +112,11 @@ class CMKOpenApiSession(requests.Session):
 
         if response.status_code == 401:
             assert isinstance(self.headers["Authorization"], str)  # HACK
-            raise AuthorizationFailed(self.headers["Authorization"], self.site)
+            raise AuthorizationFailed(
+                f"Authorization failed on site {self.site}",
+                response.headers,
+                response.text,
+            )
 
         return response
 

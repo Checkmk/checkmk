@@ -10,7 +10,7 @@ Cares about rendering the breadcrumb which is shown at the top of all pages
 from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple
 
-from cmk.gui.htmllib.html import html
+import cmk.gui.htmllib.html
 from cmk.gui.type_defs import MegaMenu
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.speaklater import LazyString
@@ -47,15 +47,15 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-a
 
 class BreadcrumbRenderer:
     def show(self, breadcrumb: Breadcrumb) -> None:
-        html.open_div(class_="breadcrumb")
+        cmk.gui.htmllib.html.html.open_div(class_="breadcrumb")
 
         for item in breadcrumb:
             if item.url:
-                html.a(escape_to_html(str(item.title)), href=item.url)
+                cmk.gui.htmllib.html.html.a(escape_to_html(str(item.title)), href=item.url)
             else:
-                html.span(escape_to_html(str(item.title)))
+                cmk.gui.htmllib.html.html.span(escape_to_html(str(item.title)))
 
-        html.close_div()
+        cmk.gui.htmllib.html.html.close_div()
 
 
 def make_simple_page_breadcrumb(menu: MegaMenu, title: str) -> Breadcrumb:

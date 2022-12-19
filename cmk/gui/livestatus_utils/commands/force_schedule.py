@@ -33,7 +33,7 @@ def force_schedule_host_check(  # type:ignore[no-untyped-def]
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.logged_in import SuperUserContext
+        >>> from cmk.gui.session import SuperUserContext
 
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_HOST_CHECK;example.com;0"
         >>> expect = simple_expect(cmd, match_type="ellipsis")
@@ -73,7 +73,7 @@ def force_schedule_service_check(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.logged_in import SuperUserContext
+        >>> from cmk.gui.session import SuperUserContext
 
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;example.com;CPU Load;0"
         >>> expect = simple_expect(cmd, match_type="ellipsis")

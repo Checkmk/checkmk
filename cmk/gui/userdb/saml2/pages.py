@@ -13,11 +13,13 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
+from cmk.gui.session import session
 from cmk.gui.userdb.saml2.connector import Connector
 from cmk.gui.userdb.saml2.interface import Interface, NotAuthenticated, XMLData
-from cmk.gui.userdb.session import create_auth_session, on_succeeded_login
+from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 
 LOGGER = logger.getChild("saml2")
@@ -212,11 +214,11 @@ class AssertionConsumerService(Page):
 
         # TODO (CMK-11849): The permission group the user belongs to, along with other attributes, could
         # change. This should be updated too.
-        session_id = on_succeeded_login(authn_response.user_id, datetime.now())
+        on_succeeded_login(authn_response.user_id, datetime.now())
 
         # TODO (CMK-11846): If for whatever reason the session is not created successfully, a message
         # should be displayed after the redirect to the login page.
-        create_auth_session(authn_response.user_id, session_id)
+        session.user = LoggedInUser(authn_response.user_id)
 
         raise HTTPRedirect(self.relay_state.target_url)
 

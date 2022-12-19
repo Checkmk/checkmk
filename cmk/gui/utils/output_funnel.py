@@ -6,8 +6,9 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+from flask import Response
+
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.http import Response
 
 
 class OutputFunnel:
@@ -57,4 +58,4 @@ class OutputFunnel:
         return text
 
 
-output_funnel: OutputFunnel = request_local_attr("output_funnel")
+output_funnel = request_local_attr("output_funnel", OutputFunnel)

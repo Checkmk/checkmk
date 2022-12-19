@@ -114,4 +114,4 @@ class DisplayOptions:
         return opt not in self.options
 
 
-display_options: DisplayOptions = request_local_attr("display_options")
+display_options = request_local_attr("display_options", DisplayOptions)

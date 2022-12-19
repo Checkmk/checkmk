@@ -9,12 +9,13 @@ import time
 from typing import TYPE_CHECKING
 
 import pytest
-from werkzeug.test import create_environ
+from flask import Flask
 
+from cmk.gui import http
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
-from cmk.gui.wsgi.applications.checkmk import CheckmkApp
+from cmk.gui.wsgi.app import CheckmkFlaskApp
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if TYPE_CHECKING:
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
     from _typeshed.wsgi import StartResponse, WSGIEnvironment
 
 
-class CheckmkTestApp(CheckmkApp):
+class CheckmkTestApp(CheckmkFlaskApp):
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         assert request.request_timeout == 110
 
@@ -36,19 +37,17 @@ class CheckmkTestApp(CheckmkApp):
         return []
 
 
-def make_start_response() -> StartResponse:
-    def start_response(status, headers, exc_info=None):
-        def start(output) -> None:  # type:ignore[no-untyped-def]
-            return None
+def test_timeout_life_cycle(flask_app: Flask) -> None:
+    flask_app.debug = False
 
-        return start
-
-    return start_response
-
-
-def test_checkmk_app_enables_timeout_handling() -> None:
     assert signal.alarm(0) == 0
-    CheckmkTestApp()(create_environ(), make_start_response())
+
+    with flask_app.test_request_context("/NO_SITE/check_mk/login.py"):
+        flask_app.preprocess_request()
+        assert callable(signal.getsignal(signal.SIGALRM))
+        assert signal.alarm(123) != 123
+        flask_app.process_response(http.Response())
+
     assert signal.alarm(0) == 0
 
 

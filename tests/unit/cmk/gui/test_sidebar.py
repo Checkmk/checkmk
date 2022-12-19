@@ -2,8 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 import pytest
 
 import cmk.gui.sidebar as sidebar
@@ -239,7 +237,6 @@ def test_save_user_config_allowed(  # type:ignore[no-untyped-def]
 def test_ajax_fold(  # type:ignore[no-untyped-def]
     request_context, mocker, origin_state, fold_var, set_state
 ) -> None:
-    request.set_var("fold", fold_var)
     m_config = mocker.patch.object(
         user,
         "load_file",
@@ -250,6 +247,7 @@ def test_ajax_fold(  # type:ignore[no-untyped-def]
     )
     m_save = mocker.patch.object(user, "save_file")
 
+    request.set_var("fold", fold_var)
     sidebar.AjaxFoldSnapin().page()
 
     m_config.assert_called_once()

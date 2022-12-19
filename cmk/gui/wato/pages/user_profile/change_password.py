@@ -8,7 +8,7 @@ from datetime import datetime
 
 from cmk.utils.crypto import Password
 
-from cmk.gui import forms, login, userdb
+from cmk.gui import forms, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -16,6 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
+from cmk.gui.session import session
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
@@ -82,7 +83,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         flash(_("Successfully changed password."))
 
         # Set the new cookie to prevent logout for the current user
-        login.update_auth_cookie(user.id)
+        session.update_cookie()
 
         # In distributed setups with remote sites where the user can login, start the
         # user profile replication now which will redirect the user to the destination

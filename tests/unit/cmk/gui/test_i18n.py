@@ -9,6 +9,7 @@ import gettext
 import subprocess
 from pathlib import Path
 
+import flask
 import pytest
 
 from tests.testlib import cmk_path
@@ -84,13 +85,14 @@ msgstr "%s"
     subprocess.call(["msgfmt", str(po_file), "-o", str(mo_file)])
 
 
-def test_underscore_without_localization() -> None:
-    assert i18n.get_current_language() == "en"
-    assert isinstance(i18n._("bla"), str)
-    assert i18n._("bla") == "bla"
+def test_underscore_without_localization(flask_app: flask.Flask) -> None:
+    with flask_app.test_request_context("/"):
+        assert i18n.get_current_language() == "en"
+        assert isinstance(i18n._("bla"), str)
+        assert i18n._("bla") == "bla"
 
 
-def test_underscore_localization() -> None:
+def test_underscore_localization(flask_app: flask.Flask) -> None:
     with application_and_request_context():
         i18n.localize("de")
         assert i18n.get_current_language() == "de"

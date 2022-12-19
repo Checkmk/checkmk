@@ -5,6 +5,7 @@
 
 import json
 from pathlib import Path
+from typing import Generator
 
 import pytest
 from pytest import MonkeyPatch
@@ -29,7 +30,9 @@ def fixture_theme_dirs(tmp_path: Path, monkeypatch: MonkeyPatch) -> tuple[Path, 
 
 
 @pytest.fixture(name="my_theme")
-def fixture_my_theme(theme_dirs: tuple[Path, Path], monkeypatch: MonkeyPatch) -> Path:
+def fixture_my_theme(
+    theme_dirs: tuple[Path, Path], monkeypatch: MonkeyPatch
+) -> Generator[Path, None, None]:
     theme_path = theme_dirs[0]
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
@@ -37,16 +40,18 @@ def fixture_my_theme(theme_dirs: tuple[Path, Path], monkeypatch: MonkeyPatch) ->
         str(json.dumps({"title": "Määh Theme :-)"}))
     )
 
+    theme.theme_choices.append(("my_theme", "Määh Theme :-)"))
     # Update the theme choices after introducing a new theme here
-    monkeypatch.setattr(theme, "theme_choices", theme_choices())
+    yield my_dir
 
-    return my_dir
+    del theme.theme_choices[-1]
 
 
 @pytest.mark.usefixtures("my_theme")
 @pytest.mark.usefixtures("request_context")
 def test_theme_request_context_integration() -> None:
     theme.from_config("facelift")
+    assert theme.get() == "facelift"
 
     theme.set("")
     assert theme.get() == "facelift"

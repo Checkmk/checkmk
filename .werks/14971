@@ -1,0 +1,28 @@
+Title: Checkmk agent: cached sections are never invalidated
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667572508
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p18
+
+This is a fix for the Checkmk agents AIX, FreeBSD, Linux, OpenWrt, and Solaris.
+The Checkmk agent is able to cache some sections. This means sections are only
+created when there is no cached data available, or the cached data is deemed
+outdated (i.e. invalidated).
+
+When the cached data is invalidated, additional processes are forked that are
+tasked with the renewal of this data. It could be the case that any one of
+these processes terminates or runs forever, leaving behind temporary files in
+the working directory "MK_VARDIR", and the data was never renewed because the
+updating process was assumed to still be running. The corresponding services of
+this section turned STALE.
+
+This problem can be verified by looking for old files named "*.cache.new*"
+or outdated files named "*.cache" under "MK_VARDIR".
+
+Any such orphaned files that are older than a specified timeout are now
+deleted, so that the cache is renewed. In addition, any suspiciously long
+running update processes are killed, so that a retry can take place.

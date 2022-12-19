@@ -1611,46 +1611,47 @@ run_cached() {
     NAME="${1}"
     MAXAGE="${2}"
     shift 2
-    # ideally, these should be independent parameters:
-    TIMEOUT=$((MAXAGE * 2))
-    REFRESH_INTERVAL="${MAXAGE}"
 
     if ${DISABLE_CACHING:-false}; then
         # We need the re-splitting to be compatible with the caching case, so:
-        # shellcheck disable=SC2068
-        $@
+        # shellcheck disable=SC2048
+        $*
         return
     fi
+
+    # ideally, these should be independent parameters:
+    TIMEOUT=$((MAXAGE * 2))
+    REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
     CACHEFILE="${MK_VARDIR}/cache/${NAME}.cache"
 
     NOW="$(get_epoch)"
-    MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
+    MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
     if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
 
         # Output the file (even if it is outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        # prefix or insert cache info, unless already present.
+        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-            sed -e "/^<<<.*>>>/{p;d;}; /^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
-            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
-            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
 
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
 
-        # Check if the creation of the cache takes suspiciously long.
-        # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+        # Check if the process is running too long (cache file not accessed for more than TIMEOUT seconds).
+        # If so, kill the process and remove the cache files (both)
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
                 kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-                rm -f "${cfile}"
+                rm -f "${cfile}" "${CACHEFILE}"
             fi
         done
 
@@ -1664,18 +1665,18 @@ run_cached() {
 
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
-            THIS_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+            THIS_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
             # Start it. If the command fails the output is thrown away
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         fi
 
     fi
 
-    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO
+    unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
 }
 
 # Make run_cached available for subshells (plugins, local checks, etc.)

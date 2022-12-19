@@ -1,0 +1,19 @@
+Title: Agent updater checks for certificate validity
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1671460038
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+
+The agent updater now reports about the status of the trusted certificates for agent signatures.
+The status of those certificates is then checked by the service <i>Check_MK Agent</i> as follows:
+
+LI: Warn if a certificate is corrupt
+LI: Warn if a certificate is not valid anymore
+LI: Warn if a certificate is about to become invalid
+LI: Crit if there is no trusted certificate
+LI: Warn/Crit if there will be no valid cert in 90/30 days.

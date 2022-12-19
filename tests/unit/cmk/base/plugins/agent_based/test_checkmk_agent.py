@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+import json
+from collections.abc import Iterable, Mapping
+from datetime import datetime
 from typing import Any
 
 import pytest
@@ -22,6 +24,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     check_checkmk_agent,
     discover_checkmk_agent,
 )
+from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
 from cmk.base.plugins.agent_based.utils.checkmk import (
     CMKAgentUpdateSection,
     Connection,
@@ -274,6 +277,137 @@ def test_check_no_check_yet_pydantic() -> None:
         Result(state=State.WARN, summary="No successful connect to server yet"),
         Result(state=State.OK, notice="Update URL: foo"),
     ]
+
+
+@pytest.mark.parametrize(
+    "trusted_certs,results",
+    (
+        (None, []),  # no cert details, pre 2.2 updater
+        ({}, [Result(state=State.CRIT, notice="Updater has no trusted certificates")]),
+        (
+            {
+                0: {"corrupt": True},
+            },
+            [
+                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(state=State.CRIT, notice="Updater has no trusted certificates"),
+            ],
+        ),
+        (
+            {
+                0: {
+                    "corrupt": False,
+                    "not_after": "20430525111300Z",
+                    "signature_algorithm": "sha1WithRSAEncryption",
+                    "common_name": "foo",
+                },
+            },
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #0 (CN='foo') will expire: 42 years 9 days",  # timespan apparently does not care for leap years
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                ),
+            ],
+        ),
+        (
+            {
+                0: {"corrupt": True},
+                1: {
+                    "corrupt": False,
+                    "not_after": "20430525111300Z",
+                    "signature_algorithm": "sha1WithRSAEncryption",
+                    "common_name": "foo",
+                },
+            },
+            [
+                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #1 (CN='foo') will expire: 42 years 9 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                ),
+            ],
+        ),
+        (
+            {
+                0: {
+                    "corrupt": False,
+                    "not_after": "20430525111300Z",
+                    "signature_algorithm": "sha1WithRSAEncryption",
+                    "common_name": "foo",
+                },
+                1: {
+                    "corrupt": False,
+                    "not_after": "20000525111300Z",
+                    "signature_algorithm": "sha1WithRSAEncryption",
+                    "common_name": "bar",
+                },
+                2: {
+                    "corrupt": False,
+                    "not_after": "20010601111300Z",
+                    "signature_algorithm": "sha1WithRSAEncryption",
+                    "common_name": "foobar",
+                },
+            },
+            [
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #0 (CN='foo') will expire: 42 years 9 days",
+                ),
+                Result(
+                    state=State.WARN,
+                    notice="Updater certificate #1 (CN='bar') is expired",
+                ),
+                Result(
+                    state=State.WARN,
+                    notice="Time until updater certificate #2 (CN='foobar') will expire: 6 days 21 hours (warn/crit below 90 days 0 hours/never)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 42 years 9 days",
+                ),
+            ],
+        ),
+    ),
+)
+def test_certificate_results(
+    trusted_certs: dict[int, dict[str, bool | str]] | None, results: Iterable[CheckResult]
+) -> None:
+    # no cert details
+    section = _parse_cmk_update_agent_status(
+        [
+            [
+                json.dumps(
+                    {
+                        "aghash": None,
+                        "last_update": None,
+                        "pending_hash": None,
+                        "update_url": "foo",
+                        "last_check": 990789180,  # Fri May 25 2001 11:13:00 GMT+0000
+                        "trusted_certs": trusted_certs,
+                        "error": None,
+                    }
+                )
+            ]
+        ]
+    )
+
+    with on_time(datetime(2001, 5, 25, 13, 13, 13), "CEST"):
+        assert [*_check_cmk_agent_update({}, None, section)] == [
+            Result(
+                state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
+            ),  # timezones?
+            Result(state=State.OK, notice="Last update check: May 25 2001 11:13:00"),
+            Result(state=State.OK, notice="Update URL: foo"),
+            *results,
+        ]
 
 
 @pytest.mark.parametrize("duplicate", [False, True])

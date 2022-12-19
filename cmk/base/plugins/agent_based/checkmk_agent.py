@@ -5,6 +5,7 @@
 
 import collections
 import time
+from datetime import datetime
 from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
@@ -235,6 +236,59 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
         yield Result(state=default_state, summary=f"Update error: {error}")
 
 
+def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:
+    """check the certificate part of the agent updater section
+
+    * Warn if a certificate is corrupt
+    * Warn if a certificate is not valid anymore
+    * Warn if a certificate is about to become invalid
+    * Crit if there is no trusted certificate
+    * Warn/Crit if there will be no valid cert in 90/30 days.
+    """
+
+    if parsed.trusted_certs is None:
+        return
+
+    amount_trusted = 0  # How many trusted certificates are configured
+    longest_valid = -1.0  # How long is the longest running certificate valid?
+    for number, cert_info in parsed.trusted_certs.items():
+        if cert_info.corrupt:
+            yield Result(state=State.WARN, notice=f"Updater certificate #{number} is corrupt")
+            continue
+
+        assert cert_info.not_after is not None  # It is only None if cert is corrupt
+
+        # We get tz aware datetimes and we must not compare them to naive datetimes
+        duration_valid = cert_info.not_after - datetime.now().astimezone()
+
+        if duration_valid.total_seconds() < 0:
+            yield Result(
+                state=State.WARN,
+                notice=f"Updater certificate #{number} (CN={cert_info.common_name!r}) is expired",
+            )
+        else:
+            amount_trusted += 1
+            longest_valid = max(longest_valid, duration_valid.total_seconds())
+            yield from check_levels(
+                duration_valid.total_seconds(),
+                levels_lower=(90 * 3600 * 24, None),  # type: ignore[arg-type]
+                render_func=render.timespan,
+                label=f"Time until updater certificate #{number} (CN={cert_info.common_name!r}) will expire",
+                notice_only=True,
+            )
+
+    if amount_trusted == 0:
+        yield Result(state=State.CRIT, notice="Updater has no trusted certificates")
+    else:
+        yield from check_levels(
+            longest_valid,
+            levels_lower=(90 * 3600 * 24, 30 * 3600 * 24),
+            render_func=render.timespan,
+            label="Time until all updater certificates are expired",
+            notice_only=True,
+        )
+
+
 def _check_cmk_agent_update(
     params: Mapping[str, Any],
     section_check_mk: CheckmkSection | None,
@@ -293,7 +347,7 @@ def _check_cmk_agent_update(
     if pending := section.pending_hash:
         yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
 
-    return
+    yield from _check_cmk_agent_update_certificates(section)
 
 
 def _check_plugins(

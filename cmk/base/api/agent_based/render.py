@@ -89,11 +89,19 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
 def timespan(seconds: float) -> str:
     """Render a time span in seconds
 
+    unaware of leap-years...
+
     Example:
         >>> timespan(1606721)
         '18 days 14 hours'
         >>> timespan(0.0001)
         '100 microseconds'
+        >>> timespan(24*60*60)
+        '1 day 0 hours'
+        >>> timespan(365*24*60*60)
+        '1 year 0 days'
+        >>> timespan(100*365*24*60*60)
+        '100 years 0 days'
 
     """
     ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))

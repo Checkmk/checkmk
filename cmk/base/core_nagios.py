@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, cast, IO, Literal
 
 import cmk.utils.config_path
+import cmk.utils.config_warnings as config_warnings
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -138,12 +139,12 @@ def create_config(
     hostnames: list[HostName] | None,
 ) -> None:
     if config.host_notification_periods != []:
-        core_config.warning(
+        config_warnings.warn(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
         )
 
     if config.service_notification_periods != []:
-        core_config.warning(
+        config_warnings.warn(
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
 
@@ -376,7 +377,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     service_labels: dict[ServiceName, Labels] = {}
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
         if not service.description:
-            core_config.warning(
+            config_warnings.warn(
                 "Skipping invalid service with empty description (plugin: %s) on host %s"
                 % (service.check_plugin_name, hostname)
             )
@@ -466,7 +467,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
                 ):
 
                     if not description:
-                        core_config.warning(
+                        config_warnings.warn(
                             f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
                         )
                         continue
@@ -547,7 +548,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             command_line = entry.get("command_line", "")
 
             if not description:
-                core_config.warning(
+                config_warnings.warn(
                     "Skipping invalid service with empty description on host %s" % hostname
                 )
                 continue

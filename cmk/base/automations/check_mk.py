@@ -21,6 +21,7 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, cast
 
+import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
@@ -1042,7 +1043,7 @@ class AutomationRestart(Automation):
                     raise
                 raise MKAutomationError(str(e))
 
-            return automation_results.RestartResult(core_config.get_configuration_warnings())
+            return automation_results.RestartResult(config_warnings.get_configuration())
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()

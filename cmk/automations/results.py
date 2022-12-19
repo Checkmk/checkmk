@@ -10,14 +10,10 @@ from dataclasses import asdict, astuple, dataclass
 from typing import Any, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
+from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import (
-    AgentRawData,
-    CheckPluginNameStr,
-    ConfigurationWarnings,
-    DiscoveredHostLabelsDict,
-)
+from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr, DiscoveredHostLabelsDict
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
     Gateways,

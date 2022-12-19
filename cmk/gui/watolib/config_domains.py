@@ -23,9 +23,10 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
+from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.process import pid_from_file, send_signal
-from cmk.utils.type_defs import ConfigurationWarnings, HostName
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs

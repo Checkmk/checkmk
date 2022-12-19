@@ -15,7 +15,8 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
-from cmk.utils.type_defs import ConfigurationWarnings, HostName
+from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize

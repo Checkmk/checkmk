@@ -6,4 +6,3 @@
 from cmk.utils.type_defs import HostName
 
 HostsToUpdate = set[HostName] | None
-ConfigurationWarnings = list[str]

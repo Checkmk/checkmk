@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import ConfigurationWarnings
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 

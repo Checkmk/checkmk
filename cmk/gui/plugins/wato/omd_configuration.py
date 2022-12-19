@@ -12,7 +12,7 @@ from typing import Any
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import ConfigurationWarnings
+from cmk.utils.config_warnings import ConfigurationWarnings
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

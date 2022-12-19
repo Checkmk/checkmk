@@ -10,13 +10,13 @@ import os
 import shlex
 import shutil
 import socket
-import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, AnyStr, Literal, NamedTuple, Union
 
 import cmk.utils.config_path
+import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -30,7 +30,6 @@ from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.type_defs import (
     CheckPluginName,
-    ConfigurationWarnings,
     HostAddress,
     HostName,
     HostsToUpdate,
@@ -53,9 +52,6 @@ ObjectMacros = dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
 CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
-
-ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
-AbstractServiceID = Union[ActiveServiceID, ServiceID]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -88,42 +84,9 @@ class MonitoringCore(abc.ABC):
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups: list[HostName] = []
 
-# .
-#   .--Warnings------------------------------------------------------------.
-#   |            __        __               _                              |
-#   |            \ \      / /_ _ _ __ _ __ (_)_ __   __ _ ___              |
-#   |             \ \ /\ / / _` | '__| '_ \| | '_ \ / _` / __|             |
-#   |              \ V  V / (_| | |  | | | | | | | | (_| \__ \             |
-#   |               \_/\_/ \__,_|_|  |_| |_|_|_| |_|\__, |___/             |
-#   |                                               |___/                  |
-#   +----------------------------------------------------------------------+
-#   | Managing of warning messages occuring during configuration building  |
-#   '----------------------------------------------------------------------'
 
-g_configuration_warnings: ConfigurationWarnings = []
-
-
-def initialize_warnings() -> None:
-    global g_configuration_warnings
-    g_configuration_warnings = []
-
-
-def warning(text: str) -> None:
-    g_configuration_warnings.append(text)
-    console.warning("\n%s", text, stream=sys.stdout)
-
-
-def get_configuration_warnings() -> ConfigurationWarnings:
-    adjusted_warnings = list(set(g_configuration_warnings))
-
-    if (num_warnings := len(adjusted_warnings)) > 10:
-        warnings = adjusted_warnings[:10] + [
-            "%d further warnings have been omitted" % (num_warnings - 10)
-        ]
-    else:
-        warnings = adjusted_warnings
-
-    return warnings
+ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
+AbstractServiceID = ActiveServiceID | ServiceID
 
 
 def duplicate_service_warning(
@@ -134,7 +97,7 @@ def duplicate_service_warning(
     first_occurrence: AbstractServiceID,
     second_occurrence: AbstractServiceID,
 ) -> None:
-    return warning(
+    return config_warnings.warn(
         "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
         " - 1st occurrence: check plugin / item: %s / %r\n"
         " - 2nd occurrence: check plugin / item: %s / %r\n"
@@ -366,8 +329,8 @@ def _create_core_config(
     hosts_to_update: HostsToUpdate = None,
     *,
     duplicates: Sequence[HostName],
-) -> ConfigurationWarnings:
-    initialize_warnings()
+) -> None:
+    config_warnings.initialize()
 
     _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
@@ -377,8 +340,6 @@ def _create_core_config(
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
     cmk.utils.password_store.save_for_helpers(config_path)
-
-    return get_configuration_warnings()
 
 
 def _verify_non_deprecated_checkgroups() -> None:
@@ -393,7 +354,7 @@ def _verify_non_deprecated_checkgroups() -> None:
 
     for checkgroup in config.checkgroup_parameters:
         if checkgroup not in check_ruleset_names_with_plugin:
-            warning(
+            config_warnings.warn(
                 'Found configured rules of deprecated check group "%s". These rules are not used '
                 "by any check plugin. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
@@ -409,7 +370,7 @@ def _verify_non_deprecated_checkgroups() -> None:
 
 def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
     if duplicates:
-        warning(
+        config_warnings.warn(
             "The following host names have duplicates: %s. "
             "This might lead to invalid/incomplete monitoring for these hosts."
             % ", ".join(duplicates)
@@ -897,7 +858,7 @@ def get_cluster_nodes_for_config(config_cache: ConfigCache, host_name: HostName)
     nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
-            warning(
+            config_warnings.warn(
                 "Node '%s' of cluster '%s' is not a monitored host in this site."
                 % (node, host_name)
             )
@@ -926,7 +887,7 @@ def _verify_cluster_address_family(
             mixed = True
 
     if mixed:
-        warning(
+        config_warnings.warn(
             "Cluster '%s' has different primary address families: %s"
             % (host_name, ", ".join(address_families))
         )
@@ -946,9 +907,11 @@ def _verify_cluster_datasource(
         node_snmp_ds = node_tg.get("snmp_ds")
         warn_text = "Cluster '%s' has different datasources as its node" % host_name
         if node_agent_ds != cluster_agent_ds:
-            warning(f"{warn_text} '{nodename}': {cluster_agent_ds} vs. {node_agent_ds}")
+            config_warnings.warn(
+                f"{warn_text} '{nodename}': {cluster_agent_ds} vs. {node_agent_ds}"
+            )
         if node_snmp_ds != cluster_snmp_ds:
-            warning(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
+            config_warnings.warn(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
 
 
 def ip_address_of(
@@ -962,7 +925,7 @@ def ip_address_of(
 
         _failed_ip_lookups.append(host_name)
         if not _ignore_ip_lookup_failures:
-            warning(
+            config_warnings.warn(
                 "Cannot lookup IP address of '%s' (%s). "
                 "The host will not be monitored correctly." % (host_name, e)
             )

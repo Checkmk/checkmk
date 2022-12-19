@@ -11,9 +11,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-from cmk.gui.exceptions import MKConfigError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -157,43 +155,6 @@ def api_get_aggregation_state(  # type:ignore[no-untyped-def]
         "missing_aggr": missing_aggregations,
     }
     return response
-
-
-def check_title_uniqueness(forest):
-    # Legacy, will be removed any decade from now
-    # One aggregation cannot be in mutliple groups.
-    known_titles: set[Any] = set()
-    for aggrs in forest.values():
-        for aggr in aggrs:
-            title = aggr["title"]
-            if title in known_titles:
-                raise MKConfigError(
-                    _(
-                        'Duplicate BI aggregation with the title "<b>%s</b>". '
-                        "Please check your BI configuration and make sure that within each group no aggregation has "
-                        "the same title as any other. Note: you can use arguments in the top level "
-                        "aggregation rule, like <tt>Host $HOST$</tt>."
-                    )
-                    % (escaping.escape_attribute(title))
-                )
-            known_titles.add(title)
-
-
-def check_aggregation_title_uniqueness(aggregations):
-    known_titles: set[Any] = set()
-    for attrs in aggregations.values():
-        title = attrs["title"]
-        if title in known_titles:
-            raise MKConfigError(
-                _(
-                    'Duplicate BI aggregation with the title "<b>%s</b>". '
-                    "Please check your BI configuration and make sure that within each group no aggregation has "
-                    "the same title as any other. Note: you can use arguments in the top level "
-                    "aggregation rule, like <tt>Host $HOST$</tt>."
-                )
-                % (escaping.escape_attribute(title))
-            )
-        known_titles.add(title)
 
 
 def ajax_set_assumption() -> None:

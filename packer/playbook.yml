@@ -5,11 +5,21 @@
 
   vars:
     checkmk_server_sites:
-      - name: test
+      - name: cmk
         version: "{{ checkmk_server_version }}"
         state: started
-        admin_pw: test
+        admin_pw: cmk
 
 
   roles:
     - tribe29.checkmk.server
+
+  tasks:
+    - name: enforce password change
+      copy:
+        dest: "/omd/sites/{{ item.name }}/var/check_mk/web/cmkadmin/enforce_pw_change.mk"
+        content: 1
+        owner: cmk
+        group: cmk
+      become: true
+      loop: "{{ checkmk_server_sites }}"

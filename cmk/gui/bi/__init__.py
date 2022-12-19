@@ -28,14 +28,8 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import (
-    Permission,
-    PermissionRegistry,
-    PermissionSection,
-    PermissionSectionRegistry,
-)
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
@@ -56,9 +50,8 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.trees import BICompiledRule
 
 
+# Move everything to .registration once extracted from __init__
 def register(
-    permission_section_registry: PermissionSectionRegistry,
-    permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
     painter_option_registry: PainterOptionRegistry,
@@ -91,33 +84,6 @@ def register(
     cmk.gui.pages.register("bi_set_assumption")(ajax_set_assumption)
     cmk.gui.pages.register("bi_save_treestate")(ajax_save_treestate)
     cmk.gui.pages.register("bi_render_tree")(ajax_render_tree)
-
-    permission_section_registry.register(PermissionSectionBI)
-    permission_registry.register(PermissionBISeeAll)
-
-
-class PermissionSectionBI(PermissionSection):
-    @property
-    def name(self) -> str:
-        return "bi"
-
-    @property
-    def title(self) -> str:
-        return _("BI - Checkmk Business Intelligence")
-
-
-PermissionBISeeAll = Permission(
-    section=PermissionSectionBI,
-    name="see_all",
-    title=_l("See all hosts and services"),
-    description=_l(
-        "With this permission set, the BI aggregation rules are applied to all "
-        "hosts and services - not only those the user is a contact for. If you "
-        "remove this permissions then the user will see incomplete aggregation "
-        "trees with status based only on those items."
-    ),
-    defaults=["admin", "guest"],
-)
 
 
 def is_part_of_aggregation(host, service) -> bool:  # type:ignore[no-untyped-def]

@@ -22,6 +22,7 @@ from cmk.gui import (
     visuals,
     wato,
 )
+from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
@@ -97,11 +98,13 @@ mkeventd.register(
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry, icon_and_action_registry)
 bi.register(
-    permission_section_registry,
-    permission_registry,
     data_source_registry,
     painter_registry,
     painter_option_registry,
+)
+bi_registration.register(
+    permission_section_registry,
+    permission_registry,
 )
 register_sites_options()
 register_row_post_processor(inventory_row_post_processor)

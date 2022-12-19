@@ -404,16 +404,13 @@ class StructuredDataNode:
     def get_node(self, path: SDPath) -> StructuredDataNode | None:
         if not path:
             return self
-        node = self._nodes.get(path[0])
-        return None if node is None else node.get_node(path[1:])
+        return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
 
     def get_table(self, path: SDPath) -> Table | None:
-        node = self.get_node(path)
-        return None if node is None else node.table
+        return None if (node := self.get_node(path)) is None else node.table
 
     def get_attributes(self, path: SDPath) -> Attributes | None:
-        node = self.get_node(path)
-        return None if node is None else node.attributes
+        return None if (node := self.get_node(path)) is None else node.attributes
 
     #   ---representation-------------------------------------------------------
 

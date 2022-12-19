@@ -57,6 +57,10 @@ class HtpasswdUserConnector(UserConnector):
     def type(cls) -> str:
         return "htpasswd"
 
+    @property
+    def id(self) -> str:
+        return "htpasswd"
+
     @classmethod
     def title(cls) -> str:
         return _("Apache Local Password File (htpasswd)")

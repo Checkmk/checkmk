@@ -80,6 +80,7 @@ def expected_items() -> dict[str, list[str]]:
         "contact_groups",
         "roles",
         "ldap_config",
+        "saml_config",
         "user_attrs",
     ]
 

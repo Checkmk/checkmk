@@ -171,6 +171,12 @@ def get_connection(connection_id: str | None) -> UserConnector | None:
     return connections_with_id[0] if connections_with_id else None
 
 
+def active_connections_by_type(connection_type: str) -> list[dict[str, Any]]:
+    return [
+        c for c in _get_connection_configs() if c["type"] == connection_type and not c["disabled"]
+    ]
+
+
 def clear_user_connection_cache() -> None:
     get_connection.cache_clear()  # type: ignore[attr-defined]
 
@@ -333,6 +339,12 @@ class UserConnector(abc.ABC):
     @abc.abstractmethod
     def title(cls) -> str:
         """The string representing this connector to humans"""
+        raise NotImplementedError()
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> str:
+        """The unique identifier of the connection"""
         raise NotImplementedError()
 
     @classmethod

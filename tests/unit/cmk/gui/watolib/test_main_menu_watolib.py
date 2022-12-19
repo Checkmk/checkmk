@@ -39,6 +39,7 @@ def test_registered_modules() -> None:
         "diagnostics",
         "download_agents",
         "rule_search",
+        "saml_config",
         "wato.py?group=activechecks&mode=rulesets",
         "wato.py?group=agent&mode=rulesets",
         "wato.py?group=agents&mode=rulesets",

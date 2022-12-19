@@ -1498,7 +1498,7 @@ class Url(TextInput):
         return value
 
 
-def HTTPUrl(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def HTTPUrl(  # pylint: disable=redefined-builtin
     show_as_link: bool = True,
     # Url
     regex: None | str | Pattern[str] = None,
@@ -1510,11 +1510,39 @@ def HTTPUrl(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
-):
+) -> Url:
     """Valuespec for a HTTP or HTTPS Url, that automatically adds http:// to the value if no scheme has been specified"""
     return Url(
         allowed_schemes=["http", "https"],
         default_scheme="http",
+        regex=regex,
+        regex_error=regex_error,
+        show_as_link=show_as_link,
+        allow_empty=allow_empty,
+        size=size,
+        title=title,
+        help=help,
+        default_value=default_value,
+    )
+
+
+def HTTPSUrl(  # pylint: disable=redefined-builtin
+    show_as_link: bool = True,
+    # Url
+    regex: None | str | Pattern[str] = None,
+    regex_error: str | None = None,
+    # TextInput
+    allow_empty: bool = True,
+    size: int | Literal["max"] = 80,
+    # ValueSpec
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
+    default_value: ValueSpecDefault[str] = DEF_VALUE,
+) -> Url:
+    """Valuespec for a HTTPS Url, that automatically adds https:// to the value if no scheme has been specified"""
+    return Url(
+        allowed_schemes=["https"],
+        default_scheme="https",
         regex=regex,
         regex_error=regex_error,
         show_as_link=show_as_link,

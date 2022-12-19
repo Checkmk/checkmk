@@ -5,15 +5,9 @@
 
 from typing import Any
 
-from pytest import MonkeyPatch
-from saml2.config import SPConfig
-
 from cmk.gui.userdb.saml2.connector import Connector
 
 
-def test_connector(monkeypatch: MonkeyPatch, config: SPConfig, raw_config: dict[str, Any]) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.userdb.saml2.interface.raw_config_to_saml_config", lambda c: config
-    )
+def test_connector(raw_config: dict[str, Any]) -> None:
     connector = Connector(raw_config)
     assert connector.is_enabled()

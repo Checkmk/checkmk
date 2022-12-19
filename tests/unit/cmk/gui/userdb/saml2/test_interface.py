@@ -13,7 +13,6 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from freezegun import freeze_time
-from saml2.config import SPConfig
 from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.type_defs import UserId
@@ -22,8 +21,8 @@ from cmk.gui.userdb.saml2.interface import Authenticated, Interface
 
 VALID_AUTHENTICATION_REQUEST_PATTERN = re.compile(
     " ".join(
-        """<ns0:AuthnRequest xmlns:ns0="urn:oasis:names:tc:SAML:2\\.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2\\.0:assertion" ID="id-[a-zA-Z0-9]{17}" Version="2\\.0" IssueInstant="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z" Destination="http://myidp\\.com/some/path/to//SSOService\\.php" ProtocolBinding="\\(\'http://myhost/mysite/check_mk/saml_acs\\.py\\?acs\', \'urn:oasis:names:tc:SAML:2\\.0:bindings:HTTP-POST\'\\)">
-   <ns1:Issuer Format="urn:oasis:names:tc:SAML:2\\.0:nameid-format:entity">http://myhost/mysite/check_mk/saml_metadata\\.py</ns1:Issuer>
+        """<ns0:AuthnRequest xmlns:ns0="urn:oasis:names:tc:SAML:2\\.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2\\.0:assertion" ID="id-[a-zA-Z0-9]{17}" Version="2\\.0" IssueInstant="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z" Destination="https://myidp\\.com/some/path/to//SSOService\\.php" ProtocolBinding="\\(\'https://myhost.com/NO_SITE/check_mk/saml_acs\\.py\\?acs\', \'urn:oasis:names:tc:SAML:2\\.0:bindings:HTTP-POST\'\\)">
+   <ns1:Issuer Format="urn:oasis:names:tc:SAML:2\\.0:nameid-format:entity">https://myhost.com/NO_SITE/check_mk/saml_metadata\\.py</ns1:Issuer>
    <ns0:NameIDPolicy Format="urn:oasis:names:tc:SAML:2\\.0:nameid-format:persistent" AllowCreate="false" />
 </ns0:AuthnRequest>""".split()
     ).replace("> <", "><")
@@ -55,20 +54,20 @@ def _authentication_request_response(
                         ID="_a639dc4ab55961d203419f46689efcc801e950819e"
                         Version="2.0"
                         IssueInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
-                        Destination="http://myhost/mysite/check_mk/saml_acs.py?acs"
+                        Destination="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs"
                         InResponseTo="{response_id}"
                         >
-            <saml:Issuer>http://myidp.com/some/path/to/metadata.php</saml:Issuer>
-            <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+            <saml:Issuer>https://myidp.com/some/path/to/metadata.php</saml:Issuer>
+            <ds:Signature xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
                 <ds:SignedInfo>
-                    <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
-                    <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+                    <ds:CanonicalizationMethod Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
+                    <ds:SignatureMethod Algorithm="https://www.w3.org/2000/09/xmldsig#rsa-sha1" />
                     <ds:Reference URI="#_a639dc4ab55961d203419f46689efcc801e950819e">
                         <ds:Transforms>
-                            <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
-                            <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+                            <ds:Transform Algorithm="https://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                            <ds:Transform Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
                         </ds:Transforms>
-                        <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+                        <ds:DigestMethod Algorithm="https://www.w3.org/2000/09/xmldsig#sha1" />
                         <ds:DigestValue>rrgTHuEqDHQOktBTEi5onR8ojtk=</ds:DigestValue>
                     </ds:Reference>
                 </ds:SignedInfo>
@@ -82,23 +81,23 @@ def _authentication_request_response(
             <samlp:Status>
                 <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
             </samlp:Status>
-            <saml:Assertion xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                            xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            <saml:Assertion xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                            xmlns:xs="https://www.w3.org/2001/XMLSchema"
                             ID="_efca8eaa2499ca65cfd6d153b9e9e873cf0a949368"
                             Version="2.0"
                             IssueInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
                             >
-                <saml:Issuer>http://myidp.com/some/path/to/metadata.php</saml:Issuer>
-                <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                <saml:Issuer>https://myidp.com/some/path/to/metadata.php</saml:Issuer>
+                <ds:Signature xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
                     <ds:SignedInfo>
-                        <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
-                        <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+                        <ds:CanonicalizationMethod Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
+                        <ds:SignatureMethod Algorithm="https://www.w3.org/2000/09/xmldsig#rsa-sha1" />
                         <ds:Reference URI="#_efca8eaa2499ca65cfd6d153b9e9e873cf0a949368">
                             <ds:Transforms>
-                                <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
-                                <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" />
+                                <ds:Transform Algorithm="https://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+                                <ds:Transform Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
                             </ds:Transforms>
-                            <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+                            <ds:DigestMethod Algorithm="https://www.w3.org/2000/09/xmldsig#sha1" />
                             <ds:DigestValue>yO3xhwoBDgTXHXyJXOuxN9d+ZbI=</ds:DigestValue>
                         </ds:Reference>
                     </ds:SignedInfo>
@@ -110,12 +109,12 @@ def _authentication_request_response(
                     </ds:KeyInfo>
                 </ds:Signature>
                 <saml:Subject>
-                    <saml:NameID SPNameQualifier="http://myhost/mysite/check_mk/saml_metadata.py"
+                    <saml:NameID SPNameQualifier="https://myhost.com/NO_SITE/check_mk/saml_metadata.py"
                                  Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
                                  >_2697f8b9e1050e4d650a78087b01f482997982afcc</saml:NameID>
                     <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
                         <saml:SubjectConfirmationData NotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
-                                                      Recipient="http://myhost/mysite/check_mk/saml_acs.py?acs"
+                                                      Recipient="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs"
                                                       InResponseTo="{response_id}"
                                                       />
                     </saml:SubjectConfirmation>
@@ -124,7 +123,7 @@ def _authentication_request_response(
                                  NotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
                                  >
                     <saml:AudienceRestriction>
-                        <saml:Audience>http://myhost/mysite/check_mk/saml_metadata.py</saml:Audience>
+                        <saml:Audience>https://myhost.com/NO_SITE/check_mk/saml_metadata.py</saml:Audience>
                     </saml:AudienceRestriction>
                 </saml:Conditions>
                 <saml:AuthnStatement AuthnInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
@@ -162,10 +161,6 @@ def _authentication_request_response(
     )
 
 
-def bla(s, d, i, *args, **kwargs):
-    return i
-
-
 class TestInterface:
     @pytest.fixture
     def current_timestamp(self) -> Iterable[datetime]:
@@ -180,15 +175,7 @@ class TestInterface:
         )
 
     @pytest.fixture
-    def interface(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-        raw_config: dict[str, Any],
-        config: SPConfig,
-    ) -> Interface:
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface.raw_config_to_saml_config", lambda c: config
-        )
+    def interface(self, raw_config: dict[str, Any]) -> Interface:
         return Interface(raw_config)
 
     @pytest.fixture
@@ -197,15 +184,15 @@ class TestInterface:
 
     def test_interface_properties(self, interface: Interface) -> None:
         assert interface.acs_endpoint == (
-            "http://myhost/mysite/check_mk/saml_acs.py?acs",
+            "https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs",
             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
         )
         assert interface.acs_binding == (
-            "http://myhost/mysite/check_mk/saml_acs.py?acs",
+            "https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs",
             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
         )
         assert interface.idp_sso_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-        assert interface.idp_sso_destination == "http://myidp.com/some/path/to//SSOService.php"
+        assert interface.idp_sso_destination == "https://myidp.com/some/path/to//SSOService.php"
 
     def test_metadata(self, interface: Interface, metadata: str) -> None:
         assert interface.metadata == metadata
@@ -233,12 +220,10 @@ class TestInterface:
         self, interface: Interface, request_id: str, current_timestamp: datetime
     ) -> None:
         parsed_response = interface.parse_authentication_request_response(
-            _authentication_request_response(response_id=request_id, timestamp=current_timestamp),
-            "index.py",
+            _authentication_request_response(response_id=request_id, timestamp=current_timestamp)
         )
         assert isinstance(parsed_response, Authenticated)
         assert parsed_response.in_response_to_id == request_id
-        assert parsed_response.relay_state == "index.py"
         assert parsed_response.user_id == UserId("user1")
 
     def test_parse_authentication_request_response_too_old(
@@ -254,8 +239,7 @@ class TestInterface:
                     timestamp=current_timestamp,
                     valid_from=current_timestamp - timedelta(days=10),
                     valid_until=current_timestamp - timedelta(days=5),
-                ),
-                "index.py",
+                )
             )
 
     def test_parse_authentication_request_response_too_young(
@@ -271,17 +255,14 @@ class TestInterface:
                     timestamp=current_timestamp,
                     valid_from=current_timestamp + timedelta(days=5),
                     valid_until=current_timestamp + timedelta(days=10),
-                ),
-                "index.py",
+                )
             )
 
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception) as e:
-            interface.parse_authentication_request_response(
-                _encode("<aardvark></aardvark>"), "index.py"
-            )
+            interface.parse_authentication_request_response(_encode("<aardvark></aardvark>"))
         assert e.value.args[0] == "Unknown response type"
 
     def test_parse_garbage_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(xml.etree.ElementTree.ParseError):
-            interface.parse_authentication_request_response(_encode("aardvark"), "index.py")
+            interface.parse_authentication_request_response(_encode("aardvark"))

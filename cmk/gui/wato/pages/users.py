@@ -202,6 +202,12 @@ class ModeUsers(WatoMode):
             item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
         )
 
+        yield PageMenuEntry(
+            title=_("SAML Authentication"),
+            icon_name="saml",
+            item=make_simple_link(folder_preserving_link([("mode", "saml_config")])),
+        )
+
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(self.mode_url())

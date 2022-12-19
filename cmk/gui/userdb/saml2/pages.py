@@ -6,6 +6,7 @@
 import abc
 import http.client as http_client
 from datetime import datetime
+from typing import NamedTuple
 
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
@@ -14,9 +15,10 @@ from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
-from cmk.gui.userdb.saml2.connector import Connector, SAML2_CONNECTOR_TYPE
+from cmk.gui.userdb.saml2.connector import Connector
 from cmk.gui.userdb.saml2.interface import Interface, NotAuthenticated, XMLData
 from cmk.gui.userdb.session import create_auth_session, on_succeeded_login
+from cmk.gui.utils import is_allowed_url
 
 LOGGER = logger.getChild("saml2")
 
@@ -25,11 +27,37 @@ class MKSaml2Exception(MKGeneralException):
     pass
 
 
-def _interface() -> Interface:
+class RelayState(NamedTuple):
+    target_url: str
+    connection_id: str
+
+    def __str__(self) -> str:
+        return f"{self.connection_id},{self.target_url}"
+
+
+def _relay_state_from_url(relay_state: str) -> RelayState:
+    """
+    >>> _relay_state_from_url("123-456,index.py")
+    RelayState(target_url='index.py', connection_id='123-456')
+
+    >>> _relay_state_from_url("123-456,index.py?so=many,many,many,params")
+    RelayState(target_url='index.py?so=many,many,many,params', connection_id='123-456')
+    """
+
+    id_, url = relay_state.split(",", 1)
+
+    if not is_allowed_url(url):
+        # TODO (CMK-11846): handle this, so that it is shown nicely in the GUI
+        raise ValueError(f"The parameter {url} is not a valid URL")
+
+    return RelayState(target_url=url, connection_id=id_)
+
+
+def _connector(connection_id: str) -> Connector:
     LOGGER.debug("Accessing SAML2.0 connector")
-    connector = get_connection(SAML2_CONNECTOR_TYPE)
+    connector = get_connection(connection_id)
     assert isinstance(connector, Connector)
-    return connector.interface
+    return connector
 
 
 class XMLPage(Page, abc.ABC):
@@ -63,11 +91,22 @@ class Metadata(XMLPage):
     """
 
     @property
-    def _interface(self) -> Interface:
-        return _interface()
+    def relay_state(self) -> RelayState:
+        return _relay_state_from_url(request.get_ascii_input_mandatory("RelayState"))
 
-    def page(self) -> XMLData:
-        return self._interface.metadata
+    @property
+    def connector(self) -> Connector:
+        return _connector(self.relay_state.connection_id)
+
+    def page(self) -> XMLData | None:
+        if not self.connector.is_enabled():
+            LOGGER.debug(
+                "Requested metadata for connection %s at URL %s but is currently disabled",
+                (self.relay_state.connection_id, self.connector.identity_provider_url),
+            )
+            # TODO (CMK-11846): handle this
+            return None
+        return self.connector.interface.metadata
 
 
 class SingleSignOn(Page):
@@ -80,18 +119,46 @@ class SingleSignOn(Page):
     """
 
     @property
-    def _interface(self) -> Interface:
-        return _interface()
+    def relay_state_string(self) -> str:
+        return request.get_ascii_input_mandatory("RelayState")
+
+    @property
+    def relay_state(self) -> RelayState:
+        return _relay_state_from_url(self.relay_state_string)
+
+    @property
+    def connector(self) -> Connector:
+        return _connector(self.relay_state.connection_id)
+
+    @property
+    def interface(self) -> Interface:
+        return self.connector.interface
 
     def page(self) -> None:
-        # NOTE: more than one IdP connection is possible
         if request.request_method != "GET":
             raise MKSaml2Exception(f"Method {request.request_method} not allowed")
 
-        relay_state = request.get_url_input("RelayState")
-        LOGGER.debug("Authentication request with RelayState=%s", relay_state)
+        # NOTE: more than one IdP connection is possible. If more IdPs should be supported in the
+        # future, the connection_id parameter would enable us to decide which one the user has chosen.
+        LOGGER.debug(
+            "Authentication request to Identity Provider %s at URL %s",
+            (self.relay_state.connection_id, self.connector.identity_provider_url),
+        )
 
-        if (authentication_request := self._interface.authentication_request(relay_state)) is None:
+        if not self.connector.is_enabled():
+            LOGGER.debug(
+                "Connection for ID %s is currently disabled", self.relay_state.connection_id
+            )
+            # TODO (CMK-11846): handle this
+            return
+
+        LOGGER.debug("Authentication request with RelayState=%s", self.relay_state_string)
+
+        if (
+            authentication_request := self.connector.interface.authentication_request(
+                self.relay_state_string
+            )
+        ) is None:
             raise MKSaml2Exception("Unable to create authentication request")
 
         LOGGER.debug("Authentication request to URL: %s", authentication_request)
@@ -106,21 +173,34 @@ class AssertionConsumerService(Page):
     """
 
     @property
-    def _interface(self) -> Interface:
-        return _interface()
+    def relay_state(self) -> RelayState:
+        return _relay_state_from_url(request.get_ascii_input_mandatory("RelayState"))
+
+    @property
+    def connector(self) -> Connector:
+        return _connector(self.relay_state.connection_id)
 
     def page(self) -> None:
         if request.request_method != "POST":
             raise MKSaml2Exception(f"Method {request.request_method} not allowed")
 
+        LOGGER.debug(
+            "Authentication request response from Identity Provider %s at URL %s",
+            (self.relay_state.connection_id, self.connector.identity_provider_url),
+        )
+
+        if not self.connector.is_enabled():
+            LOGGER.debug(
+                "Connection for ID %s is currently disabled", self.relay_state.connection_id
+            )
+            # TODO (CMK-11846): handle this
+            return
+
         if not (saml_response := request.form.get("SAMLResponse")):
             raise MKSaml2Exception("Got no response from IdP")
 
-        authn_response = self._interface.parse_authentication_request_response(
-            saml_response=saml_response,
-            relay_state=request.get_url_input(
-                "RelayState"
-            ),  # make sure RelayState is an allowed URL
+        authn_response = self.connector.interface.parse_authentication_request_response(
+            saml_response=saml_response
         )
 
         if isinstance(authn_response, NotAuthenticated):
@@ -138,7 +218,7 @@ class AssertionConsumerService(Page):
         # should be displayed after the redirect to the login page.
         create_auth_session(authn_response.user_id, session_id)
 
-        raise HTTPRedirect(authn_response.relay_state)
+        raise HTTPRedirect(self.relay_state.target_url)
 
 
 def register(page_registry: PageRegistry) -> None:

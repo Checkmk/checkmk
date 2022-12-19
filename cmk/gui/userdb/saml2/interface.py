@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, NewType
+from typing import Any, Mapping, NamedTuple, NewType
 
+import requests
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
@@ -12,6 +13,7 @@ from saml2.metadata import create_metadata_string
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
+from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.log import logger
@@ -27,7 +29,6 @@ RequestId = NewType("RequestId", str)
 
 class Authenticated(NamedTuple):
     user_id: UserId
-    relay_state: URLRedirect
     in_response_to_id: RequestId
 
 
@@ -38,30 +39,59 @@ class NotAuthenticated(NamedTuple):
 AuthenticationRequestResponse = Authenticated | NotAuthenticated
 
 
-def raw_config_to_saml_config(raw_config: object) -> SPConfig:
+def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
+    # TODO (CMK-11851): IdP metadata changes rarely so the content should be cached.
+    metadata = requests.get(url, verify=True, timeout=timeout)
+    if metadata.status_code < 200 or metadata.status_code > 299:
+        # TODO (CMK-11846): this should be logged appropriately
+        return None
+    return metadata.text
+
+
+def raw_config_to_saml_config(raw_config: dict[str, Any]) -> SPConfig:
     """Convert valuespecs into a valid SAML Service Provider configuration."""
     config = SPConfig()
-    # TODO (CMK-11847): Once valuespes are implemented, write parsing logic.
-    # TODO (CMK-11851): IdP metadata should be requested. It changes rarely so the content should be
-    # cached.
-    if not raw_config:
-        return config
-    config.load(raw_config)
+    timeout = raw_config["connection_timeout"]
+    checkmk_base_url = f"{raw_config['checkmk_server_url']}{url_prefix()}check_mk"
+    acs_endpoint_url = f"{checkmk_base_url}/saml_acs.py?acs"
+    sp_configuration = {
+        "endpoints": {
+            "assertion_consumer_service": [
+                (acs_endpoint_url, BINDING_HTTP_REDIRECT),
+                (acs_endpoint_url, BINDING_HTTP_POST),
+            ]
+        },
+        "allow_unsolicited": True,
+        "authn_request_signed": False,
+        "logout_requests_signed": False,
+        "want_assertions_signed": False,
+        "want_response_signed": False,
+    }
+    config.load(
+        {
+            "entityid": f"{checkmk_base_url}/saml_metadata.py",
+            "metadata": {
+                "inline": [_metadata_from_idp(raw_config["idp_metadata_endpoint"], timeout)]
+            },
+            "service": {"sp": sp_configuration},
+            "allow_unknown_attributes": True,
+            "http_client_timeout": timeout,
+        }
+    )
     return config
 
 
-def raw_config_to_attributes_mapping(raw_config: object) -> Mapping[str, str]:
+def raw_config_to_attributes_mapping(raw_config: dict[str, Any]) -> Mapping[str, str]:
     """Map attribute fields the Identity Provider sends to fields we expect."""
-    # TODO (CMK-11849): Once valuespecs are implemented, make this configurable. "user_id" cannot be
-    # optional.
-    return {"user_id": "username"}
+    assert isinstance(raw_config, dict)
+    return {"user_id_attribute": raw_config["user_id_attribute"]}
 
 
 class Interface:
-    def __init__(self, raw_config: object) -> None:
+    def __init__(self, raw_config: dict[str, Any]) -> None:
         self.__config = raw_config_to_saml_config(raw_config)
         self.__attributes_mapping = raw_config_to_attributes_mapping(raw_config)
-        self.__user_id_attribute = self.__attributes_mapping["user_id"]
+        self.__user_id_attribute = self.__attributes_mapping["user_id_attribute"]
         self.__client = Saml2Client(config=self.__config)
         self.__metadata = create_metadata_string(configfile=None, config=self.__config).decode(
             "utf-8"
@@ -102,7 +132,7 @@ class Interface:
         logged in.
 
         Args:
-            relay_state: The URL the user originally requested
+            relay_state: The URL the user originally requested and any other state information
 
         Returns:
             The URL, including the authentication request, that redirects the user to their Identity
@@ -135,7 +165,7 @@ class Interface:
         return URLRedirect(url_redirect)
 
     def parse_authentication_request_response(
-        self, saml_response: str, relay_state: str
+        self, saml_response: str
     ) -> AuthenticationRequestResponse:
         """Parse responses received from the Identity Provider to authentication requests we made.
 
@@ -151,7 +181,6 @@ class Interface:
 
         Args:
             response: The SAML response (XML) received from the Identity Provider
-            relay_state: The URL the user originally requested
 
         Returns:
             Authenticated: If the authentication was successful and all of the conditions were met.
@@ -187,7 +216,6 @@ class Interface:
 
         return Authenticated(
             in_response_to_id=RequestId(authentication_response.session_id()),
-            relay_state=URLRedirect(relay_state),
             user_id=UserId(user_id[0]),
             # TODO (CMK-11849): also grab other attributes, e.g. email, ...
         )

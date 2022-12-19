@@ -219,7 +219,7 @@ class LDAPUserConnector(UserConnector):
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
         self._ldap_obj_config = None
-        self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
+        self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id)
 
         self._num_queries = 0
         self._user_cache: dict[UserId, tuple[str, UserId]] = {}
@@ -228,7 +228,7 @@ class LDAPUserConnector(UserConnector):
 
         # File for storing the time of the last success event
         self._sync_time_file = Path(cmk.utils.paths.var_dir).joinpath(
-            "web/ldap_%s_sync_time.mk" % self.id()
+            "web/ldap_%s_sync_time.mk" % self.id
         )
 
         self._save_suffix()
@@ -249,6 +249,7 @@ class LDAPUserConnector(UserConnector):
     def get_connection_suffixes(cls):
         return cls.connection_suffixes
 
+    @property
     def id(self):
         return self._config["id"]
 
@@ -412,7 +413,7 @@ class LDAPUserConnector(UserConnector):
             pass
 
     def _nearest_dc_cache_filepath(self) -> Path:
-        return self._ldap_caches_filepath() / ("nearest_server.%s" % self.id())
+        return self._ldap_caches_filepath() / ("nearest_server.%s" % self.id)
 
     @classmethod
     def _ldap_caches_filepath(cls) -> Path:
@@ -545,7 +546,7 @@ class LDAPUserConnector(UserConnector):
         if suffix:
             if (
                 suffix in LDAPUserConnector.connection_suffixes
-                and LDAPUserConnector.connection_suffixes[suffix] != self.id()
+                and LDAPUserConnector.connection_suffixes[suffix] != self.id
             ):
                 raise MKUserError(
                     None,
@@ -554,9 +555,9 @@ class LDAPUserConnector(UserConnector):
                         "The LDAP connections %s and %s both use "
                         "the suffix %s which is not allowed."
                     )
-                    % (LDAPUserConnector.connection_suffixes[suffix], self.id(), suffix),
+                    % (LDAPUserConnector.connection_suffixes[suffix], self.id, suffix),
                 )
-            LDAPUserConnector.connection_suffixes[suffix] = self.id()
+            LDAPUserConnector.connection_suffixes[suffix] = self.id
 
     def needed_attributes(self) -> list[str]:
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
@@ -1126,7 +1127,7 @@ class LDAPUserConnector(UserConnector):
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
-        if user_connection_id is not None and user_connection_id != self.id():
+        if user_connection_id is not None and user_connection_id != self.id:
             return None
 
         try:
@@ -1197,7 +1198,7 @@ class LDAPUserConnector(UserConnector):
             return None
         if len(matched_connection_ids) > 1:
             raise MKUserError(None, _("Unable to match connection"))
-        return matched_connection_ids[0] == self.id()
+        return matched_connection_ids[0] == self.id
 
     def _username_matches_suffix(self, username, suffix):
         return username.endswith("@" + suffix)
@@ -1229,7 +1230,7 @@ class LDAPUserConnector(UserConnector):
         self._flush_caches()
 
         start_time = time.time()
-        connection_id = self.id()
+        connection_id = self.id
 
         self._logger.info("SYNC STARTED")
         self._logger.info("  SYNC PLUGINS: %s" % ", ".join(self._config["active_plugins"].keys()))
@@ -1245,10 +1246,10 @@ class LDAPUserConnector(UserConnector):
                 user = copy.deepcopy(users[user_id])
                 mode_create = False
             else:
-                user = new_user_template(self.id())
+                user = new_user_template(self.id)
                 mode_create = True
                 if cmk_version.is_managed_edition():
-                    user["customer"] = self._config.get("customer", managed.default_customer_id())
+                    user["customer"] = self._config.get("customer", managed.default_customer_id)
 
             return mode_create, user
 
@@ -1413,8 +1414,8 @@ class LDAPUserConnector(UserConnector):
 
     def is_enabled(self) -> bool:
         sync_config = user_sync_config()
-        if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
-            # self._ldap_logger('Skipping disabled connection %s' % (self.id()))
+        if isinstance(sync_config, tuple) and self.id not in sync_config[1]:
+            # self._ldap_logger('Skipping disabled connection %s' % (self.id))
             return False
         return True
 
@@ -1637,7 +1638,7 @@ def register_user_attribute_sync_plugins() -> None:
                                     "The LDAP attribute whose contents shall be synced into this custom attribute."
                                 ),
                                 default_value=lambda: ldap_attr_of_connection(
-                                    connection.id(), self.ident
+                                    connection.id, self.ident
                                 ),
                             ),
                         ),
@@ -1816,7 +1817,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the mail address of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id(), "mail"),
+                        default_value=lambda: ldap_attr_of_connection(connection.id, "mail"),
                     ),
                 ),
             ],
@@ -1884,7 +1885,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the alias of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id(), "cn"),
+                        default_value=lambda: ldap_attr_of_connection(connection.id, "cn"),
                     ),
                 ),
             ],
@@ -2011,9 +2012,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                             "user must login again. By default this field uses the fields which "
                             "hold the time of the last password change of the user."
                         ),
-                        default_value=lambda: ldap_attr_of_connection(
-                            connection.id(), "pw_changed"
-                        ),
+                        default_value=lambda: ldap_attr_of_connection(connection.id, "pw_changed"),
                     ),
                 ),
             ],
@@ -2082,7 +2081,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the pager number of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id(), "mobile"),
+                        default_value=lambda: ldap_attr_of_connection(connection.id, "mobile"),
                     ),
                 ),
             ],
@@ -2399,18 +2398,18 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                     if isinstance(group_spec, tuple):
                         this_conn_id = group_spec[1]
                         if this_conn_id is None:
-                            this_conn_id = connection.id()
+                            this_conn_id = connection.id
                         groups_to_fetch.setdefault(this_conn_id, [])
                         groups_to_fetch[this_conn_id].append(group_spec[0].lower())
                     else:
                         # Be compatible to old config format (no connection specified)
-                        this_conn_id = connection.id()
+                        this_conn_id = connection.id
                         groups_to_fetch.setdefault(this_conn_id, [])
                         groups_to_fetch[this_conn_id].append(group_spec.lower())
 
             elif isinstance(group_specs, str):
                 # Need to be compatible to old config formats
-                this_conn_id = connection.id()
+                this_conn_id = connection.id
                 groups_to_fetch.setdefault(this_conn_id, [])
                 groups_to_fetch[this_conn_id].append(group_specs.lower())
 

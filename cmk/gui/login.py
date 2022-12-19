@@ -41,7 +41,9 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user, UserContext
 from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, page_registry
+from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.type_defs import AuthType
+from cmk.gui.userdb.saml2.pages import RelayState
 from cmk.gui.userdb.session import (
     auth_cookie_name,
     create_auth_session,
@@ -55,7 +57,7 @@ from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
 
 auth_logger = logger.getChild("auth")
@@ -527,8 +529,6 @@ class LoginPage(Page):
         html.open_div(id_="button_text")
         html.button("_login", _("Login"), cssclass="hot")
         html.close_div()
-        # TODO (CMK-11847): add a button to click for SAML2 auth that shows
-        # when it is configured
         html.close_div()
 
         html.open_div(id_="foot")
@@ -536,6 +536,24 @@ class LoginPage(Page):
         if active_config.login_screen.get("login_message"):
             html.open_div(id_="login_message")
             html.show_message(active_config.login_screen["login_message"])
+            html.close_div()
+
+        if saml_connection := active_connections_by_type("saml2"):
+            relay_state = RelayState(
+                target_url=origtarget,
+                connection_id=saml_connection[0][
+                    "id"
+                ],  # Only one connection is currently supported
+            )
+            html.open_div(id_="saml_button")
+            html.buttonlink(
+                href=makeuri_contextless(
+                    request, [("RelayState", str(relay_state))], filename="saml_sso.py"
+                ),
+                text=_("Login with Identity Provider"),
+                obj_id="_saml2_login_button",
+                class_=["hot"],
+            )
             html.close_div()
 
         footer: list[HTML] = []

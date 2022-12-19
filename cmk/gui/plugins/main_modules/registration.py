@@ -47,6 +47,7 @@ from cmk.gui.views.painter.v0.base import painter_registry
 from cmk.gui.views.painter_options import painter_option_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.wato.pages import saml2 as saml2_wato
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
@@ -109,3 +110,4 @@ register_row_post_processor(inventory_row_post_processor)
 register_row_post_processor(join_service_row_post_processor)
 saml2_connector.register(user_connector_registry)
 saml2_pages.register(cmk.gui.pages.page_registry)
+saml2_wato.register(mode_registry)

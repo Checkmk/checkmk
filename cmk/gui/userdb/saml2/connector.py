@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import UserConnector, UserConnectorRegistry
@@ -13,7 +14,7 @@ SAML2_CONNECTOR_TYPE = "saml2"
 
 
 class Connector(UserConnector):
-    def __init__(self, raw_config: object) -> None:
+    def __init__(self, raw_config: dict[str, Any]) -> None:
         super().__init__(raw_config)
         self.__interface = Interface(self._config)
 
@@ -25,6 +26,10 @@ class Connector(UserConnector):
     def type(cls) -> str:
         return SAML2_CONNECTOR_TYPE
 
+    @property
+    def id(self) -> str:
+        return self._config["id"]
+
     @classmethod
     def title(cls) -> str:
         return _("SAML2.0 Integration")
@@ -34,7 +39,10 @@ class Connector(UserConnector):
         return _("SAML 2.0")
 
     def is_enabled(self) -> bool:
-        return True
+        return not self._config["disabled"]
+
+    def identity_provider_url(self) -> str:
+        return self._config["idp_medatata_url"]
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

@@ -10,10 +10,8 @@ add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 include(FetchContent)
 
 FetchContent_Declare(
-  asio-omd
-  URL ${root_repo_dir}/omd/packages/asio/asio-1.24.0.tar.gz
-      DOWNLOAD_EXTRACT_TIMESTAMP no
-  PATCH_COMMAND patch -p1 < ${root_repo_dir}/omd/packages/asio/asio.diff)
+  asio-omd URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/asio-1.24.0.tar.gz
+               DOWNLOAD_EXTRACT_TIMESTAMP no)
 FetchContent_MakeAvailable(asio-omd)
 FetchContent_GetProperties(
   asio-omd

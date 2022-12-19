@@ -13,7 +13,6 @@ import cmk.gui.userdb.saml2.connector as saml2_connector
 import cmk.gui.userdb.saml2.pages as saml2_pages
 from cmk.gui import (
     autocompleters,
-    bi,
     crash_reporting,
     dashboard,
     mkeventd,
@@ -97,13 +96,13 @@ mkeventd.register(
 )
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry, icon_and_action_registry)
-bi.register()
 bi_registration.register(
     data_source_registry,
     painter_registry,
     painter_option_registry,
     permission_section_registry,
     permission_registry,
+    cmk.gui.pages.page_registry,
 )
 register_sites_options()
 register_row_post_processor(inventory_row_post_processor)

@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.views.data_source import DataSourceRegistry
 from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.painter_options import PainterOptionRegistry
 
+from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import PermissionBISeeAll, PermissionSectionBI
 from .view import (
     DataSourceBIAggregations,
@@ -41,6 +43,7 @@ def register(
     painter_option_registry: PainterOptionRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
+    page_registry: PageRegistry,
 ) -> None:
     data_source_registry.register(DataSourceBIAggregations)
     data_source_registry.register(DataSourceBIHostAggregations)
@@ -69,3 +72,7 @@ def register(
 
     permission_section_registry.register(PermissionSectionBI)
     permission_registry.register(PermissionBISeeAll)
+
+    page_registry.register_page_handler("bi_set_assumption", ajax_set_assumption)
+    page_registry.register_page_handler("bi_save_treestate", ajax_save_treestate)
+    page_registry.register_page_handler("bi_render_tree", ajax_render_tree)

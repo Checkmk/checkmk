@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.notifications as notifications
+from cmk.gui.dashboard.dashlet.base import Dashlet, DashletConfig
+from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri_contextless
-
-from ..base import Dashlet, DashletConfig
 
 
 class FailedNotificationsDashletConfig(DashletConfig):
     ...
 
 
+@dashlet_registry.register
 class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
     """Dashlet notifying users in case of failure to send notifications"""
 

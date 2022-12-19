@@ -19,7 +19,6 @@ from .dashlets import (
     register_dashlets,
     StaticTextDashlet,
     StaticTextDashletConfig,
-    StatsDashletConfig,
     ViewDashletConfig,
 )
 from .figure_dashlet import ABCFigureDashlet, FigureDashletPage
@@ -40,7 +39,6 @@ __all__ = [
     "IFrameDashlet",
     "DashletConfig",
     "ViewDashletConfig",
-    "StatsDashletConfig",
     "LinkedViewDashletConfig",
     "copy_view_into_dashlet",
     "FigureDashletPage",

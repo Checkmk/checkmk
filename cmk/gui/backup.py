@@ -1136,16 +1136,32 @@ class BackupTargetLocal(ABCBackupTargetType):
         )
 
     def validate(self, varprefix: str) -> None:
-        _check_if_target_ready(self.target)
-        self._check_write_access(self.parameters["path"], varprefix)
+        _validate_local_target(
+            self.target,
+            varprefix,
+        )
 
-    @staticmethod
-    def _check_write_access(path: str, varprefix: str) -> None:
+    def remove_backup(self, backup_ident: str) -> None:
+        _check_if_target_ready(self.target)
+        shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
+
+
+def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
+    try:
+        target.check_ready()
+    except MKGeneralException as e:
+        raise MKUserError(varprefix, str(e))
+
+
+def _validate_local_target(local_target: LocalTarget, varprefix: str) -> None:
+    _check_if_target_ready(local_target, varprefix=varprefix)
+    _validate_local_write_access(local_target.path, varprefix)
+
+
+def _validate_local_write_access(path: Path, varprefix: str) -> None:
+    with _write_access_test_file(path) as test_file_path:
         try:
-            test_file_path = os.path.join(path, "write_test_%d" % time.time())
-            with open(test_file_path, "wb"):
-                pass
-            os.unlink(test_file_path)
+            test_file_path.write_bytes(b"")
         except OSError:
             if cmk_version.is_cma():
                 raise MKUserError(
@@ -1164,16 +1180,12 @@ class BackupTargetLocal(ABCBackupTargetType):
                 ),
             )
 
-    def remove_backup(self, backup_ident: str) -> None:
-        _check_if_target_ready(self.target)
-        shutil.rmtree("{}/{}".format(self.parameters["path"], backup_ident))
 
-
-def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:
-    try:
-        target.check_ready()
-    except MKGeneralException as e:
-        raise MKUserError(varprefix, str(e))
+@contextlib.contextmanager
+def _write_access_test_file(path: Path) -> Iterator[Path]:
+    test_file_path = path / (f"write_test_{int(time.time())}")
+    yield test_file_path
+    test_file_path.unlink(missing_ok=True)
 
 
 # .

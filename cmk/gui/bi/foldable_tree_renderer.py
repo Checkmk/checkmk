@@ -1,0 +1,493 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import abc
+from contextlib import contextmanager
+from typing import Any
+
+import cmk.gui.view_utils
+from cmk.gui.config import active_config
+from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
+from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
+from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
+
+from .helpers import get_state_assumption_key
+
+# possible aggregated states
+MISSING = -2  # currently unused
+PENDING = -1
+OK = 0
+WARN = 1
+CRIT = 2
+UNKNOWN = 3
+UNAVAIL = 4
+
+
+class ABCFoldableTreeRenderer(abc.ABC):
+    def __init__(  # type:ignore[no-untyped-def]
+        self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True
+    ) -> None:
+        self._row = row
+        self._omit_root = omit_root
+        self._expansion_level = expansion_level
+        self._only_problems = only_problems
+        self._lazy = lazy
+        self._wrap_texts = wrap_texts
+        self._load_tree_state()
+
+    def _load_tree_state(self):
+        self._treestate = user.get_tree_states("bi")
+        if self._expansion_level != user.bi_expansion_level:
+            self._treestate = {}
+            user.set_tree_states("bi", self._treestate)
+            user.save_tree_states()
+
+    @abc.abstractmethod
+    def css_class(self):
+        raise NotImplementedError()
+
+    def render(self) -> HTML:
+        with output_funnel.plugged():
+            self._show_tree()
+            return HTML(output_funnel.drain())
+
+    def _show_tree(self):
+        tree = self._get_tree()
+        affected_hosts = self._row["aggr_hosts"]
+        title = self._row["aggr_tree"]["title"]
+        group = self._row["aggr_group"]
+
+        url_id = urlencode_vars(
+            [
+                ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
+                ("group", group),
+                ("title", title),
+                ("omit_root", "yes" if self._omit_root else ""),
+                ("renderer", self.__class__.__name__),
+                ("only_problems", "yes" if self._only_problems else ""),
+                ("reqhosts", ",".join("%s#%s" % sitehost for sitehost in affected_hosts)),
+            ]
+        )
+
+        html.open_div(id_=url_id, class_="bi_tree_container")
+        self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
+        html.close_div()
+
+    @abc.abstractmethod
+    def _show_subtree(self, tree, path, show_host):
+        raise NotImplementedError()
+
+    def _get_tree(self):
+        tree = self._row["aggr_treestate"]
+        if self._only_problems:
+            tree = self._filter_tree_only_problems(tree)
+        return tree
+
+    # Convert tree to tree contain only node in non-OK state
+    def _filter_tree_only_problems(self, tree):
+        state, assumed_state, node, subtrees = tree
+        # remove subtrees in state OK
+        new_subtrees = []
+        for subtree in subtrees:
+            effective_state = subtree[1] if subtree[1] is not None else subtree[0]
+            if effective_state["state"] not in [OK, PENDING]:
+                if len(subtree) == 3:
+                    new_subtrees.append(subtree)
+                else:
+                    new_subtrees.append(self._filter_tree_only_problems(subtree))
+
+        return state, assumed_state, node, new_subtrees
+
+    def _is_leaf(self, tree) -> bool:  # type:ignore[no-untyped-def]
+        return len(tree) == 3
+
+    def _path_id(self, path):
+        return "/".join(path)
+
+    def _is_open(self, path) -> bool:  # type:ignore[no-untyped-def]
+        is_open = self._treestate.get(self._path_id(path))
+        if is_open is None:
+            is_open = len(path) <= self._expansion_level
+
+        # Make sure that in case of BI Boxes (omit root) the root level is *always* visible
+        if not is_open and self._omit_root and len(path) == 1:
+            is_open = True
+
+        return is_open
+
+    def _omit_content(self, path):
+        return self._lazy and not self._is_open(path)
+
+    def _get_mousecode(self, path):
+        return "%s(this, %d);" % (self._toggle_js_function(), self._omit_content(path))
+
+    @abc.abstractmethod
+    def _toggle_js_function(self):
+        raise NotImplementedError()
+
+    def _show_leaf(self, tree, show_host):
+        site, host = tree[2]["host"]
+        service = tree[2].get("service")
+
+        # Four cases:
+        # (1) zbghora17 . Host status   (show_host == True, service is None)
+        # (2) zbghora17 . CPU load      (show_host == True, service is not None)
+        # (3) Host Status               (show_host == False, service is None)
+        # (4) CPU load                  (show_host == False, service is not None)
+
+        if show_host or not service:
+            host_url = makeuri_contextless(
+                request,
+                [("view_name", "hoststatus"), ("site", site), ("host", host)],
+                filename="view.py",
+            )
+
+        if service:
+            service_url = makeuri_contextless(
+                request,
+                [("view_name", "service"), ("site", site), ("host", host), ("service", service)],
+                filename="view.py",
+            )
+
+        with self._show_node(tree, show_host):
+            self._assume_icon(site, host, service)
+
+            if show_host:
+                html.a(host.replace(" ", "&nbsp;"), href=host_url)
+                html.b(HTML("&diams;"), class_="bullet")
+
+            if not service:
+                html.a(_("Host&nbsp;status"), href=host_url)
+            else:
+                html.a(service.replace(" ", "&nbsp;"), href=service_url)
+
+    @abc.abstractmethod
+    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+        raise NotImplementedError()
+
+    def _assume_icon(self, site, host, service):
+        ass = user.bi_assumptions.get(get_state_assumption_key(site, host, service))
+        current_state = str(ass).lower()
+
+        html.icon_button(
+            url=None,
+            title=_("Assume another state for this item (reload page to activate)"),
+            icon="assume_%s" % current_state,
+            onclick="cmk.bi.toggle_assumption(this, '%s', '%s', '%s');"
+            % (site, host, service.replace("\\", "\\\\") if service else ""),
+            cssclass="assumption",
+        )
+
+    def _render_bi_state(self, state: int) -> str:
+        return {
+            PENDING: _("PD"),
+            OK: _("OK"),
+            WARN: _("WA"),
+            CRIT: _("CR"),
+            UNKNOWN: _("UN"),
+            MISSING: _("MI"),
+            UNAVAIL: _("NA"),
+        }.get(state, _("??"))
+
+
+class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
+    def css_class(self):
+        return "aggrtree"
+
+    def _toggle_js_function(self):
+        return "cmk.bi.toggle_subtree"
+
+    def _show_subtree(self, tree, path, show_host):
+        if self._is_leaf(tree):
+            self._show_leaf(tree, show_host)
+            return
+
+        html.open_span(class_="title")
+
+        is_empty = len(tree[3]) == 0
+        if is_empty:
+            mc = None
+        else:
+            mc = self._get_mousecode(path)
+
+        css_class = "open" if self._is_open(path) else "closed"
+
+        with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
+            if tree[2].get("icon"):
+                html.write_html(html.render_icon(tree[2]["icon"]))
+                html.write_text("&nbsp;")
+
+            if tree[2].get("docu_url"):
+                html.icon_button(
+                    tree[2]["docu_url"],
+                    _("Context information about this rule"),
+                    "url",
+                    target="_blank",
+                )
+                html.write_text("&nbsp;")
+
+            html.write_text(tree[2]["title"])
+
+        if not is_empty:
+            html.open_ul(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=["subtree", css_class],
+            )
+
+            if not self._omit_content(path):
+                for node in tree[3]:
+                    if not node[2].get("hidden"):
+                        new_path = path + [node[2]["title"]]
+                        html.open_li()
+                        self._show_subtree(node, new_path, show_host)
+                        html.close_li()
+
+            html.close_ul()
+
+        html.close_span()
+
+    @contextmanager
+    def _show_node(  # pylint: disable=too-many-branches
+        self,
+        tree,
+        show_host,
+        mousecode=None,
+        img_class=None,
+    ):
+        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+        if tree[1] and tree[0] != tree[1]:
+            addclass = ["assumed"]
+            effective_state = tree[1]
+        else:
+            addclass = []
+            effective_state = tree[0]
+
+        class_ = [
+            "content",
+            "state",
+            "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
+        ] + addclass
+        html.open_span(class_=class_)
+        html.write_text(self._render_bi_state(effective_state["state"]))
+        html.close_span()
+
+        if mousecode:
+            if img_class:
+                html.img(
+                    src=theme.url("images/tree_closed.svg"),
+                    class_=["treeangle", img_class],
+                    onclick=mousecode,
+                )
+
+            html.open_span(class_=["content", "name"])
+
+        icon_name, icon_title = None, None
+        if tree[0]["in_downtime"] == 2:
+            icon_name = "downtime"
+            icon_title = _("This element is currently in a scheduled downtime.")
+
+        elif tree[0]["in_downtime"] == 1:
+            # only display host downtime if the service has no own downtime
+            icon_name = "derived_downtime"
+            icon_title = _("One of the subelements is in a scheduled downtime.")
+
+        if tree[0]["acknowledged"]:
+            icon_name = "ack"
+            icon_title = _("This problem has been acknowledged.")
+
+        if not tree[0]["in_service_period"]:
+            icon_name = "outof_serviceperiod"
+            icon_title = _("This element is currently not in its service period.")
+
+        if icon_name and icon_title:
+            html.icon(icon_name, title=icon_title, class_=["icon", "bi"])
+
+        yield
+
+        if mousecode:
+            if str(effective_state["state"]) in tree[2].get("state_messages", {}):
+                html.b(HTML("&diams;"), class_="bullet")
+                html.write_text(tree[2]["state_messages"][str(effective_state["state"])])
+
+            html.close_span()
+
+        output: HTML = cmk.gui.view_utils.format_plugin_output(
+            effective_state["output"], shall_escape=active_config.escape_plugin_output
+        )
+        if output:
+            output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
+        else:
+            output = HTML()
+
+        html.span(output, class_=["content", "output"])
+
+
+class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
+    def css_class(self):
+        return "aggrtree_box"
+
+    def _toggle_js_function(self):
+        return "cmk.bi.toggle_box"
+
+    def _show_subtree(self, tree, path, show_host):
+        # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
+        if tree[1] and tree[0] != tree[1]:
+            addclass = ["assumed"]
+            effective_state = tree[1]
+        else:
+            addclass = []
+            effective_state = tree[0]
+
+        is_leaf = self._is_leaf(tree)
+        if is_leaf:
+            leaf = "leaf"
+            mc = None
+        else:
+            leaf = "noleaf"
+            mc = self._get_mousecode(path)
+
+        classes = [
+            "bibox_box",
+            leaf,
+            "open" if self._is_open(path) else "closed",
+            "state",
+            "state%d" % effective_state["state"],
+        ] + addclass
+
+        omit = self._omit_root and len(path) == 1
+        if not omit:
+            html.open_span(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=classes,
+                onclick=mc,
+            )
+
+            if is_leaf:
+                self._show_leaf(tree, show_host)
+            else:
+                html.write_text(tree[2]["title"].replace(" ", "&nbsp;"))
+
+            html.close_span()
+
+        if not is_leaf and not self._omit_content(path):
+            html.open_span(
+                class_="bibox",
+                style="display: none;" if not self._is_open(path) and not omit else "",
+            )
+            for node in tree[3]:
+                new_path = path + [node[2]["title"]]
+                self._show_subtree(node, new_path, show_host)
+            html.close_span()
+
+    @contextmanager
+    def _show_node(self, tree, show_host, mousecode=None, img_class=None):
+        yield
+
+    def _assume_icon(self, site, host, service):
+        return  # No assume icon with boxes
+
+
+class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
+    _mirror = False
+
+    def css_class(self):
+        return "aggrtree"
+
+    def _toggle_js_function(self):
+        return "cmk.bi.toggle_subtree"
+
+    def _show_tree(self):
+        td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
+
+        tree = self._get_tree()
+        depth = _status_tree_depth(tree)
+        leaves = self._gen_table(tree, depth, len(self._row["aggr_hosts"]) > 1)
+
+        html.open_table(class_=["aggrtree", "ltr"])
+        odd = "odd"
+        for code, colspan, parents in leaves:
+            html.open_tr()
+
+            leaf_td = HTMLWriter.render_td(
+                code, class_=["leaf", odd], style=td_style, colspan=colspan
+            )
+            odd = "even" if odd == "odd" else "odd"
+
+            tds = [leaf_td]
+            for rowspan, c in parents:
+                tds.append(
+                    HTMLWriter.render_td(c, class_=["node"], style=td_style, rowspan=rowspan)
+                )
+
+            if self._mirror:
+                tds.reverse()
+
+            html.write_html(HTML("").join(tds))
+            html.close_tr()
+
+        html.close_table()
+
+    def _gen_table(self, tree, height, show_host):
+        if self._is_leaf(tree):
+            return self._gen_leaf(tree, height, show_host)
+        return self._gen_node(tree, height, show_host)
+
+    def _gen_leaf(self, tree, height, show_host):
+        with output_funnel.plugged():
+            self._show_leaf(tree, show_host)
+            content = HTML(output_funnel.drain())
+        return [(content, height, [])]
+
+    def _gen_node(self, tree, height, show_host):
+        leaves: list[Any] = []
+        for node in tree[3]:
+            if not node[2].get("hidden"):
+                leaves += self._gen_table(node, height - 1, show_host)
+
+        with output_funnel.plugged():
+            html.open_div(class_="aggr_tree")
+            with self._show_node(tree, show_host):
+                html.write_text(tree[2]["title"])
+            html.close_div()
+            content = HTML(output_funnel.drain())
+
+        if leaves:
+            leaves[0][2].append((len(leaves), content))
+
+        return leaves
+
+
+def _status_tree_depth(tree):
+    if len(tree) == 3:
+        return 1
+
+    subtrees = tree[3]
+    maxdepth = 0
+    for node in subtrees:
+        maxdepth = max(maxdepth, _status_tree_depth(node))
+    return maxdepth + 1
+
+
+class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable):
+    ...
+
+
+class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
+    _mirror = True
+
+
+__all__ = [
+    "ABCFoldableTreeRenderer",
+    "FoldableTreeRendererTree",
+    "FoldableTreeRendererBoxes",
+    "FoldableTreeRendererTopDown",
+    "FoldableTreeRendererBottomUp",
+]

@@ -5,6 +5,8 @@
 
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.views.data_source import DataSourceRegistry
+from cmk.gui.views.painter.v0.base import PainterRegistry
+from cmk.gui.views.painter_options import PainterOptionRegistry
 
 from .permissions import PermissionBISeeAll, PermissionSectionBI
 from .view import (
@@ -12,11 +14,31 @@ from .view import (
     DataSourceBIHostAggregations,
     DataSourceBIHostnameAggregations,
     DataSourceBIHostnameByGroupAggregations,
+    PainterAggrAcknowledged,
+    PainterAggrAssumedState,
+    PainterAggrGroup,
+    PainterAggrHosts,
+    PainterAggrHostsServices,
+    PainterAggrIcons,
+    PainterAggrInDowntime,
+    PainterAggrName,
+    PainterAggrOutput,
+    PainterAggrRealState,
+    PainterAggrState,
+    PainterAggrStateNum,
+    PainterAggrTreestate,
+    PainterAggrTreestateBoxed,
+    PainterOptionAggrExpand,
+    PainterOptionAggrOnlyProblems,
+    PainterOptionAggrTreeType,
+    PainterOptionAggrWrap,
 )
 
 
 def register(
     data_source_registry: DataSourceRegistry,
+    painter_registry: PainterRegistry,
+    painter_option_registry: PainterOptionRegistry,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
 ) -> None:
@@ -24,6 +46,26 @@ def register(
     data_source_registry.register(DataSourceBIHostAggregations)
     data_source_registry.register(DataSourceBIHostnameAggregations)
     data_source_registry.register(DataSourceBIHostnameByGroupAggregations)
+
+    painter_registry.register(PainterAggrIcons)
+    painter_registry.register(PainterAggrInDowntime)
+    painter_registry.register(PainterAggrAcknowledged)
+    painter_registry.register(PainterAggrState)
+    painter_registry.register(PainterAggrStateNum)
+    painter_registry.register(PainterAggrRealState)
+    painter_registry.register(PainterAggrAssumedState)
+    painter_registry.register(PainterAggrGroup)
+    painter_registry.register(PainterAggrName)
+    painter_registry.register(PainterAggrOutput)
+    painter_registry.register(PainterAggrHosts)
+    painter_registry.register(PainterAggrHostsServices)
+    painter_registry.register(PainterAggrTreestate)
+    painter_registry.register(PainterAggrTreestateBoxed)
+
+    painter_option_registry.register(PainterOptionAggrExpand)
+    painter_option_registry.register(PainterOptionAggrOnlyProblems)
+    painter_option_registry.register(PainterOptionAggrTreeType)
+    painter_option_registry.register(PainterOptionAggrWrap)
 
     permission_section_registry.register(PermissionSectionBI)
     permission_registry.register(PermissionBISeeAll)

@@ -97,12 +97,11 @@ mkeventd.register(
 )
 mobile.register(layout_registry)
 wato.register(painter_registry, sorter_registry, icon_and_action_registry)
-bi.register(
-    painter_registry,
-    painter_option_registry,
-)
+bi.register()
 bi_registration.register(
     data_source_registry,
+    painter_registry,
+    painter_option_registry,
     permission_section_registry,
     permission_registry,
 )

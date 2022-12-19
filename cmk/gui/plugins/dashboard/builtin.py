@@ -6,32 +6,13 @@
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.dashboard import builtin_dashboards as _builtin_dashboards
-from cmk.gui.dashboard import DashboardConfig, GROW, MAX
+from cmk.gui.dashboard import builtin_dashboards, DashboardConfig, GROW, MAX
 from cmk.gui.dashboard.dashlet.dashlets.view import LinkedViewDashletConfig, ViewDashletConfig
-from cmk.gui.dashboard.type_defs import DashboardName
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.dashboard.stats import StatsDashletConfig
 from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
 
-
-def register(builtin_dashboards: dict[DashboardName, DashboardConfig]) -> None:
-    builtin_dashboards["problems"] = ProblemsDashboard
-
-    # CEE uses specific "main" dashboard with new CEE specific dashlets.
-    # CRE should use the problem dashboard as main dashboard
-    if cmk_version.is_raw_edition():
-        main_dashboard = builtin_dashboards["main"] = builtin_dashboards.pop("problems")
-        main_dashboard["title"] = _l("Main dashboard")
-        main_dashboard["icon"] = "dashboard_main"
-        main_dashboard["topic"] = "overview"
-        main_dashboard["sort_index"] = 12
-
-    builtin_dashboards["simple_problems"] = SimpleProblemsDashboard
-    builtin_dashboards["checkmk"] = CheckmkOverviewDashboard
-
-
-ProblemsDashboard = DashboardConfig(
+builtin_dashboards["problems"] = DashboardConfig(
     {
         "mandatory_context_filters": [],
         "hidebutton": False,
@@ -251,7 +232,17 @@ ProblemsDashboard = DashboardConfig(
     }
 )
 
-SimpleProblemsDashboard = DashboardConfig(
+
+# CEE uses specific "main" dashboard with new CEE specific dashlets.
+# CRE should use the problem dashboard as main dashboard
+if cmk_version.is_raw_edition():
+    main_dashboard = builtin_dashboards["main"] = builtin_dashboards.pop("problems")
+    main_dashboard["title"] = _l("Main dashboard")
+    main_dashboard["icon"] = "dashboard_main"
+    main_dashboard["topic"] = "overview"
+    main_dashboard["sort_index"] = 12
+
+builtin_dashboards["simple_problems"] = DashboardConfig(
     {
         "mandatory_context_filters": [],
         "hidebutton": False,
@@ -387,7 +378,7 @@ SimpleProblemsDashboard = DashboardConfig(
     }
 )
 
-CheckmkOverviewDashboard = DashboardConfig(
+builtin_dashboards["checkmk"] = DashboardConfig(
     {
         "mandatory_context_filters": [],
         "topic": "analyze",
@@ -436,5 +427,3 @@ CheckmkOverviewDashboard = DashboardConfig(
         "is_show_more": False,
     }
 )
-
-register(_builtin_dashboards)

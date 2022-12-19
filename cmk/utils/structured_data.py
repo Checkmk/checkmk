@@ -291,12 +291,7 @@ class StructuredDataNode:
     def __init__(self, *, name: SDNodeName = "", path: SDPath | None = None) -> None:
         # Only root node has no name or path
         self.name = name
-
-        if path:
-            self.path = path
-        else:
-            self.path = tuple()
-
+        self.path = path if path else tuple()
         self.attributes = Attributes(path=path)
         self.table = Table(path=path)
         self._nodes: SDNodes = {}
@@ -653,21 +648,9 @@ class Table:
         key_columns: SDKeyColumns | None = None,
         retentions: TableRetentions | None = None,
     ) -> None:
-        if path:
-            self.path = path
-        else:
-            self.path = tuple()
-
-        if key_columns:
-            self.key_columns = key_columns
-        else:
-            self.key_columns = []
-
-        if retentions:
-            self.retentions = retentions
-        else:
-            self.retentions = {}
-
+        self.path = path if path else tuple()
+        self.key_columns = key_columns if key_columns else []
+        self.retentions = retentions if retentions else {}
         self._rows: SDRows = {}
 
     def set_path(self, path: SDPath) -> None:
@@ -1012,16 +995,8 @@ class Attributes:
         path: SDPath | None = None,
         retentions: RetentionIntervalsByKeys | None = None,
     ) -> None:
-        if path:
-            self.path = path
-        else:
-            self.path = tuple()
-
-        if retentions:
-            self.retentions = retentions
-        else:
-            self.retentions = {}
-
+        self.path = path if path else tuple()
+        self.retentions = retentions if retentions else {}
         self.pairs: SDPairs = {}
 
     def set_path(self, path: SDPath) -> None:

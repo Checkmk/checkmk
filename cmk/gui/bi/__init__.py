@@ -5,10 +5,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from cmk.utils.type_defs import HostName, ServiceName
-
 import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.view_utils
@@ -225,25 +221,6 @@ def ajax_render_tree():
         lazy=False,
     )
     html.write_html(renderer.render())
-
-
-def find_all_leaves(  # type:ignore[no-untyped-def]
-    node,
-) -> list[tuple[str | None, HostName, ServiceName | None]]:
-    # leaf node
-    if node["type"] == 1:
-        site, host = node["host"]
-        return [(site, host, node.get("service"))]
-
-    # rule node
-    if node["type"] == 2:
-        entries: list[Any] = []
-        for n in node["nodes"]:
-            entries += find_all_leaves(n)
-        return entries
-
-    # place holders
-    return []
 
 
 @request_memoize()

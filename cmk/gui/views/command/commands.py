@@ -11,8 +11,8 @@ import livestatus
 from livestatus import SiteId
 
 from cmk.utils.render import SecondsRenderer
+from cmk.utils.type_defs import HostName, ServiceName
 
-import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
@@ -739,7 +739,7 @@ class CommandAcknowledge(Command):
     ) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode
             specs = []
-            for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
+            for site, host, service in _find_all_leaves(row["aggr_tree"]):
                 if service:
                     spec = f"{host};{service}"
                     cmdtag = "SVC"
@@ -1120,7 +1120,7 @@ class CommandScheduleDowntimes(Command):
         cmdtag, specs, title = self._downtime_specs(cmdtag, row, spec, title)
         if "aggr_tree" in row:  # BI mode
             node = row["aggr_tree"]
-            return bi_commands(downtime, node), title
+            return _bi_commands(downtime, node), title
         return [downtime.livestatus_command(spec_, cmdtag) for spec_ in specs], title
 
     def _remove_downtime_details(
@@ -1332,10 +1332,10 @@ class CommandScheduleDowntimes(Command):
         return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))
 
 
-def bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
+def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
-    for site, host, service in bi.find_all_leaves(node):
+    for site, host, service in _find_all_leaves(node):
         if service:
             spec = f"{host};{service}"
             cmdtag: Literal["HOST", "SVC"] = "SVC"
@@ -1344,6 +1344,25 @@ def bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
             cmdtag = "HOST"
         commands_aggr.append((site, downtime.livestatus_command(spec, cmdtag)))
     return commands_aggr
+
+
+def _find_all_leaves(  # type:ignore[no-untyped-def]
+    node,
+) -> list[tuple[str | None, HostName, ServiceName | None]]:
+    # leaf node
+    if node["type"] == 1:
+        site, host = node["host"]
+        return [(site, host, node.get("service"))]
+
+    # rule node
+    if node["type"] == 2:
+        entries: list[Any] = []
+        for n in node["nodes"]:
+            entries += _find_all_leaves(n)
+        return entries
+
+    # place holders
+    return []
 
 
 def time_interval_end(

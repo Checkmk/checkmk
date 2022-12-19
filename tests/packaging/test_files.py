@@ -229,7 +229,9 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     if not package_path.endswith(".tar.gz"):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
-    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    # package_path may indicate that we're having a release candidate but all files inside
+    # the package paths should not contain a rc information anymore.
+    prefix = os.path.basename(package_path).replace(".tar.gz", "").split("-rc")[0]
     enterprise_files = []
     managed_files = []
     plus_files = []

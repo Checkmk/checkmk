@@ -13,8 +13,9 @@ def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
-    
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware)
+
     dir("${checkout_dir}") {
         bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
 
@@ -33,4 +34,3 @@ def main() {
     }
 }
 return this;
-

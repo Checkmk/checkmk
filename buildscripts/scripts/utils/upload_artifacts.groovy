@@ -94,15 +94,33 @@ def create_hash(FILE_PATH) {
     }
 }
 
-def deploy_to_website(UPLOAD_URL, PORT, CMK_VERS) {
-    stage("Deploy to Website") {
-        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-            sh("""
-                ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT} ${UPLOAD_URL} \
-                    ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
-            """);
-        }
+def execute_cmd_on_archive_server(cmd) {
+    withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+        sh """
+           ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${WEB_DEPLOY_PORT} ${WEB_DEPLOY_URL} "${cmd}"
+        """
     }
+}
+
+def deploy_to_website(CMK_VERS) {
+    stage("Deploy to Website") {
+        // CMK_VERS can contain a rc information like v2.1.0p6-rc1.
+        // On the website, we only want to have official releases.
+        def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS)
+
+        // We also do not want to keep rc versions on the archive.
+        // So rename the folder in case we have a rc
+        if (TARGET_VERSION != CMK_VERS) {
+            execute_cmd_on_archive_server("mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION};")
+        }
+        execute_cmd_on_archive_server("ln -sf " +
+            "${downloads_path}${TARGET_VERSION} /smb-share-customer/checkmk/${TARGET_VERSION};");
+    }
+}
+
+def cleanup_rc_candidates_of_version(CMK_VERS) {
+    def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS)
+    execute_cmd_on_archive_server("rm -rf ${downloads_path}${TARGET_VERSION}-rc*;")
 }
 
 return this

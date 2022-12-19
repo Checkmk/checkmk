@@ -69,7 +69,8 @@ def main() {
 
     def branch_name = versioning.safe_branch_name(scm);
 
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_FOLDER);
     def branch_version = versioning.get_branch_version(checkout_dir);
 
@@ -86,6 +87,7 @@ def main() {
         |deploy_to_website:........ │${deploy_to_website}│
         |branch_name:.............. │${branch_name}│
         |cmk_version:.............. │${cmk_version}│
+        |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |omd_env_vars:............. │${omd_env_vars}│
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
@@ -111,10 +113,8 @@ def main() {
         // This stage is used only by bauwelt/bw-release in order to publish an already built release
         stage('Deploying previously build version to website only') {
             docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
-                artifacts_helper.deploy_to_website(
-                    WEB_DEPLOY_URL,
-                    WEB_DEPLOY_PORT,
-                    cmk_version);
+                artifacts_helper.deploy_to_website(cmk_version_rc_aware)
+                artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware)
             }
         }
         return;
@@ -210,7 +210,7 @@ def main() {
         def SOURCE_PACKAGE_NAME = get_source_package_name("${checkout_dir}", EDITION, cmk_version);
         def BUILD_SOURCE_PACKAGE_PATH = "${checkout_dir}/${SOURCE_PACKAGE_NAME}";
         def node_version_dir = "${WORKSPACE}/versions";
-        def FINAL_SOURCE_PACKAGE_PATH = "${node_version_dir}/${cmk_version}/${SOURCE_PACKAGE_NAME}";
+        def FINAL_SOURCE_PACKAGE_PATH = "${node_version_dir}/${cmk_version_rc_aware}/${SOURCE_PACKAGE_NAME}";
 
         print("SOURCE_PACKAGE_NAME ${SOURCE_PACKAGE_NAME}");
         print("BUILD_SOURCE_PACKAGE_PATH ${BUILD_SOURCE_PACKAGE_PATH}");
@@ -228,7 +228,7 @@ def main() {
         stage("Upload source package") {
             artifacts_helper.upload_via_rsync(
                 "${node_version_dir}",
-                "${cmk_version}",
+                "${cmk_version_rc_aware}",
                 SOURCE_PACKAGE_NAME,
                 "${upload_path}",
                 INTERNAL_DEPLOY_PORT,
@@ -286,7 +286,7 @@ def main() {
                             def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
                             def build_package_path = "${distro_dir}/${package_name}";
                             def node_version_dir = "${WORKSPACE}/versions";
-                            def final_package_path = "${node_version_dir}/${cmk_version}/${package_name}";
+                            def final_package_path = "${node_version_dir}/${cmk_version_rc_aware}/${package_name}";
 
                             stage("${distro} sign package") {
                                 sign_package(distro_dir, build_package_path);
@@ -303,7 +303,7 @@ def main() {
                             stage("${distro} upload package") {
                                 artifacts_helper.upload_via_rsync(
                                     "${node_version_dir}",
-                                    "${cmk_version}",
+                                    "${cmk_version_rc_aware}",
                                     "${package_name}",
                                     "${upload_path}",
                                     INTERNAL_DEPLOY_PORT,
@@ -330,10 +330,7 @@ def main() {
                 artifacts_helper.upload_version_dir(
                     "${WORKSPACE}/versions/${cmk_version}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
                 if (deploy_to_website) {
-                    artifacts_helper.deploy_to_website(
-                        WEB_DEPLOY_URL,
-                        WEB_DEPLOY_PORT,
-                        cmk_version);
+                    artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }
             }
         }

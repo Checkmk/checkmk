@@ -175,7 +175,18 @@ class TestInterface:
         )
 
     @pytest.fixture
-    def interface(self, raw_config: dict[str, Any]) -> Interface:
+    def metadata(self) -> str:
+        return " ".join(
+            """<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://myhost.com/NO_SITE/check_mk/saml_metadata.py">
+      <ns0:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" AuthnRequestsSigned="false" WantAssertionsSigned="false">
+         <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="1" />
+         <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="2" />
+      </ns0:SPSSODescriptor>
+    </ns0:EntityDescriptor>""".split()
+        ).replace("> <", "><")
+
+    @pytest.fixture
+    def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
         return Interface(raw_config)
 
     @pytest.fixture

@@ -8,6 +8,6 @@ from typing import Any
 from cmk.gui.userdb.saml2.connector import Connector
 
 
-def test_connector(raw_config: dict[str, Any]) -> None:
+def test_connector(metadata_from_idp: None, raw_config: dict[str, Any]) -> None:
     connector = Connector(raw_config)
     assert connector.is_enabled()

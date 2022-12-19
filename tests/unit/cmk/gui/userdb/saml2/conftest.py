@@ -15,7 +15,23 @@ def xmlsec1_binary_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("os.path.exists", lambda p: True)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(name="raw_config")
+def fixture_raw_config() -> dict[str, Any]:
+    return {
+        "id": "uuid123",
+        "type": "saml2",
+        "description": "",
+        "comment": "",
+        "docu_url": "",
+        "disabled": False,
+        "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
+        "checkmk_server_url": "https://myhost.com",
+        "connection_timeout": (12, 12),
+        "user_id_attribute": "username",
+    }
+
+
+@pytest.fixture
 def metadata_from_idp(monkeypatch: pytest.MonkeyPatch) -> None:
     metadata_str = """<?xml version="1.0"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="https://www.w3.org/2000/09/xmldsig#" entityID="https://myidp.com/some/path/to/metadata.php">
@@ -44,31 +60,3 @@ def metadata_from_idp(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "cmk.gui.userdb.saml2.interface._metadata_from_idp", lambda c, t: metadata_str
     )
-
-
-@pytest.fixture(name="raw_config")
-def fixture_raw_config() -> dict[str, Any]:
-    return {
-        "id": "uuid123",
-        "type": "saml2",
-        "description": "",
-        "comment": "",
-        "docu_url": "",
-        "disabled": False,
-        "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
-        "checkmk_server_url": "https://myhost.com",
-        "connection_timeout": (12, 12),
-        "user_id_attribute": "username",
-    }
-
-
-@pytest.fixture
-def metadata() -> str:
-    return " ".join(
-        """<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://myhost.com/NO_SITE/check_mk/saml_metadata.py">
-  <ns0:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" AuthnRequestsSigned="false" WantAssertionsSigned="false">
-     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="1" />
-     <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="2" />
-  </ns0:SPSSODescriptor>
-</ns0:EntityDescriptor>""".split()
-    ).replace("> <", "><")

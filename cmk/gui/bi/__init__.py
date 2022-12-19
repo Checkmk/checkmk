@@ -16,7 +16,14 @@ from cmk.bi.packs import BIAggregationPacks
 from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 from .foldable_tree_renderer import FoldableTreeRendererTree
 
-__all__ = ["FoldableTreeRendererTree"]
+__all__ = [
+    "BIManager",
+    "FoldableTreeRendererTree",
+    "is_part_of_aggregation",
+    "get_aggregation_group_trees",
+    "aggregation_group_choices",
+    "get_cached_bi_packs",
+]
 
 
 def is_part_of_aggregation(host, service) -> bool:  # type:ignore[no-untyped-def]

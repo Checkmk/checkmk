@@ -35,6 +35,7 @@ def main() {
     def package_dir = "${checkout_dir}/download";
     def branch_name = versioning.safe_branch_name(scm);
     def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def source_dir = package_dir + "/" + cmk_vers
     def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";
 
     def push_to_registry = PUSH_TO_REGISTRY=='true';
@@ -86,14 +87,14 @@ def main() {
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
                                 "${cmk_version}",
-                                "${package_dir}/${cmk_version}",
+                                "${source_dir}",
                                 "${EDITION}",
                                 "jammy");
                             artifacts_helper.download_source_tar(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
                                 "${cmk_version}",
-                                "${package_dir}/${cmk_version}",
+                                "${source_dir}",
                                 "${EDITION}");
                         }
 
@@ -104,7 +105,7 @@ def main() {
                             /// `download` inside the checkout_dir
                             sh("""buildscripts/scripts/build-cmk-container.sh \
                                 ${branch_name} ${EDITION} ${cmk_version} \
-                                ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
+                                ${source_dir} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
                                 build""");
                         }
 
@@ -142,6 +143,7 @@ def main() {
                             ${BRANCH} \
                             ${EDITION} \
                             ${cmk_version} \
+                            ${source_dir} \
                             ${SET_LATEST_TAG} \
                             ${SET_BRANCH_LATEST_TAG} \
                             push""");

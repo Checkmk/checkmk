@@ -64,6 +64,7 @@ from cmk.utils.type_defs import (
     NotifyPluginParamsDict,
     NotifyPluginParamsList,
     NotifyRuleInfo,
+    PluginNotificationContext,
     UUIDs,
 )
 
@@ -1336,7 +1337,7 @@ def call_notification_script(
 
 
 # Construct the environment for the notification script
-def notification_script_env(plugin_context: NotificationContext) -> dict[str, str]:
+def notification_script_env(plugin_context: NotificationContext) -> PluginNotificationContext:
     # Use half of the maximum allowed string length MAX_ARG_STRLEN
     # which is usually 32 pages on Linux (see "man execve").
     #

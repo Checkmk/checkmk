@@ -28,6 +28,7 @@ NotificationType = Literal[
     "RECOVERY",
 ]
 NotificationContext = NewType("NotificationContext", dict[str, str])
+PluginNotificationContext = dict[str, str]
 
 
 class EventRule(TypedDict, total=False):

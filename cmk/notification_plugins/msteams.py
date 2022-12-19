@@ -11,6 +11,7 @@ from cmk.utils.ms_teams_constants import (
     ms_teams_tmpl_svc_summary,
     ms_teams_tmpl_svc_title,
 )
+from cmk.utils.type_defs import PluginNotificationContext
 
 from cmk.notification_plugins.utils import (
     host_url_from_context,
@@ -40,7 +41,7 @@ MAP_TYPES: dict[str, str] = {
 
 
 def _msteams_msg(
-    context: dict[str, str],
+    context: PluginNotificationContext,
 ) -> dict[str, object]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
     color = _get_theme_color(context, notify_what)
@@ -75,7 +76,7 @@ def _msteams_msg(
 
 
 def _get_text_fields(
-    context: dict[str, str],
+    context: PluginNotificationContext,
     notify_what: str,
 ) -> tuple[str, str, str, str]:
     subtitle: str = MAP_TYPES[
@@ -97,7 +98,7 @@ def _get_text_fields(
     )
 
 
-def _get_section_facts(context: dict[str, str], details: str) -> list[dict[str, str]]:
+def _get_section_facts(context: PluginNotificationContext, details: str) -> list[dict[str, str]]:
     section_facts = [
         {"name": "Detail", "value": substitute_context(details, context)},
     ]
@@ -114,7 +115,7 @@ def _get_section_facts(context: dict[str, str], details: str) -> list[dict[str, 
     return section_facts
 
 
-def _get_theme_color(context: dict[str, str], notify_what: str) -> str:
+def _get_theme_color(context: PluginNotificationContext, notify_what: str) -> str:
     if context["NOTIFICATIONTYPE"] == "DOWNTIMESTART":
         return "439FE0"
     if context["NOTIFICATIONTYPE"] == "DOWNTIMEEND":

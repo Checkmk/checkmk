@@ -25,9 +25,10 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.store import load_text_from_file
+from cmk.utils.type_defs import PluginNotificationContext
 
 
-def collect_context() -> dict[str, str]:
+def collect_context() -> PluginNotificationContext:
     return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}
 
 
@@ -66,7 +67,7 @@ def default_from_address() -> str:
     return environ_default
 
 
-def _base_url(context: dict[str, str]) -> str:
+def _base_url(context: PluginNotificationContext) -> str:
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -81,12 +82,12 @@ def _base_url(context: dict[str, str]) -> str:
     return re.sub("/check_mk/?", "", url_prefix, count=1)
 
 
-def host_url_from_context(context: dict[str, str]) -> str:
+def host_url_from_context(context: PluginNotificationContext) -> str:
     base = _base_url(context)
     return base + context["HOSTURL"] if base else ""
 
 
-def service_url_from_context(context: dict[str, str]) -> str:
+def service_url_from_context(context: PluginNotificationContext) -> str:
     base = _base_url(context)
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
 
@@ -110,7 +111,7 @@ def format_plugin_output(output: str) -> str:
     return output
 
 
-def html_escape_context(context: dict[str, str]) -> dict[str, str]:
+def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:
     unescaped_variables = {
         "CONTACTALIAS",
         "CONTACTNAME",
@@ -137,7 +138,7 @@ def html_escape_context(context: dict[str, str]) -> dict[str, str]:
     }
 
 
-def add_debug_output(template: str, context: dict[str, str]) -> str:
+def add_debug_output(template: str, context: PluginNotificationContext) -> str:
     ascii_output = ""
     html_output = "<table class=context>\n"
     elements = sorted(context.items())
@@ -151,7 +152,7 @@ def add_debug_output(template: str, context: dict[str, str]) -> str:
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
 
 
-def substitute_context(template: str, context: dict[str, str]) -> str:
+def substitute_context(template: str, context: PluginNotificationContext) -> str:
     # First replace all known variables
     for varname, value in context.items():
         template = template.replace("$" + varname + "$", value)
@@ -252,7 +253,7 @@ def read_bulk_contexts() -> tuple[dict[str, str], list[dict[str, str]]]:
         line = line.strip()
         if not line:
             in_params = False
-            context: dict[str, str] = {}
+            context: PluginNotificationContext = {}
             contexts.append(context)
         else:
             try:
@@ -411,7 +412,7 @@ def process_by_result_map(
 
 
 # TODO this will be used by the smstools and the sms via IP scripts later
-def get_sms_message_from_context(raw_context: dict[str, str]) -> str:
+def get_sms_message_from_context(raw_context: PluginNotificationContext) -> str:
     notification_type = raw_context["NOTIFICATIONTYPE"]
     max_len = 160
     message = raw_context["HOSTNAME"] + " "

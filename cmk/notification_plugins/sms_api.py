@@ -9,6 +9,8 @@ from typing import NoReturn
 
 import requests
 
+from cmk.utils.type_defs import PluginNotificationContext
+
 from cmk.notification_plugins.utils import (
     collect_context,
     get_sms_message_from_context,
@@ -33,7 +35,6 @@ class Errors(list[str]):
 
 
 Message = str
-RawContext = dict[str, str]
 
 
 @dataclass
@@ -74,7 +75,7 @@ class Context:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def _get_context_parameter(raw_context: RawContext) -> Errors | Context:
+def _get_context_parameter(raw_context: PluginNotificationContext) -> Errors | Context:
     """First, get the request parameters for sendind the sms. Then construct
     the sms message and get the endpoint specific parameters to return the
     context for notification processing.
@@ -121,7 +122,9 @@ def _get_context_parameter(raw_context: RawContext) -> Errors | Context:
     return Errors(["Unknown unsupported modem: %s" % endpoint])
 
 
-def _get_request_params_from_context(raw_context: RawContext) -> Errors | RequestParameter:
+def _get_request_params_from_context(
+    raw_context: PluginNotificationContext,
+) -> Errors | RequestParameter:
     recipient = raw_context["CONTACTPAGER"].replace(" ", "")
     if not recipient:
         return Errors(["Error: Pager Number of %s not set\n" % raw_context["CONTACTNAME"]])
@@ -174,7 +177,7 @@ def process_notifications(context: Context) -> int:
 
 def main() -> NoReturn:
     """Construct needed context and call the related class."""
-    raw_context: RawContext = collect_context()
+    raw_context: PluginNotificationContext = collect_context()
 
     context = _get_context_parameter(raw_context)
 

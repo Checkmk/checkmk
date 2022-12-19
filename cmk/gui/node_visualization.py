@@ -286,9 +286,7 @@ class AjaxFetchAggregationData(AjaxPage):
             forced_layout_id = None
 
         bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names, [], [])
-        results = bi.get_cached_bi_manager().computer.compute_result_for_filter(
-            bi_aggregation_filter
-        )
+        results = bi.BIManager().computer.compute_result_for_filter(bi_aggregation_filter)
 
         aggregation_info: dict[str, Any] = {"aggregations": {}}
 

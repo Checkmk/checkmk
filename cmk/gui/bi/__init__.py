@@ -8,10 +8,9 @@ from __future__ import annotations
 import abc
 from collections.abc import Iterable, Sequence
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any
 
-from livestatus import LivestatusOutputFormat, LivestatusResponse, OnlySites, SiteId
+from livestatus import OnlySites
 
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.type_defs import HostName, ServiceName
@@ -20,8 +19,6 @@ import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.watolib.utils as watolib_utils
-from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.hooks import request_memoize
@@ -43,11 +40,12 @@ from cmk.gui.views.painter.v0.base import Cell, CellSpec, CSVExportError, Painte
 from cmk.gui.views.painter_options import PainterOption, PainterOptionRegistry, PainterOptions
 
 from cmk.bi.compiler import BICompiler
-from cmk.bi.computer import BIAggregationFilter, BIComputer
-from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.computer import BIAggregationFilter
 from cmk.bi.lib import BIStates, NodeResultBundle, SitesCallback
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.trees import BICompiledRule
+
+from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 
 
 # Move everything to .registration once extracted from __init__
@@ -89,7 +87,15 @@ def register(
 def is_part_of_aggregation(host, service) -> bool:  # type:ignore[no-untyped-def]
     if BIAggregationPacks.get_num_enabled_aggregations() == 0:
         return False
-    return get_cached_bi_compiler().is_part_of_aggregation(host, service)
+    return _get_cached_bi_compiler().is_part_of_aggregation(host, service)
+
+
+@request_memoize()
+def _get_cached_bi_compiler() -> BICompiler:
+    return BICompiler(
+        BIManager.bi_configuration_file(),
+        SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _),
+    )
 
 
 def get_aggregation_group_trees():
@@ -1030,60 +1036,11 @@ def singlehost_table(
     return rows
 
 
-def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
-    return [
-        (site_id, site_status["state"] == "online")
-        for site_id, site_status in sites.states().items()
-    ]
-
-
-class BIManager:
-    def __init__(self) -> None:
-        sites_callback = SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _)
-        self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
-        self.compiler.load_compiled_aggregations()
-        self.status_fetcher = BIStatusFetcher(sites_callback)
-        self.computer = BIComputer(self.compiler.compiled_aggregations, self.status_fetcher)
-
-    @classmethod
-    def bi_configuration_file(cls) -> str:
-        return str(Path(watolib_utils.multisite_dir()) / "bi_config.bi")
-
-
 @request_memoize()
 def get_cached_bi_packs() -> BIAggregationPacks:
     bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
     bi_packs.load_config()
     return bi_packs
-
-
-@request_memoize()
-def get_cached_bi_manager() -> BIManager:
-    return BIManager()
-
-
-@request_memoize()
-def get_cached_bi_compiler() -> BICompiler:
-    return BICompiler(
-        BIManager.bi_configuration_file(),
-        SitesCallback(all_sites_with_id_and_online, bi_livestatus_query, _),
-    )
-
-
-def bi_livestatus_query(
-    query: str,
-    only_sites: list[SiteId] | None = None,
-    output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
-    fetch_full_data: bool = False,
-) -> LivestatusResponse:
-
-    with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
-        try:
-            auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"
-            sites.live().set_auth_domain(auth_domain)
-            return sites.live().query(query)
-        finally:
-            sites.live().set_auth_domain("read")
 
 
 #     ____        _

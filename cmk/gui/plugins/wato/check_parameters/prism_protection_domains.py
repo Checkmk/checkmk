@@ -5,11 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    CheckParameterRulespecWithoutItem,
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersVirtualization,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
 def _parameter_valuespec_prism_protection_domains():
@@ -33,8 +33,9 @@ def _parameter_valuespec_prism_protection_domains():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
+    CheckParameterRulespecWithItem(
         check_group_name="prism_protection_domains",
+        item_spec=lambda: TextInput(title=_("Protection Domain")),
         group=RulespecGroupCheckParametersVirtualization,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_prism_protection_domains,

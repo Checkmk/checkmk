@@ -7,7 +7,8 @@ ExternalProject_Add(
   URL_HASH
     SHA256=f69e29721c09b3a4b9820a76236b7f230aef157527951eb4e8a3a6ec601fda22
   PREFIX "${gtest_prefix}"
-  INSTALL_COMMAND "" DOWNLOAD_EXTRACT_TIMESTAMP no)
+  INSTALL_COMMAND "" DOWNLOAD_EXTRACT_TIMESTAMP no
+  CMAKE_ARGS -DCMAKE_CXX_COMPILER=g++-12)
 
 set(gtest_libs "${gtest_prefix}/src/gtest-external-build/lib")
 set(gtest_includes "${gtest_prefix}/src/gtest-external/googletest/include")

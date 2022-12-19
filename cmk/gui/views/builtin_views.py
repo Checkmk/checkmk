@@ -3405,7 +3405,7 @@ builtin_views.update(
         #   |___|_| |_|\__\___|_|_|_|\__, |\___|_| |_|\___\___|
         #                            |___/
         #
-        # All Aggregations
+        # All aggregations
         "aggr_all": {
             "browser_reload": 0,
             "column_headers": "pergroup",
@@ -3437,7 +3437,7 @@ builtin_views.update(
                 SorterSpec(sorter="aggr_group", negate=False),
                 SorterSpec(sorter="aggr_name", negate=False),
             ],
-            "title": _l("All Aggregations"),
+            "title": _l("All aggregations"),
             "topic": "bi",
             "sort_index": 10,
             "user_sortable": True,
@@ -3848,7 +3848,7 @@ builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
         },
-        # All Aggregations that have (real) problems
+        # All aggregations that have (real) problems
         "aggr_problems": {
             "browser_reload": 0,
             "column_headers": "pergroup",

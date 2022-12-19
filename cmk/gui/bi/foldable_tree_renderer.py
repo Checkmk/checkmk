@@ -398,12 +398,6 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
     _mirror = False
 
-    def css_class(self):
-        return "aggrtree"
-
-    def _toggle_js_function(self):
-        return "cmk.bi.toggle_subtree"
-
     def _show_tree(self):
         td_style = None if self._wrap_texts == "wrap" else "white-space: nowrap;"
 

@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  This check shows the actual memory usage for the Nutanix host.
- The levels can be configured thrue the coresponding rule.
+ The levels can be configured through the corresponding rule.
 
  This check requires the special agent configurable through "Nutanix Prism".
 

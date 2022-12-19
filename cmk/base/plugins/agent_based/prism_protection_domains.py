@@ -60,14 +60,21 @@ def check_prism_protection_domains(
 
     if mtr:
         type = "Metro Availability"
+        sync_state = mtr.get("status", "Unknown")
+        wanted_state = params.get("sync_state", "Enabled")
         summary = (
             f"Type: {type}, "
             f"Role: {mtr.get('role')}, "
             f"Container: {mtr.get('container')}, "
-            f"RemoteSite: {mtr.get('remote_site_names')}, "
-            f"Status: {mtr.get('status')}"
+            f"RemoteSite: {mtr.get('remote_site')}, "
         )
-        yield Result(state=State(_SYNC_STATES.get(mtr.get("status", None), 3)), summary=summary)
+        state = 0
+        if sync_state != wanted_state:
+            state = max(_SYNC_STATES.get(sync_state, 3), _SYNC_STATES.get(wanted_state, 3))
+            summary += f"Status: {sync_state} not {wanted_state}(!)"
+        else:
+            summary += f"Status: {sync_state}"
+        yield Result(state=State(state), summary=summary)
     else:
         type = "Async DR"
 

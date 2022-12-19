@@ -70,16 +70,16 @@ def test_discovery_prism_alerts(
                 Result(state=State.OK, summary="2 alerts"),
                 Result(
                     state=State.OK,
-                    summary="Last worst on Thu Oct  6 16:16:27 2022: 'It is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.'",
+                    summary="Last worst on Thu Oct  6 14:16:27 2022: 'It is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.'",
                 ),
                 Result(state=State.OK, notice="\nLast 10 Alerts\n"),
                 Result(
                     state=State.OK,
-                    notice="Thu Oct  6 16:16:27 2022\tIt is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
+                    notice="Thu Oct  6 14:16:27 2022\tIt is recommended that NGT on the VM SRV-APP-01 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Thu Oct  6 16:16:27 2022\tIt is recommended that NGT on the VM SRV-SQL-02 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
+                    notice="Thu Oct  6 14:16:27 2022\tIt is recommended that NGT on the VM SRV-SQL-02 with uuid 0000-0000 should be upgraded to the latest version supported by the cluster.NGT update contains bug fixes and improvements, which will improve the overall product experience.",
                 ),
             ],
             id="If the disk is in expected mount state and healthy, the check result is OK.",

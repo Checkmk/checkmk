@@ -1,3 +1,5 @@
+check-mk-*-*.substvars
+check-mk-*-*/
 omd*substvars
 omd*debhelper.log
 omd-*.*/

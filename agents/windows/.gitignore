@@ -1,0 +1,12 @@
+OpenHardwareMonitorCLI.exe
+OpenHardwareMonitorLib.dll
+check_mk.example.ini
+check_mk.user.yml
+check_mk_agent.msi
+check_mk_agent_legacy-64.exe
+check_mk_agent_legacy.exe
+check_mk_agent_legacy.msi
+check_mk_agent_unsigned.msi
+python-3.4.cab
+python-3.cab
+unsign-msi.patch

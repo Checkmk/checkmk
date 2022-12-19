@@ -26,3 +26,4 @@ rpm.buildroot
 rpm.topdir
 rrdtool-1.7.1/
 build/
+bill-of-materials.json

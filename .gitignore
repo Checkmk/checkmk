@@ -49,6 +49,7 @@ check_mk-*.tar.gz
 check-mk-*.build
 check-mk-*.dsc
 check-mk-*.tar.gz
+check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz

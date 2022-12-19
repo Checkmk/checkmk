@@ -14,11 +14,6 @@ from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
-from cmk.gui.dashboard import Dashlet, dashlet_registry
-from cmk.gui.dashboard.dashlet import DashletId, DashletSize
-from cmk.gui.dashboard.dashlet.dashlets.status_helpers import make_mk_missing_data_error
-from cmk.gui.dashboard.title_macros import macro_mapping_from_context
-from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -47,6 +42,11 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.visuals import get_singlecontext_vars
+
+from ...title_macros import macro_mapping_from_context
+from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
+from ..base import Dashlet, DashletId, DashletSize
+from .status_helpers import make_mk_missing_data_error
 
 
 def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
@@ -325,7 +325,6 @@ class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     source: str
 
 
-@dashlet_registry.register
 class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphIdentifier]):
     """Dashlet for rendering a single performance graph"""
 

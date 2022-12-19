@@ -418,15 +418,8 @@ class StructuredDataNode:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
-
-    def _format(self) -> dict:
         # Only used for repr/debug purposes
-        return {
-            ATTRIBUTES_KEY: self.attributes._format(),
-            TABLE_KEY: self.table._format(),
-            _NODES_KEY: {name: node._format() for name, node in self._nodes.items()},
-        }
+        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
 
     #   ---de/serializing-------------------------------------------------------
 
@@ -864,15 +857,8 @@ class Table:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
-
-    def _format(self) -> dict:
         # Only used for repr/debug purposes
-        return {
-            _KEY_COLUMNS_KEY: self.key_columns,
-            _ROWS_KEY: self._rows,
-            _RETENTIONS_KEY: self.retentions,
-        }
+        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
 
     #   ---de/serializing-------------------------------------------------------
 
@@ -1084,14 +1070,8 @@ class Attributes:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
-
-    def _format(self) -> dict:
         # Only used for repr/debug purposes
-        return {
-            _PAIRS_KEY: self.pairs,
-            _RETENTIONS_KEY: self.retentions,
-        }
+        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
 
     #   ---de/serializing-------------------------------------------------------
 

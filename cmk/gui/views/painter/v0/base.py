@@ -648,7 +648,8 @@ class JoinCell(Cell):
         return True
 
     def join_service(self) -> ServiceName:
-        assert self._join_service_descr is not None
+        if self._join_service_descr is None:
+            raise ValueError()
         return self._join_service_descr
 
     def livestatus_filter(self, join_column_name: str) -> LivestatusQuery:

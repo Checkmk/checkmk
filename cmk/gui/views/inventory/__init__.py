@@ -19,11 +19,11 @@ import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.structured_data import (
     Attributes,
+    RawStructuredDataNode,
     RetentionIntervals,
     SDKey,
     SDKeyColumns,
     SDPath,
-    SDRawPath,
     SDRow,
     SDValue,
     StructuredDataNode,
@@ -213,11 +213,11 @@ class PainterInventoryTree(Painter):
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
+    def export_for_json(self, row: Row, cell: Cell) -> RawStructuredDataNode | None:
         return (
             tree.serialize()
             if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else {}
+            else None
         )
 
 
@@ -913,7 +913,7 @@ def _inv_filter_info():
     }
 
 
-def inv_titleinfo_long(raw_path: SDRawPath) -> str:
+def inv_titleinfo_long(raw_path: str) -> str:
     """Return the titles of the last two path components of the node, e.g. "BIOS / Vendor"."""
     inventory_path = inventory.InventoryPath.parse(raw_path)
     hints = DISPLAY_HINTS.get_hints(inventory_path.path)
@@ -1316,8 +1316,10 @@ def _export_node_for_csv() -> str | HTML:
     raise CSVExportError()
 
 
-def _export_node_as_json(row: Row, inventory_path: inventory.InventoryPath) -> dict:
-    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else {}
+def _export_node_as_json(
+    row: Row, inventory_path: inventory.InventoryPath
+) -> RawStructuredDataNode | None:
+    return node.serialize() if (node := _compute_node_painter_data(row, inventory_path)) else None
 
 
 def _register_attribute_column(
@@ -2143,11 +2145,11 @@ class PainterInvhistDelta(Painter):
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
+    def export_for_json(self, row: Row, cell: Cell) -> RawStructuredDataNode | None:
         return (
             tree.serialize()
             if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else {}
+            else None
         )
 
 

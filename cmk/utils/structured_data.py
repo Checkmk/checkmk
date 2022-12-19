@@ -15,7 +15,7 @@ import pprint
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -27,10 +27,6 @@ from cmk.utils.type_defs import HostName
 # - merge_with -> __add__
 # - count_entries -> __len__?
 # TODO Improve/clarify adding Attributes/Table while deserialization/filtering/merging/...
-
-SDRawPath = str
-# TODO improve this
-SDRawTree = dict
 
 SDNodeName = str
 SDPath = tuple[SDNodeName, ...]
@@ -53,18 +49,26 @@ SDRow = dict[SDKey, SDValue]
 SDRows = dict[SDRowIdent, SDRow]
 LegacyRows = list[SDRow]
 
+
+class RawAttributes(TypedDict, total=False):
+    Pairs: dict[SDKey, SDValue]
+    Retentions: dict[SDKey, tuple[int, int, int]]
+
+
+class RawTable(TypedDict, total=False):
+    KeyColumns: list[SDKey]
+    Rows: list[dict[SDKey, SDValue]]
+    Retentions: dict[tuple[SDValue, ...], dict[SDKey, tuple[int, int, int]]]
+
+
+class RawStructuredDataNode(TypedDict):
+    Attributes: RawAttributes
+    Table: RawTable
+    Nodes: dict[SDNodeName, RawStructuredDataNode]
+
+
 SDEncodeAs = Callable
 SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
-
-# Used for de/serialization and retentions
-ATTRIBUTES_KEY = "Attributes"
-TABLE_KEY = "Table"
-
-_PAIRS_KEY = "Pairs"
-_KEY_COLUMNS_KEY = "KeyColumns"
-_ROWS_KEY = "Rows"
-_NODES_KEY = "Nodes"
-_RETENTIONS_KEY = "Retentions"
 
 
 class SDDeltaResult(NamedTuple):
@@ -420,18 +424,32 @@ class StructuredDataNode:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
+    def serialize(self) -> RawStructuredDataNode:
         return {
-            ATTRIBUTES_KEY: self.attributes.serialize(),
-            TABLE_KEY: self.table.serialize(),
-            _NODES_KEY: {name: node.serialize() for name, node in self._nodes.items()},
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {name: node.serialize() for name, node in self._nodes.items()},
         }
 
     @classmethod
-    def deserialize(cls, raw_tree: SDRawTree) -> StructuredDataNode:
-        if all(key in raw_tree for key in (ATTRIBUTES_KEY, TABLE_KEY, _NODES_KEY)):
-            return cls._deserialize(name="", path=tuple(), raw_tree=raw_tree)
-        return cls._deserialize_legacy(name="", path=tuple(), raw_tree=raw_tree)
+    def deserialize(cls, raw_tree: object) -> StructuredDataNode:
+        if not isinstance(raw_tree, dict):
+            raise TypeError()
+
+        try:
+            raw_attributes = raw_tree["Attributes"]
+            raw_table = raw_tree["Table"]
+            raw_nodes = raw_tree["Nodes"]
+        except KeyError:
+            return cls._deserialize_legacy(name="", path=tuple(), raw_tree=raw_tree)
+
+        return cls._deserialize(
+            name="",
+            path=tuple(),
+            raw_attributes=raw_attributes,
+            raw_table=raw_table,
+            raw_nodes=raw_nodes,
+        )
 
     @classmethod
     def _deserialize(
@@ -439,19 +457,33 @@ class StructuredDataNode:
         *,
         name: SDNodeName,
         path: SDPath,
-        raw_tree: SDRawTree,
+        raw_attributes: RawAttributes,
+        raw_table: RawTable,
+        raw_nodes: dict[SDNodeName, RawStructuredDataNode],
     ) -> StructuredDataNode:
         node = cls(name=name, path=path)
 
-        node.add_attributes(Attributes.deserialize(path=path, raw_pairs=raw_tree[ATTRIBUTES_KEY]))
-        node.add_table(Table.deserialize(path=path, raw_rows=raw_tree[TABLE_KEY]))
+        node.add_attributes(
+            Attributes.deserialize(
+                path=path,
+                raw_attributes=raw_attributes,
+            )
+        )
+        node.add_table(
+            Table.deserialize(
+                path=path,
+                raw_table=raw_table,
+            )
+        )
 
-        for raw_name, raw_node in raw_tree[_NODES_KEY].items():
+        for raw_name, raw_node in raw_nodes.items():
             node.add_node(
                 cls._deserialize(
                     name=raw_name,
                     path=path + (raw_name,),
-                    raw_tree=raw_node,
+                    raw_attributes=raw_node["Attributes"],
+                    raw_table=raw_node["Table"],
+                    raw_nodes=raw_node["Nodes"],
                 )
             )
 
@@ -463,7 +495,7 @@ class StructuredDataNode:
         *,
         name: SDNodeName,
         path: SDPath,
-        raw_tree: SDRawTree,
+        raw_tree: dict,
     ) -> StructuredDataNode:
         node = cls(name=name, path=path)
         raw_pairs: SDPairs = {}
@@ -859,28 +891,31 @@ class Table:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
-        raw_table = {}
+    def serialize(self) -> RawTable:
+        raw_table: RawTable = {}
         if self._rows:
             raw_table.update(
                 {
-                    _KEY_COLUMNS_KEY: self.key_columns,
-                    _ROWS_KEY: list(self._rows.values()),
+                    "KeyColumns": self.key_columns,
+                    "Rows": list(self._rows.values()),
                 }
             )
 
         if self.retentions:
-            raw_table[_RETENTIONS_KEY] = {
+            raw_table["Retentions"] = {
                 ident: _serialize_retentions(intervals)
                 for ident, intervals in self.retentions.items()
             }
         return raw_table
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_rows: SDRawTree) -> Table:
-        rows = raw_rows.get(_ROWS_KEY, [])
-        if _KEY_COLUMNS_KEY in raw_rows:
-            key_columns = raw_rows[_KEY_COLUMNS_KEY]
+    def deserialize(cls, *, path: SDPath, raw_table: object) -> Table:
+        if not isinstance(raw_table, dict):
+            raise TypeError()
+
+        rows = raw_table.get("Rows", [])
+        if "KeyColumns" in raw_table:
+            key_columns = raw_table["KeyColumns"]
         else:
             key_columns = cls._get_default_key_columns(rows)
 
@@ -889,7 +924,7 @@ class Table:
             key_columns=key_columns,
             retentions={
                 ident: _deserialize_retentions(raw_intervals)
-                for ident, raw_intervals in raw_rows.get(_RETENTIONS_KEY, {}).items()
+                for ident, raw_intervals in raw_table.get("Retentions", {}).items()
             },
         )
         table.add_rows(rows)
@@ -1072,22 +1107,25 @@ class Attributes:
 
     #   ---de/serializing-------------------------------------------------------
 
-    def serialize(self) -> SDRawTree:
-        raw_attributes = {}
+    def serialize(self) -> RawAttributes:
+        raw_attributes: RawAttributes = {}
         if self.pairs:
-            raw_attributes[_PAIRS_KEY] = self.pairs
+            raw_attributes["Pairs"] = self.pairs
 
         if self.retentions:
-            raw_attributes[_RETENTIONS_KEY] = _serialize_retentions(self.retentions)
+            raw_attributes["Retentions"] = _serialize_retentions(self.retentions)
         return raw_attributes
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_pairs: SDRawTree) -> Attributes:
+    def deserialize(cls, *, path: SDPath, raw_attributes: object) -> Attributes:
+        if not isinstance(raw_attributes, dict):
+            raise TypeError()
+
         attributes = cls(
             path=path,
-            retentions=_deserialize_retentions(raw_pairs.get(_RETENTIONS_KEY)),
+            retentions=_deserialize_retentions(raw_attributes.get("Retentions")),
         )
-        attributes.add_pairs(raw_pairs.get(_PAIRS_KEY, {}))
+        attributes.add_pairs(raw_attributes.get("Pairs", {}))
         return attributes
 
     @classmethod
@@ -1220,7 +1258,7 @@ def _identical_delta_tree_node(value: SDValue) -> tuple[SDValue, SDValue]:
     return (value, value)
 
 
-def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
+def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(part for part in raw_path.split(".") if part)
 
 

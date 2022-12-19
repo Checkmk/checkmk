@@ -26,6 +26,7 @@ import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 from cmk.base.check_utils import ConfiguredService
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import (
     CollectedHostLabels,
     get_labels_from_attributes,
@@ -44,8 +45,10 @@ def fixture_config_path():
         shutil.rmtree(ConfigPath.ROOT)
 
 
-def test_do_create_config_nagios(core_scenario, config_path) -> None:  # type:ignore[no-untyped-def]
-    core_config.do_create_config(create_core("nagios"), duplicates=())
+def test_do_create_config_nagios(  # type:ignore[no-untyped-def]
+    core_scenario: ConfigCache, config_path
+) -> None:
+    core_config.do_create_config(create_core("nagios"), core_scenario, duplicates=())
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
@@ -399,10 +402,10 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
     hostname = HostName("testhost")
     ts = Scenario()
     ts.add_host(hostname)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
     assert core_config.translate_ds_program_source_cmdline(
-        template, hostname, ipaddress
+        config_cache, template, hostname, ipaddress
     ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 
 

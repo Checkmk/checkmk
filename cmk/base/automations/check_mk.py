@@ -1309,6 +1309,7 @@ class AutomationDiagHost(Automation):
             if test == "agent":
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
+                        config_cache,
                         hostname,
                         ipaddress,
                         agent_port=agent_port,
@@ -1374,6 +1375,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
+        config_cache: ConfigCache,
         host_name: HostName,
         ipaddress: HostAddress,
         *,
@@ -1386,7 +1388,7 @@ class AutomationDiagHost(Automation):
         for source, file_cache, fetcher in sources.make_sources(
             host_name,
             ipaddress,
-            config_cache=config.get_config_cache(),
+            config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
@@ -1398,7 +1400,7 @@ class AutomationDiagHost(Automation):
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd, host_name, ipaddress
+                        config_cache, cmd, host_name, ipaddress
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,

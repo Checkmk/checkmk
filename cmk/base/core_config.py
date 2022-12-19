@@ -284,6 +284,7 @@ def check_icmp_arguments_of(
 
 def do_create_config(
     core: MonitoringCore,
+    config_cache: ConfigCache,
     hosts_to_update: HostsToUpdate = None,
     *,
     duplicates: Sequence[HostName],
@@ -296,7 +297,9 @@ def do_create_config(
     out.output("Generating configuration for core (type %s)...\n" % core.name())
 
     try:
-        _create_core_config(core, hosts_to_update=hosts_to_update, duplicates=duplicates)
+        _create_core_config(
+            core, config_cache, hosts_to_update=hosts_to_update, duplicates=duplicates
+        )
     except Exception as e:
         if cmk.utils.debug.enabled():
             raise
@@ -359,6 +362,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 
 def _create_core_config(
     core: MonitoringCore,
+    config_cache: ConfigCache,
     hosts_to_update: HostsToUpdate = None,
     *,
     duplicates: Sequence[HostName],
@@ -369,7 +373,6 @@ def _create_core_config(
     _verify_non_deprecated_checkgroups()
 
     config_path = next(VersionedConfigPath.current())
-    config_cache = config.get_config_cache()
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
         core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
 
@@ -798,7 +801,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: str | None = None
     if ConfigCache.is_ipv4_host(hostname):
-        v4address = ip_address_of(hostname, socket.AF_INET)
+        v4address = ip_address_of(config_cache, hostname, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -806,7 +809,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: str | None = None
     if ConfigCache.is_ipv6_host(hostname):
-        v6address = ip_address_of(hostname, socket.AF_INET6)
+        v6address = ip_address_of(config_cache, hostname, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -860,7 +863,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
-            addr = ip_address_of(h, family)
+            addr = ip_address_of(config_cache, h, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -870,7 +873,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
-            addr = ip_address_of(h, family)
+            addr = ip_address_of(config_cache, h, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -948,8 +951,9 @@ def _verify_cluster_datasource(
             warning(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
 
 
-def ip_address_of(host_name: HostName, family: socket.AddressFamily) -> str | None:
-    config_cache = config.get_config_cache()
+def ip_address_of(
+    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily
+) -> str | None:
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
@@ -1021,12 +1025,12 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
 
 
 def translate_ds_program_source_cmdline(
+    config_cache: ConfigCache,
     template: str,
     host_name: HostName,
     ipaddress: HostAddress | None,
 ) -> str:
     def _translate_host_macros(cmd: str) -> str:
-        config_cache = config.get_config_cache()
         attrs = get_host_attributes(host_name, config_cache)
         if config_cache.is_cluster(host_name):
             parents_list = get_cluster_nodes_for_config(config_cache, host_name)

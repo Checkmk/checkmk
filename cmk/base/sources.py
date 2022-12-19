@@ -446,7 +446,7 @@ class _Builder:
                 source,
                 ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        datasource_program, self.host_name, self.ipaddress
+                        self.config_cache, datasource_program, self.host_name, self.ipaddress
                     ),
                     stdin=None,
                     is_cmc=config.is_cmc(),

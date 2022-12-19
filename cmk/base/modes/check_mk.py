@@ -1200,7 +1200,8 @@ def mode_update() -> None:
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
-                create_core(config.monitoring_core),
+                core=create_core(config.monitoring_core),
+                config_cache=config.get_config_cache(),
                 duplicates=config.duplicate_hosts(),
             )
     except Exception as e:

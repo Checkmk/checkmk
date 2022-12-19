@@ -23,6 +23,7 @@ from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import HostName, HostsToUpdate, TimeperiodName
 
+import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
@@ -77,7 +78,8 @@ def do_restart(
     try:
         with activation_lock(mode=locking_mode):
             core_config.do_create_config(
-                core,
+                core=core,
+                config_cache=config.get_config_cache(),
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
             )

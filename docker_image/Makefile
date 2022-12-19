@@ -40,16 +40,32 @@ needed-packages: ../omd/distros/UBUNTU_22.04.mk
 	    make -f - -f ../omd/distros/UBUNTU_22.04.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
-	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
+	@if [ -z ${VERSION_TAG} ]; then \
+  		echo "VERSION_TAG is not set, please pass this environment variable during make target call."; \
+  		exit 1; \
+  	fi; \
+
+	@if [[ "${VERSION_TAG}" == *"-rc"* ]]; then \
+  		echo "VERSION_TAG contains rc information, do a retagging before docker save."; \
+    	  	docker tag $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION); \
+		docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz; \
+    	  	docker image rm $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION); \
+    	else \
+		docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz; \
+    	fi; \
 
 image: needed-packages
+	@if [ -z ${VERSION_TAG} ]; then \
+  		echo "VERSION_TAG is not set, please pass this environment variable during make target call."; \
+  		exit 1; \
+  	fi; \
 	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	docker build \
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \
-	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) \
+	    -t $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) \
 	    . ; \
 	docker stop $$SECRET_CONTAINER_ID
 

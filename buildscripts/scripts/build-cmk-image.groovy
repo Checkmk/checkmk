@@ -34,8 +34,9 @@ def main() {
 
     def package_dir = "${checkout_dir}/download";
     def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
-    def source_dir = package_dir + "/" + cmk_vers
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
+    def source_dir = package_dir + "/" + cmk_version_rc_aware
     def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";
 
     def push_to_registry = PUSH_TO_REGISTRY=='true';
@@ -44,11 +45,11 @@ def main() {
    print(
         """
         |===== CONFIGURATION ===============================
-        |branch_name:....... │${branch_name}│
-        |cmk_version:....... │${cmk_version}│
-        |push_to_registry:.. │${push_to_registry}│
-        |build_image:....... │${build_image}│
-        |package_dir:....... │${package_dir}│
+        |branch_name:......... │${branch_name}│
+        |cmk_version_rc_aware: │${cmk_version_rc_aware}│
+        |push_to_registry:.... │${push_to_registry}│
+        |build_image:......... │${build_image}│
+        |package_dir:......... │${package_dir}│
         |===================================================
         """.stripMargin());
 
@@ -86,14 +87,14 @@ def main() {
                             artifacts_helper.download_deb(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
-                                "${cmk_version}",
+                                "${cmk_version_rc_aware}",
                                 "${source_dir}",
                                 "${EDITION}",
                                 "jammy");
                             artifacts_helper.download_source_tar(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
-                                "${cmk_version}",
+                                "${cmk_version_rc_aware}",
                                 "${source_dir}",
                                 "${EDITION}");
                         }
@@ -104,17 +105,17 @@ def main() {
                             /// to have an arbitrary location, so we have to provide
                             /// `download` inside the checkout_dir
                             sh("""buildscripts/scripts/build-cmk-container.sh \
-                                ${branch_name} ${EDITION} ${cmk_version} \
+                                ${branch_name} ${EDITION} ${cmk_version_rc_aware} \
                                 ${source_dir} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
                                 build""");
                         }
 
-                        def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
+                        def filename = versioning.get_docker_artifact_name(EDITION, cmk_version_rc_aware);
                         on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
                             stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
                                     "${package_dir}",
-                                    "${cmk_version}",
+                                    "${cmk_version_rc_aware}",
                                     "${filename}",
                                     "${INTERNAL_DEPLOY_DEST}",
                                     "${INTERNAL_DEPLOY_PORT}",
@@ -122,15 +123,15 @@ def main() {
                             }
                         }
 
-                        def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version}.tar.gz";
+                        def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version_rc_aware}.tar.gz";
                         if (branch_name.contains("sandbox") ) {
                             print("Skip uploading ${image_archive_file} due to sandbox branch");
                         } else {
                             stage("Upload ${image_archive_file}") {
                                 artifacts_helper.upload_via_rsync(
                                     "${package_dir}",
-                                    "${cmk_version}",
-                                    "check-mk-${EDITION}-docker-${cmk_version}.tar.gz",
+                                    "${cmk_version_rc_aware}",
+                                    "${filename}",
                                     "${WEB_DEPLOY_DEST}",
                                     "${WEB_DEPLOY_PORT}",
                                 );
@@ -142,7 +143,7 @@ def main() {
                         sh("""buildscripts/scripts/build-cmk-container.sh \
                             ${BRANCH} \
                             ${EDITION} \
-                            ${cmk_version} \
+                            ${cmk_version_rc_aware} \
                             ${source_dir} \
                             ${SET_LATEST_TAG} \
                             ${SET_BRANCH_LATEST_TAG} \

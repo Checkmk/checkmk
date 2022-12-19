@@ -21,7 +21,7 @@ from typing import Any
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import fields as gui_fields
-from cmk.gui.bi import api_get_aggregation_state, get_cached_bi_packs
+from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -34,7 +34,8 @@ from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.lib import ReqBoolean, ReqList, ReqString
+from cmk.bi.computer import BIAggregationFilter
+from cmk.bi.lib import BIStates, NodeResultBundle, ReqBoolean, ReqList, ReqString
 from cmk.bi.packs import (
     AggregationNotFoundException,
     BIAggregationPack,
@@ -44,6 +45,7 @@ from cmk.bi.packs import (
 )
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.schema import Schema
+from cmk.bi.trees import BICompiledRule
 
 BI_RULE_ID = {
     "rule_id": fields.String(
@@ -285,9 +287,93 @@ def get_bi_aggregation_state(params: Mapping[str, Any]) -> Response:
     filter_config = params.get("body", {})
     filter_names = filter_config.get("filter_names")
     filter_groups = filter_config.get("filter_groups")
-    return serve_json(
-        api_get_aggregation_state(filter_names=filter_names, filter_groups=filter_groups)
+    return serve_json(_aggregation_state(filter_names=filter_names, filter_groups=filter_groups))
+
+
+def _aggregation_state(  # type:ignore[no-untyped-def]
+    filter_names: list[str] | None = None, filter_groups: list[str] | None = None
+):
+    bi_manager = BIManager()
+    bi_aggregation_filter = BIAggregationFilter(
+        [],
+        [],
+        [],
+        filter_names or [],
+        filter_groups or [],
+        [],
     )
+
+    def collect_infos(  # type:ignore[no-untyped-def]
+        node_result_bundle: NodeResultBundle, is_single_host_aggregation: bool
+    ):
+        actual_result = node_result_bundle.actual_result
+
+        own_infos = {}
+        if actual_result.custom_infos:
+            own_infos["custom"] = actual_result.custom_infos
+
+        if actual_result.state not in [BIStates.OK, BIStates.PENDING]:
+            node_instance = node_result_bundle.instance
+            line_tokens = []
+            if isinstance(node_instance, BICompiledRule):
+                line_tokens.append(node_instance.properties.title)
+            else:
+                node_info = []
+                if not is_single_host_aggregation:
+                    node_info.append(node_instance.host_name)
+                if node_instance.service_description:
+                    node_info.append(node_instance.service_description)
+                if node_info:
+                    line_tokens.append("/".join(node_info))
+            if actual_result.output:
+                line_tokens.append(actual_result.output)
+            own_infos["error"] = {"state": actual_result.state, "output": ", ".join(line_tokens)}
+
+        nested_infos = [
+            x
+            for y in node_result_bundle.nested_results
+            for x in [collect_infos(y, is_single_host_aggregation)]
+            if x is not None
+        ]
+
+        if own_infos or nested_infos:
+            return [own_infos, nested_infos]
+        return None
+
+    aggregations = {}
+    results = bi_manager.computer.compute_result_for_filter(bi_aggregation_filter)
+    for _compiled_aggregation, node_result_bundles in results:
+        for node_result_bundle in node_result_bundles:
+            aggr_title = node_result_bundle.instance.properties.title
+            required_hosts = [x[1] for x in node_result_bundle.instance.get_required_hosts()]
+            is_single_host_aggregation = len(required_hosts) == 1
+            aggregations[aggr_title] = {
+                "state": node_result_bundle.actual_result.state,
+                "output": node_result_bundle.actual_result.output,
+                "hosts": required_hosts,
+                "acknowledged": node_result_bundle.actual_result.acknowledged,
+                "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
+                "in_service_period": node_result_bundle.actual_result.in_service_period,
+                "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
+            }
+
+    have_sites = {x[0] for x in bi_manager.status_fetcher.states}
+    missing_aggregations = []
+    required_sites = set()
+    required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
+    for _bi_aggregation, branches in required_aggregations:
+        for branch in branches:
+            branch_sites = {x[0] for x in branch.required_elements()}
+            required_sites.update(branch_sites)
+            if branch.properties.title not in aggregations:
+                missing_aggregations.append(branch.properties.title)
+
+    response = {
+        "aggregations": aggregations,
+        "missing_sites": list(required_sites - have_sites),
+        "missing_aggr": missing_aggregations,
+    }
+    return response
 
 
 @Endpoint(

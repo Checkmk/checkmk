@@ -5,6 +5,7 @@
 use super::config::ClientConfig;
 use super::misc::anyhow_error_to_human_readable;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use log::{debug, info};
 use std::fmt::Display;
 use std::str::FromStr;
 
@@ -154,22 +155,24 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
 
     pub fn discover(&self) -> AnyhowResult<u16> {
         let client = self.build_client()?;
-        let mut error_messages = std::collections::HashMap::new();
 
-        for protocol in ["https", "http"] {
-            match Self::discover_with_protocol(self, &client, protocol) {
-                Ok(p) => return Ok(p),
-                Err(err) => {
-                    error_messages.insert(protocol, err);
-                }
+        match Self::discover_with_protocol(self, &client, "https") {
+            Ok(p) => return Ok(p),
+            Err(err) => {
+                info!("Failed to discover agent receiver port using https, trying http.");
+                debug!("https error {:?}", anyhow_error_to_human_readable(&err));
             }
-        }
+        };
 
-        return Err(anyhow!(
-            "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
-            anyhow_error_to_human_readable(&error_messages["https"]),
-            anyhow_error_to_human_readable(&error_messages["http"]),
-        ));
+        match Self::discover_with_protocol(self, &client, "http") {
+            Ok(p) => return Ok(p),
+            Err(err) => {
+                info!("Failed to discover agent receiver port using http.");
+                debug!("http error {:?}", anyhow_error_to_human_readable(&err));
+            }
+        };
+
+        Err(anyhow!("Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors."))
     }
 }
 

@@ -708,6 +708,7 @@ def get_unpackaged_files() -> dict[PackagePart, list[str]]:
 
 
 def package_part_info() -> PackagePartInfo:
+    # this is broken, it does not decend into subfolders :-(
     part_info: PackagePartInfo = {}
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         try:
@@ -780,9 +781,8 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
             None,
         )
 
-    exported_rule_packs = package_part_info()["ec_rule_packs"]["files"]
-
-    return {os.path.splitext(file_)[0]: mkp_of(file_) for file_ in exported_rule_packs}
+    _ = PackagePart.EC_RULE_PACKS.path.lower()  # make mypy complain when this is a Path instance
+    return {f.stem: mkp_of(str(f)) for f in Path(PackagePart.EC_RULE_PACKS.path).iterdir()}
 
 
 def update_active_packages(log: logging.Logger) -> None:

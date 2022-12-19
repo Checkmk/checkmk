@@ -31,6 +31,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersVirtualization,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_prism_host_cpu,
-        title=lambda: _("Nutanix host system CPU utilization"),
+        title=lambda: _("Nutanix Host CPU utilization"),
     )
 )

@@ -106,6 +106,12 @@ def output_support(requester: Requester) -> None:
         w.append_json(obj)
 
 
+def output_ha(requester: Requester) -> None:
+    obj = requester.get("ha")
+    with SectionWriter("prism_ha") as w:
+        w.append_json(obj)
+
+
 def agent_prism_main(args: Args) -> None:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
@@ -148,6 +154,9 @@ def agent_prism_main(args: Args) -> None:
 
     LOGGING.info("fetch and write support info..")
     output_support(requester_v2)
+
+    LOGGING.info("fetch and write ha state..")
+    output_ha(requester_v2)
 
     LOGGING.info("all done. bye.")
 

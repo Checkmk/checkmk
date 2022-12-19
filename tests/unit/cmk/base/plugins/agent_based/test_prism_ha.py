@@ -8,26 +8,16 @@ from typing import Any, Dict
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.prism_info import check_prism_info, discovery_prism_info
+from cmk.base.plugins.agent_based.prism_ha import check_prism_ha, discovery_prism_ha
 
 SECTION = {
-    "block_serials": ["21FM5B310065", "21FM5B310063", "21FM5B310061"],
-    "cloudcluster": False,
-    "cluster_arch": "X86_64",
-    "cluster_fully_qualified_domain_name": None,
-    "cluster_usage_critical_alert_threshold_pct": 90,
-    "cluster_usage_warning_alert_threshold_pct": 75,
-    "encrypted": True,
-    "hypervisor_types": ["kKvm"],
-    "is_lts": True,
-    "name": "Cluster",
-    "num_nodes": 3,
-    "operation_mode": "Normal",
-    "public_keys": [],
-    "storage_type": "all_flash",
-    "support_verbosity_type": "BASIC_COREDUMP",
-    "target_version": "5.20.4.6",
-    "version": "5.20.4.6",
+    "failover_enabled": True,
+    "failover_in_progress_host_uuids": None,
+    "ha_state": "BestEffort",
+    "logical_timestamp": 0,
+    "num_host_failures_to_tolerate": 0,
+    "reservation_type": "NoReservations",
+    "reserved_host_uuids": None,
 }
 
 
@@ -44,11 +34,11 @@ SECTION = {
         pytest.param({}, [], id="No services is discovered if no data exists."),
     ],
 )
-def test_discovery_prism_info(
+def test_discovery_prism_ha(
     section: Dict[str, Any],
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(discovery_prism_info(section)) == expected_discovery_result
+    assert list(discovery_prism_ha(section)) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -57,9 +47,9 @@ def test_discovery_prism_info(
         pytest.param(
             SECTION,
             [
-                Result(state=State.OK, summary="Name: Cluster, Version: 5.20.4.6, Nodes: 3"),
+                Result(state=State.OK, summary="State: BestEffort"),
             ],
-            id="If tunnel is not active the service is OK.",
+            id="If state is as expected, service is OK.",
         ),
         pytest.param(
             {},
@@ -68,13 +58,13 @@ def test_discovery_prism_info(
         ),
     ],
 )
-def test_check_prism_info(
+def test_check_prism_ha(
     section: Dict[str, Any],
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (
         list(
-            check_prism_info(
+            check_prism_ha(
                 section=section,
             )
         )

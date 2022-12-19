@@ -33,6 +33,7 @@ import cmk.utils
 import cmk.utils.check_utils
 import cmk.utils.cleanup
 import cmk.utils.config_path
+import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
 import cmk.utils.password_store as password_store
@@ -240,6 +241,37 @@ ManagementCredentials = SNMPCredentials | IPMICredentials
 class _NestedExitSpec(ExitSpec, total=False):
     overall: ExitSpec
     individual: dict[str, ExitSpec]
+
+
+_ignore_ip_lookup_failures = False
+_failed_ip_lookups: list[HostName] = []
+
+
+def ip_address_of(
+    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily
+) -> str | None:
+    try:
+        return lookup_ip_address(config_cache, host_name, family=family)
+    except Exception as e:
+        if config_cache.is_cluster(host_name):
+            return ""
+
+        _failed_ip_lookups.append(host_name)
+        if not _ignore_ip_lookup_failures:
+            config_warnings.warn(
+                "Cannot lookup IP address of '%s' (%s). "
+                "The host will not be monitored correctly." % (host_name, e)
+            )
+        return ip_lookup.fallback_ip_for(family)
+
+
+def ignore_ip_lookup_failures() -> None:
+    global _ignore_ip_lookup_failures
+    _ignore_ip_lookup_failures = True
+
+
+def failed_ip_lookups() -> list[HostName]:
+    return _failed_ip_lookups
 
 
 def get_variable_names() -> list[str]:

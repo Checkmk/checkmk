@@ -81,10 +81,6 @@ class MonitoringCore(abc.ABC):
         raise NotImplementedError
 
 
-_ignore_ip_lookup_failures = False
-_failed_ip_lookups: list[HostName] = []
-
-
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
 AbstractServiceID = ActiveServiceID | ServiceID
 
@@ -762,7 +758,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: str | None = None
     if ConfigCache.is_ipv4_host(hostname):
-        v4address = ip_address_of(config_cache, hostname, socket.AF_INET)
+        v4address = config.ip_address_of(config_cache, hostname, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -770,7 +766,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: str | None = None
     if ConfigCache.is_ipv6_host(hostname):
-        v6address = ip_address_of(config_cache, hostname, socket.AF_INET6)
+        v6address = config.ip_address_of(config_cache, hostname, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -824,7 +820,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv4_host(hostname):
         family = socket.AF_INET
         for h in sorted_nodes:
-            addr = ip_address_of(config_cache, h, family)
+            addr = config.ip_address_of(config_cache, h, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -834,7 +830,7 @@ def get_cluster_attributes(
     if ConfigCache.is_ipv6_host(hostname):
         family = socket.AF_INET6
         for h in sorted_nodes:
-            addr = ip_address_of(config_cache, h, family)
+            addr = config.ip_address_of(config_cache, h, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -912,33 +908,6 @@ def _verify_cluster_datasource(
             )
         if node_snmp_ds != cluster_snmp_ds:
             config_warnings.warn(f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}")
-
-
-def ip_address_of(
-    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily
-) -> str | None:
-    try:
-        return config.lookup_ip_address(config_cache, host_name, family=family)
-    except Exception as e:
-        if config_cache.is_cluster(host_name):
-            return ""
-
-        _failed_ip_lookups.append(host_name)
-        if not _ignore_ip_lookup_failures:
-            config_warnings.warn(
-                "Cannot lookup IP address of '%s' (%s). "
-                "The host will not be monitored correctly." % (host_name, e)
-            )
-        return ip_lookup.fallback_ip_for(family)
-
-
-def ignore_ip_lookup_failures() -> None:
-    global _ignore_ip_lookup_failures
-    _ignore_ip_lookup_failures = True
-
-
-def failed_ip_lookups() -> list[HostName]:
-    return _failed_ip_lookups
 
 
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:

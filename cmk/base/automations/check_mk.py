@@ -408,10 +408,10 @@ class AutomationRenameHosts(Automation):
             if core_was_running:
                 # force config generation to succeed. The core *must* start.
                 # TODO: Can't we drop this hack since we have config warnings now?
-                core_config.ignore_ip_lookup_failures()
+                config.ignore_ip_lookup_failures()
                 AutomationStart().execute([])
 
-                for hostname in core_config.failed_ip_lookups():
+                for hostname in config.failed_ip_lookups():
                     actions.append("dnsfail-" + hostname)
 
         # Convert actions into a dictionary { "what" : count }
@@ -749,7 +749,7 @@ class AutomationAnalyseServices(Automation):
         self,
         config_cache: ConfigCache,
         host_name: HostName,
-        host_attrs: core_config.ObjectAttributes,
+        host_attrs: config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
         # We just consider types of checks that are managed via WATO.

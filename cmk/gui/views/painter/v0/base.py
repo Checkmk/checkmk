@@ -364,9 +364,6 @@ class Cell:
 
         return columns
 
-    def is_joined(self) -> bool:
-        return False
-
     def join_service(self) -> ServiceName | None:
         return None
 
@@ -643,9 +640,6 @@ class JoinCell(Cell):
 
         if painter_spec.column_title and self._custom_title is None:
             self._custom_title = painter_spec.column_title
-
-    def is_joined(self) -> bool:
-        return True
 
     def join_service(self) -> ServiceName:
         if self._join_service_descr is None:

@@ -790,8 +790,9 @@ class ActivateChangesManager(ActivateChanges):
         return f"{self.activation_tmp_base_dir}/{activation_id}/info.mk"
 
     def activations(self):
-        for activation_id in os.listdir(self.activation_tmp_base_dir):
-            yield activation_id, self._load_activation_info(activation_id)
+        if os.path.exists(self.activation_tmp_base_dir):
+            for activation_id in os.listdir(self.activation_tmp_base_dir):
+                yield activation_id, self._load_activation_info(activation_id)
 
     def _site_snapshot_file(self, site_id):
         return "{}/{}/site_{}_sync.tar.gz".format(

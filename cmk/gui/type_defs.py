@@ -229,7 +229,8 @@ ColumnName = str
 
 class PainterParameters(TypedDict, total=False):
     # TODO Improve:
-    # First step was: make painter's param a typed dict with ALL possible keys.
+    # First step was: make painter's param a typed dict with all obvious keys
+    # but some possible keys are still missing
     aggregation: tuple[str, str]
     color_choices: list[str]
     column_title: str

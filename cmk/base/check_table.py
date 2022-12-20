@@ -168,6 +168,7 @@ def _get_clustered_services(
 
 
 def get_check_table(
+    config_cache: ConfigCache,
     hostname: HostName,
     *,
     use_cache: bool = True,
@@ -175,7 +176,6 @@ def get_check_table(
     filter_mode: FilterMode = FilterMode.NONE,
     skip_ignored: bool = True,
 ) -> HostCheckTable:
-    config_cache = config.get_config_cache()
     cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
     if cache_key:
         with suppress(KeyError):

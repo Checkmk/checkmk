@@ -71,7 +71,7 @@ def make_parser(
             check_intervals={
                 section_name: config_cache.snmp_fetch_interval(hostname, section_name)
                 for section_name in _make_checking_sections(
-                    hostname, selected_sections=NO_SELECTION
+                    config_cache, hostname, selected_sections=NO_SELECTION
                 )
             },
             keep_outdated=keep_outdated,
@@ -144,6 +144,7 @@ def make_sections(
 
 
 def _make_checking_sections(
+    config_cache: ConfigCache,
     hostname: HostName,
     *,
     selected_sections: SectionNameCollection,
@@ -154,6 +155,7 @@ def _make_checking_sections(
         checking_sections = frozenset(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_check_table(
+                    config_cache,
                     hostname,
                     filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
                     skip_ignored=True,
@@ -299,7 +301,7 @@ class _Builder:
                     self.config_cache,
                     self.host_name,
                     checking_sections=_make_checking_sections(
-                        self.host_name, selected_sections=self.selected_sections
+                        self.config_cache, self.host_name, selected_sections=self.selected_sections
                     ),
                     needs_redetection=agent_based_register.needs_redetection,
                 ),
@@ -362,7 +364,9 @@ class _Builder:
                         self.config_cache,
                         self.host_name,
                         checking_sections=_make_checking_sections(
-                            self.host_name, selected_sections=self.selected_sections
+                            self.config_cache,
+                            self.host_name,
+                            selected_sections=self.selected_sections,
                         ),
                         needs_redetection=agent_based_register.needs_redetection,
                     ),

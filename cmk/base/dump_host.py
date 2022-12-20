@@ -210,7 +210,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
 
     table_data = []
     for service in sorted(
-        check_table.get_check_table(hostname).values(), key=lambda s: s.description
+        check_table.get_check_table(config_cache, hostname).values(), key=lambda s: s.description
     ):
         table_data.append(
             [

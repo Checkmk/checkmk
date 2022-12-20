@@ -57,11 +57,10 @@ def check_prism_protection_domains(
     }
 
     if mtr:
-        type = "Metro Availability"
         sync_state = mtr.get("status", "Unknown")
         wanted_state = params.get("sync_state", "Enabled")
         summary = (
-            f"Type: {type}, "
+            f"Type: Metro Availability, "
             f"Role: {mtr.get('role')}, "
             f"Container: {mtr.get('container')}, "
             f"RemoteSite: {mtr.get('remote_site')}, "
@@ -74,8 +73,6 @@ def check_prism_protection_domains(
             summary += f"Status: {sync_state}"
         yield Result(state=State(state), summary=summary)
     else:
-        type = "Async DR"
-
         date = data.get("next_snapshot_time_usecs", None)
         if not date:
             date = "N/A"
@@ -97,7 +94,7 @@ def check_prism_protection_domains(
             "pd_bandwidthrx", float(data["stats"].get("replication_transmitted_bandwidth_kBps"))
         )
         summary = (
-            f"Type: {type}, "
+            f"Type: Async DR, "
             f"Exclusive Snapshot Usage: {render.bytes(exclusivesnapshot)}, "
             f"Next Snapshot scheduled at: {date}, "
             f"Total entities: {len(data['vms'])}, "

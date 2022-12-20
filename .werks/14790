@@ -1,0 +1,27 @@
+Title: Handle special oracle version 12.1.0.1
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1669817156
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p33
+
+You're affected if you're using mk_oracle for linux and the oracle version 12.1.0.1 (SE One).
+The agent plugin may output something like:
+
+<tt>
+   ,vp.block_size pblock_size, vp.recovery_status precovery_status
+                               *
+ERROR at line 28:
+ORA-00904: "VP"."RECOVERY_STATUS": invalid identifier
+<\tt>
+
+Background information:
+<ul>
+<li> the oracle version 12.1.0.1 (SE One) is missing the recovery_status, see https://docs.oracle.com/database/121/REFRN/GUID-A399F608-36C8-4DF0-9A13-CEE25637653E.htm#fnsrc_d1698612e372
+<li> this version of oracle shouldn't be used anymore in production as it is EOL
+<li> for installations which are still using this version, we're now falling back to a supported query
+</ul>

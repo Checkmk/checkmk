@@ -104,23 +104,26 @@ test_get_sqlplus_version_with_precision() {
 
 test_mk_oracle_set_ora_version() {
     # Get version via sqlplus
-    ORACLE_VERSION="19.2"
-    set_ora_version "${ORACLE_VERSION}"
+    set_ora_version
     assertEquals "192" "${NUMERIC_ORACLE_VERSION}"
+    assertEquals "19234" "${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
     # Get version with remote instances
     REMOTE_INSTANCE="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:12.3:<tnsalias>"
     set_ora_version "$(echo "${REMOTE_INSTANCE}" | cut -d":" -f8)"
     assertEquals "123" "${NUMERIC_ORACLE_VERSION}"
+    assertEquals "123" "${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
     REMOTE_INSTANCE="<user>:<password>:<role>:<host>:<port>:<piggybackhost>:<sid>:12.3.4.5:<tnsalias>"
     set_ora_version "$(echo "${REMOTE_INSTANCE}" | cut -d":" -f8)"
-    assertEquals "12345" "${NUMERIC_ORACLE_VERSION}"
+    assertEquals "123" "${NUMERIC_ORACLE_VERSION}"
+    assertEquals "12345" "${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
     # Get version from env test variable
     export MK_ORA_TESTVERSION="18.1"
     set_ora_version "${ORACLE_VERSION}"
     assertEquals "181" "${NUMERIC_ORACLE_VERSION}"
+    assertEquals "181" "${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
 }
 

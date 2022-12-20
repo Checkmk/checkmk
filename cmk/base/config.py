@@ -3967,7 +3967,7 @@ class ConfigCache:
             attrs["_ACTIONS"] = ",".join(actions)
 
         if cmk_version.is_managed_edition():
-            attrs["_CUSTOMER"] = current_customer  # type: ignore[attr-defined] # pylint: disable=undefined-variable
+            attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined] # pylint: disable=undefined-variable
 
         return attrs
 

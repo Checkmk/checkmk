@@ -25,7 +25,6 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
-import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
 
 
@@ -275,7 +274,7 @@ def test_create_nagios_host_spec(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
-    host_attrs = core_config.get_host_attributes(hostname, config_cache)
+    host_attrs = config_cache.get_host_attributes(hostname)
 
     host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
     assert host_spec == result

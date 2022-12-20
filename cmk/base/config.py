@@ -12,6 +12,7 @@ import ipaddress
 import itertools
 import logging
 import marshal
+import numbers
 import os
 import pickle
 import py_compile
@@ -25,7 +26,7 @@ from dataclasses import dataclass
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, cast, Final, Literal, NamedTuple, Protocol, TypedDict, Union
+from typing import Any, AnyStr, cast, Final, Literal, NamedTuple, Protocol, TypedDict, Union
 
 from typing_extensions import assert_never
 
@@ -53,6 +54,7 @@ from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKT
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -142,6 +144,8 @@ host_service_levels = []
 AllHosts = list[HostName]
 ShadowHosts = dict[HostName, dict]
 AllClusters = dict[HostName, list[HostName]]
+
+ObjectMacros = dict[str, AnyStr]
 
 
 class ClusterCacheInfo(NamedTuple):
@@ -3867,6 +3871,268 @@ class ConfigCache:
             section_name = section_name_of(section)
             self._cache_section_name_of[section] = section_name
             return section_name
+
+    @staticmethod
+    def _get_tag_attributes(
+        collection: TaggroupIDToTagID | Labels | LabelSources,
+        prefix: str,
+    ) -> ObjectAttributes:
+        return {f"__{prefix}_{k}": str(v) for k, v in collection.items()}
+
+    def get_host_attributes(self, hostname: HostName) -> ObjectAttributes:
+        def _set_addresses(
+            attrs: ObjectAttributes,
+            addresses: list[HostAddress] | None,
+            what: Literal["4", "6"],
+        ) -> None:
+            key_base = f"_ADDRESSES_{what}"
+            if not addresses:
+                # If other addresses are not available, set to empty string in order to avoid unresolved macros
+                attrs[key_base] = ""
+                return
+            attrs[key_base] = " ".join(addresses)
+            for nr, address in enumerate(addresses):
+                key = f"{key_base}_{nr + 1}"
+                attrs[key] = address
+
+        attrs = self.extra_host_attributes(hostname)
+
+        # Pre 1.6 legacy attribute. We have changed our whole code to use the
+        # livestatus column "tags" which is populated by all attributes starting with
+        # "__TAG_" instead. We may deprecate this is one day.
+        attrs["_TAGS"] = " ".join(sorted(self.tag_list(hostname)))
+        attrs.update(ConfigCache._get_tag_attributes(self.tags(hostname), "TAG"))
+        attrs.update(ConfigCache._get_tag_attributes(self.labels(hostname), "LABEL"))
+        attrs.update(ConfigCache._get_tag_attributes(self.label_sources(hostname), "LABELSOURCE"))
+
+        if "alias" not in attrs:
+            attrs["alias"] = self.alias(hostname)
+
+        # Now lookup configured IP addresses
+        v4address: str | None = None
+        if ConfigCache.is_ipv4_host(hostname):
+            v4address = ip_address_of(self, hostname, socket.AF_INET)
+
+        if v4address is None:
+            v4address = ""
+        attrs["_ADDRESS_4"] = v4address
+
+        v6address: str | None = None
+        if ConfigCache.is_ipv6_host(hostname):
+            v6address = ip_address_of(self, hostname, socket.AF_INET6)
+        if v6address is None:
+            v6address = ""
+        attrs["_ADDRESS_6"] = v6address
+
+        ipv6_primary = self.is_ipv6_primary(hostname)
+        if ipv6_primary:
+            attrs["address"] = attrs["_ADDRESS_6"]
+            attrs["_ADDRESS_FAMILY"] = "6"
+        else:
+            attrs["address"] = attrs["_ADDRESS_4"]
+            attrs["_ADDRESS_FAMILY"] = "4"
+
+        add_ipv4addrs, add_ipv6addrs = self.additional_ipaddresses(hostname)
+        _set_addresses(attrs, add_ipv4addrs, "4")
+        _set_addresses(attrs, add_ipv6addrs, "6")
+
+        # Add the optional WATO folder path
+        path = host_paths.get(hostname)
+        if path:
+            attrs["_FILENAME"] = path
+
+        # Add custom user icons and actions
+        actions = self.icons_and_actions(hostname)
+        if actions:
+            attrs["_ACTIONS"] = ",".join(actions)
+
+        if cmk_version.is_managed_edition():
+            attrs["_CUSTOMER"] = current_customer  # type: ignore[attr-defined] # needed for CRE/CEE
+
+        return attrs
+
+    def get_cluster_attributes(
+        self,
+        hostname: HostName,
+        nodes: Sequence[HostName],
+    ) -> dict:
+        sorted_nodes = sorted(nodes)
+
+        attrs = {
+            "_NODENAMES": " ".join(sorted_nodes),
+        }
+        node_ips_4 = []
+        if ConfigCache.is_ipv4_host(hostname):
+            family = socket.AF_INET
+            for h in sorted_nodes:
+                addr = ip_address_of(self, h, family)
+                if addr is not None:
+                    node_ips_4.append(addr)
+                else:
+                    node_ips_4.append(ip_lookup.fallback_ip_for(family))
+
+        node_ips_6 = []
+        if ConfigCache.is_ipv6_host(hostname):
+            family = socket.AF_INET6
+            for h in sorted_nodes:
+                addr = ip_address_of(self, h, family)
+                if addr is not None:
+                    node_ips_6.append(addr)
+                else:
+                    node_ips_6.append(ip_lookup.fallback_ip_for(family))
+
+        node_ips = node_ips_6 if self.is_ipv6_primary(hostname) else node_ips_4
+
+        for suffix, val in [("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6)]:
+            attrs["_NODEIPS%s" % suffix] = " ".join(val)
+
+        return attrs
+
+    def get_cluster_nodes_for_config(self, host_name: HostName) -> list[HostName]:
+        nodes = self.nodes_of(host_name)
+        if nodes is None:
+            return []
+
+        self._verify_cluster_address_family(host_name, nodes)
+        self._verify_cluster_datasource(host_name, nodes)
+        nodes = nodes[:]
+        for node in nodes:
+            if node not in self.all_active_realhosts():
+                config_warnings.warn(
+                    "Node '%s' of cluster '%s' is not a monitored host in this site."
+                    % (node, host_name)
+                )
+                nodes.remove(node)
+        return nodes
+
+    def _verify_cluster_address_family(
+        self,
+        host_name: HostName,
+        nodes: Iterable[HostName],
+    ) -> None:
+        cluster_host_family = "IPv6" if self.is_ipv6_primary(host_name) else "IPv4"
+        address_families = [
+            f"{host_name}: {cluster_host_family}",
+        ]
+
+        address_family = cluster_host_family
+        mixed = False
+        for nodename in nodes:
+            family = "IPv6" if self.is_ipv6_primary(nodename) else "IPv4"
+            address_families.append(f"{nodename}: {family}")
+            if address_family is None:
+                address_family = family
+            elif address_family != family:
+                mixed = True
+
+        if mixed:
+            config_warnings.warn(
+                "Cluster '%s' has different primary address families: %s"
+                % (host_name, ", ".join(address_families))
+            )
+
+    def _verify_cluster_datasource(
+        self,
+        host_name: HostName,
+        nodes: Iterable[HostName],
+    ) -> None:
+        cluster_tg = self.tags(host_name)
+        cluster_agent_ds = cluster_tg.get("agent")
+        cluster_snmp_ds = cluster_tg.get("snmp_ds")
+        for nodename in nodes:
+            node_tg = self.tags(nodename)
+            node_agent_ds = node_tg.get("agent")
+            node_snmp_ds = node_tg.get("snmp_ds")
+            warn_text = "Cluster '%s' has different datasources as its node" % host_name
+            if node_agent_ds != cluster_agent_ds:
+                config_warnings.warn(
+                    f"{warn_text} '{nodename}': {cluster_agent_ds} vs. {node_agent_ds}"
+                )
+            if node_snmp_ds != cluster_snmp_ds:
+                config_warnings.warn(
+                    f"{warn_text} '{nodename}': {cluster_snmp_ds} vs. {node_snmp_ds}"
+                )
+
+    @staticmethod
+    def get_host_macros_from_attributes(
+        hostname: HostName, attrs: ObjectAttributes
+    ) -> ObjectMacros:
+        macros = {
+            "$HOSTNAME$": hostname,
+            "$HOSTADDRESS$": attrs["address"],
+            "$HOSTALIAS$": attrs["alias"],
+        }
+
+        # Add custom macros
+        for macro_name, value in attrs.items():
+            if macro_name[0] == "_":
+                macros["$HOST" + macro_name + "$"] = value
+                # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
+                macros["$_HOST" + macro_name[1:] + "$"] = value
+
+        return macros
+
+    @staticmethod
+    def get_service_macros_from_attributes(attrs: ObjectAttributes) -> ObjectMacros:
+        # We may want to implement a superset of Nagios' own macros, see
+        # https://assets.nagios.com/downloads/nagioscore/docs/nagioscore/3/en/macrolist.html
+        macros = {}
+        for macro_name, value in attrs.items():
+            if macro_name[0] == "_":
+                macros["$_SERVICE" + macro_name[1:] + "$"] = value
+        return macros
+
+    @staticmethod
+    def replace_macros(s: str, macros: ObjectMacros) -> str:
+        for key, value in macros.items():
+            if isinstance(value, (numbers.Integral, float)):
+                value = str(value)  # e.g. in _EC_SL (service level)
+
+            # TODO: Clean this up
+            try:
+                s = s.replace(key, value)
+            except Exception:  # Might have failed due to binary UTF-8 encoding in value
+                try:
+                    s = s.replace(key, value.decode("utf-8"))
+                except Exception:
+                    # If this does not help, do not replace
+                    if cmk.utils.debug.enabled():
+                        raise
+
+        return s
+
+    def translate_ds_program_source_cmdline(
+        self,
+        template: str,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+    ) -> str:
+        def _translate_host_macros(cmd: str) -> str:
+            attrs = self.get_host_attributes(host_name)
+            if self.is_cluster(host_name):
+                parents_list = self.get_cluster_nodes_for_config(host_name)
+                attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
+                attrs.update(
+                    self.get_cluster_attributes(
+                        host_name,
+                        parents_list,
+                    )
+                )
+
+            macros = ConfigCache.get_host_macros_from_attributes(host_name, attrs)
+            return ConfigCache.replace_macros(cmd, macros)
+
+        def _translate_legacy_macros(cmd: str) -> str:
+            # Make "legacy" translation. The users should use the $...$ macros in future
+            return replace_macros_in_str(
+                cmd,
+                {
+                    "<IP>": ip_address or "",
+                    "<HOST>": host_name,
+                },
+            )
+
+        return _translate_host_macros(_translate_legacy_macros(template))
 
     def host_extra_conf_merged(self, hostname: HostName, ruleset: Ruleset) -> dict[str, Any]:
         return self.ruleset_matcher.get_host_ruleset_merged_dict(

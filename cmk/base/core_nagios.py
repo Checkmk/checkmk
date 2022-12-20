@@ -207,7 +207,7 @@ def _create_nagios_config_host(
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
 
-    host_attrs = core_config.get_host_attributes(hostname, config_cache)
+    host_attrs = config_cache.get_host_attributes(hostname)
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
         cfg.write(_format_nagios_object("host", host_spec))
@@ -230,8 +230,8 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     ip = attrs["address"]
 
     if config_cache.is_cluster(hostname):
-        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname)
-        attrs.update(core_config.get_cluster_attributes(config_cache, hostname, nodes))
+        nodes = config_cache.get_cluster_nodes_for_config(hostname)
+        attrs.update(config_cache.get_cluster_attributes(hostname, nodes))
 
     #   _
     #  / |

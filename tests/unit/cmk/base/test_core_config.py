@@ -178,8 +178,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch) -> None:  # type:igno
     if cmk_version.is_managed_edition():
         expected_attrs["_CUSTOMER"] = "provider"
 
-    attrs = core_config.get_host_attributes("test-host", config_cache)
-    assert attrs == expected_attrs
+    assert config_cache.get_host_attributes("test-host") == expected_attrs
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -280,7 +279,7 @@ def test_get_cmk_passive_service_attributes(  # type:ignore[no-untyped-def]
     ],
 )
 def test_get_tag_attributes(tag_groups, result) -> None:  # type:ignore[no-untyped-def]
-    attributes = core_config._get_tag_attributes(tag_groups, "TAG")
+    attributes = ConfigCache._get_tag_attributes(tag_groups, "TAG")
     assert attributes == result
     for k, v in attributes.items():
         assert isinstance(k, str)
@@ -382,7 +381,7 @@ def test_iter_active_check_services(  # type:ignore[no-untyped-def]
     monkeypatch,
 ):
     monkeypatch.setattr(config, "active_check_info", active_check_info)
-    monkeypatch.setattr(core_config, "get_host_attributes", lambda e, s: host_attrs)
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     cache = config.get_config_cache()
     cache.initialize()
@@ -404,8 +403,8 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    assert core_config.translate_ds_program_source_cmdline(
-        config_cache, template, hostname, ipaddress
+    assert config_cache.translate_ds_program_source_cmdline(
+        template, hostname, ipaddress
     ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
 
 

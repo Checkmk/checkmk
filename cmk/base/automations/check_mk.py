@@ -731,7 +731,7 @@ class AutomationAnalyseServices(Automation):
                 service_info := self._get_service_info(
                     config_cache=config_cache,
                     host_name=hostname,
-                    host_attrs=core_config.get_host_attributes(hostname, config_cache),
+                    host_attrs=config_cache.get_host_attributes(hostname),
                     servicedesc=servicedesc,
                 )
             )
@@ -1400,8 +1400,8 @@ class AutomationDiagHost(Automation):
             if source.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
-                    cmdline=core_config.translate_ds_program_source_cmdline(
-                        config_cache, cmd, host_name, ipaddress
+                    cmdline=config_cache.translate_ds_program_source_cmdline(
+                        cmd, host_name, ipaddress
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
@@ -1586,7 +1586,7 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         with redirect_stdout(open(os.devnull, "w")):
-            host_attrs = core_config.get_host_attributes(hostname, config_cache)
+            host_attrs = config_cache.get_host_attributes(hostname)
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(hostname):
@@ -1653,8 +1653,8 @@ class AutomationActiveCheck(Automation):
     # know for sure the place of that either.
     def _replace_core_macros(self, hostname: HostName, commandline: str) -> str:
         config_cache = config.get_config_cache()
-        macros = core_config.get_host_macros_from_attributes(
-            hostname, core_config.get_host_attributes(hostname, config_cache)
+        macros = ConfigCache.get_host_macros_from_attributes(
+            hostname, config_cache.get_host_attributes(hostname)
         )
         self._load_resource_file(macros)
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in macros.items()})

@@ -40,12 +40,8 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import ConfigCache
-from cmk.base.core_config import (
-    get_active_check_descriptions,
-    get_host_attributes,
-    ObjectAttributes,
-)
+from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.core_config import get_active_check_descriptions
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
 from cmk.base.sources import fetch_all, make_sources
 
@@ -73,7 +69,7 @@ def get_check_preview(
         if config_cache.is_cluster(host_name)
         else config.lookup_ip_address(config_cache, host_name)
     )
-    host_attrs = get_host_attributes(host_name, config_cache)
+    host_attrs = config_cache.get_host_attributes(host_name)
 
     # The code below this line is duplicated in automation_discovery()
     nodes = config_cache.nodes_of(host_name)

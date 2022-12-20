@@ -237,11 +237,12 @@ class StandardHostsStorage(ABCHostsStorage[str]):
                 out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
 
         if folder_host_contactgroups := contact_groups["folder_hosts"]:
-            out.write("\nhost_contactgroups.insert(0, \n%r)\n" % folder_host_contactgroups)
+            for group in folder_host_contactgroups:
+                out.write("\nhost_contactgroups.insert(0, %r)\n" % group)
 
         if folder_service_contactgroups := contact_groups["folder_services"]:
             for group in folder_service_contactgroups:
-                out.write("\nservice_contactgroups.insert(0, %r)" % group)
+                out.write("\nservice_contactgroups.insert(0, %r)\n" % group)
 
         # TODO: discuss. cmk.base also parses host_attributes. ipaddresses, mgmtboard, etc.
         out.write("\n# Host attributes (needed for WATO)")

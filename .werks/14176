@@ -1,0 +1,15 @@
+Title: Setup: Fixed invalid contact group configuration in deprecated hosts.mk file
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1671539156
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+hosts.mk files are currently held as fallback configuration in case the newer pickle formatted data is not valid/available.
+Contact groups configured on a folder level were currently broken for these hosts.mk files.
+Computing the core configuration always showed this error.
+<tt>IndexError: pop from empty list</tt>
+

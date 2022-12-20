@@ -147,13 +147,6 @@ update_cmake_artifacts() {
     fi
 }
 
-update_external_dependencies() {
-    update_cmake_artifacts
-    # TODO: The target is a bit too specific and actually *builds* the library,
-    # what we don't really need here. Is there a general download/update/patch target?
-    cmake --build build --target gtest-external
-}
-
 run_clean() {
     rm -rf build
 }
@@ -197,7 +190,7 @@ run_unit_tests() {
 }
 
 run_iwyu() {
-    update_external_dependencies
+    update_cmake_artifacts
     # shellcheck disable=SC2086 # Yes, we want splitting for FILES and IWYU_EXTRA_ARGS.
     python3 ../../scripts/iwyu_tool.py \
         --jobs="${JOBS}" \
@@ -210,8 +203,8 @@ run_iwyu() {
 }
 
 run_clang_tidy() {
-    update_external_dependencies
-    # shellcheck disable=SC2086 # Yes, we want splitting for FILES and CLANG_TIDY_EXTRA_ARGS.
+    update_cmake_artifacts
+    # shellcheck disable=SC2046,SC2086 # Yes, we want splitting for FILES, CLANG_TIDY_EXTRA_ARGS and realpath
     python3 ../../scripts/run-clang-tidy.py \
         -clang-tidy-binary=clang-tidy-${CLANG_VERSION} \
         -clang-apply-replacements-binary=clang-apply-replacements-${CLANG_VERSION} \
@@ -219,7 +212,7 @@ run_clang_tidy() {
         -j "${JOBS}" \
         -p=build \
         ${CLANG_TIDY_EXTRA_ARGS} \
-        ${FILES:-src test}
+        $(realpath ${FILES:-src test}) # to avoid checking of third-party files because files args are regexs
 }
 
 run_documentation() {

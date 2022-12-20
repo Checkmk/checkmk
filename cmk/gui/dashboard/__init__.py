@@ -20,6 +20,7 @@ from cmk.gui.permissions import (
 from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
 
 from .builtin_dashboards import builtin_dashboards, GROW, MAX
+from .cre_dashboards import register_builtin_dashboards
 from .dashlet import (
     ABCFigureDashlet,
     Dashlet,
@@ -101,6 +102,7 @@ def register(
     page_registry.register_page_handler("ajax_dashlet_pos", ajax_dashlet_pos)
 
     register_dashlets(dashlet_registry_)
+    register_builtin_dashboards(builtin_dashboards)
 
 
 class PermissionSectionDashboard(PermissionSection):

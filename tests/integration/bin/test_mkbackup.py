@@ -253,7 +253,7 @@ def test_mkbackup_list_backups(site: Site) -> None:
     stdout, stderr = p.communicate()
     assert stderr == ""
     assert p.wait() == 0
-    assert "Type" in stdout
+    assert "Job" in stdout
     assert "Details" in stdout
 
 

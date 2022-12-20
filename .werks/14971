@@ -6,7 +6,7 @@ Date: 1667572508
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p18
+Version: 2.1.0p19
 
 This is a fix for the Checkmk agents AIX, FreeBSD, Linux, OpenWrt, and Solaris.
 The Checkmk agent is able to cache some sections. This means sections are only

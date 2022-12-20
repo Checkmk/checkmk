@@ -733,32 +733,6 @@ def test_agent_target_version(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", None),
-        ("testhost2", "echo 1"),
-    ],
-)
-def test_datasource_program(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
-) -> None:
-    hostname = HostName(hostname_str)
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.set_ruleset(
-        "datasource_programs",
-        [
-            {
-                "condition": {"host_name": ["testhost2"]},
-                "value": "echo 1",
-            }
-        ],
-    )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.datasource_program(hostname) == result
-
-
-@pytest.mark.parametrize(
-    "hostname_str,result",
-    [
         ("testhost1", []),
         (
             "testhost2",

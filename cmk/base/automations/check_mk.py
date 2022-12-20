@@ -1399,13 +1399,7 @@ class AutomationDiagHost(Automation):
 
             if source.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
-                fetcher = ProgramFetcher(
-                    cmdline=config_cache.translate_ds_program_source_cmdline(
-                        cmd, host_name, ipaddress
-                    ),
-                    stdin=fetcher.stdin,
-                    is_cmc=fetcher.is_cmc,
-                )
+                fetcher = config_cache.make_program_fetcher(host_name, ipaddress, cmd)
             elif source.fetcher_type is FetcherType.TCP:
                 assert isinstance(fetcher, TCPFetcher)
                 port = agent_port or fetcher.address[1]

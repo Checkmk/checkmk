@@ -10,6 +10,7 @@
 import logging
 import os.path
 from collections.abc import Iterable, Sequence
+from contextlib import suppress
 from functools import partial
 from pathlib import Path
 from typing import Final
@@ -433,8 +434,7 @@ class _Builder:
         )
 
     def _get_agent(self) -> tuple[SourceInfo, Fetcher, FileCache]:
-        datasource_program = self.config_cache.datasource_program(self.host_name)
-        if datasource_program is not None:
+        with suppress(LookupError):
             source = SourceInfo(
                 self.host_name,
                 self.ipaddress,
@@ -444,13 +444,7 @@ class _Builder:
             )
             return (
                 source,
-                ProgramFetcher(
-                    cmdline=self.config_cache.translate_ds_program_source_cmdline(
-                        datasource_program, self.host_name, self.ipaddress
-                    ),
-                    stdin=None,
-                    is_cmc=config.is_cmc(),
-                ),
+                self.config_cache.make_program_fetcher(source.hostname, source.ipaddress),
                 AgentFileCache(
                     source.hostname,
                     path_template=make_file_cache_path_template(

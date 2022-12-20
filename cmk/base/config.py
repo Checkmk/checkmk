@@ -101,7 +101,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
-from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, TCPFetcher
+from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, TCPFetcher
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.tcp import EncryptionHandling
@@ -2630,6 +2630,26 @@ class ConfigCache:
             password=ipmi_credentials.get("password"),
         )
 
+    def make_program_fetcher(
+        self, host_name: HostName, ip_address: HostAddress | None, template: str | None = None
+    ) -> ProgramFetcher:
+        """Return a fetcher
+
+        raise: LookupError if no datasource is configured.
+
+        """
+        return ProgramFetcher(
+            cmdline=self._translate_ds_program_source_cmdline(
+                host_name,
+                ip_address,
+                self.host_extra_conf(host_name, datasource_programs)[0]
+                if template is None
+                else template,
+            ),
+            stdin=None,
+            is_cmc=is_cmc(),
+        )
+
     def make_piggyback_fetcher(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> PiggybackFetcher:
@@ -4101,15 +4121,16 @@ class ConfigCache:
 
         return s
 
-    def translate_ds_program_source_cmdline(
+    def _translate_ds_program_source_cmdline(
         self,
-        template: str,
         host_name: HostName,
         ip_address: HostAddress | None,
+        template: str,
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
             attrs = self.get_host_attributes(host_name)
             if self.is_cluster(host_name):
+                # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
                 attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
                 attrs.update(
@@ -4386,17 +4407,6 @@ class ConfigCache:
             return spec[1]
 
         return spec  # return the whole spec in case of an "at least version" config
-
-    def datasource_program(self, host_name: HostName) -> str | None:
-        """Return the command line to execute instead of contacting the agent
-
-        In case no datasource program is configured for a host return None
-        """
-        programs = self.host_extra_conf(host_name, datasource_programs)
-        if not programs:
-            return None
-
-        return programs[0]
 
     def only_from(self, host_name: HostName) -> None | list[str] | str:
         """The agent of a host may be configured to be accessible only from specific IPs"""

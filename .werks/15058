@@ -1,0 +1,15 @@
+Title: REST_API: Show currently running activations was returning a 500 internal error
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1671554610
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+If you have never "activated changes" and you try to call the endpoint "show all currently running
+activations", you would previously get a 500 Internal error.  This is no longer the case.  You will
+instead get a valid reponse but with no current activations.
+

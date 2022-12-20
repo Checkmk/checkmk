@@ -460,7 +460,9 @@ async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
     .await
 }
 
-#[tokio::test(flavor = "multi_thread")]
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
+// NOTE: tst is disabled as a flaky
+// #[tokio::test(flavor = "multi_thread")]
 async fn test_pull_reload_ipv6() -> AnyhowResult<()> {
     _test_pull_reload(
         "test_pull_reload_ipv6",

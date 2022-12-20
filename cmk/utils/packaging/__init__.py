@@ -782,7 +782,11 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
         )
 
     _ = PackagePart.EC_RULE_PACKS.path.lower()  # make mypy complain when this is a Path instance
-    return {f.stem: mkp_of(str(f)) for f in Path(PackagePart.EC_RULE_PACKS.path).iterdir()}
+
+    if not (rule_pack_path := Path(PackagePart.EC_RULE_PACKS.path)).exists():
+        return {}
+
+    return {f.stem: mkp_of(str(f)) for f in rule_pack_path.iterdir()}
 
 
 def update_active_packages(log: logging.Logger) -> None:

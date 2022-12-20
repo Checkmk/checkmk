@@ -157,6 +157,11 @@ def is_registered_section_plugin(section_name: SectionName) -> bool:
     return section_name in registered_agent_sections or section_name in registered_snmp_sections
 
 
+def needs_redetection(section_name: SectionName) -> bool:
+    section = get_section_plugin(section_name)
+    return len(get_section_producers(section.parsed_section_name)) > 1
+
+
 def iter_all_agent_sections() -> Iterable[AgentSectionPlugin]:
     return registered_agent_sections.values()
 

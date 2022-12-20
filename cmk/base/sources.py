@@ -9,7 +9,7 @@
 
 import logging
 import os.path
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
@@ -128,13 +128,9 @@ def make_sections(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    selected_sections: SectionNameCollection,
+    checking_sections: frozenset[SectionName],
+    needs_redetection: Callable[[SectionName], bool],
 ) -> dict[SectionName, SectionMeta]:
-    def needs_redetection(section_name: SectionName) -> bool:
-        section = agent_based_register.get_section_plugin(section_name)
-        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
-
-    checking_sections = _make_checking_sections(host_name, selected_sections=selected_sections)
     disabled_sections = config_cache.disabled_snmp_sections(host_name)
     return {
         name: SectionMeta(
@@ -302,7 +298,10 @@ class _Builder:
                 sections=make_sections(
                     self.config_cache,
                     self.host_name,
-                    selected_sections=self.selected_sections,
+                    checking_sections=_make_checking_sections(
+                        self.host_name, selected_sections=self.selected_sections
+                    ),
+                    needs_redetection=agent_based_register.needs_redetection,
                 ),
                 on_error=self.on_scan_error,
                 missing_sys_description=self.config_cache.missing_sys_description(self.host_name),
@@ -362,7 +361,10 @@ class _Builder:
                     sections=make_sections(
                         self.config_cache,
                         self.host_name,
-                        selected_sections=self.selected_sections,
+                        checking_sections=_make_checking_sections(
+                            self.host_name, selected_sections=self.selected_sections
+                        ),
+                        needs_redetection=agent_based_register.needs_redetection,
                     ),
                     on_error=self.on_scan_error,
                     missing_sys_description=self.config_cache.missing_sys_description(

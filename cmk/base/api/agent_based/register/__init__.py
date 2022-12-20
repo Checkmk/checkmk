@@ -32,6 +32,7 @@ from cmk.base.api.agent_based.register._config import (
     iter_all_inventory_plugins,
     iter_all_snmp_sections,
     len_snmp_sections,
+    needs_redetection,
     set_discovery_ruleset,
     set_host_label_ruleset,
 )
@@ -72,6 +73,7 @@ __all__ = [
     "iter_all_snmp_sections",
     "len_snmp_sections",
     "load_all_plugins",
+    "needs_redetection",
     "set_discovery_ruleset",
     "set_host_label_ruleset",
 ]

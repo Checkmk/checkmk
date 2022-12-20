@@ -1,0 +1,14 @@
+Title: Use system MIB for OID translation in EC
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1671717877
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+With this change the OID will be correctly translated
+if the system has MIBs installed.
+

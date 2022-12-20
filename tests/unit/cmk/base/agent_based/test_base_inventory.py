@@ -5,6 +5,8 @@
 
 # pylint: disable=protected-access
 
+from typing import Literal
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -253,9 +255,9 @@ def test__inventorize_real_host_only_items() -> None:
     ],
 )
 def test__inventorize_real_host_only_intervals(
-    attrs_choices: tuple[str, list[str]] | str,
+    attrs_choices: Literal["all"] | tuple[str, list[str]],
     attrs_expected_retentions: dict[str, tuple[int, int, int]],
-    table_choices: tuple[str, list[str]] | str,
+    table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
@@ -436,9 +438,9 @@ def test__inventorize_real_host_only_intervals(
     ],
 )
 def test__inventorize_real_host_raw_cache_info_and_only_intervals(
-    attrs_choices: tuple[str, list[str]] | str,
+    attrs_choices: Literal["all"] | tuple[str, list[str]],
     attrs_expected_retentions: dict[str, tuple[int, int, int]],
-    table_choices: tuple[str, list[str]] | str,
+    table_choices: Literal["all"] | tuple[str, list[str]],
     table_expected_retentions: dict[str, tuple[int, int, int]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
@@ -748,7 +750,7 @@ def test__inventorize_real_host_no_items(
     ],
 )
 def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ):
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
@@ -795,7 +797,7 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
         ("choices", ["old", "keyz"]),
     ],
 )
-def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]] | str) -> None:
+def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]]) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={"old": (1, 2, 3)},
         previous_table_retentions={},
@@ -842,7 +844,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     ],
 )
 def test_updater_merge_previous_tables(
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
@@ -893,7 +895,7 @@ def test_updater_merge_previous_tables(
         ("choices", ["old", "keyz"]),
     ],
 )
-def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]] | str) -> None:
+def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
@@ -944,7 +946,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]] |
     ],
 )
 def test_updater_merge_attributes(
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
@@ -1003,7 +1005,7 @@ def test_updater_merge_attributes(
     ],
 )
 def test_updater_merge_attributes_outdated(
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
@@ -1069,7 +1071,7 @@ def test_updater_merge_attributes_outdated(
     ],
 )
 def test_updater_merge_tables(
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
@@ -1144,7 +1146,7 @@ def test_updater_merge_tables(
     ],
 )
 def test_updater_merge_tables_outdated(
-    choices: tuple[str, list[str]] | str,
+    choices: tuple[str, list[str]],
     expected_retentions: dict,
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(

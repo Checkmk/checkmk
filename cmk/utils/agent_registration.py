@@ -84,7 +84,7 @@ class UUIDLinkManager:
         source = self._received_outputs_dir / f"{uuid}"
 
         source.unlink(missing_ok=True)
-        source.symlink_to(target_dir.relative_to(cmk.utils.paths.omd_root))
+        source.symlink_to(target_dir)
 
     def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> UUIDLink | None:
         found: UUIDLink | None = None

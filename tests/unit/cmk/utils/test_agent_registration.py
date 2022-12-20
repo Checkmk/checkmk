@@ -11,7 +11,6 @@ import pytest
 from cmk.utils.agent_registration import get_r4r_filepath, UUIDLink, UUIDLinkManager
 from cmk.utils.paths import (
     data_source_push_agent_dir,
-    omd_root,
     r4r_declined_dir,
     r4r_discoverable_dir,
     r4r_new_dir,
@@ -53,9 +52,7 @@ def test_uuid_link_manager_create_pull_link() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-
-    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
-    assert link.target == target_path.relative_to(omd_root)
+    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
 
 
 def test_uuid_link_manager_create_push_link() -> None:
@@ -73,9 +70,7 @@ def test_uuid_link_manager_create_push_link() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-
-    target_path = data_source_push_agent_dir.joinpath(hostname)
-    assert link.target == target_path.relative_to(omd_root)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
 def test_uuid_link_manager_create_existing_link() -> None:
@@ -109,9 +104,7 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid_new)
-
-    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
-    assert link.target == target_path.relative_to(omd_root)
+    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
 
 
 @pytest.mark.parametrize("push_configured", [True, False])
@@ -133,9 +126,7 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-
-    target_path = data_source_push_agent_dir.joinpath(hostname)
-    assert link.target == target_path.relative_to(omd_root)
+    assert link.target == data_source_push_agent_dir.joinpath(hostname)
 
 
 def test_uuid_link_manager_update_links_no_links_yet() -> None:
@@ -179,9 +170,7 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-
-    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
-    assert link.target == target_path.relative_to(omd_root)
+    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
 
 
 @pytest.mark.parametrize(

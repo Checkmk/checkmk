@@ -245,46 +245,44 @@ class IndexBuilder:
         return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 
-# TODO(ml): This is not a real class.  It does not have a single useful method.
-class URLChecker:
-    @staticmethod
-    def _set_query_vars(query_vars: QueryVars) -> None:
-        for name, vals in query_vars.items():
-            request.set_var(name, vals[0])
+def _set_query_vars(query_vars: QueryVars) -> None:
+    for name, vals in query_vars.items():
+        request.set_var(name, vals[0])
 
-    @staticmethod
-    def _set_current_folder(folder_name: str) -> None:
-        # this attribute is set when calling cmk.gui.watolib.hosts_and_folders.Folder.all_folders
-        # if it is not set now, then it will be set for sure upon the next call
-        if not hasattr(g, "wato_folders"):
-            return
-        g.wato_current_folder = g.wato_folders[folder_name]
 
-    def is_permitted(self, url: str) -> bool:
-        file_name, query_vars = file_name_and_query_vars_from_url(url)
-        URLChecker._set_query_vars(query_vars)
+def _set_current_folder(folder_name: str) -> None:
+    # this attribute is set when calling cmk.gui.watolib.hosts_and_folders.Folder.all_folders
+    # if it is not set now, then it will be set for sure upon the next call
+    if not hasattr(g, "wato_folders"):
+        return
+    g.wato_current_folder = g.wato_folders[folder_name]
 
-        mode = modes[0] if (modes := query_vars.get("mode", [])) else None
 
-        if mode == "edit_host":
-            URLChecker._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
+def is_url_permitted(url: str) -> bool:
+    file_name, query_vars = file_name_and_query_vars_from_url(url)
+    _set_query_vars(query_vars)
 
-        try:
-            if mode:
-                mode_permissions_ensurance_registry[mode]().ensure_permissions()
-            else:
-                URLChecker._try_page(file_name)
-            return True
-        except MKAuthException:
-            return False
+    mode = modes[0] if (modes := query_vars.get("mode", [])) else None
 
-    @staticmethod
-    def _try_page(file_name: str) -> None:
-        page_handler = get_page_handler(file_name)
-        if page_handler:
-            with output_funnel.plugged():
-                page_handler()
-                output_funnel.drain()
+    if mode == "edit_host":
+        _set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
+
+    try:
+        if mode:
+            mode_permissions_ensurance_registry[mode]().ensure_permissions()
+        else:
+            _try_page(file_name)
+        return True
+    except MKAuthException:
+        return False
+
+
+def _try_page(file_name: str) -> None:
+    page_handler = get_page_handler(file_name)
+    if page_handler:
+        with output_funnel.plugged():
+            page_handler()
+            output_funnel.drain()
 
 
 class PermissionsHandler:
@@ -297,15 +295,11 @@ class PermissionsHandler:
             "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
             "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
         }
-        self._url_checker = URLChecker()
 
     @staticmethod
     def _permissions_rule(url: str) -> bool:
         _, query_vars = file_name_and_query_vars_from_url(url)
         return may_edit_ruleset(query_vars["varname"][0])
-
-    def _permissions_url(self, url: str) -> bool:
-        return self._url_checker.is_permitted(url)
 
     def may_see_category(self, category: str) -> bool:
         return user.may("wato.use") and self._category_permissions.get(category, True)
@@ -315,9 +309,9 @@ class PermissionsHandler:
             "rules": self._permissions_rule,
             "hosts": lambda url: (
                 any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
-                or self._permissions_url(url)
+                or is_url_permitted(url)
             ),
-            "setup": self._permissions_url,
+            "setup": is_url_permitted,
         }
 
 

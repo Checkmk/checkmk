@@ -29,6 +29,7 @@ from cmk.gui.watolib.search import (
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
+    is_url_permitted,
     localize,
 )
 from cmk.gui.watolib.search import (
@@ -39,7 +40,6 @@ from cmk.gui.watolib.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
     PermissionsHandler,
-    URLChecker,
 )
 
 
@@ -312,39 +312,40 @@ class TestIndexBuilderAndSearcher:
 
 
 @pytest.fixture(name="created_host_url")
-def fixture_created_host_url(with_admin_login) -> str:  # type:ignore[no-untyped-def]
+def fixture_created_host_url() -> str:
     folder = Folder.root_folder()
     folder.create_hosts([("host", {}, [])])
     return "wato.py?folder=&host=host&mode=edit_host"
 
 
-class TestURLChecker:
-    @pytest.mark.usefixtures("request_context")
-    def test_is_permitted_false(self) -> None:
-        assert not URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
+@pytest.mark.usefixtures("request_context")
+def test_is_url_permitted_false() -> None:
+    assert not is_url_permitted("wato.py?folder=&mode=service_groups")
 
-    @pytest.mark.usefixtures("with_admin_login")
-    def test_is_permitted_true(self) -> None:
-        assert URLChecker().is_permitted("wato.py?folder=&mode=service_groups")
 
-    def test_is_permitted_host_true(
-        self,
-        created_host_url: str,
-    ) -> None:
-        assert URLChecker().is_permitted(created_host_url)
+@pytest.mark.usefixtures("with_admin_login")
+def test_is_url_permitted_true() -> None:
+    assert is_url_permitted("wato.py?folder=&mode=service_groups")
 
-    def test_is_permitted_host_false(  # type:ignore[no-untyped-def]
-        self,
-        monkeypatch: MonkeyPatch,
-        request_context,
-        created_host_url: str,
-    ) -> None:
-        monkeypatch.setattr(
-            user,
-            "may",
-            lambda pname: False,
-        )
-        assert not URLChecker().is_permitted(created_host_url)
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_is_url_permitted_host_true(
+    created_host_url: str,
+) -> None:
+    assert is_url_permitted(created_host_url)
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_is_url_permitted_host_false(
+    monkeypatch: MonkeyPatch,
+    created_host_url: str,
+) -> None:
+    monkeypatch.setattr(
+        user,
+        "may",
+        lambda pname: False,
+    )
+    assert not is_url_permitted(created_host_url)
 
 
 class TestPermissionHandler:

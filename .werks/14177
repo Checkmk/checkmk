@@ -1,0 +1,13 @@
+Title: BI aggregations: Services did not receive downtimes from host
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1671539847
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Services in aggregation trees did not check if their host is in downtime.
+This resulted in invalid calculations for "Aggregation is in downtime".
+

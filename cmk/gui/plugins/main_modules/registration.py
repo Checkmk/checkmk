@@ -11,19 +11,11 @@ from functools import partial
 import cmk.gui.pages
 import cmk.gui.userdb.saml2.connector as saml2_connector
 import cmk.gui.userdb.saml2.pages as saml2_pages
-from cmk.gui import (
-    autocompleters,
-    crash_reporting,
-    dashboard,
-    mkeventd,
-    mobile,
-    views,
-    visuals,
-    wato,
-)
+from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, visuals, wato
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.userdb.utils import user_connector_registry
 from cmk.gui.plugins.visuals import filters
@@ -80,7 +72,7 @@ crash_reporting.register(
     sorter_registry,
     command_registry,
 )
-mkeventd.register(
+mkeventd_registration.register(
     permission_section_registry,
     permission_registry,
     data_source_registry,

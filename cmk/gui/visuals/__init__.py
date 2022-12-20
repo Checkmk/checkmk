@@ -2388,6 +2388,11 @@ def set_page_context(page_context: VisualContext) -> None:
     g.page_context = page_context
 
 
+class CreateInfoModel(BaseModel):
+    params: dict
+    context: VisualContext | None
+
+
 def ajax_add_visual() -> None:
     check_csrf_token()
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
@@ -2401,12 +2406,11 @@ def ajax_add_visual() -> None:
     # type of the visual to add (e.g. view)
     element_type = request.get_str_input_mandatory("type")
 
-    class CreateInfo(BaseModel):
-        context: VisualContext
-        params: dict
-
-    create_info = request.get_model_mandatory(CreateInfo, "create_info")
+    create_info = request.get_model_mandatory(CreateInfoModel, "create_info")
 
     visual_type.add_visual_handler(
-        visual_name, element_type, create_info.context, create_info.params
+        visual_name,
+        element_type,
+        create_info.context,
+        create_info.params,
     )

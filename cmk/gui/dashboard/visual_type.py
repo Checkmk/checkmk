@@ -14,6 +14,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
@@ -62,7 +63,13 @@ class VisualTypeDashboards(VisualType):
                 ),
             )
 
-    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
+    def add_visual_handler(  # pylint: disable=too-many-branches
+        self,
+        target_visual_name: str,
+        add_type: str,
+        context: VisualContext | None,
+        parameters: dict,
+    ) -> None:
         if not user.may("general.edit_dashboards"):
             # Exceptions do not work here.
             return
@@ -102,6 +109,9 @@ class VisualTypeDashboards(VisualType):
                 parameters = copy.deepcopy(specification[1])
                 parameters["graph_render_options"] = default_dashlet_graph_render_options
                 context = parameters.pop("context", {})
+                # FIXME: mypy doesn't know if the parameter is well-formed, but we promise it is!
+                assert isinstance(context, dict)
+
                 single_infos = specification[1]["single_infos"]
                 if "host" in single_infos:
                     context["host"] = {"host": context.get("host")}
@@ -119,6 +129,12 @@ class VisualTypeDashboards(VisualType):
                     % specification[0]
                 )
 
+        # the DashletConfig below doesn't take None for context, so at this point we should have one
+        if context is None:
+            raise ValueError(
+                "'context' should have been provided or this should have been a 'pnpgraph'"
+            )
+
         permitted_dashboards = get_permitted_dashboards()
         dashboard = load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
 
@@ -135,7 +151,8 @@ class VisualTypeDashboards(VisualType):
         if add_type == "view":
             view_name = parameters["name"]
         else:
-            dashlet_spec.update(parameters)
+            # We don't know if what we get as parameters actually fits a DashletConfig.
+            dashlet_spec.update(parameters)  # type: ignore[typeddict-item]
 
         # When a view shal be added to the dashboard, load the view and put it into the dashlet
         # FIXME: Move this to the dashlet plugins

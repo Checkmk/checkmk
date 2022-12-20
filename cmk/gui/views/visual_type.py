@@ -21,7 +21,7 @@ from cmk.gui.inventory import (
 )
 from cmk.gui.page_menu import PageMenuEntry
 from cmk.gui.plugins.visuals.utils import VisualType
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, PermittedViewSpecs, VisualContext
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
 
@@ -38,32 +38,38 @@ class VisualTypeViews(VisualType):
         return _("view")
 
     @property
-    def plural_title(self):
+    def plural_title(self) -> str:
         return _("views")
 
     @property
-    def ident_attr(self):
+    def ident_attr(self) -> str:
         return "view_name"
 
     @property
-    def multicontext_links(self):
+    def multicontext_links(self) -> bool:
         return False
 
     @property
-    def show_url(self):
+    def show_url(self) -> str:
         return "view.py"
 
     def page_menu_add_to_entries(self, add_type: str) -> Iterator[PageMenuEntry]:
         return iter(())
 
-    def add_visual_handler(self, target_visual_name, add_type, context, parameters):
+    def add_visual_handler(
+        self,
+        target_visual_name: str,
+        add_type: str,
+        context: VisualContext | None,
+        parameters: dict,
+    ) -> None:
         return None
 
-    def load_handler(self):
+    def load_handler(self) -> None:
         pass
 
     @property
-    def permitted_visuals(self):
+    def permitted_visuals(self) -> PermittedViewSpecs:
         return get_permitted_views()
 
     def link_from(  # type:ignore[no-untyped-def]

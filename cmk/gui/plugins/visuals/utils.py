@@ -148,7 +148,11 @@ class VisualType(abc.ABC):
 
     @abc.abstractmethod
     def add_visual_handler(
-        self, target_visual_name: str, add_type: str, context: VisualContext, parameters: dict
+        self,
+        target_visual_name: str,
+        add_type: str,
+        context: VisualContext | None,
+        parameters: dict,
     ) -> None:
         """The function to handle adding the given visual to the given visual of this type"""
         raise NotImplementedError()

@@ -83,10 +83,12 @@ class View:
             if not painter_exists(e):
                 continue
 
-            if e.join_index is not None:
+            if (col_type := e.column_type) == "join_column":
                 cells.append(JoinCell(e, self._compute_sort_url_parameter(e)))
-            else:
+            elif col_type == "column":
                 cells.append(Cell(e, self._compute_sort_url_parameter(e)))
+            else:
+                raise NotImplementedError()
 
         return cells
 

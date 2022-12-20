@@ -31,6 +31,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.userdb.utils import (
+    connections_by_type,
     get_connection,
     load_connection_config,
     save_connection_config,
@@ -713,6 +714,10 @@ class ModeLDAPConfig(LDAPMode):
     def permissions(cls) -> Collection[PermissionName]:
         return ["global"]
 
+    @property
+    def type(self) -> str:
+        return "ldap"
+
     def title(self) -> str:
         return _("LDAP connections")
 
@@ -802,7 +807,7 @@ class ModeLDAPConfig(LDAPMode):
 
     def page(self) -> None:
         with table_element() as table:
-            for index, connection in enumerate(load_connection_config()):
+            for index, connection in enumerate(connections_by_type(self.type)):
                 table.row()
 
                 table.cell(_("Actions"), css=["buttons"])

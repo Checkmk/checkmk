@@ -172,9 +172,11 @@ def get_connection(connection_id: str | None) -> UserConnector | None:
 
 
 def active_connections_by_type(connection_type: str) -> list[dict[str, Any]]:
-    return [
-        c for c in _get_connection_configs() if c["type"] == connection_type and not c["disabled"]
-    ]
+    return [c for c in connections_by_type(connection_type) if not c["disabled"]]
+
+
+def connections_by_type(connection_type: str) -> list[dict[str, Any]]:
+    return [c for c in _get_connection_configs() if c["type"] == connection_type]
 
 
 def clear_user_connection_cache() -> None:

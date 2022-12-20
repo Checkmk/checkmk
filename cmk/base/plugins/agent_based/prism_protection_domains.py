@@ -14,9 +14,7 @@
 import time
 from typing import Any, Dict, Mapping
 
-from cmk.base.check_api import get_bytes_human_readable
-
-from .agent_based_api.v1 import Metric, register, Result, Service, State
+from .agent_based_api.v1 import Metric, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.prism import load_json
 
@@ -100,7 +98,7 @@ def check_prism_protection_domains(
         )
         summary = (
             f"Type: {type}, "
-            f"Exclusive Snapshot Usage: {get_bytes_human_readable(exclusivesnapshot)}, "
+            f"Exclusive Snapshot Usage: {render.bytes(exclusivesnapshot)}, "
             f"Next Snapshot scheduled at: {date}, "
             f"Total entities: {len(data['vms'])}, "
             f"Remote Site: {remote}"

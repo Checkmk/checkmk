@@ -18,6 +18,7 @@ from cmk.utils.backup.type_defs import (
     TargetId,
 )
 from cmk.utils.backup.utils import (
+    BACKUP_INFO_FILENAME,
     current_site_id,
     load_backup_info,
     log,
@@ -69,23 +70,23 @@ class LocalTarget:
             # any attempt to get information about files in the folder will
             # result in a permission error. In that case do not show a backup
             try:
-                if backup_id.is_dir() and (backup_id / "mkbackup.info").exists():
+                if backup_id.is_dir():
                     try:
-                        yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
-                    except UnrecognizedBackupTypeError:
+                        yield backup_id.name, load_backup_info(backup_id / BACKUP_INFO_FILENAME)
+                    except (FileNotFoundError, UnrecognizedBackupTypeError):
                         continue
             except PermissionError:
                 continue
 
     def get_backup(self, backup_id: str) -> Backup:
         backup_path = self.path / backup_id
-        info_path = backup_path / "mkbackup.info"
-        if not backup_path.exists() or not info_path.exists():
+        try:
+            info = load_backup_info(backup_path / BACKUP_INFO_FILENAME)
+        except FileNotFoundError:
             raise MKGeneralException(
                 f"This backup does not exist (Use 'mkbackup list {self.id}' to "
                 "show a list of available backups)."
             )
-        info = load_backup_info(info_path)
         archive_file = backup_path / info.filename
         verify_backup_file(info, archive_file)
         return Backup(info, backup_id, archive_file)
@@ -108,7 +109,7 @@ class LocalTarget:
         return path
 
     def finish_backup(self, info: SiteBackupInfo, job: Job) -> Path:
-        save_backup_info(info, self._working_dir(job) / "mkbackup.info")
+        save_backup_info(info, self._working_dir(job) / BACKUP_INFO_FILENAME)
         completed_path = self.path / f"{job.id}-complete"
         if completed_path.exists():
             log("Cleaning up previously completed backup")

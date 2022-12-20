@@ -17,6 +17,7 @@ from cmk.utils.backup.type_defs import RawBackupInfo, SiteBackupInfo
 from cmk.utils.exceptions import MKGeneralException
 
 SITE_BACKUP_MARKER = "Check_MK"
+BACKUP_INFO_FILENAME = "mkbackup.info"
 
 
 def current_site_id() -> str:

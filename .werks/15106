@@ -1,0 +1,13 @@
+Title: mounts: "failover" cluster mode always reported UNKNOWN
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1671618594
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+The service <i>"Mount options of ..."</i> would always report UNKNOWN if configured for <i>failover</i> mode on clusters.
+

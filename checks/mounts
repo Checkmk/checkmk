@@ -74,8 +74,6 @@ def check_mounts(item, targetopts, info):
                 yield 2, "Filesystem has switched to read-only and is probably corrupted"
             return
 
-    yield 3, "Filesystem not mounted"
-
 
 check_info["mounts"] = {
     "check_function": check_mounts,

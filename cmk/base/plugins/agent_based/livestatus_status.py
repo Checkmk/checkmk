@@ -51,12 +51,6 @@ livestatus_status_default_levels = {
     "helper_usage_checker": (80.0, 90.0),
     "livestatus_usage": (60.0, 80.0),
     "livestatus_overflows_rate": (0.01, 0.02),
-    "carbon_overflows_rate": (0.01, 0.02),
-    "carbon_queue_usage": (60.0, 80.0),
-    "influxdb_overflows_rate": (0.01, 0.02),
-    "influxdb_queue_usage": (60.0, 80.0),
-    "rrdcached_overflows_rate": (0.01, 0.02),
-    "rrdcached_queue_usage": (60.0, 80.0),
 }
 
 

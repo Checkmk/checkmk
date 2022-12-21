@@ -3,7 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import "core-js/stable";
-import "canvas-5-polyfill"; // needed for IE11
 
 import $ from "jquery";
 import * as d3 from "d3";

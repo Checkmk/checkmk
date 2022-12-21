@@ -411,7 +411,7 @@ class ABCLabelSorter(Sorter, abc.ABC):
         return (labels_1 > labels_2) - (labels_1 < labels_2)
 
 
-class SorterHostLabels(ABCTagSorter):
+class SorterHostLabels(ABCLabelSorter):
     @property
     def object_type(self):
         return "host"
@@ -429,7 +429,7 @@ class SorterHostLabels(ABCTagSorter):
         return ["host_labels"]
 
 
-class SorterServiceLabels(ABCTagSorter):
+class SorterServiceLabels(ABCLabelSorter):
     @property
     def object_type(self):
         return "service"

@@ -4,12 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Union
+from typing import Any, Dict, List
 
 from .agent_based_api.v1 import (
     contains,
-    IgnoreResults,
-    Metric,
     OIDEnd,
     register,
     Result,
@@ -195,7 +193,7 @@ def parse_bluenet2_powerrail(string_table: List[StringTable]) -> Dict:
 
     oid_sections = [(0, "inlet"), (1, "phases"), (2, "rcm_phases"), (4, "sockets"), (5, "fuses")]
 
-    pre_parsed: Dict[str, Dict[str, Dict[str, str]]] = {}
+    pre_parsed: Dict[str, Dict[str, Dict[str, Dict[str, str]]]] = {}
     for oidend, _guid, _name, _friendly_name in string_table[0]:
         pre_parsed[oidend] = {}
         for index, what in oid_sections:
@@ -210,7 +208,7 @@ def parse_bluenet2_powerrail(string_table: List[StringTable]) -> Dict:
                     "name": friendly_name,
                 }
 
-    parsed: Dict[str, Dict[str, Dict[str, str]]] = {"sensors": {}}
+    parsed: Dict[str, Dict[str, Dict[str, Any]]] = {"sensors": {}}
     for index, what in oid_sections:
         parsed[what] = {}
     for oidend, ty, status, exponent_str, reading_str in string_table[3]:
@@ -325,24 +323,21 @@ register.snmp_section(
 )
 
 
-def discover_bluenet2_powerrail() -> Callable[..., Iterable[Union[IgnoreResults, Metric, Result]]]:
-    def discover(single_section):
-        for key in single_section:
-            yield Service(item=key)
+def discover_bluenet2_powerrail_phases(section) -> DiscoveryResult:
+    for key in section["phases"]:
+        yield Service(item=key)
 
-    return discover
+
+def check_bluenet2_powerrail_phases(item, params, section) -> CheckResult:
+    yield from check_elphase(item, params, section["phases"])
 
 
 register.check_plugin(
     name="bluenet2_powerrail",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
-    discovery_function=lambda section: (
-        yield from discover_bluenet2_powerrail()(section["phases"])
-    ),
-    check_function=lambda item, params, section: (
-        yield from check_elphase(item, params, section["phases"])
-    ),
+    discovery_function=discover_bluenet2_powerrail_phases,
+    check_function=check_bluenet2_powerrail_phases,
     check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
@@ -357,21 +352,27 @@ register.check_plugin(
 #   |                            |_|                                       |
 #   '----------------------------------------------------------------------'
 
+
+def discover_bluenet2_powerrail_rcm_phases(section) -> DiscoveryResult:
+    for key in section["rcm_phases"]:
+        yield Service(item=key)
+
+
+def check_bluenet2_powerrail_rcm_phases(item, params, section) -> CheckResult:
+    yield from check_elphase(item, params, section["rcm_phases"])
+
+
 register.check_plugin(
     name="bluenet2_powerrail_rcm",
     sections=["bluenet2_powerrail"],
     service_name="Inlet %s",
-    discovery_function=lambda section: (
-        yield from discover_bluenet2_powerrail()(section["rcm_phases"])
-    ),
-    check_function=lambda item, params, section: (
-        yield from check_elphase(item, params, section["rcm_phases"])
-    ),
+    discovery_function=discover_bluenet2_powerrail_rcm_phases,
+    check_function=check_bluenet2_powerrail_rcm_phases,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         # Suggested by customer
-        "differential_current_ac": (3.5, 30),
-        "differential_current_dc": (70, 100),
+        "differential_current_ac": (3.5, 30.0),
+        "differential_current_dc": (70.0, 100.0),
     },
 )
 
@@ -387,16 +388,22 @@ register.check_plugin(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+def discover_bluenet2_powerrail_sockets(section) -> DiscoveryResult:
+    for key in section["sockets"]:
+        yield Service(item=key)
+
+
+def check_bluenet2_powerrail_sockets(item, params, section) -> CheckResult:
+    yield from check_elphase(item, params, section["sockets"])
+
+
 register.check_plugin(
     name="bluenet2_powerrail_sockets",
     sections=["bluenet2_powerrail"],
     service_name="Socket %s",
-    discovery_function=lambda section: (
-        yield from discover_bluenet2_powerrail()(section["sockets"])
-    ),
-    check_function=lambda item, params, section: (
-        yield from check_elphase(item, params, section["sockets"])
-    ),
+    discovery_function=discover_bluenet2_powerrail_sockets,
+    check_function=check_bluenet2_powerrail_sockets,
     check_ruleset_name="ups_outphase",
     check_default_parameters={},
 )
@@ -413,15 +420,55 @@ register.check_plugin(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+def discover_bluenet2_powerrail_fuses(section) -> DiscoveryResult:
+    for key in section["fuses"]:
+        yield Service(item=key)
+
+
+def check_bluenet2_powerrail_fuses(item, params, section) -> CheckResult:
+    yield from check_elphase(item, params, section["fuses"])
+
+
 register.check_plugin(
     name="bluenet2_powerrail_fuses",
     sections=["bluenet2_powerrail"],
     service_name="Fuse %s",
-    discovery_function=lambda section: (yield from discover_bluenet2_powerrail()(section["fuses"])),
-    check_function=lambda item, params, section: (
-        yield from check_elphase(item, params, section["fuses"])
-    ),
+    discovery_function=discover_bluenet2_powerrail_fuses,
+    check_function=check_bluenet2_powerrail_fuses,
     check_ruleset_name="ups_outphase",
+    check_default_parameters={},
+)
+
+# .
+#   .--inlet---------------------------------------------------------------.
+#   |                         _       _      _                             |
+#   |                        (_)_ __ | | ___| |_                           |
+#   |                        | | '_ \| |/ _ \ __|                          |
+#   |                        | | | | | |  __/ |_                           |
+#   |                        |_|_| |_|_|\___|\__|                          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_bluenet2_powerrail_inlet(section) -> DiscoveryResult:
+    for key in section["inlet"]:
+        yield Service(item=key)
+
+
+def check_bluenet2_powerrail_inlet(item, params, section) -> CheckResult:
+    yield from check_elphase(item, params, section["inlet"])
+
+
+register.check_plugin(
+    name="bluenet2_powerrail_inlet",
+    sections=["bluenet2_powerrail"],
+    service_name="Inlet %s",
+    discovery_function=discover_bluenet2_powerrail_inlet,
+    check_function=check_bluenet2_powerrail_inlet,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
 
@@ -436,12 +483,12 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_temp(section):
+def discover_bluenet2_powerrail_temp(section) -> DiscoveryResult:
     for item in section["sensors"].get("temp", {}):
         yield Service(item=item)
 
 
-def check_bluenet2_powerrail_temp(item, params, section):
+def check_bluenet2_powerrail_temp(item, params, section) -> CheckResult:
     if item in section["sensors"].get("temp", {}):
         reading, (state, state_readable) = section["sensors"]["temp"][item]
         yield from check_temperature(
@@ -461,7 +508,7 @@ register.check_plugin(
     check_ruleset_name="temperature",
     check_default_parameters={
         # Suggested by customer
-        "levels": (30, 35),
+        "levels": (30.0, 35.0),
     },
 )
 
@@ -476,12 +523,12 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_humidity(section):
+def discover_bluenet2_powerrail_humidity(section) -> DiscoveryResult:
     for item in section["sensors"].get("humidity", {}):
         yield Service(item=item)
 
 
-def check_bluenet2_powerrail_humidity(item, params, section):
+def check_bluenet2_powerrail_humidity(item, params, section) -> CheckResult:
     if item in section["sensors"].get("humidity", {}):
         reading, (state, state_readable) = section["sensors"]["humidity"][item]
         yield from check_humidity(reading, params)
@@ -500,31 +547,7 @@ register.check_plugin(
     check_ruleset_name="humidity",
     check_default_parameters={
         # Suggested by customer
-        "levels_lower": (5, 8),
-        "levels": (75, 80),
+        "levels": (75.0, 80.0),
+        "levels_lower": (5.0, 8.0),
     },
-)
-
-# .
-#   .--inlet---------------------------------------------------------------.
-#   |                         _       _      _                             |
-#   |                        (_)_ __ | | ___| |_                           |
-#   |                        | | '_ \| |/ _ \ __|                          |
-#   |                        | | | | | |  __/ |_                           |
-#   |                        |_|_| |_|_|\___|\__|                          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-register.check_plugin(
-    name="bluenet2_powerrail_inlet",
-    sections=["bluenet2_powerrail"],
-    service_name="Inlet %s",
-    discovery_function=lambda section: (yield from discover_bluenet2_powerrail()(section["inlet"])),
-    check_function=lambda item, params, section: (
-        yield from check_elphase(item, params, section["inlet"])
-    ),
-    check_ruleset_name="el_inphase",
-    check_default_parameters={},
 )

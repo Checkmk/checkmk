@@ -42,7 +42,7 @@ from cmk.gui.plugins.webapi.utils import (
 from cmk.gui.watolib.check_mk_automations import discovery, try_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
+from cmk.gui.watolib.utils import restore_snmp_community_tuple, try_bake_agents_for_hosts
 
 # .
 #   .--Folders-------------------------------------------------------------.
@@ -117,6 +117,7 @@ class APICallFolders(APICallCollection):
         else:
             folder_alias = os.path.basename(folder_path)
 
+        folder_attributes = restore_snmp_community_tuple(folder_attributes)
         # Validates host and folder attributes, since there are no real folder attributes, at all...
         validate_host_attributes(folder_attributes, new=True)
 
@@ -143,6 +144,7 @@ class APICallFolders(APICallCollection):
         else:
             folder_alias = os.path.basename(folder_path)
 
+        folder_attributes = restore_snmp_community_tuple(folder_attributes)
         # Validates host and folder attributes, since there are no real folder attributes, at all...
         validate_host_attributes(folder_attributes, new=False)
 
@@ -264,6 +266,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
+        attributes = restore_snmp_community_tuple(attributes)
         validate_host_attributes(attributes, new=True)
 
         # Create folder(s)
@@ -318,6 +321,7 @@ class APICallHosts(APICallCollection):
         if ".nodes" in attributes:
             cluster_nodes = attributes[".nodes"]
             del attributes[".nodes"]
+        attributes = restore_snmp_community_tuple(attributes)
         validate_host_attributes(attributes, new=False)
 
         # Update existing attributes. Add new, remove unset_attributes

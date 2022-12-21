@@ -1,0 +1,15 @@
+Title: Repair invalid SNMP v3 credentials potentially written via WebAPI
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1671611925
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+If users created or edited hosts or folders via the <b>Web</b>API and configured SNMP v3 credentials as list (as JSON would do) they ended up with disfunctional configurations.
+
+With this werk both existing configurations and new incoming invalid values are fixed up automatically.
+
+Needless to say that affected users should really migrate to the REST API!

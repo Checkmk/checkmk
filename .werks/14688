@@ -1,0 +1,18 @@
+Title: Increased metric queue sizes
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1671624841
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p19
+
+The internal queues of the CMC for communication with the RRD cache daemon,
+Carbon connections, and InfluxDB connections has been increased.  This can
+help to reduce the "queue full, didn't push update" messages in the CMC log
+and the related metric data loss.  Note that this will only help when there
+are load peaks or peaks in the number of produced metrics from time to time. 
+If the monitoring server is not powerful enough to handle the average number
+of metrics per second in the long run, there will still be data loss.

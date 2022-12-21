@@ -22,7 +22,6 @@ export function hide() {
 }
 
 export function show(event_: MouseEvent, code: string) {
-    event_ = event_ || window.event;
     add();
     update_content(code, event_);
 }

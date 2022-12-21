@@ -70,8 +70,6 @@ export function initialize() {
         utils.remove_class(document.body, "visible");
         utils.remove_class(document.body, "hidden");
 
-        evt = evt || window.event;
-
         var new_class;
         if (evt.type in evtMap) {
             new_class = evtMap[evt.type];

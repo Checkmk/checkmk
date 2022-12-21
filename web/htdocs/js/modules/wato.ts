@@ -277,7 +277,6 @@ export function toggle_container(id: string) {
 // ----------------------------------------------------------------------------
 
 export function open_folder(event: Event | undefined, link: string) {
-    if (!event) event = window.event;
     var target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div
@@ -292,8 +291,6 @@ export function toggle_folder(
     oDiv: HTMLElement,
     on: boolean
 ) {
-    if (!event) event = window.event;
-
     // Skip mouseout event when moving mouse over a child element of the
     // folder element
     if (!on) {

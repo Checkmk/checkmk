@@ -271,16 +271,14 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
 }
 
 // Handle Enter key in textfields
-export function textinput_enter_submit(e, submit) {
-    if (!e) e = window.event;
-
-    var keyCode = e.which || e.keyCode;
+export function textinput_enter_submit(event, submit) {
+    var keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
         if (submit) {
             var button = document.getElementById(submit);
             if (button) button.click();
         }
-        return utils.prevent_default_events(e);
+        return utils.prevent_default_events(event);
     }
 }
 

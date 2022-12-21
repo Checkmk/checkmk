@@ -24,8 +24,6 @@ interface element_dragging {
 var g_element_dragging: null | element_dragging = null;
 
 export function start(event, dragger, dragging_tag, drop_handler) {
-    if (!event) event = window.event;
-
     var button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
@@ -56,8 +54,6 @@ export function start(event, dragger, dragging_tag, drop_handler) {
 }
 
 function element_dragging(event) {
-    if (!event) event = window.event;
-
     if (g_element_dragging === null) return true;
 
     position_dragging_object(event);
@@ -116,8 +112,6 @@ function mouse_offset_to_middle(obj, event) {
 }
 
 function element_drag_stop(event) {
-    if (!event) event = window.event;
-
     if (g_element_dragging === null) return true;
 
     finalize_dragging();

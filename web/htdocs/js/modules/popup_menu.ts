@@ -147,8 +147,6 @@ export function toggle_popup(
     onopen,
     resizable
 ) {
-    if (!event) event = window.event;
-
     if (active_popup.id) {
         if (active_popup.id === ident) {
             close_popup();

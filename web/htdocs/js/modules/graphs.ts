@@ -881,9 +881,7 @@ function get_graph_id_of_dom_node(target) {
     return graph_container.id;
 }
 
-function graph_global_mouse_wheel(event: Event | undefined) {
-    event = event || window.event; // IE FIX
-
+function graph_global_mouse_wheel(event: Event) {
     var obj: HTMLElement | ParentNode | null = event!.target as HTMLElement;
     // prevent page scrolling when making wheelies over graphs
     while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode;
@@ -946,7 +944,6 @@ function graph_activate_mouse_control(graph) {
 }
 
 function graph_start_resize(event, graph) {
-    event = event || window.event; // IE FIX
     g_resizing_graph = {
         pos: [event.clientX, event.clientY],
         graph: graph,
@@ -1001,7 +998,6 @@ function graph_get_mouse_position(event, graph): null | [number, number] {
 }
 
 function graph_mouse_down(event, graph) {
-    event = event || window.event; // IE FIX
     var pos = graph_get_mouse_position(event, graph);
     if (!pos) return;
 
@@ -1020,9 +1016,7 @@ function has_mouse_moved(pos1, pos2) {
     else return true;
 }
 
-function global_graph_mouse_up(event: Event | undefined) {
-    event = event || window.event; // IE FIX
-
+function global_graph_mouse_up(event: Event) {
     var graph_id, graph;
     if (g_dragging_graph) {
         graph = g_dragging_graph.graph;
@@ -1134,8 +1128,6 @@ function set_pin_position(event, graph, timestamp) {
 
 // move is used for dragging and also for resizing
 function graph_mouse_move(event, graph) {
-    event = event || window.event; // IE FIX
-
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process || g_graph_in_cooldown_period) return false;
@@ -1247,8 +1239,6 @@ function remove_all_mouse_indicators() {
 }
 
 function graph_mouse_wheel(event, graph) {
-    event = event || window.event; // IE FIX
-
     if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process) return utils.prevent_default_events(event);

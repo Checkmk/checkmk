@@ -13,11 +13,9 @@ export function register_search_field(field) {
     var oField = document.getElementById(field);
     if (oField) {
         oField.onkeydown = function (e) {
-            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyDown(e, oField);
         };
         oField.onkeyup = function (e) {
-            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyUp(e, oField);
         };
         oField.onclick = function () {

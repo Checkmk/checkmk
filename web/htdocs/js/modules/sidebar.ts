@@ -81,9 +81,7 @@ var g_snapin_offset = [0, 0];
 var g_snapin_start_pos = [0, 0];
 var g_snapin_scroll_top = 0;
 
-export function snapin_start_drag(event: MouseEvent | undefined) {
-    if (!event) event = window.event as MouseEvent;
-
+export function snapin_start_drag(event: MouseEvent) {
     const target = event.target;
     const button = utils.get_button(event);
 
@@ -111,8 +109,6 @@ export function snapin_start_drag(event: MouseEvent | undefined) {
 }
 
 function snapinDrag(event) {
-    if (!event) event = window.event;
-
     if (g_snapin_dragging === false) return true;
 
     // Is the mouse placed of the title bar of the snapin?
@@ -197,8 +193,6 @@ function snapinTerminateDrag() {
 
 export function snapin_stop_drag(event) {
     if (!g_snapin_dragging) return;
-
-    if (!event) event = window.event;
 
     removeSnapinDragIndicator();
     snapinDrop(event, getSnapinTargetPos());
@@ -856,8 +850,6 @@ export function wato_tree_target_changed(target_field) {
  *************************************************/
 
 export function set_snapin_site(event, ident, select_field) {
-    if (!event) event = window.event;
-
     ajax.call_ajax(
         "sidebar_ajax_set_snapin_site.py?ident=" +
             encodeURIComponent(ident) +

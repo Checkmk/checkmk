@@ -12,8 +12,6 @@ export function show_hover_graphs(
     host_name,
     service_description
 ) {
-    event_ = event_ || window.event;
-
     hover.show(event_, '<div class="message">Loading...</div>');
 
     show_check_mk_hover_graphs(site_id, host_name, service_description, event_);

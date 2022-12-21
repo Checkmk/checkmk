@@ -209,7 +209,7 @@ export function on_click_reset(id) {
 }
 export function on_key_down(id) {
     let current_search = get_current_search(id);
-    let current_key = (window.event as KeyboardEvent).key;
+    let current_key = (event as KeyboardEvent).key;
 
     if (!(current_key || current_search)) {
         return;
@@ -221,7 +221,7 @@ export function on_key_down(id) {
                 current_key == "ArrowDown" ? 1 : -1,
                 current_search
             );
-            window.event!.preventDefault();
+            event!.preventDefault();
             break;
         case "Enter":
             follow_current_search_query(current_search);

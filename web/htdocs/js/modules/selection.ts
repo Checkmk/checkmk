@@ -190,9 +190,7 @@ function highlight_elem(elem: HTMLElement, on: boolean) {
     else utils.remove_class(elem, "checkbox_hover");
 }
 
-function toggle_row(e: Event | undefined, elem: HTMLElement) {
-    if (!e) e = window.event!;
-
+function toggle_row(e: Event, elem: HTMLElement) {
     // Skip handling clicks on links/images/...
     const target = e.target;
     if (

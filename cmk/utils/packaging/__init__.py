@@ -330,7 +330,7 @@ def create(manifest: Manifest) -> None:
     package_store = PackageStore()
 
     manifest.raise_for_nonexisting_files()
-    _validate_package_files(manifest.name, manifest.files)
+    _validate_package_files(manifest)
     add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest)
 
@@ -348,7 +348,7 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
     package_store = PackageStore()
 
     new_manifest.raise_for_nonexisting_files()
-    _validate_package_files(pacname, new_manifest.files)
+    _validate_package_files(new_manifest)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest)
     remove_installed_manifest(pacname)
@@ -603,28 +603,12 @@ def _remove_packaged_rule_packs(file_names: Iterable[Path], delete_export: bool 
     ec.save_rule_packs(rule_packs)
 
 
-def _validate_package_files(
-    pacname: PackageName, files: Mapping[PackagePart, Sequence[Path]]
-) -> None:
-    """Packaged files must either be unpackaged or already belong to that package"""
-    for part in PACKAGE_PARTS:
-        _validate_package_files_part(
-            [m for m in get_installed_manifests() if m.name != pacname], part, files.get(part, [])
-        )
-
-
-def _validate_package_files_part(
-    other_installed_manifests: Sequence[Manifest],
-    part: PackagePart,
-    rel_paths: Sequence[Path],
-) -> None:
-    for rel_path in rel_paths:
-        path = part.path / rel_path
-        for manifest in other_installed_manifests:
-            if rel_path in manifest.files.get(part, []):
-                raise PackageException(
-                    f"File {path} already belongs to {manifest.name} {manifest.version}"
-                )
+def _validate_package_files(manifest: Manifest) -> None:
+    """Packaged files must not already belong to another package"""
+    for other_manifest in get_installed_manifests():
+        if manifest.name == other_manifest.name:
+            continue
+        manifest.raise_for_collision(other_manifest)
 
 
 def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:

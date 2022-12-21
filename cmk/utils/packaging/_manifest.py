@@ -63,6 +63,18 @@ class Manifest(BaseModel):
                 if not (fp := (part.path / rp).exists()):
                     raise PackageException(f"File {fp} does not exist.")
 
+    def raise_for_collision(self, other_manifest: Manifest) -> None:
+        """Packaged files must not already belong to another package"""
+        if collisions := set(
+            str(part.path / fn)
+            for part in PackagePart
+            for fn in self.files.get(part, ())
+            if fn in other_manifest.files.get(part, ())
+        ):
+            raise PackageException(
+                f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
+            )
+
 
 def manifest_template(
     name: PackageName,

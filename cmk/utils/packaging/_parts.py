@@ -52,49 +52,55 @@ class PackagePart(str, enum.Enum):
     def path(self) -> Path:
         return self._derived_properties[1]
 
+    @property
+    def permission(self) -> int:
+        return self._derived_properties[2]
+
     @cached_property
-    def _derived_properties(self) -> tuple[str, Path]:
+    def _derived_properties(self) -> tuple[str, Path, int]:
         match self:
             case PackagePart.EC_RULE_PACKS:
-                return _("Event Console rule packs"), ec.mkp_rule_pack_dir()
+                return _("Event Console rule packs"), ec.mkp_rule_pack_dir(), 0o644
             case PackagePart.AGENT_BASED:
                 return (
-                    _("Agent based plugins (Checks, Inventory),"),
+                    _("Agent based plugins (Checks, Inventory)"),
                     cmk.utils.paths.local_agent_based_plugins_dir,
+                    0o644,
                 )
 
             case PackagePart.CHECKS:
-                return _("Legacy check plugins"), cmk.utils.paths.local_checks_dir
+                return _("Legacy check plugins"), cmk.utils.paths.local_checks_dir, 0o644
             case PackagePart.HASI:
-                return _("Legacy inventory plugins"), cmk.utils.paths.local_inventory_dir
+                return _("Legacy inventory plugins"), cmk.utils.paths.local_inventory_dir, 0o644
             case PackagePart.CHECKMAN:
-                return _("Checks' man pages"), cmk.utils.paths.local_check_manpages_dir
+                return _("Checks' man pages"), cmk.utils.paths.local_check_manpages_dir, 0o644
             case PackagePart.AGENTS:
-                return _("Agents"), cmk.utils.paths.local_agents_dir
+                return _("Agents"), cmk.utils.paths.local_agents_dir, 0o755
             case PackagePart.NOTIFICATIONS:
-                return _("Notification scripts"), cmk.utils.paths.local_notifications_dir
+                return _("Notification scripts"), cmk.utils.paths.local_notifications_dir, 0o755
             case PackagePart.GUI:
-                return _("GUI extensions"), cmk.utils.paths.local_gui_plugins_dir
+                return _("GUI extensions"), cmk.utils.paths.local_gui_plugins_dir, 0o644
             case PackagePart.WEB:
-                return _("Legacy GUI extensions"), cmk.utils.paths.local_web_dir
+                return _("Legacy GUI extensions"), cmk.utils.paths.local_web_dir, 0o644
             case PackagePart.PNP_TEMPLATES:
                 return (
                     _("PNP4Nagios templates (deprecated)"),
                     cmk.utils.paths.local_pnp_templates_dir,
+                    0o644,
                 )
 
             case PackagePart.DOC:
-                return _("Documentation files"), cmk.utils.paths.local_doc_dir
+                return _("Documentation files"), cmk.utils.paths.local_doc_dir, 0o644
             case PackagePart.LOCALES:
-                return _("Localizations"), cmk.utils.paths.local_locale_dir
+                return _("Localizations"), cmk.utils.paths.local_locale_dir, 0o644
             case PackagePart.BIN:
-                return _("Binaries"), cmk.utils.paths.local_bin_dir
+                return _("Binaries"), cmk.utils.paths.local_bin_dir, 0o755
             case PackagePart.LIB:
-                return _("Libraries"), cmk.utils.paths.local_lib_dir
+                return _("Libraries"), cmk.utils.paths.local_lib_dir, 0o644
             case PackagePart.MIBS:
-                return _("SNMP MIBs"), cmk.utils.paths.local_mib_dir
+                return _("SNMP MIBs"), cmk.utils.paths.local_mib_dir, 0o644
             case PackagePart.ALERT_HANDLERS:
-                return _("Alert handlers"), cmk.utils.paths.local_alert_handlers_dir
+                return _("Alert handlers"), cmk.utils.paths.local_alert_handlers_dir, 0o755
 
         return assert_never(self)
 

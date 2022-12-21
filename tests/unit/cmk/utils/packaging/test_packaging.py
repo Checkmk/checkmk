@@ -83,20 +83,17 @@ def fixture_reload_apache(mocker: MockerFixture) -> Mock:
     )
 
 
-def test_get_permissions_unknown_path() -> None:
-    with pytest.raises(packaging.PackageException):
-        assert packaging._get_permissions(Path("lala"))
-
-
 @pytest.mark.parametrize(
-    "path,expected",
+    "part,file,expected",
     [
-        (cmk.utils.paths.local_checks_dir, 0o644),
-        (cmk.utils.paths.local_bin_dir, 0o755),
+        (packaging.PackagePart.AGENT_BASED, Path("some_check.py"), 0o644),
+        (packaging.PackagePart.BIN, Path("some_binary"), 0o755),
+        (packaging.PackagePart.LIB, Path("nagios/plugins/check_foobar"), 0o755),
+        (packaging.PackagePart.LIB, Path("something/else/check_foobar"), 0o644),
     ],
 )
-def test_get_permissions(path: Path, expected: int) -> None:
-    assert packaging._get_permissions(path) == expected
+def test_get_permissions(part: packaging.PackagePart, file: Path, expected: int) -> None:
+    assert packaging._get_permissions(part, file) == expected
 
 
 def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Manifest:

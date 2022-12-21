@@ -47,32 +47,14 @@ from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 g_logger = logging.getLogger("cmk.utils.packaging")
 
 
-def _get_permissions(path: Path) -> int:
+def _get_permissions(part: PackagePart, rel_path: Path) -> int:
     """Determine permissions by the first matching beginning of 'path'"""
 
-    # order matters! See function _get_permissions
-    perm_map: tuple[tuple[str | Path, int], ...] = (
-        (cmk.utils.paths.local_checks_dir, 0o644),
-        (cmk.utils.paths.local_notifications_dir, 0o755),
-        (cmk.utils.paths.local_inventory_dir, 0o644),
-        (cmk.utils.paths.local_check_manpages_dir, 0o644),
-        (cmk.utils.paths.local_agents_dir, 0o755),
-        (cmk.utils.paths.local_web_dir, 0o644),
-        (cmk.utils.paths.local_gui_plugins_dir, 0o644),
-        (cmk.utils.paths.local_pnp_templates_dir, 0o644),
-        (cmk.utils.paths.local_doc_dir, 0o644),
-        (cmk.utils.paths.local_locale_dir, 0o644),
-        (cmk.utils.paths.local_bin_dir, 0o755),
-        (cmk.utils.paths.local_lib_dir / "nagios" / "plugins", 0o755),
-        (cmk.utils.paths.local_lib_dir, 0o644),
-        (cmk.utils.paths.local_mib_dir, 0o644),
-        (cmk.utils.paths.local_alert_handlers_dir, 0o755),
-        (ec.mkp_rule_pack_dir(), 0o644),
-    )
-    for path_begin, perm in perm_map:
-        if path.is_relative_to(path_begin):
-            return perm
-    raise PackageException("could not determine permissions for %r" % path)
+    # I guess this shows that nagios plugins ought to be their own package part.
+    # For now I prefer to stay compatible.
+    if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
+        return 0o755
+    return part.permission
 
 
 class PackagePartInfoElement(TypedDict):
@@ -482,7 +464,7 @@ def _install(  # pylint: disable=too-many-branches
             # Fix permissions of extracted files
             for filename in filenames:
                 path = part.path / filename
-                desired_perm = _get_permissions(path)
+                desired_perm = _get_permissions(part, filename)
                 has_perm = path.stat().st_mode & 0o7777
                 if has_perm != desired_perm:
                     g_logger.log(
@@ -688,19 +670,22 @@ def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
 
 
 def package_part_info() -> PackagePartInfo:
-    # this is broken, it does not decend into subfolders :-(
+    # this is broken:
+    # * It does not decend into subfolders :-(
+    # * It reports (for diagnostics!) the *desired* permissions
+    #   instead of the actual ones!
     part_info: PackagePartInfo = {}
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         try:
-            files = os.listdir(str(part.path))
-        except OSError:
+            files = [f.relative_to(part.path) for f in part.path.iterdir()]
+        except FileNotFoundError:
             files = []
 
         part_info[part.ident] = {
             "title": part.ui_title,
-            "permissions": [_get_permissions(part.path / f) for f in files],
+            "permissions": [_get_permissions(part, f) for f in files],
             "path": str(part.path),
-            "files": files,
+            "files": [str(f) for f in files],
         }
 
     return part_info

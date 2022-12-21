@@ -106,6 +106,7 @@ agent_based_plugins_dir = _base_plugins_dir / "agent_based"
 
 gui_plugins_dir = Path(lib_dir, "check_mk", "gui", "plugins")
 
+local_root = _local_path(omd_root)
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)

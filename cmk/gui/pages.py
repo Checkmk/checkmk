@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import functools
 import http.client as http_client
 import json
 from collections.abc import Callable
@@ -178,6 +179,13 @@ def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHand
     page handler for the requested name."""
 
     def page_handler(hc: type[Page]) -> PageHandlerFunc:
-        return lambda: hc().handle_page()
+        # We pretend to wrap `hc.page` instead of `hc.handle_page`, because `hc.handle_page` is
+        # usually only defined on the superclass, which doesn't really help in debugging. The
+        # instance is not shown, and it is not 100% correct, but it's better than nothing at all.
+        @functools.wraps(hc.page)
+        def wrapper():
+            return hc().handle_page()
+
+        return wrapper
 
     return dflt if (handle_class := page_registry.get(name)) is None else page_handler(handle_class)

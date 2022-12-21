@@ -48,6 +48,9 @@ def _check_auth(req: flask.Request) -> tuple[UserId, AuthType]:
     if user_id := check_auth_by_cookie():
         return _check_user(user_id, "cookie")
 
+    if user_id := check_automation_auth_by_request_values():
+        return _check_user(user_id, "automation")
+
     raise MKAuthException("Couldn't log in.")
 
 
@@ -119,6 +122,22 @@ def _check_auth_web_server(req: flask.Request) -> UserId | None:
         return None
 
     return UserId(user_id)
+
+
+def check_automation_auth_by_request_values() -> UserId | None:
+    """Check credentials either in query string or form encoded POST body"""
+    user_name = request.values.get("_username")
+    password = (
+        request.values.get("_password")
+        or request.values.get("_passwd")
+        or request.values.get("_secret")
+    )
+    if user_name is not None and password is not None:
+        user_id = UserId(user_name)
+        if verify_automation_secret(user_id, password):
+            return user_id
+
+    return None
 
 
 def check_auth_by_cookie() -> UserId | None:

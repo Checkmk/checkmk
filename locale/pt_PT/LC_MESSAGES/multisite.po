@@ -5921,7 +5921,8 @@ msgstr ""
 msgid "Automatically track downtimes of aggregation"
 msgstr "Rastreamento automático dos tempos de agregação"
 
-msgid "Automatically update agents at <i>Activate Changes</i>, if neccessary"
+#, fuzzy
+msgid "Automatically update agents at <i>Activate Changes</i>, if necessary"
 msgstr ""
 "Atualizar automaticamente os agentes em <i>Ativar Mudanças</i>, se necessário"
 
@@ -8004,17 +8005,17 @@ msgstr "Cancelar notificações anteriores"
 msgid "Canceled"
 msgstr "Cancelado"
 
+#, fuzzy, python-format
 msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-
-#, python-format
-msgid ""
-"Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
+"Cannot acquire cookie from ntop server '%s' for user '%s'. Please check your "
 "ntop connection settings."
 msgstr ""
 "Não é possível adquirir cookie do ntop server '%s' para o utilizador '%s'. "
 "Por favor, verifique as suas configurações de conexão ntop."
+
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
+msgstr ""
 
 msgid "Cannot calculate graph recipes"
 msgstr "Não é possível calcular receitas gráficas"
@@ -9075,6 +9076,10 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Checkmk utilização do helper"
+
+#, fuzzy
+msgid "Checkmk server URL"
+msgstr "Verifique o URL"
 
 msgid "Checkmk site objects"
 msgstr "Checkmk objetos locais"
@@ -10813,6 +10818,10 @@ msgstr "Tempo de ligação"
 
 msgid "Connection timeout"
 msgstr "Tempo limite de conexão"
+
+#, fuzzy
+msgid "Connection timeout (seconds)"
+msgstr "Tempo limite de conexão em segundos"
 
 msgid "Connection timeout in seconds"
 msgstr "Tempo limite de conexão em segundos"
@@ -13359,6 +13368,11 @@ msgstr "Atraso:"
 msgid "Delayed unassigned shards"
 msgstr "Atraso de fragmentos não atribuídos"
 
+msgid ""
+"Delegate authentication to your organisation's Identity Provider using SAML "
+"2.0."
+msgstr ""
+
 msgid "Delete"
 msgstr "Eliminar"
 
@@ -13912,9 +13926,10 @@ msgstr "Implantar o plugin TSM"
 msgid "Deploy the Zypper plugin"
 msgstr "Implantar o plugin Zypper"
 
+#, fuzzy
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
-"neccessary for all <tt>postgres_*</tt> checks"
+"necessary for all <tt>postgres_*</tt> checks"
 msgstr ""
 "Implantar o plugin de agente <tt>mk_postgres</tt>. Isto irá criar "
 "informações necessárias para todas as verificações <tt>postgres_*</tt>."
@@ -14075,6 +14090,14 @@ msgstr "Detalhes"
 #, fuzzy
 msgid "Details (Previously named: long output)"
 msgstr "Detalhes (Anteriormente chamado: saída longa)"
+
+#, fuzzy
+msgid "Details for host notifications"
+msgstr "Cauda do corpo para notificações do anfitrião"
+
+#, fuzzy
+msgid "Details for service notifications"
+msgstr "Cauda do corpo para notificações de serviço"
 
 #, fuzzy
 msgid "Detect and use proxies configured on the target system"
@@ -14405,10 +14428,6 @@ msgstr "Desabilitar este teste"
 msgid "Disable timespecific parameters"
 msgstr "Desabilitar parâmetros específicos de tempo"
 
-#, fuzzy
-msgid "Disable two-factor authentication"
-msgstr "Desactivar notificações do anfitrião"
-
 msgid "Disable undecided services"
 msgstr "Desactivar serviços indecisos"
 
@@ -14512,9 +14531,6 @@ msgstr "Descubra os pacotes"
 #, fuzzy
 msgid "Discover registered hosts"
 msgstr "Número total de hospedeiros registados"
-
-msgid "Discover services"
-msgstr "Descubra os serviços"
 
 msgid "Discover services during creation"
 msgstr "Descubra os serviços durante a criação"
@@ -14939,8 +14955,8 @@ msgid "Dissolve the package, release its files into unpackaged state"
 msgstr ""
 "Dissolver o pacote, liberar seus arquivos para o estado de descompactação"
 
-#, python-format
-msgid "Dissolved extension package %s"
+#, fuzzy, python-format
+msgid "Dissolved extension package %s %s"
 msgstr "Pacote de extensão dissolvido %s"
 
 msgid "Distinguish times in and out of notification period"
@@ -15594,10 +15610,6 @@ msgstr "Você realmente quer apagar este trabalho?"
 msgid "Do you really want to delete this target?"
 msgstr "Você realmente quer apagar este alvo?"
 
-#, fuzzy, python-format
-msgid "Do you really want to disable the two-factor authentication of %s?"
-msgstr "Você realmente quer apagar o atributo personalizado \"%s\"?"
-
 #, python-format
 msgid "Do you really want to log out of '%s'?"
 msgstr "Queres mesmo sair da '%s'?"
@@ -15626,8 +15638,12 @@ msgstr "Você realmente quer apagar os anfitriões selecionados?"
 
 #, fuzzy, python-format
 msgid ""
-"Do you really want to remove the package file <tt>%s</tt> from your system?"
+"Do you really want to remove the package <tt>%s %s</tt> from your system?"
 msgstr "Você realmente quer remover o pacote <tt>%s</tt> do seu sistema?"
+
+#, fuzzy, python-format
+msgid "Do you really want to remove the two-factor authentication of %s?"
+msgstr "Você realmente quer apagar o atributo personalizado \"%s\"?"
 
 #, fuzzy
 msgid ""
@@ -15953,19 +15969,6 @@ msgstr "Dummy"
 #, python-format
 msgid "Dump file: %s"
 msgstr "Arquivo de despejo: %s"
-
-#, python-format
-msgid ""
-"Duplicate BI aggregation with the title \"<b>%s</b>\". Please check your BI "
-"configuration and make sure that within each group no aggregation has the "
-"same title as any other. Note: you can use arguments in the top level "
-"aggregation rule, like <tt>Host $HOST$</tt>."
-msgstr ""
-"Duplicar a agregação do BI com o título \"<b>%s</b>\". Verifique a "
-"configuração do seu BI e certifique-se de que dentro de cada grupo nenhuma "
-"agregação tem o mesmo título que qualquer outra. Nota: você pode usar "
-"argumentos na regra de agregação de nível superior, como <tt>Host $HOST$</"
-"tt>."
 
 #, fuzzy, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
@@ -16463,9 +16466,6 @@ msgstr "Regra de edição: %s"
 msgid "Edit service group"
 msgstr "Editar grupo de serviços"
 
-msgid "Edit services"
-msgstr "Editar serviços"
-
 #, fuzzy
 msgid "Edit settings"
 msgstr "%d Configurações de filtro"
@@ -16495,9 +16495,6 @@ msgstr "Editar as propriedades deste site"
 
 msgid "Edit the rules in this pack"
 msgstr "Editar as regras deste pacote"
-
-msgid "Edit the services of this host, do a service discovery"
-msgstr "Editar os serviços deste anfitrião, fazer uma descoberta de serviços"
 
 #, python-format
 msgid "Edit this %s"
@@ -17350,6 +17347,10 @@ msgstr "Erro durante a descoberta de %s"
 #, python-format
 msgid "Error during discovery of %s on site %s"
 msgstr "Erro durante a descoberta de %s no local %s"
+
+#, fuzzy
+msgid "Error during loading instance ID"
+msgstr "Erro durante a gravação"
 
 msgid "Error during saving"
 msgstr "Erro durante a gravação"
@@ -20306,6 +20307,10 @@ msgstr "Graylog"
 msgid "Graylog JVM"
 msgstr "Graylog JVM"
 
+#, fuzzy
+msgid "Graylog alerts"
+msgstr "licença Graylog"
+
 msgid "Graylog cluster elasticsearch statistics"
 msgstr "Estatísticas de pesquisa elástica de aglomerados de Graylog"
 
@@ -20893,6 +20898,14 @@ msgstr ""
 "Aqui é permitido usar todas as macros definidas no contexto da notificação."
 
 msgid ""
+"Here you are allowed to use all macros that are defined in the notification "
+"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</li><li><tt>"
+"$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</li><li><tt>$SERVICEOUTPUT$</"
+"li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>$SERVICEPERFDATA$</li><li><tt>"
+"$EVENT_TXT$</li></ul>"
+msgstr ""
+
+msgid ""
 "Here you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those that are members of selected contact groups. "
 "If you select more than one contact group here then the user must be member "
@@ -21039,6 +21052,7 @@ msgstr ""
 "Aqui você pode configurar se os contadores de desempenho devem ser "
 "consultados. Isto pode poupar bastante carga de CPU em sistemas maiores."
 
+#, fuzzy
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
 "which Eventlog. When you set the severity to <i>disabled</i> then this "
@@ -21047,7 +21061,7 @@ msgid ""
 "message is being found in an Eventlog, the agent usually sends <i>all</i> "
 "new messages from that check cycle. This makes it more convenient when "
 "viewing the messages in Check_MK. In high-volume logfiles it might be "
-"neccessary to switch the context off in order to save networking and disk "
+"necessary to switch the context off in order to save networking and disk "
 "resources. <b>Note</b>: When several configuration tuning entries match for "
 "a logfile then only the first one is being executed. So it does not make "
 "sense to create more then one entry for <i>All Eventlogs</i>."
@@ -23023,6 +23037,10 @@ msgstr ""
 msgid "Identity"
 msgstr "Identidade"
 
+#, fuzzy
+msgid "Identity Provider connection timeout"
+msgstr "Definir o tempo limite de conexão"
+
 msgid "Identity of an authorized key"
 msgstr "Identidade de uma chave autorizada"
 
@@ -23157,9 +23175,10 @@ msgid ""
 "folder in the future, usually via the auto registration."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
-"will also automatically add/remove them as neccessary."
+"will also automatically add/remove them as necessary."
 msgstr ""
 "Se ativo, o cheque não só notificará sobre serviços não monitorados, como "
 "também os adicionará/removerá automaticamente como necessário."
@@ -23821,6 +23840,39 @@ msgid ""
 "If you choose to query for failed index operations, use this option to set "
 "the timeframe in which failures should be covered. The check will output the "
 "total number of failures and the number of failures in this given timeframe."
+msgstr ""
+"Se você optar por consultar as operações de índice de falhas, use esta opção "
+"para definir o período de tempo no qual as falhas devem ser cobertas. A "
+"verificação irá emitir o número total de falhas e o número de falhas neste "
+"determinado período de tempo."
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of alerts in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of alerts received in this given timeframe."
+msgstr ""
+"Se você optar por consultar as operações de índice de falhas, use esta opção "
+"para definir o período de tempo no qual as falhas devem ser cobertas. A "
+"verificação irá emitir o número total de falhas e o número de falhas neste "
+"determinado período de tempo."
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of events in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of events received in this given timeframe."
+msgstr ""
+"Se você optar por consultar as operações de índice de falhas, use esta opção "
+"para definir o período de tempo no qual as falhas devem ser cobertas. A "
+"verificação irá emitir o número total de falhas e o número de falhas neste "
+"determinado período de tempo."
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of messages in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of messages received in this given timeframe."
 msgstr ""
 "Se você optar por consultar as operações de índice de falhas, use esta opção "
 "para definir o período de tempo no qual as falhas devem ser cobertas. A "
@@ -24912,6 +24964,14 @@ msgstr ""
 "inferiores. Se todos os níveis configurados dentro de uma conjunção forem "
 "alcançados, então o estado relacionado é relatado."
 
+msgid ""
+"In order to compute a unique host name you can use the agent labels (all or "
+"a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
+"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"<tt>lnx-$LABEL$</tt>."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
@@ -25499,8 +25559,8 @@ msgstr "Agente Instalado"
 msgid "Installed RAM"
 msgstr "Agente Instalado"
 
-#, python-format
-msgid "Installed extension package %s-%s (%s)"
+#, fuzzy, python-format
+msgid "Installed extension package %s %s"
 msgstr "Pacote de extensão instalada %s-%s (%s)"
 
 msgid "Installed, stopped and running services"
@@ -25635,6 +25695,11 @@ msgstr "Ritmo cardíaco intermitente"
 
 msgid "Internal ID"
 msgstr "Identificação interna"
+
+msgid ""
+"Internal ID that Checkmk uses to uniquely identify each connection to an "
+"Identity Provider."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -25909,9 +25974,6 @@ msgstr "Página do homem inválido: Falha em obter o título"
 msgid "Invalid messaging method selected."
 msgstr "Método de notificação inválido selecionado."
 
-msgid "Invalid package name"
-msgstr "Nome do pacote inválido"
-
 msgid "Invalid package part"
 msgstr "Parte do pacote inválido"
 
@@ -26068,6 +26130,10 @@ msgstr "Ident inválido: %s"
 
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "Faixa vertical inválida: de deve ser inferior a"
+
+#, fuzzy
+msgid "Invalid visual type"
+msgstr "Local inválido"
 
 msgid "Inventorize containers' network configuration"
 msgstr "Inventariar a configuração de rede dos contentores"
@@ -27833,6 +27899,10 @@ msgid "Licensing Status"
 msgstr "Status do licenciamento"
 
 #, fuzzy
+msgid "Licensing online verification"
+msgstr "verificação do certificado SSL"
+
+#, fuzzy
 msgid "Licensing settings"
 msgstr "Status do licenciamento"
 
@@ -28677,6 +28747,9 @@ msgstr "modo Login"
 
 msgid "Login username"
 msgstr "Login nome de usuário"
+
+msgid "Login with Identity Provider"
+msgstr ""
 
 msgid "Login with the following credentials"
 msgstr "Login com as seguintes credenciais"
@@ -30566,6 +30639,10 @@ msgstr "Mensagens"
 
 msgid "Meta usage"
 msgstr "Meta-uso"
+
+#, fuzzy
+msgid "Metadata endpoint URL"
+msgstr "URL do Endpoint REST"
 
 msgid "Method"
 msgstr "Método"
@@ -32645,6 +32722,10 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr "Não há tal árvore de inventário."
 
+#, fuzzy
+msgid "No such license key"
+msgstr "Licença de Uso"
+
 msgid "No test host"
 msgstr "Sem hospedeiro de teste"
 
@@ -32985,9 +33066,6 @@ msgstr "Não contidos em nenhum grupo"
 
 msgid "Not enabled"
 msgstr "Não ativado"
-
-msgid "Not executed in OMD environment!"
-msgstr "Não executado em ambiente OMD!"
 
 #, fuzzy
 msgid "Not found"
@@ -33406,6 +33484,14 @@ msgstr "Número de Plugs ativos"
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr "Número de agentes que se registaram para actualizações: %d"
+
+#, fuzzy
+msgid "Number of alerts in defined timespan lower level"
+msgstr "Número de mensagens em tempos definidos de nível inferior"
+
+#, fuzzy
+msgid "Number of alerts in defined timespan upper level"
+msgstr "Número de mensagens em tempo definido no nível superior"
 
 msgid "Number of apache processes"
 msgstr "Número de processos apache"
@@ -36058,6 +36144,14 @@ msgstr "Persistente (longo)"
 msgid "Persistent Connection"
 msgstr "Ligação Persistente"
 
+#, fuzzy
+msgid "Persistent Volume Claim name"
+msgstr "Comentário persistente"
+
+#, fuzzy
+msgid "Persistent Volume Claims"
+msgstr "Comentário persistente"
+
 msgid "Persistent comment"
 msgstr "Comentário persistente"
 
@@ -36294,6 +36388,12 @@ msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
 "probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
 "excessive runtimes."
+msgstr ""
+
+msgid ""
+"Please be aware that the monitoring of UNDO tablespaces is only useful in "
+"very rare situations with very specific preconditions. If you don't have "
+"such a specific case, you should not activate the monitoring of UNDO."
 msgstr ""
 
 msgid "Please check one metric you want to apply a transformation"
@@ -38802,6 +38902,10 @@ msgstr "Remover este pacote"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "Remover este pacote de regras do módulo Pacotes de Extensão"
 
+#, fuzzy
+msgid "Remove two-factor authentication"
+msgstr "Autenticação básica"
+
 msgid "Remove vanished services"
 msgstr "Remover serviços desaparecidos"
 
@@ -38815,8 +38919,8 @@ msgstr "Removido o tag auxiliar %s (%s)"
 msgid "Removed entries"
 msgstr "Entradas removidas"
 
-#, python-format
-msgid "Removed extension package %s"
+#, fuzzy, python-format
+msgid "Removed extension package %s %s"
 msgstr "Removido pacote de extensão %s"
 
 msgid "Removed from stack"
@@ -39953,6 +40057,10 @@ msgstr "Funciona de forma assíncrona e em cache"
 msgid "Run asynchronously, run at larger interval"
 msgstr "Funciona de forma assíncrona, funciona a um intervalo maior"
 
+#, fuzzy
+msgid "Run bulk service discovery"
+msgstr "Descoberta do serviço Solaris"
+
 msgid "Run in simulation mode"
 msgstr "Executar em modo de simulação"
 
@@ -39967,6 +40075,10 @@ msgstr ""
 "Executar relatório como este usuário. Isto significa que todos os objetos "
 "são filtrados com a permissão do usuário selecionado, mas também significa "
 "que o relatório gerado será associado a este usuário."
+
+#, fuzzy
+msgid "Run service discovery"
+msgstr "Descoberta de serviços"
 
 msgid "Run synchronously"
 msgstr "Corra de forma síncrona"
@@ -40050,6 +40162,17 @@ msgstr "Nível de potência Rx"
 
 msgid "S."
 msgstr "S."
+
+msgid "SAML 2.0"
+msgstr ""
+
+#, fuzzy
+msgid "SAML Authentication"
+msgstr "Autenticação SMTP"
+
+#, fuzzy
+msgid "SAML2.0 Integration"
+msgstr "Chave de Integração"
 
 msgid "SAN"
 msgstr "SAN"
@@ -40492,8 +40615,9 @@ msgstr "Salvar e ir para as propriedades anfitriãs"
 msgid "Save & go to list"
 msgstr "Salvar e ir para a lista"
 
-msgid "Save & go to service configuration"
-msgstr "Salvar e ir para a configuração de serviço"
+#, fuzzy
+msgid "Save & run service discovery"
+msgstr "Descoberta do serviço Solaris"
 
 msgid "Save & test"
 msgstr "Salvar e testar"
@@ -41373,9 +41497,6 @@ msgstr "Tipo de verificação de serviço"
 
 msgid "Service checks"
 msgstr "Verificações de serviço"
-
-msgid "Service configuration"
-msgstr "Configuração do serviço"
 
 msgid "Service contact groups"
 msgstr "Grupos de contato de serviços"
@@ -42278,6 +42399,13 @@ msgstr "Mostrar uma mensagem de login"
 
 msgid "Show a margin round the graph"
 msgstr "Mostrar uma margem ao redor do gráfico"
+
+#, fuzzy
+msgid "Show affected host groups"
+msgstr "Combinar grupos anfitriões"
+
+msgid "Show affected host groups in the created message."
+msgstr ""
 
 msgid "Show aggregated info over all SLA periods"
 msgstr "Mostrar informações agregadas em todos os períodos de SLA"
@@ -44312,6 +44440,10 @@ msgstr "Comece a restaurar este backup"
 msgid "Start type"
 msgstr "Tipo de partida"
 
+#, fuzzy
+msgid "Start verification"
+msgstr "verificação do certificado SSL"
+
 msgid "Start!"
 msgstr "Comece!"
 
@@ -45445,6 +45577,10 @@ msgstr "Envie para"
 
 msgid "Submit Report"
 msgstr "Submeter Relatório"
+
+#, fuzzy
+msgid "Submit verification request"
+msgstr "Regras de notificação global"
 
 msgid "Submitting crash report..."
 msgstr "Apresentar relatório de acidente..."
@@ -47248,6 +47384,7 @@ msgstr ""
 "arquivos para o seu número, tamanho e idade. Os arquivos são agrupados de "
 "acordo com a seção configurada. Também um único arquivo pode ser monitorado."
 
+#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
 "logfiles for new messages, classifies these according to a set of rules and "
@@ -47260,8 +47397,8 @@ msgid ""
 "one. <b>Note (2):</b> This duplicate possibility for classification is due "
 "to performance issues. It is always a good idea that the agent forwards only "
 "messages that are potential problems in order to cut down network traffic. "
-"Central reclassification on the other hand is more conveniant because no "
-"agent update is neccessary when rules need to be changed."
+"Central reclassification on the other hand is more convenient because no "
+"agent update is necessary when rules need to be changed."
 msgstr ""
 "O agente plugin <tt>mk_logwatch.py</tt> monitora um conjunto configurado de "
 "arquivos de log de texto para novas mensagens, classifica-os de acordo com "
@@ -47366,6 +47503,12 @@ msgstr "O atributo não existe."
 
 msgid "The attribute is added to this section in the edit dialog."
 msgstr "O atributo é adicionado a esta seção no diálogo de edição."
+
+#, fuzzy
+msgid ""
+"The attribute used to identify an individual user. This attribute must be "
+"unique."
+msgstr "O atributo utilizado para identificar os membros do grupo de usuários."
 
 msgid ""
 "The attribute used to identify the individual users. It must have unique "
@@ -47579,10 +47722,11 @@ msgstr "O aglomerado não pode ser um nó de seu próprio"
 msgid "The cluster must have at least one node"
 msgstr "O agrupamento deve ter pelo menos um nó"
 
+#, fuzzy
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
-"64 Bytes. For detecting the reachability of a host no payload is neccessary, "
+"64 Bytes. For detecting the reachability of a host no payload is necessary, "
 "so Smart PING can omit the payload and send packets of 24 bytes. Some "
 "firewalls seem to interprete this as some kind of bogus attack and block "
 "such packets."
@@ -48241,6 +48385,13 @@ msgid "The found hosts' parents"
 msgstr "Os pais dos anfitriões encontrados"
 
 msgid ""
+"The full URL of the Checkmk server that can be used by the Identity Provider "
+"to contact its Assertion Consumer Service endpoint. For example: https://"
+"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
+msgstr ""
+
+msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -48256,6 +48407,14 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
+msgstr ""
+
+msgid ""
+"The full URL to the metadata endpoint of your organisation's Identity "
+"Provider. This endpoint is used to automatically discover the correct Single "
+"Sign-On endpoint and bindings for a successful SAML communication with the "
+"Identity Provider. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
 msgstr ""
 
 #, python-format
@@ -50342,6 +50501,12 @@ msgstr "O tempo desde a última verificação do serviço"
 msgid "The timeout %s is not a valid integer number."
 msgstr "O timeout %s não é um número inteiro válido."
 
+msgid ""
+"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"sends requests to and receives responses from it regarding the "
+"authentication process of a user."
+msgstr ""
+
 #, python-format
 msgid "The timeperiod %s is currently not active"
 msgstr "O período de tempo %s não está actualmente activo"
@@ -51107,6 +51272,9 @@ msgstr ""
 msgid "This SLA has no computation plugins configured"
 msgstr "Este SLA não tem plugins de cálculo configurados"
 
+msgid "This URL can also be collected from the Password Store from Checkmk."
+msgstr ""
+
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -51306,21 +51474,9 @@ msgstr "Esta mudança foi feita por outro usuário"
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
-"or starts a procedure, and checks that the result has a defined format "
-"containing three columns, a number, a text, and performance data. Upper or "
-"lower levels may be defined here.  If they are not defined the number is "
-"taken as the state of the check.  If a procedure is used, input parameters "
-"of the procedures may by given as comma separated list. This check uses the "
-"active check <tt>check_sql</tt>."
+"or starts a procedure, and checks that the result. Please refer to the man "
+"page of the active check <tt>check_sql</tt> for details."
 msgstr ""
-"Esta verificação conecta-se ao banco de dados especificado, envia uma "
-"declaração SQL personalizada ou inicia um procedimento e verifica se o "
-"resultado tem um formato definido contendo três colunas, um número, um texto "
-"e dados de desempenho. Os níveis superiores ou inferiores podem ser "
-"definidos aqui.  Se não forem definidos, o número é tomado como o estado da "
-"verificação.  Se for utilizado um procedimento, os parâmetros de entrada dos "
-"procedimentos podem ser fornecidos como uma lista separada por vírgulas. "
-"Esta verificação usa a verificação ativa <tt>check_sql</tt>."
 
 msgid ""
 "This check crashed, but no crash dump is available, please report this to "
@@ -52441,11 +52597,12 @@ msgstr ""
 msgid "This package cannot be uploaded: %s"
 msgstr "Este pacote não pode ser instalado: %s"
 
-msgid "This package does not exist."
-msgstr "Este pacote não existe."
-
 msgid "This package does not yet contain any rules."
 msgstr "Este pacote ainda não contém quaisquer regras."
+
+#, fuzzy
+msgid "This package is not installed."
+msgstr "Este pacote não existe."
 
 #, fuzzy
 msgid ""
@@ -53732,9 +53889,10 @@ msgstr ""
 "Este conjunto de regras permite escolher qual intérprete Python é usado para "
 "executar scripts python."
 
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
-"Usually a PING is being used as a host check, so this is not neccessary. "
+"Usually a PING is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
 "when using the Check_MK Micro Core with SMART Ping and you want to track "
 "performance data of the PING to some hosts, nevertheless."
@@ -54790,7 +54948,19 @@ msgstr "Dispersão do tempo (jitter)"
 msgid "Time drifted devices"
 msgstr "Dispositivos à deriva do tempo"
 
+#, fuzzy
+msgid "Time for coverage of alerts"
+msgstr "Tempo para a cobertura de falhas"
+
+#, fuzzy
+msgid "Time for coverage of events"
+msgstr "Tempo para a cobertura de falhas"
+
 msgid "Time for coverage of failures"
+msgstr "Tempo para a cobertura de falhas"
+
+#, fuzzy
+msgid "Time for coverage of sources"
 msgstr "Tempo para a cobertura de falhas"
 
 msgid "Time format"
@@ -54979,6 +55149,14 @@ msgstr ""
 "padrão do ADO."
 
 #, fuzzy
+msgid "Time to wait in seconds for a connection."
+msgstr "Número de ligações actuais"
+
+#, fuzzy
+msgid "Time to wait in seconds for a response."
+msgstr "Tempo gasto à espera de respostas SNMP"
+
+#, fuzzy
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Definir um período de tempo de tolerância para activar os serviços"
 
@@ -55160,6 +55338,14 @@ msgstr "Tinkerforge"
 
 msgid "Title"
 msgstr "Título"
+
+#, fuzzy
+msgid "Title for host notifications"
+msgstr "Cauda do corpo para notificações do anfitrião"
+
+#, fuzzy
+msgid "Title for service notifications"
+msgstr "Cauda do corpo para notificações de serviço"
 
 msgid "Title format"
 msgstr "Formato do título"
@@ -55439,6 +55625,14 @@ msgstr "Total acumulado de Energia Activa do Canal Power"
 
 msgid "Total address space"
 msgstr "Espaço total de endereços"
+
+#, fuzzy
+msgid "Total alerts count lower levels"
+msgstr "Contagem total de mensagens níveis inferiores"
+
+#, fuzzy
+msgid "Total alerts count upper levels"
+msgstr "Contagem total de mensagens níveis superiores"
 
 msgid "Total amount of space allocated by objects in the database"
 msgstr "Quantidade total de espaço alocado por objetos no banco de dados"
@@ -58379,6 +58573,10 @@ msgstr "Base de Usuários -DN"
 msgid "User ID"
 msgstr "Identificação do usuário"
 
+#, fuzzy
+msgid "User ID attribute"
+msgstr "Atributo User-ID"
+
 msgid "User ID for web login"
 msgstr "Identificação do usuário para login na web"
 
@@ -58566,6 +58764,7 @@ msgstr ""
 "lidar com um subconjunto dos grupos abaixo da base DN.<br>>br>e.g. "
 "<tt>(objectclass=group)</tt>"
 
+#, fuzzy
 msgid ""
 "Using this option you can define the DN of a group object which is used to "
 "filter the users. Only members of this group will then be synchronized. This "
@@ -58576,8 +58775,8 @@ msgid ""
 "some directories do not have such attributes because the memberships are "
 "stored in the group objects as e.g. <tt>member</tt> attributes. You should "
 "use the regular search filter whenever possible and only use this filter "
-"when it is really neccessary. Finally you can say, you should not use this "
-"option when using Active Directory. This option is neccessary in OpenLDAP "
+"when it is really necessary. Finally you can say, you should not use this "
+"option when using Active Directory. This option is necessary in OpenLDAP "
 "directories when you like to filter by group membership.<br><br>If using, "
 "give a plain distinguished name of a group here, e. g. <tt>CN=cmk-users,"
 "OU=groups,DC=example,DC=com</tt>"
@@ -58933,8 +59132,28 @@ msgid "Verification"
 msgstr "Notificação do usuário"
 
 #, fuzzy
+msgid "Verification failed"
+msgstr "Notificação do usuário"
+
+#, fuzzy
+msgid "Verification failed (Checkmk)"
+msgstr "Verificação de certificados"
+
+#, fuzzy
+msgid "Verification failed (license server)"
+msgstr "Visão geral das aplicações"
+
+#, fuzzy
+msgid "Verification successful"
+msgstr "Assar com sucesso"
+
+#, fuzzy
 msgid "Verify certificates"
 msgstr "Verificar o certificado"
+
+#, fuzzy
+msgid "Verify response"
+msgstr "resposta de ocultação"
 
 msgid "Verify server certificate"
 msgstr "Verificar o certificado do servidor"
@@ -62696,10 +62915,10 @@ msgstr ""
 "adicionar sites remotos, não esqueça de adicionar também o seu site de "
 "monitoramento local, se você quiser exibir seus dados."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"neccessary."
+"necessary."
 msgstr ""
 "Você ainda não criou nenhum agente <a href='%s'>signature keys</a>. Isto é "
 "necessário."
@@ -64529,7 +64748,8 @@ msgstr "A integração não é ativada em configurações globais."
 msgid "ntopng integration is only available in CEE"
 msgstr "A integração em cima só está disponível na CEE"
 
-msgid "ntopng username to aquire data for"
+#, fuzzy
+msgid "ntopng username to acquire data for"
 msgstr "ntopng nome de usuário para adquirir dados para"
 
 msgid "objects"
@@ -65266,6 +65486,64 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid ""
+#~ "Duplicate BI aggregation with the title \"<b>%s</b>\". Please check your "
+#~ "BI configuration and make sure that within each group no aggregation has "
+#~ "the same title as any other. Note: you can use arguments in the top level "
+#~ "aggregation rule, like <tt>Host $HOST$</tt>."
+#~ msgstr ""
+#~ "Duplicar a agregação do BI com o título \"<b>%s</b>\". Verifique a "
+#~ "configuração do seu BI e certifique-se de que dentro de cada grupo "
+#~ "nenhuma agregação tem o mesmo título que qualquer outra. Nota: você pode "
+#~ "usar argumentos na regra de agregação de nível superior, como <tt>Host "
+#~ "$HOST$</tt>."
+
+#~ msgid "Not executed in OMD environment!"
+#~ msgstr "Não executado em ambiente OMD!"
+
+#, fuzzy
+#~| msgid "Disable host notifications"
+#~ msgid "Disable two-factor authentication"
+#~ msgstr "Desactivar notificações do anfitrião"
+
+#~ msgid ""
+#~ "This check connects to the specified database, sends a custom SQL-"
+#~ "statement or starts a procedure, and checks that the result has a defined "
+#~ "format containing three columns, a number, a text, and performance data. "
+#~ "Upper or lower levels may be defined here.  If they are not defined the "
+#~ "number is taken as the state of the check.  If a procedure is used, input "
+#~ "parameters of the procedures may by given as comma separated list. This "
+#~ "check uses the active check <tt>check_sql</tt>."
+#~ msgstr ""
+#~ "Esta verificação conecta-se ao banco de dados especificado, envia uma "
+#~ "declaração SQL personalizada ou inicia um procedimento e verifica se o "
+#~ "resultado tem um formato definido contendo três colunas, um número, um "
+#~ "texto e dados de desempenho. Os níveis superiores ou inferiores podem ser "
+#~ "definidos aqui.  Se não forem definidos, o número é tomado como o estado "
+#~ "da verificação.  Se for utilizado um procedimento, os parâmetros de "
+#~ "entrada dos procedimentos podem ser fornecidos como uma lista separada "
+#~ "por vírgulas. Esta verificação usa a verificação ativa <tt>check_sql</tt>."
+
+#~ msgid "Discover services"
+#~ msgstr "Descubra os serviços"
+
+#~ msgid "Edit services"
+#~ msgstr "Editar serviços"
+
+#~ msgid "Edit the services of this host, do a service discovery"
+#~ msgstr ""
+#~ "Editar os serviços deste anfitrião, fazer uma descoberta de serviços"
+
+#~ msgid "Invalid package name"
+#~ msgstr "Nome do pacote inválido"
+
+#~ msgid "Save & go to service configuration"
+#~ msgstr "Salvar e ir para a configuração de serviço"
+
+#~ msgid "Service configuration"
+#~ msgstr "Configuração do serviço"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "Nome da Instância"
@@ -70517,9 +70795,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Time spent waiting for Checkmk agent"
 #~ msgstr "Tempo gasto à espera do agente Checkmk"
-
-#~ msgid "Time spent waiting for SNMP responses"
-#~ msgstr "Tempo gasto à espera de respostas SNMP"
 
 #~ msgid "Time spent waiting for special agent"
 #~ msgstr "Tempo gasto à espera de agente especial"

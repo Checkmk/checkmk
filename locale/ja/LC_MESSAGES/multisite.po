@@ -5678,7 +5678,8 @@ msgstr ""
 msgid "Automatically track downtimes of aggregation"
 msgstr ""
 
-msgid "Automatically update agents at <i>Activate Changes</i>, if neccessary"
+#, fuzzy
+msgid "Automatically update agents at <i>Activate Changes</i>, if necessary"
 msgstr ""
 "必要に応じて、<i>変更のアクティブ化</i>でエージェントを自動的に更新します"
 
@@ -7641,14 +7642,14 @@ msgstr "以前の通知をキャンセルする"
 msgid "Canceled"
 msgstr "キャンセル"
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-
 #, python-format
 msgid ""
-"Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
+"Cannot acquire cookie from ntop server '%s' for user '%s'. Please check your "
 "ntop connection settings."
+msgstr ""
+
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
 msgstr ""
 
 msgid "Cannot calculate graph recipes"
@@ -8668,6 +8669,10 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Checkmkヘルパーの使用法"
+
+#, fuzzy
+msgid "Checkmk server URL"
+msgstr "URLを確認する"
 
 msgid "Checkmk site objects"
 msgstr "Checkmkサイトオブジェクト"
@@ -10295,6 +10300,10 @@ msgstr "接続時間"
 
 msgid "Connection timeout"
 msgstr "接続タイムアウト"
+
+#, fuzzy
+msgid "Connection timeout (seconds)"
+msgstr "接続タイムアウト(秒単位)"
 
 msgid "Connection timeout in seconds"
 msgstr "秒単位の接続タイムアウト"
@@ -12748,6 +12757,11 @@ msgstr "ディレイ:"
 msgid "Delayed unassigned shards"
 msgstr "割り当てられていないシャードの遅延"
 
+msgid ""
+"Delegate authentication to your organisation's Identity Provider using SAML "
+"2.0."
+msgstr ""
+
 msgid "Delete"
 msgstr "削除"
 
@@ -13284,9 +13298,10 @@ msgstr "TSMプラグインをデプロイします"
 msgid "Deploy the Zypper plugin"
 msgstr "Zypperプラグインをデプロイします"
 
+#, fuzzy
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
-"neccessary for all <tt>postgres_*</tt> checks"
+"necessary for all <tt>postgres_*</tt> checks"
 msgstr ""
 "エージェントプラグイン<tt> mk_postgres </tt>をデプロイします。これにより、す"
 "べての<tt> postgres _ * </tt>チェックに必要な情報が作成されます"
@@ -13443,6 +13458,14 @@ msgstr "詳細"
 #, fuzzy
 msgid "Details (Previously named: long output)"
 msgstr "詳細(以前の名前:長い出力)"
+
+#, fuzzy
+msgid "Details for host notifications"
+msgstr "ホスト通知用のボディテール"
+
+#, fuzzy
+msgid "Details for service notifications"
+msgstr "サービス通知用のボディテール"
 
 #, fuzzy
 msgid "Detect and use proxies configured on the target system"
@@ -13754,9 +13777,6 @@ msgstr "このテストを無効にする"
 msgid "Disable timespecific parameters"
 msgstr "時間固有のパラメータを無効にする"
 
-msgid "Disable two-factor authentication"
-msgstr "2ファクタ認証を無効にする"
-
 msgid "Disable undecided services"
 msgstr "未決定のサービスを無効にする"
 
@@ -13850,9 +13870,6 @@ msgstr "パッケージを発見"
 
 msgid "Discover registered hosts"
 msgstr "登録されたホストを検出"
-
-msgid "Discover services"
-msgstr "サービスを発見する"
 
 msgid "Discover services during creation"
 msgstr "作成中にサービスを発見する"
@@ -14255,9 +14272,9 @@ msgstr ""
 "パッケージをディゾルブし、ファイルをパッケージ化されていない状態にリリースし"
 "ます"
 
-#, python-format
-msgid "Dissolved extension package %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "Dissolved extension package %s %s"
+msgstr "拡張パッケージ %sを無効にする"
 
 msgid "Distinguish times in and out of notification period"
 msgstr "通知期間の内外の時間を区別する"
@@ -14893,10 +14910,6 @@ msgid "Do you really want to delete this target?"
 msgstr "このターゲットを本当に削除しますか？"
 
 #, python-format
-msgid "Do you really want to disable the two-factor authentication of %s?"
-msgstr "%sの2要素認証を本当に無効にしてもよろしいですか?"
-
-#, python-format
 msgid "Do you really want to log out of '%s'?"
 msgstr "本当に[%s]からログアウトしますか?"
 
@@ -14924,8 +14937,12 @@ msgstr "選択したホストのTLS登録を本当に削除しますか?"
 
 #, fuzzy, python-format
 msgid ""
-"Do you really want to remove the package file <tt>%s</tt> from your system?"
+"Do you really want to remove the package <tt>%s %s</tt> from your system?"
 msgstr "本当にシステムからパッケージ<tt>%s</tt>を削除しますか？"
+
+#, fuzzy, python-format
+msgid "Do you really want to remove the two-factor authentication of %s?"
+msgstr "%sの2要素認証を本当に無効にしてもよろしいですか?"
 
 #, fuzzy
 msgid ""
@@ -15250,14 +15267,6 @@ msgstr "ダミー"
 #, python-format
 msgid "Dump file: %s"
 msgstr "ダンプファイル:%s"
-
-#, python-format
-msgid ""
-"Duplicate BI aggregation with the title \"<b>%s</b>\". Please check your BI "
-"configuration and make sure that within each group no aggregation has the "
-"same title as any other. Note: you can use arguments in the top level "
-"aggregation rule, like <tt>Host $HOST$</tt>."
-msgstr ""
 
 #, fuzzy, python-format
 msgid "Duplicate tag ID \"%s\" in auxiliary tags"
@@ -15741,9 +15750,6 @@ msgstr "ルールの編集:%s"
 msgid "Edit service group"
 msgstr "サービスグループの編集"
 
-msgid "Edit services"
-msgstr "サービスの編集"
-
 #, fuzzy
 msgid "Edit settings"
 msgstr "%d フィルター設定"
@@ -15773,9 +15779,6 @@ msgstr "このサイトのプロパティを編集します"
 
 msgid "Edit the rules in this pack"
 msgstr "このパックのルールを編集する"
-
-msgid "Edit the services of this host, do a service discovery"
-msgstr "このホストのサービスを編集し、サービス検出を行います"
 
 #, python-format
 msgid "Edit this %s"
@@ -16596,6 +16599,10 @@ msgstr "%s の検出中にエラーが発生しました"
 #, python-format
 msgid "Error during discovery of %s on site %s"
 msgstr "%s を検出中にエラーが発生しました。サイト %s"
+
+#, fuzzy
+msgid "Error during loading instance ID"
+msgstr "保存中にエラーが発生しました"
 
 msgid "Error during saving"
 msgstr "保存中にエラーが発生しました"
@@ -19433,6 +19440,10 @@ msgstr "Graylog"
 msgid "Graylog JVM"
 msgstr "グレイログJVM"
 
+#, fuzzy
+msgid "Graylog alerts"
+msgstr "グレイログライセンス"
+
 msgid "Graylog cluster elasticsearch statistics"
 msgstr "グレイログクラスターelasticsearch統計"
 
@@ -20003,6 +20014,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Here you are allowed to use all macros that are defined in the notification "
+"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</li><li><tt>"
+"$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</li><li><tt>$SERVICEOUTPUT$</"
+"li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>$SERVICEPERFDATA$</li><li><tt>"
+"$EVENT_TXT$</li></ul>"
+msgstr ""
+
+msgid ""
 "Here you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those that are members of selected contact groups. "
 "If you select more than one contact group here then the user must be member "
@@ -20133,6 +20152,7 @@ msgstr ""
 "ここで、パフォーマンスカウンターを照会するかどうかを構成できます。これによ"
 "り、大規模なシステムでCPU負荷を大幅に節約できます。"
 
+#, fuzzy
 msgid ""
 "Here you can configure which messages should be discovered and reported from "
 "which Eventlog. When you set the severity to <i>disabled</i> then this "
@@ -20141,7 +20161,7 @@ msgid ""
 "message is being found in an Eventlog, the agent usually sends <i>all</i> "
 "new messages from that check cycle. This makes it more convenient when "
 "viewing the messages in Check_MK. In high-volume logfiles it might be "
-"neccessary to switch the context off in order to save networking and disk "
+"necessary to switch the context off in order to save networking and disk "
 "resources. <b>Note</b>: When several configuration tuning entries match for "
 "a logfile then only the first one is being executed. So it does not make "
 "sense to create more then one entry for <i>All Eventlogs</i>."
@@ -21995,6 +22015,10 @@ msgstr ""
 msgid "Identity"
 msgstr "アイデンティティー"
 
+#, fuzzy
+msgid "Identity Provider connection timeout"
+msgstr "接続タイムアウトを設定する"
+
 msgid "Identity of an authorized key"
 msgstr "許可されたキーのID"
 
@@ -22119,7 +22143,7 @@ msgstr ""
 
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
-"will also automatically add/remove them as neccessary."
+"will also automatically add/remove them as necessary."
 msgstr ""
 
 #, python-format
@@ -22691,6 +22715,36 @@ msgid ""
 "If you choose to query for failed index operations, use this option to set "
 "the timeframe in which failures should be covered. The check will output the "
 "total number of failures and the number of failures in this given timeframe."
+msgstr ""
+"失敗したインデックス操作を照会することを選択した場合は、このオプションを使用"
+"して、失敗をカバーする時間枠を設定します。チェックは、この指定された時間枠内"
+"の失敗の総数と失敗の数を出力します。"
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of alerts in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of alerts received in this given timeframe."
+msgstr ""
+"失敗したインデックス操作を照会することを選択した場合は、このオプションを使用"
+"して、失敗をカバーする時間枠を設定します。チェックは、この指定された時間枠内"
+"の失敗の総数と失敗の数を出力します。"
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of events in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of events received in this given timeframe."
+msgstr ""
+"失敗したインデックス操作を照会することを選択した場合は、このオプションを使用"
+"して、失敗をカバーする時間枠を設定します。チェックは、この指定された時間枠内"
+"の失敗の総数と失敗の数を出力します。"
+
+#, fuzzy
+msgid ""
+"If you choose to query for the total number of messages in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of messages received in this given timeframe."
 msgstr ""
 "失敗したインデックス操作を照会することを選択した場合は、このオプションを使用"
 "して、失敗をカバーする時間枠を設定します。チェックは、この指定された時間枠内"
@@ -23709,6 +23763,14 @@ msgstr ""
 "成されます。接続詞内で構成されたすべてのレベルに達すると、関連する状態が報告"
 "されます。"
 
+msgid ""
+"In order to compute a unique host name you can use the agent labels (all or "
+"a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
+"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"<tt>lnx-$LABEL$</tt>."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
@@ -24253,8 +24315,8 @@ msgstr "インストールされたエージェント"
 msgid "Installed RAM"
 msgstr "インストールされたエージェント"
 
-#, python-format
-msgid "Installed extension package %s-%s (%s)"
+#, fuzzy, python-format
+msgid "Installed extension package %s %s"
 msgstr "インストールされた拡張パッケージ %s-%s (%s)"
 
 msgid "Installed, stopped and running services"
@@ -24382,6 +24444,11 @@ msgstr "断続的なハートビート"
 
 msgid "Internal ID"
 msgstr "内部ID"
+
+msgid ""
+"Internal ID that Checkmk uses to uniquely identify each connection to an "
+"Identity Provider."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -24645,9 +24712,6 @@ msgstr "無効なマニュアルページ: タイトルの取得に失敗しま�
 msgid "Invalid messaging method selected."
 msgstr "選択されたメッセージ送信方法が無効です。"
 
-msgid "Invalid package name"
-msgstr "パッケージ名が無効です"
-
 msgid "Invalid package part"
 msgstr "パッケージパーツが無効です"
 
@@ -24797,6 +24861,10 @@ msgstr "無効な値: %s"
 
 msgid "Invalid vertical range: from must be lower than to"
 msgstr "無効な垂直範囲: from は to よりも低くする必要があります"
+
+#, fuzzy
+msgid "Invalid visual type"
+msgstr "無効なサイト"
 
 msgid "Inventorize containers' network configuration"
 msgstr "コンテナのネットワーク構成をインベントライズする"
@@ -26477,6 +26545,10 @@ msgid "Licensing Status"
 msgstr "ライセンスステータス"
 
 #, fuzzy
+msgid "Licensing online verification"
+msgstr "SSL証明書の検証"
+
+#, fuzzy
 msgid "Licensing settings"
 msgstr "ライセンスステータス"
 
@@ -27288,6 +27360,9 @@ msgstr "ログイントークン"
 
 msgid "Login username"
 msgstr "ログインユーザー名"
+
+msgid "Login with Identity Provider"
+msgstr ""
 
 msgid "Login with the following credentials"
 msgstr "次の資格情報でログインします"
@@ -29092,6 +29167,10 @@ msgstr "メッセージ送信方法"
 
 msgid "Meta usage"
 msgstr "メタ使用法"
+
+#, fuzzy
+msgid "Metadata endpoint URL"
+msgstr "RESTエンドポイントURL"
 
 msgid "Method"
 msgstr "方法"
@@ -31108,6 +31187,10 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr "そのようなインベントリツリーはありません。"
 
+#, fuzzy
+msgid "No such license key"
+msgstr "ライセンスの使用法"
+
 msgid "No test host"
 msgstr "テストホストなし"
 
@@ -31427,9 +31510,6 @@ msgstr "どのグループにも含まれていません"
 
 msgid "Not enabled"
 msgstr "有効になっていません"
-
-msgid "Not executed in OMD environment!"
-msgstr "OMD環境では実行されません！"
 
 msgid "Not found"
 msgstr "見つかりません"
@@ -31829,6 +31909,14 @@ msgstr "アクティブなトンネルの数"
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr "更新に登録したエージェントの数: %d"
+
+#, fuzzy
+msgid "Number of alerts in defined timespan lower level"
+msgstr "定義された期間の下位レベルのメッセージの数"
+
+#, fuzzy
+msgid "Number of alerts in defined timespan upper level"
+msgstr "定義された期間の上位レベルのメッセージの数"
 
 msgid "Number of apache processes"
 msgstr "アパッチプロセスの数"
@@ -34370,6 +34458,14 @@ msgstr "永続的(長い)"
 msgid "Persistent Connection"
 msgstr "持続的接続"
 
+#, fuzzy
+msgid "Persistent Volume Claim name"
+msgstr "持続的なコメント"
+
+#, fuzzy
+msgid "Persistent Volume Claims"
+msgstr "持続的なコメント"
+
 msgid "Persistent comment"
 msgstr "持続的なコメント"
 
@@ -34588,6 +34684,12 @@ msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
 "probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
 "excessive runtimes."
+msgstr ""
+
+msgid ""
+"Please be aware that the monitoring of UNDO tablespaces is only useful in "
+"very rare situations with very specific preconditions. If you don't have "
+"such a specific case, you should not activate the monitoring of UNDO."
 msgstr ""
 
 msgid "Please check one metric you want to apply a transformation"
@@ -36981,6 +37083,10 @@ msgstr ""
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "このルールパックを拡張パッケージモジュールから削除します"
 
+#, fuzzy
+msgid "Remove two-factor authentication"
+msgstr "2要素認証"
+
 msgid "Remove vanished services"
 msgstr "消えたサービスを削除する"
 
@@ -36994,8 +37100,8 @@ msgstr "補助タグ %s (%s)を削除しました"
 msgid "Removed entries"
 msgstr "削除されたエントリ"
 
-#, python-format
-msgid "Removed extension package %s"
+#, fuzzy, python-format
+msgid "Removed extension package %s %s"
 msgstr "拡張パッケージ %s を削除しました"
 
 msgid "Removed from stack"
@@ -38057,6 +38163,10 @@ msgstr "非同期で実行し、キャッシュします"
 msgid "Run asynchronously, run at larger interval"
 msgstr "非同期で実行し、より大きな間隔で実行します"
 
+#, fuzzy
+msgid "Run bulk service discovery"
+msgstr "Solarisサービスディスカバリ"
+
 msgid "Run in simulation mode"
 msgstr "シミュレーションモードで実行"
 
@@ -38072,6 +38182,10 @@ msgstr ""
 "このユーザーとしてレポートを実行します。これは、選択したユーザーの許可を得て"
 "すべてのオブジェクトがフィルタリングされることを意味しますが、生成されたレ"
 "ポートがこのユーザーに関連付けられることも意味します。"
+
+#, fuzzy
+msgid "Run service discovery"
+msgstr "サービスディスカバリ"
 
 msgid "Run synchronously"
 msgstr "同期して実行"
@@ -38147,6 +38261,17 @@ msgstr "Rxパワーレベル"
 
 msgid "S."
 msgstr "S."
+
+msgid "SAML 2.0"
+msgstr ""
+
+#, fuzzy
+msgid "SAML Authentication"
+msgstr "SMTP認証"
+
+#, fuzzy
+msgid "SAML2.0 Integration"
+msgstr "統合キー"
 
 msgid "SAN"
 msgstr "SAN"
@@ -38589,8 +38714,9 @@ msgstr "保存してホストプロパティに移動します"
 msgid "Save & go to list"
 msgstr "保存してリストに移動"
 
-msgid "Save & go to service configuration"
-msgstr "保存してサービス設定に移動"
+#, fuzzy
+msgid "Save & run service discovery"
+msgstr "Solarisサービスディスカバリ"
 
 msgid "Save & test"
 msgstr "保存してテストする"
@@ -39439,9 +39565,6 @@ msgstr "サービスチェックタイプ"
 msgid "Service checks"
 msgstr "サービスチェック"
 
-msgid "Service configuration"
-msgstr "サービス構成"
-
 msgid "Service contact groups"
 msgstr "サービス連絡先グループ"
 
@@ -40289,6 +40412,13 @@ msgstr "ログインメッセージを表示する"
 
 msgid "Show a margin round the graph"
 msgstr "グラフの周りにマージンを表示する"
+
+#, fuzzy
+msgid "Show affected host groups"
+msgstr "ホストグループを一致させる"
+
+msgid "Show affected host groups in the created message."
+msgstr ""
 
 msgid "Show aggregated info over all SLA periods"
 msgstr "すべてのSLA期間にわたって集約された情報を表示する"
@@ -42208,6 +42338,10 @@ msgstr "このバックアップの復元を開始します"
 msgid "Start type"
 msgstr "開始タイプ"
 
+#, fuzzy
+msgid "Start verification"
+msgstr "SSL証明書の検証"
+
 msgid "Start!"
 msgstr "開始!"
 
@@ -43310,6 +43444,10 @@ msgstr "サブミット"
 
 msgid "Submit Report"
 msgstr "レポートを送信する"
+
+#, fuzzy
+msgid "Submit verification request"
+msgstr "グローバル通知ルール"
 
 msgid "Submitting crash report..."
 msgstr "クラッシュレポートを送信しています..."
@@ -45001,8 +45139,8 @@ msgid ""
 "one. <b>Note (2):</b> This duplicate possibility for classification is due "
 "to performance issues. It is always a good idea that the agent forwards only "
 "messages that are potential problems in order to cut down network traffic. "
-"Central reclassification on the other hand is more conveniant because no "
-"agent update is neccessary when rules need to be changed."
+"Central reclassification on the other hand is more convenient because no "
+"agent update is necessary when rules need to be changed."
 msgstr ""
 
 msgid ""
@@ -45078,6 +45216,12 @@ msgstr "属性が存在しません。"
 
 msgid "The attribute is added to this section in the edit dialog."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"The attribute used to identify an individual user. This attribute must be "
+"unique."
+msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
 
 msgid ""
 "The attribute used to identify the individual users. It must have unique "
@@ -45266,10 +45410,11 @@ msgstr "クラスターを独自のノードにすることはできません"
 msgid "The cluster must have at least one node"
 msgstr "クラスターには少なくとも1つのノードが必要です"
 
+#, fuzzy
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
-"64 Bytes. For detecting the reachability of a host no payload is neccessary, "
+"64 Bytes. For detecting the reachability of a host no payload is necessary, "
 "so Smart PING can omit the payload and send packets of 24 bytes. Some "
 "firewalls seem to interprete this as some kind of bogus attack and block "
 "such packets."
@@ -45866,6 +46011,13 @@ msgid "The found hosts' parents"
 msgstr "見つかったホストの両親"
 
 msgid ""
+"The full URL of the Checkmk server that can be used by the Identity Provider "
+"to contact its Assertion Consumer Service endpoint. For example: https://"
+"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
+msgstr ""
+
+msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -45881,6 +46033,14 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
+msgstr ""
+
+msgid ""
+"The full URL to the metadata endpoint of your organisation's Identity "
+"Provider. This endpoint is used to automatically discover the correct Single "
+"Sign-On endpoint and bindings for a successful SAML communication with the "
+"Identity Provider. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
 msgstr ""
 
 #, python-format
@@ -47782,6 +47942,12 @@ msgstr "サービスの最後のチェックからの時間"
 msgid "The timeout %s is not a valid integer number."
 msgstr "タイムアウト %s は有効な整数ではありません。"
 
+msgid ""
+"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"sends requests to and receives responses from it regarding the "
+"authentication process of a user."
+msgstr ""
+
 #, python-format
 msgid "The timeperiod %s is currently not active"
 msgstr "期間 %s は現在アクティブではありません"
@@ -48486,6 +48652,9 @@ msgstr "このルールセットは、湿度センサーのしきい値制限を
 msgid "This SLA has no computation plugins configured"
 msgstr "このSLAには、計算プラグインが設定されていません"
 
+msgid "This URL can also be collected from the Password Store from Checkmk."
+msgstr ""
+
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -48677,19 +48846,9 @@ msgstr "この変更は別のユーザーによって行われました"
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
-"or starts a procedure, and checks that the result has a defined format "
-"containing three columns, a number, a text, and performance data. Upper or "
-"lower levels may be defined here.  If they are not defined the number is "
-"taken as the state of the check.  If a procedure is used, input parameters "
-"of the procedures may by given as comma separated list. This check uses the "
-"active check <tt>check_sql</tt>."
+"or starts a procedure, and checks that the result. Please refer to the man "
+"page of the active check <tt>check_sql</tt> for details."
 msgstr ""
-"このチェックでは、指定されたデータベースに接続し、カスタムSQLステートメントを"
-"送信するか、プロシージャを起動し、その結果が、数字、テキスト、パフォーマンス"
-"データの3つの列を含む定義された形式であることをチェックします。 定義されてい"
-"ない場合は、数値がチェックの状態として扱われます。 プロシージャを使用する場"
-"合、プロシージャの入力パラメータをカンマ区切りのリストで指定できます。この"
-"チェックは、アクティブなチェック <tt>check_sql</tt> を使用します。"
 
 msgid ""
 "This check crashed, but no crash dump is available, please report this to "
@@ -49678,11 +49837,12 @@ msgstr ""
 msgid "This package cannot be uploaded: %s"
 msgstr "このパッケージはインストールできません: %s"
 
-msgid "This package does not exist."
-msgstr "このパッケージは存在しません。"
-
 msgid "This package does not yet contain any rules."
 msgstr "このパッケージにはまだルールが含まれていません。"
+
+#, fuzzy
+msgid "This package is not installed."
+msgstr "このパッケージは存在しません。"
 
 #, fuzzy
 msgid ""
@@ -50822,9 +50982,10 @@ msgstr ""
 "このルールセットを使用すると、Pythonスクリプトの実行に使用するPythonインター"
 "プリターを選択できます。"
 
+#, fuzzy
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
-"Usually a PING is being used as a host check, so this is not neccessary. "
+"Usually a PING is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
 "when using the Check_MK Micro Core with SMART Ping and you want to track "
 "performance data of the PING to some hosts, nevertheless."
@@ -51776,7 +51937,19 @@ msgstr "時間分散(ジッター)"
 msgid "Time drifted devices"
 msgstr "時間ドリフトデバイス"
 
+#, fuzzy
+msgid "Time for coverage of alerts"
+msgstr "障害をカバーする時間"
+
+#, fuzzy
+msgid "Time for coverage of events"
+msgstr "障害をカバーする時間"
+
 msgid "Time for coverage of failures"
+msgstr "障害をカバーする時間"
+
+#, fuzzy
+msgid "Time for coverage of sources"
 msgstr "障害をカバーする時間"
 
 msgid "Time format"
@@ -51956,6 +52129,14 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
+#, fuzzy
+msgid "Time to wait in seconds for a connection."
+msgstr "TCP接続待ちの秒数"
+
+#, fuzzy
+msgid "Time to wait in seconds for a response."
+msgstr "SNMP応答の待ち時間に費やされた時間"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "AVAILABLEがfalseの場合、警告までの許容期間"
 
@@ -52125,6 +52306,14 @@ msgstr "Tinkerforge"
 
 msgid "Title"
 msgstr "タイトル"
+
+#, fuzzy
+msgid "Title for host notifications"
+msgstr "ホスト通知用のボディテール"
+
+#, fuzzy
+msgid "Title for service notifications"
+msgstr "サービス通知用のボディテール"
 
 msgid "Title format"
 msgstr "タイトル形式"
@@ -52386,6 +52575,14 @@ msgstr ""
 
 msgid "Total address space"
 msgstr "合計アドレス空間"
+
+#, fuzzy
+msgid "Total alerts count lower levels"
+msgstr "合計メッセージ数の下位レベル"
+
+#, fuzzy
+msgid "Total alerts count upper levels"
+msgstr "合計メッセージ数の上位レベル"
 
 msgid "Total amount of space allocated by objects in the database"
 msgstr ""
@@ -55203,6 +55400,10 @@ msgstr "ユーザーベース-DN"
 msgid "User ID"
 msgstr "ユーザーID"
 
+#, fuzzy
+msgid "User ID attribute"
+msgstr "ユーザーID属性"
+
 msgid "User ID for web login"
 msgstr "Webログイン用のユーザーID"
 
@@ -55378,6 +55579,7 @@ msgid ""
 "tt>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Using this option you can define the DN of a group object which is used to "
 "filter the users. Only members of this group will then be synchronized. This "
@@ -55388,8 +55590,8 @@ msgid ""
 "some directories do not have such attributes because the memberships are "
 "stored in the group objects as e.g. <tt>member</tt> attributes. You should "
 "use the regular search filter whenever possible and only use this filter "
-"when it is really neccessary. Finally you can say, you should not use this "
-"option when using Active Directory. This option is neccessary in OpenLDAP "
+"when it is really necessary. Finally you can say, you should not use this "
+"option when using Active Directory. This option is necessary in OpenLDAP "
 "directories when you like to filter by group membership.<br><br>If using, "
 "give a plain distinguished name of a group here, e. g. <tt>CN=cmk-users,"
 "OU=groups,DC=example,DC=com</tt>"
@@ -55720,8 +55922,28 @@ msgstr "証明書を確認する"
 msgid "Verification"
 msgstr "ユーザー通知"
 
+#, fuzzy
+msgid "Verification failed"
+msgstr "ユーザー通知"
+
+#, fuzzy
+msgid "Verification failed (Checkmk)"
+msgstr "証明書の確認"
+
+#, fuzzy
+msgid "Verification failed (license server)"
+msgstr "アプリケーションの概要"
+
+#, fuzzy
+msgid "Verification successful"
+msgstr "登録完了"
+
 msgid "Verify certificates"
 msgstr "証明書を確認する"
+
+#, fuzzy
+msgid "Verify response"
+msgstr "応答を非表示"
 
 msgid "Verify server certificate"
 msgstr "サーバー証明書を確認する"
@@ -59138,10 +59360,10 @@ msgid ""
 "want to display its data."
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"neccessary."
+"necessary."
 msgstr ""
 "エージェントの<a href='%s'>署名キー</a>はまだ作成していません。これは必要で"
 "す。"
@@ -60892,7 +61114,8 @@ msgstr "ntopng統合は、グローバル設定ではアクティブ化されま
 msgid "ntopng integration is only available in CEE"
 msgstr "ntopng統合はCEEでのみ利用可能です"
 
-msgid "ntopng username to aquire data for"
+#, fuzzy
+msgid "ntopng username to acquire data for"
 msgstr "データを取得するためのntopngユーザー名"
 
 msgid "objects"
@@ -61623,6 +61846,47 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Not executed in OMD environment!"
+#~ msgstr "OMD環境では実行されません！"
+
+#~ msgid "Disable two-factor authentication"
+#~ msgstr "2ファクタ認証を無効にする"
+
+#~ msgid ""
+#~ "This check connects to the specified database, sends a custom SQL-"
+#~ "statement or starts a procedure, and checks that the result has a defined "
+#~ "format containing three columns, a number, a text, and performance data. "
+#~ "Upper or lower levels may be defined here.  If they are not defined the "
+#~ "number is taken as the state of the check.  If a procedure is used, input "
+#~ "parameters of the procedures may by given as comma separated list. This "
+#~ "check uses the active check <tt>check_sql</tt>."
+#~ msgstr ""
+#~ "このチェックでは、指定されたデータベースに接続し、カスタムSQLステートメン"
+#~ "トを送信するか、プロシージャを起動し、その結果が、数字、テキスト、パフォー"
+#~ "マンスデータの3つの列を含む定義された形式であることをチェックします。 定義"
+#~ "されていない場合は、数値がチェックの状態として扱われます。 プロシージャを"
+#~ "使用する場合、プロシージャの入力パラメータをカンマ区切りのリストで指定でき"
+#~ "ます。このチェックは、アクティブなチェック <tt>check_sql</tt> を使用しま"
+#~ "す。"
+
+#~ msgid "Discover services"
+#~ msgstr "サービスを発見する"
+
+#~ msgid "Edit services"
+#~ msgstr "サービスの編集"
+
+#~ msgid "Edit the services of this host, do a service discovery"
+#~ msgstr "このホストのサービスを編集し、サービス検出を行います"
+
+#~ msgid "Invalid package name"
+#~ msgstr "パッケージ名が無効です"
+
+#~ msgid "Save & go to service configuration"
+#~ msgstr "保存してサービス設定に移動"
+
+#~ msgid "Service configuration"
+#~ msgstr "サービス構成"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "インスタンスエイリアス名"
@@ -66337,9 +66601,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Time spent in GC"
 #~ msgstr "GCで費やした時間"
-
-#~ msgid "Time spent waiting for SNMP responses"
-#~ msgstr "SNMP応答の待ち時間に費やされた時間"
 
 #~ msgid "Time spent waiting for special agent"
 #~ msgstr "特別なエージェントを待つのに費やした時間"

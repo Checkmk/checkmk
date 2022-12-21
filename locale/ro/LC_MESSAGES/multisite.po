@@ -5612,7 +5612,7 @@ msgstr ""
 msgid "Automatically track downtimes of aggregation"
 msgstr ""
 
-msgid "Automatically update agents at <i>Activate Changes</i>, if neccessary"
+msgid "Automatically update agents at <i>Activate Changes</i>, if necessary"
 msgstr ""
 
 #, fuzzy
@@ -7533,14 +7533,14 @@ msgstr ""
 msgid "Canceled"
 msgstr ""
 
-msgid ""
-"Cannot activate changes: The license usage history is older than five days."
-msgstr ""
-
 #, python-format
 msgid ""
-"Cannot aquire cookie from ntop server '%s' for user '%s'. Please check your "
+"Cannot acquire cookie from ntop server '%s' for user '%s'. Please check your "
 "ntop connection settings."
+msgstr ""
+
+msgid ""
+"Cannot activate changes: The license usage history is older than five days."
 msgstr ""
 
 msgid "Cannot calculate graph recipes"
@@ -8546,6 +8546,10 @@ msgstr ""
 #, fuzzy
 msgid "Checkmk helper usage"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Checkmk server URL"
+msgstr "Privire de ansamblu"
 
 msgid "Checkmk site objects"
 msgstr ""
@@ -10153,6 +10157,10 @@ msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "Connection timeout"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Connection timeout (seconds)"
 msgstr "Conexiune Noua"
 
 #, fuzzy
@@ -12767,6 +12775,11 @@ msgstr ""
 msgid "Delayed unassigned shards"
 msgstr ""
 
+msgid ""
+"Delegate authentication to your organisation's Identity Provider using SAML "
+"2.0."
+msgstr ""
+
 msgid "Delete"
 msgstr ""
 
@@ -13325,7 +13338,7 @@ msgstr ""
 
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
-"neccessary for all <tt>postgres_*</tt> checks"
+"necessary for all <tt>postgres_*</tt> checks"
 msgstr ""
 
 msgid "Deploy the agent plugin <tt>mk_sshd_config</tt>."
@@ -13482,6 +13495,14 @@ msgstr ""
 
 msgid "Details (Previously named: long output)"
 msgstr ""
+
+#, fuzzy
+msgid "Details for host notifications"
+msgstr "(Nu primi notificări)"
+
+#, fuzzy
+msgid "Details for service notifications"
+msgstr "trimite notificare"
 
 msgid "Detect and use proxies configured on the target system"
 msgstr ""
@@ -13814,10 +13835,6 @@ msgid "Disable timespecific parameters"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
-msgid "Disable two-factor authentication"
-msgstr "Confirma Parola"
-
-#, fuzzy
 msgid "Disable undecided services"
 msgstr "Vizibilitatea Elementelor/Serviciilor"
 
@@ -13923,10 +13940,6 @@ msgstr "servicii"
 #, fuzzy
 msgid "Discover registered hosts"
 msgstr "Numarul maxim de mesaje"
-
-#, fuzzy
-msgid "Discover services"
-msgstr "servicii"
 
 msgid "Discover services during creation"
 msgstr ""
@@ -14367,9 +14380,9 @@ msgstr "Optiuni tabel"
 msgid "Dissolve the package, release its files into unpackaged state"
 msgstr ""
 
-#, python-format
-msgid "Dissolved extension package %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "Dissolved extension package %s %s"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Distinguish times in and out of notification period"
 msgstr ""
@@ -15017,10 +15030,6 @@ msgstr ""
 msgid "Do you really want to delete this target?"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Do you really want to disable the two-factor authentication of %s?"
-msgstr "O agregare legată de un singur element"
-
 #, python-format
 msgid "Do you really want to log out of '%s'?"
 msgstr ""
@@ -15051,7 +15060,11 @@ msgstr "O agregare legată de un singur element"
 
 #, fuzzy, python-format
 msgid ""
-"Do you really want to remove the package file <tt>%s</tt> from your system?"
+"Do you really want to remove the package <tt>%s %s</tt> from your system?"
+msgstr "O agregare legată de un singur element"
+
+#, fuzzy, python-format
+msgid "Do you really want to remove the two-factor authentication of %s?"
 msgstr "O agregare legată de un singur element"
 
 msgid ""
@@ -15381,14 +15394,6 @@ msgstr ""
 
 #, python-format
 msgid "Dump file: %s"
-msgstr ""
-
-#, python-format
-msgid ""
-"Duplicate BI aggregation with the title \"<b>%s</b>\". Please check your BI "
-"configuration and make sure that within each group no aggregation has the "
-"same title as any other. Note: you can use arguments in the top level "
-"aggregation rule, like <tt>Host $HOST$</tt>."
 msgstr ""
 
 #, python-format
@@ -15871,9 +15876,6 @@ msgstr ""
 msgid "Edit service group"
 msgstr ""
 
-msgid "Edit services"
-msgstr ""
-
 #, fuzzy
 msgid "Edit settings"
 msgstr "%d setări de Filtrare"
@@ -15902,9 +15904,6 @@ msgid "Edit the properties of this site"
 msgstr ""
 
 msgid "Edit the rules in this pack"
-msgstr ""
-
-msgid "Edit the services of this host, do a service discovery"
 msgstr ""
 
 #, python-format
@@ -16737,6 +16736,9 @@ msgstr ""
 
 #, python-format
 msgid "Error during discovery of %s on site %s"
+msgstr ""
+
+msgid "Error during loading instance ID"
 msgstr ""
 
 msgid "Error during saving"
@@ -19667,6 +19669,10 @@ msgstr "Tagul Aplicatiei in syslog"
 msgid "Graylog JVM"
 msgstr ""
 
+#, fuzzy
+msgid "Graylog alerts"
+msgstr "sesiuni"
+
 msgid "Graylog cluster elasticsearch statistics"
 msgstr ""
 
@@ -20243,6 +20249,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Here you are allowed to use all macros that are defined in the notification "
+"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</li><li><tt>"
+"$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</li><li><tt>$SERVICEOUTPUT$</"
+"li><li><tt>$LONGSERVICEOUTPUT$</li><li><tt>$SERVICEPERFDATA$</li><li><tt>"
+"$EVENT_TXT$</li></ul>"
+msgstr ""
+
+msgid ""
 "Here you can <i>restrict</i> the list of contacts that has been built up by "
 "the previous options to those that are members of selected contact groups. "
 "If you select more than one contact group here then the user must be member "
@@ -20350,7 +20364,7 @@ msgid ""
 "message is being found in an Eventlog, the agent usually sends <i>all</i> "
 "new messages from that check cycle. This makes it more convenient when "
 "viewing the messages in Check_MK. In high-volume logfiles it might be "
-"neccessary to switch the context off in order to save networking and disk "
+"necessary to switch the context off in order to save networking and disk "
 "resources. <b>Note</b>: When several configuration tuning entries match for "
 "a logfile then only the first one is being executed. So it does not make "
 "sense to create more then one entry for <i>All Eventlogs</i>."
@@ -22125,6 +22139,10 @@ msgstr ""
 msgid "Identity"
 msgstr ""
 
+#, fuzzy
+msgid "Identity Provider connection timeout"
+msgstr "Conexiune Noua"
+
 msgid "Identity of an authorized key"
 msgstr ""
 
@@ -22224,7 +22242,7 @@ msgstr ""
 
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
-"will also automatically add/remove them as neccessary."
+"will also automatically add/remove them as necessary."
 msgstr ""
 
 #, python-format
@@ -22657,6 +22675,24 @@ msgid ""
 "If you choose to query for failed index operations, use this option to set "
 "the timeframe in which failures should be covered. The check will output the "
 "total number of failures and the number of failures in this given timeframe."
+msgstr ""
+
+msgid ""
+"If you choose to query for the total number of alerts in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of alerts received in this given timeframe."
+msgstr ""
+
+msgid ""
+"If you choose to query for the total number of events in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of events received in this given timeframe."
+msgstr ""
+
+msgid ""
+"If you choose to query for the total number of messages in a specific "
+"timeframe, use this option to set the timeframe. The check will output the "
+"total number of messages received in this given timeframe."
 msgstr ""
 
 msgid ""
@@ -23419,6 +23455,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"In order to compute a unique host name you can use the agent labels (all or "
+"a subset of them) from above. A label has to be marked with a  <tt>$</tt> at "
+"the beginning and the end, eg. <tt>$LABEL$</tt>. During rule evaluation the "
+"label will replaced by its value.<br>You can also add fixed strings, eg. "
+"<tt>lnx-$LABEL$</tt>."
+msgstr ""
+
+msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
 "all time periods in advance. Since that cannot be done until infinity you "
 "need to specify the number of days for the precomputation. After that time "
@@ -23950,9 +23994,9 @@ msgstr "Acces la Agenți"
 msgid "Installed RAM"
 msgstr "Acces la Agenți"
 
-#, python-format
-msgid "Installed extension package %s-%s (%s)"
-msgstr ""
+#, fuzzy, python-format
+msgid "Installed extension package %s %s"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Installed, stopped and running services"
 msgstr ""
@@ -24083,6 +24127,11 @@ msgid "Intermittent heartbeat"
 msgstr ""
 
 msgid "Internal ID"
+msgstr ""
+
+msgid ""
+"Internal ID that Checkmk uses to uniquely identify each connection to an "
+"Identity Provider."
 msgstr ""
 
 #, python-format
@@ -24347,10 +24396,6 @@ msgid "Invalid messaging method selected."
 msgstr ""
 
 #, fuzzy
-msgid "Invalid package name"
-msgstr "Nume tablespace"
-
-#, fuzzy
 msgid "Invalid package part"
 msgstr "Nume tablespace"
 
@@ -24498,6 +24543,10 @@ msgstr " Parametrul este: %r"
 
 msgid "Invalid vertical range: from must be lower than to"
 msgstr ""
+
+#, fuzzy
+msgid "Invalid visual type"
+msgstr " Parametrul este: %r"
 
 #, fuzzy
 msgid "Inventorize containers' network configuration"
@@ -26315,6 +26364,10 @@ msgid "Licensing Status"
 msgstr ""
 
 #, fuzzy
+msgid "Licensing online verification"
+msgstr "Activare Configurare"
+
+#, fuzzy
 msgid "Licensing settings"
 msgstr "Conexiuni Active"
 
@@ -27152,6 +27205,9 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Login username"
 msgstr "foloseste numele portului"
+
+msgid "Login with Identity Provider"
+msgstr ""
 
 msgid "Login with the following credentials"
 msgstr ""
@@ -29127,6 +29183,9 @@ msgstr "Mesajul Text"
 #, fuzzy
 msgid "Meta usage"
 msgstr "% utilizare"
+
+msgid "Metadata endpoint URL"
+msgstr ""
 
 msgid "Method"
 msgstr ""
@@ -31290,6 +31349,10 @@ msgid "No such inventory tree."
 msgstr ""
 
 #, fuzzy
+msgid "No such license key"
+msgstr "Stare adiministrativă"
+
+#, fuzzy
 msgid "No test host"
 msgstr "(element fără element)"
 
@@ -31587,9 +31650,6 @@ msgid "Not contained in any group"
 msgstr ""
 
 msgid "Not enabled"
-msgstr ""
-
-msgid "Not executed in OMD environment!"
 msgstr ""
 
 #, fuzzy
@@ -32011,6 +32071,14 @@ msgstr "Numarul maxim de mesaje"
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
 msgstr ""
+
+#, fuzzy
+msgid "Number of alerts in defined timespan lower level"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of alerts in defined timespan upper level"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of apache processes"
@@ -34646,6 +34714,14 @@ msgid "Persistent Connection"
 msgstr ""
 
 #, fuzzy
+msgid "Persistent Volume Claim name"
+msgstr "cu comentariu"
+
+#, fuzzy
+msgid "Persistent Volume Claims"
+msgstr "cu comentariu"
+
+#, fuzzy
 msgid "Persistent comment"
 msgstr "cu comentariu"
 
@@ -34869,6 +34945,12 @@ msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
 "probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
 "excessive runtimes."
+msgstr ""
+
+msgid ""
+"Please be aware that the monitoring of UNDO tablespaces is only useful in "
+"very rare situations with very specific preconditions. If you don't have "
+"such a specific case, you should not activate the monitoring of UNDO."
 msgstr ""
 
 msgid "Please check one metric you want to apply a transformation"
@@ -37324,6 +37406,10 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr ""
 
+#, fuzzy
+msgid "Remove two-factor authentication"
+msgstr "trimite notificare"
+
 msgid "Remove vanished services"
 msgstr ""
 
@@ -37337,9 +37423,9 @@ msgstr ""
 msgid "Removed entries"
 msgstr ""
 
-#, python-format
-msgid "Removed extension package %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "Removed extension package %s %s"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Removed from stack"
 msgstr ""
@@ -38468,6 +38554,10 @@ msgstr ""
 msgid "Run asynchronously, run at larger interval"
 msgstr ""
 
+#, fuzzy
+msgid "Run bulk service discovery"
+msgstr "(fără Nivel de serviciu)"
+
 msgid "Run in simulation mode"
 msgstr ""
 
@@ -38479,6 +38569,10 @@ msgid ""
 "with the permission of the selected user but also means that the generated "
 "report will be associated with this user."
 msgstr ""
+
+#, fuzzy
+msgid "Run service discovery"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Run synchronously"
 msgstr ""
@@ -38564,6 +38658,16 @@ msgid "Rx power level"
 msgstr "trei nivele"
 
 msgid "S."
+msgstr ""
+
+msgid "SAML 2.0"
+msgstr ""
+
+#, fuzzy
+msgid "SAML Authentication"
+msgstr "trimite notificare"
+
+msgid "SAML2.0 Integration"
 msgstr ""
 
 msgid "SAN"
@@ -39029,8 +39133,8 @@ msgid "Save & go to list"
 msgstr "Salveaza si mergi la"
 
 #, fuzzy
-msgid "Save & go to service configuration"
-msgstr "Salveaza configuratia manuala a verificarilor"
+msgid "Save & run service discovery"
+msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Save & test"
@@ -39902,10 +40006,6 @@ msgstr ""
 
 msgid "Service checks"
 msgstr ""
-
-#, fuzzy
-msgid "Service configuration"
-msgstr "foloseste configuratia locala"
 
 msgid "Service contact groups"
 msgstr ""
@@ -40787,6 +40887,13 @@ msgid "Show a login message"
 msgstr ""
 
 msgid "Show a margin round the graph"
+msgstr ""
+
+#, fuzzy
+msgid "Show affected host groups"
+msgstr "Arata regulile de utilizator"
+
+msgid "Show affected host groups in the created message."
 msgstr ""
 
 msgid "Show aggregated info over all SLA periods"
@@ -42622,6 +42729,10 @@ msgstr ""
 msgid "Start type"
 msgstr ""
 
+#, fuzzy
+msgid "Start verification"
+msgstr "Adaugă notificare"
+
 msgid "Start!"
 msgstr ""
 
@@ -43744,6 +43855,10 @@ msgstr ""
 
 msgid "Submit Report"
 msgstr ""
+
+#, fuzzy
+msgid "Submit verification request"
+msgstr "Notificari"
 
 msgid "Submitting crash report..."
 msgstr ""
@@ -45331,8 +45446,8 @@ msgid ""
 "one. <b>Note (2):</b> This duplicate possibility for classification is due "
 "to performance issues. It is always a good idea that the agent forwards only "
 "messages that are potential problems in order to cut down network traffic. "
-"Central reclassification on the other hand is more conveniant because no "
-"agent update is neccessary when rules need to be changed."
+"Central reclassification on the other hand is more convenient because no "
+"agent update is necessary when rules need to be changed."
 msgstr ""
 
 msgid ""
@@ -45395,6 +45510,11 @@ msgid "The attribute does not exist."
 msgstr ""
 
 msgid "The attribute is added to this section in the edit dialog."
+msgstr ""
+
+msgid ""
+"The attribute used to identify an individual user. This attribute must be "
+"unique."
 msgstr ""
 
 msgid ""
@@ -45554,7 +45674,7 @@ msgstr ""
 msgid ""
 "The command line <tt>ping</tt> command defaults to sending ICMP packets with "
 "a payload of 40 bytes. Together with the IP and ICMP header that sums up to "
-"64 Bytes. For detecting the reachability of a host no payload is neccessary, "
+"64 Bytes. For detecting the reachability of a host no payload is necessary, "
 "so Smart PING can omit the payload and send packets of 24 bytes. Some "
 "firewalls seem to interprete this as some kind of bogus attack and block "
 "such packets."
@@ -46067,6 +46187,13 @@ msgid "The found hosts' parents"
 msgstr ""
 
 msgid ""
+"The full URL of the Checkmk server that can be used by the Identity Provider "
+"to contact its Assertion Consumer Service endpoint. For example: https://"
+"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
+msgstr ""
+
+msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -46082,6 +46209,14 @@ msgid ""
 "The full URL to the Prometheus API endpoint including the protocol (http or "
 "https). OpenShift exposes such endpoints via a route in the openshift-"
 "monitoring namespace called prometheus-k8s."
+msgstr ""
+
+msgid ""
+"The full URL to the metadata endpoint of your organisation's Identity "
+"Provider. This endpoint is used to automatically discover the correct Single "
+"Sign-On endpoint and bindings for a successful SAML communication with the "
+"Identity Provider. Note that we only support HTTPS for this endpoint, "
+"because it specifies certificates which should be trusted."
 msgstr ""
 
 #, python-format
@@ -47755,6 +47890,12 @@ msgstr ""
 msgid "The timeout %s is not a valid integer number."
 msgstr "%s nu este un număr întreg valid."
 
+msgid ""
+"The timeout applied to HTTP connections with the Identity Provider. Checkmk "
+"sends requests to and receives responses from it regarding the "
+"authentication process of a user."
+msgstr ""
+
 #, python-format
 msgid "The timeperiod %s is currently not active"
 msgstr ""
@@ -48341,6 +48482,9 @@ msgstr ""
 msgid "This SLA has no computation plugins configured"
 msgstr ""
 
+msgid "This URL can also be collected from the Password Store from Checkmk."
+msgstr ""
+
 msgid ""
 "This URL is opened when clicking on the action / icon. You can use some "
 "macros within the URL which are dynamically replaced for each object. These "
@@ -48483,12 +48627,8 @@ msgstr ""
 
 msgid ""
 "This check connects to the specified database, sends a custom SQL-statement "
-"or starts a procedure, and checks that the result has a defined format "
-"containing three columns, a number, a text, and performance data. Upper or "
-"lower levels may be defined here.  If they are not defined the number is "
-"taken as the state of the check.  If a procedure is used, input parameters "
-"of the procedures may by given as comma separated list. This check uses the "
-"active check <tt>check_sql</tt>."
+"or starts a procedure, and checks that the result. Please refer to the man "
+"page of the active check <tt>check_sql</tt> for details."
 msgstr ""
 
 msgid ""
@@ -49295,11 +49435,12 @@ msgstr ""
 msgid "This package cannot be uploaded: %s"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
-msgid "This package does not exist."
-msgstr ""
-
 msgid "This package does not yet contain any rules."
 msgstr ""
+
+#, fuzzy
+msgid "This package is not installed."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "This page can be used to generate a new time period definition based on the "
@@ -50185,7 +50326,7 @@ msgstr ""
 
 msgid ""
 "This ruleset allows you to configure explicit PING monitoring of hosts. "
-"Usually a PING is being used as a host check, so this is not neccessary. "
+"Usually a PING is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
 "when using the Check_MK Micro Core with SMART Ping and you want to track "
 "performance data of the PING to some hosts, nevertheless."
@@ -50936,8 +51077,20 @@ msgstr ""
 msgid "Time drifted devices"
 msgstr ""
 
+#, fuzzy
+msgid "Time for coverage of alerts"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Time for coverage of events"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Time for coverage of failures"
 msgstr ""
+
+#, fuzzy
+msgid "Time for coverage of sources"
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Time format"
 msgstr ""
@@ -51117,6 +51270,13 @@ msgid ""
 "the next instance. If unset, the default value from ADO is used."
 msgstr ""
 
+#, fuzzy
+msgid "Time to wait in seconds for a connection."
+msgstr "Numarul maxim de conexiuni"
+
+msgid "Time to wait in seconds for a response."
+msgstr ""
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr ""
 
@@ -51285,6 +51445,14 @@ msgstr ""
 
 msgid "Title"
 msgstr ""
+
+#, fuzzy
+msgid "Title for host notifications"
+msgstr "(Nu primi notificări)"
+
+#, fuzzy
+msgid "Title for service notifications"
+msgstr "trimite notificare"
 
 msgid "Title format"
 msgstr ""
@@ -51547,6 +51715,14 @@ msgstr ""
 
 msgid "Total address space"
 msgstr ""
+
+#, fuzzy
+msgid "Total alerts count lower levels"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Total alerts count upper levels"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Total amount of space allocated by objects in the database"
 msgstr ""
@@ -54491,6 +54667,10 @@ msgstr ""
 msgid "User ID"
 msgstr "Utilizator nou"
 
+#, fuzzy
+msgid "User ID attribute"
+msgstr "Atribute personalizate"
+
 msgid "User ID for web login"
 msgstr ""
 
@@ -54680,8 +54860,8 @@ msgid ""
 "some directories do not have such attributes because the memberships are "
 "stored in the group objects as e.g. <tt>member</tt> attributes. You should "
 "use the regular search filter whenever possible and only use this filter "
-"when it is really neccessary. Finally you can say, you should not use this "
-"option when using Active Directory. This option is neccessary in OpenLDAP "
+"when it is really necessary. Finally you can say, you should not use this "
+"option when using Active Directory. This option is necessary in OpenLDAP "
 "directories when you like to filter by group membership.<br><br>If using, "
 "give a plain distinguished name of a group here, e. g. <tt>CN=cmk-users,"
 "OU=groups,DC=example,DC=com</tt>"
@@ -55006,8 +55186,27 @@ msgid "Verification"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "Verification failed"
+msgstr "trimite notificare"
+
+msgid "Verification failed (Checkmk)"
+msgstr ""
+
+#, fuzzy
+msgid "Verification failed (license server)"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Verification successful"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "Verify certificates"
 msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Verify response"
+msgstr "Notificari"
 
 msgid "Verify server certificate"
 msgstr ""
@@ -57948,7 +58147,7 @@ msgstr ""
 #, python-format
 msgid ""
 "You have not created any agent <a href='%s'>signature keys</a> yet. This is "
-"neccessary."
+"necessary."
 msgstr ""
 
 #, fuzzy
@@ -59717,7 +59916,7 @@ msgstr "Acces la modulul <i>Setări Globale</i>"
 msgid "ntopng integration is only available in CEE"
 msgstr ""
 
-msgid "ntopng username to aquire data for"
+msgid "ntopng username to acquire data for"
 msgstr ""
 
 msgid "objects"
@@ -60473,6 +60672,26 @@ msgstr "%s este prea mare. Valoarea maximală permisă este %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Disable two-factor authentication"
+#~ msgstr "Confirma Parola"
+
+#, fuzzy
+#~ msgid "Discover services"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Invalid package name"
+#~ msgstr "Nume tablespace"
+
+#, fuzzy
+#~ msgid "Save & go to service configuration"
+#~ msgstr "Salveaza configuratia manuala a verificarilor"
+
+#, fuzzy
+#~ msgid "Service configuration"
+#~ msgstr "foloseste configuratia locala"
 
 #, fuzzy
 #~ msgid "Instance Alias Name"
@@ -63078,10 +63297,6 @@ msgstr ""
 #~ msgstr "Nume AP"
 
 #, fuzzy
-#~ msgid "Bulk Service Discovery"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Bulk delete"
 #~ msgstr "Nume AP"
 
@@ -64094,10 +64309,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Specify explicit values"
 #~ msgstr "foloseste numele portului"
-
-#, fuzzy
-#~ msgid "State classification"
-#~ msgstr "Adaugă notificare"
 
 #, fuzzy
 #~ msgid "Stop Editing"

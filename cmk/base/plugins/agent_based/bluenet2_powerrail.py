@@ -6,15 +6,7 @@
 
 from typing import Any, Dict, List
 
-from .agent_based_api.v1 import (
-    contains,
-    OIDEnd,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-)
+from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.elphase import check_elphase
 from .utils.humidity import check_humidity

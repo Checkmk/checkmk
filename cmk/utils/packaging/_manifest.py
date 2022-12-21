@@ -34,7 +34,7 @@ class Manifest(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
-        extra = Extra.forbid
+        extra = Extra.allow  # we used to have 'num_files' :-(
 
     def file_content(self) -> str:
         return f"{pprint.pformat(self.dict(by_alias=True))}\n"

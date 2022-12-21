@@ -38,6 +38,21 @@ class TestManifest:
             " 'version.packaged': '2.1.0p2'}\n"
         )
 
+    def test_read_20_manifest(self) -> None:
+        """make sure we can read old packages with 'num_files'"""
+        assert Manifest.parse_python_string(
+            "{'author': 'tribe29 GmbH (mo)',\n"
+            " 'description': '',\n"
+            " 'download_url': '',\n"
+            " 'files': {},\n"
+            " 'num_files': 0,\n"
+            " 'name': 'test-package',\n"
+            " 'title': 'Test Package',\n"
+            " 'version': '1.0.0',\n"
+            " 'version.min_required': '2.1.0',\n"
+            " 'version.packaged': '2.1.0p2'}\n"
+        )
+
     def test_read_21_manifest(self) -> None:
         assert Manifest.parse_python_string(
             "{'author': 'tribe29 GmbH (mo)',\n"
@@ -71,8 +86,7 @@ def test_read_manifest_optionally_ok(tmp_path: Path) -> None:
 def test_read_manifest_optionally_invalid(tmp_path: Path) -> None:
     invalid_manifest_path = tmp_path / "invalid"
     invalid_manifest_dict = {
-        **TEST_MANIFEST.dict(by_alias=True),
-        "additional_key": "this will fail.",
+        k: v for k, v in TEST_MANIFEST.dict(by_alias=True).items() if k != "name"
     }
     invalid_manifest_path.write_text(f"{pprint.pformat(invalid_manifest_dict)}\n")
 

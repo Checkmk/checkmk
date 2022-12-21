@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, NewType
+from typing import Mapping, NewType
 
 import requests
+from pydantic import BaseModel
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
@@ -27,12 +28,19 @@ URLRedirect = NewType("URLRedirect", str)
 RequestId = NewType("RequestId", str)
 
 
-class Authenticated(NamedTuple):
+class InterfaceConfig(BaseModel):
+    connection_timeout: tuple[int, int]
+    checkmk_server_url: str
+    idp_metadata_endpoint: str
+    user_id_attribute: str
+
+
+class Authenticated(BaseModel):
     user_id: UserId
     in_response_to_id: RequestId
 
 
-class NotAuthenticated(NamedTuple):
+class NotAuthenticated(BaseModel):
     reason: str
 
 
@@ -48,11 +56,14 @@ def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
     return metadata.text
 
 
-def raw_config_to_saml_config(raw_config: dict[str, Any]) -> SPConfig:
+def saml_config(
+    checkmk_server_url: str,
+    idp_metadata_endpoint: str,
+    timeout: tuple[int, int],
+) -> SPConfig:
     """Convert valuespecs into a valid SAML Service Provider configuration."""
     config = SPConfig()
-    timeout = raw_config["connection_timeout"]
-    checkmk_base_url = f"{raw_config['checkmk_server_url']}{url_prefix()}check_mk"
+    checkmk_base_url = f"{checkmk_server_url}{url_prefix()}check_mk"
     acs_endpoint_url = f"{checkmk_base_url}/saml_acs.py?acs"
     sp_configuration = {
         "endpoints": {
@@ -70,9 +81,7 @@ def raw_config_to_saml_config(raw_config: dict[str, Any]) -> SPConfig:
     config.load(
         {
             "entityid": f"{checkmk_base_url}/saml_metadata.py",
-            "metadata": {
-                "inline": [_metadata_from_idp(raw_config["idp_metadata_endpoint"], timeout)]
-            },
+            "metadata": {"inline": [_metadata_from_idp(idp_metadata_endpoint, timeout)]},
             "service": {"sp": sp_configuration},
             "allow_unknown_attributes": True,
             "http_client_timeout": timeout,
@@ -81,16 +90,19 @@ def raw_config_to_saml_config(raw_config: dict[str, Any]) -> SPConfig:
     return config
 
 
-def raw_config_to_attributes_mapping(raw_config: dict[str, Any]) -> Mapping[str, str]:
+def attributes_mapping(user_id_attribute: str) -> Mapping[str, str]:
     """Map attribute fields the Identity Provider sends to fields we expect."""
-    assert isinstance(raw_config, dict)
-    return {"user_id_attribute": raw_config["user_id_attribute"]}
+    return {"user_id_attribute": user_id_attribute}
 
 
 class Interface:
-    def __init__(self, raw_config: dict[str, Any]) -> None:
-        self.__config = raw_config_to_saml_config(raw_config)
-        self.__attributes_mapping = raw_config_to_attributes_mapping(raw_config)
+    def __init__(self, config: InterfaceConfig) -> None:
+        self.__config = saml_config(
+            timeout=config.connection_timeout,
+            idp_metadata_endpoint=config.idp_metadata_endpoint,
+            checkmk_server_url=config.checkmk_server_url,
+        )
+        self.__attributes_mapping = attributes_mapping(config.user_id_attribute)
         self.__user_id_attribute = self.__attributes_mapping["user_id_attribute"]
         self.__client = Saml2Client(config=self.__config)
         self.__metadata = create_metadata_string(configfile=None, config=self.__config).decode(

@@ -2,6 +2,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import copy
 from collections.abc import Collection, Iterator
 
 import cmk.gui.forms as forms
@@ -26,11 +27,13 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.plugins.wato.utils import redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryEntry,
     DictionaryModel,
+    FixedValue,
     HTTPSUrl,
     Integer,
     rule_option_elements,
@@ -50,6 +53,14 @@ def _general_properties() -> list[DictionaryEntry]:
                     "Internal ID that Checkmk uses to uniquely identify each connection to an Identity Provider."
                 ),
             ),
+        ),
+        (
+            "type",
+            FixedValue(value="saml2"),
+        ),
+        (
+            "version",
+            FixedValue(value="1.0.0"),
         ),
     ] + rule_option_elements()
 
@@ -152,18 +163,15 @@ def saml2_connection_valuespec() -> Dictionary:
         render="form",
         form_narrow=True,
         optional_keys=[],
+        hidden_keys=["type", "version"],
     )
 
 
 class ModeSAML2Config(WatoMode):
     def _from_vars(self) -> None:
-        self.__configuration = self._from_config_file()
+        self.__configuration = self.from_config_file()
         self.__valuespec = saml2_connection_valuespec()
         self.__html_valuespec_param_prefix = "vs"
-        self.__internal_config_variables = {
-            "type": self.type,
-            "version": self.version,
-        }
 
     @classmethod
     def name(cls) -> str:
@@ -233,7 +241,7 @@ class ModeSAML2Config(WatoMode):
         html.begin_form("value_editor", method="POST")
 
         self.__valuespec.render_input_as_form(
-            self.__html_valuespec_param_prefix, self._from_config_file()
+            self.__html_valuespec_param_prefix, self.from_config_file()
         )
 
         forms.end()
@@ -251,20 +259,17 @@ class ModeSAML2Config(WatoMode):
 
         return redirect(self.mode_url())
 
-    def _from_config_file(self) -> DictionaryModel:
+    def from_config_file(self) -> DictionaryModel:
         connections = active_connections_by_type(self.type)
 
         if not connections:
             return {}
 
         # Only one SAML connection is currently supported
-        return connections[0]
+        return _config_to_valuespec(ConnectorConfig(**connections[0]))
 
-    def _to_config_file(self, user_input: DictionaryModel) -> DictionaryModel:
-        return {
-            **self.__internal_config_variables,
-            **user_input,
-        }
+    def to_config_file(self, user_input: DictionaryModel) -> DictionaryModel:
+        return _valuespec_to_config(user_input).dict()
 
     def _connection_id(self) -> str:
         return self.__configuration.get("id", self._user_input()["id"])
@@ -282,12 +287,31 @@ class ModeSAML2Config(WatoMode):
 
         connections = load_connection_config(lock=True)
         updated_connections = [c for c in connections if c["id"] != self._connection_id()]
-        updated_connections.append(self._to_config_file(user_input))
+        updated_connections.append(self.to_config_file(user_input))
         save_connection_config(updated_connections)
 
     def _action_delete(self) -> None:
         connections = load_connection_config(lock=True)
         save_connection_config([c for c in connections if c["id"] != self._connection_id()])
+
+
+def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
+    interface_config_keys = {
+        "connection_timeout",
+        "idp_metadata_endpoint",
+        "checkmk_server_url",
+        "user_id_attribute",
+    }
+    raw_user_input = copy.deepcopy(user_input)
+    interface_config = {k: raw_user_input.pop(k) for k in interface_config_keys}
+    raw_user_input["interface_config"] = interface_config
+    return ConnectorConfig(**raw_user_input)
+
+
+def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
+    config_dict = config.dict()
+    interface_config = config_dict.pop("interface_config")
+    return {**config_dict, **interface_config}
 
 
 def register(

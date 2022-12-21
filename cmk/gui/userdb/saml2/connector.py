@@ -5,18 +5,32 @@
 
 from typing import Any
 
+from pydantic import BaseModel
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import UserConnector, UserConnectorRegistry
-from cmk.gui.userdb.saml2.interface import Interface
+from cmk.gui.userdb.saml2.interface import Interface, InterfaceConfig
 
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
 
 
+class ConnectorConfig(BaseModel):
+    type: str
+    version: str
+    id: str
+    description: str
+    comment: str
+    docu_url: str
+    disabled: bool
+    interface_config: InterfaceConfig
+
+
 class Connector(UserConnector):
     def __init__(self, raw_config: dict[str, Any]) -> None:
         super().__init__(raw_config)
-        self.__interface = Interface(self._config)
+        self.__config = ConnectorConfig(**self._config)
+        self.__interface = Interface(self.__config.interface_config)
 
     @property
     def interface(self) -> Interface:
@@ -28,7 +42,7 @@ class Connector(UserConnector):
 
     @property
     def id(self) -> str:
-        return self._config["id"]
+        return self.__config.id
 
     @classmethod
     def title(cls) -> str:
@@ -39,10 +53,10 @@ class Connector(UserConnector):
         return _("SAML 2.0")
 
     def is_enabled(self) -> bool:
-        return not self._config["disabled"]
+        return not self.__config.disabled
 
     def identity_provider_url(self) -> str:
-        return self._config["idp_medatata_url"]
+        return self.__config.interface_config.idp_metadata_endpoint
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

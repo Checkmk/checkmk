@@ -18,16 +18,19 @@ def xmlsec1_binary_path(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture(name="raw_config")
 def fixture_raw_config() -> dict[str, Any]:
     return {
-        "id": "uuid123",
         "type": "saml2",
+        "version": "1.0.0",
+        "id": "uuid123",
         "description": "",
         "comment": "",
         "docu_url": "",
         "disabled": False,
-        "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
-        "checkmk_server_url": "https://myhost.com",
-        "connection_timeout": (12, 12),
-        "user_id_attribute": "username",
+        "interface_config": {
+            "connection_timeout": (12, 12),
+            "checkmk_server_url": "https://myhost.com",
+            "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
+            "user_id_attribute": "username",
+        },
     }
 
 

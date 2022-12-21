@@ -17,6 +17,7 @@ from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.type_defs import UserId
 
+from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.userdb.saml2.interface import Authenticated, Interface
 
 VALID_AUTHENTICATION_REQUEST_PATTERN = re.compile(
@@ -187,7 +188,7 @@ class TestInterface:
 
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
-        return Interface(raw_config)
+        return Interface(ConnectorConfig(**raw_config).interface_config)
 
     @pytest.fixture
     def request_id(self) -> str:

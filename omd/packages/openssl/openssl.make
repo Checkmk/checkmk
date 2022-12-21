@@ -25,10 +25,12 @@ endif
 
 ifeq ($(DISTRO_CODE),el8)
 $(OPENSSL_BUILD):
+	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 else
 $(OPENSSL_BUILD):
 	bazel build @openssl//:build
+	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 endif
 

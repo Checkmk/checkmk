@@ -401,22 +401,6 @@ def _page_menu_availability(  # type:ignore[no-untyped-def]
         + page_menu_dropdown_add_to_visual(add_type="availability", name=view.name)
         + [
             PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Monitoring"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Status view"),
-                                icon_name="status",
-                                item=make_simple_link(makeuri(request, [], delvars=["mode"])),
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-            PageMenuDropdown(
                 name="export",
                 title=_("Export"),
                 topics=[
@@ -451,11 +435,13 @@ def _page_menu_entries_av_mode(
 
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
-            title=_("Availability"),
+            title=_("Table"),
             icon_name="availability",
             item=make_simple_link(
                 makeuri(request, [("av_mode", "availability")], delvars=["av_host", "av_aggr"])
             ),
+            is_shortcut=True,
+            shortcut_title=_("View table"),
         )
         return
 
@@ -464,6 +450,8 @@ def _page_menu_entries_av_mode(
             title=_("Timeline"),
             icon_name="timeline",
             item=make_simple_link(makeuri(request, [("av_mode", "timeline")])),
+            is_shortcut=True,
+            shortcut_title=_("View timeline"),
         )
         return
 
@@ -473,6 +461,8 @@ def _page_menu_entries_av_mode(
             title=_("History"),
             icon_name="history",
             item=make_simple_link(history_url),
+            is_shortcut=True,
+            shortcut_title=_("View history"),
         )
 
 
@@ -862,6 +852,8 @@ def show_bi_availability(  # pylint: disable=too-many-branches
                     title=_("Timeline"),
                     icon_name="timeline",
                     item=make_simple_link(timeline_url),
+                    is_shortcut=True,
+                    shortcut_title=_("View timeline"),
                 )
             )
 

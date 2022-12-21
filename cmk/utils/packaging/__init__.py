@@ -329,6 +329,7 @@ def create(manifest: Manifest) -> None:
 
     package_store = PackageStore()
 
+    manifest.raise_for_nonexisting_files()
     _validate_package_files(manifest.name, manifest.files)
     add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(package_store, manifest)
@@ -346,6 +347,7 @@ def edit(pacname: PackageName, new_manifest: Manifest) -> None:
             )
     package_store = PackageStore()
 
+    new_manifest.raise_for_nonexisting_files()
     _validate_package_files(pacname, new_manifest.files)
 
     _create_enabled_mkp_from_installed_package(package_store, new_manifest)
@@ -618,9 +620,6 @@ def _validate_package_files_part(
 ) -> None:
     for rel_path in rel_paths:
         path = part.path / rel_path
-        if not path.exists():
-            raise PackageException("File %s does not exist." % path)
-
         for manifest in other_installed_manifests:
             if rel_path in manifest.files.get(part, []):
                 raise PackageException(

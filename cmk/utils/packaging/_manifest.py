@@ -57,6 +57,12 @@ class Manifest(BaseModel):
     def id(self) -> PackageID:
         return PackageID(name=self.name, version=self.version)
 
+    def raise_for_nonexisting_files(self) -> None:
+        for part, rel_path in self.files.items():
+            for rp in rel_path:
+                if not (fp := (part.path / rp).exists()):
+                    raise PackageException(f"File {fp} does not exist.")
+
 
 def manifest_template(
     name: PackageName,

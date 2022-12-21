@@ -150,7 +150,18 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
 
 def create_mkp_object(manifest: Manifest) -> bytes:
 
-    manifest.version_packaged = cmk_version.__version__
+    manifest = Manifest(
+        title=manifest.title,
+        name=manifest.name,
+        description=manifest.description,
+        version=manifest.version,
+        version_packaged=cmk_version.__version__,
+        version_min_required=manifest.version_min_required,
+        version_usable_until=manifest.version_usable_until,
+        author=manifest.author,
+        download_url=manifest.download_url,
+        files=manifest.files,
+    )
 
     buffer = BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as tar:

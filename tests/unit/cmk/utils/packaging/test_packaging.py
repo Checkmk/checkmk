@@ -101,11 +101,12 @@ def test_get_permissions(path: Path, expected: int) -> None:
 
 def _create_simple_test_package(pacname: packaging.PackageName) -> packaging.Manifest:
     _create_test_file(pacname)
-    manifest = packaging.manifest_template(pacname)
-
-    manifest.files = {
-        packaging.PackagePart.CHECKS: [Path(pacname)],
-    }
+    manifest = packaging.manifest_template(
+        name=pacname,
+        files={
+            packaging.PackagePart.CHECKS: [Path(pacname)],
+        },
+    )
 
     packaging.create(manifest)
     return _read_manifest(pacname)
@@ -132,16 +133,20 @@ def test_create_twice() -> None:
 
 
 def test_edit_not_existing() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("aaa"))
-    new_manifest.version = packaging.PackageVersion("2.0.0")
+    new_manifest = packaging.manifest_template(
+        name=packaging.PackageName("aaa"),
+        version=packaging.PackageVersion("2.0.0"),
+    )
 
     with pytest.raises(packaging.PackageException):
         packaging.edit(packaging.PackageName("aaa"), new_manifest)
 
 
 def test_edit() -> None:
-    new_manifest = packaging.manifest_template(packaging.PackageName("aaa"))
-    new_manifest.version = packaging.PackageVersion("2.0.0")
+    new_manifest = packaging.manifest_template(
+        name=packaging.PackageName("aaa"),
+        version=packaging.PackageVersion("2.0.0"),
+    )
 
     manifest = _create_simple_test_package(packaging.PackageName("aaa"))
     assert manifest.version == packaging.PackageVersion("1.0.0")
@@ -308,8 +313,10 @@ def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_in
 
 
 def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
-    package = packaging.manifest_template(packaging.PackageName("ding"))
-    package.files = {packaging.PackagePart.GUI: [Path("a")]}
+    package = packaging.manifest_template(
+        name=packaging.PackageName("ding"),
+        files={packaging.PackagePart.GUI: [Path("a")]},
+    )
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
@@ -317,8 +324,10 @@ def test_reload_gui_with_gui_part(reload_apache: Mock, build_setup_search_index:
 
 
 def test_reload_gui_with_web_part(reload_apache: Mock, build_setup_search_index: Mock) -> None:
-    package = packaging.manifest_template(packaging.PackageName("ding"))
-    package.files = {packaging.PackagePart.WEB: [Path("a")]}
+    package = packaging.manifest_template(
+        name=packaging.PackageName("ding"),
+        files={packaging.PackagePart.WEB: [Path("a")]},
+    )
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()

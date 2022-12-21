@@ -196,8 +196,10 @@ def package_create(args: list[str]) -> None:
     unpackaged = get_unpackaged_files()
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
-    package = manifest_template(pacname)
-    package.files = {part: files for part in PACKAGE_PARTS if (files := unpackaged.get(part))}
+    package = manifest_template(
+        name=pacname,
+        files={part: files_ for part in PACKAGE_PARTS if (files_ := unpackaged.get(part))},
+    )
     for part, files in package.files.items():
         logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in files:
@@ -210,6 +212,7 @@ def package_create(args: list[str]) -> None:
         pacname,
         package_num_files(package),
     )
+    # TODO: why is this *vital* information only in verbose logging?!
     logger.log(
         VERBOSE,
         "Please edit package details in %s%s%s",

@@ -187,10 +187,12 @@ def _create_test_package(name: str) -> packaging.Manifest:
 
     (check_dir / name).touch()
 
-    manifest = packaging.manifest_template(packaging.PackageName(name))
-    manifest.files = {
-        packaging.PackagePart.CHECKS: [Path(name)],
-    }
+    manifest = packaging.manifest_template(
+        packaging.PackageName(name),
+        files={
+            packaging.PackagePart.CHECKS: [Path(name)],
+        },
+    )
 
     packaging.create(manifest)
     return manifest

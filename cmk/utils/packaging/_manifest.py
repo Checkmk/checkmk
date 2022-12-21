@@ -8,7 +8,7 @@ from __future__ import annotations
 import ast
 import pprint
 import tarfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from io import BytesIO
 from logging import Logger
@@ -32,10 +32,11 @@ class Manifest(BaseModel):
     version_usable_until: str | None = Field(None, alias="version.usable_until")
     author: str
     download_url: str
-    files: Mapping[PackagePart, list[Path]]
+    files: Mapping[PackagePart, Sequence[Path]]
 
     class Config:
         allow_population_by_field_name = True
+        allow_mutation = False
         extra = Extra.allow  # we used to have 'num_files' :-(
 
     def file_content(self) -> str:
@@ -57,18 +58,23 @@ class Manifest(BaseModel):
         return PackageID(name=self.name, version=self.version)
 
 
-def manifest_template(pacname: PackageName) -> Manifest:
+def manifest_template(
+    name: PackageName,
+    *,
+    version: PackageVersion | None = None,
+    files: Mapping[PackagePart, Sequence[Path]] | None = None,
+) -> Manifest:
     return Manifest(
-        title=f"Title of {pacname}",
-        name=pacname,
+        title=f"Title of {name}",
+        name=name,
         description="Please add a description here",
-        version=PackageVersion("1.0.0"),
+        version=version or PackageVersion("1.0.0"),
         version_packaged=cmk_version.__version__,
         version_min_required=cmk_version.__version__,
         version_usable_until=None,
         author="Add your name here",
-        download_url=f"https://example.com/{pacname}/",
-        files={},
+        download_url=f"https://example.com/{name}/",
+        files=files or {},
     )
 
 

@@ -26,7 +26,7 @@ class PackagePart(enum.Enum):
     AGENT_BASED = "agent_based"
     CHECKS = "checks"
     HASI = "inventory"
-    CHEKCMAN = "checkman"
+    CHECKMAN = "checkman"
     AGENTS = "agents"
     NOTIFICATIONS = "notifications"
     GUI = "gui"
@@ -65,7 +65,7 @@ class PackagePart(enum.Enum):
                 return _("Legacy check plugins"), cmk.utils.paths.local_checks_dir
             case PackagePart.HASI:
                 return _("Legacy inventory plugins"), cmk.utils.paths.local_inventory_dir
-            case PackagePart.CHEKCMAN:
+            case PackagePart.CHECKMAN:
                 return _("Checks' man pages"), cmk.utils.paths.local_check_manpages_dir
             case PackagePart.AGENTS:
                 return _("Agents"), cmk.utils.paths.local_agents_dir
@@ -103,7 +103,7 @@ PACKAGE_PARTS: Final = (
     PackagePart.AGENT_BASED,
     PackagePart.CHECKS,
     PackagePart.HASI,
-    PackagePart.CHEKCMAN,
+    PackagePart.CHECKMAN,
     PackagePart.AGENTS,
     PackagePart.NOTIFICATIONS,
     PackagePart.GUI,

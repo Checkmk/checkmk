@@ -83,7 +83,7 @@ register.check_plugin(
     name="graylog_events",
     check_function=check_graylog_events,
     discovery_function=discover_graylog_events,
-    service_name="Graylog Events",
+    service_name="Graylog Cluster Events",
     check_default_parameters={},
     check_ruleset_name="graylog_events",
 )

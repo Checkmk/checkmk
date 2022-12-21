@@ -71,7 +71,7 @@ register.check_plugin(
     name="graylog_alerts",
     check_function=check_graylog_alerts,
     discovery_function=discover_graylog_alerts,
-    service_name="Graylog Alerts",
+    service_name="Graylog Cluster Alerts",
     check_default_parameters={},
     check_ruleset_name="graylog_alerts",
 )

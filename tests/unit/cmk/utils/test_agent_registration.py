@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from os.path import abspath
 from pathlib import Path
 from uuid import UUID
 
@@ -52,7 +53,9 @@ def test_uuid_link_manager_create_pull_link() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+
+    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert abspath(link.source.parent / link.target) == abspath(target_path)
 
 
 def test_uuid_link_manager_create_push_link() -> None:
@@ -70,7 +73,9 @@ def test_uuid_link_manager_create_push_link() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath(hostname)
+
+    target_path = data_source_push_agent_dir.joinpath(hostname)
+    assert abspath(link.source.parent / link.target) == abspath(target_path)
 
 
 def test_uuid_link_manager_create_existing_link() -> None:
@@ -104,7 +109,9 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid_new)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+
+    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert abspath(link.source.parent / link.target) == abspath(target_path)
 
 
 @pytest.mark.parametrize("push_configured", [True, False])
@@ -126,7 +133,9 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath(hostname)
+
+    target_path = data_source_push_agent_dir.joinpath(hostname)
+    assert abspath(link.source.parent / link.target) == abspath(target_path)
 
 
 def test_uuid_link_manager_update_links_no_links_yet() -> None:
@@ -170,7 +179,9 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
     link = next(iter(uuid_link_manager))
 
     assert link.source == received_outputs_dir.joinpath(raw_uuid)
-    assert link.target == data_source_push_agent_dir.joinpath("inactive", hostname)
+
+    target_path = data_source_push_agent_dir.joinpath("inactive", hostname)
+    assert abspath(link.source.parent / link.target) == abspath(target_path)
 
 
 @pytest.mark.parametrize(

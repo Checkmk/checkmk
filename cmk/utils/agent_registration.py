@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Container, Iterator, Mapping, Sequence
+from os.path import relpath
 from pathlib import Path
 from typing import Any, NamedTuple
 from uuid import UUID
@@ -84,7 +85,7 @@ class UUIDLinkManager:
         source = self._received_outputs_dir / f"{uuid}"
 
         source.unlink(missing_ok=True)
-        source.symlink_to(target_dir)
+        source.symlink_to(relpath(target_dir, self._received_outputs_dir))
 
     def _find_and_cleanup_existing_links(self, hostname: HostName, uuid: UUID) -> UUIDLink | None:
         found: UUIDLink | None = None

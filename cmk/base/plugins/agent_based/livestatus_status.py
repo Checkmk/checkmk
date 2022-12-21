@@ -194,11 +194,18 @@ def _generate_livestatus_results(
         for conn, name in (("carbon", "Carbon"), ("influxdb", "InfluxDB"), ("rrdcached", "RRD")):
             metrics.extend(
                 (
+                    (100, render.percent, f"{conn}_queue_usage", f"{name} queue usage"),
                     (
                         100,
                         lambda x: "%d/s" % x,
                         f"{conn}_queue_usage_rate",
                         f"{name} queue usage rate",
+                    ),
+                    (
+                        1,
+                        lambda x: "%d/s" % x,
+                        f"{conn}_overflows_rate",
+                        f"Rate of performance data loss for {name}",
                     ),
                     (
                         1,
@@ -225,6 +232,8 @@ def _generate_livestatus_results(
                     "influxdb_queue_usage",
                     "influxdb_queue_usage_rate",
                     "influxdb_bytes_sent_rate",
+                    "rrdcached_overflows_rate",
+                    "rrdcached_queue_usage",
                     "rrdcached_queue_usage_rate",
                     "rrdcached_bytes_sent_rate",
                     "perf_data_count_rate",

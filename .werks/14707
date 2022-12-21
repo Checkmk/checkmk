@@ -1,0 +1,16 @@
+Title: agent_receiver: Fix crash in activation after omd cp
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1671110712
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+Previously, the activation of changes would crash in the
+sites created as copies with the omd cp command.
+The error message stated "Permission denied:
+'/omd/sites/SITE_NAME/tmp/check_mk/data_source_cache/push-agent/HOST_NAME'".
+

@@ -5,7 +5,6 @@
 
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -15,6 +14,7 @@ from .utils.azure import (
     check_azure_metrics,
     iter_resource_attributes,
     MetricData,
+    parse_azure_datetime,
     parse_resources,
     Resource,
 )
@@ -244,7 +244,7 @@ def check_virtual_network_gateway_health(item: str, section: Section) -> CheckRe
     yield Result(state=State.OK, summary=f"Summary: {health.summary}")
 
     if not health_available:
-        occurred_time = datetime.strptime(health.occuredTime, "%Y-%m-%dT%H:%M:%SZ").timestamp()
+        occurred_time = parse_azure_datetime(health.occuredTime).timestamp()
         summary = (
             f"Reason type: {health.reasonType}, Occurred time: {render.datetime(occurred_time)}"
         )

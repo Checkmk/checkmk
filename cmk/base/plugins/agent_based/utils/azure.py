@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from datetime import datetime
 from typing import Any, Callable, Iterable, Mapping, NamedTuple, Sequence
 
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
@@ -44,6 +45,11 @@ class MetricData(NamedTuple):
 
 
 Section = Mapping[str, Resource]
+
+
+def parse_azure_datetime(datetime_string: str) -> datetime:
+    datetime_string = datetime_string.strip("Z").split(".")[0]
+    return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S")
 
 
 #   .--Parse---------------------------------------------------------------.

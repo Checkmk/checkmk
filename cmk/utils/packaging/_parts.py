@@ -94,7 +94,7 @@ class PackagePart(str, enum.Enum):
             case PackagePart.MIBS:
                 return _("SNMP MIBs"), cmk.utils.paths.local_mib_dir
             case PackagePart.ALERT_HANDLERS:
-                return _("Alert handlers"), cmk.utils.paths.local_share_dir / "alert_handlers"
+                return _("Alert handlers"), cmk.utils.paths.local_alert_handlers_dir
 
         return assert_never(self)
 

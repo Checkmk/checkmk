@@ -52,31 +52,21 @@ def _get_permissions(path: Path) -> int:
 
     # order matters! See function _get_permissions
     perm_map: tuple[tuple[str | Path, int], ...] = (
-        (cmk.utils.paths.checks_dir, 0o644),
         (cmk.utils.paths.local_checks_dir, 0o644),
-        (cmk.utils.paths.notifications_dir, 0o755),
         (cmk.utils.paths.local_notifications_dir, 0o755),
-        (cmk.utils.paths.inventory_dir, 0o644),
         (cmk.utils.paths.local_inventory_dir, 0o644),
-        (cmk.utils.paths.check_manpages_dir, 0o644),
         (cmk.utils.paths.local_check_manpages_dir, 0o644),
-        (cmk.utils.paths.agents_dir, 0o755),
         (cmk.utils.paths.local_agents_dir, 0o755),
-        (cmk.utils.paths.web_dir, 0o644),
         (cmk.utils.paths.local_web_dir, 0o644),
         (cmk.utils.paths.local_gui_plugins_dir, 0o644),
-        (cmk.utils.paths.pnp_templates_dir, 0o644),
         (cmk.utils.paths.local_pnp_templates_dir, 0o644),
-        (cmk.utils.paths.doc_dir, 0o644),
         (cmk.utils.paths.local_doc_dir, 0o644),
-        (cmk.utils.paths.locale_dir, 0o644),
         (cmk.utils.paths.local_locale_dir, 0o644),
         (cmk.utils.paths.local_bin_dir, 0o755),
         (cmk.utils.paths.local_lib_dir / "nagios" / "plugins", 0o755),
         (cmk.utils.paths.local_lib_dir, 0o644),
         (cmk.utils.paths.local_mib_dir, 0o644),
-        (os.path.join(cmk.utils.paths.share_dir, "alert_handlers"), 0o755),
-        (cmk.utils.paths.local_share_dir / "alert_handlers", 0o755),
+        (cmk.utils.paths.local_alert_handlers_dir, 0o755),
         (ec.mkp_rule_pack_dir(), 0o644),
     )
     for path_begin, perm in perm_map:

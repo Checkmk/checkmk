@@ -1521,7 +1521,7 @@ def ContactGroupChoice(with_foreign_groups: bool) -> DualListChoice:
     return DualListChoice(
         choices=_load_groups,
         title=_("Publish to members of contact groups"),
-        rows=5,
+        rows=15,
         size=80,
     )
 

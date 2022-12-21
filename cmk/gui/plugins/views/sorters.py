@@ -217,7 +217,7 @@ class ABCLabelSorter(Sorter, abc.ABC):
 
 
 @sorter_registry.register
-class SorterHostLabels(ABCTagSorter):
+class SorterHostLabels(ABCLabelSorter):
     @property
     def object_type(self):
         return "host"
@@ -236,7 +236,7 @@ class SorterHostLabels(ABCTagSorter):
 
 
 @sorter_registry.register
-class SorterServiceLabels(ABCTagSorter):
+class SorterServiceLabels(ABCLabelSorter):
     @property
     def object_type(self):
         return "service"

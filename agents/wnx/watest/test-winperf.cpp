@@ -17,20 +17,18 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 
-namespace wtools {
-extern std::vector<int> TsValues;
-}
+using namespace std::string_literals;
 
 namespace {
 bool ValidIndexOfTs(int index) {
-    return std::ranges::any_of(wtools::TsValues,
+    return std::ranges::any_of(tst::g_terminal_services_indexes,
                                [index](const auto &e) { return e == index; });
 }
 }  // namespace
 
 namespace cma::provider {  // to become friendly for wtools classes
 
-auto GetIndexOfTS() {
+auto GetIndexOfTs() {
     uint32_t key_index = 0;
     auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
     return key_index;
@@ -39,7 +37,7 @@ auto GetIndexOfTS() {
 TEST(WinPerf, ValidateFabricConfig) {
     namespace groups = cfg::groups;
     namespace vars = cfg::vars;
-    auto temp_fs(tst::TempCfgFs::CreateNoIo());
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
@@ -76,8 +74,8 @@ TEST(WinPerf, ValidateFabricConfig) {
     };
 
     int found_count = 0;
-    for (const auto &counter : counters) {
-        std::pair counter_low(counter.first, counter.second);
+    for (const auto &[section, value] : counters) {
+        std::pair counter_low(section, value);
         tools::StringLower(counter_low.first);
         tools::StringLower(counter_low.second);
         if (std::ranges::find(base_counters, counter_low) !=
@@ -90,7 +88,7 @@ TEST(WinPerf, ValidateFabricConfig) {
 }
 
 TEST(WinPerf, BuildCommandLine) {
-    auto temp_fs(tst::TempCfgFs::CreateNoIo());
+    const auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent("global:\n  enabled: yes\n"));
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
     EXPECT_TRUE(cmd_line.empty()) << cmd_line;
@@ -102,27 +100,23 @@ TEST(WinPerf, BuildCommandLine) {
 }
 
 TEST(WinPerf, MakeWinPerfStamp) {
-    auto x = details::MakeWinPerfStamp(0);
-    ASSERT_TRUE(!x.empty());
-
-    auto table = tools::SplitString(x, " ");
+    const auto x = details::MakeWinPerfStamp(0);
+    const auto table = tools::SplitString(x, " ");
     ASSERT_EQ(table.size(), 3);
     EXPECT_EQ(table[1], "0");
 
-    auto value = tools::ConvertToUint64(table[2], 12345678);
+    const auto value = tools::ConvertToUint64(table[2], 12345678);
     EXPECT_NE(value, 12345678);
     EXPECT_TRUE(value > 1000);
 }
 
 TEST(WinPerf, MakeWinPerfHeader) {
-    auto x = details::MakeWinPerfHeader(L"wp", L"zzz");
-    EXPECT_EQ(x, "<<<wp_zzz>>>\n");
-    x = details::MakeWinPerfHeader(L"www", L"");
-    EXPECT_EQ(x, "<<<www_>>>\n");
+    EXPECT_EQ(details::MakeWinPerfHeader(L"wp", L"zzz"), "<<<wp_zzz>>>\n");
+    EXPECT_EQ(details::MakeWinPerfHeader(L"www", L""), "<<<www_>>>\n");
 }
 
 std::pair<wtools::perf::DataSequence, uint32_t> GetKeyIndex() {
-    const auto ts_index = GetIndexOfTS();
+    const auto ts_index = GetIndexOfTs();
     EXPECT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
 
     uint32_t key_index = 0;
@@ -155,91 +149,73 @@ TEST(WinPerf, MakeBodyForTSIntegration) {
 }
 
 TEST(WinPerf, InvalidCounter) {
-    auto name = L"ifxz";
-    auto index = L"12345510";
-    auto x = BuildWinPerfSection(L"winp", name, index);
-    EXPECT_TRUE(x.empty());
+    constexpr auto name = L"ifxz";
+    constexpr auto index = L"12345510";
+    EXPECT_TRUE(BuildWinPerfSection(L"winp", name, index).empty());
 }
 
 TEST(WinPerf, IfCounter) {
-    using namespace std::string_literals;
-    auto x = BuildWinPerfSection(L"winp", L"if", L"510");
-    ASSERT_TRUE(!x.empty());
-
-    // check all
-    auto table = tools::SplitString(x, "\n");
+    const auto x = BuildWinPerfSection(L"winp", L"if", L"510");
+    const auto table = tools::SplitString(x, "\n");
     ASSERT_TRUE(table.size() > 3);
 
     // check header
     EXPECT_EQ(table[0], "<<<winp_if>>>"s);
-    auto stamp = tools::SplitString(table[1], " ");
+    const auto stamp = tools::SplitString(table[1], " ");
     ASSERT_EQ(stamp.size(), 3);
 
     // check stamp
-    auto stamp_time = tools::ConvertToUint64(stamp[0], 12345678);
+    const auto stamp_time = tools::ConvertToUint64(stamp[0], 12345678);
     EXPECT_NE(stamp_time, 12345678);
     EXPECT_TRUE(stamp_time > 100000);  // we are sure that time is going
 
-    auto stamp_index = tools::ConvertToUint64(stamp[1], 12345678);
-    EXPECT_EQ(std::to_string(stamp_index), "510");
+    EXPECT_EQ(std::to_string(tools::ConvertToUint64(stamp[1], 12345678)),
+              "510");
 
-    auto stamp_counter = tools::ConvertToUint64(stamp[2], 12345678);
-    EXPECT_EQ(stamp_counter, cfg::GetPerformanceFrequency());
+    EXPECT_EQ(tools::ConvertToUint64(stamp[2], 12345678),
+              cfg::GetPerformanceFrequency());
 }
 
 TEST(WinPerf, TcpConnCounter) {
-    auto x = BuildWinPerfSection(L"winperf", L"tcp_conn", L"638");
-    ASSERT_TRUE(!x.empty());
-
-    auto table = tools::SplitString(x, "\n");
-    ASSERT_TRUE(table.size() > 3);
+    const auto x = BuildWinPerfSection(L"winperf", L"tcp_conn", L"638");
+    ASSERT_GT(tools::SplitString(x, "\n").size(), 3U);
 }
 
 TEST(WinPerf, PhyDiskCounter) {
-    auto x = BuildWinPerfSection(L"winperf", L"phydisk", L"234");
-    ASSERT_TRUE(!x.empty());
-
-    auto table = tools::SplitString(x, "\n");
-    ASSERT_TRUE(table.size() > 3);
+    const auto x = BuildWinPerfSection(L"winperf", L"phydisk", L"234");
+    ASSERT_GT(tools::SplitString(x, "\n").size(), 3U);
 }
 
-TEST(WinPerf, TsCounter) {
-    using namespace std::string_view_literals;
-    auto index_iofts = GetIndexOfTS();
+TEST(WinPerf, TsCounterByIndex) {
+    const auto index_iofts = GetIndexOfTs();
     ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest
         << "not supported index " << index_iofts << std::endl;
-    {
-        auto x = BuildWinPerfSection(L"winperf", std::to_wstring(index_iofts),
-                                     std::to_wstring(index_iofts));
-        ASSERT_TRUE(!x.empty());
 
-        // check all
-        auto table = tools::SplitString(x, "\n");
-        ASSERT_TRUE(table.size() > 3);
-    }
+    const auto x = BuildWinPerfSection(L"winperf", std::to_wstring(index_iofts),
+                                       std::to_wstring(index_iofts));
+    ASSERT_TRUE(tools::SplitString(x, "\n").size() > 3U);
+}
 
-    {
-        uint32_t key_index = 0;
-        auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
-        EXPECT_EQ(key_index, index_iofts);
-        EXPECT_TRUE(r.len_ != 0);
-        EXPECT_TRUE(r.data_ != nullptr);
-        auto object = wtools::perf::FindPerfObject(r, key_index);
-        EXPECT_TRUE(object != nullptr);
-    }
+TEST(WinPerf, TsCounterByName) {
+    const auto index_iofts = GetIndexOfTs();
 
-    {
-        constexpr auto name = L"ts_sessions";
-        constexpr auto index = L"Terminal Services";
-        auto x = BuildWinPerfSection(L"winperf", name, index);
-        ASSERT_TRUE(!x.empty());
+    uint32_t key_index = 0;
+    const auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
+    EXPECT_EQ(key_index, index_iofts);
+    EXPECT_TRUE(r.len_ != 0);
+    EXPECT_TRUE(r.data_ != nullptr);
+    EXPECT_NE(wtools::perf::FindPerfObject(r, key_index), nullptr);
+}
 
-        // check all
-        auto table = tools::SplitString(x, "\n");
-        ASSERT_TRUE(table.size() > 3);
-        auto words = tools::SplitString(table[2], " ");
-        EXPECT_EQ(words.size(), 3);
-    }
+TEST(WinPerf, TsCounterFull) {
+    constexpr auto name = L"ts_sessions";
+    constexpr auto index = L"Terminal Services";
+    const auto x = BuildWinPerfSection(L"winperf", name, index);
+    ASSERT_TRUE(!x.empty());
+
+    const auto table = tools::SplitString(x, "\n");
+    ASSERT_TRUE(table.size() > 3);
+    EXPECT_EQ(tools::SplitString(table[2], " ").size(), 3);
 }
 
 }  // namespace cma::provider

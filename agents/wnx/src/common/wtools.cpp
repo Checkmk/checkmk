@@ -2603,24 +2603,25 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {
     auto pwd = GenerateRandomString(12);
 
     uc::LdapControl primary_dc;
-    primary_dc.userDel(name);
-    auto add_user_status = primary_dc.userAdd(name, pwd);
+    const auto ret = primary_dc.userDel(name);
+    XLOG::t(ret == uc::Status::success ? "delete success" : "delete fail");
+    const auto add_user_status = primary_dc.userAdd(name, pwd);
     if (add_user_status != uc::Status::success) {
-        XLOG::l("Can't add user '{}'", wtools::ToUtf8(name));
+        XLOG::l("Can't add user '{}'", ToUtf8(name));
         return {};
     }
 
-    // Now add the user to the local group_name.
     if (primary_dc.localGroupAddMembers(group_name, name) !=
         uc::Status::error) {
         return {name, pwd};
     }
 
-    // Fail situation processing
-    XLOG::l("Can't add user '{}' to group_name '{}'", wtools::ToUtf8(name),
-            wtools::ToUtf8(group_name));
+    XLOG::l("Can't add user '{}' to group_name '{}'", ToUtf8(name),
+            ToUtf8(group_name));
     if (add_user_status == uc::Status::success) {
-        primary_dc.userDel(name);
+        const auto primary_ret = primary_dc.userDel(name);
+        XLOG::t(primary_ret == uc::Status::success ? "delete success"
+                                                   : "delete faid");
     }
 
     return {};
@@ -2742,23 +2743,23 @@ fs::path ExecuteCommandsSync(std::wstring_view name,
     return ExecuteCommands(name, commands, true);
 }
 
-// simple scanner of Windows(tm) multi_sz strings
+//- simple scanner of Windows(tm) multi_sz strings
 const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end) {
     if (pos == nullptr || end == nullptr) {
         XLOG::l(XLOG_FUNC + "-Bad data");
         return nullptr;
     }
 
-    auto start = pos;
     if (pos >= end) {
         return nullptr;
     }
 
-    auto len = wcslen(pos);
+    const auto len = wcslen(pos);
     if (len == 0) {
         return nullptr;
     }
 
+    const auto start = pos;
     pos += len + 1;
     return start;
 }

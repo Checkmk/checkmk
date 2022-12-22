@@ -299,10 +299,19 @@ struct EventRecordData {
 };
 
 const std::vector<EventRecordData> &SimpleLogData();
+
+constexpr std::array g_terminal_services_indexes = {
+    8154,  // windows 10, dev machine
+    2066,  // windows server, build machine
+    5090,  // windows 10, dev machine, late build
+    6324,  // windows 10, 20h2
+    8868,  // windows server build machine
+};
+
 }  // namespace tst
 
 namespace cma::evl {
-class EventLogRecordDebug final: public EventLogRecordBase {
+class EventLogRecordDebug final : public EventLogRecordBase {
 public:
     EventLogRecordDebug(uint64_t record_id, const tst::EventRecordData &data)
         : record_id_{record_id}

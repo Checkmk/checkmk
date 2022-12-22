@@ -723,6 +723,13 @@ class ModeEditRuleset(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return []
 
+    def ensure_permissions(self) -> None:
+        super().ensure_permissions()
+        if not may_edit_ruleset(self._name):
+            raise MKAuthException(_("You are not permitted to access this ruleset."))
+        if self._host:
+            self._host.need_permission("read")
+
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRulesetGroup
@@ -761,10 +768,6 @@ class ModeEditRuleset(WatoMode):
         self._back_mode = request.get_ascii_input_mandatory(
             "back_mode", request.get_ascii_input_mandatory("ruleset_back_mode", "rulesets")
         )
-
-        if not may_edit_ruleset(self._name):
-            raise MKAuthException(_("You are not permitted to access this ruleset."))
-
         self._item: ServiceName | None = None
         self._service: ServiceName | None = None
 
@@ -812,9 +815,7 @@ class ModeEditRuleset(WatoMode):
             self._hostname = HostName(hostname)
             host = Folder.current().host(self._hostname)
             self._host = host
-            if self._host:
-                self._host.need_permission("read")
-            else:
+            if not self._host:
                 raise MKUserError("host", _("The given host does not exist."))
 
         # The service argument is only needed for performing match testing of rules
@@ -1669,15 +1670,21 @@ def _vs_ruleset_group() -> DropdownChoice:
 
 
 class ABCEditRuleMode(WatoMode):
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return []
+
+    def ensure_permissions(self) -> None:
+        super().ensure_permissions()
+        if not may_edit_ruleset(self._name):
+            raise MKAuthException(_("You are not permitted to access this ruleset."))
+
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditRuleset
 
     def _from_vars(self) -> None:
         self._name = request.get_ascii_input_mandatory("varname")
-
-        if not may_edit_ruleset(self._name):
-            raise MKAuthException(_("You are not permitted to access this ruleset."))
 
         try:
             self._rulespec = rulespec_registry[self._name]
@@ -2687,10 +2694,6 @@ class ModeEditRule(ABCEditRuleMode):
     def name(cls) -> str:
         return "edit_rule"
 
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return []
-
     def _save_rule(self) -> None:
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._orig_rule, self._rule)
@@ -2702,10 +2705,6 @@ class ModeCloneRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
         return "clone_rule"
-
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return []
 
     def title(self) -> str:
         return _("Copy rule: %s") % self._rulespec.title
@@ -2727,10 +2726,6 @@ class ModeNewRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
         return "new_rule"
-
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return []
 
     def title(self) -> str:
         return _("New rule: %s") % self._rulespec.title
@@ -2814,10 +2809,6 @@ class ModeExportRule(ABCEditRuleMode):
     @classmethod
     def name(cls) -> str:
         return "export_rule"
-
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return []
 
     def title(self) -> str:
         return _("Rule representation: %s") % self._rulespec.title

@@ -303,6 +303,10 @@ class ModeEditHost(ABCHostMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
+    def ensure_permissions(self) -> None:
+        super().ensure_permissions()
+        self._host.need_permission("read")
+
     # pylint does not understand this overloading
     @overload
     @classmethod
@@ -327,7 +331,6 @@ class ModeEditHost(ABCHostMode):
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
-        host.need_permission("read")
         return host
 
     def title(self) -> str:
@@ -564,6 +567,15 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
 
 
 class CreateHostMode(ABCHostMode):
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["hosts", "manage_hosts"]
+
+    def ensure_permissions(self) -> None:
+        super().ensure_permissions()
+        if self._mode == "clone" and not user.may("wato.clone_hosts"):
+            raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
+
     @classmethod
     @abc.abstractmethod
     def _init_new_host_object(cls):
@@ -580,7 +592,7 @@ class CreateHostMode(ABCHostMode):
         raise NotImplementedError()
 
     def _from_vars(self):
-        if request.var("clone") and self._init_host():
+        if request.var("clone"):
             self._mode = "clone"
         else:
             self._mode = "new"
@@ -591,8 +603,6 @@ class CreateHostMode(ABCHostMode):
             return self._init_new_host_object()
         if not Folder.current().has_host(clonename):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        if not user.may("wato.clone_hosts"):
-            raise MKAuthException(_("Sorry, you are not allowed to clone hosts."))
         host = Folder.current().load_host(clonename)
         self._verify_host_type(host)
         return host
@@ -660,10 +670,6 @@ class ModeCreateHost(CreateHostMode):
     def name(cls) -> str:
         return "newhost"
 
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return ["hosts", "manage_hosts"]
-
     def title(self) -> str:
         if self._mode == "clone":
             return _("Create clone of %s") % self._host.name()
@@ -693,10 +699,6 @@ class ModeCreateCluster(CreateHostMode):
     @classmethod
     def name(cls) -> str:
         return "newcluster"
-
-    @staticmethod
-    def static_permissions() -> Collection[PermissionName]:
-        return ["hosts", "manage_hosts"]
 
     def _is_cluster(self) -> bool:
         return True

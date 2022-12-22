@@ -8,7 +8,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import logging
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from functools import partial
 from typing import Final
@@ -27,11 +27,10 @@ from cmk.core_helpers.cache import FileCacheMode, FileCacheOptions, MaxAge, Sect
 from cmk.core_helpers.config import make_file_cache_path_template, make_persisted_section_dir
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.snmp import SectionMeta, SNMPFetcher, SNMPFileCache, SNMPParser
+from cmk.core_helpers.snmp import SNMPFetcher, SNMPFileCache, SNMPParser
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
@@ -59,7 +58,13 @@ def parse(
 
 
 def make_parser(
-    config_cache: ConfigCache, source: SourceInfo, *, keep_outdated: bool, logger: logging.Logger
+    config_cache: ConfigCache,
+    source: SourceInfo,
+    *,
+    # Always from NO_SELECTION.
+    checking_sections: frozenset[SectionName],
+    keep_outdated: bool,
+    logger: logging.Logger,
 ) -> Parser:
     hostname = source.hostname
     if source.fetcher_type is FetcherType.SNMP:
@@ -68,9 +73,7 @@ def make_parser(
             SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
             check_intervals={
                 section_name: config_cache.snmp_fetch_interval(hostname, section_name)
-                for section_name in _make_checking_sections(
-                    config_cache, hostname, selected_sections=NO_SELECTION
-                )
+                for section_name in checking_sections
             },
             keep_outdated=keep_outdated,
             logger=logger,
@@ -81,50 +84,6 @@ def make_parser(
         SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
         keep_outdated=keep_outdated,
         logger=logger,
-    )
-
-
-def make_sections(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    *,
-    checking_sections: frozenset[SectionName],
-    needs_redetection: Callable[[SectionName], bool],
-) -> dict[SectionName, SectionMeta]:
-    disabled_sections = config_cache.disabled_snmp_sections(host_name)
-    return {
-        name: SectionMeta(
-            checking=name in checking_sections,
-            disabled=name in disabled_sections,
-            redetect=name in checking_sections and needs_redetection(name),
-            fetch_interval=config_cache.snmp_fetch_interval(host_name, name),
-        )
-        for name in (checking_sections | disabled_sections)
-    }
-
-
-def _make_checking_sections(
-    config_cache: ConfigCache,
-    hostname: HostName,
-    *,
-    selected_sections: SectionNameCollection,
-) -> frozenset[SectionName]:
-    if selected_sections is not NO_SELECTION:
-        checking_sections = selected_sections
-    else:
-        checking_sections = frozenset(
-            agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=config.get_check_table(
-                    config_cache,
-                    hostname,
-                    filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
-                    skip_ignored=True,
-                ).needed_check_names(),
-                inventory_plugin_names=(),
-            )
-        )
-    return frozenset(
-        s for s in checking_sections if agent_based_register.is_registered_snmp_section_plugin(s)
     )
 
 
@@ -257,13 +216,11 @@ class _Builder:
         self._add(
             source,
             SNMPFetcher(
-                sections=make_sections(
-                    self.config_cache,
+                sections=self.config_cache.make_snmp_sections(
                     self.host_name,
-                    checking_sections=_make_checking_sections(
-                        self.config_cache, self.host_name, selected_sections=self.selected_sections
+                    checking_sections=self.config_cache.make_checking_sections(
+                        self.host_name, selected_sections=self.selected_sections
                     ),
-                    needs_redetection=agent_based_register.needs_redetection,
                 ),
                 on_error=self.on_scan_error,
                 missing_sys_description=self.config_cache.missing_sys_description(self.host_name),
@@ -320,15 +277,11 @@ class _Builder:
             self._add(
                 source,
                 SNMPFetcher(
-                    sections=make_sections(
-                        self.config_cache,
+                    sections=self.config_cache.make_snmp_sections(
                         self.host_name,
-                        checking_sections=_make_checking_sections(
-                            self.config_cache,
-                            self.host_name,
-                            selected_sections=self.selected_sections,
+                        checking_sections=self.config_cache.make_checking_sections(
+                            self.host_name, selected_sections=self.selected_sections
                         ),
-                        needs_redetection=agent_based_register.needs_redetection,
                     ),
                     on_error=self.on_scan_error,
                     missing_sys_description=self.config_cache.missing_sys_description(

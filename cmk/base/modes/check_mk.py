@@ -447,6 +447,9 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 make_parser(
                     config_cache,
                     source,
+                    checking_sections=config_cache.make_checking_sections(
+                        hostname, selected_sections=NO_SELECTION
+                    ),
                     keep_outdated=file_cache_options.keep_outdated,
                     logger=log.logger,
                 ),

@@ -1734,6 +1734,9 @@ class AutomationGetAgentOutput(Automation):
                         make_parser(
                             config_cache,
                             source,
+                            checking_sections=config_cache.make_checking_sections(
+                                source.hostname, selected_sections=NO_SELECTION
+                            ),
                             keep_outdated=file_cache_options.keep_outdated,
                             logger=logging.getLogger("cmk.base.checking"),
                         ),

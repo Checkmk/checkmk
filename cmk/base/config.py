@@ -104,7 +104,9 @@ import cmk.core_helpers.cache as cache_file
 from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, TCPFetcher
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
+from cmk.core_helpers.snmp import SectionMeta
 from cmk.core_helpers.tcp import EncryptionHandling
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -2905,6 +2907,29 @@ class ConfigCache:
             ),
         )
 
+    def make_checking_sections(
+        self, hostname: HostName, *, selected_sections: SectionNameCollection
+    ) -> frozenset[SectionName]:
+        if selected_sections is not NO_SELECTION:
+            checking_sections = selected_sections
+        else:
+            checking_sections = frozenset(
+                agent_based_register.get_relevant_raw_sections(
+                    check_plugin_names=get_check_table(
+                        self,
+                        hostname,
+                        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+                        skip_ignored=True,
+                    ).needed_check_names(),
+                    inventory_plugin_names=(),
+                )
+            )
+        return frozenset(
+            s
+            for s in checking_sections
+            if agent_based_register.is_registered_snmp_section_plugin(s)
+        )
+
     def invalidate_host_config(self, hostname: HostName) -> None:
         self.__enforced_services_table.clear()
         self.__is_piggyback_host.clear()
@@ -3391,6 +3416,23 @@ class ConfigCache:
             )
 
         return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
+
+    def make_snmp_sections(
+        self,
+        host_name: HostName,
+        *,
+        checking_sections: frozenset[SectionName],
+    ) -> dict[SectionName, SectionMeta]:
+        disabled_sections = self.disabled_snmp_sections(host_name)
+        return {
+            name: SectionMeta(
+                checking=name in checking_sections,
+                disabled=name in disabled_sections,
+                redetect=name in checking_sections and agent_based_register.needs_redetection(name),
+                fetch_interval=self.snmp_fetch_interval(host_name, name),
+            )
+            for name in (checking_sections | disabled_sections)
+        }
 
     def _collect_hosttags(self, tag_to_group_map: TagIDToTaggroupID) -> None:
         """Calculate the effective tags for all configured hosts

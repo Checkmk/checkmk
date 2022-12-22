@@ -54,6 +54,7 @@ from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils
+import cmk.utils.paths
 import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.log import VERBOSE

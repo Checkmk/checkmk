@@ -70,7 +70,14 @@ def make_parser(
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             hostname,
-            SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
+            SectionStore[SNMPRawDataSection](
+                make_persisted_section_dir(
+                    source.hostname,
+                    fetcher_type=source.fetcher_type,
+                    ident=source.ident,
+                ),
+                logger=logger,
+            ),
             check_intervals={
                 section_name: config_cache.snmp_fetch_interval(hostname, section_name)
                 for section_name in checking_sections
@@ -81,7 +88,12 @@ def make_parser(
 
     return config_cache.make_agent_parser(
         hostname,
-        SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
+        SectionStore[AgentRawDataSection](
+            make_persisted_section_dir(
+                source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
+            ),
+            logger=logger,
+        ),
         keep_outdated=keep_outdated,
         logger=logger,
     )
@@ -215,22 +227,11 @@ class _Builder:
         )
         self._add(
             source,
-            SNMPFetcher(
-                sections=self.config_cache.make_snmp_sections(
-                    self.host_name,
-                    checking_sections=self.config_cache.make_checking_sections(
-                        self.host_name, selected_sections=self.selected_sections
-                    ),
-                ),
-                on_error=self.on_scan_error,
-                missing_sys_description=self.config_cache.missing_sys_description(self.host_name),
-                do_status_data_inventory=(
-                    self.config_cache.hwsw_inventory_parameters(
-                        self.host_name
-                    ).status_data_inventory
-                ),
-                section_store_path=make_persisted_section_dir(source),
-                snmp_config=self.config_cache.make_snmp_config(source.hostname, source.ipaddress),
+            self.config_cache.make_snmp_fetcher(
+                self.host_name,
+                self.ipaddress,
+                on_scan_error=self.on_scan_error,
+                selected_sections=self.selected_sections,
             ),
             SNMPFileCache(
                 source.hostname,
@@ -276,26 +277,11 @@ class _Builder:
             )
             self._add(
                 source,
-                SNMPFetcher(
-                    sections=self.config_cache.make_snmp_sections(
-                        self.host_name,
-                        checking_sections=self.config_cache.make_checking_sections(
-                            self.host_name, selected_sections=self.selected_sections
-                        ),
-                    ),
-                    on_error=self.on_scan_error,
-                    missing_sys_description=self.config_cache.missing_sys_description(
-                        self.host_name
-                    ),
-                    do_status_data_inventory=(
-                        self.config_cache.hwsw_inventory_parameters(
-                            self.host_name
-                        ).status_data_inventory
-                    ),
-                    section_store_path=make_persisted_section_dir(source),
-                    snmp_config=self.config_cache.make_snmp_config(
-                        source.hostname, source.ipaddress
-                    ),
+                self.config_cache.make_snmp_fetcher(
+                    self.host_name,
+                    self.ipaddress,
+                    on_scan_error=self.on_scan_error,
+                    selected_sections=self.selected_sections,
                 ),
                 SNMPFileCache(
                     source.hostname,

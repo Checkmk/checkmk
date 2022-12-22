@@ -50,7 +50,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.config_path import ConfigPath
-from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
@@ -101,9 +101,17 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
-from cmk.core_helpers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, TCPFetcher
+from cmk.core_helpers import (
+    FetcherType,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
+from cmk.core_helpers.config import make_persisted_section_dir
 from cmk.core_helpers.snmp import SectionMeta
 from cmk.core_helpers.tcp import EncryptionHandling
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
@@ -2817,6 +2825,32 @@ class ConfigCache:
             time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
         )
 
+    def make_snmp_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        *,
+        on_scan_error: OnError,
+        selected_sections: SectionNameCollection,
+    ) -> SNMPFetcher:
+        return SNMPFetcher(
+            sections=self._make_snmp_sections(
+                host_name,
+                checking_sections=self.make_checking_sections(
+                    host_name, selected_sections=selected_sections
+                ),
+            ),
+            on_error=on_scan_error,
+            missing_sys_description=self._missing_sys_description(host_name),
+            do_status_data_inventory=self.hwsw_inventory_parameters(
+                host_name
+            ).status_data_inventory,
+            section_store_path=make_persisted_section_dir(
+                host_name, fetcher_type=FetcherType.SNMP, ident="snmp"
+            ),
+            snmp_config=self.make_snmp_config(host_name, ip_address),
+        )
+
     def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress | None) -> TCPFetcher:
         return TCPFetcher(
             host_name=host_name,
@@ -3367,7 +3401,7 @@ class ConfigCache:
             return "ok"
         return default_host_check_command
 
-    def missing_sys_description(self, host_name: HostName) -> bool:
+    def _missing_sys_description(self, host_name: HostName) -> bool:
         return self.in_binary_hostlist(host_name, snmp_without_sys_descr)
 
     def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:
@@ -3417,7 +3451,7 @@ class ConfigCache:
 
         return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
 
-    def make_snmp_sections(
+    def _make_snmp_sections(
         self,
         host_name: HostName,
         *,

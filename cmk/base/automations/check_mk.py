@@ -1528,6 +1528,9 @@ class AutomationDiagHost(Automation):
             return 1, "SNMP command not implemented"
 
         # TODO: What about SNMP management boards?
+        # TODO: `snmp_table.get_snmp_table()` with some cache handling
+        #       is what the SNMPFetcher already does.  Work on reducing
+        #       code duplication.
         snmp_config = SNMPHostConfig(
             is_ipv6_primary=snmp_config.is_ipv6_primary,
             hostname=hostname,

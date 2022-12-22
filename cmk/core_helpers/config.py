@@ -8,29 +8,29 @@ from pathlib import Path
 from typing import Final
 
 import cmk.utils.paths
+from cmk.utils.type_defs import HostName
 
-from .type_defs import FetcherType, SourceInfo
+from .type_defs import FetcherType
 
 __all__ = ["make_file_cache_path_template", "make_persisted_section_dir"]
 
 
-def make_persisted_section_dir(source: SourceInfo) -> Path:
+def make_persisted_section_dir(
+    host_name: HostName,
+    *,
+    fetcher_type: FetcherType,
+    ident: str,
+) -> Path:
     var_dir: Final = Path(cmk.utils.paths.var_dir)
     return {
-        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / source.ident / str(source.hostname),
-        FetcherType.SNMP: var_dir / "persisted_sections" / source.ident / str(source.hostname),
-        FetcherType.IPMI: var_dir / "persisted_sections" / source.ident / str(source.hostname),
-        FetcherType.PROGRAM: var_dir / "persisted" / str(source.hostname),
-        FetcherType.SPECIAL_AGENT: var_dir
-        / "persisted_sections"
-        / source.ident
-        / str(source.hostname),
-        FetcherType.PUSH_AGENT: var_dir
-        / "persisted_sections"
-        / source.ident
-        / str(source.hostname),
-        FetcherType.TCP: var_dir / "persisted" / str(source.hostname),
-    }[source.fetcher_type]
+        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / ident / str(host_name),
+        FetcherType.SNMP: var_dir / "persisted_sections" / ident / str(host_name),
+        FetcherType.IPMI: var_dir / "persisted_sections" / ident / str(host_name),
+        FetcherType.PROGRAM: var_dir / "persisted" / str(host_name),
+        FetcherType.SPECIAL_AGENT: var_dir / "persisted_sections" / ident / str(host_name),
+        FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / ident / str(host_name),
+        FetcherType.TCP: var_dir / "persisted" / str(host_name),
+    }[fetcher_type]
 
 
 def make_file_cache_path_template(

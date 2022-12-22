@@ -39,11 +39,6 @@ def get_installed_manifests(log: logging.Logger | None = None) -> Sequence[Manif
     ]
 
 
-def _path(raw: str) -> Path:
-    """make mypy remind us to remove this"""
-    return Path(raw)
-
-
 def get_packaged_files() -> Mapping[PackagePart, set[Path]]:
     packaged_files: dict[PackagePart, set[Path]] = {p: set() for p in PackagePart}
     for manifest in get_installed_manifests():

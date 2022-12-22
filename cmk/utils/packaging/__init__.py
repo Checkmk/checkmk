@@ -23,7 +23,6 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
-import cmk.utils.werks
 from cmk.utils.i18n import _
 from cmk.utils.log import VERBOSE
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version

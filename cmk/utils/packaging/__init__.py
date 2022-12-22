@@ -62,17 +62,6 @@ def _get_permissions(part: PackagePart, rel_path: Path) -> int:
     return part.permission
 
 
-class PackagePartInfoElement(TypedDict):
-    # Whatch out! This is used in diagnostics (only) and must remain JSON dumpable!
-    title: str
-    permissions: Sequence[int]
-    path: str
-    files: Sequence[str]
-
-
-PackagePartInfo = dict[PartName, PackagePartInfoElement]
-
-
 def format_file_name(package_id: PackageID) -> str:
     """
     >>> package_id = PackageID(
@@ -682,28 +671,6 @@ def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
             all_rule_pack_files() - packaged[PackagePart.EC_RULE_PACKS]
         ),
     }
-
-
-def package_part_info() -> PackagePartInfo:
-    # this is broken:
-    # * It does not decend into subfolders :-(
-    # * It reports (for diagnostics!) the *desired* permissions
-    #   instead of the actual ones!
-    part_info: PackagePartInfo = {}
-    for part in PACKAGE_PARTS + CONFIG_PARTS:
-        try:
-            files = [f.relative_to(part.path) for f in part.path.iterdir()]
-        except FileNotFoundError:
-            files = []
-
-        part_info[part.ident] = {
-            "title": part.ui_title,
-            "permissions": [_get_permissions(part, f) for f in files],
-            "path": str(part.path),
-            "files": [str(f) for f in files],
-        }
-
-    return part_info
 
 
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:

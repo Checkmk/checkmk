@@ -18,7 +18,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -39,11 +39,9 @@ from cmk.utils.diagnostics import (
     DiagnosticsElementFilepaths,
     DiagnosticsElementJSONResult,
     DiagnosticsOptionalParameters,
-    get_all_package_infos,
     get_checkmk_config_files_map,
     get_checkmk_core_files_map,
     get_checkmk_log_files_map,
-    get_local_files_csv,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
     OPT_CHECKMK_LOG_FILES,
@@ -161,8 +159,9 @@ class DiagnosticsDump:
 
         optional_elements: list[ABCDiagnosticsElement] = []
         if parameters.get(OPT_LOCAL_FILES):
-            optional_elements.append(LocalFilesJSONDiagnosticsElement())
-            optional_elements.append(LocalFilesCSVDiagnosticsElement())
+            optional_elements.append(MKPFindTextDiagnosticsElement())
+            optional_elements.append(MKPShowTextDiagnosticsElement())
+            optional_elements.append(MKPListTextDiagnosticsElement())
 
         if parameters.get(OPT_OMD_CONFIG):
             optional_elements.append(OMDConfigDiagnosticsElement())
@@ -321,6 +320,17 @@ class ABCDiagnosticsElement(abc.ABC):
         raise NotImplementedError()
 
 
+class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
+    def add_or_get_files(self, tmp_dump_folder: Path) -> Iterator[Path]:
+        filepath = tmp_dump_folder.joinpath(self.ident)
+        store.save_text_to_file(filepath, self._collect_infos())
+        yield filepath
+
+    @abc.abstractmethod
+    def _collect_infos(self) -> str:
+        raise NotImplementedError()
+
+
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         infos = self._collect_infos()
@@ -352,27 +362,6 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
 
 
 #   ---csv dumps-----------------------------------------------------------
-
-
-class LocalFilesCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
-    @property
-    def ident(self) -> str:
-        return "local_files"
-
-    @property
-    def title(self) -> str:
-        return _("Local Files")
-
-    @property
-    def description(self) -> str:
-        return _(
-            "List of installed, unpacked, optional files below $OMD_ROOT/local. "
-            "This also includes information about installed MKPs."
-        )
-
-    def _collect_infos(self) -> DiagnosticsElementCSVResult:
-        package_infos = get_all_package_infos()
-        return get_local_files_csv(package_infos)
 
 
 class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
@@ -572,33 +561,64 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return dict(os.environ)
 
 
-class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @property
     def ident(self) -> str:
-        return "local_files"
+        return "mkp_find_all.json"
 
     @property
     def title(self) -> str:
-        return _("Local Files")
+        return _("Extension package files")
 
     @property
     def description(self) -> str:
         return _(
-            "List of installed, unpacked, optional files below $OMD_ROOT/local. "
-            "This also includes information about installed MKPs."
+            "Output of `mkp find --all --json`. "
+            "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        all_infos = get_all_package_infos()
-        return {
-            "installed": [v.json() for v in all_infos["installed"]],
-            "unpackaged": all_infos["unpackaged"],
-            "parts": all_infos["parts"],
-            "optional_packages": [
-                (v.json(), is_local) for v, is_local in all_infos["optional_packages"].values()
-            ],
-            "enabled_packages": [v.json() for v in all_infos["enabled_packages"].values()],
-        }
+    def _collect_infos(self) -> str:
+        return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
+
+
+class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+    @property
+    def ident(self) -> str:
+        return "mkp_show_all.json"
+
+    @property
+    def title(self) -> str:
+        return _("Extension package files")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Output of `mkp show-all --json`. "
+            "See the corresponding commandline help for more details."
+        )
+
+    def _collect_infos(self) -> str:
+        return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
+
+
+class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+    @property
+    def ident(self) -> str:
+        return "mkp_list.json"
+
+    @property
+    def title(self) -> str:
+        return _("Extension package files")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Output of `mkp list --json`. "
+            "See the corresponding commandline help for more details."
+        )
+
+    def _collect_infos(self) -> str:
+        return subprocess.check_output(["mkp", "list", "--json"], text=True)
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

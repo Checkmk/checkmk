@@ -11,7 +11,6 @@ from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from livestatus import SiteId
 
-import cmk.utils.packaging as packaging
 import cmk.utils.paths
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
@@ -21,7 +20,6 @@ _JSONSerializable = Union[
     list[tuple[str, bool]],
     Mapping[str, str],
     Mapping[str, list[str]],
-    packaging.PackagePartInfo,
 ]
 
 DiagnosticsCLParameters = list[str]
@@ -265,125 +263,6 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
                 rel_filepath = str(filepath.relative_to(cmk.utils.paths.log_dir))
                 files_map.setdefault(rel_filepath, filepath)
     return files_map
-
-
-class AllPackageInfos(TypedDict):
-    installed: Sequence[packaging.Manifest]
-    unpackaged: Mapping[str, list[str]]
-    parts: packaging.PackagePartInfo
-    optional_packages: Mapping[packaging.PackageID, tuple[packaging.Manifest, bool]]
-    enabled_packages: Mapping[packaging.PackageID, packaging.Manifest]
-
-
-def get_all_package_infos() -> AllPackageInfos:
-    store = packaging.PackageStore()
-    stored_packages = packaging.get_stored_manifests(store)
-    return {
-        "installed": packaging.get_installed_manifests(),
-        "unpackaged": {
-            part.ident: [str(f) for f in files]
-            for part, files in packaging.get_unpackaged_files().items()
-        },
-        "parts": packaging.package_part_info(),
-        "optional_packages": {
-            **{m.id: (m, False) for m in stored_packages.shipped},
-            **{m.id: (m, True) for m in stored_packages.local},
-        },
-        "enabled_packages": packaging.get_enabled_manifests(),
-    }
-
-
-def _parse_mkp_file_parts(contents: packaging.PackagePartInfoElement) -> dict[str, dict[str, str]]:
-    file_list: dict[str, dict[str, str]] = {}
-    for idx, file in enumerate(contents["files"]):
-        path = "{}/{}".format(contents["path"], file)
-        file_list[path] = {"path": path, "permissions": str(contents["permissions"][idx])}
-    return file_list
-
-
-def _parse_mkp_files(
-    items: list[str], module: str, contents: packaging.Manifest | None, state: str, package: str
-) -> dict[str, dict[str, str]]:
-    file_list: dict[str, dict[str, str]] = {}
-    columns = (
-        {}
-        if contents is None
-        else {k: str(v) for k, v in contents.dict(by_alias=True).items() if k in _CSV_COLUMNS}
-    )
-    for file in items:
-        path = f"{cmk.utils.paths.omd_root}/local/{_MODULE_TO_PATH[module]}/{file}"
-        file_list[path] = {
-            **{col: columns.get(col, "N/A") for col in _CSV_COLUMNS},
-            "package": package,
-            state: "YES",
-            "path": path,
-        }
-
-    return file_list
-
-
-def _deep_update(
-    d1: dict[str, dict[str, str]], d2: dict[str, dict[str, str]]
-) -> dict[str, dict[str, str]]:
-    for key in set(d1) | set(d2):
-        if key not in d1:
-            d1[key] = d2[key]
-        elif key in d2:
-            d1[key].update(d2[key])
-    return d1
-
-
-def _get_path_type(path: Path) -> str:
-    if path.is_file():
-        return "file"
-    if path.is_dir():
-        return "directory"
-    if path.exists():
-        return "unknown"
-    return "missing"
-
-
-def _filelist_to_csv_lines(dictlist: dict[str, dict[str, str]]) -> Sequence[str]:
-    lines = ["'%s'" % "';'".join(_CSV_COLUMNS)]
-    for file_definition in dictlist.values():
-        lines.append("'%s'" % "';'".join([file_definition.get(col, "N/A") for col in _CSV_COLUMNS]))
-    return lines
-
-
-def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
-    files: dict[str, dict[str, str]] = {}
-
-    # Parse different secions of the packaging output
-    for (module, items) in infos["unpackaged"].items():
-        files = _deep_update(files, _parse_mkp_files(items, module, None, "unpackaged", "N/A"))
-    for package, (contents, _is_local) in infos["optional_packages"].items():
-        for part, files_list in contents.files.items():
-            files = _deep_update(
-                files,
-                _parse_mkp_files(
-                    [str(f) for f in files_list],
-                    part.ident,
-                    contents,
-                    "optional_packages",
-                    package.name,
-                ),
-            )
-    for manifest in infos["installed"]:
-        for part, files_list in manifest.files.items():
-            files = _deep_update(
-                files,
-                _parse_mkp_files(
-                    [str(f) for f in files_list], part.ident, manifest, "installed", manifest.name
-                ),
-            )
-    for (module, data) in infos["parts"].items():
-        files = _deep_update(files, _parse_mkp_file_parts(data))
-
-    # Check which files exist
-    for path in files:
-        files[path]["exists"] = _get_path_type(Path(path))
-
-    return "\n".join(_filelist_to_csv_lines(files))
 
 
 class CheckmkFileSensitivity(Enum):

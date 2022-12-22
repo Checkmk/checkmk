@@ -31,6 +31,7 @@ def fixture_raw_config() -> dict[str, Any]:
             "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
             "user_id_attribute": "username",
         },
+        "create_users_on_login": False,
     }
 
 

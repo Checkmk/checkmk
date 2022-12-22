@@ -21,6 +21,7 @@ from cmk.gui.userdb.saml2.connector import Connector
 from cmk.gui.userdb.saml2.interface import Interface, NotAuthenticated, XMLData
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
+from cmk.gui.utils.urls import makeuri_contextless
 
 LOGGER = logger.getChild("saml2")
 
@@ -197,7 +198,6 @@ class AssertionConsumerService(Page):
             )
             # TODO (CMK-11846): handle this
             return
-
         if not (saml_response := request.form.get("SAMLResponse")):
             raise MKSaml2Exception("Got no response from IdP")
 
@@ -208,18 +208,22 @@ class AssertionConsumerService(Page):
         if isinstance(authn_response, NotAuthenticated):
             raise MKAuthException("Invalid login")
 
-        # TODO (CMK-11849): The current assumption is that the user already exists in Checkmk. If that's
-        # not the case, the user should be created ad-hoc. When it is created, we need to be careful
-        # not to overlap with users that may exist locally.
+        try:
+            self.connector.create_and_update_user(authn_response.user_id)
+        except IndexError:
+            raise HTTPRedirect(
+                makeuri_contextless(
+                    request, [("_origtarget", self.relay_state.target_url)], filename="login.py"
+                )
+            )
 
-        # TODO (CMK-11849): The permission group the user belongs to, along with other attributes, could
-        # change. This should be updated too.
         on_succeeded_login(authn_response.user_id, datetime.now())
 
         # TODO (CMK-11846): If for whatever reason the session is not created successfully, a message
         # should be displayed after the redirect to the login page.
         session.user = LoggedInUser(authn_response.user_id)
 
+        # self.connector.update_user(authn_response.user_id)
         raise HTTPRedirect(self.relay_state.target_url)
 
 

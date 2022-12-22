@@ -33,6 +33,7 @@ def fixture_config_variables() -> Variables:
             "vs_p_connection_timeout_0": "12",
             "vs_p_connection_timeout_1": "12",
             "vs_p_user_id_attribute": "username",
+            "vs_p_create_users_on_login": "on",
         },
         valuespec={
             "type": "saml2",
@@ -41,11 +42,12 @@ def fixture_config_variables() -> Variables:
             "description": "",
             "disabled": False,
             "docu_url": "",
-            "checkmk_server_url": "https://mycheckmk.com",
             "comment": "",
             "connection_timeout": (12, 12),
+            "checkmk_server_url": "https://mycheckmk.com",
             "idp_metadata_endpoint": "https://myidp.com",
             "user_id_attribute": "username",
+            "create_users_on_login": True,
         },
         serialised={
             "type": "saml2",
@@ -61,6 +63,7 @@ def fixture_config_variables() -> Variables:
                 "idp_metadata_endpoint": "https://myidp.com",
                 "user_id_attribute": "username",
             },
+            "create_users_on_login": True,
         },
     )
 

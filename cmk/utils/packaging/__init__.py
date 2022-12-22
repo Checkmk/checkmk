@@ -38,7 +38,7 @@ from ._installed import (
 )
 from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
 from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
-from ._reporter import all_rule_pack_files
+from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 g_logger = logging.getLogger("cmk.utils.packaging")
@@ -661,8 +661,17 @@ def _get_enabled_package_paths():
 
 def get_unpackaged_files() -> dict[PackagePart, list[Path]]:
     packaged = get_packaged_files()
-    present = get_local_files_by_part()
-    return {part: sorted(present[part] - (packaged.get(part) or set())) for part in present}
+    present = all_local_files()
+    return {
+        **{
+            part: sorted(present[part] - (packaged.get(part) or set()))
+            for part in PackagePart
+            if part is not None
+        },
+        PackagePart.EC_RULE_PACKS: sorted(
+            all_rule_pack_files() - packaged[PackagePart.EC_RULE_PACKS]
+        ),
+    }
 
 
 def package_part_info() -> PackagePartInfo:
@@ -689,35 +698,6 @@ def package_part_info() -> PackagePartInfo:
 
 def package_num_files(package: Manifest) -> int:
     return sum(len(fl) for fl in package.files.values())
-
-
-def get_local_files_by_part() -> Mapping[PackagePart, set[Path]]:
-    return {part: _files_in_dir(part.ident, str(part.path)) for part in PackagePart}
-
-
-def _files_in_dir(part: str, directory: str, prefix: str = "") -> set[Path]:
-    if not os.path.exists(directory):
-        return set()
-
-    # Handle case where one part-directory lies below another
-    taboo_dirs = {str(p.path) for p in PACKAGE_PARTS + CONFIG_PARTS if p.ident != part}
-    # os.path.realpath would resolve /omd to /opt/omd ...
-    taboo_dirs |= {p.replace("lib/check_mk", "lib/python3/cmk") for p in taboo_dirs}
-    if directory in taboo_dirs:
-        return set()
-
-    result: set[Path] = set()
-    files = os.listdir(directory)
-    for f in files:
-        if f in [".", ".."] or f.startswith(".") or f.endswith("~") or f.endswith(".pyc"):
-            continue
-
-        path = directory + "/" + f
-        if os.path.isdir(path):
-            result.update(_files_in_dir(part, path, prefix + f + "/"))
-        else:
-            result.add(Path(prefix + f))
-    return result
 
 
 def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:

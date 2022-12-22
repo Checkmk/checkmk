@@ -125,3 +125,20 @@ PACKAGE_PARTS: Final = (
     PackagePart.MIBS,
     PackagePart.ALERT_HANDLERS,
 )
+
+
+def _part_depth(part: PackagePart) -> int:
+    return len(Path(part.path).resolve().parts)
+
+
+def get_package_part(full_file_path: Path) -> PackagePart | None:
+    """Determine the part for a given file (or return None if there is none)"""
+    # deal with parts containing each other by checking more specific ones first!
+    return next(
+        (
+            part
+            for part in sorted(PackagePart, key=_part_depth, reverse=True)
+            if full_file_path.resolve().is_relative_to(part.path.resolve())
+        ),
+        None,
+    )

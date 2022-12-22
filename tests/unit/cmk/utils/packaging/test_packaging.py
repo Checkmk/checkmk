@@ -378,10 +378,21 @@ def _setup_local_files_structure() -> None:
         (part.path / f"compiled_file_of_{part.ident}.pyc").touch()
         (subdir / f"subdir_file_of_{part.ident}.py").touch()
 
+    other_file = cmk.utils.paths.local_root / "some" / "other" / "file.sh"
+    other_file.parent.mkdir(parents=True)
+    other_file.touch()
+
 
 def test_get_local_files_by_part() -> None:
     _setup_local_files_structure()
-    assert packaging.get_local_files_by_part() == {
-        p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
-        for p in packaging.PackagePart
+    expected: dict[packaging.PackagePart | None, set[Path]] = {
+        **{
+            p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
+            for p in packaging.PackagePart
+            if p is not packaging.PackagePart.EC_RULE_PACKS
+        },
+        None: {
+            cmk.utils.paths.local_root / "some" / "other" / "file.sh",
+        },
     }
+    assert packaging.all_local_files() == expected

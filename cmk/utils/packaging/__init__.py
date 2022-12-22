@@ -16,9 +16,6 @@ from itertools import groupby
 from pathlib import Path
 from typing import Final, TypedDict
 
-from typing_extensions import assert_never
-
-import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -178,12 +175,11 @@ def uninstall(manifest: Manifest, post_package_change_actions: bool = True) -> N
         for fn in filenames:
             g_logger.log(VERBOSE, "    %s", fn)
             try:
-                file_path = part.path / fn
-                file_path.unlink(missing_ok=True)
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                raise Exception(f"Cannot uninstall {file_path}: {e}\n")
+                (part.path / fn).unlink(missing_ok=True)
+            except Exception as exc:
+                raise PackageException(
+                    f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
+                ) from exc
 
     remove_installed_manifest(manifest.name)
 

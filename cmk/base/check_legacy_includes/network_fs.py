@@ -14,6 +14,17 @@ from .df import df_check_filesystem_single
 # /with spaces ok 217492 123563 112515 524288
 # /with spaces Permission denied
 
+CHECK_DEFAULT_PARAMETERS = {
+    # adapted from FILESYSTEM_DEFAULT_LEVELS:
+    "levels": (80.0, 90.0),
+    "magic_normsize": 20,
+    "levels_low": (50.0, 60.0),
+    "trend_range": 24,
+    "trend_perfdata": True,
+    "has_perfdata": False,
+    "show_levels": "onmagic",
+}
+
 
 def parse_network_fs_mounts(info):
     parsed = {}

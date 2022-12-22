@@ -8,6 +8,7 @@ import copy
 import os
 import traceback
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Mapping, TypeVar
 
@@ -48,6 +49,35 @@ from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
 T = TypeVar("T")
+
+
+class OpenFileMode(Enum):
+    READ = "read"
+    WRITE = "write"
+
+
+class UserStore:
+    def __init__(self, mode: OpenFileMode = OpenFileMode.READ) -> None:
+        self.mode = mode
+        self.users = load_users(mode is OpenFileMode.WRITE)
+        self.__unchanged_users = copy.deepcopy(self.users)
+
+    def __enter__(self) -> Users:
+        return self.users
+
+    def __exit__(self, *exc_info: object) -> bool:
+        if self.mode is OpenFileMode.READ:
+            return True
+
+        if self.users == self.__unchanged_users:
+            # only write when really needed, because:
+            # - writing users may be a performance issue
+            # - it invalidates the cache
+            release_users_lock()
+            return True
+
+        save_users(self.users, datetime.utcnow())  # Implicitly releases the lock
+        return True
 
 
 def load_custom_attr(

@@ -12,7 +12,6 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "ChronoUtils.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "IntColumn.h"
@@ -25,6 +24,7 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
+#include "livestatus/ChronoUtils.h"
 #include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex

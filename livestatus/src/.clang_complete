@@ -3,8 +3,13 @@
 -I.
 -I../..
 -I..
+-I../../packages/livestatus/include
 -isystem includes/asio
 -DASIO_DISABLE_CONCEPTS
 -I../../omd/packages/re2/destdir/include
 -Iincludes/googletest
--I../../omd/build/package_build/rrdtool-1.7.2/src
+-I../../omd/build/intermediate_install/rrdtool-1.7.2/include
+-gdwarf-4
+-O3
+-Wall
+-Wextra

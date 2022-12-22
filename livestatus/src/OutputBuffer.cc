@@ -11,8 +11,8 @@
 #include <string_view>
 #include <utility>
 
-#include "Logger.h"
-#include "POSIXUtils.h"
+#include "livestatus/Logger.h"
+#include "livestatus/POSIXUtils.h"
 
 using namespace std::chrono_literals;
 

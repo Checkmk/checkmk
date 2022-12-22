@@ -10,7 +10,7 @@
 #include <map>
 #include <utility>
 
-#include "Logger.h"
+#include "livestatus/Logger.h"
 #include "strutil.h"
 
 namespace column::attribute_list {

@@ -11,7 +11,7 @@
 #define _GNU_SOURCE
 #endif
 
-#include "POSIXUtils.h"
+#include "livestatus/POSIXUtils.h"
 
 #include <pthread.h>
 #include <sys/socket.h>
@@ -20,8 +20,8 @@
 #include <ratio>
 #include <thread>
 
-#include "Logger.h"
-#include "Poller.h"
+#include "livestatus/Logger.h"
+#include "livestatus/Poller.h"
 
 using namespace std::chrono_literals;
 

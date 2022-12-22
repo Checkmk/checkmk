@@ -36,13 +36,10 @@
 #include <vector>
 
 #include "Average.h"
-#include "ChronoUtils.h"
 #include "DowntimeOrComment.h"
 #include "InputBuffer.h"
-#include "Logger.h"
 #include "NagiosCore.h"
 #include "OutputBuffer.h"
-#include "Poller.h"
 #include "Queue.h"
 #include "RegExp.h"
 #include "TimeperiodsCache.h"
@@ -50,6 +47,9 @@
 #include "User.h"
 #include "data_encoding.h"
 #include "global_counters.h"
+#include "livestatus/ChronoUtils.h"
+#include "livestatus/Logger.h"
+#include "livestatus/Poller.h"
 #include "nagios.h"
 #include "strutil.h"
 

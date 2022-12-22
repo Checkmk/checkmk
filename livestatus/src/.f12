@@ -12,6 +12,7 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+(cd ../../packages/livestatus && ONLY_COPY=1 ./.f12)
 echo Building rrdtool library...
 LANG=C make -j4 -C ../../omd re2-build rrdtool-build-library >/dev/null
 LANG=C make -C ../.. config.status

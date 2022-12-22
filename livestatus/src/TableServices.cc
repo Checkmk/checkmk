@@ -33,7 +33,6 @@
 #include "DynamicRRDColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
-#include "Logger.h"
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -45,6 +44,7 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "User.h"
+#include "livestatus/Logger.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

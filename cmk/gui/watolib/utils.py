@@ -8,7 +8,7 @@ import ast
 import re
 import pprint
 import base64
-from typing import Any, Union, List, TypedDict, Tuple
+from typing import Any, List, Mapping, Tuple, TypedDict, Union
 
 from six import ensure_binary, ensure_str
 
@@ -203,3 +203,11 @@ def format_php(data: object, lvl: int = 1) -> str:
         s += str(data)
 
     return s
+
+
+def restore_snmp_community_tuple(attributes: Mapping[str, Any]) -> Mapping[str, Any]:
+    """JSON does not know about tuples, and makes them lists. Repair."""
+    snmp_community = attributes.get("snmp_community")
+    if isinstance(snmp_community, list):
+        return {**attributes, "snmp_community": tuple(snmp_community)}
+    return attributes

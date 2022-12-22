@@ -79,6 +79,7 @@ from cmk.gui.watolib.utils import (
     host_attribute_matches,
     HostContactGroupSpec,
     rename_host_in_list,
+    restore_snmp_community_tuple,
     try_bake_agents_for_hosts,
     wato_root_dir,
 )
@@ -740,6 +741,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         attributes = self._add_missing_meta_data(attributes)
         attributes = self._transform_tag_snmp_ds(attributes)
         attributes = self._transform_cgconf_attributes(attributes)
+        attributes = restore_snmp_community_tuple(attributes)
         return attributes
 
     def _transform_cgconf_attributes(self, attributes):
@@ -2144,21 +2146,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _rewrite_hosts_file(self):
         self._load_hosts_on_demand()
-
-        for host in self._hosts.values():
-            self._correct_snmp_types(host)
-
         self.save_hosts()
-
-    @staticmethod
-    def _correct_snmp_types(host):
-        """For a while, the Web Api would write lists instead of tuples into the hosts.mk files"""
-        snmp_keys = ["snmp_community", "explicit_snmp_communities"]
-
-        for key in snmp_keys:
-            if value := host.attribute(key, None):
-                if isinstance(value, list):
-                    host.set_attribute(key, tuple(value))
 
     # .-----------------------------------------------------------------------.
     # | HTML Generation                                                       |

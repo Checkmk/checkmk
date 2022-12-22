@@ -18,7 +18,7 @@
 #include <ratio>
 #include <string>
 
-#include "livestatus/Poller.h"
+#include "Poller.h"
 
 using namespace std::chrono_literals;
 

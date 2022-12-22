@@ -11,12 +11,12 @@
 #include <string>
 
 #include "CrashReport.h"
+#include "Logger.h"
 #include "NagiosCore.h"
 #include "TableCrashReports.h"
 #include "TableQueryHelper.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
-#include "livestatus/Logger.h"
 #include "test/Utilities.h"
 class Comment;
 class Downtime;

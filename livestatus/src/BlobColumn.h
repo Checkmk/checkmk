@@ -21,10 +21,10 @@
 
 #include "Column.h"
 #include "Filter.h"
+#include "Logger.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "contact_fwd.h"
-#include "livestatus/Logger.h"
 #include "opids.h"
 class Aggregator;
 class RowRenderer;

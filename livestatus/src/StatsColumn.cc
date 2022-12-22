@@ -11,7 +11,7 @@
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "CountAggregator.h"
-#include "livestatus/Logger.h"
+#include "Logger.h"
 
 StatsColumnCount::StatsColumnCount(std::unique_ptr<Filter> filter)
     : _filter(std::move(filter)) {}

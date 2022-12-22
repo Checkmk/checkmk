@@ -8,12 +8,12 @@
 #include <optional>
 
 #include "Column.h"
+#include "Logger.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "User.h"
-#include "livestatus/Logger.h"
 #include "nagios.h"
 
 namespace {

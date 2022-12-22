@@ -14,12 +14,14 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
+#include "ChronoUtils.h"
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "Filter.h"
 #include "HostServiceState.h"
 #include "IntColumn.h"
 #include "LogEntry.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -29,8 +31,6 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
-#include "livestatus/ChronoUtils.h"
-#include "livestatus/Logger.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep

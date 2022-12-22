@@ -18,7 +18,9 @@
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
+#include "ChronoUtils.h"
 #include "Column.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
@@ -26,8 +28,6 @@
 #include "StringUtils.h"
 #include "Table.h"
 #include "User.h"
-#include "livestatus/ChronoUtils.h"
-#include "livestatus/Logger.h"
 #include "opids.h"
 #include "strutil.h"
 

@@ -7,8 +7,8 @@
 
 #include <chrono>
 
+#include "ChronoUtils.h"
 #include "Renderer.h"
-#include "livestatus/ChronoUtils.h"
 
 void DowntimeRenderer::output(ListRenderer &l,
                               const DowntimeData &downtime) const {

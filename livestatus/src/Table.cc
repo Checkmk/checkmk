@@ -10,9 +10,9 @@
 
 #include "Column.h"
 #include "DynamicColumn.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
-#include "livestatus/Logger.h"
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 

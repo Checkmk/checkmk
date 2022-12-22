@@ -17,6 +17,7 @@
 
 #include "Column.h"
 #include "LogCache.h"
+#include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Table.h"
@@ -44,7 +45,6 @@
 #include "TableTimeperiods.h"
 #include "Triggers.h"
 #include "gtest/gtest.h"
-#include "livestatus/Logger.h"
 
 #ifdef CMC
 #include "TableCachedStatehist.h"

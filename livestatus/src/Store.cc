@@ -14,11 +14,11 @@
 #include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "StringUtils.h"
-#include "livestatus/Logger.h"
 #include "mk_logwatch.h"
 #include "nagios.h"
 

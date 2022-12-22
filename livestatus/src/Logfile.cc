@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "LogCache.h"
-#include "livestatus/Logger.h"
+#include "Logger.h"
 
 namespace {
 std::chrono::system_clock::time_point firstTimestampOf(

@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "livestatus/Logger.h"
+#include "Logger.h"
 #include "nagios.h"
 
 using namespace std::chrono_literals;

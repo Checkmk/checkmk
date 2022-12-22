@@ -7,12 +7,12 @@
 
 #include <cmath>
 
+#include "Logger.h"
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
 #include "RendererPython3.h"
 #include "data_encoding.h"
-#include "livestatus/Logger.h"
 
 // static
 std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,

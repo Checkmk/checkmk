@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-#include "livestatus/ChronoUtils.h"
+#include "ChronoUtils.h"
 
 namespace {
 constexpr double percentile = 0.50;

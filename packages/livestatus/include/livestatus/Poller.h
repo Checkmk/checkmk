@@ -16,9 +16,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "livestatus/BitMask.h"
-#include "livestatus/ChronoUtils.h"
-#include "livestatus/Logger.h"
+#include "BitMask.h"
+#include "ChronoUtils.h"
+#include "Logger.h"
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);

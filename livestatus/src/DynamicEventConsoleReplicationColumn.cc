@@ -15,8 +15,8 @@
 
 #include "BlobColumn.h"
 #include "EventConsoleConnection.h"
+#include "Logger.h"
 #include "MonitoringCore.h"
-#include "livestatus/Logger.h"
 
 class TableEventConsoleReplication;
 

@@ -16,7 +16,7 @@
 #include <thread>
 #include <utility>
 
-#include "livestatus/Logger.h"
+#include "Logger.h"
 
 using namespace std::chrono_literals;
 

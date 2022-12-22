@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
+#include "Logger.h"
 #include "Metric.h"
 #include "gtest/gtest.h"
-#include "livestatus/Logger.h"
 #include "pnp4nagios.h"
 
 namespace fs = std::filesystem;

@@ -16,9 +16,9 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "livestatus/Logger.h"
 #include "strutil.h"
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,

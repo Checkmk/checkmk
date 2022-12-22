@@ -20,7 +20,8 @@ FetchContent_GetProperties(
   POPULATED done_var)
 set(asio_ext_include ${src_dir}/include)
 
-target_include_directories(livestatus PUBLIC ../include ${asio_ext_include})
+target_include_directories(livestatus PUBLIC ../include/livestatus
+                                             ${asio_ext_include})
 target_link_libraries(livestatus PRIVATE pthread ${asio_ext_lib})
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}

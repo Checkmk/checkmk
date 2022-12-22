@@ -19,10 +19,6 @@ PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-1.24.0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
-LIVESTATUS_PATH := $(abs_top_srcdir)/packages/livestatus
-LIVESTATUS_LIB := $(LIVESTATUS_PATH)/build/src
-LIBLIVESTATUS_SO := $(LIVESTATUS_LIB)/liblivestatus.so
-
 RRDTOOL_VERSION := rrdtool-1.7.2
 RRDTOOL_PATH := $(abs_top_srcdir)/omd/build/intermediate_install/$(RRDTOOL_VERSION)
 RRDTOOL_BUILD_LOG := $(RRDTOOL_PATH)/build.log
@@ -37,7 +33,6 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 AM_CPPFLAGS = \
     -I.. \
-    -I$(LIVESTATUS_PATH)/include \
     -isystem $(ASIO_INCLUDE) \
     -DASIO_DISABLE_CONCEPTS \
     @RE2_CPPFLAGS@
@@ -88,20 +83,13 @@ test_neb_LDADD = \
     liblivestatusneb.a \
     -lstdc++fs \
     @RE2_LIBS@ \
-    $(LIBLIVESTATUS_SO) \
     $(LIBS_DIR)/libgtest.a \
     $(LIBS_DIR)/libgtest_main.a \
     -lrrd \
     -lpthread
 
-$(LIBLIVESTATUS_SO):
-	$(LIVESTATUS_PATH)/run-ci --build
-
-unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
-	LD_LIBRARY_PATH=$(LIVESTATUS_LIB) \
-		GTEST_OUTPUT=xml \
-		$(VALGRIND) \
-		./test_neb$(EXEEXT)
+unit-test: test_neb$(EXEEXT)
+	GTEST_OUTPUT=xml $(VALGRIND) ./test_neb$(EXEEXT)
 
 pkglib_LIBRARIES = liblivestatusneb.a
 
@@ -138,6 +126,7 @@ liblivestatusneb_a_SOURCES = \
         LogCache.cc \
         LogEntry.cc \
         Logfile.cc \
+        Logger.cc \
         LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
@@ -146,6 +135,7 @@ liblivestatusneb_a_SOURCES = \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
+        POSIXUtils.cc \
         Query.cc \
         RegExp.cc \
         Renderer.cc \
@@ -249,13 +239,13 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $@
 
-livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
+livestatus.o: $(liblivestatusneb_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(LIBLIVESTATUS_SO) $(RRDTOOL_LD_FLAGS)
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles

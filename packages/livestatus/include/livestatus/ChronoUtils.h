@@ -6,8 +6,6 @@
 #ifndef ChronoUtils_h
 #define ChronoUtils_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>

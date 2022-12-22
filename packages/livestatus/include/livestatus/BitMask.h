@@ -6,8 +6,6 @@
 #ifndef BitMask_h
 #define BitMask_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <type_traits>
 
 namespace mk {

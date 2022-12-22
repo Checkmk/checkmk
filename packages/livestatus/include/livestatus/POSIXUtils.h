@@ -6,8 +6,6 @@
 #ifndef POSIXUtils_h
 #define POSIXUtils_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <fcntl.h>
 #include <semaphore.h>
 #include <sys/types.h>

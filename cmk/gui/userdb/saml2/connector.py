@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 from typing import Any
 
 from pydantic import BaseModel
@@ -88,7 +89,7 @@ class Connector(UserConnector):
                 different connection).
         """
         if user_profile is None:
-            user_profile = active_config.default_user_profile
+            user_profile = copy.deepcopy(active_config.default_user_profile)
             user_profile["connector"] = self.__config.id
             user_profile["alias"] = user_id
 

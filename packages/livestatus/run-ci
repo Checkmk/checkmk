@@ -142,12 +142,14 @@ parse_options() {
 }
 
 update_cmake_artifacts() {
-    for i in CMakeLists.txt src/CMakeLists.txt test/CMakeLists.txt; do
-        if [ "${i}" -nt build/compile_commands.json ]; then
-            cmake -S . -B build
-            return
-        fi
-    done
+    # We depend on all CMakeLists.txt, all the external dependencies pulled in
+    # via FetchContent, and all the patches applied to those dependencies. We
+    # could guard the configuration call below with a timestamp comparison
+    # against e.g. build/compile_commands.json, but let's play safe and always
+    # run it. Currently, configuration takes only about 120ms in a no-op
+    # scenario, which is fast enough. We can reconsider a guard when this gets
+    # worse.
+    cmake -S . -B build
 }
 
 run_clean() {

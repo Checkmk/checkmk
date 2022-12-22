@@ -891,7 +891,7 @@ def test_show_all_users_with_no_email(
 
     # We remove all the contact information to mimic the no email case
     monkeypatch.setattr(
-        "cmk.gui.userdb.load_contacts",
+        "cmk.gui.userdb.store.load_contacts",
         lambda: {},
     )
     resp = aut_user_auth_wsgi_app.call_method(

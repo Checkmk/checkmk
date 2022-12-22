@@ -16,7 +16,6 @@ Once a user logs out or the "last activity" is older than the configured session
 session is invalidated. The user can then login again from the same client or another one.
 """
 
-import ast
 import hmac
 import secrets
 from dataclasses import asdict
@@ -35,7 +34,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
-from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
+from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
 
 auth_logger = gui_logger.getChild("auth")
 
@@ -200,26 +199,6 @@ def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) 
 
 def _save_failed_logins(username: UserId, count: int) -> None:
     save_custom_attr(username, "num_failed_logins", str(count))
-
-
-def convert_session_info(value: str) -> dict[str, SessionInfo]:
-    if value == "":
-        return {}
-
-    if value.startswith("{"):
-        return {k: SessionInfo(**v) for k, v in ast.literal_eval(value).items()}
-
-    # Transform pre 2.0 values
-    session_id, last_activity = value.split("|", 1)
-    return {
-        session_id: SessionInfo(
-            session_id=session_id,
-            # We don't have that information. The best guess is to use the last activitiy
-            started_at=int(last_activity),
-            last_activity=int(last_activity),
-            flashes=[],
-        ),
-    }
 
 
 def is_valid_user_session(

@@ -12,7 +12,7 @@ checkname = 'mbg_lantime_ng_refclock'
 
 
 info = [['1',
-         '92',
+         '999',
          '3',
          '1',
          '1',

@@ -142,9 +142,12 @@ parse_options() {
 }
 
 update_cmake_artifacts() {
-    if [ "CMakeLists.txt" -nt "build/compile_commands.json" ]; then
-        cmake -S . -B build
-    fi
+    for i in CMakeLists.txt src/CMakeLists.txt test/CMakeLists.txt; do
+        if [ "${i}" -nt build/compile_commands.json ]; then
+            cmake -S . -B build
+            return
+        fi
+    done
 }
 
 run_clean() {

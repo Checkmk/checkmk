@@ -20242,6 +20242,10 @@ msgstr "Statistiken des Graylog Cluster"
 msgid "Graylog cluster traffic"
 msgstr "Graylog Cluster Datenverkehr"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "Graylog-Lizenz"
+
 msgid "Graylog index failures"
 msgstr "Graylog Index-Fehler"
 
@@ -31289,6 +31293,10 @@ msgstr "Weitere Informationen finden sich in ~/var/log/web.log"
 msgid "More than %d results"
 msgstr "Mehr als %d Ergebnisse"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -33377,6 +33385,14 @@ msgstr "Anzahl von Elementen zur Anzeige in der Schnellsuche"
 
 msgid "Number of entries"
 msgstr "Anzahl von Einträgen"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Anzahl der Meldungen in definierter Zeitspannenuntergrenze"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Anzahl der Meldungen in definierter Zeitspannenobergrenze"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -55458,6 +55474,14 @@ msgstr "Gesamte Plattenkapazität"
 msgid "Total documents"
 msgstr "Dokumente insgesamt"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "Untere Schwellwerte für Gesamtanzahl der Nachrichten"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Obere Schwellwerte für Gesamtanzahl der Nachrichten"
+
 msgid "Total file size"
 msgstr "Datafile-Größe"
 
@@ -56576,6 +56600,10 @@ msgstr "Unbekanntes Tag: Der Host hat <b>nicht</b> das Tag <tt>%s</tt>."
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "Unknown tag: Host has the tag <tt>%s</tt>"
+
+#, fuzzy, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr "Unbekannte BI Aggregations-Gruppe %s. Vorhanden: %s"
 
 msgid "Unknown user"
 msgstr "Unbekannter Benutzer"
@@ -75064,9 +75092,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Undefined aggregation function '%s'. Available are: %s"
 #~ msgstr "Nicht definierte Aggregations-Funktion '%s'. Vorhanden: %s"
-
-#~ msgid "Unknown BI Aggregation group %s. Available are: %s"
-#~ msgstr "Unbekannte BI Aggregations-Gruppe %s. Vorhanden: %s"
 
 #~ msgid "Untitled BI rule"
 #~ msgstr "BI-Regel ohne Titel"

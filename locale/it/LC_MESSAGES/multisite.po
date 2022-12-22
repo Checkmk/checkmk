@@ -20506,6 +20506,10 @@ msgstr "Statistiche graylog cluster"
 msgid "Graylog cluster traffic"
 msgstr "Traffico cluster Graylog"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "Licenza Graylog"
+
 msgid "Graylog index failures"
 msgstr "Fallimenti dell'indice Graylog"
 
@@ -31736,6 +31740,10 @@ msgstr "Maggiori informazioni possono essere trovate in ~/var/log/web.log"
 msgid "More than %d results"
 msgstr "Più di %d risultati"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -33844,6 +33852,14 @@ msgstr "Numero di elementi da mostrare nella ricerca rapida"
 
 msgid "Number of entries"
 msgstr "Numero di voci"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Numero di messaggi in un lasso di tempo definito livello inferiore"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Numero di messaggi nel lasso di tempo definito livello superiore"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -56212,6 +56228,14 @@ msgstr "Capacità totale del disco"
 msgid "Total documents"
 msgstr "Totale documenti"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "Conteggio totale dei messaggi livelli inferiori"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Conteggio totale dei messaggi livelli superiori"
+
 msgid "Total file size"
 msgstr "Dimensione totale del file"
 
@@ -57342,6 +57366,10 @@ msgstr "Tag sconosciuto: L'host ha <b>non</b> il tag <tt>%s</tt>"
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "Tag sconosciuto: L'host ha il tag <tt>%s</tt>"
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr ""
 
 msgid "Unknown user"
 msgstr "Utente sconosciuto"

@@ -19685,6 +19685,10 @@ msgstr ""
 msgid "Graylog cluster traffic"
 msgstr ""
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "sesiuni"
+
 msgid "Graylog index failures"
 msgstr ""
 
@@ -30059,6 +30063,10 @@ msgstr ""
 msgid "More than %d results"
 msgstr ""
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -32181,6 +32189,14 @@ msgstr ""
 #, fuzzy
 msgid "Number of entries"
 msgstr "Cluster nou"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -51777,6 +51793,14 @@ msgid "Total documents"
 msgstr "sesiuni"
 
 #, fuzzy
+msgid "Total events count lower levels"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Total file size"
 msgstr "sesiuni"
 
@@ -52904,6 +52928,10 @@ msgstr ""
 
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
+msgstr ""
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
 msgstr ""
 
 #, fuzzy

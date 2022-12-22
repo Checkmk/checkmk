@@ -20323,6 +20323,10 @@ msgstr "Estatísticas de agrupamento de Graylog"
 msgid "Graylog cluster traffic"
 msgstr "Tráfego de aglomerados de Graylog"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "licença Graylog"
+
 msgid "Graylog index failures"
 msgstr "Falhas no índice Graylog"
 
@@ -31482,6 +31486,10 @@ msgstr "Mais informações podem ser encontradas em ~/var/log/web.log"
 msgid "More than %d results"
 msgstr "Mais de %d de resultados"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -33582,6 +33590,14 @@ msgstr "Número de elementos a mostrar na Quicksearch"
 
 msgid "Number of entries"
 msgstr "Número de entradas"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Número de mensagens em tempos definidos de nível inferior"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Número de mensagens em tempo definido no nível superior"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -55687,6 +55703,14 @@ msgstr "Capacidade total do disco"
 msgid "Total documents"
 msgstr "Total de documentos"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "Contagem total de mensagens níveis inferiores"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Contagem total de mensagens níveis superiores"
+
 msgid "Total file size"
 msgstr "Tamanho total do arquivo"
 
@@ -56802,6 +56826,10 @@ msgstr "Etiqueta desconhecida: Host tem <b>not</b> a tag <tt>%s</tt>"
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "Etiqueta desconhecida: Host tem a tag <tt>%s</tt>"
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr ""
 
 msgid "Unknown user"
 msgstr "Usuário desconhecido"

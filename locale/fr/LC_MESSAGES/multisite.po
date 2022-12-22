@@ -20426,6 +20426,10 @@ msgstr "Statistiques du cluster Graylog"
 msgid "Graylog cluster traffic"
 msgstr "Trafic du cluster Graylog"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "Licence Graylog"
+
 msgid "Graylog index failures"
 msgstr "Défaillances de l'index Graylog"
 
@@ -31618,6 +31622,10 @@ msgstr "Plus d'informations peuvent être trouvées dans ~/var/log/web.log"
 msgid "More than %d results"
 msgstr "Plus de %d résultats"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -33716,6 +33724,14 @@ msgstr "Nombre d'éléments à afficher dans la recherche rapide"
 
 msgid "Number of entries"
 msgstr "Nombre d'entrées"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Nombre de messages dans un laps de temps défini niveau inférieur"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Nombre de messages dans un intervalle de temps défini Niveau supérieur"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -56085,6 +56101,14 @@ msgstr "Capacité totale du disque"
 msgid "Total documents"
 msgstr "Total des documents"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "Nombre total de messages aux niveaux inférieurs"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Nombre total de messages niveaux supérieurs"
+
 msgid "Total file size"
 msgstr "Taille totale du fichier"
 
@@ -57205,6 +57229,10 @@ msgstr "Balise inconnue : L'hôte n'a <b>pas</b> la balise <tt>%s</tt>."
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "Balise inconnue : L'hôte possède la balise <tt>%s</tt>."
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr ""
 
 msgid "Unknown user"
 msgstr "Utilisateur inconnu"

@@ -19456,6 +19456,10 @@ msgstr "Graylogクラスター統計"
 msgid "Graylog cluster traffic"
 msgstr "グレイログクラスタートラフィック"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "グレイログライセンス"
+
 msgid "Graylog index failures"
 msgstr "グレイログインデックスの失敗"
 
@@ -29981,6 +29985,10 @@ msgstr "詳細については、~/var/log/web.logをご覧ください"
 msgid "More than %d results"
 msgstr "%dを超える結果"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -32007,6 +32015,14 @@ msgstr "クイック検索に表示する要素の数"
 
 msgid "Number of entries"
 msgstr "エントリー数"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "定義された期間の下位レベルのメッセージの数"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "定義された期間の上位レベルのメッセージの数"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -52637,6 +52653,14 @@ msgstr "総ディスク容量"
 msgid "Total documents"
 msgstr "総ドキュメント"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "合計メッセージ数の下位レベル"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "合計メッセージ数の上位レベル"
+
 msgid "Total file size"
 msgstr "合計ファイルサイズ"
 
@@ -53722,6 +53746,10 @@ msgstr "不明なタグ:ホストには <tt>%s </tt>タグが<b>ありません<
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "不明なタグ:ホストのタグは<tt>%s </tt>です"
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr ""
 
 msgid "Unknown user"
 msgstr "不明なユーザー"

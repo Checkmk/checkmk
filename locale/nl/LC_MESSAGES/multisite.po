@@ -20179,6 +20179,10 @@ msgstr "Graylog cluster statistieken"
 msgid "Graylog cluster traffic"
 msgstr "Graylog cluster verkeer"
 
+#, fuzzy
+msgid "Graylog events"
+msgstr "Graylog licentie"
+
 msgid "Graylog index failures"
 msgstr "Graylog index mislukkingen"
 
@@ -31234,6 +31238,10 @@ msgstr "Meer informatie is te vinden in ~/var/log/web.log"
 msgid "More than %d results"
 msgstr "Meer dan %d resultaten"
 
+#, python-format
+msgid "More than %d results available, please refine your search."
+msgstr ""
+
 msgid ""
 "Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
@@ -33313,6 +33321,14 @@ msgstr "Aantal elementen om te tonen in Quicksearch"
 
 msgid "Number of entries"
 msgstr "Aantal inzendingen"
+
+#, fuzzy
+msgid "Number of events in defined timespan lower level"
+msgstr "Aantal berichten in gedefinieerde tijdspanne lager niveau"
+
+#, fuzzy
+msgid "Number of events in defined timespan upper level"
+msgstr "Aantal berichten in gedefinieerde tijdspanne Bovenste niveau"
 
 #, fuzzy
 msgid "Number of evicted keys"
@@ -55373,6 +55389,14 @@ msgstr "Totale schijfcapaciteit"
 msgid "Total documents"
 msgstr "Totaal documenten"
 
+#, fuzzy
+msgid "Total events count lower levels"
+msgstr "Totaal aantal berichten lagere niveaus"
+
+#, fuzzy
+msgid "Total events count upper levels"
+msgstr "Totaal aantal berichten bovenste niveaus"
+
 msgid "Total file size"
 msgstr "Totale bestandsgrootte"
 
@@ -56482,6 +56506,10 @@ msgstr "Onbekende tag: Host heeft <b>niet</b> de tag <tt>%s</tt>"
 #, python-format
 msgid "Unknown tag: Host has the tag <tt>%s</tt>"
 msgstr "Onbekende tag: Host heeft de tag <tt>%s</tt>"
+
+#, python-format
+msgid "Unknown target type: %s. Available types: %s."
+msgstr ""
 
 msgid "Unknown user"
 msgstr "Onbekende gebruiker"

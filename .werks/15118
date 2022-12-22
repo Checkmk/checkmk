@@ -1,0 +1,13 @@
+Title: Fix adding of content elements "for multiple" to reports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1671720006
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Since version 2.1.0 adding of content elements "Host report for multiple hosts"
+and "Service report for multiple services" to reports was non functional. The
+content element was not added and no error message was shown.

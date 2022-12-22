@@ -78,7 +78,6 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
-import cmk.base.check_table as check_table
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
@@ -818,7 +817,7 @@ class AutomationAnalyseServices(Automation):
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # differen information. Also: check table forgets wether it's an *auto*check.
-        table = check_table.get_check_table(config_cache, host_name)
+        table = config.get_check_table(config_cache, host_name)
         services = (
             [
                 service

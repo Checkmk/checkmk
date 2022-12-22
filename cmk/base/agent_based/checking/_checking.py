@@ -43,7 +43,6 @@ from cmk.core_helpers import FetcherType
 from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -97,7 +96,7 @@ def execute_checkmk_checks(
     services = config.resolve_service_dependencies(
         host_name=hostname,
         services=sorted(
-            check_table.get_check_table(config_cache, hostname).values(),
+            config.get_check_table(config_cache, hostname).values(),
             key=lambda service: service.description,
         ),
     )
@@ -418,7 +417,7 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = check_table.get_check_table(config_cache, host_name, skip_autochecks=True)
+        table = config.get_check_table(config_cache, host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(

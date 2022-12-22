@@ -114,7 +114,7 @@ def _make_checking_sections(
     else:
         checking_sections = frozenset(
             agent_based_register.get_relevant_raw_sections(
-                check_plugin_names=check_table.get_check_table(
+                check_plugin_names=config.get_check_table(
                     config_cache,
                     hostname,
                     filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,

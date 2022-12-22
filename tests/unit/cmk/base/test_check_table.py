@@ -22,7 +22,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base import check_table, config
+from cmk.base import config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry
 from cmk.base.check_table import FilterMode, HostCheckTable
@@ -72,7 +72,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         ),
     )
 
-    clustered_service = check_table.get_check_table(config_cache, cluster)[service_id]
+    clustered_service = config.get_check_table(config_cache, cluster)[service_id]
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
     )
@@ -414,10 +414,10 @@ def test_get_check_table(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert set(check_table.get_check_table(config_cache, hostname, filter_mode=filter_mode)) == set(
+    assert set(config.get_check_table(config_cache, hostname, filter_mode=filter_mode)) == set(
         expected_result
     )
-    for key, value in check_table.get_check_table(
+    for key, value in config.get_check_table(
         config_cache, hostname, filter_mode=filter_mode
     ).items():
         assert key in expected_result
@@ -474,7 +474,7 @@ def test_get_check_table_of_mgmt_boards(
 
     config_cache = ts.apply(monkeypatch)
 
-    assert list(check_table.get_check_table(config_cache, hostname).keys()) == expected_result
+    assert list(config.get_check_table(config_cache, hostname).keys()) == expected_result
 
 
 def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
@@ -499,7 +499,7 @@ def test_get_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     ts.set_autochecks(hostname_str, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
     config_cache = ts.apply(monkeypatch)
 
-    chk_table = check_table.get_check_table(config_cache, hostname)
+    chk_table = config.get_check_table(config_cache, hostname)
 
     # assert check table is populated as expected
     assert len(chk_table) == 1
@@ -572,7 +572,7 @@ def test_check_table__get_static_check_entries(
     )
 
     static_check_parameters = [
-        service.parameters for service in check_table._get_enforced_services(config_cache, hostname)
+        service.parameters for service in config._get_enforced_services(config_cache, hostname)
     ]
 
     entries = config._get_checkgroup_parameters(

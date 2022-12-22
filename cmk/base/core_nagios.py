@@ -47,6 +47,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
+from cmk.base.check_table import FilterMode
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import (
     AbstractServiceID,
@@ -338,8 +339,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
 ) -> dict[ServiceName, Labels]:
-    from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
-
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
     #   _____
@@ -371,7 +370,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         return result
 
-    host_check_table = get_check_table(config_cache, hostname)
+    host_check_table = config.get_check_table(config_cache, hostname)
     have_at_least_one_service = False
     used_descriptions: dict[ServiceName, AbstractServiceID] = {}
     service_labels: dict[ServiceName, Labels] = {}
@@ -1359,8 +1358,6 @@ if '-d' in sys.argv:
 def _get_needed_plugin_names(
     config_cache: ConfigCache, host_name: HostName
 ) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
-    from cmk.base import check_table  # pylint: disable=import-outside-toplevel
-
     needed_legacy_check_plugin_names = {
         f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
     }
@@ -1372,10 +1369,10 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = check_table.get_check_table(
+    needed_agent_based_check_plugin_names = config.get_check_table(
         config_cache,
         host_name,
-        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
+        filter_mode=FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()
 

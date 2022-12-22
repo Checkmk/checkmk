@@ -27,7 +27,6 @@ from cmk.core_helpers import (
 from cmk.core_helpers.cache import FileCacheOptions
 from cmk.core_helpers.type_defs import SourceInfo
 
-import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
@@ -210,7 +209,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
 
     table_data = []
     for service in sorted(
-        check_table.get_check_table(config_cache, hostname).values(), key=lambda s: s.description
+        config.get_check_table(config_cache, hostname).values(), key=lambda s: s.description
     ):
         table_data.append(
             [

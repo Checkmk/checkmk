@@ -124,7 +124,8 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.autochecks import AutocheckServiceWithNodes
-from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.check_table import FilterMode, HostCheckTable
+from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # TODO: Prefix helper functions with "_".
@@ -146,6 +147,161 @@ ShadowHosts = dict[HostName, dict]
 AllClusters = dict[HostName, list[HostName]]
 
 ObjectMacros = dict[str, AnyStr]
+
+
+def _aggregate_check_table_services(
+    host_name: HostName,
+    *,
+    config_cache: ConfigCache,
+    skip_autochecks: bool,
+    skip_ignored: bool,
+    filter_mode: FilterMode,
+) -> Iterable[ConfiguredService]:
+    sfilter = _ServiceFilter(
+        host_name,
+        config_cache=config_cache,
+        mode=filter_mode,
+        skip_ignored=skip_ignored,
+    )
+
+    # process all entries that are specific to the host
+    # in search (single host) or that might match the host.
+    if not (skip_autochecks or config_cache.is_ping_host(host_name)):
+        yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
+
+    yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
+
+    # Now add checks a cluster might receive from its nodes
+    if config_cache.is_cluster(host_name):
+        yield from (
+            s
+            for s in _get_clustered_services(config_cache, host_name, skip_autochecks)
+            if sfilter.keep(s)
+        )
+        return
+
+    # add all services from the nodes inside the host's clusters
+    # the host must try to fetch all services that are discovered in his clusters
+    # in case of failover, it has to provide the service data to the cluster
+    # even when the service was never discovered on it
+    yield from (
+        s for s in _get_services_from_cluster_nodes(config_cache, host_name) if sfilter.keep(s)
+    )
+
+
+class _ServiceFilter:
+    def __init__(
+        self,
+        host_name: HostName,
+        *,
+        config_cache: ConfigCache,
+        mode: FilterMode,
+        skip_ignored: bool,
+    ) -> None:
+        """Filter services for a specific host
+
+        FilterMode.NONE              -> default, returns only checks for this host
+        FilterMode.ONLY_CLUSTERED    -> returns only checks belonging to clusters
+        FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
+        """
+        self._host_name = host_name
+        self._config_cache = config_cache
+        self._mode = mode
+        self._skip_ignored = skip_ignored
+
+    def keep(self, service: ConfiguredService) -> bool:
+
+        if self._skip_ignored and service_ignored(
+            self._host_name,
+            service.check_plugin_name,
+            service.description,
+        ):
+            return False
+
+        if self._mode is FilterMode.INCLUDE_CLUSTERED:
+            return True
+
+        if not self._config_cache.clusters_of(self._host_name):
+            return self._mode is not FilterMode.ONLY_CLUSTERED
+
+        host_of_service = self._config_cache.host_of_clustered_service(
+            self._host_name,
+            service.description,
+            part_of_clusters=self._config_cache.clusters_of(self._host_name),
+        )
+        svc_is_mine = self._host_name == host_of_service
+
+        if self._mode is FilterMode.NONE:
+            return svc_is_mine
+
+        # self._mode is FilterMode.ONLY_CLUSTERED
+        return not svc_is_mine
+
+
+def _get_enforced_services(
+    config_cache: ConfigCache, host_name: HostName
+) -> list[ConfiguredService]:
+    return [
+        service
+        for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
+    ]
+
+
+def _get_services_from_cluster_nodes(
+    config_cache: ConfigCache, hostname: HostName
+) -> Iterable[ConfiguredService]:
+    for cluster in config_cache.clusters_of(hostname):
+        yield from _get_clustered_services(config_cache, cluster, False)
+
+
+def _get_clustered_services(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    skip_autochecks: bool,
+) -> Iterable[ConfiguredService]:
+    for node in config_cache.nodes_of(host_name) or []:
+        # TODO: Cleanup this to work exactly like the logic above (for a single host)
+        # (mo): in particular: this means that autochecks will win over static checks.
+        #       for a single host the static ones win.
+        node_checks = _get_enforced_services(config_cache, node)
+        if not (skip_autochecks or config_cache.is_ping_host(host_name)):
+            node_checks += config_cache.get_autochecks_of(node)
+
+        yield from (
+            service
+            for service in node_checks
+            if config_cache.host_of_clustered_service(node, service.description) == host_name
+        )
+
+
+def get_check_table(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    *,
+    use_cache: bool = True,
+    skip_autochecks: bool = False,
+    filter_mode: FilterMode = FilterMode.NONE,
+    skip_ignored: bool = True,
+) -> HostCheckTable:
+    cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
+    if cache_key:
+        with contextlib.suppress(KeyError):
+            return config_cache.check_table_cache[cache_key]
+
+    host_check_table = HostCheckTable(
+        services=_aggregate_check_table_services(
+            hostname,
+            config_cache=config_cache,
+            skip_autochecks=skip_autochecks,
+            skip_ignored=skip_ignored,
+            filter_mode=filter_mode,
+        )
+    )
+
+    if cache_key:
+        config_cache.check_table_cache[cache_key] = host_check_table
+
+    return host_check_table
 
 
 class ClusterCacheInfo(NamedTuple):

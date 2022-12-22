@@ -18,7 +18,7 @@ if sys.version_info < (3, 11):
 else:
     from typing import TypedDict
 
-T = TypeVar("T")
+T_Ruletype = TypeVar("T_Ruletype")
 
 HostName = str
 HostAddress = str
@@ -53,12 +53,12 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_folder: Any
 
 
-class _RuleSpecBase(TypedDict, Generic[T]):
-    value: T
+class _RuleSpecBase(TypedDict, Generic[T_Ruletype]):
+    value: T_Ruletype
     condition: RuleConditionsSpec
 
 
-class RuleSpec(Generic[T], _RuleSpecBase[T], total=False):
+class RuleSpec(Generic[T_Ruletype], _RuleSpecBase[T_Ruletype], total=False):
     id: str  # Should not be optional but nearly not test has that attribute set!
     options: RuleOptionsSpec
 
@@ -121,7 +121,7 @@ HostOrServiceConditions = (
     HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
 )  # TODO: refine type
 
-Ruleset = list[RuleSpec[T]]
+Ruleset = list[RuleSpec[T_Ruletype]]
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = str | None

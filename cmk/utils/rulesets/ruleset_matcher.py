@@ -6,7 +6,7 @@
 
 from collections.abc import Generator, Iterable
 from re import Pattern
-from typing import Any, cast, TypeVar
+from typing import Any, cast
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
@@ -30,6 +30,9 @@ from cmk.utils.type_defs import (
     Ruleset,
     RuleSpec,
     ServiceName,
+)
+from cmk.utils.type_defs import T_Ruletype as T
+from cmk.utils.type_defs import (
     TagCondition,
     TagConditionNE,
     TagConditionNOR,
@@ -40,8 +43,6 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
     TagsOfHosts,
 )
-
-T = TypeVar("T")
 
 LabelConditions = dict  # TODO: Optimize this
 PreprocessedHostRuleset = dict[HostName, list[T]]
@@ -177,7 +178,7 @@ class RulesetMatcher:
             match_object.host_name not in self.ruleset_optimizer.all_processed_hosts()
         )
 
-        optimized_ruleset = self.ruleset_optimizer.get_host_ruleset(
+        optimized_ruleset: PreprocessedHostRuleset[T] = self.ruleset_optimizer.get_host_ruleset(
             ruleset, with_foreign_hosts, is_binary=is_binary
         )
 
@@ -430,7 +431,9 @@ class RulesetOptimizer:
         if cache_id in self._host_ruleset_cache:
             return self._host_ruleset_cache[cache_id]
 
-        host_ruleset = self._convert_host_ruleset(ruleset, with_foreign_hosts, is_binary)
+        host_ruleset: PreprocessedHostRuleset[T] = self._convert_host_ruleset(
+            ruleset, with_foreign_hosts, is_binary
+        )
         self._host_ruleset_cache[cache_id] = host_ruleset
         return host_ruleset
 
@@ -1160,7 +1163,6 @@ def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
     return tag_id_to_tag_group_id_map
 
 
-def _is_disabled(rule: RuleSpec[T]) -> bool:
-    # TODO(ml): RuleSpec[object] should be good enough.
+def _is_disabled(rule: RuleSpec) -> bool:
     # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
     return "options" in rule and bool(rule["options"].get("disabled", False))

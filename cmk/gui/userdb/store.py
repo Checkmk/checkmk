@@ -59,25 +59,32 @@ class OpenFileMode(Enum):
 class UserStore:
     def __init__(self, mode: OpenFileMode = OpenFileMode.READ) -> None:
         self.mode = mode
-        self.users = load_users(mode is OpenFileMode.WRITE)
+
+        try:
+            self.users = load_users(mode is OpenFileMode.WRITE)
+        finally:
+            release_users_lock()
+
         self.__unchanged_users = copy.deepcopy(self.users)
 
     def __enter__(self) -> Users:
         return self.users
 
-    def __exit__(self, *exc_info: object) -> bool:
+    def __exit__(self, *exc_info: object) -> None:
         if self.mode is OpenFileMode.READ:
-            return True
+            return
 
         if self.users == self.__unchanged_users:
             # only write when really needed, because:
             # - writing users may be a performance issue
             # - it invalidates the cache
             release_users_lock()
-            return True
+            return
 
-        save_users(self.users, datetime.utcnow())  # Implicitly releases the lock
-        return True
+        try:
+            save_users(self.users, datetime.utcnow())  # Implicitly releases the lock
+        finally:
+            release_users_lock()
 
 
 def load_custom_attr(

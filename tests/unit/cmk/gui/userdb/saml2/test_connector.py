@@ -39,7 +39,7 @@ class TestConnector:
                 super().__init__(mode)
                 self.users = users
 
-            def __exit__(self, *exc_info: object) -> bool:
+            def __exit__(self, *exc_info):
                 return True
 
         monkeypatch.setattr("cmk.gui.userdb.saml2.connector.UserStore", MockedUserStore)

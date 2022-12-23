@@ -3878,7 +3878,7 @@ msgstr ""
 msgid "Agent baking finished."
 msgstr ""
 
-msgid "Agent based plugins (Checks, Inventory),"
+msgid "Agent based plugins (Checks, Inventory)"
 msgstr ""
 
 #, fuzzy
@@ -10968,6 +10968,10 @@ msgstr ""
 
 msgid "Create new topic"
 msgstr ""
+
+#, fuzzy
+msgid "Create new users on login"
+msgstr "Conexiune Noua"
 
 msgid "Create new virtual host tree configuration"
 msgstr ""
@@ -22297,6 +22301,12 @@ msgid ""
 "the rule set <a href='%s'>Periodic Service Discovery</a>, which allows a per-"
 "host configuration and additional features such as automatic rediscovery. "
 "Rules in that rule set will override the global settings done here."
+msgstr ""
+
+msgid ""
+"If enabled, Checkmk automatically creates new users when they first log in. "
+"If the user profile cannot be determined based on the current configuration, "
+"the default user profile from the global settings is used."
 msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
@@ -38682,9 +38692,6 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "trimite notificare"
-
-msgid "SAML2.0 Integration"
-msgstr ""
 
 msgid "SAN"
 msgstr ""
@@ -63481,10 +63488,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Create new rule pack"
 #~ msgstr "Regula Noua"
-
-#, fuzzy
-#~ msgid "Create new site connection"
-#~ msgstr "Conexiune Noua"
 
 #, fuzzy
 #~ msgid "Create random hosts"

@@ -4121,7 +4121,7 @@ msgid "Agent baking finished."
 msgstr "Agent bakte af."
 
 #, fuzzy
-msgid "Agent based plugins (Checks, Inventory),"
+msgid "Agent based plugins (Checks, Inventory)"
 msgstr "Agent-gebaseerde plugins (Controles, Inventaris)"
 
 msgid "Agent controller"
@@ -11564,6 +11564,10 @@ msgstr "Nieuwe tag groep maken"
 
 msgid "Create new topic"
 msgstr "Creëer nieuw onderwerp"
+
+#, fuzzy
+msgid "Create new users on login"
+msgstr "Gebruikers alleen aanmaken bij inloggen"
 
 msgid "Create new virtual host tree configuration"
 msgstr "Nieuwe virtuele hostboomconfiguratie maken"
@@ -23115,6 +23119,12 @@ msgstr ""
 "Discovery</a>, die een configuratie per host toestaat en extra functies "
 "zoals automatische herontdekking. Regels in die regelset zullen de globale "
 "instellingen hier overschrijven."
+
+msgid ""
+"If enabled, Checkmk automatically creates new users when they first log in. "
+"If the user profile cannot be determined based on the current configuration, "
+"the default user profile from the global settings is used."
+msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -39794,10 +39804,6 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "SMTP-verificatie"
-
-#, fuzzy
-msgid "SAML2.0 Integration"
-msgstr "Integratie Toets"
 
 msgid "SAN"
 msgstr "SAN"
@@ -65202,6 +65208,11 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Integration Key"
+#~ msgid "SAML2.0 Integration"
+#~ msgstr "Integratie Toets"
 
 #, python-format
 #~ msgid ""

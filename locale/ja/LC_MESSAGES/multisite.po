@@ -3938,7 +3938,7 @@ msgid "Agent baking finished."
 msgstr "エージェントのベーキングが終了しました。"
 
 #, fuzzy
-msgid "Agent based plugins (Checks, Inventory),"
+msgid "Agent based plugins (Checks, Inventory)"
 msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
 
 msgid "Agent controller"
@@ -11050,6 +11050,10 @@ msgstr "新しいタググループを作成する"
 
 msgid "Create new topic"
 msgstr "新しいトピックを作成する"
+
+#, fuzzy
+msgid "Create new users on login"
+msgstr "ログイン時にのみユーザーを作成する"
 
 msgid "Create new virtual host tree configuration"
 msgstr "新しい仮想ホストツリー構成を作成する"
@@ -22217,6 +22221,12 @@ msgstr ""
 "定期的なサービス検出</a>に置き換えられました。これにより、ホストごとの構成"
 "や、次のような追加機能が可能になります。自動再検出。そのルールセットのルール"
 "は、ここで行われたグローバル設定を上書きします。"
+
+msgid ""
+"If enabled, Checkmk automatically creates new users when they first log in. "
+"If the user profile cannot be determined based on the current configuration, "
+"the default user profile from the global settings is used."
+msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -38284,10 +38294,6 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "SMTP認証"
-
-#, fuzzy
-msgid "SAML2.0 Integration"
-msgstr "統合キー"
 
 msgid "SAN"
 msgstr "SAN"
@@ -61874,6 +61880,11 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Integration Key"
+#~ msgid "SAML2.0 Integration"
+#~ msgstr "統合キー"
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "OMD環境では実行されません！"

@@ -4095,7 +4095,7 @@ msgid "Agent baking finished."
 msgstr "Agente a cozer acabou."
 
 #, fuzzy
-msgid "Agent based plugins (Checks, Inventory),"
+msgid "Agent based plugins (Checks, Inventory)"
 msgstr "Plugins baseados em agentes (Checks, Inventory)"
 
 #, fuzzy
@@ -11594,6 +11594,10 @@ msgstr "Criar novo grupo de etiquetas"
 
 msgid "Create new topic"
 msgstr "Criar novo tópico"
+
+#, fuzzy
+msgid "Create new users on login"
+msgstr "Criar usuários somente no login"
 
 msgid "Create new virtual host tree configuration"
 msgstr "Criar nova configuração de host tree virtual"
@@ -23265,6 +23269,12 @@ msgstr ""
 "a>, que permite uma configuração por host e recursos adicionais como a "
 "redescoberta automática. As regras nesse conjunto de regras irão substituir "
 "as configurações globais feitas aqui."
+
+msgid ""
+"If enabled, Checkmk automatically creates new users when they first log in. "
+"If the user profile cannot be determined based on the current configuration, "
+"the default user profile from the global settings is used."
+msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
@@ -40185,10 +40195,6 @@ msgstr ""
 #, fuzzy
 msgid "SAML Authentication"
 msgstr "Autenticação SMTP"
-
-#, fuzzy
-msgid "SAML2.0 Integration"
-msgstr "Chave de Integração"
 
 msgid "SAN"
 msgstr "SAN"
@@ -65514,6 +65520,11 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Integration Key"
+#~ msgid "SAML2.0 Integration"
+#~ msgstr "Chave de Integração"
 
 #, python-format
 #~ msgid ""

@@ -39,7 +39,7 @@ class OraErrors:
     # found for the current item. It must deal with the ORA-* error
     # messages. It has to skip over the lines which show the SQL statement
     # and the SQL error message which comes before the ORA-* message.
-    def handle_errors(self, line):
+    def handle_errors(self, line: Sequence[str]) -> None:
         if len(line) == 1:
             return
 

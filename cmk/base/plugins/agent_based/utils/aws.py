@@ -241,11 +241,11 @@ def get_number_with_precision(
     return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
 
 
-def aws_get_float_human_readable(f, unit=""):
+def aws_get_float_human_readable(f: float, unit: str = "") -> str:
     return get_number_with_precision(f, unit=unit, precision=3)
 
 
-def aws_get_counts_rate_human_readable(rate):
+def aws_get_counts_rate_human_readable(rate: float) -> str:
     return aws_get_float_human_readable(rate) + "/s"
 
 
@@ -295,7 +295,7 @@ class LambdaCloudwatchMetrics:
     ProvisionedConcurrentExecutions: Optional[float] = None
     UnreservedConcurrentExecutions: Optional[float] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # convert timespans from milliseconds to canonical seconds
         self.Duration /= 1000.0
         if self.PostRuntimeExtensionsDuration:

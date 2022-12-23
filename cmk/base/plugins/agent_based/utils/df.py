@@ -616,11 +616,14 @@ def df_check_filesystem_list(  # type:ignore[no-untyped-def]
 ) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
 
-    def group_sum(metric_name, info, mountpoints_group):
+    def group_sum(
+        metric_name: str, info: dict[str, dict[str, float | None]], mountpoints_group: list[str]
+    ) -> float | None:
         """Calculate sum of named values for matching mount points"""
         try:
+            # If we have a None, sum will throw a TypeError which we catch...
             return sum(
-                block_info[metric_name]  #
+                block_info[metric_name]  # type: ignore[misc]
                 for (mp, block_info) in info.items()  #
                 if mp in mountpoints_group
             )

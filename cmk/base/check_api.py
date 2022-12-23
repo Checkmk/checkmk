@@ -96,7 +96,7 @@ import sys  # noqa: F401 # pylint: disable=unused-import
 import time
 from collections.abc import Callable, Iterable
 from contextlib import suppress
-from typing import Any, Dict, List, Literal, Mapping, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Mapping, NoReturn, Optional, Set, Tuple, Union
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
@@ -175,7 +175,7 @@ def host_name() -> str:
     return str(_internal_host_name())
 
 
-def HostLabel(*_a, **_kw):
+def HostLabel(*_a: object, **_kw: object) -> NoReturn:
     raise NotImplementedError(
         "Creation of HostLabels in legacy plugins is no longer supported"
         " (see https://checkmk.de/check_mk-werks.php?werk_id=11117)."
@@ -185,7 +185,7 @@ def HostLabel(*_a, **_kw):
 HostLabels = HostLabel
 
 
-def ServiceLabel(*_a, **_kw):
+def ServiceLabel(*_a: object, **_kw: object) -> NoReturn:
     raise NotImplementedError(
         "Creation of ServiceLabels in legacy plugins is no longer supported"
         " (see https://checkmk.de/check_mk-werks.php?werk_id=13229)."

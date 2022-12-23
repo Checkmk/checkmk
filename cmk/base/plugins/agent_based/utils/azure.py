@@ -180,7 +180,7 @@ def discover_azure_by_metrics(
 def iter_resource_attributes(
     resource: Resource, include_keys: tuple[str] = ("location",)
 ) -> Iterable[tuple[str, str | None]]:
-    def capitalize(string):
+    def capitalize(string: str) -> str:
         return string[0].upper() + string[1:]
 
     for key in include_keys:

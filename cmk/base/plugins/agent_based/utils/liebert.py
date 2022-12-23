@@ -25,7 +25,7 @@ def parse_liebert_without_unit(
     parsed = {}
     used_names = set()
 
-    def get_item_name(name):
+    def get_item_name(name: str) -> str:
         counter = 2
         new_name = name
         while True:

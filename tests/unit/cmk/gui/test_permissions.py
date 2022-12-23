@@ -63,6 +63,7 @@ def test_registered_permissions() -> None:
     expected_permissions = [
         "action.acknowledge",
         "action.addcomment",
+        "action.aggregation_freeze",
         "action.clearmodattr",
         "action.customnotification",
         "action.downtimes",
@@ -260,6 +261,7 @@ def test_registered_permissions() -> None:
         "sidesnap.views",
         "sidesnap.wato_foldertree",
         "view.aggr_all",
+        "view.aggr_frozen_diff",
         "view.aggr_all_api",
         "view.aggr_group",
         "view.aggr_host",

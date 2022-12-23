@@ -81,6 +81,7 @@ def test_registered_painters() -> None:
         "aggr_state_num",
         "aggr_treestate",
         "aggr_treestate_boxed",
+        "aggr_treestate_frozen_diff",
         "alert_stats_crit",
         "alert_stats_ok",
         "alert_stats_problem",

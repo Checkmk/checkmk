@@ -141,6 +141,7 @@ def test_registered_exporters() -> None:
 def test_registered_command_groups() -> None:
     expected = [
         "acknowledge",
+        "aggregations",
         "downtimes",
         "fake_check",
         "various",
@@ -170,6 +171,12 @@ def test_registered_commands() -> None:
             "permission": "action.acknowledge",
             "tables": ["host", "service", "aggr"],
             "title": "Acknowledge problems",
+        },
+        "freeze_aggregation": {
+            "group": "aggregations",
+            "permission": "action.aggregation_freeze",
+            "tables": ["aggr"],
+            "title": "Freeze aggregations",
         },
         "ec_custom_actions": {
             "permission": "mkeventd.actions",

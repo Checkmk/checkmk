@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, Set, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -195,7 +196,7 @@ def create_nested_schema(
         base_schema,
         dump_default=default_config,
         example=example,
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="Nested dictionary",
     )
 
 
@@ -236,6 +237,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.disabled = computation_config["disabled"]
         self.use_hard_states = computation_config["use_hard_states"]
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
+        self.freeze_aggregations = computation_config.get("freeze_aggregations", False)
 
     @classmethod
     def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
@@ -244,6 +246,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def serialize(self):
         return {
             "disabled": self.disabled,
+            "freeze_aggregations": self.freeze_aggregations,
             "use_hard_states": self.use_hard_states,
             "escalate_downtimes_as_warn": self.escalate_downtimes_as_warn,
         }
@@ -253,6 +256,7 @@ class BIAggregationComputationOptionsSchema(Schema):
     disabled = ReqBoolean(dump_default=False, example=False)
     use_hard_states = ReqBoolean(dump_default=False, example=False)
     escalate_downtimes_as_warn = ReqBoolean(dump_default=False, example=False)
+    freeze_aggregations = Boolean(dump_default=False, example=False)
 
 
 class BIAggregationGroups(ABCWithSchema):
@@ -433,10 +437,33 @@ CompiledNodeKind = Literal[
 ]
 
 
+@dataclass(frozen=True)
+class FrozenMarker:
+    status: Literal["missing", "new", "ok"]
+
+
+@dataclass(frozen=True)
+class NodeIdentifierInfo:
+    id: tuple
+    node_ref: ABCBICompiledNode
+
+
 class ABCBICompiledNode(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.required_hosts: list[tuple[SiteId, str]] = []
+        self._frozen_marker: FrozenMarker | None = None
+
+    @property
+    def frozen_marker(self):
+        return self._frozen_marker
+
+    def set_frozen_marker(self, frozen_marker: FrozenMarker) -> None:
+        """Sets branch comparison result info"""
+        self._frozen_marker = frozen_marker
+
+    def get_identifiers(self, parent_id: tuple, used_ids: Set[tuple]) -> list[NodeIdentifierInfo]:
+        return []
 
     @classmethod
     @abstractmethod

@@ -1958,6 +1958,56 @@ class _FilterAggrGroupTree(Filter):
 filter_registry.register(_FilterAggrGroupTree())
 
 
+class _BIFrozenAggregations(Filter):
+    def __init__(self):
+        super().__init__(
+            ident="aggregation_types",
+            title=_("Aggregation types"),
+            sort_index=90,
+            info="aggr",
+            htmlvars=["aggr_type_frozen", "aggr_type_dynamic"],
+            link_columns=[],
+        )
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.checkbox(
+            self.htmlvars[0], deflt=bool(value.get(self.htmlvars[0], True)), label=_("Show frozen")
+        )
+        html.checkbox(
+            self.htmlvars[1], deflt=bool(value.get(self.htmlvars[1], True)), label=_("Show dynamic")
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        if self.ident not in context:
+            return rows
+        show_frozen = bool(context.get(self.ident, {}).get(self.htmlvars[0]))
+        show_dynamic = bool(context.get(self.ident, {}).get(self.htmlvars[1]))
+        if show_frozen and show_dynamic:
+            return rows
+        if not show_frozen and not show_dynamic:
+            return []
+
+        new_rows = []
+        for row in rows:
+            if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is None:
+                continue
+
+            if compiled_aggregation.frozen_info:
+                if show_frozen:
+                    new_rows.append(row)
+            else:
+                # dynamic aggregation
+                if show_dynamic:
+                    new_rows.append(row)
+
+        return new_rows
+
+
+filter_registry.register(_BIFrozenAggregations())
+
 # how is either "regex" or "exact"
 class BITextFilter(Filter):
     def __init__(

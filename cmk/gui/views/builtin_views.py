@@ -3406,6 +3406,75 @@ builtin_views.update(
         #                            |___/
         #
         # All aggregations
+        "aggr_frozen_diff": {
+            "browser_reload": 0,
+            "column_headers": "pergroup",
+            "datasource": "bi_aggregations",
+            "description": _l("Displays all BI aggregations."),
+            "group_painters": [
+                ColumnSpec(
+                    name="aggr_group",
+                    link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
+                )
+            ],
+            "hidden": True,
+            "hidebutton": False,
+            "force_checkboxes": True,
+            "icon": "aggr",
+            "layout": "table",
+            "mustsearch": False,
+            "name": "aggr_all",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_treestate_frozen_diff"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "sorters": [
+                SorterSpec(sorter="aggr_group", negate=False),
+                SorterSpec(sorter="aggr_name", negate=False),
+            ],
+            "title": _l("All frozen aggregations"),
+            "topic": "bi",
+            "sort_index": 10,
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {
+                "aggr_group": {},
+                "aggr_group_tree": {},
+                "aggr_hosts": {},
+                "aggr_name_regex": {"aggr_name_regex": ""},
+                "aggr_state": {
+                    "birs-1": "on",
+                    "birs0": "on",
+                    "birs1": "on",
+                    "birs2": "on",
+                    "birs3": "on",
+                },
+                "aggr_output": {"aggr_output": ""},
+                "aggr_assumed_state": {
+                    "bias0": "on",
+                    "bias1": "on",
+                    "bias2": "on",
+                    "bias3": "on",
+                    "biasn": "on",
+                },
+                "aggr_effective_state": {
+                    "bies-1": "on",
+                    "bies0": "on",
+                    "bies1": "on",
+                    "bies2": "on",
+                    "bies3": "on",
+                },
+                "aggregation_types": {"aggr_type_frozen": "on", "aggr_type_dynamic": ""},
+            },
+            "link_from": {},
+            "add_context_to_title": True,
+            "is_show_more": False,
+        },
         "aggr_all": {
             "browser_reload": 0,
             "column_headers": "pergroup",

@@ -126,7 +126,7 @@ class BIAggregationSchema(Schema):
     id = ReqString(
         dump_default="",
         example="aggr1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The unique aggregation id",
     )
     comment = String(
         description="An optional comment that may be used to explain the purpose of this object.",

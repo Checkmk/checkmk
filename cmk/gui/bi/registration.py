@@ -30,6 +30,7 @@ from .view import (
     PainterAggrStateNum,
     PainterAggrTreestate,
     PainterAggrTreestateBoxed,
+    PainterAggrTreestateFrozenDiff,
     PainterOptionAggrExpand,
     PainterOptionAggrOnlyProblems,
     PainterOptionAggrTreeType,
@@ -63,6 +64,7 @@ def register(
     painter_registry.register(PainterAggrHosts)
     painter_registry.register(PainterAggrHostsServices)
     painter_registry.register(PainterAggrTreestate)
+    painter_registry.register(PainterAggrTreestateFrozenDiff)
     painter_registry.register(PainterAggrTreestateBoxed)
 
     painter_option_registry.register(PainterOptionAggrExpand)

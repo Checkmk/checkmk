@@ -183,13 +183,13 @@ class BIRuleSchema(Schema):
     id = ReqString(
         dump_default="",
         example="rule1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The unique rule id",
     )
     nodes = ReqList(
         fields.Nested(BINodeGeneratorSchema),
         dump_default=[],
         example=[],
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="A list of nodes for for this rule",
     )
     params = create_nested_schema_for_class(
         BIParams,

@@ -1816,6 +1816,17 @@ class BIModeEditAggregation(ABCBIMode):
                     ),
                 ),
                 (
+                    "freeze_aggregations",
+                    Checkbox(
+                        title=_("Freeze aggregations"),
+                        label=_("New aggregations are frozen"),
+                        help=_(
+                            "The structure of frozen aggregations are saved initially and does not change afterwards, unless triggered by the user. "
+                            "An icon indicates whether the aggregate is frozen. This icon can also be used to update the frozen structure of the aggregates."
+                        ),
+                    ),
+                ),
+                (
                     "use_hard_states",
                     Checkbox(
                         title=_("Use Hard States"),

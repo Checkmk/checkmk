@@ -33,9 +33,17 @@ UNAVAIL = 4
 
 class ABCFoldableTreeRenderer(abc.ABC):
     def __init__(  # type:ignore[no-untyped-def]
-        self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True
+        self,
+        row,
+        omit_root,
+        expansion_level,
+        only_problems,
+        lazy,
+        wrap_texts=True,
+        show_frozen_difference=False,
     ) -> None:
         self._row = row
+        self._show_frozen_difference = show_frozen_difference
         self._omit_root = omit_root
         self._expansion_level = expansion_level
         self._only_problems = only_problems
@@ -68,6 +76,7 @@ class ABCFoldableTreeRenderer(abc.ABC):
         url_id = urlencode_vars(
             [
                 ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
+                ("show_frozen_difference", "yes" if self._show_frozen_difference else ""),
                 ("group", group),
                 ("title", title),
                 ("omit_root", "yes" if self._omit_root else ""),
@@ -78,7 +87,11 @@ class ABCFoldableTreeRenderer(abc.ABC):
         )
 
         html.open_div(id_=url_id, class_="bi_tree_container")
-        self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
+        self._show_subtree(
+            tree,
+            path=[("frozen_" if self._show_frozen_difference else "") + tree[2]["title"]],
+            show_host=len(affected_hosts) > 1,
+        )
         html.close_div()
 
     @abc.abstractmethod
@@ -205,7 +218,9 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
     def _toggle_js_function(self):
         return "cmk.bi.toggle_subtree"
 
-    def _show_subtree(self, tree, path, show_host):
+    def _show_subtree(
+        self, tree, path, show_host, frozen_marker_set=False
+    ):  # pylint: disable=too-many-branches
         if self._is_leaf(tree):
             self._show_leaf(tree, show_host)
             return
@@ -246,8 +261,37 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
                 for node in tree[3]:
                     if not node[2].get("hidden"):
                         new_path = path + [node[2]["title"]]
-                        html.open_li()
-                        self._show_subtree(node, new_path, show_host)
+                        frozen_marker = node[2].get("frozen_marker")
+                        frozen_bi_css = ""
+                        tooltip_text = ""
+                        if not frozen_marker_set and frozen_marker and self._show_frozen_difference:
+                            is_leaf = self._is_leaf(new_path)
+                            if frozen_marker.status == "new":
+                                if is_leaf:
+                                    tooltip_text = _("This node is not in the frozen aggregation")
+                                else:
+                                    tooltip_text = _(
+                                        "These nodes are not in the frozen aggregation"
+                                    )
+                                frozen_bi_css = "frozen_bi missing_in_frozen_aggregation"
+                            else:
+                                if is_leaf:
+                                    tooltip_text = _("This node is only in the frozen aggregation")
+                                else:
+                                    tooltip_text = _(
+                                        "These nodes are only in the frozen aggregation"
+                                    )
+                                frozen_bi_css = "frozen_bi only_in_frozen_aggregation"
+                        html.open_li(class_=frozen_bi_css)
+                        if frozen_bi_css:
+                            html.span(
+                                "+" if frozen_marker.status == "new" else "-",
+                                class_=["frozen_marker", frozen_marker.status],
+                                title=tooltip_text,
+                            )
+                        self._show_subtree(
+                            node, new_path, show_host, frozen_marker_set or bool(frozen_bi_css)
+                        )
                         html.close_li()
 
             html.close_ul()
@@ -322,12 +366,14 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         output: HTML = cmk.gui.view_utils.format_plugin_output(
             effective_state["output"], shall_escape=active_config.escape_plugin_output
         )
+
         if output:
             output = HTMLWriter.render_b(HTML("&diams;"), class_="bullet") + output
         else:
             output = HTML()
 
-        html.span(output, class_=["content", "output"])
+        css_classes = ["content", "output"]
+        html.span(output, class_=css_classes)
 
 
 class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):

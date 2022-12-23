@@ -15,6 +15,7 @@ class FrontendPort(BaseModel):
 
 
 class HttpListener(BaseModel):
+    name: str
     frontendIPConfiguration: Mapping[str, str]
     frontendPort: Mapping[str, str]
     protocol: str

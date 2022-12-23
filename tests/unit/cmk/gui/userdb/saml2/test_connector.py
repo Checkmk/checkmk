@@ -12,7 +12,6 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.saml2.connector import Connector, SAML2_CONNECTOR_TYPE
-from cmk.gui.userdb.store import OpenFileMode, UserStore
 
 
 class TestConnector:
@@ -33,16 +32,8 @@ class TestConnector:
     @pytest.fixture
     def user_store(self, monkeypatch: pytest.MonkeyPatch, users_pre_edit: Users) -> Iterable[Users]:
         users = copy.deepcopy(users_pre_edit)
-
-        class MockedUserStore(UserStore):
-            def __init__(self, mode: OpenFileMode) -> None:
-                super().__init__(mode)
-                self.users = users
-
-            def __exit__(self, *exc_info):
-                return True
-
-        monkeypatch.setattr("cmk.gui.userdb.saml2.connector.UserStore", MockedUserStore)
+        monkeypatch.setattr("cmk.gui.userdb.store.load_users", lambda l: users)
+        monkeypatch.setattr("cmk.gui.userdb.store.save_users", lambda u, n: None)
         yield users
 
     @pytest.fixture
@@ -50,13 +41,13 @@ class TestConnector:
         self, monkeypatch: pytest.MonkeyPatch, raw_config: dict[str, Any]
     ) -> None:
         monkeypatch.setattr(
-            "cmk.gui.plugins.userdb.utils.get_connection", lambda i: (i, Connector(raw_config))
+            "cmk.gui.userdb.saml2.connector.get_connection", lambda i: Connector(raw_config)
         )
 
     @pytest.fixture
     def connections_nonsaml_connection(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
-            "cmk.gui.plugins.userdb.utils.get_connection", lambda i: HtpasswdUserConnector({})
+            "cmk.gui.userdb.saml2.connector.get_connection", lambda i: HtpasswdUserConnector({})
         )
 
     def test_connector_properties(self, raw_config: dict[str, Any]) -> None:
@@ -88,13 +79,15 @@ class TestConnector:
         new_user_id = UserId("Paul")
         new_user_spec = UserSpec({})
 
-        connector.create_and_update_user(new_user_id, new_user_spec)
+        with pytest.raises(IndexError):
+            connector.create_and_update_user(new_user_id, new_user_spec)
 
         assert user_store == users_pre_edit
 
     def test_edit_user_creates_new_user(
         self,
         raw_config: dict[str, Any],
+        connections_saml_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
@@ -102,7 +95,7 @@ class TestConnector:
         connector = Connector(config)
 
         new_user_id = UserId("Paul")
-        new_user_spec = UserSpec({})
+        new_user_spec = UserSpec({"connector": connector.id})
         new_user = {new_user_id: new_user_spec}
 
         connector.create_and_update_user(new_user_id, new_user_spec)
@@ -112,6 +105,7 @@ class TestConnector:
     def test_edit_user_creates_new_user_with_default_profile(
         self,
         raw_config: dict[str, Any],
+        connections_saml_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
@@ -127,7 +121,7 @@ class TestConnector:
             UserId("Paul"): UserSpec(
                 {
                     "alias": "Paul",
-                    "connector": "uuid123",
+                    "connector": connector.id,
                     "contactgroups": [],
                     "force_authuser": False,
                     "roles": ["user"],
@@ -150,7 +144,8 @@ class TestConnector:
         new_user_id = UserId("Roy")
         new_user_spec = UserSpec({})
 
-        connector.create_and_update_user(new_user_id, new_user_spec)
+        with pytest.raises(IndexError):
+            connector.create_and_update_user(new_user_id, new_user_spec)
 
         assert user_store == users_pre_edit
 

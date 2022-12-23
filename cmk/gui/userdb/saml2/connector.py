@@ -16,7 +16,7 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import get_connection, UserConnector, UserConnectorRegistry
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb.saml2.interface import Interface, InterfaceConfig
-from cmk.gui.userdb.store import OpenFileMode, UserStore
+from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
@@ -70,7 +70,9 @@ class Connector(UserConnector):
     def identity_provider_url(self) -> str:
         return self.__config.interface_config.idp_metadata_endpoint
 
-    def create_and_update_user(self, user_id: UserId, user_profile: UserSpec | None = None) -> None:
+    def create_and_update_user(
+        self, user_id: UserId, updated_user_profile: UserSpec | None = None
+    ) -> None:
         """Update user profile in Checkmk users store.
 
         It can be configured whether to create new users when they first log in. In this case, the
@@ -79,40 +81,59 @@ class Connector(UserConnector):
 
         Args:
             user_id: The unique ID of the user that is to be created or edited
-            user_profile: The profile of the user that should be updated in the Checkmk user store.
+            updated_user_profile: The profile of the user that should be entered in the Checkmk user store.
                 If not specified, the default profile is used. This can be configured via the global
                 settings.
 
         Raises:
-            IndexError: when the user cannot be edited (either because it does not exist and it is
-                not configured to create users automatically, or because the user already exists for a
-                different connection).
+            ValueError:
+                - The user does not exist, and it is not configured to create users
+                - The user exists, but the corresponding connection cannot be determined (e.g. when
+                  a connection has been deleted)
+                - The user already exists for a different connection
         """
-        if user_profile is None:
-            user_profile = copy.deepcopy(active_config.default_user_profile)
-            user_profile["connector"] = self.__config.id
-            user_profile["alias"] = user_id
+        if updated_user_profile is None:
+            updated_user_profile = copy.deepcopy(active_config.default_user_profile)
+            updated_user_profile["connector"] = self.__config.id
+            updated_user_profile["alias"] = user_id
 
         with UserStore(mode=OpenFileMode.WRITE) as user_store:
-            if (
-                not (user_entry := user_store.get(user_id))
-                and not self.__config.create_users_on_login
-            ):
-                LOGGER.debug("User %s does not exist, and not configured to create", user_id)
-                raise IndexError("User does not exist")
+            if not (user_entry := user_store.get(user_id)):
+                self._create_user(user_id, updated_user_profile, user_store)
+                return
 
-            user_entry = user_store.setdefault(user_id, user_profile)
+            self._update_user(
+                user_id=user_id,
+                user_profile=updated_user_profile,
+                connection_id=user_entry.get("connector"),
+                user_store=user_store,
+            )
 
-            if (
-                connection := get_connection(user_entry["connector"])
-            ) is not None and connection.type() != self.type():
-                LOGGER.debug(
-                    "Attempting to create user %s but already exists for connection %s",
-                    (user_id, connection.type()),
-                )
-                raise IndexError("User already exists for different connection")
+    def _create_user(self, user_id: UserId, user_profile: UserSpec, user_store: Users) -> None:
+        if not self.__config.create_users_on_login:
+            LOGGER.debug("User %s does not exist, and not configured to create", user_id)
+            raise ValueError("User does not exist")
 
-            user_entry.update(user_profile)
+        user_store[user_id] = user_profile
+
+    def _update_user(
+        self, user_id: UserId, user_profile: UserSpec, user_store: Users, connection_id: str | None
+    ) -> None:
+        if not connection_id or not (connection := get_connection(connection_id)):
+            LOGGER.debug(
+                "Attempting to update user %s for connection %s, but does not exist",
+                (user_id, connection_id),
+            )
+            raise ValueError("Unknown connection")
+
+        if connection.id != self.id:
+            LOGGER.debug(
+                "Attempting to create user %s but already exists for connection %s of type %s",
+                (user_id, connection.id, connection.type()),
+            )
+            raise ValueError("User already exists for different connection")
+
+        user_store[user_id] = user_profile
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

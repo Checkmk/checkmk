@@ -210,7 +210,7 @@ class AssertionConsumerService(Page):
 
         try:
             self.connector.create_and_update_user(authn_response.user_id)
-        except IndexError:
+        except ValueError:
             raise HTTPRedirect(
                 makeuri_contextless(
                     request, [("_origtarget", self.relay_state.target_url)], filename="login.py"

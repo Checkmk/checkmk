@@ -20,12 +20,16 @@ class TestConnector:
         return metadata_from_idp
 
     @pytest.fixture
-    def users_pre_edit(self) -> Users:
+    def saml2_connection_id(self, raw_config: dict[str, Any]) -> str:
+        return raw_config["id"]
+
+    @pytest.fixture
+    def users_pre_edit(self, saml2_connection_id: str) -> Users:
         return {
-            UserId("Moss"): UserSpec({"connector": "ldap", "email": "moss@helloit.com"}),
+            UserId("Moss"): UserSpec({"connector": "htpasswd", "email": "moss@helloit.com"}),
             UserId("Roy"): UserSpec({"connector": "htpasswd", "email": "roy@helloit.com"}),
             UserId("Richmond"): UserSpec(
-                {"connector": SAML2_CONNECTOR_TYPE, "email": "richmond@helloit.com"}
+                {"connector": saml2_connection_id, "email": "richmond@helloit.com"}
             ),
         }
 
@@ -37,17 +41,11 @@ class TestConnector:
         yield users
 
     @pytest.fixture
-    def connections_saml_connection(
-        self, monkeypatch: pytest.MonkeyPatch, raw_config: dict[str, Any]
-    ) -> None:
+    def get_connection(self, monkeypatch: pytest.MonkeyPatch, raw_config: dict[str, Any]) -> None:
+        saml2_connector = Connector(raw_config)
+        connections = {"htpasswd": HtpasswdUserConnector({}), saml2_connector.id: saml2_connector}
         monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.connector.get_connection", lambda i: Connector(raw_config)
-        )
-
-    @pytest.fixture
-    def connections_nonsaml_connection(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.connector.get_connection", lambda i: HtpasswdUserConnector({})
+            "cmk.gui.userdb.saml2.connector.get_connection", lambda i: connections[i]
         )
 
     def test_connector_properties(self, raw_config: dict[str, Any]) -> None:
@@ -87,7 +85,7 @@ class TestConnector:
     def test_edit_user_creates_new_user(
         self,
         raw_config: dict[str, Any],
-        connections_saml_connection: None,
+        get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
@@ -105,7 +103,7 @@ class TestConnector:
     def test_edit_user_creates_new_user_with_default_profile(
         self,
         raw_config: dict[str, Any],
-        connections_saml_connection: None,
+        get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
@@ -132,7 +130,7 @@ class TestConnector:
     def test_edit_user_does_not_overwrite_existing_user_in_different_namespace(
         self,
         raw_config: dict[str, Any],
-        connections_nonsaml_connection: None,
+        get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
@@ -152,7 +150,7 @@ class TestConnector:
     def test_edit_user_updates_user_profile(
         self,
         raw_config: dict[str, Any],
-        connections_saml_connection: None,
+        get_connection: None,
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.gui.plugins.metrics.html_render import render_title_elements_plain
@@ -21,5 +23,5 @@ from cmk.gui.plugins.metrics.html_render import render_title_elements_plain
         ),
     ],
 )
-def test_render_title_elements_plain(elements, result) -> None:  # type:ignore[no-untyped-def]
+def test_render_title_elements_plain(elements: Sequence[str], result: str) -> None:
     assert render_title_elements_plain(elements) == result

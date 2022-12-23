@@ -7,6 +7,8 @@ import io
 import tarfile
 from pathlib import Path
 
+import pytest
+
 import cmk.utils.crash_reporting
 
 import cmk.gui.crash_handler as crash_handler
@@ -17,7 +19,8 @@ def test_gui_crash_report_registry() -> None:
     assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_handler.GUICrashReport
 
 
-def test_gui_crash_report_get_packed(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_gui_crash_report_get_packed() -> None:
     store = crash_handler.CrashReportStore()
     try:
         crash_dir = Path()

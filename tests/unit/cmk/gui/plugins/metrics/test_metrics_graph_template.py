@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 import cmk.gui.metrics as metrics
@@ -10,10 +12,12 @@ import cmk.gui.plugins.metrics.graph_templates as gt
 from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
     GraphTemplate,
+    StackElement,
     TranslatedMetrics,
     unit_info,
     UnitConverter,
 )
+from cmk.gui.type_defs import GraphConsoldiationFunction, MetricExpression
 
 
 @pytest.mark.parametrize(
@@ -25,8 +29,10 @@ from cmk.gui.plugins.metrics.utils import (
         ("user.min,sys.max,+", None, [("user", "min"), ("sys", "max"), ("+", None)]),
     ],
 )
-def test_rpn_consolidation(  # type:ignore[no-untyped-def]
-    expression, enforced_consolidation_function, result
+def test_rpn_consolidation(
+    expression: MetricExpression,
+    enforced_consolidation_function: GraphConsoldiationFunction | None,
+    result: Sequence[tuple[str, GraphConsoldiationFunction | None]],
 ) -> None:
     assert list(gt.iter_rpn_expression(expression, enforced_consolidation_function)) == result
 
@@ -34,8 +40,8 @@ def test_rpn_consolidation(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize(
     "expression, enforced_consolidation_function", [("user.min", "max"), ("user.min,sys,+", "avg")]
 )
-def test_rpn_consolidation_exception(  # type:ignore[no-untyped-def]
-    expression, enforced_consolidation_function
+def test_rpn_consolidation_exception(
+    expression: MetricExpression, enforced_consolidation_function: GraphConsoldiationFunction | None
 ) -> None:
     with pytest.raises(gt.MKGeneralException):
         list(gt.iter_rpn_expression(expression, enforced_consolidation_function))
@@ -75,7 +81,7 @@ def test_rpn_consolidation_exception(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_rpn_stack(expression, result) -> None:  # type:ignore[no-untyped-def]
+def test_rpn_stack(expression: MetricExpression, result: StackElement) -> None:
     translated_metrics = metrics.translate_perf_data(
         "/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;", "check_mk-df"
     )
@@ -164,8 +170,8 @@ def test_create_graph_recipe_from_template() -> None:
         ("test", "test=5;5;10;0;20", "check_mk-local", "#cc00ff"),
     ],
 )
-def test_metric_unit_color(  # type:ignore[no-untyped-def]
-    expression, perf_string, check_command, result_color
+def test_metric_unit_color(
+    expression: str, perf_string: str, check_command: str | None, result_color: str
 ) -> None:
     metrics.fixup_unit_info()
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
@@ -187,8 +193,8 @@ def test_metric_unit_color(  # type:ignore[no-untyped-def]
         ("test", "", "check_mk-local"),
     ],
 )
-def test_metric_unit_color_skip(  # type:ignore[no-untyped-def]
-    expression, perf_string, check_command
+def test_metric_unit_color_skip(
+    expression: MetricExpression, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     assert gt.metric_unit_color(expression, translated_metrics, ["test"]) is None
@@ -200,8 +206,8 @@ def test_metric_unit_color_skip(  # type:ignore[no-untyped-def]
         ("level,altitude,+", "test=5;5;10;0;20", "check_mk-local"),
     ],
 )
-def test_metric_unit_color_exception(  # type:ignore[no-untyped-def]
-    metric, perf_string, check_command
+def test_metric_unit_color_exception(
+    metric: MetricExpression, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
     with pytest.raises(gt.MKGeneralException):

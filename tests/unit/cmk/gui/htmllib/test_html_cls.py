@@ -5,6 +5,8 @@
 
 import traceback
 
+import pytest
+
 from tests.testlib import compare_html
 
 from cmk.gui.exceptions import MKUserError
@@ -16,7 +18,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
 
 
-def test_render_help_empty(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_render_help_empty() -> None:
     assert html.have_help is False
     assert html.render_help(None) == HTML("")
     assert isinstance(html.render_help(None), HTML)
@@ -28,7 +31,8 @@ def test_render_help_empty(request_context) -> None:  # type:ignore[no-untyped-d
     assert isinstance(html.render_help("    "), HTML)
 
 
-def test_render_help_html(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_render_help_html() -> None:
     assert html.have_help is False
     assert compare_html(
         html.render_help(HTML("<abc>")),
@@ -41,7 +45,8 @@ def test_render_help_html(request_context) -> None:  # type:ignore[no-untyped-de
     assert html.have_help is True
 
 
-def test_render_help_text(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_render_help_text() -> None:
     assert compare_html(
         html.render_help("äbc"),
         HTML(
@@ -52,7 +57,8 @@ def test_render_help_text(request_context) -> None:  # type:ignore[no-untyped-de
     )
 
 
-def test_render_help_visible(request_context, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(
@@ -65,7 +71,8 @@ def test_render_help_visible(request_context, monkeypatch) -> None:  # type:igno
     )
 
 
-def test_add_manual_link(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
         html.render_help("[intro_welcome|Welcome]"),
@@ -78,9 +85,8 @@ def test_add_manual_link(request_context) -> None:  # type:ignore[no-untyped-def
     )
 
 
-def test_add_manual_link_localized(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help("[intro_welcome|Welcome]"),
@@ -93,9 +99,8 @@ def test_add_manual_link_localized(  # type:ignore[no-untyped-def]
     )
 
 
-def test_add_manual_link_anchor(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
         html.render_help("[graphing#rrds|RRDs]"),
@@ -108,14 +113,16 @@ def test_add_manual_link_anchor(  # type:ignore[no-untyped-def]
     )
 
 
-def test_user_error(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_user_error() -> None:
     with output_funnel.plugged():
         html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
         c = output_funnel.drain()
     assert c == '<div class="error">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>'
 
 
-def test_show_user_errors(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_show_user_errors() -> None:
     assert not user_errors
     user_errors.add(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
     assert user_errors
@@ -126,7 +133,8 @@ def test_show_user_errors(request_context) -> None:  # type:ignore[no-untyped-de
     assert c == '<div class="error">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>'
 
 
-def test_HTMLWriter(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_HTMLWriter() -> None:
     with output_funnel.plugged():
 
         with output_funnel.plugged():
@@ -178,21 +186,24 @@ def test_HTMLWriter(request_context) -> None:  # type:ignore[no-untyped-def]
                 print(e)
 
 
-def test_multiclass_call(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_multiclass_call() -> None:
     with output_funnel.plugged():
         html.div("", class_="1", css="3", cssclass="4", **{"class": "2"})
         written_text = "".join(output_funnel.drain())
     assert compare_html(written_text, '<div class="1 3 4 2"></div>')
 
 
-def test_exception_handling(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_exception_handling() -> None:
     try:
         raise Exception("Test")
     except Exception as e:
         assert compare_html(HTMLWriter.render_div(str(e)), "<div>%s</div>" % e)
 
 
-def test_text_input(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_text_input() -> None:
     with output_funnel.plugged():
         html.text_input("tralala")
         written_text = "".join(output_funnel.drain())
@@ -223,7 +234,8 @@ def test_text_input(request_context) -> None:  # type:ignore[no-untyped-def]
         )
 
 
-def test_render_a(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_render_a() -> None:
     a = HTMLWriter.render_a("bla", href="blu", class_=["eee"], target="_blank")
     assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
 

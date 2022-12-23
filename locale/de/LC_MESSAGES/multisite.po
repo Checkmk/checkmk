@@ -13667,7 +13667,7 @@ msgid "Deploy the SAP router plugin"
 msgstr "Das SAP-Router-Plugin ausrollen"
 
 msgid "Deploy the SSH daemon configuration plugin"
-msgstr "Das SSH Daemon Konfigurationsplugin nicht ausrollen"
+msgstr "Das SSH Daemon Konfigurationsplugin ausrollen"
 
 msgid "Deploy the TSM plugin"
 msgstr "Das TSM Plugin ausrollen"

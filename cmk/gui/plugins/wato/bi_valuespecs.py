@@ -345,10 +345,10 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                             title=_("Refer to:"),
                             choices=[
                                 ("host", _("The found hosts themselves")),
-                                ("child", _("The found hosts' childs")),
+                                ("child", _("The found hosts' children")),
                                 (
                                     "child_with",
-                                    _("The found hosts' childs (with child filtering)"),
+                                    _("The found hosts' children (with child filtering)"),
                                     Dictionary(
                                         title=_("Child Conditions"),
                                         elements=cls.get_host_conditions(),
@@ -358,7 +358,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                                 ("parent", _("The found hosts' parents")),
                             ],
                             help=_(
-                                "When selecting <i>The found hosts' childs</i>, the conditions "
+                                "When selecting <i>The found hosts' children</i>, the conditions "
                                 "(tags and host name) are used to match a host, but you will get one "
                                 "node created for each child of the matched host. The "
                                 "place holder <tt>$HOSTNAME$</tt> contains the name of the found child "
@@ -801,7 +801,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                         title=_("Restrict severity to at worst"),
                         help=_(
                             "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the childs have more severe states."
+                            "exceeded, even if some of the children have more severe states."
                         ),
                         default_value=2,
                     ),
@@ -856,7 +856,7 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                         title=_("Restrict severity to at worst"),
                         help=_(
                             "Here a maximum severity of the node state can be set. This severity is not "
-                            "exceeded, even if some of the childs have more severe states."
+                            "exceeded, even if some of the children have more severe states."
                         ),
                         default_value=2,
                     ),

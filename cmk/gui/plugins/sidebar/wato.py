@@ -217,7 +217,7 @@ def compute_foldertree():
     # row is a folder with the number of hosts on this level.
     #
     # Now get number of hosts by folder
-    # Count all childs for each folder
+    # Count all children for each folder
     user_folders = {}
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/

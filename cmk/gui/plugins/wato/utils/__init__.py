@@ -300,7 +300,7 @@ def _list_user_icons_and_actions() -> DropdownChoiceEntries:
     return sorted(choices, key=lambda x: x[1])
 
 
-# TODO: Refactor this and all other childs of ElementSelection() to base on
+# TODO: Refactor this and all other children of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
     def __init__(

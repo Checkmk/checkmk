@@ -75,7 +75,7 @@ MTE_SINGLE_MSG = "102"
 MTE_LONG_TXT = "110"
 # This is a short text label without status
 MTE_SHORT_TXT = "111"
-# Is a "folder" which has no own state, just computed by its childs
+# Is a "folder" which has no own state, just computed by its children
 MTE_VIRTUAL = "199"
 
 # This map converts between the SAP color codes (key values) and the

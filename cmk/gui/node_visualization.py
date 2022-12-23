@@ -914,7 +914,7 @@ class ParentChildNetworkTopology(Topology):
         ]
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
-        """Create a central node and add all monitoring sites as childs"""
+        """Create a central node and add all monitoring sites as children"""
 
         central_node: _MeshNode = {
             "name": HostName(""),

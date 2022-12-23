@@ -737,3 +737,30 @@ rulespec_registry.register(
         title=lambda: _("Azure Load Balancer Health"),
     )
 )
+
+
+def _parameter_valuespec_app_gateway():
+    return Dictionary(
+        title=_("Levels app gateway"),
+        elements=[
+            (
+                "healthy_hosts",
+                SimpleLevels(Integer, title=_("Number of healthy hosts lower levels")),
+            ),
+            (
+                "failed_requests",
+                SimpleLevels(Integer, title=_("Number of failed requests upper levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_app_gateway",
+        item_spec=lambda: TextInput(title=_("Application Gateway")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_app_gateway,
+        title=lambda: _("Azure Application Gateway"),
+    )
+)

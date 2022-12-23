@@ -146,6 +146,10 @@ ALL_METRICS: dict[str, list[tuple]] = {
             None,
         ),
     ],
+    "Microsoft.Network/applicationGateways": [
+        ("HealthyHostCount", "PT1M", "average", None),
+        ("FailedRequests", "PT1M", "count", None),
+    ],
 }
 
 
@@ -476,6 +480,10 @@ class MgmtApiClient(BaseApiClient):
     def vmview(self, group, name):
         temp = "resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s/instanceView"
         return self._get(temp % (group, name), params={"api-version": "2018-06-01"})
+
+    def app_gateway_view(self, group, name):
+        url = "resourceGroups/{}/providers/Microsoft.Network/applicationGateways/{}"
+        return self._get(url.format(group, name), params={"api-version": "2022-01-01"})
 
     def load_balancer_view(self, group, name):
         url = "resourceGroups/{}/providers/Microsoft.Network/loadBalancers/{}"
@@ -886,6 +894,60 @@ def get_frontend_ip_configs(
     return frontend_ip_configs
 
 
+def get_routing_rules(app_gateway: Mapping) -> list[Mapping]:
+    routing_rule_keys = ("httpListener", "backendAddressPool", "backendHttpSettings")
+    return [
+        {
+            "name": r["name"],
+            **filter_keys(r["properties"], routing_rule_keys),
+        }
+        for r in app_gateway["properties"]["requestRoutingRules"]
+    ]
+
+
+def get_http_listeners(app_gateway: Mapping) -> Mapping[str, Mapping]:
+    listener_keys = ("port", "protocol", "hostNames", "frontendIPConfiguration", "frontendPort")
+    return {
+        l["id"]: {
+            "id": l["id"],
+            "name": l["name"],
+            **filter_keys(l["properties"], listener_keys),
+        }
+        for l in app_gateway["properties"]["httpListeners"]
+    }
+
+
+def process_app_gateway(mgmt_client: MgmtApiClient, resource: AzureResource) -> None:
+    app_gateway = mgmt_client.app_gateway_view(resource.info["group"], resource.info["name"])
+    frontend_ip_configs = get_frontend_ip_configs(mgmt_client, app_gateway)
+
+    resource.info["properties"] = {}
+    resource.info["properties"]["operational_state"] = app_gateway["properties"]["operationalState"]
+    resource.info["properties"]["frontend_api_configs"] = frontend_ip_configs
+    resource.info["properties"]["routing_rules"] = get_routing_rules(app_gateway)
+    resource.info["properties"]["http_listeners"] = get_http_listeners(app_gateway)
+
+    if (
+        waf_config := app_gateway["properties"].get("webApplicationFirewallConfiguration")
+    ) is not None:
+        resource.info["properties"]["waf_enabled"] = waf_config["enabled"]
+
+    frontend_ports = {
+        p["id"]: {"port": p["properties"]["port"]}
+        for p in app_gateway["properties"]["frontendPorts"]
+    }
+    resource.info["properties"]["frontend_ports"] = frontend_ports
+
+    backend_settings = {
+        c["id"]: {"name": c["name"], **filter_keys(c["properties"], ("port", "protocol"))}
+        for c in app_gateway["properties"]["backendHttpSettingsCollection"]
+    }
+    resource.info["properties"]["backend_settings"] = backend_settings
+
+    backend_pools = {p["id"]: p for p in app_gateway["properties"]["backendAddressPools"]}
+    resource.info["properties"]["backend_address_pools"] = backend_pools
+
+
 def get_network_interface_config(mgmt_client: MgmtApiClient, nic_id: str) -> Mapping[str, Mapping]:
     _, group, nic_name, ip_conf_name = get_params_from_azure_id(
         nic_id, resource_types=["networkInterfaces", "ipConfigurations"]
@@ -1249,7 +1311,8 @@ def process_resource(
 
         if args.piggyback_vms == "self":
             sections.append(get_vm_labels_section(resource, group_labels))
-
+    elif resource_type == "Microsoft.Network/applicationGateways":
+        process_app_gateway(mgmt_client, resource)
     elif resource_type == "Microsoft.RecoveryServices/vaults":
         process_recovery_services_vaults(mgmt_client, resource)
     elif resource_type == "Microsoft.Network/virtualNetworkGateways":

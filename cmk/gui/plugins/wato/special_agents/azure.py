@@ -44,9 +44,13 @@ ALL_AZURE_SERVICES: list[tuple[str, str]] = [
     ("Microsoft.Network/trafficmanagerprofiles", _("Traffic Manager")),
     ("Microsoft.Network/loadBalancers", _("Load Balancer")),
     ("Microsoft.RecoveryServices/vaults", _("Recovery Services Vault")),
+    ("Microsoft.Network/applicationGateways", _("Application Gateway")),
 ]
 
-PLUS_ONLY_AZURE_SERVICES: Final = {"Microsoft.RecoveryServices/vaults"}
+PLUS_ONLY_AZURE_SERVICES: Final = {
+    "Microsoft.RecoveryServices/vaults",
+    "Microsoft.Network/applicationGateways",
+}
 
 
 def _special_agents_azure_azure_explicit_config():

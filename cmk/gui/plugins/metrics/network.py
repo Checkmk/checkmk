@@ -108,6 +108,12 @@ metric_info["requests"] = {
     "color": "31/a",
 }
 
+metric_info["failed_requests"] = {
+    "title": _("Failed requests"),
+    "unit": "count",
+    "color": "32/a",
+}
+
 metric_info["requests_per_conn"] = {
     "title": _("Requests per connection"),
     "unit": "count",

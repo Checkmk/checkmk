@@ -63,6 +63,12 @@ metric_info["hosts_other"] = {
     "color": "41/a",
 }
 
+metric_info["hosts_healthy"] = {
+    "title": _l("Healthy hosts"),
+    "unit": "count",
+    "color": "46/a",
+}
+
 metric_info["service_check_rate"] = {
     "title": _l("Service check rate"),
     "unit": "1/s",

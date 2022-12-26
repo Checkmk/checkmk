@@ -140,23 +140,19 @@ def print_table(
     headers: TableRow, colors: TableColors, rows: Iterable[TableRow], indent: str = ""
 ) -> None:
     num_columns = len(headers)
-    lengths = _column_lengths(headers, rows, num_columns)
+    lengths = _column_lengths(headers, rows)
     dashes = ["-" * l for l in lengths]
     fmt = _row_template(lengths, colors, indent)
     for row in itertools.chain([headers, dashes], rows):
         sys.stdout.write(fmt % tuple(row[:num_columns]))
 
 
-def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: int) -> list[int]:
+def _column_lengths(headers: TableRow, rows: Iterable[TableRow]) -> list[int]:
     """
-    >>> _column_lengths(['h1', 'h2'], [['r11', 'r12__', 'r13'], ['r22_', 'r23']], 2)
+    >>> _column_lengths(['h1', 'h2'], [['r11', 'r12__', 'r13'], ['r22_', 'r23']])
     [4, 5]
     """
-    lengths = [len(h) for h in headers]
-    for row in rows:
-        for index, column in enumerate(row[:num_columns]):
-            lengths[index] = max(len(column), lengths[index])
-    return lengths
+    return [max(len(i) for i in e) for e in zip(headers, *rows)]
 
 
 def _row_template(lengths: list[int], colors: TableColors, indent: str) -> str:

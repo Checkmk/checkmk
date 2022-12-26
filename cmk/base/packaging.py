@@ -142,22 +142,16 @@ def package_info(args: list[str]) -> None:
 
 
 def show_package_contents(name: str) -> None:
-    show_package(name, False)
+    package = _resolve_package_argument(name)
+    _show_package(package, False)
 
 
 def show_package_info(name: str) -> None:
-    show_package(name, True)
+    package = _resolve_package_argument(name)
+    _show_package(package, True)
 
 
-def show_package(name: str, show_info: bool = False) -> None:
-    package: Manifest | None = (
-        extract_manifest(Path(name).read_bytes())
-        if name.endswith(PACKAGE_EXTENSION)
-        else get_installed_manifest(PackageName(name))
-    )
-    if package is None:
-        raise PackageException("No such package: %s" % name)
-
+def _show_package(package: Manifest, show_info: bool = False) -> None:
     if show_info:
         sys.stdout.write(f"Name:                          {package.name}\n")
         sys.stdout.write(f"Version:                       {package.version}\n")
@@ -171,18 +165,30 @@ def show_package(name: str, show_info: bool = False) -> None:
         files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package.files.items()])
         sys.stdout.write(f"Files:                         {files}\n")
         sys.stdout.write(f"Description:\n  {package.description}\n")
+        return
+
+    if logger.isEnabledFor(VERBOSE):
+        sys.stdout.write(f"Files in package {package.name}:\n")
+        for part in PACKAGE_PARTS:
+            if part_files := package.files.get(part, []):
+                sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")
+                for f in part_files:
+                    sys.stdout.write("    %s\n" % f)
     else:
-        if logger.isEnabledFor(VERBOSE):
-            sys.stdout.write(f"Files in package {name}:\n")
-            for part in PACKAGE_PARTS:
-                if part_files := package.files.get(part, []):
-                    sys.stdout.write(f"  {tty.bold}{part.ui_title}{tty.normal}:\n")
-                    for f in part_files:
-                        sys.stdout.write("    %s\n" % f)
-        else:
-            for part in PACKAGE_PARTS:
-                for fn in package.files.get(part, []):
-                    sys.stdout.write(f"{part / fn}\n")
+        for part in PACKAGE_PARTS:
+            for fn in package.files.get(part, []):
+                sys.stdout.write(f"{part / fn}\n")
+
+
+def _resolve_package_argument(name: str) -> Manifest:
+    package: Manifest | None = (
+        extract_manifest(Path(name).read_bytes())
+        if name.endswith(PACKAGE_EXTENSION)
+        else get_installed_manifest(PackageName(name))
+    )
+    if package is None:
+        raise PackageException(f"No such package: {name}")
+    return package
 
 
 def package_create(args: list[str]) -> None:

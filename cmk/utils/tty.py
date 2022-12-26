@@ -148,6 +148,10 @@ def print_table(
 
 
 def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: int) -> list[int]:
+    """
+    >>> _column_lengths(['h1', 'h2'], [['r11', 'r12__', 'r13'], ['r22_', 'r23']], 2)
+    [4, 5]
+    """
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):

@@ -7,10 +7,12 @@ import argparse
 import json
 import logging
 import sys
+from pathlib import Path
 from typing import Callable
 
 from cmk.utils import tty
 
+from ._manifest import extract_manifest
 from ._reporter import files_inventory
 from ._type_defs import PackageException
 
@@ -51,12 +53,34 @@ def _command_find(args: argparse.Namespace, logger: logging.Logger) -> int:
     return 0
 
 
+def _args_inspect(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("--json", action="store_true", help="format output as json")
+    subparser.add_argument("file", type=Path, help="Path to an MKP file")
+
+
+def _command_inspect(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Show manifest of an MKP file"""
+    file_path: Path = args.file
+    try:
+        file_content = file_path.read_bytes()
+    except OSError as exc:
+        raise PackageException from exc
+
+    manifest = extract_manifest(file_content)
+
+    sys.stdout.write(f"{manifest.json() if args.json else manifest.to_text(summarize=False)}\n")
+    return 0
+
+
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="mkp", description=__doc__)
     parser.add_argument("--debug", "-d", action="store_true")
     subparsers = parser.add_subparsers(required=True)
 
     _add_command(subparsers, "find", _args_find, _command_find)
+    _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
 
     return parser.parse_args(argv)
 

@@ -14,8 +14,11 @@ These changes require some adjustments and modernisations of the commandline int
 
 The following changes are made to the commandline interface <tt>mkp [COMMAND]</tt>:
 
-<tt>find</tt>:
+<tt>find [--all] [--json]</tt>:
 The find command now reports some details for each file.
 If you are using the command in a script, we recommend setting the new <tt>--json</tt> flag, and pipe the output through the commandline tool "<tt>jq</tt>".
 To get a list of all local files, for instance, use "<tt>mkp find --json --all | jq .[].file </tt>".
 
+<tt>inspect PATH_TO_MKP_FILE</tt>:
+This is a new command to show the contents of an MKP file as listed in its manifest file (a.k.a. "info").
+The <tt>show</tt> and <tt>list</tt> commands no longer accept paths as argument.

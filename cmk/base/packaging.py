@@ -20,7 +20,6 @@ from cmk.utils.packaging import (
     create_mkp_object,
     disable,
     disable_outdated,
-    extract_manifest,
     format_file_name,
     get_enabled_manifests,
     get_installed_manifest,
@@ -30,7 +29,6 @@ from cmk.utils.packaging import (
     is_installed,
     Manifest,
     manifest_template,
-    PACKAGE_EXTENSION,
     package_num_files,
     PACKAGE_PARTS,
     PackageException,
@@ -55,11 +53,10 @@ Available commands are:
    pack NAME               ...  Create package file from installed package
    release NAME            ...  Drop installed package NAME, release packaged files
    find [-h] [-a] [--json] ...  Find and display unpackaged files
+   inspect FILE            ...  Show manifest of an `.mkp` file.
    list                    ...  List all installed packages
    list NAME               ...  List files of installed package
-   list PACK.mkp           ...  List files of uninstalled package file
    show NAME               ...  Show information about installed package
-   show PACK.mkp           ...  Show information about uninstalled package file
    install PACK.mkp        ...  Install or update package from file PACK.mkp
    remove NAME VERSION     ...  Uninstall and delete package NAME
    disable NAME [VERSION]  ...  Disable package NAME
@@ -86,6 +83,7 @@ def do_packaging(args: list[str]) -> None:
         "release": package_release,
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
+        "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show": package_show,
         "pack": package_pack,
         "remove": package_remove,
@@ -136,7 +134,7 @@ def package_list(args: list[str]) -> None:
 
 def package_show(args: list[str]) -> None:
     if len(args) == 0:
-        raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
+        raise PackageException("Usage: check_mk -P show NAME")
 
     for manifest in (_resolve_package_argument(arg) for arg in args):
         sys.stdout.write(f"{manifest.to_text()}\n")
@@ -157,12 +155,7 @@ def _list_package(package: Manifest) -> None:
 
 
 def _resolve_package_argument(name: str) -> Manifest:
-    package: Manifest | None = (
-        extract_manifest(Path(name).read_bytes())
-        if name.endswith(PACKAGE_EXTENSION)
-        else get_installed_manifest(PackageName(name))
-    )
-    if package is None:
+    if (package := get_installed_manifest(PackageName(name))) is None:
         raise PackageException(f"No such package: {name}")
     return package
 

@@ -75,9 +75,13 @@ class Manifest(BaseModel):
                 f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
             )
 
-    def to_text(self) -> str:
+    def to_text(self, summarize: bool = True) -> str:
         valid_until_text = self.version_usable_until or "No version limitation"
-        files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in self.files.items()])
+        files = "".join(
+            "\n  %s%s"
+            % (part.ui_title, f": {len(fs)}" if summarize else "".join(f"\n    {f}" for f in fs))
+            for part, fs in self.files.items()
+        )
         return (
             f"Name:                          {self.name}\n"
             f"Version:                       {self.version}\n"

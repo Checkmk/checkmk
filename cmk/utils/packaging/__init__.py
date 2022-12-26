@@ -64,8 +64,6 @@ class PackagePartInfoElement(TypedDict):
 
 PackagePartInfo = dict[PartName, PackagePartInfoElement]
 
-PACKAGE_EXTENSION: Final[str] = ".mkp"
-
 
 def format_file_name(package_id: PackageID) -> str:
     """
@@ -78,7 +76,7 @@ def format_file_name(package_id: PackageID) -> str:
     'my_package-1.0.2.mkp'
 
     """
-    return f"{package_id.name}-{package_id.version}{PACKAGE_EXTENSION}"
+    return f"{package_id.name}-{package_id.version}.mkp"
 
 
 def release(pacname: PackageName) -> None:

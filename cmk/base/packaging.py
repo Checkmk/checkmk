@@ -86,7 +86,7 @@ def do_packaging(args: list[str]) -> None:
         "release": package_release,
         "list": package_list,
         "find": package_find,
-        "show": package_info,
+        "show": package_show,
         "pack": package_pack,
         "remove": package_remove,
         "install": package_install,
@@ -113,8 +113,8 @@ def do_packaging(args: list[str]) -> None:
 
 def package_list(args: list[str]) -> None:
     if len(args) > 0:
-        for name in args:
-            show_package_contents(PackageName(name))
+        for package in (_resolve_package_argument(arg) for arg in args):
+            _list_package(package)
             return
 
     table = [
@@ -134,25 +134,11 @@ def package_list(args: list[str]) -> None:
             sys.stdout.write("%s\n" % name)
 
 
-def package_info(args: list[str]) -> None:
+def package_show(args: list[str]) -> None:
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
-    for name in args:
-        show_package_info(name)
 
-
-def show_package_contents(name: str) -> None:
-    package = _resolve_package_argument(name)
-    _show_package(package, False)
-
-
-def show_package_info(name: str) -> None:
-    package = _resolve_package_argument(name)
-    _show_package(package, True)
-
-
-def _show_package(package: Manifest, show_info: bool = False) -> None:
-    if show_info:
+    for package in (_resolve_package_argument(arg) for arg in args):
         sys.stdout.write(f"Name:                          {package.name}\n")
         sys.stdout.write(f"Version:                       {package.version}\n")
         sys.stdout.write(f"Packaged on Checkmk Version:   {package.version_packaged}\n")
@@ -165,8 +151,9 @@ def _show_package(package: Manifest, show_info: bool = False) -> None:
         files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package.files.items()])
         sys.stdout.write(f"Files:                         {files}\n")
         sys.stdout.write(f"Description:\n  {package.description}\n")
-        return
 
+
+def _list_package(package: Manifest) -> None:
     if logger.isEnabledFor(VERBOSE):
         sys.stdout.write(f"Files in package {package.name}:\n")
         for part in PACKAGE_PARTS:

@@ -1,0 +1,13 @@
+Title: aws: Missing regions added
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1672146900
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Regions Asia Pacific (Hyderabad), Europe (Zurich), Europe (Spain),
+Middle East (UAE), AWS GovCloud (US-East) and AWS GovCloud (US-West)
+have been added to Amazon Web Services (AWS) configuration rule.

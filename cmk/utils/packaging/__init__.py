@@ -38,6 +38,7 @@ from ._installed import (
 )
 from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
 from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
+from ._reporter import all_rule_pack_files
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 g_logger = logging.getLogger("cmk.utils.packaging")
@@ -725,21 +726,13 @@ def rule_pack_id_to_mkp() -> dict[str, PackageName | None]:
     Every rule pack is contained exactly once in this mapping. If no corresponding
     MKP exists, the value of that mapping is None.
     """
-    try:
-        rel_files = [
-            f.relative_to(PackagePart.EC_RULE_PACKS.path)
-            for f in PackagePart.EC_RULE_PACKS.path.iterdir()
-        ]
-    except FileNotFoundError:
-        return {}
-
     package_map = {
         file: manifest.name
         for manifest in get_installed_manifests()
         for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
     }
 
-    return {f.stem: package_map.get(f) for f in rel_files}
+    return {f.stem: package_map.get(f) for f in all_rule_pack_files()}
 
 
 def update_active_packages(log: logging.Logger) -> None:

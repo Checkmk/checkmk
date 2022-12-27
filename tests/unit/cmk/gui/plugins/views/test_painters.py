@@ -4,17 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 
 from tests.testlib import on_time
 
 import cmk.utils.version as cmk_version
+from cmk.utils.paths import default_config_dir
 from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.gui import sites
 from cmk.gui.globals import request
+from cmk.gui.plugins.views.painters import _paint_custom_notes
 from cmk.gui.plugins.views.utils import painter_registry
-from cmk.gui.type_defs import PainterSpec
+from cmk.gui.type_defs import List, Literal, PainterSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.views import painters_of_datasource, View
 
@@ -1691,3 +1695,72 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
+
+
+@pytest.mark.parametrize(
+    "notes_type, notes_dir, notes_file, row, notes",
+    [
+        pytest.param(
+            "service",
+            Path(default_config_dir) / "notes/services" / "heute",
+            Path(default_config_dir) / "notes/services" / "heute" / "SomeService",
+            {
+                "host_address": "127.0.0.1",
+                "service_description": "SomeService",
+                "host_name": "heute",
+                "site": "my_site",
+            },
+            ["A Service note", "One more service note"],
+            id="Service note for dedicated host",
+        ),
+        pytest.param(
+            "service",
+            Path(default_config_dir) / "notes/services" / "*",
+            Path(default_config_dir) / "notes/services" / "*" / "AnotherService",
+            {
+                "host_address": "127.0.0.1",
+                "service_description": "AnotherService",
+                "host_name": "some_host",
+                "site": "my_site",
+            },
+            ["Another service note", "Last service note"],
+            id="Service note for multiple hosts",
+        ),
+        pytest.param(
+            "host",
+            Path(default_config_dir) / "notes/hosts",
+            Path(default_config_dir) / "notes/hosts" / "this_host",
+            {
+                "host_address": "127.0.0.1",
+                "host_name": "this_host",
+                "site": "my_site",
+            },
+            ["First host node", "Second host node"],
+            id="A host note for dedicated host",
+        ),
+        pytest.param(
+            "host",
+            Path(default_config_dir) / "notes/hosts",
+            Path(default_config_dir) / "notes/hosts" / "*",
+            {
+                "host_address": "127.0.0.1",
+                "host_name": "another_host",
+                "site": "my_site",
+            },
+            ["First host node", "Second host node", "And so on"],
+            id="A host note for multiple hosts",
+        ),
+    ],
+)
+def test_paint_custom_notes(
+    notes_type: Literal["host", "service"],
+    notes_dir: Path,
+    notes_file: Path,
+    row: Row,
+    notes: List[str],
+) -> None:
+    notes_dir.mkdir(parents=True)
+    with open(notes_file, "w") as f:
+        f.write("<hr>".join(notes))
+
+    assert notes_file.read_text() == _paint_custom_notes(notes_type, row)[1]

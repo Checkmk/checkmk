@@ -1,0 +1,13 @@
+Title: Fix service custom notes for multiple hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1672135404
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+In versions prior 2.1 the service custom notes matched für multiple hosts if
+the custom note file was places below the directory
+"~/etc/check_mk/notes/services/*". This now works as intended again.

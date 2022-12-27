@@ -67,7 +67,7 @@ _need_ip_access_list() {
 
 _deploy_controller() {
     printf "Deploying agent controller: %s\n" "${CONTROLLER_TARGET}"
-    gunzip --force --quiet -c "/var/lib/cmk-agent/cmk-agent-ctl.gz" > "/var/lib/cmk-agent/cmk-agent-ctl" || {
+    gunzip --force --quiet -c "/var/lib/cmk-agent/cmk-agent-ctl.gz" >"/var/lib/cmk-agent/cmk-agent-ctl" || {
         printf "%s\n" "...Failed to unpack with gzip."
         return 1
     }

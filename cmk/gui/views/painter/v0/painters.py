@@ -1531,7 +1531,10 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/services" / host]
+        dirs = [
+            Path(cmk.utils.paths.default_config_dir) / "notes/services" / host,
+            Path(cmk.utils.paths.default_config_dir) / "notes/services" / "*",
+        ]
         item = svc
     else:
         dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]

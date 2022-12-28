@@ -6,9 +6,11 @@
 import base64
 import re
 import xml
+import xml.etree.ElementTree as ET
 import zlib
-from datetime import datetime, timedelta
-from typing import Any, Iterable
+from itertools import zip_longest
+from pathlib import Path
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -20,155 +22,18 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.userdb.saml2.interface import Authenticated, Interface
 
-VALID_AUTHENTICATION_REQUEST_PATTERN = re.compile(
-    " ".join(
-        """<ns0:AuthnRequest xmlns:ns0="urn:oasis:names:tc:SAML:2\\.0:protocol" xmlns:ns1="urn:oasis:names:tc:SAML:2\\.0:assertion" ID="id-[a-zA-Z0-9]{17}" Version="2\\.0" IssueInstant="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z" Destination="https://myidp\\.com/some/path/to//SSOService\\.php" ProtocolBinding="\\(\'https://myhost.com/NO_SITE/check_mk/saml_acs\\.py\\?acs\', \'urn:oasis:names:tc:SAML:2\\.0:bindings:HTTP-POST\'\\)">
-   <ns1:Issuer Format="urn:oasis:names:tc:SAML:2\\.0:nameid-format:entity">https://myhost.com/NO_SITE/check_mk/saml_metadata\\.py</ns1:Issuer>
-   <ns0:NameIDPolicy Format="urn:oasis:names:tc:SAML:2\\.0:nameid-format:persistent" AllowCreate="false" />
-</ns0:AuthnRequest>""".split()
-    ).replace("> <", "><")
-)
-
 
 def _encode(string: str) -> str:
     return base64.b64encode(string.encode("utf-8")).decode("utf-8")
 
 
-def _authentication_request_response(
-    response_id: str,
-    timestamp: datetime,
-    *,
-    valid_from: datetime | None = None,
-    valid_until: datetime | None = None,
-) -> str:
-    timestamp_fmt = "%Y-%m-%dT%H:%M:%SZ"
-
-    if not valid_from:
-        valid_from = timestamp - timedelta(days=5)
-
-    if not valid_until:
-        valid_until = timestamp + timedelta(days=5)
-
-    return _encode(
-        f"""<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
-                        xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
-                        ID="_a639dc4ab55961d203419f46689efcc801e950819e"
-                        Version="2.0"
-                        IssueInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
-                        Destination="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs"
-                        InResponseTo="{response_id}"
-                        >
-            <saml:Issuer>https://myidp.com/some/path/to/metadata.php</saml:Issuer>
-            <ds:Signature xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
-                <ds:SignedInfo>
-                    <ds:CanonicalizationMethod Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
-                    <ds:SignatureMethod Algorithm="https://www.w3.org/2000/09/xmldsig#rsa-sha1" />
-                    <ds:Reference URI="#_a639dc4ab55961d203419f46689efcc801e950819e">
-                        <ds:Transforms>
-                            <ds:Transform Algorithm="https://www.w3.org/2000/09/xmldsig#enveloped-signature" />
-                            <ds:Transform Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
-                        </ds:Transforms>
-                        <ds:DigestMethod Algorithm="https://www.w3.org/2000/09/xmldsig#sha1" />
-                        <ds:DigestValue>rrgTHuEqDHQOktBTEi5onR8ojtk=</ds:DigestValue>
-                    </ds:Reference>
-                </ds:SignedInfo>
-                <ds:SignatureValue>ErQMB6wSQ6U8PjZeG8GUX+O1GA5lwYN9sWC33+mjbs9i25TWDE1wjsWU2mnI7VZED0h0K8GkTwTItCCpScdJ8dh6g7lo1oXBz4N17l8Gd0RxUEt72MI/2F30Hkri13bZMegmPT2/BsdcgEh7ILRpaCWryyAyokz+TS9uoY+Lc0U88241wkj1r2TIFdtU6WxPlL12MaBOms3C3XJ4/R5d0salpAQ09ytcmMo11cZSIgPcRFQacRoUSDB+yZ04ld5FYaZ9S43/1OkVAEqMweTvz1BkcCnHrAzRJkrxnlPOh9KBmNxOOGAJsKYW6EbEMf8Xz4/9C3sIbmRJQFRsqe7qwQ==</ds:SignatureValue>
-                <ds:KeyInfo>
-                    <ds:X509Data>
-                        <ds:X509Certificate>MIIDXTCCAkWgAwIBAgIJALmVVuDWu4NYMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTYxMjMxMTQzNDQ3WhcNNDgwNjI1MTQzNDQ3WjBFMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzUCFozgNb1h1M0jzNRSCjhOBnR+uVbVpaWfXYIR+AhWDdEe5ryY+CgavOg8bfLybyzFdehlYdDRgkedEB/GjG8aJw06l0qF4jDOAw0kEygWCu2mcH7XOxRt+YAH3TVHa/Hu1W3WjzkobqqqLQ8gkKWWM27fOgAZ6GieaJBN6VBSMMcPey3HWLBmc+TYJmv1dbaO2jHhKh8pfKw0W12VM8P1PIO8gv4Phu/uuJYieBWKixBEyy0lHjyixYFCR12xdh4CA47q958ZRGnnDUGFVE1QhgRacJCOZ9bd5t9mr8KLaVBYTCJo5ERE8jymab5dPqe5qKfJsCZiqWglbjUo9twIDAQABo1AwTjAdBgNVHQ4EFgQUxpuwcs/CYQOyui+r1G+3KxBNhxkwHwYDVR0jBBgwFoAUxpuwcs/CYQOyui+r1G+3KxBNhxkwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAAiWUKs/2x/viNCKi3Y6blEuCtAGhzOOZ9EjrvJ8+COH3Rag3tVBWrcBZ3/uhhPq5gy9lqw4OkvEws99/5jFsX1FJ6MKBgqfuy7yh5s1YfM0ANHYczMmYpZeAcQf2CGAaVfwTTfSlzNLsF2lW/ly7yapFzlYSJLGoVE+OHEu8g5SlNACUEfkXw+5Eghh+KzlIN7R6Q7r2ixWNFBC/jWf7NKUfJyX8qIG5md1YUeT6GBW9Bm2/1/RiO24JTaYlfLdKK9TYb8sG5B+OLab2DImG99CJ25RkAcSobWNF5zD0O6lgOo3cEdB/ksCq3hmtlC/DlLZ/D8CJ+7VuZnS1rR2naQ==</ds:X509Certificate>
-                    </ds:X509Data>
-                </ds:KeyInfo>
-            </ds:Signature>
-            <samlp:Status>
-                <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" />
-            </samlp:Status>
-            <saml:Assertion xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
-                            xmlns:xs="https://www.w3.org/2001/XMLSchema"
-                            ID="_efca8eaa2499ca65cfd6d153b9e9e873cf0a949368"
-                            Version="2.0"
-                            IssueInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
-                            >
-                <saml:Issuer>https://myidp.com/some/path/to/metadata.php</saml:Issuer>
-                <ds:Signature xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
-                    <ds:SignedInfo>
-                        <ds:CanonicalizationMethod Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
-                        <ds:SignatureMethod Algorithm="https://www.w3.org/2000/09/xmldsig#rsa-sha1" />
-                        <ds:Reference URI="#_efca8eaa2499ca65cfd6d153b9e9e873cf0a949368">
-                            <ds:Transforms>
-                                <ds:Transform Algorithm="https://www.w3.org/2000/09/xmldsig#enveloped-signature" />
-                                <ds:Transform Algorithm="https://www.w3.org/2001/10/xml-exc-c14n#" />
-                            </ds:Transforms>
-                            <ds:DigestMethod Algorithm="https://www.w3.org/2000/09/xmldsig#sha1" />
-                            <ds:DigestValue>yO3xhwoBDgTXHXyJXOuxN9d+ZbI=</ds:DigestValue>
-                        </ds:Reference>
-                    </ds:SignedInfo>
-                    <ds:SignatureValue>ErQMB6wSQ6U8PjZeG8GUX+O1GA5lwYN9sWC33+mjbs9i25TWDE1wjsWU2mnI7VZED0h0K8GkTwTItCCpScdJ8dh6g7lo1oXBz4N17l8Gd0RxUEt72MI/2F30Hkri13bZMegmPT2/BsdcgEh7ILRpaCWryyAyokz+TS9uoY+Lc0U88241wkj1r2TIFdtU6WxPlL12MaBOms3C3XJ4/R5d0salpAQ09ytcmMo11cZSIgPcRFQacRoUSDB+yZ04ld5FYaZ9S43/1OkVAEqMweTvz1BkcCnHrAzRJkrxnlPOh9KBmNxOOGAJsKYW6EbEMf8Xz4/9C3sIbmRJQFRsqe7qwQ==</ds:SignatureValue>
-                    <ds:KeyInfo>
-                        <ds:X509Data>
-                            <ds:X509Certificate>MIIDXTCCAkWgAwIBAgIJALmVVuDWu4NYMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwHhcNMTYxMjMxMTQzNDQ3WhcNNDgwNjI1MTQzNDQ3WjBFMQswCQYDVQQGEwJBVTETMBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzUCFozgNb1h1M0jzNRSCjhOBnR+uVbVpaWfXYIR+AhWDdEe5ryY+CgavOg8bfLybyzFdehlYdDRgkedEB/GjG8aJw06l0qF4jDOAw0kEygWCu2mcH7XOxRt+YAH3TVHa/Hu1W3WjzkobqqqLQ8gkKWWM27fOgAZ6GieaJBN6VBSMMcPey3HWLBmc+TYJmv1dbaO2jHhKh8pfKw0W12VM8P1PIO8gv4Phu/uuJYieBWKixBEyy0lHjyixYFCR12xdh4CA47q958ZRGnnDUGFVE1QhgRacJCOZ9bd5t9mr8KLaVBYTCJo5ERE8jymab5dPqe5qKfJsCZiqWglbjUo9twIDAQABo1AwTjAdBgNVHQ4EFgQUxpuwcs/CYQOyui+r1G+3KxBNhxkwHwYDVR0jBBgwFoAUxpuwcs/CYQOyui+r1G+3KxBNhxkwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAAiWUKs/2x/viNCKi3Y6blEuCtAGhzOOZ9EjrvJ8+COH3Rag3tVBWrcBZ3/uhhPq5gy9lqw4OkvEws99/5jFsX1FJ6MKBgqfuy7yh5s1YfM0ANHYczMmYpZeAcQf2CGAaVfwTTfSlzNLsF2lW/ly7yapFzlYSJLGoVE+OHEu8g5SlNACUEfkXw+5Eghh+KzlIN7R6Q7r2ixWNFBC/jWf7NKUfJyX8qIG5md1YUeT6GBW9Bm2/1/RiO24JTaYlfLdKK9TYb8sG5B+OLab2DImG99CJ25RkAcSobWNF5zD0O6lgOo3cEdB/ksCq3hmtlC/DlLZ/D8CJ+7VuZnS1rR2naQ==</ds:X509Certificate>
-                        </ds:X509Data>
-                    </ds:KeyInfo>
-                </ds:Signature>
-                <saml:Subject>
-                    <saml:NameID SPNameQualifier="https://myhost.com/NO_SITE/check_mk/saml_metadata.py"
-                                 Format="urn:oasis:names:tc:SAML:2.0:nameid-format:transient"
-                                 >_2697f8b9e1050e4d650a78087b01f482997982afcc</saml:NameID>
-                    <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
-                        <saml:SubjectConfirmationData NotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
-                                                      Recipient="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs"
-                                                      InResponseTo="{response_id}"
-                                                      />
-                    </saml:SubjectConfirmation>
-                </saml:Subject>
-                <saml:Conditions NotBefore="{datetime.strftime(valid_from, timestamp_fmt)}"
-                                 NotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
-                                 >
-                    <saml:AudienceRestriction>
-                        <saml:Audience>https://myhost.com/NO_SITE/check_mk/saml_metadata.py</saml:Audience>
-                    </saml:AudienceRestriction>
-                </saml:Conditions>
-                <saml:AuthnStatement AuthnInstant="{datetime.strftime(timestamp, timestamp_fmt)}"
-                                     SessionNotOnOrAfter="{datetime.strftime(valid_until, timestamp_fmt)}"
-                                     SessionIndex="_9f1f6e28ac623990bd1012437f6e03afdfa97e0399"
-                                     >
-                    <saml:AuthnContext>
-                        <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:Password</saml:AuthnContextClassRef>
-                    </saml:AuthnContext>
-                </saml:AuthnStatement>
-                <saml:AttributeStatement>
-                    <saml:Attribute Name="uid"
-                                    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-                                    >
-                        <saml:AttributeValue xsi:type="xs:string">1</saml:AttributeValue>
-                    </saml:Attribute>
-                    <saml:Attribute Name="username"
-                                    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-                                    >
-                        <saml:AttributeValue xsi:type="xs:string">user1</saml:AttributeValue>
-                    </saml:Attribute>
-                    <saml:Attribute Name="eduPersonAffiliation"
-                                    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-                                    >
-                        <saml:AttributeValue xsi:type="xs:string">group1</saml:AttributeValue>
-                    </saml:Attribute>
-                    <saml:Attribute Name="email"
-                                    NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic"
-                                    >
-                        <saml:AttributeValue xsi:type="xs:string">user1@example.com</saml:AttributeValue>
-                    </saml:Attribute>
-                </saml:AttributeStatement>
-            </saml:Assertion>
-        </samlp:Response>"""
-    )
+def _reduce_xml_template_whitespace(template: str) -> str:
+    # This is to simplify comparison by adjusting the format to the one the pysaml2 client
+    # generates
+    return " ".join(template.split()).replace("> <", "><")
 
 
 class TestInterface:
-    @pytest.fixture
-    def current_timestamp(self) -> Iterable[datetime]:
-        current_timestamp = datetime.utcnow()
-        with freeze_time(current_timestamp, tz_offset=0):
-            yield current_timestamp
-
     @pytest.fixture(autouse=True)
     def ignore_signature(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
@@ -176,49 +41,65 @@ class TestInterface:
         )
 
     @pytest.fixture
-    def metadata(self) -> str:
-        return " ".join(
-            """<ns0:EntityDescriptor xmlns:ns0="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://myhost.com/NO_SITE/check_mk/saml_metadata.py">
-      <ns0:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" AuthnRequestsSigned="false" WantAssertionsSigned="false">
-         <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="1" />
-         <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs" index="2" />
-      </ns0:SPSSODescriptor>
-    </ns0:EntityDescriptor>""".split()
-        ).replace("> <", "><")
+    def metadata(self, xml_files_path: Path) -> str:
+        return _reduce_xml_template_whitespace(
+            Path(xml_files_path / "checkmk_service_provider_metadata.xml").read_text()
+        )
 
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
         return Interface(ConnectorConfig(**raw_config).interface_config)
 
     @pytest.fixture
-    def request_id(self) -> str:
-        return "1234567890"
+    def authentication_request(self, xml_files_path: Path) -> str:
+        return _reduce_xml_template_whitespace(
+            Path(xml_files_path / "authentication_request.xml").read_text()
+        )
+
+    @pytest.fixture
+    def authentication_request_response(self, xml_files_path: Path) -> str:
+        return _encode(Path(xml_files_path / "authentication_request_response.xml").read_text())
 
     def test_interface_properties(self, interface: Interface) -> None:
         assert interface.acs_endpoint == (
-            "https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs",
+            "http://localhost/heute/check_mk/saml_acs.py?acs",
             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
         )
         assert interface.acs_binding == (
-            "https://myhost.com/NO_SITE/check_mk/saml_acs.py?acs",
+            "http://localhost/heute/check_mk/saml_acs.py?acs",
             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
         )
         assert interface.idp_sso_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-        assert interface.idp_sso_destination == "https://myidp.com/some/path/to//SSOService.php"
+        assert (
+            interface.idp_sso_destination
+            == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
+        )
 
     def test_metadata(self, interface: Interface, metadata: str) -> None:
         assert interface.metadata == metadata
 
-    def test_authentication_request_is_valid(self, interface: Interface) -> None:
+    def test_authentication_request_contains_relay_state(self, interface: Interface) -> None:
         request = str(interface.authentication_request(relay_state="index.py"))
         parsed_query = parse_qs(urlparse(request).query)
 
         relay_state = parsed_query.get("RelayState")
-        saml_request = parsed_query.get("SAMLRequest")
-
-        assert len(parsed_query) == 2
 
         assert relay_state == ["index.py"]
+
+    def test_authentication_request_is_valid(
+        self,
+        interface: Interface,
+        authentication_request: str,
+    ) -> None:
+        dynamic_elements = {
+            "ID": re.compile("id-[a-zA-Z0-9]{17}"),
+            "IssueInstant": re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"),
+        }  # These regex patterns are just to simplify comparison, they are not meant to test the conformity/standard of these fields
+
+        request = str(interface.authentication_request(relay_state="_"))
+        parsed_query = parse_qs(urlparse(request).query)
+
+        saml_request = parsed_query.get("SAMLRequest")
 
         assert isinstance(saml_request, list)
         assert len(saml_request) == 1
@@ -226,49 +107,45 @@ class TestInterface:
         saml_request_decoded = zlib.decompress(base64.b64decode(saml_request[0]), -15).decode(
             "utf-8"
         )
-        assert re.search(VALID_AUTHENTICATION_REQUEST_PATTERN, saml_request_decoded)
+        for actual_element, expected_element in zip_longest(
+            sorted(ET.fromstring(saml_request_decoded).items()),
+            sorted(ET.fromstring(authentication_request).items()),
+        ):
+            if regex_to_match := dynamic_elements.get(actual_element[0]):
+                assert re.match(regex_to_match, actual_element[1])
+            else:
+                assert actual_element == expected_element
 
+    @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_successful_authentication_request_response(
-        self, interface: Interface, request_id: str, current_timestamp: datetime
+        self,
+        interface: Interface,
+        authentication_request_response: str,
     ) -> None:
         parsed_response = interface.parse_authentication_request_response(
-            _authentication_request_response(response_id=request_id, timestamp=current_timestamp)
+            authentication_request_response
         )
         assert isinstance(parsed_response, Authenticated)
-        assert parsed_response.in_response_to_id == request_id
+        assert parsed_response.in_response_to_id == "id-Ex1qiCa1tiZj1nBKe"
         assert parsed_response.user_id == UserId("user1")
 
+    @freeze_time("2022-12-28T11:11:36Z")
     def test_parse_authentication_request_response_too_old(
         self,
         interface: Interface,
-        request_id: str,
-        current_timestamp: datetime,
+        authentication_request_response: str,
     ) -> None:
         with pytest.raises(ResponseLifetimeExceed):
-            interface.parse_authentication_request_response(
-                _authentication_request_response(
-                    response_id=request_id,
-                    timestamp=current_timestamp,
-                    valid_from=current_timestamp - timedelta(days=10),
-                    valid_until=current_timestamp - timedelta(days=5),
-                )
-            )
+            interface.parse_authentication_request_response(authentication_request_response)
 
+    @freeze_time("2022-12-28T11:06:04Z")
     def test_parse_authentication_request_response_too_young(
         self,
         interface: Interface,
-        request_id: str,
-        current_timestamp: datetime,
+        authentication_request_response: str,
     ) -> None:
         with pytest.raises(ToEarly):
-            interface.parse_authentication_request_response(
-                _authentication_request_response(
-                    response_id=request_id,
-                    timestamp=current_timestamp,
-                    valid_from=current_timestamp + timedelta(days=5),
-                    valid_until=current_timestamp + timedelta(days=10),
-                )
-            )
+            interface.parse_authentication_request_response(authentication_request_response)
 
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception) as e:

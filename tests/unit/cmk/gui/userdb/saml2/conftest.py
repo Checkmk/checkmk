@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -27,40 +28,28 @@ def fixture_raw_config() -> dict[str, Any]:
         "disabled": False,
         "interface_config": {
             "connection_timeout": (12, 12),
-            "checkmk_server_url": "https://myhost.com",
-            "idp_metadata_endpoint": "https://myidp.com/some/path/to/metadata.php",
+            "checkmk_server_url": "http://localhost",
+            "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
             "user_id_attribute": "username",
         },
         "create_users_on_login": False,
     }
 
 
-@pytest.fixture
-def metadata_from_idp(monkeypatch: pytest.MonkeyPatch) -> None:
-    metadata_str = """<?xml version="1.0"?>
-<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" xmlns:ds="https://www.w3.org/2000/09/xmldsig#" entityID="https://myidp.com/some/path/to/metadata.php">
-  <md:IDPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
-    <md:KeyDescriptor use="signing">
-      <ds:KeyInfo xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
-        <ds:X509Data>
-          <ds:X509Certificate>ABC</ds:X509Certificate>
-        </ds:X509Data>
-      </ds:KeyInfo>
-    </md:KeyDescriptor>
-    <md:KeyDescriptor use="encryption">
-      <ds:KeyInfo xmlns:ds="https://www.w3.org/2000/09/xmldsig#">
-        <ds:X509Data>
-          <ds:X509Certificate>ABC</ds:X509Certificate>
-        </ds:X509Data>
-      </ds:KeyInfo>
-    </md:KeyDescriptor>
-    <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://myidp.com/some/path/to//SingleLogoutService.php"/>
-    <md:NameIDFormat>urn:oasis:names:tc:SAML:2.0:nameid-format:transient</md:NameIDFormat>
-    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://myidp.com/some/path/to//SSOService.php"/>
-  </md:IDPSSODescriptor>
-</md:EntityDescriptor>
+@pytest.fixture(autouse=True)
+def url_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("cmk.gui.userdb.saml2.interface.url_prefix", lambda: "/heute/")
 
-"""
+
+@pytest.fixture(name="xml_files_path")
+def fixture_xml_files_path() -> Path:
+    return Path(__file__).parent / "xml_files"
+
+
+@pytest.fixture
+def metadata_from_idp(monkeypatch: pytest.MonkeyPatch, xml_files_path: Path) -> None:
+    with open(xml_files_path / "identity_provider_metadata.xml", "r") as f:
+        metadata_str = f.read()
     monkeypatch.setattr(
         "cmk.gui.userdb.saml2.interface._metadata_from_idp", lambda c, t: metadata_str
     )

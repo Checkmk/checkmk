@@ -62,7 +62,10 @@ class TestConnector:
         assert connector.interface
         assert connector.type() == SAML2_CONNECTOR_TYPE
         assert connector.id == "uuid123"
-        assert connector.identity_provider_url() == "https://myidp.com/some/path/to/metadata.php"
+        assert (
+            connector.identity_provider_url()
+            == "http://localhost:8080/simplesaml/saml2/idp/metadata.php"
+        )
 
     def test_connector_is_enabled_config(self, raw_config: dict[str, Any]) -> None:
         config = {**raw_config, **{"disabled": False}}

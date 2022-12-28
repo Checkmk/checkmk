@@ -32,6 +32,12 @@ _SortKeyElement = Union[
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
+    _MISMATCH_MSG = "A package version must not contain slashes"
+
+    def __new__(cls, value: str) -> PackageVersion:
+        if "/" in value:
+            raise ValueError(cls._MISMATCH_MSG)
+        return super().__new__(cls, value)
 
     @staticmethod
     def parse_semver(raw: str) -> VersionInfo:

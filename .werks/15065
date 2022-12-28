@@ -1,0 +1,30 @@
+Title: Path-Traversal in MKP storing
+Class: security
+Compatible: compat
+Component: packages
+Date: 1672910267
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Previous to this Werk it was possible that an authenticated user with admin rights uploads a malicious MKP leading to a file creation with an attacker controlled path.
+
+We thank Niko Wenselowsk (SVA) for reporting this issue.
+
+<b>Affected versions are:</b>
+
+LI: 2.0.0 previous to this Werk
+LI: 2.1.0 previous to this Werk
+LI: 1.6.0 is not affected
+
+<b>Detection possibilities:</b>
+
+A audit log is written when an extension package is uploaded.
+You can look for a entry with <tt>Uploaded extension package</tt> follwed by a package name and version containing sequences of <tt>../</tt>.
+
+<b>Vulnerability Management:</b>
+
+We have rated the issue with a CVSS Score of 3.5 (low) with the following CVSS vector: CVSS:3.1/AV:N/AC:L/PR:H/UI:R/S:U/C:N/I:L/A:L.
+
+We assigned CVE-2022-4884 to this vulnerability.

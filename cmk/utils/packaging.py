@@ -205,7 +205,18 @@ def format_file_name(*, name: str, version: str) -> str:
     >>> f(name="a-a-a", version="99.99")
     'a-a-a-99.99.mkp'
 
+    >>> f(name="../foo", version="99.99")
+    Traceback (most recent call last):
+        ...
+    ValueError: Packagename and version must not contain slashes
+    >>> f(name="aaa", version="../")
+    Traceback (most recent call last):
+        ...
+    ValueError: Packagename and version must not contain slashes
+
     """
+    if "/" in name or "/" in version:
+        raise ValueError("Packagename and version must not contain slashes")
     return f"{name}-{version}{PACKAGE_EXTENSION}"
 
 

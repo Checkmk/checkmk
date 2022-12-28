@@ -5870,18 +5870,28 @@ class ECS(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 # .
 
-
+# AWS has different nomenclature for ElastiCache resources in the UI and in
+# the API (cluster in the UI is a resource group in The API, node in the UI
+# is a cache cluster in the API)
+# The following fields are renamed so we can use the UI nomenclature consistently
+# in the Checkmk
 class ElastiCacheNode(BaseModel):
-    CacheClusterId: str
+    NodeId: str = Field(..., alias="CacheClusterId")
     Engine: str
     ARN: str
 
+    class Config:
+        allow_population_by_field_name = True
+
 
 class ElastiCacheCluster(BaseModel):
-    ReplicationGroupId: str
+    ClusterId: str = Field(..., alias="ReplicationGroupId")
     Status: str
-    MemberClusters: Sequence[str]
+    MemberNodes: Sequence[str] = Field(..., alias="MemberClusters")
     ARN: str
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class SubnetGroup(BaseModel):
@@ -5993,11 +6003,11 @@ class ElastiCacheLimits(AWSSectionLimits):
                 "",
                 AWSLimit(
                     key="nodes_per_cluster",
-                    title=f"Nodes of {cluster.ReplicationGroupId}",
+                    title=f"Nodes of {cluster.ClusterId}",
                     limit=ElastiCacheLimits._get_quota_limit(
                         quotas, "Nodes per cluster per instance type (Redis cluster mode enabled)"
                     ),
-                    amount=len(cluster.MemberClusters),
+                    amount=len(cluster.MemberNodes),
                 ),
                 region=self._region,
             )
@@ -6093,7 +6103,7 @@ class ElastiCacheSummary(AWSSection):
     ) -> Iterable[ElastiCacheCluster]:
         if self._names is not None:
             for cluster in clusters:
-                if cluster.ReplicationGroupId in self._names:
+                if cluster.ClusterId in self._names:
                     yield cluster
             return
 
@@ -6113,7 +6123,7 @@ class ElastiCacheSummary(AWSSection):
     ) -> Iterable[Mapping[str, object]]:
         for node in nodes:
             for cluster in clusters:
-                if node.CacheClusterId in cluster.MemberClusters:
+                if node.NodeId in cluster.MemberNodes:
                     yield node.dict()
                     break
 
@@ -6137,6 +6147,79 @@ class ElastiCacheSummary(AWSSection):
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", [c.dict() for c in computed_content.content[0]])]
+
+
+class ElastiCache(AWSSectionCloudwatch):
+    @property
+    def name(self) -> str:
+        return "elasticache"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("elasticache_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(
+                [node.NodeId for node in colleague.content[1]],
+                colleague.cache_timestamp,
+            )
+        return AWSColleagueContents([], 0.0)
+
+    def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
+        muv: list[tuple[str, str]] = [
+            ("CPUUtilization", "Percent"),
+            ("EngineCPUUtilization", "Percent"),
+            ("BytesUsedForCache", "Bytes"),
+            ("DatabaseMemoryUsagePercentage", "Percent"),
+            ("Evictions", "Count"),
+            ("Reclaimed", "Count"),
+            ("MemoryFragmentationRatio", "None"),
+            ("CacheHitRate", "Percent"),
+            ("CurrConnections", "Count"),
+            ("NewConnections", "Count"),
+            ("ReplicationLag", "Seconds"),
+            ("MasterLinkHealthStatus", "Count"),
+        ]
+        metrics: Metrics = []
+
+        for idx, node_name in enumerate(colleague_contents.content):
+            for metric_name, unit in muv:
+                metric: Metric = {
+                    "Id": self._create_id_for_metric_data_query(idx, metric_name),
+                    "Label": node_name,
+                    "MetricStat": {
+                        "Metric": {
+                            "Namespace": "AWS/ElastiCache",
+                            "MetricName": metric_name,
+                            "Dimensions": [
+                                {
+                                    "Name": "CacheClusterId",
+                                    "Value": node_name,
+                                }
+                            ],
+                        },
+                        "Period": self.period,
+                        "Stat": "Average",
+                    },
+                }
+                if unit:
+                    metric["MetricStat"]["Unit"] = unit
+                metrics.append(metric)
+        return metrics
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
 
 
 # .
@@ -6662,6 +6745,10 @@ class AWSSectionsGeneric(AWSSections):
             )
             distributor.add("elasticache_limits", elasticache_summary)
             self._sections.append(elasticache_summary)
+
+            elasticache = ElastiCache(cloudwatch_client, region, config)
+            distributor.add("elasticache_summary", elasticache)
+            self._sections.append(elasticache)
 
 
 # .

@@ -16,14 +16,18 @@ from cmk.special_agents.agent_aws import (
     AWSConfig,
     AWSRegionLimit,
     AWSSectionResult,
+    AWSSectionResults,
+    ElastiCache,
     ElastiCacheLimits,
     ElastiCacheSummary,
     OverallTags,
     ResultDistributor,
 )
 
+from .agent_aws_fake_clients import FakeCloudwatchClient
+
 GetSectionsCallable = Callable[
-    [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary]
+    [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
 ]
 
 CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
@@ -80,7 +84,7 @@ CLUSTERS_RESPONSE1: Final[Sequence[Mapping[str, object]]] = [
                 "GlobalReplicationGroupInfo": {},
                 "Status": "available",
                 "PendingModifiedValues": {},
-                "MemberClusters": [
+                "MemberNodes": [
                     "test-redis-cluster-2-0001-001",
                 ],
                 "NodeGroups": [
@@ -167,7 +171,7 @@ NODES_RESPONSE: Final[Sequence[Mapping[str, object]]] = [
     {
         "CacheClusters": [
             {
-                "CacheClusterId": "test-redis-cluster-1-0001-001",
+                "CacheClusterId": "test-redis-cluster-3-0001-001",
                 "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
                 "CacheNodeType": "cache.t4g.micro",
                 "Engine": "redis",
@@ -189,18 +193,18 @@ NODES_RESPONSE: Final[Sequence[Mapping[str, object]]] = [
                 "CacheSubnetGroupName": "test-subnet-group",
                 "AutoMinorVersionUpgrade": True,
                 "SecurityGroups": [{"SecurityGroupId": "sg-01ee1ae2f37779132", "Status": "active"}],
-                "ReplicationGroupId": "test-redis-cluster-1",
+                "ReplicationGroupId": "test-redis-cluster-3",
                 "SnapshotRetentionLimit": 0,
                 "SnapshotWindow": "04:30-05:30",
                 "AuthTokenEnabled": False,
                 "TransitEncryptionEnabled": False,
                 "AtRestEncryptionEnabled": False,
-                "ARN": "arn:aws:elasticache:us-east-1:710145618630:cluster:test-redis-cluster-1-0001-001",
+                "ARN": "arn:aws:elasticache:us-east-1:710145618630:cluster:test-redis-cluster-3-0001-001",
                 "ReplicationGroupLogDeliveryEnabled": False,
                 "LogDeliveryConfigurations": [],
             },
             {
-                "CacheClusterId": "test-redis-cluster-1-0001-002",
+                "CacheClusterId": "test-redis-cluster-3-0001-002",
                 "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",
                 "CacheNodeType": "cache.t4g.micro",
                 "Engine": "redis",
@@ -222,13 +226,13 @@ NODES_RESPONSE: Final[Sequence[Mapping[str, object]]] = [
                 "CacheSubnetGroupName": "test-subnet-group",
                 "AutoMinorVersionUpgrade": True,
                 "SecurityGroups": [{"SecurityGroupId": "sg-01ee1ae2f37779132", "Status": "active"}],
-                "ReplicationGroupId": "test-redis-cluster-1",
+                "ReplicationGroupId": "test-redis-cluster-3",
                 "SnapshotRetentionLimit": 0,
                 "SnapshotWindow": "04:30-05:30",
                 "AuthTokenEnabled": False,
                 "TransitEncryptionEnabled": False,
                 "AtRestEncryptionEnabled": False,
-                "ARN": "arn:aws:elasticache:us-east-1:710145618630:cluster:test-redis-cluster-1-0001-002",
+                "ARN": "arn:aws:elasticache:us-east-1:710145618630:cluster:test-redis-cluster-3-0001-002",
                 "ReplicationGroupLogDeliveryEnabled": False,
                 "LogDeliveryConfigurations": [],
             },
@@ -357,13 +361,14 @@ class FakeQuotaClient:
 def get_elasticache_sections() -> GetSectionsCallable:
     def _create_elasticache_sections(
         names: Sequence[str] | None, tags: OverallTags
-    ) -> tuple[ElastiCacheLimits, ElastiCacheSummary]:
+    ) -> tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]:
         region = "region"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("elasticache_names", names)
         config.add_service_tags("elasticache_tags", tags)
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
         fake_elasticache_client2 = FakeElastiCacheClient(CLUSTERS_RESPONSE2)
+        fake_cloudwatch_client = FakeCloudwatchClient()
         fake_quota_client = FakeQuotaClient()
 
         distributor = ResultDistributor()
@@ -374,9 +379,11 @@ def get_elasticache_sections() -> GetSectionsCallable:
         elasticache_summary = ElastiCacheSummary(
             fake_elasticache_client2, region, config, distributor
         )
+        elasticache = ElastiCache(fake_cloudwatch_client, region, config)
 
         distributor.add(elasticache_limits.name, elasticache_summary)
-        return elasticache_limits, elasticache_summary
+        distributor.add(elasticache_summary.name, elasticache)
+        return elasticache_limits, elasticache_summary, elasticache
 
     return _create_elasticache_sections
 
@@ -384,7 +391,7 @@ def get_elasticache_sections() -> GetSectionsCallable:
 def test_agent_aws_elasticache_limits(
     get_elasticache_sections: GetSectionsCallable,
 ) -> None:
-    elasticache_limits, _elasticache_summary = get_elasticache_sections(None, (None, None))
+    elasticache_limits, _summary, _elasticache = get_elasticache_sections(None, (None, None))
 
     assert elasticache_limits.cache_interval == 300
     assert elasticache_limits.period == 600
@@ -419,9 +426,7 @@ def test_agent_aws_elasticache_limits(
     ]
 
 
-def test_agent_aws_elasticache_limits_without_quota_client(
-    get_elasticache_sections: GetSectionsCallable,
-) -> None:
+def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig("hostname", [], ([], []))
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
@@ -462,22 +467,22 @@ def test_agent_aws_elasticache_limits_without_quota_client(
 
 CLUSTER1 = {
     "ARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-1",
-    "MemberClusters": ["test-redis-cluster-1-0001-001", "test-redis-cluster-1-0001-002"],
-    "ReplicationGroupId": "test-redis-cluster-1",
+    "MemberNodes": ["test-redis-cluster-1-0001-001", "test-redis-cluster-1-0001-002"],
+    "ClusterId": "test-redis-cluster-1",
     "Status": "available",
 }
 
 CLUSTER2 = {
     "ARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-2",
-    "MemberClusters": ["test-redis-cluster-2-0001-001"],
-    "ReplicationGroupId": "test-redis-cluster-2",
+    "MemberNodes": ["test-redis-cluster-2-0001-001"],
+    "ClusterId": "test-redis-cluster-2",
     "Status": "available",
 }
 
 CLUSTER3 = {
     "ARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3",
-    "MemberClusters": ["test-redis-cluster-3-0001-001"],
-    "ReplicationGroupId": "test-redis-cluster-3",
+    "MemberNodes": ["test-redis-cluster-3-0001-001"],
+    "ClusterId": "test-redis-cluster-3",
     "Status": "available",
 }
 
@@ -508,7 +513,7 @@ def test_agent_aws_elasticache_summary(
     tags: OverallTags,
     expected_content: Sequence[object],
 ) -> None:
-    elasticache_limits, elasticache_summary = get_elasticache_sections(names, tags)
+    elasticache_limits, elasticache_summary, _elasticache = get_elasticache_sections(names, tags)
 
     assert elasticache_summary.cache_interval == 300
     assert elasticache_summary.period == 600
@@ -551,7 +556,7 @@ def test_agent_aws_elasticache_summary_witout_colleague_content(
     tags: OverallTags,
     expected_content: Sequence[object],
 ) -> None:
-    _elasticache_limits, elasticache_summary = get_elasticache_sections(names, tags)
+    _elasticache_limits, elasticache_summary, _elasticache = get_elasticache_sections(names, tags)
 
     assert elasticache_summary.cache_interval == 300
     assert elasticache_summary.period == 600
@@ -565,3 +570,141 @@ def test_agent_aws_elasticache_summary_witout_colleague_content(
     result = results.results[0]
     assert isinstance(result, AWSSectionResult)
     assert result.content == expected_content
+
+
+@pytest.mark.parametrize(
+    "names, expected_content",
+    [
+        (
+            ["test-redis-cluster-3"],
+            [
+                {
+                    "Id": "id_0_CPUUtilization",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_EngineCPUUtilization",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_BytesUsedForCache",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_DatabaseMemoryUsagePercentage",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_Evictions",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_Reclaimed",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_MemoryFragmentationRatio",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_CacheHitRate",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_CurrConnections",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_NewConnections",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_ReplicationLag",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+                {
+                    "Id": "id_0_MasterLinkHealthStatus",
+                    "Label": "test-redis-cluster-3-0001-001",
+                    "Messages": [{"Code": "string1", "Value": "string1"}],
+                    "StatusCode": "'Complete' | 'InternalError' | 'PartialData'",
+                    "Timestamps": ["1970-01-01"],
+                    "Values": [(123.0, None)],
+                },
+            ],
+        )
+    ],
+)
+def test_agent_aws_elasticache(
+    get_elasticache_sections: GetSectionsCallable,
+    names: Sequence[str] | None,
+    expected_content: Sequence[object],
+) -> None:
+    _limits, elasticache_summary, elasticache = get_elasticache_sections(names, (None, None))
+
+    assert elasticache.cache_interval == 300
+    assert elasticache.period == 600
+    assert elasticache.name == "elasticache"
+
+    elasticache_summary.run()
+
+    assert elasticache._received_results
+
+    results = elasticache.run()
+    assert len(results.results) == 1
+    result = results.results[0]
+    assert isinstance(result, AWSSectionResult)
+    assert result.content == expected_content
+
+
+def test_agent_aws_elasticache_without_colleague_content(
+    get_elasticache_sections: GetSectionsCallable,
+) -> None:
+    _limits, _summary, elasticache = get_elasticache_sections(None, (None, None))
+
+    results = elasticache.run()
+    assert isinstance(results, AWSSectionResults)
+    assert results.results == []

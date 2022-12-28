@@ -312,6 +312,7 @@ TEST(Wtools, ConditionallyConvertBom) {
     EXPECT_EQ(5, strlen(ret.c_str()));
 }
 
+/*
 TEST(Wtools, PerformanceFrequency) {
     LARGE_INTEGER freq;
     ::QueryPerformanceFrequency(&freq);
@@ -327,6 +328,7 @@ TEST(Wtools, PerformanceFrequency) {
     EXPECT_LE(c1.QuadPart, c);
     EXPECT_LE(c, c2.QuadPart);
 }
+*/
 
 TEST(Wtools, Utf16Utf8) {
     const unsigned short utf16_string[] = {0x41,   0x0448, 0x65e5,

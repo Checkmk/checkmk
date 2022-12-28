@@ -4,6 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
 from collections.abc import Collection, Iterator
+from pathlib import Path
+from typing import Literal
+
+from cmk.utils.paths import saml2_signature_private_keyfile, saml2_signature_public_keyfile
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -30,6 +34,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
+    CascadingDropdown,
     Checkbox,
     Dictionary,
     DictionaryEntry,
@@ -77,7 +82,7 @@ def _connection_properties() -> list[DictionaryEntry]:
                     "Provider. This endpoint is used to automatically discover the correct "
                     "Single Sign-On endpoint and bindings for a successful SAML communication "
                     "with the Identity Provider. Note that we only support HTTPS for this endpoint, "
-                    "because it specifies certificates which should be trusted."
+                    "because it specifies certificate which should be trusted."
                 ),
                 allow_empty=False,
             ),
@@ -91,7 +96,7 @@ def _connection_properties() -> list[DictionaryEntry]:
                     "use. It does not need to be accessible to your Identity Provider. For example: "
                     "https://mycheckmkserver.com. "
                     "Note that we only support HTTPS for this endpoint, because it specifies "
-                    "certificates which should be trusted."
+                    "certificate which should be trusted."
                 ),
                 allow_empty=False,
             ),
@@ -154,10 +159,22 @@ def _user_properties() -> list[DictionaryEntry]:
 
 def _security_properties() -> list[DictionaryEntry]:
     return [
-        # TODO (CMK-11853): options for signing and encryption go here, e.g.:
-        #     - whether to encrypt requests
-        #     - whether to reject unencrypted responses
-        #     - algorithms for encryption
+        (
+            "signature_certificate",
+            CascadingDropdown(
+                title=_("Certificate to sign requests"),
+                help=_(
+                    "Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use the "
+                    "certificate that is shipped with Checkmk. Alternatively, if your organisation "
+                    "manages its own certificates, you can also add a custom certificate."
+                ),
+                choices=[
+                    ("default", "Use Checkmk certificate", None),
+                    # TODO (CMK-11853): implement valuespec to add custom certificate
+                ],
+                default_value="default",
+            ),
+        ),
     ]
 
 
@@ -165,12 +182,14 @@ def saml2_connection_valuespec() -> Dictionary:
     general_properties = _general_properties()
     connection_properties = _connection_properties()
     user_properties = _user_properties()
+    security_properties = _security_properties()
     return Dictionary(
         title=_("SAML Authentication"),
-        elements=general_properties + connection_properties + user_properties,
+        elements=general_properties + connection_properties + user_properties + security_properties,
         headers=[
             (_("General Properties"), [k for k, _v in general_properties]),
             (_("Connection"), [k for k, _v in connection_properties]),
+            (_("Security"), [k for k, _v in security_properties]),
             (_("Users"), [k for k, _v in user_properties]),
         ],
         render="form",
@@ -318,15 +337,44 @@ def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
     raw_user_input = copy.deepcopy(user_input)
     interface_config = {k: raw_user_input.pop(k) for k in interface_config_keys}
     raw_user_input["interface_config"] = interface_config
+    raw_user_input["interface_config"]["signature_certificate"] = _signature_certificate_to_config(
+        raw_user_input.pop("signature_certificate")
+    )
     return ConnectorConfig(**raw_user_input)
+
+
+def _signature_certificate_to_config(mode: Literal["default", "custom"]) -> dict[str, Path]:
+    match mode:
+        case "default":
+            return {
+                "private": saml2_signature_private_keyfile,
+                "public": saml2_signature_public_keyfile,
+            }
+        case "custom":
+            # TODO (CMK-11853): Implement this
+            return {"private": Path(), "public": Path()}
+        case _:
+            raise ValueError(f"Option {mode} for signature certificate not supported")
+
+
+def _signature_certificate_from_config(signature_certificate: dict[str, Path]) -> str:
+    certificate_paths = list(signature_certificate.values())
+    if certificate_paths == [
+        saml2_signature_private_keyfile,
+        saml2_signature_public_keyfile,
+    ]:
+        return "default"
+    raise ValueError(f"Unknown paths for certificate: {', '.join(map(str, certificate_paths))}")
 
 
 def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
     config_dict = config.dict()
     interface_config = config_dict.pop("interface_config")
+    signature_certificate = interface_config.pop("signature_certificate")
     return {
         **config_dict,
         **interface_config,
+        "signature_certificate": _signature_certificate_from_config(signature_certificate),
     }
 
 

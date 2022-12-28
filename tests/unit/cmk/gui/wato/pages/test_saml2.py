@@ -8,6 +8,8 @@ from typing import Any, Iterable, NamedTuple
 
 import pytest
 
+from cmk.utils.paths import saml2_signature_private_keyfile, saml2_signature_public_keyfile
+
 from cmk.gui.http import Request
 from cmk.gui.wato.pages.saml2 import ModeSAML2Config
 
@@ -46,6 +48,7 @@ def fixture_config_variables() -> Variables:
             "connection_timeout": (12, 12),
             "checkmk_server_url": "https://mycheckmk.com",
             "idp_metadata_endpoint": "https://myidp.com",
+            "signature_certificate": "default",
             "user_id_attribute": "username",
             "create_users_on_login": True,
         },
@@ -62,6 +65,10 @@ def fixture_config_variables() -> Variables:
                 "connection_timeout": (12, 12),
                 "idp_metadata_endpoint": "https://myidp.com",
                 "user_id_attribute": "username",
+                "signature_certificate": {
+                    "private": saml2_signature_private_keyfile,
+                    "public": saml2_signature_public_keyfile,
+                },
             },
             "create_users_on_login": True,
         },

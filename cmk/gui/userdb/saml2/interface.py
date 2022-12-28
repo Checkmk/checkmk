@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Mapping, NewType
 
 import requests
@@ -33,11 +34,17 @@ Milliseconds = NewType("Milliseconds", int)
 AUTHORIZATION_REQUEST_ID_DATABASE = get_redis_client()
 
 
+class Certificate(BaseModel):
+    private: Path
+    public: Path
+
+
 class InterfaceConfig(BaseModel):
     connection_timeout: tuple[int, int]
     checkmk_server_url: str
     idp_metadata_endpoint: str
     user_id_attribute: str
+    signature_certificate: Certificate
 
 
 class Authenticated(BaseModel):
@@ -58,6 +65,8 @@ def saml_config(
     checkmk_server_url: str,
     idp_metadata_endpoint: str,
     timeout: tuple[int, int],
+    signature_private_keyfile: Path,
+    signature_public_keyfile: Path,
 ) -> SPConfig:
     """Convert valuespecs into a valid SAML Service Provider configuration."""
     config = SPConfig()
@@ -71,10 +80,9 @@ def saml_config(
             ]
         },
         "allow_unsolicited": True,
-        "authn_request_signed": False,
-        "logout_requests_signed": False,
-        "want_assertions_signed": False,
-        "want_response_signed": False,
+        "authn_requests_signed": True,
+        "want_assertions_signed": True,
+        "want_response_signed": True,
     }
     config.load(
         {
@@ -83,6 +91,15 @@ def saml_config(
             "service": {"sp": sp_configuration},
             "allow_unknown_attributes": True,
             "http_client_timeout": timeout,
+            "key_file": str(signature_private_keyfile),
+            "cert_file": str(signature_public_keyfile),
+            "encryption_keypairs": [
+                {
+                    # TODO (CMK-11946): implement encryption
+                    "key_file": "",
+                    "cert_file": "",
+                },
+            ],
         }
     )
     return config
@@ -99,6 +116,8 @@ class Interface:
             timeout=config.connection_timeout,
             idp_metadata_endpoint=config.idp_metadata_endpoint,
             checkmk_server_url=config.checkmk_server_url,
+            signature_private_keyfile=config.signature_certificate.private,
+            signature_public_keyfile=config.signature_certificate.public,
         )
         self.__attributes_mapping = attributes_mapping(config.user_id_attribute)
         self.__user_id_attribute = self.__attributes_mapping["user_id_attribute"]
@@ -130,6 +149,18 @@ class Interface:
         except UnknownSystemEntity:
             # TODO (CMK-11846): handle this
             raise UnknownSystemEntity
+
+    @property
+    def want_response_signed(self) -> bool:
+        return self.__client.want_response_signed
+
+    @property
+    def want_assertions_signed(self) -> bool:
+        return self.__client.want_assertions_signed
+
+    @property
+    def authn_requests_signed(self) -> bool:
+        return self.__client.authn_requests_signed
 
     @property
     def metadata(self) -> XMLData:

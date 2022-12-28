@@ -1646,17 +1646,23 @@ def get_pattern(pattern, line):
 
 # snapshot.rootSnapshotList.summary 871 1605626114 poweredOn SnapshotName| 834 1605632160 poweredOff Snapshotname2
 def get_section_snapshot_summary(vms):
-    snapshots = [
-        vm.get("snapshot.rootSnapshotList").split(" ")
-        for vm in vms.values()
-        if vm.get("snapshot.rootSnapshotList")
-    ]
+    snapshots = []
+    for vm in vms.values():
+        if raw_snapshots := vm.get("snapshot.rootSnapshotList"):
+            snapshots.extend(
+                [
+                    raw_snapshot.split(" ", 3) + vm["name"].split()
+                    for raw_snapshot in raw_snapshots.split("|")
+                ]
+            )
+
     return ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"] + [
         json.dumps(
             {
                 "time": int(snapshot[1]),
                 "state": snapshot[2],
                 "name": snapshot[3],
+                "vm": snapshot[4],
             }
         )
         for snapshot in snapshots

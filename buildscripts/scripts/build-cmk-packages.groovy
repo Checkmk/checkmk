@@ -12,6 +12,9 @@
 /// different scenario: packages are built for a subset of distros only and
 /// OMD package and Python optimizations are disabled.
 
+import java.time.Duration
+
+
 def main() {
     check_job_parameters([
         "EDITION",
@@ -153,32 +156,39 @@ def main() {
     //      in the conditional_stage
     def agent_builds = agent_list.collectEntries { agent ->
         [("agent ${agent}") : {
-                conditional_stage("Build ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
+                conditional_stage("Build Agent for ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
                     if (agent == "windows") {
                         def win_project_name = "${jenkins_base_folder}/windows-agent-build";
                         def win_py_project_name = "${jenkins_base_folder}/windows-agent-modules-build";
-                        def win_project_build, win_py_project_build;
 
-                        /// TODO: these builds do not depend on the edition, so we could also just take
-                        ///       nightly builds as well (those can be selected based on parameters, too)
-                        on_dry_run_omit(LONG_RUNNING, "BUILD agent=${agent}") {
-                            win_project_build = build(
-                                job: win_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                            win_py_project_build = build(
-                                job: win_py_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                        }
+                        /// Trigger Windows Agent build jobs only if there is
+                        /// no recent successful build.
+                        def win_project_build = (
+                            artifacts_valid(win_project_name, Duration.ofHours(1)) ? null :
+                                build(
+                                    job: win_project_name,
+                                    parameters: [string(name: 'VERSION', value: VERSION)]));
+                        def win_py_project_build = (
+                            artifacts_valid(win_py_project_name, Duration.ofHours(1)) ? null :
+                                build(
+                                    job: win_py_project_name,
+                                    parameters: [string(name: 'VERSION', value: VERSION)]));
 
                         copyArtifacts(
                             projectName: win_project_name,
-                            selector: win_project_build ? specific(win_project_build.getId()) : lastSuccessful(),
+                            selector: (
+                                win_project_build ? 
+                                    specific(win_project_build.getId()) :
+                                    lastSuccessful()),
                             target: "agents",
                             fingerprintArtifacts: true
                         )
                         copyArtifacts(
                             projectName: win_py_project_name,
-                            selector: win_py_project_build ? specific(win_py_project_build.getId()) : lastSuccessful(),
+                            selector: (
+                                win_py_project_build ?
+                                    specific(win_py_project_build.getId()) :
+                                    lastSuccessful()),
                             target: "agents",
                             fingerprintArtifacts: true
                          )
@@ -550,4 +560,20 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
         ])
     }
 }
+
+/// Returns true if the last build of the specified job has been successful and
+/// not older than @maxAge
+def artifacts_valid(jobName, maxAge) {
+    def lastBuild = Jenkins.instance.getItemByFullName(jobName).lastCompletedBuild;
+
+    if (lastBuild == null) {
+        return false;
+    }
+    def elapsedTime = Duration.between(
+        lastBuild.timestamp.toInstant(),
+        new Date().toInstant());
+    print("The job '${jobName}' was last run ${elapsedTime} ago, result was ${lastBuild.result}");
+    return lastBuild.result.toString().equals("SUCCESS") && elapsedTime <= maxAge;
+}
+
 return this;

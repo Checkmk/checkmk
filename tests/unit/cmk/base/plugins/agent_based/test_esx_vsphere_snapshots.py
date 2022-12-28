@@ -19,9 +19,9 @@ from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
 
 
 def test_parse_esx_vsphere_snapshots():
-    assert parse_esx_vsphere_snapshots([['{"time": 0, "state": "On", "name": "foo"}']]) == [
-        Snapshot(time=0, state="On", name="foo")
-    ]
+    assert parse_esx_vsphere_snapshots(
+        [['{"time": 0, "state": "On", "name": "foo", "vm": "bar"}']]
+    ) == [Snapshot(time=0, state="On", name="foo", vm="bar")]
 
 
 @pytest.mark.parametrize(
@@ -29,20 +29,23 @@ def test_parse_esx_vsphere_snapshots():
     [
         (
             [
-                Snapshot(5234560, "poweredOn", "PC1"),
-                Snapshot(2087850, "poweredOff", "PC2"),
+                Snapshot(5234560, "poweredOn", "PC1", "vm_name"),
+                Snapshot(2087850, "poweredOff", "PC2", "vm_name"),
             ],
             [
                 Result(state=State.OK, summary="Count: 2"),
-                Result(state=State.OK, summary="Powered on: PC1"),
-                Result(state=State.OK, summary="Latest: PC1 Mar 02 1970 14:02:40"),
+                Result(state=State.OK, summary="Powered on: vm_name/PC1"),
+                Result(state=State.OK, summary="Latest: vm_name/PC1 Mar 02 1970 14:02:40"),
                 Result(state=State.OK, notice="Age of latest: 50 years 278 days"),
-                Result(state=State.OK, summary="Oldest: PC2 Jan 25 1970 03:57:30"),
+                Result(state=State.OK, summary="Oldest: vm_name/PC2 Jan 25 1970 03:57:30"),
                 Result(state=State.OK, notice="Age of oldest: 50 years 314 days"),
             ],
         ),
         (
-            [Snapshot(5234560, "poweredOn", "PC1"), Snapshot(1606089700, "poweredOff", "PC2")],
+            [
+                Snapshot(5234560, "poweredOn", "PC1", "vm_name"),
+                Snapshot(1606089700, "poweredOff", "PC2", "vm_name"),
+            ],
             [
                 Result(
                     state=State.WARN,
@@ -65,12 +68,15 @@ def test_check_snapshots(monkeypatch):
     assert list(
         check_snapshots(
             {},
-            {"snapshot.rootSnapshotList": ["871", "1605626114", "poweredOn", "Snapshotname"]},
+            {
+                "name": ["test_vm_name"],
+                "snapshot.rootSnapshotList": ["871", "1605626114", "poweredOn", "Snapshotname"],
+            },
         )
     ) == [
         Result(state=State.OK, summary="Count: 1"),
-        Result(state=State.OK, summary="Powered on: Snapshotname"),
-        Result(state=State.OK, summary="Latest: Snapshotname Nov 17 2020 15:15:14"),
+        Result(state=State.OK, summary="Powered on: test_vm_name/Snapshotname"),
+        Result(state=State.OK, summary="Latest: test_vm_name/Snapshotname Nov 17 2020 15:15:14"),
         Result(state=State.OK, notice="Age of latest: 5 days 8 hours"),
         Result(state=State.OK, notice="Age of oldest: 5 days 8 hours"),
     ]

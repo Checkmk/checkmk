@@ -1,0 +1,13 @@
+Title: esx_vsphere_snapshot: Added vm name to the snapshot summary
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1678729252
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With the introduction of this werk the esx_vsphere_vm_snapshots_summary will include the VM name in addition to the snapshot name.
+The snapshot names will have the following format: "vm_name/snapshot_name".
+

@@ -11,9 +11,11 @@ from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
+from saml2.response import AuthnResponse
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 
+from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
 from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
@@ -25,6 +27,8 @@ LOGGER = logger.getChild("saml2")
 XMLData = NewType("XMLData", str)
 URLRedirect = NewType("URLRedirect", str)
 RequestId = NewType("RequestId", str)
+
+AUTHORIZATION_REQUEST_ID_DATABASE = get_redis_client()
 
 
 class InterfaceConfig(BaseModel):
@@ -100,6 +104,7 @@ class Interface:
         self.__metadata = create_metadata_string(configfile=None, config=self.__config).decode(
             "utf-8"
         )
+        self.__redis_namespace = "saml2_authentication_requests"
 
         self.acs_endpoint, self.acs_binding = self.__config.getattr("endpoints")[
             "assertion_consumer_service"
@@ -107,12 +112,17 @@ class Interface:
 
         if self.__config.metadata is None:
             raise AttributeError("Got no metadata information from Identity Provider")
+
+        self.__identity_provider_entity_id = list(self.__config.metadata.keys())[
+            0
+        ]  # May or may not be the metadata endpoint of the IdP
+
         try:
             self.idp_sso_binding, self.idp_sso_destination = self.__client.pick_binding(
                 "single_sign_on_service",
                 [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
                 "idpsso",
-                entity_id=list(self.__config.metadata.keys())[0],
+                entity_id=self.__identity_provider_entity_id,
             )
         except UnknownSystemEntity:
             # TODO (CMK-11846): handle this
@@ -134,6 +144,9 @@ class Interface:
         It is up to the Identity Provider to perform any authentication if the user is not already
         logged in.
 
+        Additionally, the request IDs are tracked so that it can be verified that responses received
+        are in response to a request that has actually been made.
+
         Args:
             relay_state: The URL the user originally requested and any other state information
 
@@ -146,17 +159,27 @@ class Interface:
                 not be created
         """
 
-        # TODO (CMK-11848): We must keep track of the request IDs that we sent to the IdP (saml_sso
-        # endpoint), and verify that the response is to one of those requests. If it is a random
-        # response to a request we never made, we must reject it.
         LOGGER.debug("Prepare authentication request")
-        _authn_request_id, authn_request = self.__client.create_authn_request(
+        authn_request_id, authn_request = self.__client.create_authn_request(
             self.idp_sso_destination,
             binding=self.acs_binding,
             extensions=None,
             # TODO (lisa): find out what this option does
             nameid_format=NAMEID_FORMAT_PERSISTENT,
         )
+
+        query_redis(
+            client=AUTHORIZATION_REQUEST_ID_DATABASE,
+            data_key=self.__redis_namespace,
+            integrity_callback=lambda: IntegrityCheckResponse.UPDATE,
+            update_callback=lambda pipeline: pipeline.set(
+                f"{self.__redis_namespace}:{authn_request_id}",
+                self.__identity_provider_entity_id,
+            ),
+            query_callback=lambda: None,
+            timeout=5,
+        )
+
         http_headers = self.__client.apply_binding(
             self.idp_sso_binding,
             authn_request,
@@ -212,6 +235,8 @@ class Interface:
             saml_response, BINDING_HTTP_POST
         )
 
+        self.validate_in_response_to_id(authentication_response)
+
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
         LOGGER.debug("Mapping User ID to field %s", self.__user_id_attribute)
@@ -224,3 +249,71 @@ class Interface:
             user_id=UserId(user_id[0]),
             # TODO (CMK-11868): also grab other attributes, e.g. email, ...
         )
+
+    def validate_in_response_to_id(self, authentication_response: AuthnResponse) -> None:
+        """Validate authentication request response IDs.
+
+        Each authentication request response contains the field "InResponseTo", which holds the ID
+        of the original authentication request that was sent by the service provider. These IDs
+        should be known IDs, otherwise the response is to a request that has never been made.
+
+        We would normally delegate this to the client, however, the UserConnectors only live on a
+        per-session basis. Since the full authentication cycle is technically two sessions (see
+        pages saml_sso.py/saml_acs.py), the authentication request IDs are stored in Redis and
+        validated here.
+
+        Args:
+            authentication_response: The unmodified authentication response object returned by the
+                pysaml2 client
+
+        Returns:
+            None: The validation was successful and the response is valid
+
+        Raises:
+            AttributeError: The validation was unsuccessful and the response must be rejected
+        """
+        if not authentication_response.in_response_to:
+            LOGGER.debug(
+                "Got authentication request response with missing InResponseTo ID from entity %s",
+                authentication_response.issuer(),
+            )
+            raise AttributeError("Missing InResponseTo ID")
+
+        if not authentication_response.check_subject_confirmation_in_response_to(
+            authentication_response.in_response_to
+        ):
+            # The Identity Provider can send multiple assertion statements within the authentication
+            # request response. All of these must be in response to the original authentication
+            # request, otherwise the response must be rejected.
+            LOGGER.warning(
+                "Got unsolicited response from entity %s", authentication_response.issuer()
+            )
+            raise AttributeError("Inconsistent InResponseTo ID found in attribute statements")
+
+        in_response_to_id = authentication_response.in_response_to
+        if not (
+            identity_provider_entity_id := query_redis(
+                client=AUTHORIZATION_REQUEST_ID_DATABASE,
+                data_key=self.__redis_namespace,
+                integrity_callback=lambda: IntegrityCheckResponse.USE,
+                update_callback=lambda p: None,
+                query_callback=lambda: AUTHORIZATION_REQUEST_ID_DATABASE.get(
+                    f"{self.__redis_namespace}:{in_response_to_id}"
+                ),
+                timeout=5,
+            )
+        ):
+            LOGGER.warning(
+                "Got unsolicited response from entity %s: %s",
+                authentication_response.issuer(),
+                authentication_response.in_response_to,
+            )
+            raise AttributeError("Unknown InResponseTo ID")
+
+        if identity_provider_entity_id != authentication_response.issuer():
+            LOGGER.warning(
+                "Got unexpected response from entity %s, expected %s",
+                authentication_response.issuer(),
+                identity_provider_entity_id,
+            )
+            raise AttributeError("Response from unexpected entity")

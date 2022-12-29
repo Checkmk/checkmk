@@ -7,6 +7,7 @@ from typing import Mapping, NewType
 
 import requests
 from pydantic import BaseModel
+from redis.client import Pipeline
 from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
@@ -27,6 +28,7 @@ LOGGER = logger.getChild("saml2")
 XMLData = NewType("XMLData", str)
 URLRedirect = NewType("URLRedirect", str)
 RequestId = NewType("RequestId", str)
+Milliseconds = NewType("Milliseconds", int)
 
 AUTHORIZATION_REQUEST_ID_DATABASE = get_redis_client()
 
@@ -105,6 +107,7 @@ class Interface:
             "utf-8"
         )
         self.__redis_namespace = "saml2_authentication_requests"
+        self.authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
 
         self.acs_endpoint, self.acs_binding = self.__config.getattr("endpoints")[
             "assertion_consumer_service"
@@ -159,6 +162,17 @@ class Interface:
                 not be created
         """
 
+        def _redis_update_query(pipeline: Pipeline) -> None:
+            hkey = f"{self.__redis_namespace}:{authn_request_id}"
+            pipeline.set(
+                hkey,
+                self.__identity_provider_entity_id,
+            )
+            pipeline.pexpire(
+                hkey,
+                self.authentication_request_id_expiry,
+            )
+
         LOGGER.debug("Prepare authentication request")
         authn_request_id, authn_request = self.__client.create_authn_request(
             self.idp_sso_destination,
@@ -172,10 +186,7 @@ class Interface:
             client=AUTHORIZATION_REQUEST_ID_DATABASE,
             data_key=self.__redis_namespace,
             integrity_callback=lambda: IntegrityCheckResponse.UPDATE,
-            update_callback=lambda pipeline: pipeline.set(
-                f"{self.__redis_namespace}:{authn_request_id}",
-                self.__identity_provider_entity_id,
-            ),
+            update_callback=_redis_update_query,
             query_callback=lambda: None,
             timeout=5,
         )
@@ -308,7 +319,7 @@ class Interface:
                 authentication_response.issuer(),
                 authentication_response.in_response_to,
             )
-            raise AttributeError("Unknown InResponseTo ID")
+            raise AttributeError("Unknown or expired InResponseTo ID")
 
         if identity_provider_entity_id != authentication_response.issuer():
             LOGGER.warning(

@@ -5,22 +5,24 @@
 
 import base64
 import re
+import time
 import xml.etree.ElementTree as ET
 import zlib
 from itertools import zip_longest
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from freezegun import freeze_time
+from redis import Redis
 from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
-from cmk.gui.userdb.saml2.interface import Authenticated, Interface
+from cmk.gui.userdb.saml2.interface import Authenticated, Interface, Milliseconds
 
 
 def _encode(string: str) -> str:
@@ -41,7 +43,7 @@ class TestInterface:
         )
 
     @pytest.fixture(autouse=True)
-    def initialise_redis(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def initialised_redis(self, monkeypatch: pytest.MonkeyPatch) -> Iterable[Redis]:
         requests_db = get_redis_client()  # this is already monkeypatched to fakeredis
         requests_db.set(
             "saml2_authentication_requests:id-Ex1qiCa1tiZj1nBKe",
@@ -50,6 +52,7 @@ class TestInterface:
         monkeypatch.setattr(
             "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", requests_db
         )
+        yield requests_db
 
     @pytest.fixture
     def metadata(self, xml_files_path: Path) -> str:
@@ -59,7 +62,9 @@ class TestInterface:
 
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
-        return Interface(ConnectorConfig(**raw_config).interface_config)
+        interface = Interface(ConnectorConfig(**raw_config).interface_config)
+        interface.authentication_request_id_expiry = Milliseconds(-1)
+        return interface
 
     @pytest.fixture
     def authentication_request(self, xml_files_path: Path) -> str:
@@ -257,3 +262,20 @@ class TestInterface:
             interface.parse_authentication_request_response(
                 unsolicited_authentication_request_response
             )
+
+    def test_authentication_request_ids_expire(
+        self, interface: Interface, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        redis = get_redis_client()  # this is already monkeypatched to fakeredis
+        monkeypatch.setattr(
+            "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", redis
+        )
+
+        expiry = 1
+        monkeypatch.setattr(interface, "authentication_request_id_expiry", expiry)
+
+        interface.authentication_request(relay_state="_")
+
+        time.sleep(expiry / 1000)
+
+        assert not list(redis.keys("saml2_authentication_requests:*"))

@@ -16,6 +16,13 @@ TAR_GZ := $(shell which tar) xzf
 TEST := $(shell which test)
 TOUCH := $(shell which touch)
 UNZIP := $(shell which unzip) -o
+ifdef $(BAZEL_CACHE_URL)
+BAZEL_BUILD := $(shell which bazel) build --remote_cache=grpcs://$(BAZEL_CACHE_USER):$(BAZEL_CACHE_PWD)@$(BAZEL_CACHE_URL)
+BAZEL_RUN := $(shell which bazel) run --remote_cache=grpcs://$(BAZEL_CACHE_USER):$(BAZEL_CACHE_PWD)@$(BAZEL_CACHE_URL)
+else
+BAZEL_BUILD := $(shell which bazel) build
+BAZEL_RUN := $(shell which bazel) run
+endif
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))

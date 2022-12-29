@@ -24947,10 +24947,11 @@ msgstr ""
 "que primeiro é mostrada em cinza e depois é preenchida em verde durante a "
 "sincronização."
 
+#, fuzzy
 msgid ""
 "In order to avoid large timeouts in case of oversized history logfiles the "
 "core limits the number of lines read from history logfiles. The limit is on "
-"a per-file-base and can be configred here. Exceeding lines are simply "
+"a per-file-base and can be configured here. Exceeding lines are simply "
 "ignored and an error is logged in the the CMC daemon logfile."
 msgstr ""
 "A fim de evitar grandes intervalos de tempo em caso de arquivos de histórico "

@@ -33,7 +33,7 @@ DIST_DEPS          := $(CONFIG_DEPS)
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
-                      src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
+                      src/{Makefile.am,{,test/}*.{cc,h}} src/livestatus standalone/config_files.m4
 
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \

@@ -33,6 +33,7 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
     metadata_dir = pkg.get_distribution(
         dist_renamings.get(dist_name, dist_name)
     ).egg_info  # type: ignore[attr-defined]
+    # TODO: More and more packages don't have a "toplevel.txt" anymore, so this whole idea is broken.
     with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)
@@ -42,7 +43,8 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
 def _get_import_names_from_pipfile() -> list[str]:
 
     # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
-    static_import_names = ["black", "ordered_set", "typing_extensions"]
+    # TODO: "ordered-set" is not even an import name
+    static_import_names = ["black", "ordered-set", "typing_extensions"]
 
     import_names = []
     for dist_name in _load_pipfile_data()["default"].keys():

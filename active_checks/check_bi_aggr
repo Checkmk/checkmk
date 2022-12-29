@@ -69,7 +69,7 @@ base_url = None
 aggr_name = None
 
 username = ""
-password = None
+password: str | None = None
 use_automation_user = False
 
 auth_mode = "header"
@@ -140,11 +140,11 @@ if track_downtime and not hostname:
     sys.exit(1)
 
 
-def init_auth():
+def init_auth(pw: str) -> requests.auth.AuthBase | None:
     if auth_mode == "kerberos":
         kinit_completed = subprocess.run(
             ["kinit", username],
-            input="%s\n" % password,
+            input="%s\n" % pw,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
@@ -159,9 +159,9 @@ def init_auth():
             sys.exit(1)
         return HTTPKerberosAuth(principal=username)
     if auth_mode == "digest":
-        return requests.auth.HTTPDigestAuth(username, password)
+        return requests.auth.HTTPDigestAuth(username, pw)
     if auth_mode == "basic":
-        return requests.auth.HTTPBasicAuth(username, password)
+        return requests.auth.HTTPBasicAuth(username, pw)
     if auth_mode == "header":
         return None
     raise Exception("Unknown auth mode: " + auth_mode)
@@ -169,7 +169,7 @@ def init_auth():
 
 endpoint_url = f"{base_url.rstrip('/')}/check_mk/api/1.0/domain-types/bi_aggregation/actions/aggregation_state/invoke"
 
-auth = init_auth()
+auth = init_auth(password)
 
 if debug:
     sys.stderr.write("URL: %s\n" % endpoint_url)

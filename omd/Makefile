@@ -294,6 +294,7 @@ deb: debian/changelog debian/control
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="BAZEL_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --prepend-path $$HOME/.cargo/bin \

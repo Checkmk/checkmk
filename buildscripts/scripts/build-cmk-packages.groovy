@@ -32,6 +32,8 @@ def main() {
         "NODE_NAME",
         "JOB_BASE_NAME",
         "DOCKER_REGISTRY",
+        "NEXUS_BUILD_CACHE_URL",
+        "BAZEL_CACHE_URL",
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -275,8 +277,15 @@ def main() {
                                         passwordVariable: 'NEXUS_PASSWORD',
                                         usernameVariable: 'NEXUS_USERNAME')
                                 ]) {
-                                    versioning.print_image_tag();
-                                    build_package(distro_package_type(distro), distro_dir, omd_env_vars);
+                                    withCredentials([usernamePassword(
+                                        credentialsId: 'bazel-caching-credentials',
+                                        /// BAZEL_CACHE_URL must be set already, e.g. via Jenkins config 
+                                        passwordVariable: 'BAZEL_CACHE_PASSWORD',
+                                        usernameVariable: 'BAZEL_CACHE_USER')
+                                    ]) {
+                                        versioning.print_image_tag();
+                                        build_package(distro_package_type(distro), distro_dir, omd_env_vars);
+                                    }
                                 }
                             }
                         }

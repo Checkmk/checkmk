@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from functools import cached_property
 from typing import Literal, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from semver import VersionInfo
 
 from cmk.utils.exceptions import MKException
@@ -81,3 +81,11 @@ class PackageName(str):
 class PackageID(BaseModel, frozen=True):
     name: PackageName
     version: PackageVersion
+
+    @validator("name")
+    def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
+        return PackageName(value)
+
+    @validator("version")
+    def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
+        return PackageVersion(value)

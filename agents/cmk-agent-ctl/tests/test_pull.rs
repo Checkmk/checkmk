@@ -245,7 +245,7 @@ async fn _test_pull_tls_main(prefix: &str, socket_addr: SocketAddr) -> AnyhowRes
         .context("Teardown failed")
 }
 
-// TODO(sk): Fix this test
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
 #[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
@@ -256,7 +256,7 @@ async fn test_pull_tls_main_ipv4() -> AnyhowResult<()> {
     .await
 }
 
-// TODO(sk): Fix this test
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
 #[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_tls_main_ipv6() -> AnyhowResult<()> {
@@ -451,7 +451,9 @@ async fn _test_pull_reload(prefix: &str, socket_addr: SocketAddr) -> AnyhowResul
         .context("Teardown failed")
 }
 
+// TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
 #[tokio::test(flavor = "multi_thread")]
+#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
     _test_pull_reload(
         "test_pull_reload_ipv4",
@@ -461,8 +463,8 @@ async fn test_pull_reload_ipv4() -> AnyhowResult<()> {
 }
 
 // TODO(sk): reenable test according to https://jira.lan.tribe29.com/browse/CMK-11921
-// NOTE: tst is disabled as a flaky
-// #[tokio::test(flavor = "multi_thread")]
+#[tokio::test(flavor = "multi_thread")]
+#[cfg_attr(target_os = "windows", ignore)]
 async fn test_pull_reload_ipv6() -> AnyhowResult<()> {
     _test_pull_reload(
         "test_pull_reload_ipv6",

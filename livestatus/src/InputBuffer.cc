@@ -13,9 +13,9 @@
 #include <ostream>
 #include <utility>
 
-#include "ChronoUtils.h"
-#include "Logger.h"
-#include "Poller.h"
+#include "livestatus/ChronoUtils.h"
+#include "livestatus/Logger.h"
+#include "livestatus/Poller.h"
 
 using namespace std::chrono_literals;
 

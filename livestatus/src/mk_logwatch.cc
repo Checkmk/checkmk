@@ -7,7 +7,7 @@
 
 #include <system_error>
 
-#include "Logger.h"
+#include "livestatus/Logger.h"
 #include "pnp4nagios.h"
 
 void mk_logwatch_acknowledge(Logger *logger,

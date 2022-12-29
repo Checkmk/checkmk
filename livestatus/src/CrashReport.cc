@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "Logger.h"
+#include "livestatus/Logger.h"
 
 CrashReport::CrashReport(std::string id, std::string component)
     : _id(std::move(id)), _component(std::move(component)) {}

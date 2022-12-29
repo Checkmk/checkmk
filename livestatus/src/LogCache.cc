@@ -11,8 +11,8 @@
 #include <system_error>
 
 #include "Logfile.h"
-#include "Logger.h"
 #include "MonitoringCore.h"
+#include "livestatus/Logger.h"
 
 namespace {
 // Check memory every N'th new message

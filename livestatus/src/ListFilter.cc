@@ -7,8 +7,8 @@
 
 #include <utility>
 
-#include "Logger.h"
 #include "RegExp.h"
+#include "livestatus/Logger.h"
 
 namespace {
 RelationalOperator relOpForElement(RelationalOperator relOp) {

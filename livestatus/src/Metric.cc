@@ -9,7 +9,7 @@
 #include <regex>
 #include <sstream>
 
-#include "Logger.h"
+#include "livestatus/Logger.h"
 
 namespace {
 const std::regex label_regex{

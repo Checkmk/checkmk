@@ -9,7 +9,7 @@
 #include <iterator>
 
 #include "Column.h"
-#include "Logger.h"
+#include "livestatus/Logger.h"
 
 std::vector<std::string> getLogwatchList(const std::filesystem::path &dir,
                                          const Column &col) {

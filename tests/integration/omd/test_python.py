@@ -44,7 +44,7 @@ def _get_import_names_from_pipfile() -> list[str]:
 
     # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
     # TODO: "ordered-set" is not even an import name
-    static_import_names = ["black", "ordered-set", "typing_extensions"]
+    static_import_names = ["black", "ordered-set", "typing_extensions", "uvicorn"]
 
     import_names = []
     for dist_name in _load_pipfile_data()["default"].keys():

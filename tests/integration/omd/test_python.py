@@ -42,7 +42,7 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
 def _get_import_names_from_pipfile() -> list[str]:
 
     # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
-    static_import_names = ["black", "typing_extensions"]
+    static_import_names = ["black", "ordered_set", "typing_extensions"]
 
     import_names = []
     for dist_name in _load_pipfile_data()["default"].keys():

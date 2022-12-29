@@ -270,12 +270,10 @@ def _find_path_and_package_info(
             package_version is None or manifest.version == package_version
         )
 
-    enabled_packages = get_enabled_manifests()
-
     matching_packages = [
         (package_path, manifest)
         for package_path in _get_enabled_package_paths()
-        if (manifest := enabled_packages.get(package_path.name)) is not None
+        if (manifest := extract_manifest_optionally(package_path, g_logger)) is not None
         and (
             package_matches(manifest, package_name, package_version)
             or filename_matches(manifest, package_name)
@@ -652,7 +650,7 @@ def _get_manifests(
     }
 
 
-def _get_enabled_package_paths():
+def _get_enabled_package_paths() -> list[Path]:
     try:
         return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
     except FileNotFoundError:

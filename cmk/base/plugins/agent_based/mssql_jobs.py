@@ -185,15 +185,18 @@ def check_mssql_jobs(
         yield from check_levels(
             value=job_specs.last_run_duration,
             metric_name="database_job_duration",
-            levels_upper=params["run_duration"],
+            levels_upper=params.get("run_duration"),
             render_func=render.timespan,
             label="Last duration",
         )
 
-    yield Result(
-        state=State.OK if params["ignore_db_status"] else job_specs.state,
-        summary=f"MSSQL status: {job_specs.last_run_outcome}",
+    db_status = (
+        job_specs.state
+        if params["consider_job_status"] == "consider"
+        or (params["consider_job_status"] == "consider_if_enabled" and job_specs.enabled)
+        else State.OK
     )
+    yield Result(state=db_status, summary=f"MSSQL status: {job_specs.last_run_outcome}")
 
     yield Result(state=State.OK, summary=f"Last run: {job_specs.last_run_datetime}")
 
@@ -221,9 +224,8 @@ register.check_plugin(
     service_name="MSSQL Job: %s",
     check_ruleset_name="mssql_jobs",
     check_default_parameters={
-        "ignore_db_status": True,
+        "consider_job_status": "ignore",
         "status_disabled_jobs": 0,
         "status_missing_jobs": 2,
-        "run_duration": None,
     },
 )

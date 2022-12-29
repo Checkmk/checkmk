@@ -208,9 +208,12 @@ class SNMPTrapTranslator:
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
-            # load MIBs from our compiled MIB and default MIB paths
-            builder.setMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))] +
-                                  list(builder.getMibSources()))
+            # load MIBs from our compiled MIB
+            builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(str(mibs_dir))])
+
+            # explicit System MIBs
+            builder.addMibSources(
+                *[pysnmp.smi.builder.DirMibSource(str(Path("/usr/share/snmp/mibs")))])
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts

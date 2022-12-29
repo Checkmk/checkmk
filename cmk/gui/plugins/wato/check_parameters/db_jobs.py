@@ -18,14 +18,23 @@ run_duration = Tuple(
     ],
 )
 
-ignore_db_status = DropdownChoice(
-    title=_("Job State"),
-    help=_("The state of the job is ignored by default."),
-    choices=[
-        (True, _("Ignore the state of the Job")),
-        (False, _("Consider the state of the job")),
-    ],
-)
+
+def get_default_consider_job_status_choices() -> tuple[tuple[str, str], tuple[str, str]]:
+    return (
+        ("ignore", _("Ignore the state of the job")),
+        ("consider", _("Consider the state of the job")),
+    )
+
+
+def get_consider_job_status_valuespec(
+    choices: tuple[tuple[str, str], ...] = get_default_consider_job_status_choices()
+) -> DropdownChoice:
+    return DropdownChoice(
+        title=_("Job State"),
+        help=_("The state of the job is ignored by default."),
+        choices=list(choices),
+    )
+
 
 status_disabled_jobs = MonitoringState(
     title=_("Status of service in case of disabled job"),

@@ -6,7 +6,8 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.db_jobs import (
-    ignore_db_status,
+    get_consider_job_status_valuespec,
+    get_default_consider_job_status_choices,
     run_duration,
     status_disabled_jobs,
     status_missing_jobs,
@@ -16,7 +17,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, TextInput
+from cmk.gui.valuespec import Dictionary, TextInput, Transform
 
 
 def _item_spec_mssql_jobs():
@@ -30,15 +31,32 @@ def _item_spec_mssql_jobs():
     )
 
 
+def get_consider_job_status_choices() -> tuple[tuple[str, str], tuple[str, str], tuple[str, str]]:
+    return get_default_consider_job_status_choices() + (
+        ("consider_if_enabled", _("Consider the state of the job only if the job is enabled")),
+    )
+
+
+def transform_ignore_db_status(v: dict[str, object]) -> dict[str, object]:
+    if (ignore_status := v.pop("ignore_db_status", None)) is not None:
+        v["consider_job_status"] = "ignore" if ignore_status else "consider"
+
+    return v
+
+
 def _parameter_valuespec_mssql_jobs():
-    return Dictionary(
-        help=_("A scheduled job on Microsoft SQL Server."),
-        elements=[
-            ("run_duration", run_duration),
-            ("ignore_db_status", ignore_db_status),
-            ("status_disabled_jobs", status_disabled_jobs),
-            ("status_missing_jobs", status_missing_jobs),
-        ],
+    choices = get_consider_job_status_choices()
+    return Transform(
+        Dictionary(
+            help=_("A scheduled job on Microsoft SQL Server."),
+            elements=[
+                ("run_duration", run_duration),
+                ("consider_job_status", get_consider_job_status_valuespec(choices)),
+                ("status_disabled_jobs", status_disabled_jobs),
+                ("status_missing_jobs", status_missing_jobs),
+            ],
+        ),
+        forth=transform_ignore_db_status,
     )
 
 

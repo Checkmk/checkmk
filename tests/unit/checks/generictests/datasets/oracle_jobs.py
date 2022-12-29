@@ -23,7 +23,7 @@ checks = {
     '': [
         (
             'DB19.CDB$ROOT.ORACLE_OCM.MGMT_STATS_CONFIG_JOB', {
-                'disabled': True,
+                'consider_job_status': 'ignore',
                 'status_missing_jobs': 2,
                 'missinglog': 1
             }, [

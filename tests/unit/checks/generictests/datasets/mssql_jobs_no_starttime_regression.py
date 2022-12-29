@@ -22,7 +22,7 @@ checks = {
     '': [
         (
             'teststsssss', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': None

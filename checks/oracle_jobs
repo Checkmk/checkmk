@@ -32,7 +32,7 @@
 # QS1|DBADMIN|DATENEXPORT-FUR|COMPLETED|0|3|FALSE|22-AUG-14 01.11.00.000000 AM EUROPE/BERLIN|-|
 
 factory_settings["oracle_jobs_defaults"] = {
-    "disabled": True,
+    "consider_job_status": "ignore",
     "missinglog": 1,
     "status_missing_jobs": 2,
 }
@@ -155,7 +155,7 @@ def check_oracle_jobs(item, params, info):
         ):
 
             service_found = True
-            param_disabled = params["disabled"]
+            param_consider_job_status = params["consider_job_status"]
 
             break
 
@@ -185,7 +185,7 @@ def check_oracle_jobs(item, params, info):
 
     txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
     if job_enabled != "TRUE" and job_state != "RUNNING":
-        if param_disabled:
+        if param_consider_job_status == "ignore":
             txt += " (ignored)"
         else:
             txt += "(!)"

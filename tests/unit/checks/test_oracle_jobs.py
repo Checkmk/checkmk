@@ -122,7 +122,7 @@ def test_check_cdb_noncdb(
         Check("oracle_jobs").run_check(
             item,
             {
-                "disabled": False,
+                "consider_job_status": "consider",
                 "status_missing_jobs": 2,
                 "missinglog": 1,
             },

@@ -1,0 +1,14 @@
+Title: mssql_jobs: New option for monitoring job state
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1672327307
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p19
+
+A new option "Consider the state of the job only if the job is enabled"
+has been added to the "Job State" in the "MSSQL Jobs" rule.
+If the option and the job are enabled, the state of the job
+will be considered.

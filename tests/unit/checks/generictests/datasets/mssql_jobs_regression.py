@@ -171,7 +171,7 @@ checks = {
     '': [
         (
             'täglich 00:03', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -191,7 +191,7 @@ checks = {
         ),
         (
             '1 x täglich 01:00 Uhr', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -211,7 +211,7 @@ checks = {
         ),
         (
             '14 Uhr', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -231,7 +231,7 @@ checks = {
         ),
         (
             '1x Täglich 6:00 Uhr', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -251,7 +251,7 @@ checks = {
         ),
         (
             '1x Täglich Infomanagement', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -275,7 +275,7 @@ checks = {
         ),
         (
             '1x Täglich', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -299,7 +299,7 @@ checks = {
         ),
         (
             '1x täglich ttCall', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 2,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -320,7 +320,7 @@ checks = {
         ),
         (
             '4x Täglich Infomanagement', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -340,7 +340,7 @@ checks = {
         ),
         (
             'SSIS Server Maintenance Job', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 1,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -361,7 +361,7 @@ checks = {
         ),
         (
             'SSRS AIC Report DL', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -382,7 +382,7 @@ checks = {
         ),
         (
             'SSRS BO-Tool Report DL', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -403,7 +403,7 @@ checks = {
         ),
         (
             'Sonntag', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -423,7 +423,7 @@ checks = {
         ),
         (
             'Wartung Stündlich', {
-                'ignore_db_status': False,
+                'consider_job_status': 'consider',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -444,7 +444,7 @@ checks = {
         ),
         (
             'Wartung Täglich', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -464,7 +464,7 @@ checks = {
         ),
         (
             'aller 15 min', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -484,7 +484,7 @@ checks = {
         ),
         (
             'aller 1h', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -504,7 +504,7 @@ checks = {
         ),
         (
             'aller 2h', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)
@@ -524,7 +524,7 @@ checks = {
         ),
         (
             'aller 5 min', {
-                'ignore_db_status': True,
+                'consider_job_status': 'ignore',
                 'status_disabled_jobs': 0,
                 'status_missing_jobs': 2,
                 'run_duration': (1800, 2400)

@@ -20,10 +20,9 @@ from typing import Any, Mapping, NamedTuple, Optional
 
 
 factory_settings["mssql_jobs_defaults"] = {
-    "ignore_db_status": True,
+    "consider_job_status": "ignore",
     "status_disabled_jobs": 0,
     "status_missing_jobs": 2,
-    "run_duration": None,
 }
 
 DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -186,9 +185,13 @@ def check_mssql_jobs(item: str, params: Mapping[str, Any], section: Mapping[str,
             infoname="Last duration",
         )
 
-    db_status = 0
-    if not params["ignore_db_status"]:
-        db_status = status_mapping[job_specs.last_run_outcome]
+    db_status = (
+        status_mapping[job_specs.last_run_outcome]
+        if params["consider_job_status"] == "consider"
+        or (params["consider_job_status"] == "consider_if_enabled" and job_specs.enabled)
+        else 0
+    )
+
     yield db_status, "MSSQL status: %s" % job_specs.last_run_outcome
 
     yield 0, "Last run: %s" % job_specs.last_run_datetime

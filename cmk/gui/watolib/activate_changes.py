@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any, NamedTuple
 
 import psutil  # type: ignore[import]
-from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
+from setproctitle import setthreadtitle
 
 from livestatus import SiteConfiguration, SiteId
 

@@ -7,7 +7,7 @@
 
 from ssl import SSLObject
 
-from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
+from uvicorn.protocols.http.h11_impl import (
     asyncio,
     h11,
     H11Protocol,
@@ -16,7 +16,7 @@ from uvicorn.protocols.http.h11_impl import (  # type: ignore[import]
     service_unavailable,
     unquote,
 )
-from uvicorn.workers import UvicornWorker  # type: ignore[import]
+from uvicorn.workers import UvicornWorker
 
 
 def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:
@@ -47,12 +47,11 @@ class _ClientCertProtocol(H11Protocol):
                 self.logger.warning(msg, exc_info=exc)
                 self.transport.close()
                 return
-            event_type = type(event)
 
-            if event_type is h11.NEED_DATA:
+            if isinstance(event, h11.NEED_DATA):
                 break
 
-            elif event_type is h11.PAUSED:
+            elif isinstance(event, h11.PAUSED):
                 # This case can occur in HTTP pipelining, so we need to
                 # stop reading any more data, and ensure that at the end
                 # of the active request/response cycle we handle any
@@ -60,7 +59,7 @@ class _ClientCertProtocol(H11Protocol):
                 self.flow.pause_reading()
                 break
 
-            elif event_type is h11.Request:
+            elif isinstance(event, h11.Request):
                 self.headers = [(key.lower(), value) for key, value in event.headers]
 
                 # ==================================================================================
@@ -104,7 +103,8 @@ class _ClientCertProtocol(H11Protocol):
                     if name == b"connection":
                         tokens = [token.lower().strip() for token in value.split(b",")]
                         if b"upgrade" in tokens:
-                            self.handle_upgrade(event)
+                            # TODO: This looks like a bug. Perhaps handle_websocket_upgrade()?
+                            self.handle_upgrade(event)  # type: ignore[attr-defined]
                             return
 
                 # Handle 503 responses when 'limit_concurrency' is exceeded.
@@ -126,7 +126,8 @@ class _ClientCertProtocol(H11Protocol):
                     logger=self.logger,
                     access_logger=self.access_logger,
                     access_log=self.access_log,
-                    default_headers=self.default_headers,
+                    # TODO: This looks like a bug.
+                    default_headers=self.default_headers,  # type: ignore[attr-defined]
                     message_event=asyncio.Event(),
                     on_response=self.on_response_complete,
                 )
@@ -134,7 +135,7 @@ class _ClientCertProtocol(H11Protocol):
                 task.add_done_callback(self.tasks.discard)
                 self.tasks.add(task)
 
-            elif event_type is h11.Data:
+            elif isinstance(event, h11.Data):
                 if self.conn.our_state is h11.DONE:
                     continue
                 self.cycle.body += event.data
@@ -142,7 +143,7 @@ class _ClientCertProtocol(H11Protocol):
                     self.flow.pause_reading()
                 self.cycle.message_event.set()
 
-            elif event_type is h11.EndOfMessage:
+            elif isinstance(event, h11.EndOfMessage):
                 if self.conn.our_state is h11.DONE:
                     self.transport.resume_reading()
                     self.conn.start_next_cycle()

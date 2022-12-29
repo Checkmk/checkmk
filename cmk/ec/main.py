@@ -36,7 +36,7 @@ from pathlib import Path
 from types import FrameType
 from typing import Any, Literal, NamedTuple, Protocol, TypedDict
 
-from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
+from setproctitle import setthreadtitle
 
 import cmk.utils.daemon
 import cmk.utils.debug

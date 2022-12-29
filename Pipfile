@@ -74,13 +74,13 @@ setuptools_scm = "==4.1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
 PyYAML = "==6.0"  # needed by vcrpy
-wrapt = "==1.13.3"  # needed by vcrpy
-yarl = "==1.7.2"  # needed by vcrpy
+wrapt = "==1.14.1"  # needed by vcrpy
+yarl = "==1.8.2"  # needed by vcrpy
 multidict = "==5.2.0"  # needed by yarl
 idna = "==2.10"  # needed by yarl
-vcrpy = "==4.1.1"  # used by various unit tests to mock HTTP transactions
+vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions
 pycparser = "==2.21"  # needed by cffi
-cffi = "==1.15.0"  # needed by PyNaCl, cryptography, bcrypt
+cffi = "==1.15.1"  # needed by PyNaCl, cryptography, bcrypt
 PyNaCl = "==1.3.0"  # needed by paramiko
 cryptography = "==3.3.2"  # needed by paramiko
 bcrypt = "==3.1.7"  # needed by paramiko
@@ -93,20 +93,20 @@ pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "==2021.10.8"  # needed by requests
-chardet = "==4.0.0"  # needed by requests
-urllib3 = "==1.26.7"  # needed by requests
+chardet = "==5.1.0"  # needed by requests
+urllib3 = "==1.26.13"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.10.0"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
 requests = {version = "==2.28.1",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
-requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
+requests-kerberos = "==0.14.0"  # needed by check_bi_aggr
 MarkupSafe = "==2.1.1"  # needed by Jinja2
 itsdangerous = "==2.1.2"  # needed by Flask
 Jinja2 = "==3.1.2"  # needed by Flask
 more-itertools = "==8.12.0"  # needed by connexion through zipp, pytest
-zipp = "==3.7.0"  # needed by importlib_metadata
-attrs = "==21.4.0"  # needed by jsonschema
+zipp = "==3.11.0"  # needed by importlib_metadata
+attrs = "==22.2.0"  # needed by jsonschema
 importlib_metadata = "==4.8.2"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema
 click = "==8.1.3"  # needed by Flask
@@ -119,8 +119,8 @@ psutil = "==5.9.0"  # needed for omdlib
 passlib = "==1.7.4"  # needed for omdlib
 defusedxml = "==0.7.1"  # needed by jira
 oauthlib = "==3.1.0"  # needed by requests-oauthlib and jira
-requests-oauthlib = "==1.3.0"  # needed by jira
-requests-toolbelt = "==0.9.1"  # needed by jira
+requests-oauthlib = "==1.3.1"  # needed by jira
+requests-toolbelt = "==0.10.1"  # needed by jira
 docutils = "==0.17.1"  # needed by boto3 (aws)
 jira = "==2.0.0"  # needed by jira
 adal = "==1.2.0"  # needed by agent_azure
@@ -129,12 +129,12 @@ python-ldap = "==3.4.0"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.4"  # needed by GUI (API XML format)
 Cython = "==0.29.19"  # needed by numpy
 numpy = "==1.22.4"  # needed by GUI (metrics)
-reportlab = "==3.5.66"  # needed by GUI (reporting)
+reportlab = "==3.6.12"  # needed by GUI (reporting)
 PyPDF3 = "==1.0.5"  # needed by GUI (reporting)
-roman = "==3.2"  # needed by GUI (reporting)
+roman = "==3.3"  # needed by GUI (reporting)
 cachetools = "==4.1.1"  # needed by kubernetes
 google-auth = "==2.3.3"  # needed by kubernetes
-websocket_client = "==0.57.0"  # needed by kubernetes
+websocket_client = "==1.4.2"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes
 jmespath = "==0.10.0"  # needed by boto3 (aws)
 botocore = "==1.20.102"  # needed by boto3 (aws)
@@ -149,24 +149,24 @@ marshmallow = "==3.17.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy_extensions = "==0.4.3" # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
-typing_extensions = "==4.3.0"   # required by pydantic
+typing_extensions = "==4.4.0"   # required by pydantic
 pydantic = "==1.10.2"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
-rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
+rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...
 docstring_parser = "==0.13"  # direct dependency
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==2.4.7"  # direct dependency
-ordered-set = "==4.0.2"  # needed by deepdiff
+ordered-set = "==4.1.0"  # needed by deepdiff
 deepdiff = "==5.0.2"  # used for recording setup audit log
 redis = "==3.5.3"  # needed by GUI (caching)
 fido2 = "==0.9.3"  # used for GUI 2fa webauthn
-tenacity = "==6.3.1"  # needed by opsgenie-sdk
-opsgenie-sdk = "==2.0.3"  # needed by opsgenie_issues
+tenacity = "==8.1.0"  # needed by opsgenie-sdk
+opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
 semver = "==2.13.0"
-uvicorn = "==0.16.0"  # used for running agent-receiver server, UPGRADES MIGHT BREAK agent-receiver/agent_receiver/worker.py
+uvicorn = "==0.20.0"  # used for running agent-receiver server, UPGRADES MIGHT BREAK agent-receiver/agent_receiver/worker.py
 gunicorn= "==20.1.0" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "==1.2"  # used by SMB share special agent
@@ -176,7 +176,7 @@ exchangelib = "==4.7.2"  # used by active checks for mail
 lxml = "==4.9.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
-setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
+setproctitle = "==1.3.2"  # used by mkbench/dcd/liveproxyd
 black = {version = "==22.10.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
 meraki = "==1.24.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status

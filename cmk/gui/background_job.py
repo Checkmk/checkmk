@@ -23,7 +23,7 @@ from typing import Any, NoReturn, TypedDict
 
 import psutil  # type: ignore[import]
 from pydantic import BaseModel
-from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
+from setproctitle import setthreadtitle
 
 import cmk.utils.daemon as daemon
 import cmk.utils.log

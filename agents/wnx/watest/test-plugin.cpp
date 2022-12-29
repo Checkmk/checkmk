@@ -2394,83 +2394,63 @@ TEST(CmaMain, MiniBoxStartMode) {
     }
 }
 
+namespace {
+struct MiniBoxResult {
+    std::vector<char> accu;
+    bool started{false};
+    bool success{false};
+};
+
+MiniBoxResult ExecWithMiniBox(const fs::path &file,
+                              std::chrono::milliseconds delay) {
+    TheMiniBox mb;
+    MiniBoxResult result;
+    const auto exec = ConstructCommandToExec(file);
+    result.started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
+    if (result.started) {
+        result.success = mb.waitForEnd(delay);
+        mb.processResults([&](const std::wstring & /*cmd_line*/,
+                              uint32_t /*pid*/, uint32_t /*code*/,
+                              const std::vector<char> &data) {
+            const auto output = wtools::ConditionallyConvertFromUTF16(data);
+            tools::AddVector(result.accu, output);
+        });
+    }
+    return result;
+}
+
+}  // namespace
+
 TEST(CmaMain, MiniBoxStartModeDeep) {
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [source, target] = tst::CreateInOut();
-    auto file = target / "a.bat";
+    const tst::TempDirPair dirs{test_info_->name()};
+    const auto bat_file = dirs.in() / "a.bat";
+    CreateComplicatedPluginInTemp(bat_file, "aaa");
 
-    CreateComplicatedPluginInTemp(file, "aaa");
-    {
-        TheMiniBox mb;
+    const auto good = ExecWithMiniBox(bat_file, 3s);
+    ASSERT_TRUE(good.started);
+    ASSERT_TRUE(good.success);
 
-        auto exec = ConstructCommandToExec(file);
+    EXPECT_EQ(good.accu.size(), 200U) << std::string(
+        good.accu.begin(), good.accu.end());  // 200 is from plugin
 
-        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
-        ASSERT_TRUE(started);
+    const auto fail = ExecWithMiniBox(bat_file, 20ms);
+    ASSERT_TRUE(fail.started);
+    ASSERT_FALSE(fail.success);
 
-        std::vector<char> accu;
-        auto success = mb.waitForEnd(std::chrono::seconds(3));
-        ASSERT_TRUE(success);
-        // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring & /*cmd_line*/,
-                              uint32_t /*pid*/, uint32_t /*code*/,
-                              const std::vector<char> &data) {
-            const auto result = wtools::ConditionallyConvertFromUTF16(data);
+    EXPECT_LT(fail.accu.size(), 200U) << std::string(
+        fail.accu.begin(), fail.accu.end());  // 200 is from plugin
+}
 
-            tools::AddVector(accu, result);
-        });
+TEST(CmaMain, MiniBoxStartModeVbsDeep) {
+    const tst::TempDirPair dirs{test_info_->name()};
+    const auto vbs_file = dirs.in() / "a.vbs";
+    CreateVbsPluginInTemp(vbs_file, "aaa");
 
-        EXPECT_TRUE(!accu.empty());
-        EXPECT_EQ(accu.size(), 200);  // 200 is from complicated plugin
-    }
+    const auto good = ExecWithMiniBox(vbs_file, 30s);
+    ASSERT_TRUE(good.started);
+    ASSERT_TRUE(good.success);
 
-    // this code is for testing vbs scripts, not usable
-    {
-        auto file = target / "a.vbs";
-        CreateVbsPluginInTemp(file, "aaa");
-        auto exec = ConstructCommandToExec(file);
-        TheMiniBox mb;
-
-        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
-        ASSERT_TRUE(started);
-
-        std::vector<char> accu;
-        auto success = mb.waitForEnd(std::chrono::seconds(30));
-        ASSERT_TRUE(success);
-        // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring & /*cmd_line*/,
-                              uint32_t /*pid*/, uint32_t /*code*/,
-                              const std::vector<char> &data) {
-            const auto result = wtools::ConditionallyConvertFromUTF16(data);
-
-            tools::AddVector(accu, result);
-        });
-
-        EXPECT_TRUE(!accu.empty());
-        EXPECT_TRUE(accu.size() > 38000);  // 38000 is from complicated plugin
-    }
-
-    {
-        TheMiniBox mb;
-        auto exec = ConstructCommandToExec(file);
-
-        auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
-        ASSERT_TRUE(started);
-
-        std::vector<char> accu;
-        auto success = mb.waitForEnd(std::chrono::milliseconds(20));
-        EXPECT_FALSE(success);
-        // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring & /*cmd_line*/,
-                              uint32_t /*pid*/, uint32_t /*code*/,
-                              const std::vector<char> &data) {
-            const auto result = wtools::ConditionallyConvertFromUTF16(data);
-            tools::AddVector(accu, result);
-        });
-
-        EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
-    }
+    EXPECT_GE(good.accu.size(), 38000U);  // 38000 is from plugin
 }
 
 namespace {

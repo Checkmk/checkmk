@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import xml.etree.ElementTree as ET
 from typing import Mapping, NewType
 
 import requests
@@ -13,6 +14,7 @@ from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
@@ -197,27 +199,28 @@ class Interface:
         Returns:
             Authenticated: If the authentication was successful and all of the conditions were met.
             NotAuthenticated: If the authentication was unsuccessful or at least one of the
-                conditions was not met (in this order).
+                conditions was not met.
         """
         # TODO (CMK-11851): One of the reasons why this could fail is that the metadata of the IdP
         # changed. Isolate the resulting error(s), refresh the config and retry.
 
         LOGGER.debug("Parsing authentication request response")
 
-        authentication_response = self.__client.parse_authn_request_response(
-            saml_response, BINDING_HTTP_POST
-        )
+        try:
+            authentication_response = self.__client.parse_authn_request_response(
+                saml_response, BINDING_HTTP_POST
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            # This means that the authentication failed, either due to a failed login or due to some
+            # failed conditions. Conditions are specified by the Identity Provider and must all be
+            # met in order for the response to be considered valid. They are included in the
+            # response's assertion statement.
 
-        if not authentication_response.authn_statement_ok():
-            LOGGER.debug("Rejecting authentication attempt based on failed authentication")
-            return NotAuthenticated(reason="Invalid login")
-
-        if not authentication_response.condition_ok():
-            # TODO (CMK-11850): inspect use cases; ensure that this is already taking care of the time
-            # window the response is valid for. Also: see whether it is possible to get more
-            # information for the debug log.
-            LOGGER.debug("Rejecting authentication attempt based on failed condition(s)")
-            return NotAuthenticated(reason="Failed condition(s)")
+            # We are 'silencing' the client because we don't want to show any sensitive information
+            # in the GUI, and we can't be sure what it shows. Instead, we show it in the debug log.
+            LOGGER.debug(e, exc_info=True)
+            reason = self._determine_failed_authentication_reason(e)
+            return NotAuthenticated(reason=reason)
 
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
@@ -231,3 +234,15 @@ class Interface:
             user_id=UserId(user_id[0]),
             # TODO (CMK-11868): also grab other attributes, e.g. email, ...
         )
+
+    def _determine_failed_authentication_reason(self, exception: Exception) -> str:
+        if isinstance(exception, ToEarly):
+            return "Response not yet valid (too early)"
+
+        if isinstance(exception, ResponseLifetimeExceed):
+            return "Response has expired"
+
+        if isinstance(exception, ET.ParseError):
+            return "Response not well-formed"
+
+        return "Unknown"

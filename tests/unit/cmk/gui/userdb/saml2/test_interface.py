@@ -5,7 +5,6 @@
 
 import base64
 import re
-import xml
 import xml.etree.ElementTree as ET
 import zlib
 from itertools import zip_longest
@@ -15,12 +14,11 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from freezegun import freeze_time
-from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
-from cmk.gui.userdb.saml2.interface import Authenticated, Interface
+from cmk.gui.userdb.saml2.interface import Authenticated, Interface, NotAuthenticated
 
 
 def _encode(string: str) -> str:
@@ -135,8 +133,11 @@ class TestInterface:
         interface: Interface,
         authentication_request_response: str,
     ) -> None:
-        with pytest.raises(ResponseLifetimeExceed):
-            interface.parse_authentication_request_response(authentication_request_response)
+        parsed_response = interface.parse_authentication_request_response(
+            authentication_request_response
+        )
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Response has expired"
 
     @freeze_time("2022-12-28T11:06:04Z")
     def test_parse_authentication_request_response_too_young(
@@ -144,14 +145,20 @@ class TestInterface:
         interface: Interface,
         authentication_request_response: str,
     ) -> None:
-        with pytest.raises(ToEarly):
-            interface.parse_authentication_request_response(authentication_request_response)
+        parsed_response = interface.parse_authentication_request_response(
+            authentication_request_response
+        )
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Response not yet valid (too early)"
 
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
-        with pytest.raises(Exception) as e:
-            interface.parse_authentication_request_response(_encode("<aardvark></aardvark>"))
-        assert e.value.args[0] == "Unknown response type"
+        parsed_response = interface.parse_authentication_request_response(
+            _encode("<aardvark></aardvark>")
+        )
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Unknown"
 
     def test_parse_garbage_authentication_request_response(self, interface: Interface) -> None:
-        with pytest.raises(xml.etree.ElementTree.ParseError):
-            interface.parse_authentication_request_response(_encode("aardvark"))
+        parsed_response = interface.parse_authentication_request_response(_encode("aardvark"))
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Response not well-formed"

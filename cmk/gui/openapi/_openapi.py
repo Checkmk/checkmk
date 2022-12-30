@@ -6,7 +6,7 @@
 import copy
 from typing import Any
 
-from openapi_spec_validator import validate_spec  # type: ignore[import]
+from openapi_spec_validator import validate_spec
 
 from cmk.utils.site import omd_site
 

@@ -259,6 +259,7 @@ CEE_UNUSED_PACKAGES = [
     "jmespath",
     "more-itertools",
     "multidict",
+    "openapi-spec-validator",
     "ordered-set",
     "pbr",
     "ply",
@@ -287,6 +288,7 @@ def test_dependencies_are_used() -> None:
     unused_packages = CEE_UNUSED_PACKAGES
     if not is_enterprise_repo():
         unused_packages += ["PyPDF3", "numpy", "roman"]
+
     assert sorted(get_unused_dependencies()) == sorted(unused_packages)
 
 
@@ -309,6 +311,7 @@ def test_dependencies_are_declared() -> None:
             "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
             "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
             "_typeshed",  # used by mypy within typing.TYPE_CHECKING
+            "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
         }
     )
 

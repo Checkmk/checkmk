@@ -15,7 +15,7 @@ import pprint
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 
 import dateutil.parser
-import pyparsing as pp  # type: ignore
+import pyparsing as pp
 
 from cmk.utils.livestatus_helpers import tables
 

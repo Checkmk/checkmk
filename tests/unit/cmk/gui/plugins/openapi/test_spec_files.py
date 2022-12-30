@@ -8,7 +8,7 @@ import json
 
 import pytest
 import yaml
-from openapi_spec_validator import validate_spec  # type: ignore[import]
+from openapi_spec_validator import validate_spec
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

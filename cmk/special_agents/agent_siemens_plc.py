@@ -10,16 +10,10 @@ import socket
 import sys
 from itertools import groupby
 
-import snap7  # type: ignore[import]
-from snap7.common import Snap7Exception, Snap7Library  # type: ignore[import]
-from snap7.snap7types import (  # type: ignore[import]
-    S7AreaCT,
-    S7AreaDB,
-    S7AreaMK,
-    S7AreaPA,
-    S7AreaPE,
-    S7AreaTM,
-)
+import snap7
+from snap7.common import Snap7Library
+from snap7.exceptions import Snap7Exception
+from snap7.types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM
 
 from cmk.special_agents.utils.agent_common import SectionWriter
 

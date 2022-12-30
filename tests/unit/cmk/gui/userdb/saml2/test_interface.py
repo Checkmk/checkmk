@@ -58,6 +58,15 @@ class TestInterface:
     def authentication_request_response(self, xml_files_path: Path) -> str:
         return _encode(Path(xml_files_path / "authentication_request_response.xml").read_text())
 
+    @pytest.fixture
+    def authentication_request_response_not_for_us(self, xml_files_path: Path) -> str:
+        response = Path(xml_files_path / "authentication_request_response.xml").read_text()
+        response = response.replace(
+            "<saml:Audience>http://localhost/heute/check_mk/saml_metadata.py</saml:Audience>",
+            "<saml:Audience>http://some_other_audience.com</saml:Audience>",
+        )
+        return _encode(response)
+
     def test_interface_properties(self, interface: Interface) -> None:
         assert interface.acs_endpoint == (
             "http://localhost/heute/check_mk/saml_acs.py?acs",
@@ -162,3 +171,15 @@ class TestInterface:
         parsed_response = interface.parse_authentication_request_response(_encode("aardvark"))
         assert isinstance(parsed_response, NotAuthenticated)
         assert parsed_response.reason == "Response not well-formed"
+
+    @freeze_time("2022-12-28T11:06:05Z")
+    def test_parse_authentication_request_response_is_not_for_us(
+        self,
+        interface: Interface,
+        authentication_request_response_not_for_us: str,
+    ) -> None:
+        parsed_response = interface.parse_authentication_request_response(
+            authentication_request_response_not_for_us
+        )
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Response intended for a different audience"

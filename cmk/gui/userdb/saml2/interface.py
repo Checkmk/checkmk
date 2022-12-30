@@ -245,4 +245,7 @@ class Interface:
         if isinstance(exception, ET.ParseError):
             return "Response not well-formed"
 
+        if exception.args[0].lower().startswith("audiencerestrictions"):
+            return "Response intended for a different audience"
+
         return "Unknown"

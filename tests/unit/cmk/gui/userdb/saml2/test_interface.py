@@ -67,6 +67,26 @@ class TestInterface:
         )
         return _encode(response)
 
+    @pytest.fixture(
+        params=[
+            '<saml:Condition xsi:type="xs:string">mycustomconditiion</saml:Condition>',
+            "<saml:Condition>mycustomconditiion</saml:Condition>",
+        ],
+        ids=[
+            "Valid custom condition",
+            "Custom condition not well-formed (must have xsi:type defined)",
+        ],
+    )
+    def authentication_request_response_custom_condition(
+        self, xml_files_path: Path, request: pytest.FixtureRequest
+    ) -> str:
+        response = Path(xml_files_path / "authentication_request_response.xml").read_text()
+        response = response.replace(
+            "</saml:Conditions>",
+            f"{request.param}</saml:Conditions>",
+        )
+        return _encode(response)
+
     def test_interface_properties(self, interface: Interface) -> None:
         assert interface.acs_endpoint == (
             "http://localhost/heute/check_mk/saml_acs.py?acs",
@@ -183,3 +203,15 @@ class TestInterface:
         )
         assert isinstance(parsed_response, NotAuthenticated)
         assert parsed_response.reason == "Response intended for a different audience"
+
+    @freeze_time("2022-12-28T11:06:05Z")
+    def test_parse_authentication_request_response_custom_condition(
+        self,
+        interface: Interface,
+        authentication_request_response_custom_condition: str,
+    ) -> None:
+        parsed_response = interface.parse_authentication_request_response(
+            authentication_request_response_custom_condition
+        )
+        assert isinstance(parsed_response, NotAuthenticated)
+        assert parsed_response.reason == "Custom conditions are not supported"

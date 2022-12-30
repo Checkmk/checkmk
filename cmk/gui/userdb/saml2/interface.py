@@ -245,7 +245,12 @@ class Interface:
         if isinstance(exception, ET.ParseError):
             return "Response not well-formed"
 
-        if exception.args[0].lower().startswith("audiencerestrictions"):
+        exception_message = exception.args[0].lower()
+
+        if exception_message.startswith("audiencerestrictions"):
             return "Response intended for a different audience"
+
+        if exception_message in {"unknown condition", "missing xsi:type specification"}:
+            return "Custom conditions are not supported"
 
         return "Unknown"

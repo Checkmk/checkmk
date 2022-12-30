@@ -161,6 +161,7 @@ class MasterControlSnapin(SidebarSnapin):
                 enabled=colvalue,
                 help_txt=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
                 onclick=onclick,
+                class_=["large"],
             )
             html.close_td()
             html.close_tr()

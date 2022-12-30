@@ -196,42 +196,18 @@ input.button.hot {
   }
 }
 
-/* on/off toggle button */
-.toggle_switch {
-  a {
-    display: block;
-    float: left;
+/* toggle switch icon button */
+a.toggle_switch {
+  &:hover {
+    opacity: 0.7;
+  }
+
+  img.icon.iconbutton {
     width: $toggle-switch-width;
-    height: $toggle-switch-height;
-    font-size: $font-size-small;
-    font-weight: $font-weight-bold;
-    line-height: $toggle-switch-height;
-    letter-spacing: $letter-spacing-table;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    box-shadow: none;
-
-    &:hover {
-      text-decoration: none !important;
-      opacity: 0.5; /* TODO: create a better hover effect */
-    }
   }
 
-  &.on {
-    a {
-      color: $font-color-light-bg !important;
-      background-color: $success;
-    }
-  }
-
-  &.off {
-    a {
-      color: $font-color-dimmed !important;
-      background-color: $input-background-color;
-    }
+  &.large img.icon.iconbutton {
+    width: $toggle-switch-width-large;
   }
 }
 

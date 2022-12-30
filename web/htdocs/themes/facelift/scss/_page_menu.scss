@@ -285,6 +285,7 @@ div#top_heading {
           width: 14px;
           height: 14px;
           margin-right: 5px;
+          padding-bottom: 2px;
 
           &.emblem {
             right: 0;
@@ -324,6 +325,10 @@ div#top_heading {
               pointer-events: none;
               cursor: default;
               opacity: 0.5;
+            }
+
+            &.hidden {
+              display: none;
             }
           }
         }

@@ -24,10 +24,10 @@ function is_help_active() {
 export function toggle(title_show, title_hide) {
     if (is_help_active()) {
         switch_help(false);
-        switch_help_text(title_show);
+        toggle_help_page_menu_entry(title_show);
     } else {
         switch_help(true);
-        switch_help_text(title_hide);
+        toggle_help_page_menu_entry(title_hide);
     }
 }
 
@@ -61,8 +61,13 @@ function switch_help(how) {
     ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
-function switch_help_text(title) {
-    var helpspan = document.getElementById("menu_entry_inline_help")!
-        .childNodes[0].childNodes[1];
-    helpspan.textContent = title;
+function toggle_help_page_menu_entry(title) {
+    const entry = document.getElementById("menu_entry_inline_help")!;
+    const span = entry.getElementsByTagName("span")[0];
+    const icon = entry.getElementsByTagName("img")[0];
+
+    span.textContent = title;
+    icon.src = icon.src.includes("toggle_on")
+        ? icon.src.replace("toggle_on", "toggle_off")
+        : icon.src.replace("toggle_off", "toggle_on");
 }

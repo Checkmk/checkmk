@@ -274,3 +274,21 @@ export function inpage_search_init(reset_button_id, was_submitted) {
         reset_button.disabled = true;
     }
 }
+
+export function toggle_navigation_page_menu_entry() {
+    const iframe = window.frameElement;
+    const hide_navigation = document.getElementById(
+        "menu_entry_hide_navigation"
+    )!;
+    const show_navigation = document.getElementById(
+        "menu_entry_show_navigation"
+    )!;
+
+    if (iframe !== null) {
+        utils.remove_class(hide_navigation, "hidden");
+        utils.add_class(show_navigation, "hidden");
+    } else {
+        utils.remove_class(show_navigation, "hidden");
+        utils.add_class(hide_navigation, "hidden");
+    }
+}

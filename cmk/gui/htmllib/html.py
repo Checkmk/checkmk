@@ -744,23 +744,18 @@ class HTMLGenerator(HTMLWriter):
         help_txt: str,
         class_: CSSSpec | None = None,
         href: str = "javascript:void(0)",
-        **attrs: HTMLTagAttributeValue,
+        onclick: str | None = None,
     ) -> None:
-        classes = [] if class_ is None else class_
-        classes += [
-            "toggle_switch",
-            "on" if enabled else "off",
-        ]
-        onclick = attrs.pop("onclick", None)
+        class_ = [] if class_ is None else class_
+        class_ += ["toggle_switch"]
 
-        self.open_div(class_=classes, **attrs)
-        self.a(
-            content=_("on") if enabled else _("off"),
-            href=href,
+        self.icon_button(
+            url=href,
             title=help_txt,
+            icon="toggle_" + ("on" if enabled else "off"),
             onclick=onclick,
+            class_=class_,
         )
-        self.close_div()
 
     def password_input(
         self,

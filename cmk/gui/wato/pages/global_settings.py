@@ -230,12 +230,12 @@ class ABCGlobalSettingsMode(WatoMode):
                     )
                     html.toggle_switch(
                         enabled=value,
-                        help_txt=_("Immediately toggle this setting"),
+                        help_txt=(value_title + " " if value_title else "")
+                        + _("Click to toggle this setting"),
                         href=makeactionuri(
                             request, transactions, [("_action", "toggle"), ("_varname", varname)]
                         ),
-                        class_=modified_cls,
-                        title=value_title,
+                        class_=[*modified_cls, "large"],
                     )
                     html.close_div()
 

@@ -91,8 +91,9 @@ $timerange-width: 800px;
 /* TODO: There are two implementations of toggle switches. One in _wato.scss
  * and one in _main.scss. Can we use just one implementation?
 */
-$toggle-switch-height: 13px;
-$toggle-switch-width: 30px;
+$toggle-switch-height: 12px;
+$toggle-switch-width: 15px;
+$toggle-switch-width-large: 18px;
 $tag-padding: 0.1em 0.3em;
 $page-header-height: 58px;
 $popup-filters-border-radius: 2px;

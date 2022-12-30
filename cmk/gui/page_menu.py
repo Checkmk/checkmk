@@ -285,24 +285,29 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                 title=_("General display options"),
                 entries=[
                     PageMenuEntry(
-                        title=_("This page without navigation"),
-                        icon_name="frameurl",
+                        title=(_("Hide page navigation")),
+                        name="hide_navigation",
+                        icon_name="toggle_on",
                         item=PageMenuLink(
                             Link(
-                                url=makeuri(request, []),
+                                url=(makeuri(request, [])),
                                 target="_top",
                             )
                         ),
+                        css_classes=["hidden"],
                     ),
                     PageMenuEntry(
-                        title=_("This page with navigation"),
-                        icon_name="pageurl",
+                        title=(_("Show page navigation")),
+                        name="show_navigation",
+                        icon_name="toggle_off",
                         item=PageMenuLink(
                             Link(
-                                url=makeuri_contextless(
-                                    request,
-                                    [("start_url", makeuri(request, []))],
-                                    filename="index.py",
+                                url=(
+                                    makeuri_contextless(
+                                        request,
+                                        [("start_url", makeuri(request, []))],
+                                        filename="index.py",
+                                    )
                                 ),
                                 target="_top",
                             )
@@ -327,7 +332,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                 entries=[
                     PageMenuEntry(
                         title=title_hide_help if user.show_help else title_show_help,
-                        icon_name="help",
+                        icon_name="toggle_" + ("on" if user.show_help else "off"),
                         item=make_javascript_link(
                             f'cmk.help.toggle("{title_show_help}", "{title_hide_help}")'
                         ),
@@ -499,6 +504,8 @@ class PageMenuRenderer:
             self._show_suggestions(menu)
         html.close_table()
 
+        self._javascript()
+
     def _show_dropdowns(self, menu: PageMenu) -> None:
         html.open_td(class_="menues")
 
@@ -618,6 +625,9 @@ class PageMenuRenderer:
         html.open_td(class_="icon_container")
         html.icon_button("wato.py?mode=changelog", tooltip if tooltip else "", "pending_changes")
         html.close_td()
+
+    def _javascript(self) -> None:
+        html.javascript("cmk.page_menu.toggle_navigation_page_menu_entry();")
 
 
 class SuggestedEntryRenderer:

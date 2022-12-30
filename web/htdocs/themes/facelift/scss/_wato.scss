@@ -687,24 +687,29 @@ div.filter_buttons {
     padding: 2px;
     margin-left: -2px;
     border: 1px solid $font-color-dimmed;
+    border-radius: $spacing;
 
     &.on {
       border: 1px solid $success;
     }
-
-    border-radius: $spacing;
-    box-shadow: $globalvars-modified-box-shadow;
-  }
-
-  td.simple a.modified.globally,
-  td.simple div.toggle_switch_container.modified.globally,
-  td.content a.modified.globally > table {
-    box-shadow: $globalvars-modified-globally-box-shadow;
   }
 
   td.simple div.toggle_switch_container {
-    width: $toggle-switch-width;
+    width: $toggle-switch-width-large;
     height: $toggle-switch-height;
+
+    img.iconbutton {
+      height: $toggle-switch-height;
+    }
+
+    &.modified {
+      padding: 1px 2px;
+    }
+
+    a.modified {
+      border: none;
+      padding: 0;
+    }
   }
 
   div.title a.modified {

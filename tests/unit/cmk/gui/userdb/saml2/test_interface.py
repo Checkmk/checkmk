@@ -19,6 +19,7 @@ from freezegun import freeze_time
 from redis import Redis
 from saml2.sigver import SignatureError
 from saml2.validate import ResponseLifetimeExceed, ToEarly
+from saml2.xmldsig import SIG_RSA_SHA1
 
 from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
@@ -91,7 +92,15 @@ class TestInterface:
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
         interface = Interface(ConnectorConfig(**raw_config).interface_config)
         interface.authentication_request_id_expiry = Milliseconds(-1)
+        # SHA1 is normally disallowed, but used in the test data
+        interface._allowed_algorithms.add(SIG_RSA_SHA1)
         return interface
+
+    @pytest.fixture
+    def secure_interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
+        interface = Interface(ConnectorConfig(**raw_config).interface_config)
+        interface.authentication_request_id_expiry = Milliseconds(-1)
+        return Interface(ConnectorConfig(**raw_config).interface_config)
 
     @pytest.fixture
     def authentication_request(self, xml_files_path: Path) -> str:
@@ -392,3 +401,11 @@ class TestInterface:
             interface.parse_authentication_request_response(
                 malicious_authentication_request_response
             )
+
+    @needs_xmlsec1
+    @freeze_time("2022-12-28T11:06:05Z")
+    def test_response_rejected_if_signed_with_disallowed_algorithm(
+        self, secure_interface: Interface, authentication_request_response: str
+    ) -> None:
+        with pytest.raises(AttributeError, match="Insecure algorithm"):
+            secure_interface.parse_authentication_request_response(authentication_request_response)

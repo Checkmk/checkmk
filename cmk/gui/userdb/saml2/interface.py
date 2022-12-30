@@ -16,6 +16,15 @@ from saml2.metadata import create_metadata_string
 from saml2.response import AuthnResponse
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
+from saml2.xmldsig import (
+    DIGEST_SHA512,
+    SIG_ECDSA_SHA256,
+    SIG_ECDSA_SHA384,
+    SIG_ECDSA_SHA512,
+    SIG_RSA_SHA256,
+    SIG_RSA_SHA384,
+    SIG_RSA_SHA512,
+)
 
 from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
 from cmk.utils.site import url_prefix
@@ -83,6 +92,8 @@ def saml_config(
         "authn_requests_signed": True,
         "want_assertions_signed": True,
         "want_response_signed": True,
+        "signing_algorithm": SIG_RSA_SHA512,
+        "digest_algorithm": DIGEST_SHA512,  # this is referring to the digest alg the counterparty should use
     }
     config.load(
         {
@@ -112,39 +123,51 @@ def attributes_mapping(user_id_attribute: str) -> Mapping[str, str]:
 
 class Interface:
     def __init__(self, config: InterfaceConfig) -> None:
-        self.__config = saml_config(
+        self._config = saml_config(
             timeout=config.connection_timeout,
             idp_metadata_endpoint=config.idp_metadata_endpoint,
             checkmk_server_url=config.checkmk_server_url,
             signature_private_keyfile=config.signature_certificate.private,
             signature_public_keyfile=config.signature_certificate.public,
         )
-        self.__attributes_mapping = attributes_mapping(config.user_id_attribute)
-        self.__user_id_attribute = self.__attributes_mapping["user_id_attribute"]
-        self.__client = Saml2Client(config=self.__config)
-        self.__metadata = create_metadata_string(configfile=None, config=self.__config).decode(
+        self._attributes_mapping = attributes_mapping(config.user_id_attribute)
+        self._user_id_attribute = self._attributes_mapping["user_id_attribute"]
+        self._client = Saml2Client(config=self._config)
+        self._metadata = create_metadata_string(configfile=None, config=self._config).decode(
             "utf-8"
         )
-        self.__redis_namespace = "saml2_authentication_requests"
+        self._redis_namespace = "saml2_authentication_requests"
         self.authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
 
-        self.acs_endpoint, self.acs_binding = self.__config.getattr("endpoints")[
+        # Maintaining an allow-list has the advantage of knowing exactly what we support, and we are
+        # less prone to changes made to the pysaml2 dependency. New algorithms are not added
+        # frequently.
+        self._allowed_algorithms = {
+            SIG_ECDSA_SHA256,
+            SIG_ECDSA_SHA384,
+            SIG_ECDSA_SHA512,
+            SIG_RSA_SHA256,
+            SIG_RSA_SHA384,
+            SIG_RSA_SHA512,
+        }
+
+        self.acs_endpoint, self.acs_binding = self._config.getattr("endpoints")[
             "assertion_consumer_service"
         ]
 
-        if self.__config.metadata is None:
+        if self._config.metadata is None:
             raise AttributeError("Got no metadata information from Identity Provider")
 
-        self.__identity_provider_entity_id = list(self.__config.metadata.keys())[
+        self._identity_provider_entity_id = list(self._config.metadata.keys())[
             0
         ]  # May or may not be the metadata endpoint of the IdP
 
         try:
-            self.idp_sso_binding, self.idp_sso_destination = self.__client.pick_binding(
+            self.idp_sso_binding, self.idp_sso_destination = self._client.pick_binding(
                 "single_sign_on_service",
                 [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
                 "idpsso",
-                entity_id=self.__identity_provider_entity_id,
+                entity_id=self._identity_provider_entity_id,
             )
         except UnknownSystemEntity:
             # TODO (CMK-11846): handle this
@@ -152,15 +175,23 @@ class Interface:
 
     @property
     def want_response_signed(self) -> bool:
-        return self.__client.want_response_signed
+        return self._client.want_response_signed
 
     @property
     def want_assertions_signed(self) -> bool:
-        return self.__client.want_assertions_signed
+        return self._client.want_assertions_signed
 
     @property
     def authn_requests_signed(self) -> bool:
-        return self.__client.authn_requests_signed
+        return self._client.authn_requests_signed
+
+    @property
+    def signing_algorithm(self) -> str:
+        return self._client.signing_algorithm
+
+    @property
+    def digest_algorithm(self) -> str:
+        return self._client.digest_algorithm
 
     @property
     def metadata(self) -> XMLData:
@@ -170,7 +201,7 @@ class Interface:
         Returns:
             A valid XML string
         """
-        return XMLData(self.__metadata)
+        return XMLData(self._metadata)
 
     def authentication_request(self, relay_state: str) -> URLRedirect:
         """Authentication request to be forwarded to the Identity Provider.
@@ -194,10 +225,10 @@ class Interface:
         """
 
         def _redis_update_query(pipeline: Pipeline) -> None:
-            hkey = f"{self.__redis_namespace}:{authn_request_id}"
+            hkey = f"{self._redis_namespace}:{authn_request_id}"
             pipeline.set(
                 hkey,
-                self.__identity_provider_entity_id,
+                self._identity_provider_entity_id,
             )
             pipeline.pexpire(
                 hkey,
@@ -205,7 +236,7 @@ class Interface:
             )
 
         LOGGER.debug("Prepare authentication request")
-        authn_request_id, authn_request = self.__client.create_authn_request(
+        authn_request_id, authn_request = self._client.create_authn_request(
             self.idp_sso_destination,
             binding=self.acs_binding,
             extensions=None,
@@ -215,14 +246,14 @@ class Interface:
 
         query_redis(
             client=AUTHORIZATION_REQUEST_ID_DATABASE,
-            data_key=self.__redis_namespace,
+            data_key=self._redis_namespace,
             integrity_callback=lambda: IntegrityCheckResponse.UPDATE,
             update_callback=_redis_update_query,
             query_callback=lambda: None,
             timeout=5,
         )
 
-        http_headers = self.__client.apply_binding(
+        http_headers = self._client.apply_binding(
             self.idp_sso_binding,
             authn_request,
             self.idp_sso_destination,
@@ -257,6 +288,7 @@ class Interface:
 
         Raises:
             AttributeError: The User ID attribute is missing
+            AttributeError: The algorithm used to sign the response is deemed insecure
 
             pysaml2 Exceptions:
                 ToEarly: The authentication request response is not yet valid
@@ -273,16 +305,28 @@ class Interface:
         # If the authentication failed, e.g. due to some failed conditions, the pysaml2 client will
         # raise an Exception. The type of the Exception is highly inconsistent (see function
         # docstring).
-        authentication_response = self.__client.parse_authn_request_response(
+        authentication_response = self._client.parse_authn_request_response(
             saml_response, BINDING_HTTP_POST
         )
+        if any(
+            (
+                authentication_response.response.signature.signed_info.signature_method.algorithm
+                not in self._allowed_algorithms,
+                authentication_response.assertion.signature.signed_info.signature_method.algorithm
+                not in self._allowed_algorithms,
+            )
+        ):
+            LOGGER.debug(
+                "Rejecting authentication attempt based on insecure algorithm used to sign the response/assertion"
+            )
+            raise AttributeError("Insecure algorithm used for signature")
 
         self.validate_in_response_to_id(authentication_response)
 
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
-        LOGGER.debug("Mapping User ID to field %s", self.__user_id_attribute)
-        if not (user_id := authentication_response.ava.get(self.__user_id_attribute)):
+        LOGGER.debug("Mapping User ID to field %s", self._user_id_attribute)
+        if not (user_id := authentication_response.ava.get(self._user_id_attribute)):
             LOGGER.debug("User ID not found or empty, value is: %s", repr(user_id))
             raise AttributeError("User ID not found or empty")
 
@@ -336,11 +380,11 @@ class Interface:
         if not (
             identity_provider_entity_id := query_redis(
                 client=AUTHORIZATION_REQUEST_ID_DATABASE,
-                data_key=self.__redis_namespace,
+                data_key=self._redis_namespace,
                 integrity_callback=lambda: IntegrityCheckResponse.USE,
                 update_callback=lambda p: None,
                 query_callback=lambda: AUTHORIZATION_REQUEST_ID_DATABASE.get(
-                    f"{self.__redis_namespace}:{in_response_to_id}"
+                    f"{self._redis_namespace}:{in_response_to_id}"
                 ),
                 timeout=5,
             )

@@ -38,14 +38,14 @@ def _extract_client_cert_cn(ssl_object: SSLObject | None) -> str | None:
 
 class _ClientCertProtocol(H11Protocol):
     # copied from uvicorn.protocols.http.h11_impl.H11Protocol
-    def handle_events(self):
+    def handle_events(self) -> None:
         while True:
             try:
                 event = self.conn.next_event()
-            except h11.RemoteProtocolError as exc:
+            except h11.RemoteProtocolError:
                 msg = "Invalid HTTP request received."
-                self.logger.warning(msg, exc_info=exc)
-                self.transport.close()
+                self.logger.warning(msg)
+                self.send_400_response(msg)
                 return
 
             if isinstance(event, h11.NEED_DATA):
@@ -81,11 +81,11 @@ class _ClientCertProtocol(H11Protocol):
                 # ==================================================================================
 
                 raw_path, _, query_string = event.target.partition(b"?")
-                self.scope = {
+                self.scope = {  # type: ignore[typeddict-item]
                     "type": "http",
                     "asgi": {
                         "version": self.config.asgi_version,
-                        "spec_version": "2.1",
+                        "spec_version": "2.3",
                     },
                     "http_version": event.http_version.decode("ascii"),
                     "server": self.server,
@@ -99,13 +99,10 @@ class _ClientCertProtocol(H11Protocol):
                     "headers": self.headers,
                 }
 
-                for name, value in self.headers:
-                    if name == b"connection":
-                        tokens = [token.lower().strip() for token in value.split(b",")]
-                        if b"upgrade" in tokens:
-                            # TODO: This looks like a bug. Perhaps handle_websocket_upgrade()?
-                            self.handle_upgrade(event)  # type: ignore[attr-defined]
-                            return
+                upgrade = self._get_upgrade()
+                if upgrade == b"websocket" and self._should_upgrade_to_ws():
+                    self.handle_websocket_upgrade(event)
+                    return
 
                 # Handle 503 responses when 'limit_concurrency' is exceeded.
                 if self.limit_concurrency is not None and (
@@ -126,8 +123,7 @@ class _ClientCertProtocol(H11Protocol):
                     logger=self.logger,
                     access_logger=self.access_logger,
                     access_log=self.access_log,
-                    # TODO: This looks like a bug.
-                    default_headers=self.default_headers,  # type: ignore[attr-defined]
+                    default_headers=self.server_state.default_headers,
                     message_event=asyncio.Event(),
                     on_response=self.on_response_complete,
                 )

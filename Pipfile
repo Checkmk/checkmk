@@ -177,7 +177,7 @@ lxml = "==4.9.1"  # used via beautifulsoup4 as a parser and in the agent_netapp 
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.3.2"  # used by mkbench/dcd/liveproxyd
-black = {version = "==22.10.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
+black = {version = "==22.12.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
 meraki = "==1.24.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "==7.2.1"  # used by SSO via SAML2.0

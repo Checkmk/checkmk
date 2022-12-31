@@ -179,7 +179,7 @@ impl MaxConnectionsGuard {
             })
         } else {
             debug!("Too many active connections");
-            Err(anyhow!("Too many active connections"))
+            bail!("Too many active connections")
         }
     }
 }

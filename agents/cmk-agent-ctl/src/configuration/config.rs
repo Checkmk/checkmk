@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::{certs, cli, constants, setup, site_spec, types};
-use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
+use anyhow::{bail, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
@@ -411,7 +411,7 @@ impl Registry {
             println!("Deleted pull connection '{}'", site_id);
             return Ok(());
         }
-        Err(anyhow!("Connection '{}' not found", site_id))
+        bail!("Connection '{}' not found", site_id)
     }
 
     pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
@@ -419,10 +419,7 @@ impl Registry {
             println!("Deleted imported connection '{}'", uuid);
             return Ok(());
         };
-        Err(anyhow!(
-            "Imported pull connection with UUID {} not found",
-            uuid
-        ))
+        bail!("Imported pull connection with UUID {} not found", uuid)
     }
 
     pub fn clear(&mut self) {

@@ -5,7 +5,7 @@
 use crate::site_spec::SiteID;
 
 use super::config;
-use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{bail, Context, Error as AnyhowError, Result as AnyhowResult};
 use config::JSONLoaderMissingSafe;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
@@ -102,13 +102,11 @@ impl FromStr for Coordinates {
     fn from_str(s: &str) -> AnyhowResult<Coordinates> {
         let outer_components: Vec<&str> = s.split('/').collect();
         if outer_components.len() != 2 {
-            return Err(anyhow!(
-                "Failed to split into server address and site at '/'"
-            ));
+            bail!("Failed to split into server address and site at '/'");
         }
         let server_components: Vec<&str> = outer_components[0].split(':').collect();
         if server_components.len() != 2 {
-            return Err(anyhow!("Failed to split into server and port at ':'"));
+            bail!("Failed to split into server and port at ':'");
         }
         Ok(Coordinates {
             server: String::from(server_components[0]),

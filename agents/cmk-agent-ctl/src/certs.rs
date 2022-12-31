@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use openssl::hash::MessageDigest;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
@@ -225,7 +225,7 @@ pub fn rustls_private_key(key_pem: &str) -> AnyhowResult<RustlsPrivateKey> {
     {
         Ok(RustlsPrivateKey(it))
     } else {
-        Err(anyhow!("Could not process private key"))
+        bail!("Could not process private key")
     }
 }
 
@@ -236,7 +236,7 @@ pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
     {
         Ok(RustlsCertificate(it))
     } else {
-        Err(anyhow!("Could not process certificate"))
+        bail!("Could not process certificate")
     }
 }
 

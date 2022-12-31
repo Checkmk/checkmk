@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::{agent_receiver_api, certs, config, constants, misc, site_spec, types};
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info};
 
 trait TrustEstablishing {
@@ -56,10 +56,10 @@ impl TrustEstablishing for InteractiveTrust {
             match answer.to_lowercase().trim() {
                 "y" | "" => return Ok(()),
                 "n" => {
-                    return Err(anyhow!(format!(
+                    bail!(format!(
                         "Cannot continue without trusting {}, port {}",
                         server, port
-                    )))
+                    ))
                 }
                 _ => {
                     eprintln!("Please answer 'y' or 'n'");
@@ -218,14 +218,14 @@ fn post_registration_conn_type(
             &connection.trust,
         )?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
-            return Err(anyhow!(
+            bail!(
                 "Registration declined by Checkmk instance{}",
                 if let Some(msg) = status_resp.message {
                     format!(": {}", msg)
                 } else {
-                    String::from("")
+                    "".to_string()
                 }
-            ));
+            );
         }
         if let Some(ct) = status_resp.connection_type {
             return Ok(ct);

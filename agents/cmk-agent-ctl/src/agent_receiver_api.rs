@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{certs, config, types};
-use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
+use anyhow::{bail, Context, Result as AnyhowResult};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
@@ -142,9 +142,10 @@ impl Api {
             Some(body) => format!(
                 "Request failed with code {}: {}",
                 status,
-                match serde_json::from_str::<ErrorResponse>(&body) {
-                    Ok(error_response) => error_response.detail,
-                    _ => body,
+                if let Ok(error_response) = serde_json::from_str::<ErrorResponse>(&body) {
+                    error_response.detail
+                } else {
+                    body
                 }
             ),
         }
@@ -155,10 +156,10 @@ impl Api {
         if status == StatusCode::NO_CONTENT {
             Ok(())
         } else {
-            Err(anyhow!(Api::error_response_description(
+            bail!(Api::error_response_description(
                 status,
                 response.text().ok()
-            )))
+            ))
         }
     }
 }
@@ -189,10 +190,10 @@ impl Pairing for Api {
             serde_json::from_str::<PairingResponse>(&body)
                 .context(format!("Error parsing this response body: {}", body))
         } else {
-            Err(anyhow!(Api::error_response_description(
+            bail!(Api::error_response_description(
                 status,
                 response.text().ok()
-            )))
+            ))
         }
     }
 }
@@ -309,16 +310,15 @@ impl Status for Api {
         )?)
         .send()?;
 
-        match response.status() {
-            StatusCode::OK => {
-                let body = response.text()?;
-                Ok(serde_json::from_str::<StatusResponse>(&body)
-                    .context(format!("Failed to deserialize response body: {}", body))?)
-            }
-            _ => bail!(Api::error_response_description(
+        if response.status() == StatusCode::OK {
+            let body = response.text()?;
+            Ok(serde_json::from_str::<StatusResponse>(&body)
+                .context(format!("Failed to deserialize response body: {}", body))?)
+        } else {
+            bail!(Api::error_response_description(
                 response.status(),
                 response.text().ok()
-            )),
+            ))
         }
     }
 }
@@ -383,19 +383,16 @@ mod test_api {
 
     #[test]
     fn test_check_response_204_error() {
-        match Api::check_response_204(reqwest::blocking::Response::from(
+        let error_value = Api::check_response_204(reqwest::blocking::Response::from(
             http::Response::builder()
                 .status(StatusCode::UNAUTHORIZED)
                 .body("{\"detail\": \"Insufficient permissions\"}")
                 .unwrap(),
-        )) {
-            Err(err) => {
-                assert_eq!(
-                    format!("{}", err),
-                    "Request failed with code 401 Unauthorized: Insufficient permissions"
-                )
-            }
-            _ => panic!("Expected an error"),
-        }
+        ))
+        .unwrap_err();
+        assert_eq!(
+            format!("{}", error_value),
+            "Request failed with code 401 Unauthorized: Insufficient permissions"
+        );
     }
 }

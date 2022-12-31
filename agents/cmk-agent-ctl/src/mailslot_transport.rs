@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{bail, Result as AnyhowResult};
 use is_elevated::is_elevated;
 use log::warn;
 use mail_slot::{MailslotClient, MailslotName, MailslotServer};
@@ -111,15 +111,12 @@ impl MailSlotBackend {
         let (rx, tx) = channel::<String>();
         let stop = Arc::new(AtomicBool::new(false));
         let result = Self::start_mailslot_server(name, rx, Arc::clone(&stop));
-        if let Ok(srv) = result {
-            Ok(MailSlotBackend {
-                srv: Some(srv),
-                stop_flag: Arc::clone(&stop),
-                tx,
-            })
-        } else {
-            Err(anyhow!(result.unwrap_err()))
-        }
+        let Ok(srv) = result else { bail!(result.unwrap_err()); };
+        Ok(MailSlotBackend {
+            srv: Some(srv),
+            stop_flag: Arc::clone(&stop),
+            tx,
+        })
     }
 
     /// Always returns correct string even if input is not valid utf8 sequence
@@ -185,7 +182,7 @@ impl MailSlotBackend {
                 )
                 .unwrap();
             if wait_result.1.timed_out() {
-                return Err(anyhow!("server creation timeout"));
+                bail!("server creation timeout");
             }
         }
 

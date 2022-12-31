@@ -4,7 +4,7 @@
 
 use super::config::ClientConfig;
 use super::misc::anyhow_error_to_human_readable;
-use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{bail, Context, Error as AnyhowError, Result as AnyhowResult};
 use log::{debug, info};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -33,7 +33,7 @@ impl FromStr for ServerSpec {
             true => {
                 let components: Vec<&str> = s.split(':').collect();
                 if components.len() != 2 {
-                    return Err(anyhow!("Failed to split into server and port at ':'"));
+                    bail!("Failed to split into server and port at ':'");
                 }
                 Ok(Self {
                     server: String::from(components[0]),
@@ -62,11 +62,11 @@ impl FromStr for SiteID {
     fn from_str(s: &str) -> AnyhowResult<SiteID> {
         let components: Vec<&str> = s.split('/').collect();
         if components.len() != 2 {
-            return Err(anyhow!("Failed to split into server and site at '/'"));
+            bail!("Failed to split into server and site at '/'");
         }
         Ok(SiteID {
-            server: String::from(components[0]),
-            site: String::from(components[1]),
+            server: components[0].to_owned(),
+            site: components[1].to_owned(),
         })
     }
 }
@@ -142,23 +142,20 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
     pub fn discover(&self) -> AnyhowResult<u16> {
         let client = self.build_client()?;
 
-        match Self::discover_with_protocol(self, &client, "https") {
-            Ok(p) => return Ok(p),
-            Err(err) => {
-                info!("Failed to discover agent receiver port using https, trying http.");
-                debug!("https error: {:?}", anyhow_error_to_human_readable(&err));
-            }
-        };
+        for protocol in ["https", "http"] {
+            match Self::discover_with_protocol(self, &client, protocol) {
+                Ok(p) => return Ok(p),
+                Err(err) => {
+                    info!("Failed to discover agent receiver port using {protocol}.");
+                    debug!(
+                        "{protocol} error: {:?}",
+                        anyhow_error_to_human_readable(&err)
+                    );
+                }
+            };
+        }
 
-        match Self::discover_with_protocol(self, &client, "http") {
-            Ok(p) => return Ok(p),
-            Err(err) => {
-                info!("Failed to discover agent receiver port using http.");
-                debug!("http error: {:?}", anyhow_error_to_human_readable(&err));
-            }
-        };
-
-        Err(anyhow!("Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors."))
+        bail!("Failed to discover agent receiver port from Checkmk REST API, both with http and https. Run with verbose output to see errors.")
     }
 }
 

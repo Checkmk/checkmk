@@ -18,7 +18,7 @@ mod setup;
 pub mod site_spec;
 mod tls_server;
 pub mod types;
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{bail, Context, Result as AnyhowResult};
 use configuration::config;
 use configuration::config::TOMLLoaderMissingSafe;
 use log::info;
@@ -109,18 +109,19 @@ pub fn run_requested_mode(cli: cli::Cli, paths: setup::PathResolver) -> AnyhowRe
     }
 }
 
-// This check is currently only useful on Unix. On Windows, the internal agent address can be passed
-// on the command line, so we cannot easily check this for any mode.
+/// This check is currently only useful on Unix. On Windows, the internal agent address can be passed
+/// on the command line, so we cannot easily check this for any mode.
 fn agent_socket_operational(mode: &cli::Mode) -> AnyhowResult<()> {
-    let agent_channel = setup::agent_channel();
     match mode {
         cli::Mode::Register(_) | cli::Mode::RegisterNew(_) | cli::Mode::Import(_) => {
-            match agent_channel.operational() {
-                true => Ok(()),
-                false => Err(anyhow!(format!(
+            let agent_channel = setup::agent_channel();
+            if agent_channel.operational() {
+                Ok(())
+            } else {
+                bail!(format!(
                     "Something seems wrong with the agent socket ({}), aborting",
                     agent_channel
-                ))),
+                ))
             }
         }
         _ => Ok(()),

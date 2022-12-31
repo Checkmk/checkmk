@@ -7,7 +7,7 @@ use is_elevated::is_elevated;
 
 use anyhow::Error as AnyhowError;
 #[cfg(windows)]
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{bail, Result as AnyhowResult};
 
 pub fn anyhow_error_to_human_readable(err: &AnyhowError) -> String {
     err.chain()
@@ -28,7 +28,7 @@ pub fn validate_elevation() -> AnyhowResult<()> {
         // Ergo, to avoid strange | duplicated output we write two different message in the log
         // and stderr thus providing correct information for a user
         eprintln!("{}", MESSAGE_NOT_ELEVATED);
-        Err(anyhow!("Not elevated, exiting...".to_string()))
+        bail!("Not elevated, exiting...".to_string())
     }
 }
 

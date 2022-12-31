@@ -72,7 +72,6 @@ fn is_error_acceptable(error: &Error) -> bool {
     error.kind() == std::io::Error::from_raw_os_error(10054).kind()
 }
 
-// TODO(sk): add logging and unit testing(using local server)
 async fn async_collect_from_ip(agent_ip: &str, remote_ip: IpAddr) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     debug!("connect to {}", agent_ip);
@@ -164,10 +163,11 @@ async fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {
 
 pub fn collect(agent_channel: &AgentChannel) -> IoResult<Vec<u8>> {
     let (ch_type, ch_addr) = agent_channel.parse()?;
-    match ch_type {
-        ChannelType::Ip => collect_from_ip(&ch_addr),
-        ChannelType::Mailslot => collect_from_mailslot(&ch_addr),
-    }
+    let collector = match ch_type {
+        ChannelType::Ip => collect_from_ip,
+        ChannelType::Mailslot => collect_from_mailslot,
+    };
+    collector(&ch_addr)
 }
 
 #[cfg(test)]
@@ -187,12 +187,18 @@ mod tests {
     }
     const EMPTY_DATA: Vec<u8> = vec![];
 
+    impl ChannelType {
+        fn to_string_id(&self) -> &str {
+            match *self {
+                ChannelType::Ip => "Ip",
+                ChannelType::Mailslot => "Mailslot",
+            }
+        }
+    }
+
     impl fmt::Debug for ChannelType {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            match *self {
-                ChannelType::Ip => write!(f, "Ip"),
-                ChannelType::Mailslot => write!(f, "Mailslot"),
-            }
+            write!(f, "{}", self.to_string_id())
         }
     }
 
@@ -201,31 +207,27 @@ mod tests {
     }
 
     #[test]
-    fn test_address_channel_parse() {
-        assert_eq!(
-            parse_me("").map_err(|e| e.kind()),
-            Err(ErrorKind::InvalidInput)
-        );
-        assert_eq!(
-            parse_me("ms/c/c").map_err(|e| e.kind()),
-            Err(ErrorKind::InvalidInput)
-        );
-        assert_eq!(
-            parse_me("zz/127.0.0.1:x").map_err(|e| e.kind()),
-            Err(ErrorKind::InvalidInput)
-        );
-        assert_eq!(
-            parse_me("ms/buzz_inc").unwrap(),
-            (ChannelType::Mailslot, "buzz_inc".to_string())
-        );
-        assert_eq!(
-            parse_me("ip/buzz_inc").unwrap(),
-            (ChannelType::Ip, "buzz_inc".to_string())
-        );
-        assert_eq!(
-            parse_me("buzz_inc").unwrap(),
-            (ChannelType::Ip, "buzz_inc".to_string())
-        );
+    fn test_address_channel_parse_invalid() {
+        for channel in ["", "ms/c/c", "zz/127.0.0.1:x"] {
+            assert_eq!(
+                parse_me(channel).map_err(|e| e.kind()),
+                Err(ErrorKind::InvalidInput)
+            );
+        }
+    }
+
+    #[test]
+    fn test_address_channel_parse_valid() {
+        for (channel, channel_type) in [
+            ("ms/buzz_inc", ChannelType::Mailslot),
+            ("ip/buzz_inc", ChannelType::Ip),
+            ("buzz_inc", ChannelType::Ip), // legacy
+        ] {
+            assert_eq!(
+                parse_me(channel).unwrap(),
+                (channel_type, "buzz_inc".to_string())
+            );
+        }
     }
 
     #[test]

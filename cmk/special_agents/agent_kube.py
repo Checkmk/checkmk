@@ -1362,6 +1362,55 @@ def write_nodes_api_sections(
             output_sections(node)
 
 
+def create_deployment_api_sections(
+    api_deployment: Deployment, host_settings: CheckmkHostSettings, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_deployment_info_v1"),
+            section=deployment_info(
+                api_deployment,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
+            ),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_deployment.pod_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_deployment.memory_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_deployment.cpu_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_update_strategy_v1"),
+            section=controller_strategy(api_deployment),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_deployment_replicas_v1"),
+            section=deployment_replicas(api_deployment.status),
+        ),
+    )
+
+    if (section_conditions := deployment_conditions(api_deployment.status)) is not None:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_deployment_conditions_v1"),
+            section=section_conditions,
+        )
+
+
 def write_deployments_api_sections(
     api_deployments: Sequence[Deployment],
     host_settings: CheckmkHostSettings,
@@ -1371,16 +1420,11 @@ def write_deployments_api_sections(
 
     def output_sections(cluster_deployment: Deployment) -> None:
         sections = {
-            "kube_pod_resources_v1": cluster_deployment.pod_resources,
-            "kube_memory_resources_v1": cluster_deployment.memory_resources,
             "kube_deployment_info_v1": lambda: deployment_info(
                 cluster_deployment,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
-            ),
-            "kube_deployment_conditions_v1": lambda: deployment_conditions(
-                cluster_deployment.status
             ),
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_update_strategy_v1": lambda: controller_strategy(cluster_deployment),
@@ -2126,13 +2170,15 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.deployments in arguments.monitored_objects:
                 LOGGER.info("Write deployments sections based on API data")
-                write_deployments_api_sections(
-                    kube_objects_from_namespaces(
-                        composed_entities.deployments, monitored_namespace_names
-                    ),
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                for deployment in kube_objects_from_namespaces(
+                    composed_entities.deployments, monitored_namespace_names
+                ):
+                    sections = create_deployment_api_sections(
+                        deployment,
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=piggyback_formatter(deployment),
+                    )
+                    common.write_sections(sections)
 
             resource_quotas = api_data.resource_quotas
             # Namespaces are handled differently to other objects. Namespace piggyback hosts

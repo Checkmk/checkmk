@@ -19,3 +19,10 @@ import pytest_mock
 @pytest.fixture(name="write_sections_mock")
 def fixture_write_sections_mock(mocker: pytest_mock.MockFixture) -> unittest.mock.MagicMock:
     return mocker.patch("cmk.special_agents.agent_kube._write_sections")
+
+
+@pytest.fixture(name="write_writeable_sections_mock")
+def fixture_write_writeable_sections_mock(
+    mocker: pytest_mock.MockFixture,
+) -> unittest.mock.MagicMock:
+    return mocker.patch("cmk.special_agents.utils_kubernetes.common.write_sections")

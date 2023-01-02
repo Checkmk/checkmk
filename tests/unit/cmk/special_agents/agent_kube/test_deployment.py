@@ -2,8 +2,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 from pydantic_factories import ModelFactory
 
@@ -23,8 +22,8 @@ class DeploymentConditionFactory(ModelFactory):
     __model__ = api.DeploymentCondition
 
 
-def deployments_api_sections() -> Sequence[str]:
-    return [
+def deployments_api_sections() -> set[str]:
+    return {
         "kube_pod_resources_v1",
         "kube_memory_resources_v1",
         "kube_deployment_info_v1",
@@ -32,7 +31,7 @@ def deployments_api_sections() -> Sequence[str]:
         "kube_cpu_resources_v1",
         "kube_update_strategy_v1",
         "kube_deployment_replicas_v1",
-    ]
+    }
 
 
 def test_pod_deployment_controller_name() -> None:
@@ -55,16 +54,20 @@ def test_deployment_conditions() -> None:
 
 
 def test_write_deployments_api_sections_registers_sections_to_be_written(
-    write_sections_mock: MagicMock,
+    write_writeable_sections_mock: MagicMock,
 ) -> None:
     deployment = api_to_agent_deployment(APIDeploymentFactory.build(), pods=[APIPodFactory.build()])
-    agent.write_deployments_api_sections(
-        [deployment],
+    deployment_sections = agent.create_deployment_api_sections(
+        deployment,
         agent.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
         ),
-        Mock(),
+        "deployment",
     )
-    assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections()
+    agent.common.write_sections(deployment_sections)
+    assert (
+        set(section.section_name for section in write_writeable_sections_mock.call_args[0][0])
+        == deployments_api_sections()
+    )

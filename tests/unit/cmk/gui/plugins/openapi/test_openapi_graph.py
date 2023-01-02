@@ -58,7 +58,7 @@ def test_openapi_graph_custom(
             status=200,
             params=json.dumps(
                 {
-                    "spec": {"name": "my_cool_graph"},
+                    "name": "my_cool_graph",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
                     "reduce": "max",
                 }

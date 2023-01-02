@@ -15,6 +15,9 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
 if [ -d "$ROOT" ]; then
-    sudo install -v -m 755 build/src/liblivestatus.so "$ROOT/lib"
-    test -z "$ONLY_COPY" && sudo su - "$SITE" -c "omd restart"
+    sudo cp -P build/src/liblivestatus.so* "$ROOT/lib/"
+    if [ -z "$ONLY_COPY" ]; then
+        sudo su - "$SITE" -c "omd restart nagios"
+        sudo su - "$SITE" -c "omd restart cmc"
+    fi
 fi

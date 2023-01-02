@@ -3,6 +3,7 @@
 -I.
 -I../..
 -I..
+-I../../packages/livestatus/include
 -isystem includes/asio
 -DASIO_DISABLE_CONCEPTS
 -I../../omd/packages/re2/destdir/include

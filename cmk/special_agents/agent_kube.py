@@ -2257,10 +2257,22 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 for daemonset in kube_objects_from_namespaces(
                     composed_entities.daemonsets, monitored_namespace_names
                 ):
+                    daemonset_piggyback_name = piggyback_formatter(daemonset)
                     daemonset_sections = create_daemon_set_api_sections(
                         daemonset,
                         host_settings=checkmk_host_settings,
-                        piggyback_name=piggyback_formatter(daemonset),
+                        piggyback_name=daemonset_piggyback_name,
+                    )
+                    daemonset_sections = chain(
+                        daemonset_sections,
+                        create_pvc_sections(
+                            piggyback_name=daemonset_piggyback_name,
+                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                daemonset.pods
+                            ),
+                            api_persistent_volume_claims=api_persistent_volume_claims,
+                            attached_volumes=attached_volumes,
+                        ),
                     )
                     common.write_sections(daemonset_sections)
 

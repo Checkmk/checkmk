@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel
@@ -129,6 +130,19 @@ class Connector(UserConnector):
             raise ValueError("User already exists for different connection")
 
         user_store[user_id] = user_profile
+
+    def locked_attributes(self) -> Sequence[str]:
+        """Attributes managed by the connector.
+
+        List the names of user attributes that are managed automatically by the SAML2 connector, and
+        may not be edited via the GUI. This always includes the 'password' attribute, as well as any
+        other mapped attributes.
+
+        Returns:
+            A list of attributes managed by the connector, always containing at least the 'password'
+            attribute.
+        """
+        return ["password"]
 
 
 def register(user_connector_registry: UserConnectorRegistry) -> None:

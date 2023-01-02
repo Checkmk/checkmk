@@ -185,3 +185,8 @@ class TestConnector:
         connector.create_and_update_user(user_id, new_user_spec)
 
         assert user_store == {**users_pre_edit, **{user_id: new_user_spec}}
+
+    def test_password_is_a_locked_attribute(self, raw_config: dict[str, Any]) -> None:
+        connector = Connector(raw_config)
+
+        assert "password" in connector.locked_attributes()

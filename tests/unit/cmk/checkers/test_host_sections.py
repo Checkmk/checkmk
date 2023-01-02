@@ -9,8 +9,8 @@ import pytest
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import AgentRawDataSection
+from cmk.checkers.host_sections import HostSections
+from cmk.checkers.type_defs import AgentRawDataSection
 
 
 class TestHostSections:

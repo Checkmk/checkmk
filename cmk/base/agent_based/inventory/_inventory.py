@@ -51,9 +51,9 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.host_sections import HostSections
+from cmk.checkers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

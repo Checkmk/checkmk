@@ -21,9 +21,9 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-import cmk.core_helpers.cache
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
+import cmk.checkers.cache
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register
@@ -59,7 +59,7 @@ def get_check_preview(
     config_cache: ConfigCache,
     file_cache_options: FileCacheOptions,
     force_snmp_cache_refresh: bool,
-    max_cachefile_age: cmk.core_helpers.cache.MaxAge,
+    max_cachefile_age: cmk.checkers.cache.MaxAge,
     on_error: OnError,
 ) -> tuple[Sequence[CheckPreviewEntry], QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of

@@ -7,7 +7,7 @@ from zlib import compress
 
 import pytest
 
-from cmk.core_helpers.tcp_agent_ctl import (
+from cmk.checkers.tcp_agent_ctl import (
     AgentCtlMessage,
     CompressionType,
     HeaderV1,

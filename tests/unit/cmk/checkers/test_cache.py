@@ -10,8 +10,8 @@ from collections.abc import Sequence
 
 from cmk.utils.type_defs import SectionName
 
-from cmk.core_helpers.cache import MaxAge, PersistedSections, SectionStore
-from cmk.core_helpers.type_defs import AgentRawDataSection, Mode
+from cmk.checkers.cache import MaxAge, PersistedSections, SectionStore
+from cmk.checkers.type_defs import AgentRawDataSection, Mode
 
 
 class MockStore:

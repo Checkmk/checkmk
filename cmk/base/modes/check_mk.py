@@ -42,12 +42,12 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
-import cmk.core_helpers.factory as snmp_factory
-from cmk.core_helpers import FetcherType, get_raw_data
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.summarize import summarize
-from cmk.core_helpers.type_defs import Mode as FetchMode
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
+import cmk.checkers.factory as snmp_factory
+from cmk.checkers import FetcherType, get_raw_data
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.summarize import summarize
+from cmk.checkers.type_defs import Mode as FetchMode
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.agent_based.inventory as inventory

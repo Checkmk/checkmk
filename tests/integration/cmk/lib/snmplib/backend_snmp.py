@@ -19,7 +19,7 @@ from cmk.snmplib.type_defs import (
     SNMPRowInfo,
 )
 
-from cmk.core_helpers.snmp_backend.classic import ClassicSNMPBackend
+from cmk.checkers.snmp_backend.classic import ClassicSNMPBackend
 
 from .conftest import InlineSNMPBackend
 

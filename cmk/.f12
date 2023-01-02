@@ -33,6 +33,7 @@ PYTHON3_PATHS=(
     automations
     base
     bi
+    checkers
 )
 
 echo "Copy files..."
@@ -116,8 +117,3 @@ if [ -z "$ONLY_COPY" ]; then
         sudo "$ROOT"/bin/python3 -m compileall -qq "${PYTHON3_PATHS[@]}"
     )
 fi
-
-(
-    cd core_helpers
-    bash .f12
-)

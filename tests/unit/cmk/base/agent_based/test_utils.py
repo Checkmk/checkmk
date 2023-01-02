@@ -13,8 +13,8 @@ import pytest
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, HostName, ParsedSectionName, SectionName, SourceType
 
-from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import AgentRawDataSection
+from cmk.checkers.host_sections import HostSections
+from cmk.checkers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.agent_based.data_provider import (

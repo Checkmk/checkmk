@@ -39,8 +39,8 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers import FetcherType
-from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
+from cmk.checkers import FetcherType
+from cmk.checkers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

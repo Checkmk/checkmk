@@ -21,7 +21,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-import cmk.core_helpers.cache
+import cmk.checkers.cache
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

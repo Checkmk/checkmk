@@ -31,10 +31,10 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
-from cmk.core_helpers.agent import AgentRawDataSection
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.checkers.agent import AgentRawDataSection
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.host_sections import HostSections
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register

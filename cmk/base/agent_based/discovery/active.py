@@ -11,7 +11,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, result, ServiceState
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.type_defs import SourceInfo
+from cmk.checkers.type_defs import SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.config import ConfigCache

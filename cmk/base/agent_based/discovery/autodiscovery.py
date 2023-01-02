@@ -34,9 +34,9 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-import cmk.core_helpers.cache
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
+import cmk.checkers.cache
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.autochecks as autochecks
 import cmk.base.check_utils
@@ -111,7 +111,7 @@ def automation_discovery(
     on_error: OnError,
     file_cache_options: FileCacheOptions,
     force_snmp_cache_refresh: bool,
-    max_cachefile_age: cmk.core_helpers.cache.MaxAge,
+    max_cachefile_age: cmk.checkers.cache.MaxAge,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
     result = DiscoveryResult()

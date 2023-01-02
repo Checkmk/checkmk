@@ -9,7 +9,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
-from cmk.core_helpers import PiggybackFetcher
+from cmk.checkers import PiggybackFetcher
 
 import cmk.base.modes.check_mk as check_mk
 

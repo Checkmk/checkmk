@@ -12,8 +12,8 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config

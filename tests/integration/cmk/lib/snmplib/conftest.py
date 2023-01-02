@@ -24,10 +24,10 @@ import cmk.utils.paths
 import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
-from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
+from cmk.checkers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 try:
-    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+    from cmk.checkers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 

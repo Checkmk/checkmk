@@ -20,10 +20,10 @@ from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
-from cmk.core_helpers.agent import AgentParser, PiggybackMarker, SectionMarker
-from cmk.core_helpers.cache import PersistedSections, SectionStore
-from cmk.core_helpers.snmp import SNMPParser
-from cmk.core_helpers.type_defs import AgentRawDataSection, NO_SELECTION
+from cmk.checkers.agent import AgentParser, PiggybackMarker, SectionMarker
+from cmk.checkers.cache import PersistedSections, SectionStore
+from cmk.checkers.snmp import SNMPParser
+from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 
 
 @pytest.fixture(autouse=True)

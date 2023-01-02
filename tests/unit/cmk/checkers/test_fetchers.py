@@ -32,22 +32,22 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import get_raw_data, snmp
-from cmk.core_helpers.agent import AgentFileCache
-from cmk.core_helpers.cache import FileCache, FileCacheMode, MaxAge, TRawData
-from cmk.core_helpers.ipmi import IPMIFetcher
-from cmk.core_helpers.piggyback import PiggybackFetcher
-from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.snmp import (
+from cmk.checkers import get_raw_data, snmp
+from cmk.checkers.agent import AgentFileCache
+from cmk.checkers.cache import FileCache, FileCacheMode, MaxAge, TRawData
+from cmk.checkers.ipmi import IPMIFetcher
+from cmk.checkers.piggyback import PiggybackFetcher
+from cmk.checkers.program import ProgramFetcher
+from cmk.checkers.snmp import (
     SectionMeta,
     SNMPFetcher,
     SNMPFileCache,
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
-from cmk.core_helpers.tcp import EncryptionHandling, TCPFetcher
-from cmk.core_helpers.tcp_agent_ctl import CompressionType, HeaderV1, Version
-from cmk.core_helpers.type_defs import Mode
+from cmk.checkers.tcp import EncryptionHandling, TCPFetcher
+from cmk.checkers.tcp_agent_ctl import CompressionType, HeaderV1, Version
+from cmk.checkers.type_defs import Mode
 
 
 class SensorReading(NamedTuple):

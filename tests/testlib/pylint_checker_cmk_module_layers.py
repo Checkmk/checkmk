@@ -87,7 +87,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.core_helpers` and `cmk.snmplib`.
+    Allow import of `cmk.checkers` and `cmk.snmplib`.
 
     The layering is such that `fetchers` and `snmplib` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -96,7 +96,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.core_helpers")),
+            _in_component(imported, Component("cmk.checkers")),
             _in_component(imported, Component("cmk.snmplib")),
         )
     )
@@ -108,7 +108,7 @@ def _allow_default_plus_fetchers_snmplib_and_bakery(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.core_helpers`, `cmk.snmplib` and `cmk.cee.bakery`.
+    Allow import of `cmk.checkers`, `cmk.snmplib` and `cmk.cee.bakery`.
 
     The layering is such that `fetchers`, `snmplib` and `bakery` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -117,7 +117,7 @@ def _allow_default_plus_fetchers_snmplib_and_bakery(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
-            _in_component(imported, Component("cmk.core_helpers")),
+            _in_component(imported, Component("cmk.checkers")),
             _in_component(imported, Component("cmk.snmplib")),
             _in_component(imported, Component("cmk.cee.bakery")),
         )
@@ -216,7 +216,7 @@ _COMPONENTS = (
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allow_default_plus_fetchers_snmplib_and_bakery),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
-    (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.checkers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _allow_default_plus_bakery),
     (Component("cmk.ec"), _is_default_allowed_import),
@@ -243,7 +243,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.core_helpers"),
+    ModulePath("enterprise/bin/fetcher"): Component("cmk.checkers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),

@@ -100,8 +100,8 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
     SNMPTiming,
 )
 
-import cmk.core_helpers.cache as cache_file
-from cmk.core_helpers import (
+import cmk.checkers.cache as cache_file
+from cmk.checkers import (
     FetcherType,
     IPMIFetcher,
     PiggybackFetcher,
@@ -109,12 +109,12 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
-from cmk.core_helpers.cache import SectionStore
-from cmk.core_helpers.config import make_persisted_section_dir
-from cmk.core_helpers.snmp import SectionMeta
-from cmk.core_helpers.tcp import EncryptionHandling
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.checkers.agent import AgentParser, AgentRawDataSection
+from cmk.checkers.cache import SectionStore
+from cmk.checkers.config import make_persisted_section_dir
+from cmk.checkers.snmp import SectionMeta
+from cmk.checkers.tcp import EncryptionHandling
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks

@@ -7,9 +7,9 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
-from cmk.core_helpers.cache import FileCacheOptions
+import cmk.checkers.cache as file_cache
+from cmk.checkers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.checkers.cache import FileCacheOptions
 
 from cmk.base.sources import make_sources
 

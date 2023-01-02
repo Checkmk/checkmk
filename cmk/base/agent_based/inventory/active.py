@@ -12,8 +12,8 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName, ServiceState
 
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.auto_queue import AutoQueue

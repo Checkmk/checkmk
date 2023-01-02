@@ -11,11 +11,11 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
-import cmk.core_helpers.factory as factory
-from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
+import cmk.checkers.factory as factory
+from cmk.checkers.snmp_backend import ClassicSNMPBackend
 
 try:
-    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+    from cmk.checkers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 

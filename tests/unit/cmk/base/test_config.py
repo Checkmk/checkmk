@@ -25,8 +25,8 @@ from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionN
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.core_helpers.tcp import EncryptionHandling
-from cmk.core_helpers.type_defs import Mode
+from cmk.checkers.tcp import EncryptionHandling
+from cmk.checkers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

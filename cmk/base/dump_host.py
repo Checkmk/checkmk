@@ -15,8 +15,8 @@ from cmk.utils.type_defs import HostName, SourceType
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import (
+import cmk.checkers.cache as file_cache
+from cmk.checkers import (
     Fetcher,
     IPMIFetcher,
     PiggybackFetcher,
@@ -24,8 +24,8 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import SourceInfo
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import SourceInfo
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

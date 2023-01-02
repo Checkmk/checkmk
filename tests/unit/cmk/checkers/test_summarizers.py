@@ -9,7 +9,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.type_defs import ExitSpec
 
-from cmk.core_helpers.summarize import summarize_failure, summarize_piggyback, summarize_success
+from cmk.checkers.summarize import summarize_failure, summarize_piggyback, summarize_success
 
 
 class TestAgentSummarizer:

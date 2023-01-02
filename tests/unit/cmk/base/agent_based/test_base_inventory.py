@@ -13,8 +13,8 @@ import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import EVERYTHING
 
-from cmk.core_helpers.cache import FileCacheOptions
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config

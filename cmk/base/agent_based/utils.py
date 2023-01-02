@@ -9,9 +9,9 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.type_defs import ExitSpec, HostKey, ParsedSectionName, result, ServiceState
 
-from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.summarize import summarize
-from cmk.core_helpers.type_defs import SourceInfo
+from cmk.checkers.host_sections import HostSections
+from cmk.checkers.summarize import summarize
+from cmk.checkers.type_defs import SourceInfo
 
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker
 

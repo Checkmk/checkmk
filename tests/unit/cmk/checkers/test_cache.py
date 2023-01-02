@@ -11,8 +11,9 @@ from collections.abc import Sequence
 from cmk.utils.type_defs import SectionName
 
 from cmk.fetchers import Mode
+from cmk.fetchers.cache import PersistedSections, SectionStore
 
-from cmk.checkers.cache import MaxAge, PersistedSections, SectionStore
+from cmk.checkers.cache import MaxAge
 from cmk.checkers.type_defs import AgentRawDataSection
 
 

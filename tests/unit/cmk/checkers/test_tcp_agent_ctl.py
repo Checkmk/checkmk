@@ -7,13 +7,7 @@ from zlib import compress
 
 import pytest
 
-from cmk.checkers.tcp_agent_ctl import (
-    AgentCtlMessage,
-    CompressionType,
-    HeaderV1,
-    MessageV1,
-    Version,
-)
+from cmk.fetchers._agentctl import AgentCtlMessage, CompressionType, HeaderV1, MessageV1, Version
 
 
 @pytest.fixture(name="uncompressed_data")

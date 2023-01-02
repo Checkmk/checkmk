@@ -9,4 +9,60 @@ See Also:
 
 """
 
+from collections.abc import Mapping
+from typing import Any
+
+from typing_extensions import assert_never
+
 from ._abstract import Fetcher, FetcherType, Mode
+from ._ipmi import IPMIFetcher
+from ._nofetcher import NoFetcher
+from ._piggyback import PiggybackFetcher
+from ._program import ProgramFetcher
+from ._snmp import SNMPFetcher, SNMPSectionMeta
+from ._tcp import TCPEncryptionHandling, TCPFetcher
+
+__all__ = [
+    "Fetcher",
+    "FetcherFactory",
+    "FetcherType",
+    "IPMIFetcher",
+    "Mode",
+    "NoFetcher",
+    "PiggybackFetcher",
+    "ProgramFetcher",
+    "SNMPFetcher",
+    "TCPFetcher",
+]
+
+
+class FetcherFactory:
+    @staticmethod
+    def make(fetcher_type: FetcherType) -> type[Fetcher]:
+        """The fetcher factory."""
+        # The typing error comes from the use of `Fetcher[Any]`.
+        # but we have tests to show that it still does what it
+        # is supposed to do.
+        match fetcher_type:
+            case FetcherType.NONE:
+                return NoFetcher
+            case FetcherType.IPMI:
+                return IPMIFetcher
+            case FetcherType.PIGGYBACK:
+                return PiggybackFetcher
+            case FetcherType.PUSH_AGENT:
+                return NoFetcher
+            case FetcherType.PROGRAM:
+                return ProgramFetcher
+            case FetcherType.SPECIAL_AGENT:
+                return ProgramFetcher
+            case FetcherType.SNMP:
+                return SNMPFetcher
+            case FetcherType.TCP:
+                return TCPFetcher
+        assert_never(fetcher_type)
+
+    @staticmethod
+    def from_json(fetcher_type: FetcherType, serialized: Mapping[str, Any]) -> Fetcher:
+        """Instantiate the fetcher from serialized data."""
+        return FetcherFactory.make(fetcher_type).from_json(serialized)

@@ -9,7 +9,7 @@ import abc
 import logging
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
-from typing import Any, final, Final, NamedTuple
+from typing import final, Final, NamedTuple
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
@@ -17,11 +17,11 @@ import cmk.utils.misc
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from cmk.fetchers import Fetcher, Mode
+from cmk.fetchers.cache import SectionStore
 
 from ._base import Parser
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache, SectionStore
+from .cache import FileCache
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
@@ -34,27 +34,6 @@ class AgentFileCache(FileCache[AgentRawData]):
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         return raw_data
-
-
-class NoFetcher(Fetcher[AgentRawData]):
-    def __init__(self) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.noop"))
-
-    @classmethod
-    def _from_json(cls, serialized: object) -> NoFetcher:
-        return NoFetcher()
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {}
-
-    def open(self) -> None:
-        pass
-
-    def close(self) -> None:
-        pass
-
-    def _fetch_from_io(self, mode: Mode):  # type:ignore[no-untyped-def]
-        raise TypeError(self)
 
 
 class SectionWithHeader(NamedTuple):

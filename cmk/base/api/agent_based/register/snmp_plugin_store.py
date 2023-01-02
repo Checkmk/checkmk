@@ -10,7 +10,7 @@ from cmk.snmplib.type_defs import (  # pylint: disable=cmk-module-layer-violatio
     SNMPDetectSpec,
 )
 
-from cmk.checkers.snmp import (  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.snmp import (  # pylint: disable=cmk-module-layer-violation
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )

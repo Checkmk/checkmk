@@ -12,7 +12,7 @@ from cmk.snmplib.snmp_table import get_snmp_table
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-from cmk.checkers.snmp_backend import StoredWalkSNMPBackend
+from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin

@@ -25,9 +25,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionN
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.fetchers import Mode
-
-from cmk.checkers.tcp import EncryptionHandling
+from cmk.fetchers import Mode, TCPEncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -656,12 +654,12 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname_str: str, result
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", EncryptionHandling.ANY_AND_PLAIN),
-        ("testhost2", EncryptionHandling.TLS_ENCRYPTED_ONLY),
+        ("testhost1", TCPEncryptionHandling.ANY_AND_PLAIN),
+        ("testhost2", TCPEncryptionHandling.TLS_ENCRYPTED_ONLY),
     ],
 )
 def test_encryption_handling(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: EncryptionHandling
+    monkeypatch: MonkeyPatch, hostname_str: str, result: TCPEncryptionHandling
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()

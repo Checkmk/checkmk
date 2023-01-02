@@ -11,11 +11,11 @@ from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
-import cmk.checkers.factory as factory
-from cmk.checkers.snmp_backend import ClassicSNMPBackend
+from cmk.fetchers.snmp import make_backend
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 
 try:
-    from cmk.checkers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
+    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
@@ -40,22 +40,22 @@ def fixture_snmp_config() -> SNMPHostConfig:
 
 
 def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
-    assert isinstance(factory.backend(snmp_config, logging.getLogger()), ClassicSNMPBackend)
+    assert isinstance(make_backend(snmp_config, logging.getLogger()), ClassicSNMPBackend)
 
 
 def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
     if InlineSNMPBackend is not None:
-        assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
+        assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         snmp_config = snmp_config._replace(snmp_backend="bla")  # type: ignore[arg-type]
         if InlineSNMPBackend is not None:
-            assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
+            assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
         else:
             assert isinstance(
-                factory.backend(snmp_config, logging.getLogger()),
+                make_backend(snmp_config, logging.getLogger()),
                 ClassicSNMPBackend,
             )

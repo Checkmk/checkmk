@@ -67,14 +67,13 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
-from cmk.fetchers import FetcherType, Mode
+from cmk.fetchers import FetcherType, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 import cmk.checkers.cache
-from cmk.checkers import factory, get_raw_data
+from cmk.checkers import get_raw_data
 from cmk.checkers.cache import FileCacheOptions
-from cmk.checkers.program import ProgramFetcher
 from cmk.checkers.summarize import summarize
-from cmk.checkers.tcp import TCPFetcher
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -1559,7 +1558,7 @@ class AutomationDiagHost(Automation):
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=factory.backend(snmp_config, log.logger),
+            backend=make_snmp_backend(snmp_config, log.logger),
         )
 
         if data:
@@ -1771,7 +1770,7 @@ class AutomationGetAgentOutput(Automation):
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
                 snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
-                backend = factory.backend(snmp_config, log.logger, use_cache=False)
+                backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
 
                 lines = []
                 for walk_oid in snmp_modes.oids_to_walk():

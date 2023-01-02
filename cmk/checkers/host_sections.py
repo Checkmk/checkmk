@@ -12,7 +12,7 @@ from typing import Final, Generic
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.checkers.cache import TRawDataSection
+from cmk.fetchers.cache import TRawDataSection
 
 
 class HostSections(Generic[TRawDataSection], abc.ABC):

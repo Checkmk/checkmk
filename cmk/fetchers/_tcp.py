@@ -23,11 +23,13 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._base import verify_ipaddress
-from .tcp_agent_ctl import AgentCtlMessage
+from ._agentctl import AgentCtlMessage
+from ._iputils import verify_ipaddress
+
+__all__ = ["TCPEncryptionHandling", "TCPFetcher"]
 
 
-class EncryptionHandling(enum.Enum):
+class TCPEncryptionHandling(enum.Enum):
     TLS_ENCRYPTED_ONLY = enum.auto()
     ANY_ENCRYPTED = enum.auto()
     ANY_AND_PLAIN = enum.auto()
@@ -41,7 +43,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         address: tuple[HostAddress | None, int],
         timeout: float,
         host_name: HostName,
-        encryption_handling: EncryptionHandling,
+        encryption_handling: TCPEncryptionHandling,
         pre_shared_secret: str | None,
     ) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
@@ -80,7 +82,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         serialized_ = copy.deepcopy(dict(serialized))
         address: tuple[HostAddress | None, int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
-        encryption_handling = EncryptionHandling(serialized_.pop("encryption_handling"))
+        encryption_handling = TCPEncryptionHandling(serialized_.pop("encryption_handling"))
         return cls(
             address=address,
             host_name=host_name,
@@ -179,14 +181,14 @@ class TCPFetcher(Fetcher[AgentRawData]):
             raise MKFetcherError("Refused: Host is registered for TLS but not using it")
 
         match self.encryption_handling:
-            case EncryptionHandling.TLS_ENCRYPTED_ONLY:
+            case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
                 raise MKFetcherError("Refused: TLS is enforced but host is not using it")
-            case EncryptionHandling.ANY_ENCRYPTED:
+            case TCPEncryptionHandling.ANY_ENCRYPTED:
                 if protocol is TransportProtocol.PLAIN:
                     raise MKFetcherError(
                         "Refused: Encryption is enforced but agent output is plaintext"
                     )
-            case EncryptionHandling.ANY_AND_PLAIN:
+            case TCPEncryptionHandling.ANY_AND_PLAIN:
                 pass
             case never:
                 assert_never(never)

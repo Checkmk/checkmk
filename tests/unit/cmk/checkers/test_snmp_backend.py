@@ -5,8 +5,8 @@
 
 import pytest
 
-import cmk.checkers.snmp_backend._utils as utils
-from cmk.checkers.snmp_backend import StoredWalkSNMPBackend
+import cmk.fetchers.snmp_backend._utils as utils
+from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
 
 @pytest.mark.parametrize(

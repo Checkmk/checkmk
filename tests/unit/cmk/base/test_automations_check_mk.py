@@ -15,7 +15,7 @@ from cmk.utils.type_defs import result
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 
-from cmk.checkers import PiggybackFetcher
+from cmk.fetchers import PiggybackFetcher
 
 import cmk.base.automations.check_mk as check_mk
 import cmk.base.config as config

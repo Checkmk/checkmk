@@ -32,23 +32,24 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.fetchers import Mode
+import cmk.fetchers._snmp as snmp
+from cmk.fetchers import (
+    IPMIFetcher,
+    Mode,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPSectionMeta,
+    TCPEncryptionHandling,
+    TCPFetcher,
+)
+from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
+from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 
-from cmk.checkers import get_raw_data, snmp
+from cmk.checkers import get_raw_data
 from cmk.checkers.agent import AgentFileCache
 from cmk.checkers.cache import FileCache, FileCacheMode, MaxAge, TRawData
-from cmk.checkers.ipmi import IPMIFetcher
-from cmk.checkers.piggyback import PiggybackFetcher
-from cmk.checkers.program import ProgramFetcher
-from cmk.checkers.snmp import (
-    SectionMeta,
-    SNMPFetcher,
-    SNMPFileCache,
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-)
-from cmk.checkers.tcp import EncryptionHandling, TCPFetcher
-from cmk.checkers.tcp_agent_ctl import CompressionType, HeaderV1, Version
+from cmk.checkers.snmp import SNMPFileCache
 
 
 class SensorReading(NamedTuple):
@@ -541,7 +542,7 @@ class TestSNMPFetcherFetch:
             fetcher,
             "sections",
             {
-                section_name: SectionMeta(
+                section_name: SNMPSectionMeta(
                     checking=True,
                     disabled=False,
                     redetect=False,
@@ -583,7 +584,7 @@ class TestSNMPFetcherFetch:
             fetcher,
             "sections",
             {
-                section_name: SectionMeta(
+                section_name: SNMPSectionMeta(
                     checking=True,
                     disabled=False,
                     redetect=False,
@@ -793,12 +794,12 @@ class TestSNMPSectionMeta:
     @pytest.mark.parametrize(
         "meta",
         [
-            SectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
-            SectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
+            SNMPSectionMeta(checking=False, disabled=False, redetect=False, fetch_interval=None),
+            SNMPSectionMeta(checking=True, disabled=False, redetect=False, fetch_interval=None),
         ],
     )
-    def test_serialize(self, meta: SectionMeta) -> None:
-        assert SectionMeta.deserialize(meta.serialize()) == meta
+    def test_serialize(self, meta: SNMPSectionMeta) -> None:
+        assert SNMPSectionMeta.deserialize(meta.serialize()) == meta
 
 
 class _MockSock:
@@ -826,7 +827,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         )
 
@@ -858,7 +859,7 @@ class TestTCPFetcher:
             address=("This is not an IP address. Connecting would fail.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         ) as fetcher:
             # TODO(ml): monkeypatch the fetcehr and check it was
@@ -881,7 +882,7 @@ class TestTCPFetcher:
             address=("127.0.0.1", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         ) as fetcher:
             for mode in Mode:
@@ -905,7 +906,7 @@ class TestTCPFetcher:
             address=("This is not an IP address. Connecting fails.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         ) as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
@@ -919,7 +920,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
@@ -930,7 +931,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_handling=EncryptionHandling.ANY_ENCRYPTED,
+            encryption_handling=TCPEncryptionHandling.ANY_ENCRYPTED,
             pre_shared_secret=None,
         )
 
@@ -943,7 +944,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
             pre_shared_secret=None,
         )
         for p in TransportProtocol:
@@ -954,7 +955,7 @@ class TestTCPFetcher:
 
     def test_validate_protocol_tls_always_ok(self) -> None:
         for encryption_handling, is_registered in cartesian_product(
-            EncryptionHandling, (True, False)
+            TCPEncryptionHandling, (True, False)
         ):
             TCPFetcher(
                 family=socket.AF_INET,
@@ -971,7 +972,7 @@ class TestTCPFetcher:
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_handling=EncryptionHandling.TLS_ENCRYPTED_ONLY,
+            encryption_handling=TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
             pre_shared_secret=None,
         )
         for p in TransportProtocol:
@@ -1028,7 +1029,7 @@ class TestFetcherCaching:
             address=("1.2.3.4", 0),
             timeout=0.0,
             host_name=HostName("irrelevant_for_this_test"),
-            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         )
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")

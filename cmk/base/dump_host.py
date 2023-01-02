@@ -15,8 +15,7 @@ from cmk.utils.type_defs import HostName, SourceType
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-import cmk.checkers.cache as file_cache
-from cmk.checkers import (
+from cmk.fetchers import (
     Fetcher,
     IPMIFetcher,
     PiggybackFetcher,
@@ -24,6 +23,8 @@ from cmk.checkers import (
     SNMPFetcher,
     TCPFetcher,
 )
+
+import cmk.checkers.cache as file_cache
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.type_defs import SourceInfo
 

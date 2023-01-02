@@ -100,15 +100,21 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
     SNMPTiming,
 )
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import (
+    FetcherType,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPSectionMeta,
+    TCPEncryptionHandling,
+    TCPFetcher,
+)
+from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 
 import cmk.checkers.cache as cache_file
-from cmk.checkers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.checkers.agent import AgentParser, AgentRawDataSection
-from cmk.checkers.cache import SectionStore
-from cmk.checkers.snmp import SectionMeta
-from cmk.checkers.tcp import EncryptionHandling
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -3451,10 +3457,10 @@ class ConfigCache:
         host_name: HostName,
         *,
         checking_sections: frozenset[SectionName],
-    ) -> dict[SectionName, SectionMeta]:
+    ) -> dict[SectionName, SNMPSectionMeta]:
         disabled_sections = self.disabled_snmp_sections(host_name)
         return {
-            name: SectionMeta(
+            name: SNMPSectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
                 redetect=name in checking_sections and agent_based_register.needs_redetection(name),
@@ -4594,16 +4600,16 @@ class ConfigCache:
 
         return timeouts[0]
 
-    def _encryption_handling(self, host_name: HostName) -> EncryptionHandling:
+    def _encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
         if not (settings := self.host_extra_conf(host_name, encryption_handling)):
-            return EncryptionHandling.ANY_AND_PLAIN
+            return TCPEncryptionHandling.ANY_AND_PLAIN
         match settings[0]["accept"]:
             case "tls_encrypted_only":
-                return EncryptionHandling.TLS_ENCRYPTED_ONLY
+                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
             case "any_encrypted":
-                return EncryptionHandling.ANY_ENCRYPTED
+                return TCPEncryptionHandling.ANY_ENCRYPTED
             case "any_and_plain":
-                return EncryptionHandling.ANY_AND_PLAIN
+                return TCPEncryptionHandling.ANY_AND_PLAIN
         raise ValueError("Unknown setting: %r" % settings[0])
 
     def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:

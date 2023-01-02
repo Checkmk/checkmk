@@ -14,8 +14,8 @@ from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
-import cmk.checkers.snmp_backend.classic as classic_snmp
-from cmk.checkers.snmp_backend import ClassicSNMPBackend
+import cmk.fetchers.snmp_backend.classic as classic_snmp
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 
 
 @pytest.mark.parametrize(

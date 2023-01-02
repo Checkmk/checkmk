@@ -7,8 +7,8 @@ import abc
 from functools import partial
 from typing import Generic
 
-from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
-from cmk.utils.type_defs import HostAddress, result
+from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -18,7 +18,7 @@ from .cache import FileCache
 from .host_sections import HostSections, TRawDataSection
 from .type_defs import SectionNameCollection
 
-__all__ = ["verify_ipaddress", "get_raw_data"]
+__all__ = ["get_raw_data"]
 
 
 def get_raw_data(
@@ -52,13 +52,3 @@ class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
         self, raw_data: TRawData, *, selection: SectionNameCollection
     ) -> HostSections[TRawDataSection]:
         raise NotImplementedError
-
-
-def verify_ipaddress(address: HostAddress | None) -> None:
-    if not address:
-        raise MKIPAddressLookupError("Host has no IP address configured.")
-
-    if address in ["0.0.0.0", "::"]:
-        raise MKIPAddressLookupError(
-            "Failed to lookup IP address and no explicit IP address configured"
-        )

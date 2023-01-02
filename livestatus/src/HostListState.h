@@ -10,8 +10,8 @@
 
 #include <cstdint>
 
-#include "LogEntry.h"
 #include "ServiceListState.h"
+#include "livestatus/LogEntry.h"
 class User;
 
 #ifdef CMC

@@ -14,10 +14,10 @@
 
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
-#include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OStreamStateSaver.h"
+#include "livestatus/data_encoding.h"
 
 using namespace std::chrono_literals;
 

@@ -25,13 +25,13 @@
 #include <vector>
 
 #include "Aggregator.h"  // IWYU pragma: keep
-#include "Filter.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
 #include "Row.h"
 #include "StatsColumn.h"
 #include "Triggers.h"
 #include "User.h"
+#include "livestatus/Filter.h"
 class Column;
 class Logger;
 class OutputBuffer;

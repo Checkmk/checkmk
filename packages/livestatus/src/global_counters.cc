@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "global_counters.h"
+#include "livestatus/global_counters.h"
 
 #include <chrono>
 #include <mutex>

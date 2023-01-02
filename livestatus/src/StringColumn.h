@@ -15,9 +15,9 @@
 #include <utility>
 
 #include "Column.h"
-#include "Filter.h"
 #include "PerfdataAggregator.h"
 #include "StringFilter.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class Aggregator;
 class Row;

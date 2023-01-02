@@ -13,7 +13,7 @@
 #include <string>
 
 #include "Column.h"
-#include "Filter.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class Aggregator;
 class Row;

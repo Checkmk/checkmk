@@ -12,7 +12,7 @@
 
 #include "Row.h"
 #include "Table.h"
-#include "global_counters.h"
+#include "livestatus/global_counters.h"
 class ColumnOffsets;
 class MonitoringCore;
 class Query;

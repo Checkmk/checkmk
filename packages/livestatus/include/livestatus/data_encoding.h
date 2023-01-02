@@ -6,8 +6,6 @@
 #ifndef data_encoding_h
 #define data_encoding_h
 
-#include "config.h"  // IWYU pragma: keep
-
 enum class Encoding { utf8, latin1, mixed };
 
 #endif  // data_encoding_h

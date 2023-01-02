@@ -7,7 +7,7 @@
 
 #include <ostream>
 
-#include "data_encoding.h"
+#include "livestatus/data_encoding.h"
 
 RendererJSON::RendererJSON(std::ostream &os, Logger *logger,
                            Encoding data_encoding)

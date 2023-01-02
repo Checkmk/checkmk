@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "LogEntry.h"
+#include "livestatus/LogEntry.h"
 
 #include <algorithm>
 #include <array>

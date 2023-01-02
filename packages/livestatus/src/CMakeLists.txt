@@ -2,13 +2,30 @@ set(header_location ${Livestatus_SOURCE_DIR}/include/livestatus)
 set(livestatus_headers
     ${header_location}/BitMask.h
     ${header_location}/ChronoUtils.h
+    ${header_location}/LogEntry.h
+    ${header_location}/CrashReport.h
+    ${header_location}/data_encoding.h
+    ${header_location}/FileSystemHelper.h
+    ${header_location}/Filter.h
+    ${header_location}/global_counters.h
     ${header_location}/Logger.h
     ${header_location}/OStreamStateSaver.h
+    ${header_location}/OutputBuffer.h
     ${header_location}/POSIXUtils.h
     ${header_location}/Poller.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h)
-set(livestatus_sources Logger.cc POSIXUtils.cc StringUtils.cc strutil.cc)
+set(livestatus_sources
+    CrashReport.cc
+    FileSystemHelper.cc
+    Filter.cc
+    global_counters.cc
+    LogEntry.cc
+    Logger.cc
+    OutputBuffer.cc
+    POSIXUtils.cc
+    StringUtils.cc
+    strutil.cc)
 
 add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 

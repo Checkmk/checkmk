@@ -6,8 +6,6 @@
 #ifndef OutputBuffer_h
 #define OutputBuffer_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <functional>
 #include <sstream>
 #include <string>

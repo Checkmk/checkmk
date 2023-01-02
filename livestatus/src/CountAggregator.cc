@@ -5,9 +5,9 @@
 
 #include "CountAggregator.h"
 
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "livestatus/Filter.h"
 
 void CountAggregator::consume(Row row, const User &user,
                               std::chrono::seconds timezone_offset) {

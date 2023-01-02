@@ -6,8 +6,6 @@
 #ifndef global_counters_h
 #define global_counters_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <cstdlib>
 
 // Remember to update num_counters when you change the enum below. C++ really

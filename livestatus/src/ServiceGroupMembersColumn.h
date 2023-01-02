@@ -13,10 +13,10 @@
 #include <string>
 #include <utility>
 
-#include "Filter.h"
 #include "ListColumn.h"
 #include "ListFilter.h"  // IWYU pragma: keep
 #include "Row.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 enum class ServiceState;
 class Logger;

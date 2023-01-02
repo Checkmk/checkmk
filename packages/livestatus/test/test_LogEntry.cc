@@ -17,8 +17,8 @@
 #include <variant>
 #include <vector>
 
-#include "LogEntry.h"
 #include "gtest/gtest.h"
+#include "livestatus/LogEntry.h"
 
 using namespace std::string_literals;
 

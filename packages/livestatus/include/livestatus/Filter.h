@@ -6,8 +6,6 @@
 #ifndef Filter_h
 #define Filter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <bitset>
 #include <chrono>
 #include <cstdint>

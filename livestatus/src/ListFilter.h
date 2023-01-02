@@ -19,8 +19,8 @@
 #include <vector>
 
 #include "ColumnFilter.h"
-#include "Filter.h"
 #include "Row.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class RegExp;
 class Logger;

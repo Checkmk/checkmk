@@ -11,8 +11,8 @@
 #include "RendererCSV.h"
 #include "RendererJSON.h"
 #include "RendererPython3.h"
-#include "data_encoding.h"
 #include "livestatus/Logger.h"
+#include "livestatus/data_encoding.h"
 
 // static
 std::unique_ptr<Renderer> Renderer::make(OutputFormat format, std::ostream &os,

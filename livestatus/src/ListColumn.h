@@ -18,10 +18,10 @@
 #include <vector>
 
 #include "Column.h"
-#include "Filter.h"
 #include "ListFilter.h"
 #include "Renderer.h"
 #include "Row.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class Aggregator;
 class User;

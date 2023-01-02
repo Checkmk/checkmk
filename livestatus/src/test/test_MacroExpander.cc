@@ -17,8 +17,8 @@
 #include "Row.h"
 #include "Store.h"
 #include "StringColumn.h"
-#include "data_encoding.h"
 #include "gtest/gtest.h"
+#include "livestatus/data_encoding.h"
 #include "nagios.h"
 #include "test_utilities.h"
 class Comment;

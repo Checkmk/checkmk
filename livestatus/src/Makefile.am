@@ -63,10 +63,8 @@ test_neb_SOURCES = \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
-    test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
     test/test_ListColumn.cc \
-    test/test_LogEntry.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
     test/test_Queue.cc \
@@ -120,15 +118,12 @@ liblivestatusneb_a_SOURCES = \
         ColumnFilter.cc \
         CommentRenderer.cc \
         CountAggregator.cc \
-        CrashReport.cc \
         DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         EventConsoleConnection.cc \
-        FileSystemHelper.cc \
-        Filter.cc \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
@@ -136,7 +131,6 @@ liblivestatusneb_a_SOURCES = \
         IntFilter.cc \
         ListFilter.cc \
         LogCache.cc \
-        LogEntry.cc \
         Logfile.cc \
         LogwatchList.cc \
         MacroExpander.cc \
@@ -144,7 +138,6 @@ liblivestatusneb_a_SOURCES = \
         NagiosCore.cc \
         NullColumn.cc \
         OringFilter.cc \
-        OutputBuffer.cc \
         PerfdataAggregator.cc \
         Query.cc \
         RegExp.cc \
@@ -189,7 +182,6 @@ liblivestatusneb_a_SOURCES = \
         TimeperiodsCache.cc \
         Triggers.cc \
         User.cc \
-        global_counters.cc \
         mk_inventory.cc \
         mk_logwatch.cc \
         module.cc \

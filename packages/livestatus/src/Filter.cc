@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "Filter.h"
+#include "livestatus/Filter.h"
 
 std::optional<std::string> Filter::stringValueRestrictionFor(
     const std::string & /* column_name */) const {

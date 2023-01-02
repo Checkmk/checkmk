@@ -14,11 +14,11 @@
 
 #include "Aggregator.h"
 #include "Column.h"
-#include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"
 #include "TimeAggregator.h"
 #include "TimeFilter.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class User;
 

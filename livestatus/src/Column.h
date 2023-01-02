@@ -15,8 +15,8 @@
 #include <string>
 #include <vector>
 
-#include "Filter.h"
 #include "Row.h"
+#include "livestatus/Filter.h"
 #include "livestatus/Logger.h"
 #include "opids.h"
 class Aggregation;

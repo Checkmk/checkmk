@@ -40,9 +40,14 @@ class BaseRequestSchema(BaseSchema):
         example={"start": str(datetime.now() - timedelta(minutes=15)), "end": str(datetime.now())},
         required=True,
     )
-    consolidation_function = String(
+
+    reduce = String(
         enum=["min", "max", "average"],
-        description="Data points get summarized over time by taking the minimum, maximum and average values over a specific time range. This field governs which value type is returned when data from this time range is requested.",
+        description=(
+            "Specify how to reduce a segment of data points to a single data point of the output graph. "
+            "This can be useful to find spikes in your data that would be smoothed out by computing the average."
+        ),
+        load_default="average",
         example="max",
     )
 

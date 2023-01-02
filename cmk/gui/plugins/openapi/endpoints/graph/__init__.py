@@ -13,9 +13,6 @@ from typing import Any
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
 from cmk.gui.plugins.openapi.endpoints.graph import request_schemas, response_schemas
 from cmk.gui.plugins.openapi.endpoints.graph.common import (
-    BaseRequestSchema,
-    GRAPH_NAME_REGEX,
-    GRAPH_NAME_VALIDATOR,
     reorganize_response,
     reorganize_time_range,
 )
@@ -42,7 +39,7 @@ def get_metric_graph(params):
         {
             "specification": _legacy_spec_from_metric(spec),
             "data_range": reorganize_time_range(time_range),
-            "consolidation_function": body.get("consolidation_function", "max"),
+            "consolidation_function": body["reduce"],
         },
         resolve_combined_single_metric_spec,
     )

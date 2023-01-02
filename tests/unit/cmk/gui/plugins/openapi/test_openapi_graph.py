@@ -60,7 +60,7 @@ def test_openapi_graph_custom(
                 {
                     "spec": {"name": "my_cool_graph"},
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "consolidation_function": "max",
+                    "reduce": "max",
                 }
             ),
         )
@@ -113,7 +113,7 @@ def test_openapi_graph_named(
                         "graph_name": "cpu_load",
                     },
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "consolidation_function": "max",
+                    "reduce": "max",
                 }
             ),
         )
@@ -170,7 +170,7 @@ def test_openapi_graph_metric(
                         "metric_name": "load1",
                     },
                     "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
-                    "consolidation_function": "max",
+                    "reduce": "max",
                 }
             ),
         )
@@ -208,7 +208,7 @@ def test_openapi_graph_combined(
                         "presentation": "lines",
                     },
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "consolidation_function": "max",
+                    "reduce": "max",
                 }
             ),
         )

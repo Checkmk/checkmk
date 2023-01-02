@@ -11,9 +11,9 @@
 #include <sstream>
 #include <utility>
 
-#include "StringUtils.h"
 #include "User.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

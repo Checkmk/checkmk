@@ -12,7 +12,7 @@
 
 #include "MonitoringCore.h"
 #include "RegExp.h"
-#include "StringUtils.h"
+#include "livestatus/StringUtils.h"
 #include "nagios.h"
 
 // static

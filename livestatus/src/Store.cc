@@ -17,8 +17,8 @@
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Query.h"
-#include "StringUtils.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
 #include "mk_logwatch.h"
 #include "nagios.h"
 

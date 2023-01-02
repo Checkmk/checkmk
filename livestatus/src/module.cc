@@ -50,8 +50,8 @@
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Poller.h"
+#include "livestatus/strutil.h"
 #include "nagios.h"
-#include "strutil.h"
 
 using namespace std::chrono_literals;
 

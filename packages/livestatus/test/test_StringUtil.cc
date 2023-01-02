@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 
-#include "StringUtils.h"
 #include "gtest/gtest.h"
+#include "livestatus/StringUtils.h"
 
 TEST(StringUtilTest, StartsWith) {
     EXPECT_TRUE(mk::starts_with("", ""));

@@ -11,8 +11,8 @@
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "MonitoringCore.h"
-#include "StringUtils.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 

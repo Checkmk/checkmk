@@ -19,7 +19,7 @@ set(googletest_ext_include ${src_dir}/googletest/include)
 # <test> target
 enable_testing()
 
-add_executable(test test.cc)
+add_executable(test test.cc test_StringUtil.cc)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})
 target_compile_features(test PRIVATE cxx_std_17)

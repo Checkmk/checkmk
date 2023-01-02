@@ -27,8 +27,8 @@
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
-#include "StringUtils.h"
 #include "TimeColumn.h"
+#include "livestatus/StringUtils.h"
 #include "opids.h"
 
 using namespace std::chrono_literals;

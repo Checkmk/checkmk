@@ -6,7 +6,7 @@
 #ifndef StringUtils_h
 #define StringUtils_h
 
-#include "config.h"  // IWYU pragma: keep
+#include <netinet/in.h>
 
 #include <bitset>
 #include <cstddef>
@@ -17,15 +17,9 @@
 #include <utility>
 #include <vector>
 
-#ifdef CMC
-#include <netinet/in.h>
-#endif
-
 namespace mk {
 std::string unsafe_tolower(const std::string &str);
-#ifdef CMC
 std::string unsafe_toupper(const std::string &str);
-#endif
 
 bool starts_with(std::string_view input, std::string_view test);
 bool ends_with(std::string_view input, std::string_view test);
@@ -83,9 +77,7 @@ std::string replace_all(const std::string &str, const std::string &from,
 std::string from_multi_line(const std::string &str);
 std::string to_multi_line(const std::string &str);
 
-#ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address);
-#endif
 }  // namespace mk
 
 template <size_t N>

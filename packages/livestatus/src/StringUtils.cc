@@ -3,7 +3,10 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "StringUtils.h"
+#include "livestatus/StringUtils.h"
+
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <algorithm>
 #include <cctype>
@@ -11,12 +14,7 @@
 #include <sstream>
 #include <type_traits>
 
-#include "OStreamStateSaver.h"
-
-#ifdef CMC
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#endif
+#include "livestatus/OStreamStateSaver.h"
 
 namespace mk {
 std::string unsafe_tolower(const std::string &str) {
@@ -25,13 +23,11 @@ std::string unsafe_tolower(const std::string &str) {
     return result;
 }
 
-#ifdef CMC
 std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
 }
-#endif
 
 bool starts_with(std::string_view input, std::string_view test) {
     return input.size() >= test.size() &&
@@ -164,12 +160,10 @@ std::string to_multi_line(const std::string &str) {
     return replace_all(str, R"(\n)", "\n");
 }
 
-#ifdef CMC
 std::string ipv4ToString(in_addr_t ipv4_address) {
     char addr_buf[INET_ADDRSTRLEN];
     struct in_addr ia = {ipv4_address};
     inet_ntop(AF_INET, &ia, addr_buf, sizeof(addr_buf));
     return addr_buf;
 }
-#endif
 }  // namespace mk

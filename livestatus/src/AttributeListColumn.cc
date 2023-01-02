@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "livestatus/Logger.h"
-#include "strutil.h"
+#include "livestatus/strutil.h"
 
 namespace column::attribute_list {
 

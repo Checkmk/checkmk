@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "StringUtils.h"
+#include "livestatus/StringUtils.h"
 
 #ifdef CMC
 #include <unordered_map>  // IWYU pragma: keep

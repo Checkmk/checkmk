@@ -23,13 +23,13 @@
 #include "NullColumn.h"
 #include "OringFilter.h"
 #include "OutputBuffer.h"
-#include "StringUtils.h"
 #include "Table.h"
 #include "User.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
+#include "livestatus/strutil.h"
 #include "opids.h"
-#include "strutil.h"
 
 using namespace std::chrono_literals;
 

@@ -19,7 +19,7 @@
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "livestatus/Logger.h"
-#include "strutil.h"
+#include "livestatus/strutil.h"
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
                              const std::string &column_name) {

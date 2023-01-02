@@ -6,8 +6,6 @@
 #ifndef strutil_h
 #define strutil_h
 
-#include "config.h"  // IWYU pragma: keep
-
 char *next_token(char **c, char delim);
 const char *safe_next_token(char **c, char delim);
 char *next_field(char **c);

@@ -24,13 +24,13 @@
 #include "Query.h"
 #include "Row.h"
 #include "StringColumn.h"
-#include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
 
 #ifdef CMC
 #include "Host.h"     // IWYU pragma: keep

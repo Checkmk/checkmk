@@ -73,7 +73,6 @@ test_neb_SOURCES = \
     test/test_RegExp.cc \
     test/test_Renderer.cc \
     test/test_StringColumn.cc \
-    test/test_StringUtil.cc \
     test/test_Table.cc \
     test/test_TimeColumn.cc \
     test/test_utilities.cc
@@ -161,7 +160,6 @@ liblivestatusneb_a_SOURCES = \
         StatsColumn.cc \
         Store.cc \
         StringFilter.cc \
-        StringUtils.cc \
         Table.cc \
         TableColumns.cc \
         TableCommands.cc \
@@ -196,8 +194,7 @@ liblivestatusneb_a_SOURCES = \
         mk_logwatch.cc \
         module.cc \
         opids.cc \
-        pnp4nagios.cc \
-        strutil.cc
+        pnp4nagios.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets

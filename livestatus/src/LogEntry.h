@@ -14,7 +14,7 @@
 #include <string_view>
 #include <vector>
 
-#include "StringUtils.h"
+#include "livestatus/StringUtils.h"
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 

@@ -39,12 +39,12 @@
 #include "Query.h"
 #include "RRDColumn.h"
 #include "StringColumn.h"
-#include "StringUtils.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "User.h"
 #include "livestatus/Logger.h"
+#include "livestatus/StringUtils.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

@@ -445,7 +445,7 @@ class MatchFailure:
 @dataclass(frozen=True)
 class MatchSuccess:
     cancelling: bool
-    match_groups: dict[str, Any]
+    match_groups: MatchGroups
 
 
 MatchResult = MatchFailure | MatchSuccess
@@ -1448,12 +1448,18 @@ class EventServer(ECServerThread):
                 self._add_rule_contact_groups_to_event(rule, event)
 
                 # Store groups from matching this event. In order to make
-                # persistence easier, we do not safe them as list but join
+                # persistence easier, we do not save them as list but join
                 # them on ASCII-1.
-                event["match_groups"] = result.match_groups.get("match_groups_message", ())
-                event["match_groups_syslog_application"] = result.match_groups.get(
+                match_groups_message = result.match_groups.get("match_groups_message", ())
+                assert match_groups_message is not False
+                event["match_groups"] = match_groups_message
+
+                match_groups_syslog_application = result.match_groups.get(
                     "match_groups_syslog_application", ()
                 )
+                assert match_groups_syslog_application is not False
+                event["match_groups_syslog_application"] = match_groups_syslog_application
+
                 self.rewrite_event(rule, event, result.match_groups)
 
                 # Lookup the monitoring core hosts and add the core host
@@ -3276,16 +3282,17 @@ class EventStatus:
                 self.remove_event(e, "CANCELLED")
 
     def cancelling_match(  # pylint: disable=too-many-branches
-        self, match_groups: dict, new_event: Event, event: Event, rule: Rule
+        self, match_groups: MatchGroups, new_event: Event, event: Event, rule: Rule
     ) -> bool:
         debug = self._config["debug_rules"]
 
         # The match_groups of the canceling match only contain the *_ok match groups
         # Since the rewrite definitions are based on the positive match, we need to
         # create some missing keys. O.o
-        for key in match_groups.keys():
-            if key.endswith("_ok"):
-                match_groups[key[:-3]] = match_groups[key]
+        match_groups["match_groups_message"] = match_groups["match_groups_message_ok"]
+        match_groups["match_groups_syslog_application"] = match_groups[
+            "match_groups_syslog_application_ok"
+        ]
 
         # Note: before we compare host and application we need to
         # apply the rewrite rules to the event. Because if in the previous
@@ -3331,9 +3338,13 @@ class EventStatus:
         # Make sure, that the matching groups are the same. If the OK match
         # has less groups, we do not care. If it has more groups, then we
         # do not care either. We just compare the common "prefix".
+        groups_message_ok = match_groups.get("match_groups_message_ok", ())
+        assert groups_message_ok is not False
         for nr, (prev_group, cur_group) in enumerate(
             zip(
-                event["match_groups"], match_groups.get("match_groups_message_ok", ()), strict=False
+                event["match_groups"],
+                groups_message_ok,
+                strict=False,
             )
         ):
             if prev_group != cur_group:
@@ -3352,10 +3363,12 @@ class EventStatus:
         # Make sure, that the syslog_application matching groups are the same. If the OK match
         # has less groups, we do not care. If it has more groups, then we
         # do not care either. We just compare the common "prefix".
+        groups_syslog_ok = match_groups.get("match_groups_syslog_application_ok", ())
+        assert groups_syslog_ok is not False
         for nr, (prev_group, cur_group) in enumerate(
             zip(
                 event.get("match_groups_syslog_application", ()),
-                match_groups.get("match_groups_syslog_application_ok", ()),
+                groups_syslog_ok,
                 strict=False,
             )
         ):

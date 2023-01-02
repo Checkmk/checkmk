@@ -21,7 +21,13 @@ from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str] | None
 TextMatchResult = Literal[False] | Sequence[str]
-MatchGroups = dict[str, TextMatchResult]
+
+
+class MatchGroups(TypedDict, total=False):
+    match_groups_message: TextMatchResult
+    match_groups_message_ok: TextMatchResult
+    match_groups_syslog_application: TextMatchResult
+    match_groups_syslog_application_ok: TextMatchResult
 
 
 # Horrible ValueSpec...

@@ -12,6 +12,7 @@ from typing import Callable
 
 from cmk.utils import tty
 
+from . import PackageStore
 from ._manifest import extract_manifest
 from ._reporter import files_inventory
 from ._type_defs import PackageException
@@ -74,6 +75,26 @@ def _command_inspect(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
+def _args_store(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("file", type=Path, help="Path to an MKP file")
+
+
+def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Add an MKP to the collection of managed MKPs"""
+    file_path: Path = args.file
+    try:
+        file_content = file_path.read_bytes()
+    except OSError as exc:
+        raise PackageException from exc
+
+    manifest = PackageStore().store(file_content)
+
+    sys.stdout.write(f"{manifest.name} {manifest.version}\n")
+    return 0
+
+
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="mkp", description=__doc__)
     parser.add_argument("--debug", "-d", action="store_true")
@@ -81,6 +102,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
 
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
+    _add_command(subparsers, "store", _args_store, _command_store)
 
     return parser.parse_args(argv)
 

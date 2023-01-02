@@ -87,7 +87,6 @@ def do_packaging(args: list[str]) -> None:
         "show": package_show,
         "pack": package_pack,
         "remove": package_remove,
-        "install": package_install,
         "disable": package_disable,
         "enable": package_enable,
         "disable-outdated": package_disable_outdated,
@@ -247,20 +246,6 @@ def package_remove(args: list[str]) -> None:
     logger.log(VERBOSE, "Removing package %s...", package_id.name)
     PackageStore().remove(package_id)
     logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
-
-
-def package_install(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P install PACK.mkp")
-    path = Path(args[0])
-    if not path.exists():
-        raise PackageException("No such file %s." % path)
-
-    store = PackageStore()
-    with Path(path).open("rb") as fh:
-        package = store.store(fh.read())
-
-    install_optional_package(store, package.id)
 
 
 def package_disable(args: list[str]) -> None:

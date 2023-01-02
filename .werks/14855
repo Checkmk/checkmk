@@ -1,0 +1,13 @@
+Title: Fix hitachi_hnas_volume OID for virtualVolumeTitanQuotasUsageLimit
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1672670240
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p19
+
+hitachi_hnas_volume used an incorrect OID for virtualVolumeTitanQuotasUsageLimit
+

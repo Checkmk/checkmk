@@ -71,7 +71,7 @@ register.snmp_section(
                 OIDEnd(),  # needed for referencing between tables
                 "3",  # virtualVolumeTitanQuotasTargetType
                 "4",  # virtualVolumeTitanQuotasUsage
-                "5",  # virtualVolumeTitanQuotasUsageLimit
+                "6",  # virtualVolumeTitanQuotasUsageLimit
             ],
         ),
     ],

@@ -16,7 +16,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
-from typing import Any, overload, TypeVar
+from typing import Any, cast, overload, TypeVar
 
 from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -1463,7 +1463,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 return nr, entry
         raise MKUserError(None, _("The requested rule pack does not exist."))
 
-    def _show_event_simulator(self) -> dict[str, Any] | None:
+    def _show_event_simulator(self) -> ec.Event | None:
         event = user.load_file("simulated_event", {})
         html.begin_form("simulator")
         self._vs_mkeventd_event().render_input("event", event)
@@ -1475,7 +1475,8 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         html.br()
 
         if request.var("_simulate") or request.var("_generate"):
-            return self._vs_mkeventd_event().from_html_vars("event")
+            # TODO: remove cast improve type by explicit type conversion to Event
+            return cast(ec.Event, self._vs_mkeventd_event().from_html_vars("event"))
         return None
 
     def _event_simulation_action(self) -> bool:
@@ -1977,8 +1978,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                     for rule in rule_pack["rules"]:
                         result = event_rule_matches(rule_pack, rule, event)
-                        if isinstance(result, tuple):
-                            cancelling, groups = result
+                        if isinstance(result, ec.MatchSuccess):
+                            cancelling, groups = result.cancelling, result.match_groups
 
                             if not cancelling and rule.get("drop") == "skip_pack":
                                 matches += 1
@@ -2306,10 +2307,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     )
                 elif event:
                     result = event_rule_matches(self._rule_pack, rule, event)
-                    if not isinstance(result, tuple):
-                        html.icon("rulenmatch", _("Rule does not match: %s") % result)
+                    if not isinstance(result, ec.MatchSuccess):
+                        html.icon("rulenmatch", _("Rule does not match: %s") % result.reason)
                     else:
-                        cancelling, groups = result
+                        cancelling, groups = result.match_groups, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = "rulepmatch"

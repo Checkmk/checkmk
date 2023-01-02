@@ -6,10 +6,26 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
-from .config import ConfigFromWATO, ECRulePack, ECRulePackSpec, MkpRulePackProxy, Rule, TextPattern
+from .config import (
+    ConfigFromWATO,
+    ECRulePack,
+    ECRulePackSpec,
+    MkpRulePackProxy,
+    Rule,
+    TextMatchResult,
+    TextPattern,
+)
 from .defaults import default_config, default_rule_pack
+from .event import Event
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
-from .main import match_ipv4_network, SyslogFacility, SyslogPriority
+from .main import (
+    match_ipv4_network,
+    MatchFailure,
+    MatchResult,
+    MatchSuccess,
+    SyslogFacility,
+    SyslogPriority,
+)
 from .rule_packs import (
     add_rule_pack_proxies,
     ECRuleSpec,

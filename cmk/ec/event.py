@@ -14,6 +14,8 @@ from typing import TypedDict
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 
+from livestatus import SiteId
+
 from cmk.utils.type_defs import HostName
 
 
@@ -50,6 +52,7 @@ class Event(TypedDict, total=False):
     owner: str
     phase: str
     rule_id: str | None
+    site: SiteId
     sl: int
     state: int
 

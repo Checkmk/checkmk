@@ -21,20 +21,20 @@ echo "Update site $SITE..."
 
 PYTHON3_PATHS=(
     .
-    gui
-    snmplib
-    utils
-    fields
-    ec
-    notification_plugins
-    special_agents
-    post_rename_site
-    update_config
     automations
     base
     bi
     checkers
+    ec
     fetchers
+    fields
+    gui
+    notification_plugins
+    post_rename_site
+    snmplib
+    special_agents
+    update_config
+    utils
 )
 
 echo "Copy files..."

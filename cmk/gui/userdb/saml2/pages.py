@@ -3,31 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import http.client as http_client
 from datetime import datetime
 from typing import NamedTuple
 
-from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
-from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.http import request, response
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
 from cmk.gui.session import session
 from cmk.gui.userdb.saml2.connector import Connector
-from cmk.gui.userdb.saml2.interface import Interface, NotAuthenticated, XMLData
+from cmk.gui.userdb.saml2.interface import Interface, XMLData
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.urls import makeuri_contextless
 
 LOGGER = logger.getChild("saml2")
-
-
-class MKSaml2Exception(MKGeneralException):
-    pass
 
 
 class RelayState(NamedTuple):
@@ -50,8 +44,8 @@ def _relay_state_from_url(relay_state: str) -> RelayState:
     id_, url = relay_state.split(",", 1)
 
     if not is_allowed_url(url):
-        # TODO (CMK-11846): handle this, so that it is shown nicely in the GUI
-        raise ValueError(f"The parameter {url} is not a valid URL")
+        LOGGER.debug("The parameter %s is not a valid URL", url)
+        raise MKUserError(varname=None, message=_("URL not allowed"))
 
     return RelayState(target_url=url, connection_id=id_)
 
@@ -63,31 +57,7 @@ def _connector(connection_id: str) -> Connector:
     return connector
 
 
-class XMLPage(Page, abc.ABC):
-    def handle_page(self) -> None:
-        try:
-            response.set_content_type("application/xml")
-            response.set_data(self.page().encode("utf-8"))
-        except MKGeneralException as e:
-            response.set_content_type("text/plain")
-            response.status_code = http_client.BAD_REQUEST
-            response.set_data(str(e))
-        except Exception as e:
-            response.set_content_type("text/plain")
-            response.status_code = http_client.INTERNAL_SERVER_ERROR
-            handle_exception_as_gui_crash_report(
-                plain_error=True,
-                show_crash_link=getattr(g, "may_see_crash_reports", False),
-            )
-            response.set_data(str(e))
-
-    @abc.abstractmethod
-    def page(self):
-        """Override this to implement the page functionality"""
-        raise NotImplementedError()
-
-
-class Metadata(XMLPage):
+class Metadata(Page):
     """Metadata information the Checkmk server provides on itself.
 
     The Identity Provider requests this service to validate that it is dealing with a known entity.
@@ -101,15 +71,34 @@ class Metadata(XMLPage):
     def connector(self) -> Connector:
         return _connector(self.relay_state.connection_id)
 
-    def page(self) -> XMLData | None:
+    def page(self) -> XMLData:
         if not self.connector.is_enabled():
             LOGGER.debug(
                 "Requested metadata for connection %s at URL %s but is currently disabled",
                 (self.relay_state.connection_id, self.connector.identity_provider_url),
             )
-            # TODO (CMK-11846): handle this
-            return None
+            raise MKUserError(
+                varname=None,
+                message=_(
+                    "This connection is currently disabled. Please contact your system administrator."
+                ),
+            )
+
         return self.connector.interface.metadata
+
+    def handle_page(self) -> None:
+        try:
+            response.set_content_type("application/xml")
+            response.set_data(self.page().encode("utf-8"))
+        except MKUserError as e:
+            LOGGER.debug(e, exc_info=True)
+            response.status_code = http_client.SERVICE_UNAVAILABLE
+            response.set_data(str(e))
+        except Exception as e:  # pylint: disable=broad-except
+            LOGGER.exception(e)
+            response.set_content_type("text/plain")
+            response.status_code = http_client.INTERNAL_SERVER_ERROR
+            response.set_data(_("Unable to process request"))
 
 
 class SingleSignOn(Page):
@@ -139,7 +128,7 @@ class SingleSignOn(Page):
 
     def page(self) -> None:
         if request.request_method != "GET":
-            raise MKSaml2Exception(f"Method {request.request_method} not allowed")
+            raise MKUserError(varname=None, message=_("Method not allowed"))
 
         # NOTE: more than one IdP connection is possible. If more IdPs should be supported in the
         # future, the connection_id parameter would enable us to decide which one the user has chosen.
@@ -152,21 +141,50 @@ class SingleSignOn(Page):
             LOGGER.debug(
                 "Connection for ID %s is currently disabled", self.relay_state.connection_id
             )
-            # TODO (CMK-11846): handle this
-            return
+            raise MKUserError(
+                varname=None,
+                message=_(
+                    "This connection is currently disabled. Please contact your system administrator."
+                ),
+            )
 
         LOGGER.debug("Authentication request with RelayState=%s", self.relay_state_string)
 
-        if (
-            authentication_request := self.connector.interface.authentication_request(
+        try:
+            authentication_request = self.connector.interface.authentication_request(
                 self.relay_state_string
             )
-        ) is None:
-            raise MKSaml2Exception("Unable to create authentication request")
+        except Exception as e:  # pylint: disable=broad-except
+            LOGGER.warning(
+                "%s - %s: %s", self.connector.identity_provider_url(), type(e).__name__, str(e)
+            )
+            raise MKUserError(
+                varname=None, message=_("Unable to create authentication request")
+            ) from e
 
         LOGGER.debug("Authentication request to URL: %s", authentication_request)
 
         raise HTTPRedirect(authentication_request)
+
+    def handle_page(self) -> None:
+        try:
+            self.page()
+        except HTTPRedirect:
+            raise
+        except MKUserError as e:
+            LOGGER.debug(e, exc_info=True)
+            raise _redirect_to_login_with_error(
+                origtarget=self.relay_state.target_url, error_message=str(e)
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            # Messages of exceptions may contain sensitive information that the user should not
+            # see in the front-end. We only show messages in the GUI if they stem from
+            # 'MKUserError' exception types.
+            LOGGER.exception(e)
+            raise _redirect_to_login_with_error(
+                origtarget=self.relay_state.target_url,
+                error_message=_("Unhandled exception occurred"),
+            )
 
 
 class AssertionConsumerService(Page):
@@ -185,7 +203,7 @@ class AssertionConsumerService(Page):
 
     def page(self) -> None:
         if request.request_method != "POST":
-            raise MKSaml2Exception(f"Method {request.request_method} not allowed")
+            raise MKUserError(varname=None, message=_("Method not allowed"))
 
         LOGGER.debug(
             "Authentication request response from Identity Provider %s at URL %s",
@@ -196,35 +214,74 @@ class AssertionConsumerService(Page):
             LOGGER.debug(
                 "Connection for ID %s is currently disabled", self.relay_state.connection_id
             )
-            # TODO (CMK-11846): handle this
-            return
+            raise MKUserError(
+                varname=None,
+                message=_(
+                    "This connection is currently disabled. Please contact your system administrator."
+                ),
+            )
+
         if not (saml_response := request.form.get("SAMLResponse")):
-            raise MKSaml2Exception("Got no response from IdP")
+            raise MKUserError(varname=None, message=_("Got no response from IdP"))
 
-        authn_response = self.connector.interface.parse_authentication_request_response(
-            saml_response=saml_response
-        )
-
-        if isinstance(authn_response, NotAuthenticated):
-            raise MKAuthException("Invalid login")
+        try:
+            authn_response = self.connector.interface.parse_authentication_request_response(
+                saml_response=saml_response
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            # This most likely means that some conditions the Identity Provider has specified were
+            # not met. Note that the type of the exception raised by the client may be a bare
+            # Exception.
+            LOGGER.warning(
+                "%s - %s: %s", self.connector.identity_provider_url(), type(e).__name__, str(e)
+            )
+            raise MKUserError(message=_("Authentication failed"), varname=None) from e
 
         try:
             self.connector.create_and_update_user(authn_response.user_id)
-        except ValueError:
-            raise HTTPRedirect(
-                makeuri_contextless(
-                    request, [("_origtarget", self.relay_state.target_url)], filename="login.py"
-                )
-            )
+        except ValueError as e:
+            LOGGER.warning("%s: %s", type(e).__name__, str(e))
+            raise MKUserError(message=_("Unknown user"), varname=None) from e
 
         on_succeeded_login(authn_response.user_id, datetime.now())
 
-        # TODO (CMK-11846): If for whatever reason the session is not created successfully, a message
-        # should be displayed after the redirect to the login page.
         session.user = LoggedInUser(authn_response.user_id)
 
         # self.connector.update_user(authn_response.user_id)
         raise HTTPRedirect(self.relay_state.target_url)
+
+    def handle_page(self) -> None:
+        try:
+            self.page()
+        except HTTPRedirect:
+            raise
+        except MKUserError as e:
+            LOGGER.debug(e, exc_info=True)
+            raise _redirect_to_login_with_error(
+                origtarget=self.relay_state.target_url, error_message=str(e)
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            # Messages of exceptions may contain sensitive information that the user should not
+            # see in the front-end. We only show messages in the GUI if they stem from
+            # 'MKUserError' exception types.
+            LOGGER.exception(e)
+            raise _redirect_to_login_with_error(
+                origtarget=self.relay_state.target_url,
+                error_message=_("Unhandled exception occurred"),
+            )
+
+
+def _redirect_to_login_with_error(origtarget: str, error_message: str) -> HTTPRedirect:
+    return HTTPRedirect(
+        makeuri_contextless(
+            request,
+            [
+                ("_origtarget", origtarget),
+                ("_saml2_user_error", error_message),
+            ],
+            filename="login.py",
+        )
+    )
 
 
 def register(page_registry: PageRegistry) -> None:

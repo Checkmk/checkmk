@@ -21,8 +21,6 @@ from cmk.gui.userdb.store import OpenFileMode, Users, UserStore
 # TODO (lisa): introduce enums
 SAML2_CONNECTOR_TYPE = "saml2"
 
-# TODO (CMK-11846): currently this logs to cmk.web.saml2 but it would be good to have dedicated logging
-# for SAML that can be changed via the global settings
 LOGGER = logger.getChild("saml2")
 
 

@@ -709,6 +709,7 @@ class Site:
             % {
                 "cmk.web": 10,
                 "cmk.web.ldap": 10,
+                "cmk.web.saml2": 10,
                 "cmk.web.auth": 10,
                 "cmk.web.bi.compilation": 10,
                 "cmk.web.automations": 10,

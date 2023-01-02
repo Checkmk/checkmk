@@ -101,6 +101,15 @@ active_config = request_local_attr("config", Config)
 def initialize() -> None:
     load_config()
     log.set_log_levels(active_config.log_levels)
+
+    # The log level of the pysaml2 package should be set to debug if the logging for SAML has been
+    # set to debug in the global settings. Otherwise it should be kept to a minimum as it spams the
+    # web.log
+    if active_config.log_levels["cmk.web.saml2"] == 10:
+        log.set_log_levels({"saml2": 10})
+    else:
+        log.set_log_levels({"saml2": 50})
+
     cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
 
 

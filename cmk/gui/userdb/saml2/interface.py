@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import xml.etree.ElementTree as ET
 from typing import Mapping, NewType
 
 import requests
@@ -14,16 +13,14 @@ from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
 from saml2.s_utils import UnknownSystemEntity
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
-from saml2.validate import ResponseLifetimeExceed, ToEarly
 
 from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.log import logger
 
-# TODO (CMK-11846): currently this logs to cmk.web.saml2 but it would be good to have dedicated logging
-# for SAML that can be changed via the global settings
 LOGGER = logger.getChild("saml2")
+
 
 XMLData = NewType("XMLData", str)
 URLRedirect = NewType("URLRedirect", str)
@@ -42,18 +39,11 @@ class Authenticated(BaseModel):
     in_response_to_id: RequestId
 
 
-class NotAuthenticated(BaseModel):
-    reason: str
-
-
-AuthenticationRequestResponse = Authenticated | NotAuthenticated
-
-
 def _metadata_from_idp(url: str, timeout: tuple[int, int]) -> str | None:
     # TODO (CMK-11851): IdP metadata changes rarely so the content should be cached.
     metadata = requests.get(url, verify=True, timeout=timeout)
     if metadata.status_code < 200 or metadata.status_code > 299:
-        # TODO (CMK-11846): this should be logged appropriately
+        LOGGER.critical("Failed to fetch metadata from URL %s", url)
         return None
     return metadata.text
 
@@ -116,8 +106,7 @@ class Interface:
         ]
 
         if self.__config.metadata is None:
-            # TODO (CMK-11846): implement a more consistent way of logging errors
-            raise AssertionError("Got no metadata information from Identity Provider")
+            raise AttributeError("Got no metadata information from Identity Provider")
         try:
             self.idp_sso_binding, self.idp_sso_destination = self.__client.pick_binding(
                 "single_sign_on_service",
@@ -139,7 +128,7 @@ class Interface:
         """
         return XMLData(self.__metadata)
 
-    def authentication_request(self, relay_state: str) -> URLRedirect | None:
+    def authentication_request(self, relay_state: str) -> URLRedirect:
         """Authentication request to be forwarded to the Identity Provider.
 
         It is up to the Identity Provider to perform any authentication if the user is not already
@@ -150,8 +139,11 @@ class Interface:
 
         Returns:
             The URL, including the authentication request, that redirects the user to their Identity
-            Provider's Single Sign-On service, or None if the authentication request cannot be
-            created.
+            Provider's Single Sign-On service
+
+        Raises:
+            AttributeError: The redirect URL to the Identity Provider's Single Sign-On Service could
+                not be created
         """
 
         # TODO (CMK-11848): We must keep track of the request IDs that we sent to the IdP (saml_sso
@@ -173,19 +165,18 @@ class Interface:
         )["headers"]
 
         if (url_redirect := dict(http_headers).get("Location")) is None:
-            LOGGER.debug("Redirect URL: %s", url_redirect)
-            return None
+            raise AttributeError("Unable to create redirect URL")
+
+        LOGGER.debug("Redirect URL: %s", url_redirect)
 
         return URLRedirect(url_redirect)
 
-    def parse_authentication_request_response(
-        self, saml_response: str
-    ) -> AuthenticationRequestResponse:
+    def parse_authentication_request_response(self, saml_response: str) -> Authenticated:
         """Parse responses received from the Identity Provider to authentication requests we made.
 
         Take into account the authentication outcome as well as any conditions the Identity Provider
         has specified. ALL of the conditions must be met in order for the response to be considered
-        valid. If any of the conditions is not met, the response must be rejected.
+        valid. If any of the conditions is not met or unknown, the response must be rejected.
 
         Also verify that the ID of the response is known, i.e. matches one of the IDs of the
         authentication requests we made, otherwise the response must be rejected.
@@ -197,60 +188,39 @@ class Interface:
             response: The SAML response (XML) received from the Identity Provider
 
         Returns:
-            Authenticated: If the authentication was successful and all of the conditions were met.
-            NotAuthenticated: If the authentication was unsuccessful or at least one of the
-                conditions was not met.
+            Authenticated: The authentication was successful and all of the conditions were met
+
+        Raises:
+            AttributeError: The User ID attribute is missing
+
+            pysaml2 Exceptions:
+                ToEarly: The authentication request response is not yet valid
+                ResponseLifetimeExceed: The authentication request response has expired
+                Exception: The response is intended for a different audience, or the
+                    condition is unknown or not well-formed
+               ...
         """
         # TODO (CMK-11851): One of the reasons why this could fail is that the metadata of the IdP
         # changed. Isolate the resulting error(s), refresh the config and retry.
 
         LOGGER.debug("Parsing authentication request response")
 
-        try:
-            authentication_response = self.__client.parse_authn_request_response(
-                saml_response, BINDING_HTTP_POST
-            )
-        except Exception as e:  # pylint: disable=broad-except
-            # This means that the authentication failed, either due to a failed login or due to some
-            # failed conditions. Conditions are specified by the Identity Provider and must all be
-            # met in order for the response to be considered valid. They are included in the
-            # response's assertion statement.
-
-            # We are 'silencing' the client because we don't want to show any sensitive information
-            # in the GUI, and we can't be sure what it shows. Instead, we show it in the debug log.
-            LOGGER.debug(e, exc_info=True)
-            reason = self._determine_failed_authentication_reason(e)
-            return NotAuthenticated(reason=reason)
+        # If the authentication failed, e.g. due to some failed conditions, the pysaml2 client will
+        # raise an Exception. The type of the Exception is highly inconsistent (see function
+        # docstring).
+        authentication_response = self.__client.parse_authn_request_response(
+            saml_response, BINDING_HTTP_POST
+        )
 
         LOGGER.debug("Found user attributes: %s", ", ".join(authentication_response.ava.keys()))
 
         LOGGER.debug("Mapping User ID to field %s", self.__user_id_attribute)
         if not (user_id := authentication_response.ava.get(self.__user_id_attribute)):
             LOGGER.debug("User ID not found or empty, value is: %s", repr(user_id))
-            return NotAuthenticated(reason="User ID not found or empty")
+            raise AttributeError("User ID not found or empty")
 
         return Authenticated(
             in_response_to_id=RequestId(authentication_response.session_id()),
             user_id=UserId(user_id[0]),
             # TODO (CMK-11868): also grab other attributes, e.g. email, ...
         )
-
-    def _determine_failed_authentication_reason(self, exception: Exception) -> str:
-        if isinstance(exception, ToEarly):
-            return "Response not yet valid (too early)"
-
-        if isinstance(exception, ResponseLifetimeExceed):
-            return "Response has expired"
-
-        if isinstance(exception, ET.ParseError):
-            return "Response not well-formed"
-
-        exception_message = exception.args[0].lower()
-
-        if exception_message.startswith("audiencerestrictions"):
-            return "Response intended for a different audience"
-
-        if exception_message in {"unknown condition", "missing xsi:type specification"}:
-            return "Custom conditions are not supported"
-
-        return "Unknown"

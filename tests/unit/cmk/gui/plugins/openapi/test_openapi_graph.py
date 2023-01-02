@@ -73,8 +73,7 @@ def test_openapi_graph_custom(
 
 
 @pytest.mark.usefixtures("with_host")
-@not_in_cre
-def test_openapi_graph_named(
+def test_openapi_get_graph_graph(
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
@@ -93,27 +92,29 @@ def test_openapi_graph_named(
         ],
     )
     mock_livestatus.expect_query(
+        # hostfield with should_be_monitored=True
+        "GET hosts\nColumns: name\nFilter: name = heute"
+    )
+    mock_livestatus.expect_query(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.max:0.0:30.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: rrddata:load1:load1.average:0.0:30.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get_named_graph"),
+            url=endpoint("get"),
             content_type="application/json",
             headers={"Accept": "application/json"},
             status=200,
             params=json.dumps(
                 {
-                    "spec": {
-                        "site": "NO_SITE",
-                        "host_name": "heute",
-                        "service": "CPU load",
-                        "graph_name": "cpu_load",
-                    },
+                    "site": "NO_SITE",
+                    "host_name": "heute",
+                    "service_description": "CPU load",
+                    "type": "graph",
+                    "graph_name": "cpu_load",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "reduce": "max",
                 }
             ),
         )
@@ -133,7 +134,7 @@ def test_openapi_graph_named(
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_graph_metric(
+def test_openapi_get_graph_metric(
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     mock_livestatus.set_sites(["NO_SITE"])
@@ -150,27 +151,29 @@ def test_openapi_graph_metric(
         ],
     )
     mock_livestatus.expect_query(
+        # hostfield with should_be_monitored=True
+        "GET hosts\nColumns: name\nFilter: name = heute"
+    )
+    mock_livestatus.expect_query(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.max:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: rrddata:load1:load1.average:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get_metric_graph"),
+            url=endpoint("get"),
             content_type="application/json",
             headers={"Accept": "application/json"},
             status=200,
             params=json.dumps(
                 {
-                    "spec": {
-                        "site": "NO_SITE",
-                        "host_name": "heute",
-                        "service": "CPU load",
-                        "metric_name": "load1",
-                    },
+                    "site": "NO_SITE",
+                    "host_name": "heute",
+                    "service_description": "CPU load",
+                    "metric_name": "load1",
+                    "type": "metric",
                     "time_range": {"start": "1970-01-01T00:00:01Z", "end": "1970-01-01T00:00:02Z"},
-                    "reduce": "max",
                 }
             ),
         )

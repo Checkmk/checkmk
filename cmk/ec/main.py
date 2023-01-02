@@ -98,13 +98,11 @@ class PackedEventStatus(TypedDict):
     interval_starts: dict[str, int]
 
 
-# TODO: Make this total.
-class SlaveStatus(TypedDict, total=False):
+class SlaveStatus(TypedDict):
     last_master_down: float | None
     last_sync: float
     mode: Literal["master", "sync", "takeover"]
     success: bool
-    average_sync_time: float | None  # TODO: Never changed. Bug?
 
 
 # Python and mypy have FD stuff internally, but they don't export it. :-/
@@ -3720,7 +3718,7 @@ def default_slave_status_master() -> SlaveStatus:
         "last_sync": 0,
         "last_master_down": None,
         "mode": "master",
-        "average_sync_time": None,
+        "success": True,
     }
 
 
@@ -3729,7 +3727,7 @@ def default_slave_status_sync() -> SlaveStatus:
         "last_sync": 0,
         "last_master_down": None,
         "mode": "sync",
-        "average_sync_time": None,
+        "success": True,
     }
 
 
@@ -3741,12 +3739,12 @@ def update_slave_status(
         try:
             slave_status.update(ast.literal_eval(path.read_text(encoding="utf-8")))
         except Exception:
-            slave_status.update(default_slave_status_sync())
+            slave_status = default_slave_status_sync()
             save_slave_status(settings, slave_status)
     else:
         if path.exists():
             path.unlink()
-        slave_status.update(default_slave_status_master())
+        slave_status = default_slave_status_master()
 
 
 # .

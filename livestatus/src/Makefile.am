@@ -261,7 +261,7 @@ livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
 # target, so we use a cruel sed hack below. :-P
-compile_commands.json: $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatusneb_a_SOURCES)
+compile_commands.json: Makefile $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatusneb_a_SOURCES)
 	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json

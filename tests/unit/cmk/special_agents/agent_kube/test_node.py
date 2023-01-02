@@ -80,7 +80,13 @@ def test_write_nodes_api_sections_registers_sections_to_be_written(  # type:igno
 ) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
-        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], "host", Mock()
+        [node],
+        agent.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+        ),
+        Mock(),
     )
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections()
 
@@ -90,7 +96,13 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(
 ) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
-        "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], "host", Mock()
+        [node],
+        agent.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+        ),
+        Mock(),
     )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
@@ -103,10 +115,12 @@ def test_write_nodes_api_sections_calls_write_sections_for_each_node(
 ) -> None:
     cluster_nodes = 3
     agent.write_nodes_api_sections(
-        "cluster",
-        agent.AnnotationNonPatternOption.ignore_all,
         [api_to_agent_node(APINodeFactory.build()) for _ in range(cluster_nodes)],
-        "host",
+        agent.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+        ),
         Mock(),
     )
     assert write_sections_mock.call_count == cluster_nodes

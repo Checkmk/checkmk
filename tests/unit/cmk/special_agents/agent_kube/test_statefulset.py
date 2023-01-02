@@ -34,7 +34,13 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
 ) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     agent_kube.write_statefulsets_api_sections(
-        "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], "host", Mock()
+        [statefulset],
+        agent_kube.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent_kube.AnnotationNonPatternOption.ignore_all,
+        ),
+        Mock(),
     )
     assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections()
 
@@ -44,7 +50,13 @@ def test_write_statefulsets_api_sections_maps_section_names_to_callables(
 ) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     agent_kube.write_statefulsets_api_sections(
-        "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], "host", Mock()
+        [statefulset],
+        agent_kube.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent_kube.AnnotationNonPatternOption.ignore_all,
+        ),
+        Mock(),
     )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
@@ -57,10 +69,12 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
 ) -> None:
     statefulsets = [api_to_agent_statefulset(APIStatefulSetFactory.build()) for _ in range(3)]
     agent_kube.write_statefulsets_api_sections(
-        "cluster",
-        agent_kube.AnnotationNonPatternOption.ignore_all,
         statefulsets,
-        "host",
+        agent_kube.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent_kube.AnnotationNonPatternOption.ignore_all,
+        ),
         Mock(),
     )
     assert write_sections_mock.call_count == 3

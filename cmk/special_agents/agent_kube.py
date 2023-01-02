@@ -36,7 +36,7 @@ from collections.abc import (
 )
 from dataclasses import dataclass
 from itertools import chain
-from typing import Literal, TypeVar
+from typing import Literal, NamedTuple, TypeVar
 from urllib.parse import urlparse
 
 import requests
@@ -73,6 +73,24 @@ NATIVE_NODE_CONDITION_TYPES = [
     "PIDPressure",
     "NetworkUnavailable",
 ]
+
+
+class CheckmkHostSettings(NamedTuple):
+    """
+    The listed settings apply to all Kubernetes generated piggyback hosts
+
+        cluster:
+            the given Kubernetes cluster name is prefixed to all piggyback host names
+        kubernetes_cluster_hostname:
+            the name of the Checkmk host which represents the cluster will be made available as
+            Checkmk label
+        annotation_key_pattern:
+            decides what annotations of the k8 object will be translated to Checkmk labels
+    """
+
+    cluster_name: str
+    kubernetes_cluster_hostname: str
+    annotation_key_pattern: AnnotationOption
 
 
 class AnnotationNonPatternOption(enum.Enum):
@@ -1215,12 +1233,10 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
 
 
 def write_cronjobs_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_cron_jobs: Sequence[api.CronJob],
     api_cron_job_pods: Sequence[api.Pod],
     api_jobs: Mapping[api.JobUID, api.Job],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_cronjob_sections(
@@ -1231,7 +1247,10 @@ def write_cronjobs_api_sections(
         timestamp_sorted_jobs = sorted(jobs, key=lambda job: job.metadata.creation_timestamp)
         sections = {
             "kube_cron_job_info_v1": lambda: cron_job_info(
-                cron_job, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
+                cron_job,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
             ),
             "kube_cron_job_status_v1": lambda: cron_job_status(
                 cron_job.status, timestamp_sorted_jobs
@@ -1258,12 +1277,10 @@ def write_cronjobs_api_sections(
 
 
 def write_namespaces_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_namespaces: Sequence[api.Namespace],
     api_resource_quotas: Sequence[api.ResourceQuota],
     api_pods: Sequence[api.Pod],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_namespace_sections(
@@ -1272,9 +1289,9 @@ def write_namespaces_api_sections(
         sections = {
             "kube_namespace_info_v1": lambda: namespace_info(
                 namespace,
-                cluster_name,
-                annotation_key_pattern,
-                kubernetes_cluster_hostname,
+                host_settings.cluster_name,
+                host_settings.annotation_key_pattern,
+                host_settings.kubernetes_cluster_hostname,
             ),
             "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
@@ -1316,10 +1333,8 @@ def write_namespaces_api_sections(
 
 
 def write_nodes_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_nodes: Sequence[Node],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     def output_sections(cluster_node: Node) -> None:
@@ -1329,9 +1344,9 @@ def write_nodes_api_sections(
             "kube_pod_resources_v1": cluster_node.pod_resources,
             "kube_allocatable_pods_v1": cluster_node.allocatable_pods,
             "kube_node_info_v1": lambda: cluster_node.info(
-                cluster_name,
-                kubernetes_cluster_hostname,
-                annotation_key_pattern,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
             ),
             "kube_cpu_resources_v1": cluster_node.cpu_resources,
             "kube_memory_resources_v1": cluster_node.memory_resources,
@@ -1348,10 +1363,8 @@ def write_nodes_api_sections(
 
 
 def write_deployments_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_deployments: Sequence[Deployment],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the deployment relevant sections based on k8 API information"""
@@ -1362,9 +1375,9 @@ def write_deployments_api_sections(
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
             "kube_deployment_info_v1": lambda: deployment_info(
                 cluster_deployment,
-                cluster_name,
-                kubernetes_cluster_hostname,
-                annotation_key_pattern,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
             ),
             "kube_deployment_conditions_v1": lambda: deployment_conditions(
                 cluster_deployment.status
@@ -1385,10 +1398,8 @@ def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
 
 
 def write_daemon_sets_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_daemon_sets: Sequence[DaemonSet],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the daemon set relevant sections based on k8 API information"""
@@ -1400,9 +1411,9 @@ def write_daemon_sets_api_sections(
             "kube_cpu_resources_v1": cluster_daemon_set.cpu_resources,
             "kube_daemonset_info_v1": lambda: daemonset_info(
                 cluster_daemon_set,
-                cluster_name,
-                kubernetes_cluster_hostname,
-                annotation_key_pattern,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
             ),
             "kube_update_strategy_v1": lambda: controller_strategy(cluster_daemon_set),
             "kube_daemonset_replicas_v1": lambda: daemonset_replicas(cluster_daemon_set),
@@ -1415,10 +1426,8 @@ def write_daemon_sets_api_sections(
 
 
 def write_statefulsets_api_sections(
-    cluster_name: str,
-    annotation_key_pattern: AnnotationOption,
     api_statefulsets: Sequence[StatefulSet],
-    kubernetes_cluster_hostname: str,
+    host_settings: CheckmkHostSettings,
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     """Write the StatefulSet relevant sections based on k8 API information"""
@@ -1430,9 +1439,9 @@ def write_statefulsets_api_sections(
             "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
             "kube_statefulset_info_v1": lambda: statefulset_info(
                 cluster_statefulset,
-                cluster_name,
-                kubernetes_cluster_hostname,
-                annotation_key_pattern,
+                host_settings.cluster_name,
+                host_settings.kubernetes_cluster_hostname,
+                host_settings.annotation_key_pattern,
             ),
             "kube_update_strategy_v1": lambda: controller_strategy(cluster_statefulset),
             "kube_statefulset_replicas_v1": lambda: statefulset_replicas(cluster_statefulset),
@@ -2059,6 +2068,11 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
     arguments = parse_arguments(args)
+    checkmk_host_settings = CheckmkHostSettings(
+        cluster_name=arguments.cluster,
+        kubernetes_cluster_hostname=arguments.kubernetes_cluster_name,
+        annotation_key_pattern=arguments.annotation_key_pattern,
+    )
 
     try:
         setup_logging(arguments.verbose)
@@ -2105,22 +2119,18 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             if MonitoredObject.nodes in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 write_nodes_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     composed_entities.nodes,
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.deployments in arguments.monitored_objects:
                 LOGGER.info("Write deployments sections based on API data")
                 write_deployments_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(
                         composed_entities.deployments, monitored_namespace_names
                     ),
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
@@ -2144,36 +2154,30 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 LOGGER.info("Write namespaces sections based on API data")
 
                 write_namespaces_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     monitored_api_namespaces,
                     resource_quotas,
                     api_data.pods,
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
                 write_daemon_sets_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(
                         composed_entities.daemonsets, monitored_namespace_names
                     ),
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")
                 write_statefulsets_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(
                         composed_entities.statefulsets, monitored_namespace_names
                     ),
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
@@ -2185,12 +2189,10 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             ]
             if MonitoredObject.cronjobs in arguments.monitored_objects:
                 write_cronjobs_api_sections(
-                    arguments.cluster,
-                    arguments.annotation_key_pattern,
                     kube_objects_from_namespaces(api_data.cron_jobs, monitored_namespace_names),
                     monitored_api_cron_job_pods,
                     {job.uid: job for job in api_data.jobs},
-                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
                 )
 
@@ -2226,9 +2228,9 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                                 section_name=SectionName("kube_pod_info_v1"),
                                 section=pod_info(
                                     pod=pod,
-                                    cluster_name=arguments.cluster,
-                                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                                    annotation_key_pattern=arguments.annotation_key_pattern,
+                                    cluster_name=checkmk_host_settings.cluster_name,
+                                    kubernetes_cluster_hostname=checkmk_host_settings.kubernetes_cluster_hostname,
+                                    annotation_key_pattern=checkmk_host_settings.annotation_key_pattern,
                                 ),
                             )
                         ],

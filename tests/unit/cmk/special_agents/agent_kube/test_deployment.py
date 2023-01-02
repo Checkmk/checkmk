@@ -59,6 +59,12 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
 ) -> None:
     deployment = api_to_agent_deployment(APIDeploymentFactory.build(), pods=[APIPodFactory.build()])
     agent.write_deployments_api_sections(
-        "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
+        [deployment],
+        agent.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+        ),
+        Mock(),
     )
     assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections()

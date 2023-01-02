@@ -137,7 +137,7 @@ def test_python_modules(site: Site, module_name) -> None:  # type:ignore[no-unty
     # Skip those modules for now, they throw:
     # >       found = self._search_paths(context.pattern, context.path)
     # E       AttributeError: 'Context' object has no attribute 'pattern'
-    if module_name in ("jsonschema", "openapi_spec_validator", "ordered-set"):
+    if module_name in ("jsonschema", "openapi-spec-validator", "ordered-set"):
         return
     import importlib  # pylint: disable=import-outside-toplevel
 

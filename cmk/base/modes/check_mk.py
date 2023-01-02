@@ -42,11 +42,13 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
+from cmk.fetchers import FetcherType
+from cmk.fetchers import Mode as FetchMode
+
 import cmk.checkers.factory as snmp_factory
-from cmk.checkers import FetcherType, get_raw_data
+from cmk.checkers import get_raw_data
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.summarize import summarize
-from cmk.checkers.type_defs import Mode as FetchMode
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.discovery as discovery

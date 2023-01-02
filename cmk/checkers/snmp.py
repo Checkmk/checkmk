@@ -25,11 +25,13 @@ from cmk.snmplib.type_defs import (
     SNMPRawDataSection,
 )
 
+from cmk.fetchers import Fetcher, Mode
+
 from . import factory
-from ._base import Fetcher, Parser, verify_ipaddress
+from ._base import Parser, verify_ipaddress
 from .cache import FileCache, PersistedSections, SectionStore
 from .host_sections import HostSections
-from .type_defs import Mode, SectionNameCollection
+from .type_defs import SectionNameCollection
 
 __all__ = [
     "SNMPFetcher",

@@ -62,7 +62,9 @@ from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection, TRawData
 
-from .type_defs import AgentRawDataSection, Mode
+from cmk.fetchers import Mode
+
+from .type_defs import AgentRawDataSection
 
 __all__ = [
     "ABCRawDataSection",

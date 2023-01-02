@@ -17,11 +17,13 @@ import cmk.utils.misc
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from ._base import Fetcher, Parser
+from cmk.fetchers import Fetcher, Mode
+
+from ._base import Parser
 from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, SectionStore
 from .host_sections import HostSections
-from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
+from .type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 
 class AgentFileCache(FileCache[AgentRawData]):

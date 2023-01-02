@@ -21,14 +21,16 @@ from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, Sour
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
-from cmk.checkers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
+from cmk.fetchers import Fetcher, FetcherType, Mode
+from cmk.fetchers.config import make_file_cache_path_template, make_persisted_section_dir
+
+from cmk.checkers import FileCache, get_raw_data, NoFetcher, Parser
 from cmk.checkers.agent import AgentFileCache, AgentRawData, AgentRawDataSection
 from cmk.checkers.cache import FileCacheMode, FileCacheOptions, MaxAge, SectionStore
-from cmk.checkers.config import make_file_cache_path_template, make_persisted_section_dir
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.program import ProgramFetcher
 from cmk.checkers.snmp import SNMPFetcher, SNMPFileCache, SNMPParser
-from cmk.checkers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

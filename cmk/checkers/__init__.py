@@ -2,13 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This package contains the business logic for the core helpers.
-
-Generally, the helpers implement three interfaces:
-
-* `Fetcher` performs I/O and returns raw data.
-* `Parser` parses the raw data into `HostSections` and handles caching.
-* `Summarizer` extracts the `ServiceCheckResult`.
+"""This package contains the business logic for the checkers.
 
 The typical sequence of events is
 
@@ -28,10 +22,8 @@ The typical sequence of events is
     Summarizer --> User : ServiceCheckResult
 
 See Also:
+    cmk.fetchers for the fetchers.
     cmk.base.sources: The entry point into the core helpers from base.
-
-Todo:
-    Handle the caches separately from the parsers.
 
 """
 
@@ -40,8 +32,10 @@ from typing import Any
 
 from typing_extensions import assert_never
 
+from cmk.fetchers import Fetcher, FetcherType
+
 from . import cache
-from ._base import Fetcher, FileCache, get_raw_data, Parser, verify_ipaddress
+from ._base import FileCache, get_raw_data, Parser, verify_ipaddress
 from .agent import NoFetcher
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -49,12 +43,9 @@ from .program import ProgramFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
 from .summarize import summarize
 from .tcp import TCPFetcher
-from .type_defs import FetcherType
 
 __all__ = [
-    "Fetcher",
     "FetcherFactory",
-    "FetcherType",
     "FileCache",
     "IPMIFetcher",
     "NoFetcher",

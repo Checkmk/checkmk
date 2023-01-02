@@ -21,8 +21,9 @@ from cmk.utils.exceptions import (
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result
 
+from cmk.fetchers import FetcherType
+
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import FetcherType
 
 __all__ = ["summarize"]
 

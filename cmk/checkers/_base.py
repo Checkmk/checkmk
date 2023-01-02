@@ -4,96 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import logging
-from collections.abc import Mapping
 from functools import partial
-from typing import Any, final, Generic, Literal, TypeVar
+from typing import Generic
 
 from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
-from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
+from cmk.fetchers import Fetcher, Mode
+
 from .cache import FileCache
 from .host_sections import HostSections, TRawDataSection
-from .type_defs import Mode, SectionNameCollection
+from .type_defs import SectionNameCollection
 
-__all__ = [
-    "Fetcher",
-    "verify_ipaddress",
-    "get_raw_data",
-]
-
-TFetcher = TypeVar("TFetcher", bound="Fetcher")
-
-
-class Fetcher(Generic[TRawData], abc.ABC):
-    """Interface to the data fetchers."""
-
-    def __init__(self, *, logger: logging.Logger) -> None:
-        super().__init__()
-        self._logger = logger
-
-    @final
-    @classmethod
-    def from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
-        """Deserialize from JSON."""
-        return cls._from_json(serialized)
-
-    @classmethod
-    @abc.abstractmethod
-    def _from_json(cls: type[TFetcher], serialized: Mapping[str, Any]) -> TFetcher:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def to_json(self) -> Mapping[str, Any]:
-        """Serialize to JSON."""
-        raise NotImplementedError()
-
-    @final
-    def __enter__(self) -> "Fetcher[TRawData]":
-        return self
-
-    @final
-    def __exit__(self, *exc_info: object) -> Literal[True]:
-        """Close the data source."""
-        self.close()
-        return True
-
-    @abc.abstractmethod
-    def open(self) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def close(self) -> None:
-        raise NotImplementedError()
-
-    @final
-    def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
-        """Return the data from the source, either cached or from IO."""
-        try:
-            return result.OK(self._fetch(mode))
-        except Exception as exc:
-            return result.Error(exc)
-
-    def _fetch(self, mode: Mode) -> TRawData:
-        self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
-
-        try:
-            self.open()
-            raw_data = self._fetch_from_io(mode)
-        except MKFetcherError:
-            raise
-        except Exception as exc:
-            raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
-
-        return raw_data
-
-    @abc.abstractmethod
-    def _fetch_from_io(self, mode: Mode) -> TRawData:
-        """Override this method to contact the source and return the raw data."""
-        raise NotImplementedError()
+__all__ = ["verify_ipaddress", "get_raw_data"]
 
 
 def get_raw_data(

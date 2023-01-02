@@ -32,6 +32,8 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
+from cmk.fetchers import Mode
+
 from cmk.checkers import get_raw_data, snmp
 from cmk.checkers.agent import AgentFileCache
 from cmk.checkers.cache import FileCache, FileCacheMode, MaxAge, TRawData
@@ -47,7 +49,6 @@ from cmk.checkers.snmp import (
 )
 from cmk.checkers.tcp import EncryptionHandling, TCPFetcher
 from cmk.checkers.tcp_agent_ctl import CompressionType, HeaderV1, Version
-from cmk.checkers.type_defs import Mode
 
 
 class SensorReading(NamedTuple):

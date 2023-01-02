@@ -24,8 +24,7 @@ from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import Fetcher
-from .type_defs import Mode
+from cmk.fetchers import Fetcher, Mode
 
 
 class IPMIFetcher(Fetcher[AgentRawData]):

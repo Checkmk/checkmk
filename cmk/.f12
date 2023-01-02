@@ -34,6 +34,7 @@ PYTHON3_PATHS=(
     base
     bi
     checkers
+    fetchers
 )
 
 echo "Copy files..."

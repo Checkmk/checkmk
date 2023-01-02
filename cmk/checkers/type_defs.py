@@ -10,32 +10,9 @@ from typing import Final, NamedTuple
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
-__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection", "SourceInfo", "FetcherType"]
+from cmk.fetchers import FetcherType
 
-
-class Mode(enum.Enum):
-    NONE = enum.auto()
-    CHECKING = enum.auto()
-    DISCOVERY = enum.auto()
-    INVENTORY = enum.auto()
-    RTC = enum.auto()
-    # Special case for discovery/checking/inventory command line argument where we specify in
-    # advance all sections we want. Should disable caching, and in the SNMP case also detection.
-    # Disabled sections must *not* be discarded in this mode.
-    FORCE_SECTIONS = enum.auto()
-
-
-class FetcherType(enum.Enum):
-    """Map short name to fetcher class."""
-
-    NONE = enum.auto()
-    PUSH_AGENT = enum.auto()
-    IPMI = enum.auto()
-    PIGGYBACK = enum.auto()
-    PROGRAM = enum.auto()
-    SPECIAL_AGENT = enum.auto()
-    SNMP = enum.auto()
-    TCP = enum.auto()
+__all__ = ["NO_SELECTION", "SectionNameCollection", "SourceInfo", "FetcherType"]
 
 
 class SourceInfo(NamedTuple):

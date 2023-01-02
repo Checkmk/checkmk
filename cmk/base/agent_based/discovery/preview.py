@@ -21,9 +21,11 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.fetchers import Mode
+
 import cmk.checkers.cache
 from cmk.checkers.cache import FileCacheOptions
-from cmk.checkers.type_defs import Mode, NO_SELECTION, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SourceInfo
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register

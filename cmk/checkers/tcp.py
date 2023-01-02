@@ -21,9 +21,10 @@ from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from ._base import Fetcher, verify_ipaddress
+from cmk.fetchers import Fetcher, Mode
+
+from ._base import verify_ipaddress
 from .tcp_agent_ctl import AgentCtlMessage
-from .type_defs import Mode
 
 
 class EncryptionHandling(enum.Enum):

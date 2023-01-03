@@ -2297,10 +2297,22 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 for statefulset in kube_objects_from_namespaces(
                     composed_entities.statefulsets, monitored_namespace_names
                 ):
+                    statefulset_piggyback_name = piggyback_formatter(statefulset)
                     statefulset_sections = create_statefulset_api_sections(
                         statefulset,
                         host_settings=checkmk_host_settings,
-                        piggyback_name=piggyback_formatter(statefulset),
+                        piggyback_name=statefulset_piggyback_name,
+                    )
+                    statefulset_sections = chain(
+                        statefulset_sections,
+                        create_pvc_sections(
+                            piggyback_name=statefulset_piggyback_name,
+                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
+                                statefulset.pods
+                            ),
+                            api_persistent_volume_claims=api_persistent_volume_claims,
+                            attached_volumes=attached_volumes,
+                        ),
                     )
                     common.write_sections(statefulset_sections)
 

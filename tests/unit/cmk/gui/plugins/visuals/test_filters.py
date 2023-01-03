@@ -1096,30 +1096,30 @@ filter_table_tests = [
         request_vars=[("svc_service_level_lower", "1"), ("svc_service_level_upper", "3")],
         rows=[
             {
-                "custom_variables": {"EC_SL": "0"},
+                "service_custom_variables": {"EC_SL": "0"},
             },
             {
-                "custom_variables": {"EC_SL": "1"},
+                "service_custom_variables": {"EC_SL": "1"},
             },
             {
-                "custom_variables": {"EC_SL": "2"},
+                "service_custom_variables": {"EC_SL": "2"},
             },
             {
-                "custom_variables": {"EC_SL": "3"},
+                "service_custom_variables": {"EC_SL": "3"},
             },
             {
-                "custom_variables": {"EC_SL": "4"},
+                "service_custom_variables": {"EC_SL": "4"},
             },
         ],
         expected_rows=[
             {
-                "custom_variables": {"EC_SL": "1"},
+                "service_custom_variables": {"EC_SL": "1"},
             },
             {
-                "custom_variables": {"EC_SL": "2"},
+                "service_custom_variables": {"EC_SL": "2"},
             },
             {
-                "custom_variables": {"EC_SL": "3"},
+                "service_custom_variables": {"EC_SL": "3"},
             },
         ],
     ),
@@ -1128,18 +1128,18 @@ filter_table_tests = [
         request_vars=[("hst_service_level_lower", "1")],
         rows=[
             {
-                "custom_variables": {"EC_SL": "0"},
+                "host_custom_variables": {"EC_SL": "0"},
             },
             {
-                "custom_variables": {"EC_SL": "1"},
+                "host_custom_variables": {"EC_SL": "1"},
             },
             {
-                "custom_variables": {"EC_SL": "2"},
+                "host_custom_variables": {"EC_SL": "2"},
             },
         ],
         expected_rows=[
             {
-                "custom_variables": {"EC_SL": "1"},
+                "host_custom_variables": {"EC_SL": "1"},
             },
         ],
     ),
@@ -1148,18 +1148,18 @@ filter_table_tests = [
         request_vars=[("hst_service_level_upper", "2")],
         rows=[
             {
-                "custom_variables": {"EC_SL": "0"},
+                "host_custom_variables": {"EC_SL": "0"},
             },
             {
-                "custom_variables": {"EC_SL": "1"},
+                "host_custom_variables": {"EC_SL": "1"},
             },
             {
-                "custom_variables": {"EC_SL": "2"},
+                "host_custom_variables": {"EC_SL": "2"},
             },
         ],
         expected_rows=[
             {
-                "custom_variables": {"EC_SL": "2"},
+                "host_custom_variables": {"EC_SL": "2"},
             },
         ],
     ),

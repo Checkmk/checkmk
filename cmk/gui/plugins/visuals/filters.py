@@ -1778,7 +1778,7 @@ class FilterECServiceLevelRange(Filter):
         assert lower_bound is not None
         assert upper_bound is not None
         for row in rows:
-            service_level = int(row["custom_variables"]["EC_SL"])
+            service_level = int(row["%s_custom_variables" % self.info]["EC_SL"])
             if int(lower_bound) <= service_level <= int(upper_bound):
                 filtered_rows.append(row)
 
@@ -1792,7 +1792,7 @@ class FilterECServiceLevelRange(Filter):
 
     def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
         if self.ident in context:
-            yield "custom_variables"
+            yield "%s_custom_variables" % self.info
 
 
 filter_registry.register(

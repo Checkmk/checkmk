@@ -1,0 +1,13 @@
+Title: Fix possible error on using host or service level filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1672740264
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+If you used host or service level filter in views with an event datasource,
+e.g. "Events of host & services", the error "Internal error: 'NoneType' object
+is not subscriptable" occurred.

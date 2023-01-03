@@ -249,7 +249,7 @@ PyWinAg module: typing,3.10.0.0,Python-2.0,https://spdx.org/licenses/Python-2.0.
 PyWinAg module: urllib3,1.25.9,MIT,https://opensource.org/licenses/MIT,included in agents/windows/python-3.cab,,,,
 PyWinAg module: urllib3,1.24.3,MIT,https://opensource.org/licenses/MIT,included in agents/windows/python-3.4.cab,,,,
 PyWinAg module: wheel,0.34.2,MIT,https://opensource.org/licenses/MIT,included in agents/windows/python-3.cab,,,,
-re2,2020-06-01,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/re2/re2-2020-06-01.tar.gz,,,,
+re2,2022-12-01,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/re2/re2-2022-12-01.tar.gz,,,,
 Redis,6.2.6,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/redis/redis-6.2.6.tar.gz
 rrdtool,1.7.2,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/rrdtool/rrdtool-1.7.2.tar.gz,,,,
 sapnwrfc,0.19,LGPL-2.1,https://opensource.org/licenses/LGPL-2.1,agents/sap/sapnwrfc-0.19.tar.gz,,,,

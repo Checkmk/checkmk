@@ -1,8 +1,8 @@
 # We use a released version from https://github.com/google/re2/, but in
 # principle we could use any tag by exporting it manually via:
-#    ( TAG=2018-02-01; git archive --prefix=re2-$TAG/ --output=re2-$TAG.tar.gz $TAG )
+#    ( TAG=2022-12-01; git archive --prefix=re2-$TAG/ --output=re2-$TAG.tar.gz $TAG )
 RE2 := re2
-RE2_VERS := 2020-06-01
+RE2_VERS := 2022-12-01
 RE2_DIR := $(RE2)-$(RE2_VERS)
 
 RE2_UNPACK := $(BUILD_HELPER_DIR)/$(RE2_DIR)-unpack

@@ -6,8 +6,6 @@
 #ifndef RegExp_h
 #define RegExp_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 #include <string>
 

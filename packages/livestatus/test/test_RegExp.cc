@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "RegExp.h"
 #include "gtest/gtest.h"
+#include "livestatus/RegExp.h"
 
 TEST(RegExpTest, RespectLiteral) {
     RegExp r{"max", RegExp::Case::respect, RegExp::Syntax::literal};

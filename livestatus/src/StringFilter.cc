@@ -7,7 +7,7 @@
 
 #include <utility>
 
-#include "RegExp.h"
+#include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
 
 StringFilter::StringFilter(Kind kind, std::string columnName,

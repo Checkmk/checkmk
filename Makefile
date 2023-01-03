@@ -189,7 +189,7 @@ $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) --exclude=build packages/livestatus omd/packages/asio omd/packages/googletest | tar xf - -C mk-livestatus-$(VERSION)
+	tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 omd/packages/asio omd/packages/googletest | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
@@ -439,15 +439,8 @@ config.status: $(CONFIG_DEPS)
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \
-	  if test -d ../re2/destdir ; then \
-	    RE2_OPT="--with-re2=$(abspath ../re2/destdir)" ; \
-	  elif test -d omd/packages/re2/destdir ; then \
-	    RE2_OPT="--with-re2=$(abspath omd/packages/re2/destdir)" ; \
-	  else \
-	    RE2_OPT="DUMMY3=" ; \
-	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" "$$RE2_OPT" ; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
 	fi
 
 protobuf-files:

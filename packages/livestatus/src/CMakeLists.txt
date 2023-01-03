@@ -23,6 +23,7 @@ set(livestatus_headers
     ${header_location}/overload.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
+    ${header_location}/RegExp.h
     ${header_location}/Renderer.h
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
@@ -47,6 +48,7 @@ set(livestatus_sources
     OringFilter.cc
     OutputBuffer.cc
     POSIXUtils.cc
+    RegExp.cc
     Renderer.cc
     RendererBrokenCSV.cc
     RendererCSV.cc
@@ -59,6 +61,11 @@ set(livestatus_sources
 add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 
 include(FetchContent)
+# Forbids option redefine in subproject: in the case to prevent re2::testing
+# build
+if(POLICY CMP0777)
+  cmake_policy(SET CMP0777 NEW)
+endif()
 
 FetchContent_Declare(
   asio-omd
@@ -74,8 +81,27 @@ FetchContent_GetProperties(
   POPULATED done_var)
 set(asio_ext_include ${src_dir}/include)
 
-target_include_directories(livestatus PUBLIC ../include ${asio_ext_include})
-target_link_libraries(livestatus PRIVATE pthread ${asio_ext_lib})
+FetchContent_Declare(
+  re2 URL ${CMAKE_SOURCE_DIR}/../../third_party/re2/re2-2022-12-01.tar.gz
+          DOWNLOAD_EXTRACT_TIMESTAMP no)
+
+# We disable build re2::testing in the recommended manner by re2 because of
+# warnings and time. Approach is equal to `cmake ... -DRE2_BUILD_TESTING="OFF"`
+option(RE2_BUILD_TESTING "disable testing for RE2" OFF)
+
+FetchContent_MakeAvailable(re2)
+# Those pesky c-Wno-unused-parameter will be removed with 'next' re2 iteration.
+target_compile_options(re2 PRIVATE -Wno-unused-parameter -DRE2_ON_VALGRIND -O3
+                                   -g -fPIC)
+FetchContent_GetProperties(re2 SOURCE_DIR re2_src_dir)
+set(re2_ext_include ${re2_src_dir})
+
+target_include_directories(livestatus PUBLIC ../include ${asio_ext_include}
+                                             ${re2_ext_include})
+target_link_libraries(
+  livestatus
+  PRIVATE pthread
+  PUBLIC re2::re2)
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})

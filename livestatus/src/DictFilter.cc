@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "RegExp.h"
+#include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
 
 namespace {

@@ -12,6 +12,7 @@
 #include <cstring>
 #include <ostream>
 #include <utility>
+// IWYU pragma: no_include <type_traits>
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"

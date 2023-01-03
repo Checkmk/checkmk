@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "RegExp.h"
+#include "livestatus/RegExp.h"
 
 #ifdef HAVE_RE2
 // -----------------------------------------------------------------------------

@@ -34,7 +34,7 @@ h3:not(.table) {
   padding: 6px 0 4px 8px;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
-  border-radius: $theme-border-radius $theme-border-radius 0 0;
+  border-radius: $border-radius-top;
 }
 
 h3.table {
@@ -847,7 +847,7 @@ table.nform {
       vertical-align: middle;
       cursor: pointer;
       background-color: transparent;
-      border-radius: $theme-border-radius $theme-border-radius 0 0;
+      border-radius: $border-radius-top;
     }
 
     td {

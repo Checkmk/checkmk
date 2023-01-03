@@ -85,6 +85,7 @@ $spacing-double: (2 * $spacing);
 $menu-item-spacing: (2.2 * $spacing);
 
 $theme-border-radius: 4px;
+$border-radius-top: $theme-border-radius $theme-border-radius 0 0;
 $border-radius-left: $theme-border-radius 0 0 $theme-border-radius;
 $border-radius-right: 0 $theme-border-radius $theme-border-radius 0;
 

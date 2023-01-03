@@ -8,7 +8,6 @@
 This file contains helper functions for transform and transform_json. Each
 function is required to handle data from the client or from JSON.
 """
-import datetime
 import json
 import re
 from collections.abc import Mapping
@@ -16,24 +15,6 @@ from typing import Iterator, TypeGuard
 
 from .schemata import api
 from .schemata.api import Label, LabelName, LabelValue
-
-
-def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> api.Timestamp:
-    if isinstance(kube_date_time, str):
-        date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=datetime.timezone.utc
-        )
-    elif isinstance(kube_date_time, datetime.datetime):
-        date_time = kube_date_time
-        if date_time.tzinfo is None:
-            raise ValueError(f"Can not convert to timestamp: '{kube_date_time}' is missing tzinfo")
-    else:
-        raise TypeError(
-            f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
-        )
-
-    return api.Timestamp(date_time.timestamp())
-
 
 # See LabelValue for details
 __validation_value = re.compile(r"(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")

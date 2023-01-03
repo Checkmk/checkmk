@@ -17,8 +17,14 @@ from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
-from .schemata.api import Label, LabelName, parse_cpu_cores, parse_resource_value
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
+from .schemata.api import (
+    convert_to_timestamp,
+    Label,
+    LabelName,
+    parse_cpu_cores,
+    parse_resource_value,
+)
+from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 
 def parse_metadata_no_namespace(
@@ -224,16 +230,7 @@ def node_conditions(status: client.V1NodeStatus) -> Sequence[api.NodeCondition] 
     conditions = status.conditions
     if not conditions:
         return None
-    return [
-        api.NodeCondition(
-            status=c.status,
-            type_=c.type,
-            reason=c.reason,
-            detail=c.message,
-            last_transition_time=int(convert_to_timestamp(c.last_transition_time)),
-        )
-        for c in conditions
-    ]
+    return [api.NodeCondition.from_orm(c) for c in conditions]
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:

@@ -18,7 +18,7 @@ from typing import cast, Literal, TypedDict
 from typing_extensions import NotRequired
 
 from .schemata import api
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
+from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 # StatefulSet
 
@@ -98,7 +98,7 @@ def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
     return api.MetaData(
         name=metadata["name"],
         namespace=api.NamespaceName(metadata["namespace"]),
-        creation_timestamp=convert_to_timestamp(metadata["creationTimestamp"]),
+        creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
         labels=parse_labels(metadata.get("labels", {})),
         annotations=parse_annotations(metadata.get("annotations", {})),
     )

@@ -12,6 +12,7 @@ except the python standard library or pydantic.
 """
 from __future__ import annotations
 
+import datetime
 import enum
 import math
 from collections.abc import Mapping, Sequence
@@ -190,6 +191,23 @@ def _parse_quantity(value: str) -> float:
     return float(value)
 
 
+def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
+    if isinstance(kube_date_time, str):
+        date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc
+        )
+    elif isinstance(kube_date_time, datetime.datetime):
+        date_time = kube_date_time
+        if date_time.tzinfo is None:
+            raise ValueError(f"Can not convert to timestamp: '{kube_date_time}' is missing tzinfo")
+    else:
+        raise TypeError(
+            f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
+        )
+
+    return Timestamp(date_time.timestamp())
+
+
 class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
     name: ObjectName
     creation_timestamp: Timestamp
@@ -322,12 +340,16 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
-class NodeCondition(BaseModel):
+class NodeCondition(ClientModel):
     status: NodeConditionStatus
-    type_: str
+    type_: str = Field(..., alias="type")
     reason: str | None
     detail: str | None
     last_transition_time: int | None
+
+    _parse_last_transition_time = validator("last_transition_time", pre=True, allow_reuse=True)(
+        convert_to_timestamp
+    )
 
 
 class NodeResources(BaseModel):

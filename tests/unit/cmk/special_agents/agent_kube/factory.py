@@ -240,9 +240,6 @@ NPD_NODE_CONDITION_TYPES = [
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
 
-    # TODO: the ignore should be removed when mypy is unpinned
-    type_ = Use(next, itertools.cycle(agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES))  # type: ignore
-
 
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
@@ -250,6 +247,7 @@ class NodeStatusFactory(ModelFactory):
     conditions = Use(
         NodeConditionFactory.batch,
         size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+        factory_use_construct=True,
     )
     allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
     capacity = Use(NodeResourcesFactory.build, factory_use_construct=True)
@@ -257,10 +255,14 @@ class NodeStatusFactory(ModelFactory):
 
 def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
     return NodeStatusFactory.build(
-        conditions=NodeConditionFactory.batch(
-            len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-            status=node_condition_status,
-        )
+        conditions=[
+            NodeConditionFactory.build(
+                type_=type_,
+                status=node_condition_status,
+                factory_use_construct=True,
+            )
+            for type_ in agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
+        ],
     )
 
 

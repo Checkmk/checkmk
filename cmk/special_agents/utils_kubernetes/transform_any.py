@@ -120,7 +120,7 @@ def _parse_labels(raw_labels: str) -> Mapping[str, str]:
     labels = {}
 
     for label in _split_labels(raw_labels):
-        label_name, label_value = label.split("=")
+        label_name, label_value = label.split("=", maxsplit=1)
         labels[label_name] = json.loads(label_value)  # unquotes the string
 
     return labels

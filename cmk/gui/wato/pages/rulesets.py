@@ -655,19 +655,6 @@ def _page_menu_entry_predefined_conditions() -> PageMenuEntry:
     )
 
 
-def _page_menu_entry_rule_search() -> PageMenuEntry:
-    return PageMenuEntry(
-        title=_("Rule search"),
-        icon_name="search",
-        item=make_simple_link(
-            makeuri_contextless(
-                request,
-                [("mode", "rule_search")],
-            )
-        ),
-    )
-
-
 def _page_menu_entry_search_rules(
     search_options: SearchOptions, mode: str, page_type: PageType
 ) -> PageMenuEntry:
@@ -915,7 +902,17 @@ class ModeEditRuleset(WatoMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
-        yield _page_menu_entry_rule_search()
+
+        yield PageMenuEntry(
+            title=_("Rule search"),
+            icon_name="search",
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "rule_search")],
+                )
+            ),
+        )
 
         if self._hostname:
             yield PageMenuEntry(
@@ -1767,7 +1764,6 @@ class ABCEditRuleMode(WatoMode):
 
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield _page_menu_entry_predefined_conditions()
-        yield _page_menu_entry_rule_search()
 
     def _page_menu_topic_this_rule(self) -> PageMenuTopic | None:
         if user.may("wato.auditlog"):

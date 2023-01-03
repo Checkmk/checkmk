@@ -12,6 +12,7 @@ data structures to version independent data structured defined in schemata.api
 from __future__ import annotations
 
 import datetime
+import math
 import re
 from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, Type, Union
 
@@ -39,37 +40,36 @@ def parse_frac_prefix(value: str) -> float:
 
 
 def parse_memory(value: str) -> float:
-    if value.endswith("Ki"):
-        return 1024**1 * float(value[:-2])
-    if value.endswith("Mi"):
-        return 1024**2 * float(value[:-2])
-    if value.endswith("Gi"):
-        return 1024**3 * float(value[:-2])
-    if value.endswith("Ti"):
-        return 1024**4 * float(value[:-2])
-    if value.endswith("Pi"):
-        return 1024**5 * float(value[:-2])
-    if value.endswith("Ei"):
-        return 1024**6 * float(value[:-2])
+    """Converts quantity to bytes, rounding up if necessary.
 
-    if value.endswith("K") or value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    if value.endswith("M"):
-        return 1e6 * float(value[:-1])
-    if value.endswith("G"):
-        return 1e9 * float(value[:-1])
-    if value.endswith("T"):
-        return 1e12 * float(value[:-1])
-    if value.endswith("P"):
-        return 1e15 * float(value[:-1])
-    if value.endswith("E"):
-        return 1e18 * float(value[:-1])
+    millibytes are useless, but valid. This is because Kubernetes uses Quantity everywhere
+    https://github.com/kubernetes/kubernetes/issues/28741
+    Internally, Kubernetes rounds millibytes up to the nearest byte.
+    """
+    return math.ceil(_parse_quantity(value))
 
-    # millibytes are a useless, but valid option:
-    # https://github.com/kubernetes/kubernetes/issues/28741
-    if value.endswith("m"):
-        return 1e-3 * float(value[:-1])
 
+def _parse_quantity(value: str) -> float:
+    # Kubernetes uses a common field for any entry in resources, which it refers to as Quantity.
+    # See staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go
+    for unit, factor in [
+        ("Ki", 1024**1),
+        ("Mi", 1024**2),
+        ("Gi", 1024**3),
+        ("Ti", 1024**4),
+        ("Pi", 1024**5),
+        ("Ei", 1024**6),
+        ("K", 1e3),
+        ("k", 1e3),
+        ("M", 1e6),
+        ("G", 1e9),
+        ("T", 1e12),
+        ("P", 1e15),
+        ("E", 1e18),
+        ("m", 1e-3),
+    ]:
+        if value.endswith(unit):
+            return factor * float(value.removesuffix(unit))
     return float(value)
 
 

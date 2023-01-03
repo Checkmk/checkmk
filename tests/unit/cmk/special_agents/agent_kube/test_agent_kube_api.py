@@ -10,6 +10,7 @@ import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APICronJobFactory,
     APIDeploymentFactory,
     APINodeFactory,
     APIPodFactory,
@@ -30,10 +31,6 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 class ResourcesRequirementsFactory(ModelFactory):
     __model__ = api.ResourcesRequirements
-
-
-class CronJobFactory(ModelFactory):
-    __model__ = api.CronJob
 
 
 def test_pod_node_allocation_within_cluster() -> None:
@@ -117,7 +114,7 @@ def test_aggregate_resources_with_only_zeroed_limit_memory() -> None:
 def test_pod_resources_from_api_pods(pods_count: int) -> None:
     pods = [
         APIPodFactory.build(
-            metadata=MetaDataFactory.build(name=str(i)),
+            metadata=MetaDataFactory.build(name=str(i), factory_use_construct=True),
             status=PodStatusFactory.build(
                 phase=api.Phase.RUNNING,
             ),
@@ -135,7 +132,9 @@ def test_pod_resources_from_api_pods(pods_count: int) -> None:
 def test_pod_name() -> None:
     name = "name"
     namespace = "namespace"
-    pod = APIPodFactory.build(metadata=MetaDataFactory.build(name=name, namespace=namespace))
+    pod = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name=name, namespace=namespace, factory_use_construct=True)
+    )
 
     pod_name = agent.pod_name(pod)
     pod_namespaced_name = agent.pod_name(pod, prepend_namespace=True)
@@ -145,8 +144,12 @@ def test_pod_name() -> None:
 
 
 def test_filter_pods_by_namespace() -> None:
-    pod_one = APIPodFactory.build(metadata=MetaDataFactory.build(name="pod_one", namespace="one"))
-    pod_two = APIPodFactory.build(metadata=MetaDataFactory.build(name="pod_two", namespace="two"))
+    pod_one = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name="pod_one", namespace="one", factory_use_construct=True)
+    )
+    pod_two = APIPodFactory.build(
+        metadata=MetaDataFactory.build(name="pod_two", namespace="two", factory_use_construct=True)
+    )
 
     filtered_pods = agent.filter_pods_by_namespace([pod_one, pod_two], api.NamespaceName("one"))
 
@@ -160,7 +163,7 @@ def test_filter_pods_by_cron_job() -> None:
     pod_two = APIPodFactory.build(
         uid="not_in_cron_job",
     )
-    cron_job = CronJobFactory.build(
+    cron_job = APICronJobFactory.build(
         pod_uids=[
             "in_cron_job",
         ]

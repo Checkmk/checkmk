@@ -67,6 +67,10 @@ class MetaDataFactory(ModelFactory[api.MetaData]):
     __model__ = api.MetaData
 
 
+class MetaDataNoNamespaceFactory(ModelFactory[api.MetaDataNoNamespace]):
+    __model__ = api.MetaDataNoNamespace
+
+
 # Pod related Factories
 class VolumePersistentVolumeClaimSourceFactory(ModelFactory):
     __model__ = api.VolumePersistentVolumeClaimSource
@@ -87,6 +91,8 @@ class PodStatusFactory(ModelFactory):
 class APIPodFactory(ModelFactory):
     __model__ = api.Pod
 
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
 
 class APIControllerFactory(ModelFactory):
     __model__ = api.Controller
@@ -106,6 +112,8 @@ class DeploymentStatusFactory(ModelFactory):
 class APIDeploymentFactory(ModelFactory):
     __model__ = api.Deployment
 
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
 
 def api_to_agent_deployment(
     api_deployment: api.Deployment, pods: Sequence[api.Pod] = ()
@@ -124,6 +132,8 @@ def api_to_agent_deployment(
 class APIDaemonSetFactory(ModelFactory):
     __model__ = api.DaemonSet
 
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
 
 def api_to_agent_daemonset(
     api_daemonset: api.DaemonSet, pods: Sequence[api.Pod] = ()
@@ -141,6 +151,8 @@ def api_to_agent_daemonset(
 
 class APIStatefulSetFactory(ModelFactory):
     __model__ = api.StatefulSet
+
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
 
 
 def api_to_agent_statefulset(
@@ -163,6 +175,14 @@ class NamespaceMetaDataFactory(ModelFactory):
 
 class APIResourceQuotaFactory(ModelFactory):
     __model__ = api.ResourceQuota
+
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
+
+class APINamespaceFactory(ModelFactory):
+    __model__ = api.Namespace
+
+    metadata = Use(NamespaceMetaDataFactory.build, factory_use_construct=True)
 
 
 # Performance related Factories
@@ -215,6 +235,7 @@ class PersistentVolumeClaimFactory(ModelFactory):
 
     spec = PersistentVolumeSpecFactory.build
     status = PersistentVolumeClaimStatusFactory.build
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
 
 
 # Node related Factories
@@ -270,6 +291,7 @@ class APINodeFactory(ModelFactory):
     __model__ = api.Node
 
     status = NodeStatusFactory.build
+    metadata = Use(NodeMetaDataFactory.build, factory_use_construct=True)
 
 
 def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
@@ -279,6 +301,29 @@ def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Nod
         kubelet_health=node.kubelet_health,
         pods=pods,
     )
+
+
+# CronJob
+
+
+class CronJobStatusFactory(ModelFactory):
+    __model__ = api.CronJobStatus
+
+
+class JobStatusFactory(ModelFactory):
+    __model__ = api.JobStatus
+
+
+class APIJobFactory(ModelFactory):
+    __model__ = api.Job
+
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
+
+class APICronJobFactory(ModelFactory):
+    __model__ = api.CronJob
+
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
 
 
 # Prometheus API
@@ -308,6 +353,14 @@ class APIDataFactory(ModelFactory):
 
     persistent_volume_claims = Use(PersistentVolumeClaimFactory.batch, size=2)
     nodes = Use(APINodeFactory.batch, size=3)
+    cron_jobs = Use(APICronJobFactory.batch, size=3)
+    deployments = Use(APIDeploymentFactory.batch, size=3)
+    daemonsets = Use(APIDaemonSetFactory.batch, size=3)
+    jobs = Use(APIJobFactory.batch, size=3)
+    statefulsets = Use(APIStatefulSetFactory.batch, size=3)
+    namespaces = Use(APINamespaceFactory.batch, size=3)
+    pods = Use(APIPodFactory.batch, size=3)
+    resource_quotas = Use(APIResourceQuotaFactory.batch, size=3)
 
 
 class ClusterDetailsFactory(ModelFactory):
@@ -341,3 +394,6 @@ def composed_entities_builder(
             pods=pods,
         ),
     )
+
+
+APIDataFactory.build()

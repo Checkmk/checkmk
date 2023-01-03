@@ -11,7 +11,6 @@ import pytest
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
-from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
 from .factory import (
     APIDaemonSetFactory,
@@ -31,8 +30,8 @@ from .factory import (
 )
 
 
-def _create_labels_from_roles(roles: Sequence[str]) -> api.Labels:
-    return parse_labels({f"node-role.kubernetes.io/{role}": "" for role in roles})
+def _create_labels_from_roles(roles: Sequence[str]) -> dict[str, str]:
+    return {f"node-role.kubernetes.io/{role}": "" for role in roles}
 
 
 def cluster_api_sections() -> Sequence[str]:
@@ -125,7 +124,10 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) 
 
 
 def test_node_control_plane_count() -> None:
-    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
+    metadata = NodeMetaDataFactory.build(
+        labels=_create_labels_from_roles(["master"]),
+        factory_use_construct=True,
+    )
     api_node = APINodeFactory.build(
         metadata=metadata, status=node_status(api.NodeConditionStatus.TRUE)
     )
@@ -137,9 +139,12 @@ def test_node_control_plane_count() -> None:
 
 
 def test_node_control_plane_not_ready_count() -> None:
-    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
+    metadata = NodeMetaDataFactory.build(
+        labels=_create_labels_from_roles(["master"]), factory_use_construct=True
+    )
     api_node = APINodeFactory.build(
-        metadata=metadata, status=node_status(api.NodeConditionStatus.FALSE)
+        metadata=metadata,
+        status=node_status(api.NodeConditionStatus.FALSE),
     )
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
     node_count = cluster.node_count()
@@ -204,7 +209,9 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
+                    metadata=NodeMetaDataFactory.build(
+                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                    ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(
                             memory=memory, factory_use_construct=True
@@ -257,7 +264,9 @@ def test_cluster_allocatable_cpu_resource_cluster(
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
+                    metadata=NodeMetaDataFactory.build(
+                        labels=_create_labels_from_roles(roles), factory_use_construct=True
+                    ),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(cpu=6.0, factory_use_construct=True)
                     ),
@@ -301,7 +310,9 @@ def test_cluster_usage_resources(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles))
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            )
         )
         for node, _, roles in node_podcount_roles
     ]
@@ -348,7 +359,9 @@ def test_cluster_allocatable_pods(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            ),
             status=NodeStatusFactory.build(
                 allocatable=NodeResourcesFactory.build(
                     pods=allocatable, factory_use_construct=True
@@ -404,7 +417,9 @@ def test_create_correct_number_pod_names_for_cluster_host(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
+            metadata=NodeMetaDataFactory.build(
+                name=node, labels=_create_labels_from_roles(roles), factory_use_construct=True
+            ),
         )
         for node, _, roles in node_podcount_roles
     ]
@@ -521,7 +536,9 @@ def test__node_collector_daemons_error_handling(
 ) -> None:
     daemonsets = [
         APIDaemonSetFactory.build(
-            metadata=MetaDataFactory.build(labels=parse_labels(labels)),
+            metadata=MetaDataFactory.build(
+                labels=api.parse_labels(labels), factory_use_construct=True
+            ),
         )
         for labels in labels_per_daemonset
     ]
@@ -536,17 +553,20 @@ def test__node_collector_daemons_error_handling(
 
 DAEMONSET_MACHINE_SECTIONS = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"node-collector": "machine-sections"}),
+        labels=api.parse_labels({"node-collector": "machine-sections"}),
+        factory_use_construct=True,
     ),
 )
 DAEMONSET_CONTAINER_METRICS = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"node-collector": "container-metrics"}),
+        labels=api.parse_labels({"node-collector": "container-metrics"}),
+        factory_use_construct=True,
     ),
 )
 DAEMONSET_NOT_A_COLLECTOR = APIDaemonSetFactory.build(
     metadata=MetaDataFactory.build(
-        labels=parse_labels({"random-label": "container-metrics"}),
+        labels=api.parse_labels({"random-label": "container-metrics"}),
+        factory_use_construct=True,
     ),
 )
 

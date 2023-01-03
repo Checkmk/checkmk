@@ -19,9 +19,13 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 def test_filter_matching_namespace_resource_quota() -> None:
     namespace_name = api.NamespaceName("matching-namespace")
     resource_quotas = [
-        APIResourceQuotaFactory.build(metadata=MetaDataFactory.build(namespace=namespace_name)),
         APIResourceQuotaFactory.build(
-            metadata=MetaDataFactory.build(namespace=api.NamespaceName("non-matching-namespace"))
+            metadata=MetaDataFactory.build(namespace=namespace_name, factory_use_construct=True)
+        ),
+        APIResourceQuotaFactory.build(
+            metadata=MetaDataFactory.build(
+                namespace=api.NamespaceName("non-matching-namespace"), factory_use_construct=True
+            )
         ),
     ]
 
@@ -254,7 +258,9 @@ def _pod_with_scopes_factory(
     terminating: bool = False,
 ) -> api.Pod:
     return APIPodFactory.build(
-        metadata=MetaDataFactory.build(name=name) if name else MetaDataFactory.build(),
+        metadata=MetaDataFactory.build(name=name, factory_use_construct=True)
+        if name
+        else MetaDataFactory.build(factory_use_construct=True),
         status=PodStatusFactory.build(qos_class="besteffort" if best_effort else "guaranteed"),
         spec=PodSpecFactory.build(
             priority_class_name=priority_class,

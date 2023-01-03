@@ -18,10 +18,14 @@ def test_filter_pods_from_namespaces() -> None:
     # Arrange
     pods = [
         APIPodFactory.build(
-            metadata=MetaDataFactory.build(name="one", namespace=api.NamespaceName("default")),
+            metadata=MetaDataFactory.build(
+                name="one", namespace=api.NamespaceName("default"), factory_use_construct=True
+            ),
         ),
         APIPodFactory.build(
-            metadata=MetaDataFactory.build(name="two", namespace=api.NamespaceName("standard"))
+            metadata=MetaDataFactory.build(
+                name="two", namespace=api.NamespaceName("standard"), factory_use_construct=True
+            )
         ),
     ]
 
@@ -38,12 +42,17 @@ def test_filter_deployments_from_monitored_namespaces() -> None:
     deployments = [
         api_to_agent_deployment(
             APIDeploymentFactory.build(
-                metadata=MetaDataFactory.build(namespace=api.NamespaceName("default"))
+                metadata=MetaDataFactory.build(
+                    namespace=api.NamespaceName("default"),
+                    factory_use_construct=True,
+                )
             ),
         ),
         api_to_agent_deployment(
             APIDeploymentFactory.build(
-                metadata=MetaDataFactory.build(namespace=api.NamespaceName("standard"))
+                metadata=MetaDataFactory.build(
+                    namespace=api.NamespaceName("standard"), factory_use_construct=True
+                ),
             ),
         ),
     ]

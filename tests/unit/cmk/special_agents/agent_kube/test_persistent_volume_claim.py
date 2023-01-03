@@ -15,7 +15,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 def pod_attached_persistent_volume_claims():
     APIPodFactory.build(
-        metadata=MetaDataFactory.build(namespace="default"),
+        metadata=MetaDataFactory.build(namespace="default", factory_use_construct=True),
         spec=PodSpecFactory.build(
             volumes=[
                 PodVolumeFactory.build(

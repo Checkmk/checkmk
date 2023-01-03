@@ -1206,7 +1206,9 @@ def pod_namespace(pod: api.Pod) -> api.NamespaceName:
 def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     """The name of the namespace
     Examples:
-        >>> namespace_name(api.Namespace(metadata=api.MetaDataNoNamespace(name="foo", creation_timestamp=0.0, labels={}, annotations={})))
+        >>> metadata = api.NamespaceMetaData.parse_obj({"name": "foo", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
+        >>> namespace = api.Namespace(metadata=metadata)
+        >>> namespace_name(namespace)
         'foo'
     """
     return namespace.metadata.name
@@ -1214,7 +1216,8 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
 
 def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
     """The name of the cron job appended to the namespace
-    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", job_uids=[], metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0), status=api.CronJobStatus(active=None, last_schedule_time=None, last_successful_time=None)))
+    >>> metadata = api.MetaData.parse_obj({"name": "foo", "namespace": "bar", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
+    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", job_uids=[], metadata=metadata, pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0), status=api.CronJobStatus(active=None, last_schedule_time=None, last_successful_time=None)))
     'bar_foo'
     """
     return f"{cron_job.metadata.namespace}_{cron_job.metadata.name}"

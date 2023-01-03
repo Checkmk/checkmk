@@ -18,27 +18,15 @@ from pydantic import parse_obj_as
 from . import transform_json
 from .schemata import api
 from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_value
-from .transform_any import parse_annotations, parse_labels, parse_match_labels
+from .transform_any import parse_match_labels
 
 
 def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
-    return api.MetaDataNoNamespace(
-        name=metadata.name,
-        creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
-        labels=parse_labels(metadata.labels),
-        annotations=parse_annotations(metadata.annotations),
-    )
+    return api.MetaDataNoNamespace.from_orm(metadata)
 
 
 def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    metadata_no_namespace: api.MetaDataNoNamespace = parse_metadata_no_namespace(metadata)
-    return api.MetaData(
-        name=metadata_no_namespace.name,
-        namespace=api.NamespaceName(metadata.namespace),
-        creation_timestamp=metadata_no_namespace.creation_timestamp,
-        labels=metadata_no_namespace.labels,
-        annotations=metadata_no_namespace.annotations,
-    )
+    return api.MetaData.from_orm(metadata)
 
 
 def container_resources(container: client.V1Container) -> api.ContainerResources:
@@ -399,9 +387,7 @@ def daemonset_from_client(
 
 
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
-    return api.Namespace(
-        metadata=api.NamespaceMetaData.parse_obj(parse_metadata_no_namespace(namespace.metadata)),
-    )
+    return api.Namespace.from_orm(namespace)
 
 
 def parse_resource_quota_spec(

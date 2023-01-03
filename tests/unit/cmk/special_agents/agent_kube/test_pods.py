@@ -141,6 +141,7 @@ def test_pod_info() -> None:
             creation_timestamp=100.0,
             labels={},
             namespace="namespace-name",
+            factory_use_construct=True,
         ),
         spec=PodSpecFactory.build(
             node="node-name",

@@ -25,8 +25,9 @@ from __future__ import annotations
 import datetime
 import enum
 import math
+import re
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType
+from typing import Literal, NewType, TypeGuard
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
@@ -216,11 +217,63 @@ def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
     return Timestamp(date_time.timestamp())
 
 
-class MetaDataNoNamespace(BaseModel):
+def parse_labels(labels: Mapping[str, str] | None) -> Mapping[LabelName, Label]:
+    if labels is None:
+        return {}
+    return {LabelName(k): Label(name=LabelName(k), value=LabelValue(v)) for k, v in labels.items()}
+
+
+# See LabelValue for details
+__validation_value = re.compile(r"(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])?")
+
+
+def _is_valid_label_value(value: object) -> TypeGuard[LabelValue]:
+    # The length of a Kubernetes label value at most 63 chars
+    return isinstance(value, str) and bool(__validation_value.fullmatch(value)) and len(value) < 64
+
+
+def parse_annotations(annotations: Mapping[str, str] | None) -> Annotations:
+    """Select annotations, if they are valid.
+
+    Kubernetes allows the annotations to be arbitrary byte strings with a
+    length of at most 256Kb. The python client will try to decode these with
+    utf8, but appears to return raw data if an exception occurs. We have not
+    tested whether this will happen. The current commit, when this information
+    was obtained, was
+    https://github.com/kubernetes/kubernetes/commit/a83cc51a19d1b5f2b2d3fb75574b04f587ec0054
+
+    Since not every annotation can be converted to a HostLabel, we decided to
+    only use annotations, which are also valid Kubernetes labels. Kubernetes
+    makes sure that the annotation has a valid name, so we only verify, that
+    the key is also valid as a label.
+
+    >>> parse_annotations(None)  # no annotation specified for the object
+    {}
+    >>> parse_annotations({
+    ... '1': '',
+    ... '2': 'a-',
+    ... '3': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    ... '4': 'a&a',
+    ... '5': 'valid-key',
+    ... })
+    {'1': '', '5': 'valid-key'}
+    """
+    if annotations is None:
+        return {}
+    return {LabelName(k): v for k, v in annotations.items() if _is_valid_label_value(v)}
+
+
+class MetaDataNoNamespace(ClientModel):
     name: str
-    creation_timestamp: Timestamp
-    labels: Labels
-    annotations: Annotations
+    creation_timestamp: Timestamp = Field(..., alias="creationTimestamp")
+    labels: Labels = {}
+    annotations: Annotations = {}
+
+    _parse_creation_timestamp = validator("creation_timestamp", pre=True, allow_reuse=True)(
+        convert_to_timestamp
+    )
+    _parse_labels = validator("labels", pre=True, allow_reuse=True)(parse_labels)
+    _parse_annotations = validator("annotations", pre=True, allow_reuse=True)(parse_annotations)
 
 
 class MetaData(MetaDataNoNamespace):
@@ -235,7 +288,7 @@ class NodeMetaData(MetaDataNoNamespace):
     name: NodeName
 
 
-class Namespace(BaseModel):
+class Namespace(ClientModel):
     metadata: NamespaceMetaData
 
 

@@ -3,30 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pydantic_factories import ModelFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APIJobFactory,
+    APIPodFactory,
+    CronJobStatusFactory,
+    JobStatusFactory,
+)
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-class CronJobStatusFactory(ModelFactory):
-    __model__ = api.CronJobStatus
-
-
-class JobStatusFactory(ModelFactory):
-    __model__ = api.JobStatus
-
-
-class JobFactory(ModelFactory):
-    __model__ = api.Job
-
-
-class PodFactory(ModelFactory):
-    __model__ = api.Pod
-
-
 def test_cron_job_status_section() -> None:
-    api_job = JobFactory.build(
+    api_job = APIJobFactory.build(
         status=JobStatusFactory.build(
             start_time=api.Timestamp(1.0),
             completion_time=api.Timestamp(2.0),
@@ -50,8 +39,8 @@ def test_cron_job_status_section() -> None:
 
 def test_cron_job_latest_job_section() -> None:
     pod_number = 1
-    api_pods = PodFactory.batch(size=pod_number)
-    api_job = JobFactory.build(
+    api_pods = APIPodFactory.batch(size=pod_number)
+    api_job = APIJobFactory.build(
         status=JobStatusFactory.build(
             conditions=[],
             start_time=api.Timestamp(1.0),

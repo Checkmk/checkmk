@@ -133,21 +133,22 @@ IpAddress = NewType("IpAddress", str)
 ObjectName = TypeVar("ObjectName", bound=str)
 
 
-def parse_frac_prefix(value: str) -> float:
-    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
+def parse_cpu_cores(value: str) -> float:
+    """Parses and then rounds up to nearest millicore.
+
+    This is how it is done internally by the Kubernetes API server.
 
     Examples:
-       >>> parse_frac_prefix("359m")
+       >>> parse_cpu_cores("359m")
        0.359
-       >>> parse_frac_prefix("4k")
+       >>> parse_cpu_cores("4k")
        4000.0
+       >>> parse_cpu_cores("200Mi")
+       209715200.0
+       >>> parse_cpu_cores("1M")
+       1000000.0
     """
-
-    if value.endswith("m"):
-        return 0.001 * float(value[:-1])
-    if value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    return float(value)
+    return math.ceil(1000 * _parse_quantity(value)) / 1000
 
 
 def parse_resource_value(value: str) -> float:

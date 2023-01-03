@@ -17,7 +17,7 @@ from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
-from .schemata.api import Label, LabelName, parse_frac_prefix, parse_resource_value
+from .schemata.api import Label, LabelName, parse_cpu_cores, parse_resource_value
 from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
 
 
@@ -54,12 +54,12 @@ def container_resources(container: client.V1Container) -> api.ContainerResources
         if limits := container.resources.limits:
             parsed_limits = api.ResourcesRequirements(
                 memory=parse_resource_value(limits["memory"]) if "memory" in limits else None,
-                cpu=parse_frac_prefix(limits["cpu"]) if "cpu" in limits else None,
+                cpu=parse_cpu_cores(limits["cpu"]) if "cpu" in limits else None,
             )
         if requests := container.resources.requests:
             parsed_requests = api.ResourcesRequirements(
                 memory=parse_resource_value(requests["memory"]) if "memory" in requests else None,
-                cpu=parse_frac_prefix(requests["cpu"]) if "cpu" in requests else None,
+                cpu=parse_cpu_cores(requests["cpu"]) if "cpu" in requests else None,
             )
 
     return api.ContainerResources(
@@ -269,13 +269,13 @@ def node_resources(  # type:ignore[no-untyped-def]
 
     if capacity:
         resources["capacity"] = api.NodeResources(
-            cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
+            cpu=parse_cpu_cores(capacity.get("cpu", 0.0)),
             memory=parse_resource_value(capacity.get("memory", 0.0)),
             pods=capacity.get("pods", 0),
         )
     if allocatable:
         resources["allocatable"] = api.NodeResources(
-            cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
+            cpu=parse_cpu_cores(allocatable.get("cpu", 0.0)),
             memory=parse_resource_value(allocatable.get("memory", 0.0)),
             pods=allocatable.get("pods", 0),
         )
@@ -599,7 +599,7 @@ def parse_resource_requirement(
             continue
         requirement_type = "limit" if "limits" in requirement else "request"
         requirements[requirement_type] = (
-            parse_frac_prefix(value) if resource == "cpu" else parse_resource_value(value)
+            parse_cpu_cores(value) if resource == "cpu" else parse_resource_value(value)
         )
 
     if not requirements:

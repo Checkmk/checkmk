@@ -5,7 +5,8 @@
 
 from unittest.mock import Mock
 
-from cmk.base.check_utils import CheckPluginName
+from cmk.checkers.check_table import CheckPluginName
+
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads

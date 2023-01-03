@@ -11,7 +11,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
 
-from cmk.fetchers import Mode
+from cmk.fetchers import fetch_all, Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers.checkresults import ActiveCheckResult
@@ -21,7 +21,7 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
 from cmk.base.config import ConfigCache
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 from ._checking import execute_checkmk_checks
 

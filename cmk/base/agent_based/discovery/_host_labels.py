@@ -13,7 +13,7 @@ This module exposes three functions:
 from collections.abc import Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName
 
@@ -24,7 +24,6 @@ from cmk.checkers import HostKey
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.config import ConfigCache
-from cmk.base.discovered_labels import HostLabel
 
 from .utils import QualifiedDiscovery
 

@@ -22,10 +22,11 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName, Labels
 
+from cmk.checkers.check_table import ConfiguredService
+
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import (
     CollectedHostLabels,

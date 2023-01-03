@@ -20,6 +20,7 @@ import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
+from cmk.utils.labels import HostLabel
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     AgentRawData,
@@ -34,13 +35,12 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode, SourceInfo
+from cmk.fetchers import fetch_all, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.autochecks as autochecks
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -53,8 +53,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
-from cmk.base.discovered_labels import HostLabel
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters

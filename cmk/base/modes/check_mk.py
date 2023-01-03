@@ -47,6 +47,7 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
+from cmk.checkers import parse_raw_data
 from cmk.checkers.submitters import get_submitter, Submitter
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
@@ -54,7 +55,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
@@ -73,7 +73,6 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
-from cmk.base.sources import parse as parse_raw_data
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for

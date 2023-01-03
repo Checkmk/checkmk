@@ -40,6 +40,8 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
+from cmk.checkers.check_table import FilterMode
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -47,7 +49,6 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.check_table import FilterMode
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import (
     AbstractServiceID,

@@ -12,6 +12,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
+from cmk.utils.labels import HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import AgentRawData, HostName, RulesetName, ServiceName
@@ -21,14 +22,14 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode, SourceInfo
+from cmk.fetchers import fetch_all, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -40,11 +41,9 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
-from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
-from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 from ._discovery import get_host_services
 from ._host_labels import analyse_host_labels

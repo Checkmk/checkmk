@@ -9,11 +9,11 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from typing import NamedTuple
 
+from cmk.utils.labels import ServiceLabel
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.discovered_labels import ServiceLabel
+from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 
 from .utils import AutocheckEntry, AutochecksStore
 

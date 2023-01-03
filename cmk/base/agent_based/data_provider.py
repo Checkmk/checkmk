@@ -18,7 +18,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import SourceInfo, SourceType
 
-from cmk.checkers import HostKey
+from cmk.checkers import HostKey, parse_raw_data
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
@@ -27,7 +27,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.config import ConfigCache
 from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import make_parser
-from cmk.base.sources import parse as parse_raw_data
 
 _CacheInfo = tuple[int, int]
 

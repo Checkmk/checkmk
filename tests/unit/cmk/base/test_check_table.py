@@ -21,12 +21,12 @@ from cmk.utils.type_defs import (
     ServiceID,
 )
 
+from cmk.checkers.check_table import ConfiguredService, FilterMode, HostCheckTable
+
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry
-from cmk.base.check_table import FilterMode, HostCheckTable
-from cmk.base.check_utils import ConfiguredService
 
 
 @pytest.fixture(autouse=True, scope="module")

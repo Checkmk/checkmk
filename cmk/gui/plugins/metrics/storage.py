@@ -699,6 +699,24 @@ metric_info["mem_nonheap_committed"] = {
     "color": "16/b",
 }
 
+metric_info["mem_fragmentation"] = {
+    "title": _("Memory fragmentation"),
+    "unit": "count",
+    "color": "16/b",
+}
+
+metric_info["evictions"] = {
+    "title": _("Evictions"),
+    "unit": "count",
+    "color": "31/b",
+}
+
+metric_info["reclaimed"] = {
+    "title": _("Reclaimed"),
+    "unit": "count",
+    "color": "35/b",
+}
+
 metric_info["tapes_total"] = {
     "title": _("Total number of tapes"),
     "unit": "count",

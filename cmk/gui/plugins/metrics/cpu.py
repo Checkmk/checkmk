@@ -257,6 +257,12 @@ metric_info["util"] = {
     "color": "26/a",
 }
 
+metric_info["engine_cpu_util"] = {
+    "title": _l("Engine CPU utilization"),
+    "unit": "%",
+    "color": "33/a",
+}
+
 metric_info["util_numcpu_as_max"] = {
     "title": _l("CPU utilization"),
     "unit": "%",
@@ -831,10 +837,7 @@ graph_info["util_fallback"] = {
         "util:warn",
         "util:crit",
     ],
-    "conflicting_metrics": [
-        "util_average",
-        "system",
-    ],
+    "conflicting_metrics": ["util_average", "system", "engine_cpu_util"],
     "range": (0, 100),
 }
 
@@ -897,5 +900,13 @@ graph_info["memory_utilization_percentile"] = {
         ("memory_util_50", "line"),
         ("memory_util_95", "line"),
         ("memory_util_99", "line"),
+    ],
+}
+
+graph_info["cpu_utilization"] = {
+    "title": _l("CPU utilization"),
+    "metrics": [
+        ("util", "line"),
+        ("engine_cpu_util", "line"),
     ],
 }

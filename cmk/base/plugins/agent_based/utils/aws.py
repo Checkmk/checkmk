@@ -190,6 +190,7 @@ def extract_aws_metrics_by_labels(  # type:ignore[no-untyped-def]
 def discover_aws_generic(
     section: AWSSectionMetrics,
     required_metrics: Iterable[str],
+    requirement: Callable[[Iterable], bool] = all,
 ) -> DiscoveryResult:
     """
     >>> list(discover_aws_generic(
@@ -199,7 +200,7 @@ def discover_aws_generic(
     [Service(item='x')]
     """
     for instance_name, instance in section.items():
-        if all(required_metric in instance for required_metric in required_metrics):
+        if requirement(required_metric in instance for required_metric in required_metrics):
             yield Service(item=instance_name)
 
 

@@ -1,0 +1,22 @@
+Title: aws_elasticache: Monitor AWS ElastiCache
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1672753574
+Edition: cpe
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It's now possible to monitor AWS ElastiCache in Checkmk.
+Six new checks have been added:
+LI: AWS ElastiCache: Summary
+LI: AWS ElastiCache: Limits
+LI: AWS ElastiCache: CPU Utilization
+LI: AWS ElastiCache: Memory
+LI: AWS ElastiCache: Connections
+LI: AWS ElastiCache: Replication
+
+To monitor ElastiCache you have to configure the related
+special agent Amazon Web Services (AWS).
+

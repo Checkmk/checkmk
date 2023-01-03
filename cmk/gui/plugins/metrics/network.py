@@ -1409,6 +1409,18 @@ metric_info["connections_perc_used"] = {
     "color": "42/a",
 }
 
+metric_info["current_connections"] = {
+    "title": _("Current connections"),
+    "unit": "count",
+    "color": "24/a",
+}
+
+metric_info["new_connections"] = {
+    "title": _("New connections"),
+    "unit": "count",
+    "color": "42/a",
+}
+
 metric_info["op_s"] = {
     "title": _("Operations per second"),
     "unit": "count",
@@ -2180,5 +2192,13 @@ graph_info["latencies"] = {
         ("latencies_50", "line"),
         ("latencies_95", "line"),
         ("latencies_99", "line"),
+    ],
+}
+
+graph_info["connection_count"] = {
+    "title": _("Connections"),
+    "metrics": [
+        ("current_connections", "line"),
+        ("new_connections", "line"),
     ],
 }

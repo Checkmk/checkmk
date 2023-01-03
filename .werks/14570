@@ -1,0 +1,17 @@
+Title: Kube: Fix crash upon specifying power-of-two unit with CPU resources
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1672736260
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Previously, specifying a unit such as
+C+:
+resources:
+  cpu: 200Mi
+C-:
+inside an API object would result in crash.
+With this change, the correct number of CPU cores are computed instead.

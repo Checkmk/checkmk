@@ -23,20 +23,21 @@ from .schemata.api import Label, LabelName, LabelValue
 
 
 def parse_frac_prefix(value: str) -> float:
-    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
+    """Parses and then rounds up to nearest millicore.
+
+    This is how it is done internally by the Kubernetes API server.
 
     Examples:
        >>> parse_frac_prefix("359m")
        0.359
        >>> parse_frac_prefix("4k")
        4000.0
+       >>> parse_frac_prefix("200Mi")
+       209715200.0
+       >>> parse_frac_prefix("1M")
+       1000000.0
     """
-
-    if value.endswith("m"):
-        return 0.001 * float(value[:-1])
-    if value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    return float(value)
+    return math.ceil(1000 * _parse_quantity(value)) / 1000
 
 
 def parse_memory(value: str) -> float:

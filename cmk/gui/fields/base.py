@@ -555,7 +555,7 @@ Keys 'optional1', 'required1' occur more than once.
     def _serialize(  # type:ignore[no-untyped-def]
         self,
         value: typing.Any,
-        attr: str,
+        attr: str | None,
         obj: typing.Any,
         **kwargs,
     ) -> Result | list[Result]:

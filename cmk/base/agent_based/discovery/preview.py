@@ -22,7 +22,7 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode, SourceInfo
+from cmk.fetchers import fetch_all, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
@@ -43,7 +43,7 @@ from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import get_active_check_descriptions
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 from ._discovery import get_host_services
 from ._host_labels import analyse_host_labels

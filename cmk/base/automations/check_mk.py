@@ -71,6 +71,7 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
+from cmk.checkers import parse_raw_data
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION
 
@@ -94,7 +95,6 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.sources import make_parser
-from cmk.base.sources import parse as parse_raw_data
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]

@@ -42,7 +42,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, res
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode, SourceInfo, SourceType
+from cmk.fetchers import fetch_all, Mode, SourceInfo, SourceType
 from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey
@@ -66,7 +66,7 @@ from cmk.base.agent_based.utils import (
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import ConfigCache, HWSWInventoryParameters
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 __all__ = [
     "inventorize_status_data_of_real_host",

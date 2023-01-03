@@ -35,7 +35,7 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode, SourceInfo
+from cmk.fetchers import fetch_all, Mode, SourceInfo
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkers.type_defs import NO_SELECTION
@@ -53,7 +53,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
-from cmk.base.sources import fetch_all, make_sources
+from cmk.base.sources import make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters

@@ -10,22 +10,16 @@
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
-from functools import partial
 from typing import Final
 
-import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
-from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.fetchers import (
     Fetcher,
     FetcherType,
-    get_raw_data,
-    Mode,
     NoFetcher,
     ProgramFetcher,
     SNMPFetcher,
@@ -44,7 +38,6 @@ from cmk.fetchers.filecache import (
 )
 
 from cmk.checkers import Parser, SNMPParser
-from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -54,24 +47,9 @@ from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_stor
 from cmk.base.config import ConfigCache
 
 __all__ = [
-    "do_fetch",
-    "fetch_all",
     "make_sources",
-    "parse",
     "make_parser",
 ]
-
-
-def parse(
-    parser: Parser,
-    raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
-    *,
-    selection: SectionNameCollection,
-) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    try:
-        return raw_data.map(partial(parser.parse, selection=selection))
-    except Exception as exc:
-        return result.Error(exc)
 
 
 def make_parser(
@@ -501,28 +479,3 @@ def make_sources(
         file_cache_options=file_cache_options,
         file_cache_max_age=file_cache_max_age,
     ).sources
-
-
-def fetch_all(
-    sources: Iterable[tuple[SourceInfo, FileCache, Fetcher]],
-    *,
-    mode: Mode,
-) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    return [
-        do_fetch(source_info, file_cache, fetcher, mode=mode)
-        for source_info, file_cache, fetcher in sources
-    ]
-
-
-def do_fetch(
-    source_info: SourceInfo,
-    file_cache: FileCache,
-    fetcher: Fetcher,
-    *,
-    mode: Mode,
-) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
-    console.vverbose(f"  Source: {source_info}\n")
-    with CPUTracker() as tracker:
-        raw_data = get_raw_data(file_cache, fetcher, mode)
-    return source_info, raw_data, tracker.duration

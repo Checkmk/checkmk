@@ -27,6 +27,7 @@ See Also:
 
 """
 
+from ._api import parse_raw_data
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from ._parseragent import AgentParser
@@ -37,7 +38,10 @@ from .summarize import summarize
 __all__ = [
     "AgentParser",
     "HostKey",
+    "parse_raw_data",
     "Parser",
+    "PiggybackMarker",
+    "SectionMarker",
     "SNMPParser",
     "summarize",
 ]

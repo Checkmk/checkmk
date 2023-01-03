@@ -1,6 +1,6 @@
-diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/gtest-param-test.h googletest-9c332145b7/googletest/include/gtest/gtest-param-test.h
---- googletest-9c332145b7.orig/googletest/include/gtest/gtest-param-test.h	2022-11-16 18:18:37.000000000 +0100
-+++ googletest-9c332145b7/googletest/include/gtest/gtest-param-test.h	2022-11-21 11:40:54.121254716 +0100
+diff -Nur googletest.orig/googletest/include/gtest/gtest-param-test.h googletest/googletest/include/gtest/gtest-param-test.h
+--- googletest.orig/googletest/include/gtest/gtest-param-test.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest/googletest/include/gtest/gtest-param-test.h	2022-11-21 11:40:54.121254716 +0100
 @@ -468,10 +468,10 @@
                ::testing::internal::CodeLocation(__FILE__, __LINE__));          \
        return 0;                                                                \
@@ -23,9 +23,9 @@ diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/gtest-param-test.h
        GTEST_ATTRIBUTE_UNUSED_ =                                              \
            ::testing::UnitTest::GetInstance()                                 \
                ->parameterized_test_registry()                                \
-diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-death-test-internal.h googletest-9c332145b7/googletest/include/gtest/internal/gtest-death-test-internal.h
---- googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-16 18:18:37.000000000 +0100
-+++ googletest-9c332145b7/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-21 11:43:13.557391478 +0100
+diff -Nur googletest.orig/googletest/include/gtest/internal/gtest-death-test-internal.h googletest/googletest/include/gtest/internal/gtest-death-test-internal.h
+--- googletest.orig/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest/googletest/include/gtest/internal/gtest-death-test-internal.h	2022-11-21 11:43:13.557391478 +0100
 @@ -226,14 +226,14 @@
              #statement,                                                        \
              ::testing::internal::MakeDeathTestMatcher(regex_or_matcher),       \
@@ -43,9 +43,9 @@ diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-dea
            }                                                                    \
            break;                                                               \
          case ::testing::internal::DeathTest::EXECUTE_TEST: {                   \
-diff -Nur googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-internal.h googletest-9c332145b7/googletest/include/gtest/internal/gtest-internal.h
---- googletest-9c332145b7.orig/googletest/include/gtest/internal/gtest-internal.h	2022-11-16 18:18:37.000000000 +0100
-+++ googletest-9c332145b7/googletest/include/gtest/internal/gtest-internal.h	2022-11-21 11:46:55.169610283 +0100
+diff -Nur googletest.orig/googletest/include/gtest/internal/gtest-internal.h googletest/googletest/include/gtest/internal/gtest-internal.h
+--- googletest.orig/googletest/include/gtest/internal/gtest-internal.h	2022-11-16 18:18:37.000000000 +0100
++++ googletest/googletest/include/gtest/internal/gtest-internal.h	2022-11-21 11:46:55.169610283 +0100
 @@ -1406,7 +1406,7 @@
      gtest_msg.value += " with description \"";                                 \
      gtest_msg.value += e.what();                                               \

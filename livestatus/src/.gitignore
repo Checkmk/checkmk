@@ -12,7 +12,7 @@ Makefile.in
 asio-1.24.0/
 compile_commands.json
 cppcheck-result.xml
-googletest-9c332145b7/
+googletest-*-patched/
 html/
 includes/
 libs/

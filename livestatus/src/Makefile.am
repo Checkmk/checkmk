@@ -31,7 +31,7 @@ RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
-GOOGLETEST_VERSION := googletest-9c332145b7
+GOOGLETEST_VERSION := googletest-71140c3ca7-patched
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 .PHONY: unit-test tidy iwyu documentation documentation-quick
@@ -244,10 +244,9 @@ $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
         .
 	touch $@
 
-$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz $(PACKAGE_GOOGLETEST)/googletest.diff
+$(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz
 	$(RM) -r $(GOOGLETEST_VERSION)
 	tar xzf $<
-	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $@
 
 livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)

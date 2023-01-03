@@ -63,6 +63,6 @@ powershell Write-Host "Usage:" -ForegroundColor DarkGreen
 powershell Write-Host "unpack_package.cmd file_name target_dir_name sourcedir_name" -ForegroundColor DarkGreen
 powershell Write-Host "sourcedir_name is subdirectory in ..\omd\packages" -ForegroundColor DarkGreen
 powershell Write-Host "Example with folder in tarball:" -ForegroundColor DarkGreen
-powershell Write-Host "       unpack_package.cmd 7z ..\..\..\omd\packages\googletest googletest-9c332145b7.tar.gz ..\packages2 googletest" -ForegroundColor DarkGreen
+powershell Write-Host "       unpack_package.cmd 7z ..\..\..\omd\packages\googletest googletest-71140c3ca7-patched.tar.gz ..\packages2 googletest" -ForegroundColor DarkGreen
 powershell Write-Host "Example without folder in tarball: unpack_package.cmd simpleini-2af65fc        simpleini  simpleini  7-zip\7z.exe ..\packagesx simpleini" -ForegroundColor DarkGreen
 :exit

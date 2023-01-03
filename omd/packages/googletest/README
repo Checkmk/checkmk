@@ -1,4 +1,0 @@
-Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head
-philosophy" nowadays. To create a tar archive for a given hash use:
-
-( SHA=9c332145b7; git archive --prefix=googletest-$SHA/ --output=googletest-$SHA.tar.gz $SHA )

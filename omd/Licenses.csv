@@ -4,7 +4,7 @@ cpp-httplib,0.8.9,MIT,https://opensource.org/licenses/MIT,omd/packages/httplib/c
 fmt-master,7.0.3,MIT,https://opensource.org/licenses/MIT,omd/packages/fmt/fmt-master-7.0.3.tar.gz,,,,
 FreeTDS,0.95.95,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/freetds/freetds-0.95.95.tar.gz,,,,
 GNU patch,2.7.6,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/patch/patch-2.7.6.tar.gz,,,,
-googletest,1.10.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/googletest/googletest-9c332145b7.tar.gz,,,,
+googletest,1.10.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,omd/packages/googletest/googletest-71140c3ca7-patched.tar.gz,,,,
 Heirloom Packaging Tools,070227,CDDL-1.0,https://opensource.org/licenses/CDDL-1.0,omd/packages/heirloom-pkgtools/heirloom-pkgtools-070227.tar.bz2,"Unless otherwise noted, all files in this distribution are released under the Common Development and Distribution License (CDDL), Version 1.0 only.  Exceptions are noted within the associated source files. BSD-4-Clause also partially applies",,,
 Heirloom-mailx,12.5,MPL-1.1,https://opensource.org/licenses/MPL-1.1,omd/packages/heirloom-mailx/heirloom-mailx-12.5.tar.gz,,,,
 Lasso,2.7.0,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/lasso/lasso-2.7.0.tar.gz

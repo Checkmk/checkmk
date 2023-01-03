@@ -4,9 +4,9 @@ include(FetchContent)
 
 FetchContent_Declare(
   gtest-omd
-  URL ${root_repo_dir}/omd/packages/googletest/googletest-9c332145b7.tar.gz
+  URL ${root_repo_dir}/omd/packages/googletest/googletest-71140c3ca7-patched.tar.gz
   URL_HASH
-    SHA256=f69e29721c09b3a4b9820a76236b7f230aef157527951eb4e8a3a6ec601fda22
+    SHA256=ff90c74541157daf5fe7503b2b02ddc1b1df35bd5d2d861e9865aa4bd53248ce
   DOWNLOAD_EXTRACT_TIMESTAMP no)
 FetchContent_MakeAvailable(gtest-omd)
 FetchContent_GetProperties(

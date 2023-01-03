@@ -15,11 +15,12 @@ from typing import Final, IO, Literal, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
+
+from cmk.checkers.checkresults import ServiceCheckResult
 
 _CacheInfo = tuple[int, int]
 

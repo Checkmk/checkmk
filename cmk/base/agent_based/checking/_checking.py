@@ -13,7 +13,6 @@ from typing import Callable, DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.check_utils import ActiveCheckResult, ServiceCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
@@ -41,6 +40,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
+from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register

@@ -24,7 +24,6 @@ from typing import Callable, NamedTuple
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
@@ -54,6 +53,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Mode
 
 from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 

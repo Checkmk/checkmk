@@ -13,11 +13,12 @@ from typing import Any, NamedTuple
 from livestatus import SiteId
 
 import cmk.utils.render
-from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.site import omd_site
 
 from cmk.automations.results import CheckPreviewEntry
+
+from cmk.checkers.checkresults import ServiceCheckResult
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb

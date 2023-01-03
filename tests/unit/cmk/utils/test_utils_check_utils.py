@@ -5,12 +5,9 @@
 
 import pytest
 
-from cmk.utils.check_utils import (
-    ActiveCheckResult,
-    unwrap_parameters,
-    worst_service_state,
-    wrap_parameters,
-)
+from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
+
+from cmk.checkers.checkresults import ActiveCheckResult
 
 
 @pytest.mark.parametrize(
@@ -33,29 +30,6 @@ def test_noop_wrap_parameters() -> None:
 
 def test_noop_unwrap_parameters() -> None:
     assert {"levels": (1, 2)} == unwrap_parameters({"levels": (1, 2)})
-
-
-def test_worst_service_state_ok() -> None:
-    assert worst_service_state(0, 0, default=0) == 0
-
-
-def test_worst_service_state_warn() -> None:
-    assert worst_service_state(0, 1, default=0) == 1
-
-
-def test_worst_service_state_crit() -> None:
-    assert worst_service_state(0, 1, 2, 3, default=0) == 2
-
-
-def test_worst_service_state_unknown() -> None:
-    assert worst_service_state(0, 1, 3, default=0) == 3
-
-
-def test_worst_service_state_empty() -> None:
-    assert worst_service_state(default=0) == 0
-    assert worst_service_state(default=1) == 1
-    assert worst_service_state(default=2) == 2
-    assert worst_service_state(default=3) == 3
 
 
 def test_active_check_result() -> None:

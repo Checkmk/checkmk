@@ -7,7 +7,6 @@ from collections.abc import Callable, Container
 from functools import partial
 
 import cmk.utils.version as cmk_version
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostName, ServiceState
@@ -15,6 +14,7 @@ from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostAddress, HostNa
 from cmk.fetchers import Mode
 
 from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling

@@ -9,7 +9,6 @@ import itertools
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
     MKEmptyAgentData,
@@ -23,6 +22,7 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result
 
 from cmk.fetchers import FetcherType
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 
 __all__ = ["summarize"]

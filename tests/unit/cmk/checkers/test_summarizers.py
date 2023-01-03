@@ -5,10 +5,10 @@
 # pylint: disable=undefined-variable
 import pytest
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.type_defs import ExitSpec
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.summarize import summarize_failure, summarize_piggyback, summarize_success
 
 

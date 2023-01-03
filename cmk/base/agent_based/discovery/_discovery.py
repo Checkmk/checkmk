@@ -9,13 +9,13 @@ from collections import Counter
 from collections.abc import Sequence
 
 import cmk.utils.paths
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION, SourceInfo
 
 import cmk.base.config as config

@@ -6,11 +6,12 @@
 
 import pytest
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
 from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
+
+from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.agent_based.error_handling as error_handling
 

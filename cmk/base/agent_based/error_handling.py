@@ -8,7 +8,6 @@ from collections.abc import Callable
 from contextlib import suppress
 
 import cmk.utils.debug
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -28,6 +27,8 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
+
+from cmk.checkers.checkresults import ActiveCheckResult
 
 import cmk.base.crash_reporting
 

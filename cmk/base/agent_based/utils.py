@@ -5,10 +5,10 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.type_defs import ExitSpec, HostKey, ParsedSectionName, result, ServiceState
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import SourceInfo

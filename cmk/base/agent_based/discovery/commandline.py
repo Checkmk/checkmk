@@ -13,7 +13,6 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
@@ -26,6 +25,7 @@ from cmk.fetchers import Mode
 
 import cmk.checkers.cache
 from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling

@@ -13,7 +13,6 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
@@ -33,6 +32,7 @@ from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.checkers.agent import AgentRawDataSection
 from cmk.checkers.cache import FileCacheOptions
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import NO_SELECTION
 

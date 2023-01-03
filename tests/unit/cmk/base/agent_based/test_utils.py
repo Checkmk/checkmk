@@ -10,9 +10,9 @@ from typing import Any
 
 import pytest
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, HostName, ParsedSectionName, SectionName, SourceType
 
+from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import AgentRawDataSection
 

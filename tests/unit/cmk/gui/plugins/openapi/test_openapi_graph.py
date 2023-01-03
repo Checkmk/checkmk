@@ -193,23 +193,21 @@ def test_openapi_get_graph_metric(
 
 
 @not_in_cre
-def test_openapi_graph_combined(
+def test_openapi_filter_graph(
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get_combined_graph"),
+            url=endpoint("filter"),
             content_type="application/json",
             headers={"Accept": "application/json"},
             status=200,
             params=json.dumps(
                 {
-                    "spec": {
-                        "filters": {"host": {"host": "heute"}, "siteopt": {"site": "heute"}},
-                        "only_from": ["host"],
-                        "graph_name": "cpu_utilization_5_util",
-                        "presentation": "lines",
-                    },
+                    "filter": {"host": {"host": "heute"}, "siteopt": {"site": "heute"}},
+                    "only_from": ["host"],
+                    "type": "graph",
+                    "graph_name": "cpu_utilization_5_util",
                     "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
                     "reduce": "max",
                 }

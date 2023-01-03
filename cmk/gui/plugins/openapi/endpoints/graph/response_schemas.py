@@ -47,6 +47,8 @@ class GraphCollectionSchema(BaseSchema):
         GraphSchema(),
         description="The actual graph data.",
         required=True,
+        # TODO: something is wrong with many:
+        # rendered as object in redoc!
         many=True,
         example=[
             {

@@ -17,6 +17,7 @@ retrieve.
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request
 from cmk.gui.plugins.openapi.endpoints.graph import request_schemas, response_schemas
 from cmk.gui.plugins.openapi.endpoints.graph.common import (
+    graph_id_from_request,
     reorganize_response,
     reorganize_time_range,
 )
@@ -41,11 +42,6 @@ def get_graph(params):
     """
     body = params["body"]
 
-    if body["type"] == "metric":
-        graph_id = f"METRIC_{body['metric_name']}"
-    else:
-        graph_id = body["graph_name"]
-
     result = graph_spec_from_request(
         {
             "specification": [
@@ -54,7 +50,7 @@ def get_graph(params):
                     "site": body["site"],
                     "host_name": body["host_name"],
                     "service_description": body["service_description"],
-                    "graph_id": graph_id,
+                    "graph_id": graph_id_from_request(body),
                 },
             ],
             "data_range": reorganize_time_range(body["time_range"]),

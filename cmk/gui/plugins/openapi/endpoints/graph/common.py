@@ -20,6 +20,26 @@ GRAPH_NAME_VALIDATOR = marshmallow.validate.Regexp(
 )
 
 
+class GraphNameField(String):
+    def __init__(self):
+        super().__init__(
+            description="The name of the graph.",
+            example="cmk_cpu_time_by_phase",
+            required=True,
+            validate=GRAPH_NAME_VALIDATOR,
+        )
+
+
+class MetricNameField(String):
+    def __init__(self):
+        super().__init__(
+            description="The name of the metric.",
+            example="cmk_time_agent",
+            required=True,
+            validate=GRAPH_NAME_VALIDATOR,
+        )
+
+
 class TimeRange(BaseSchema):
     start = Timestamp(
         description="The approximate time of the first sample.",
@@ -97,3 +117,15 @@ def reorganize_time_range(time_range: dict[str, Any] | None) -> dict[str, Any] |
     if time_range is None:
         return None
     return {"time_range": [time_range["start"], time_range["end"]]}
+
+
+def graph_id_from_request(body: dict[str, Any]) -> str:
+    """
+    >>> graph_id_from_request({"type": "metric", "metric_name": "metric"})
+    'METRIC_metric'
+    >>> graph_id_from_request({"type": "graph", "graph_name": "graph"})
+    'graph'
+    """
+    if body["type"] == "metric":
+        return f"METRIC_{body['metric_name']}"
+    return body["graph_name"]

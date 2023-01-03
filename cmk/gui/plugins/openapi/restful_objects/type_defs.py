@@ -110,7 +110,7 @@ CmkEndpointName = Literal[
     "cmk/link_uuid",
     "cmk/get_graph",
     "cmk/get_custom_graph",
-    "cmk/get_combined_graph",
+    "cmk/filter_graph",
     "cmk/site_logout",
     "cmk/site_login",
     "cmk/update",

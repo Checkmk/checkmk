@@ -5,7 +5,11 @@
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import HostField, SiteField
-from cmk.gui.plugins.openapi.endpoints.graph.common import BaseRequestSchema, GRAPH_NAME_VALIDATOR
+from cmk.gui.plugins.openapi.endpoints.graph.common import (
+    BaseRequestSchema,
+    GraphNameField,
+    MetricNameField,
+)
 
 from cmk.fields import String
 
@@ -25,21 +29,11 @@ class _BaseGetSchema(BaseRequestSchema):
 
 
 class GetGraphSchema(_BaseGetSchema):
-    graph_name = String(
-        description="The name of the graph.",
-        example="cmk_cpu_time_by_phase",
-        required=True,
-        validate=GRAPH_NAME_VALIDATOR,
-    )
+    graph_name = GraphNameField()
 
 
 class GetMetricSchema(_BaseGetSchema):
-    metric_name = String(
-        description="The name of the metric.",
-        example="cmk_time_agent",
-        required=True,
-        validate=GRAPH_NAME_VALIDATOR,
-    )
+    metric_name = MetricNameField()
 
 
 class GetSchema(OneOfSchema):

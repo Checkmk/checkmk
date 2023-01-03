@@ -67,6 +67,7 @@ from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditionRegex,
     RuleValue,
+    user_id_22_regex,
     UserId,
 )
 
@@ -1478,6 +1479,30 @@ The following users are affected:"""
             self._logger.warning(_format_warning(explanation + "\n" + "\n".join(insecure)))
 
         save_users(users)
+
+    def _check_user_ids(self) -> None:
+        """Starting in version 2.2 we will validate UserIds more strictly. Wato is already quite
+        strict in 2.1, so especially existing UserIds from "external" connectors like LDAP might
+        no longer be accepted in the future. This check will warn about affected users.
+        """
+        users: Users = load_users(lock=False)
+
+        incompatible = [
+            f"{u} (from Connection: \"{users[u].get('connector')}\")"
+            for u in users
+            if user_id_22_regex().match(UserId(u)) is None
+        ]
+        if not incompatible:
+            return
+
+        msg = """WARNING: Some users will not be compatible with future versions of Checkmk.
+Beginning with Checkmk version 2.2, certain special characters will no longer be permitted in
+Checkmk user IDs. If you require the use of such characters in your user IDs, please contact Checkmk
+support for assistance. Please refert to Werk #14393 for further details.
+The following users in your current installation will become incompatible with Checkmk 2.2:\n""" + "\n".join(
+            incompatible
+        )
+        self._logger.warning(_format_warning(msg))
 
     def _rewrite_py2_inventory_data(self) -> None:
         done_path = Path(cmk.utils.paths.var_dir, "update_config")

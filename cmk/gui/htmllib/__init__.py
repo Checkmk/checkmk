@@ -780,6 +780,12 @@ class ABCHTMLGenerator(abc.ABC):
     def render_ul(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("ul", content, **kwargs)
 
+    def render_details(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+        return render_element("details", content, **kwargs)
+
+    def render_summary(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
+        return render_element("summary", content, **kwargs)
+
 
 # .
 #   .--html----------------------------------------------------------------.

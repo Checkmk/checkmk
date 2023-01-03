@@ -13,7 +13,7 @@ from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import Password
-from cmk.utils.type_defs import timeperiod_spec_alias, UserId
+from cmk.utils.type_defs import timeperiod_spec_alias, user_id_22_regex, UserId
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -315,6 +315,8 @@ class ModeUsers(WatoMode):
 
         users = userdb.load_users()
 
+        self._show_incompatible_users(users.keys())
+
         entries = list(users.items())
 
         html.begin_form("bulk_delete_form", method="POST")
@@ -559,6 +561,24 @@ class ModeUsers(WatoMode):
                 "notifications."
             )
             html.close_div()
+
+    def _show_incompatible_users(self, users: List[UserId]) -> None:
+        """
+        Some user IDs will no longer be allowed in Checkmk 2.2.0 (Werk #14393). Show a warning.
+        """
+        if incomp := [str(html.render_li(u)) for u in users if user_id_22_regex().match(u) is None]:
+            txt_incomp_users_found = _(
+                "%d users will not be compatible with future versions of Checkmk (see Werk #14393)."
+            ) % len(incomp)
+            txt_reveal_users = _("Affected users:")
+
+            html.show_warning(
+                escape_to_html(txt_incomp_users_found)
+                + html.render_br()
+                + html.render_details(
+                    html.render_summary(txt_reveal_users) + html.render_ul("".join(incomp))
+                )
+            )
 
 
 # TODO: Create separate ModeCreateUser()

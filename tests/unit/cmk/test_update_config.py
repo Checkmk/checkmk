@@ -1259,3 +1259,38 @@ def test_check_password_hashes(uc: update_config.UpdateConfig) -> None:
     assert all(user in loaded for user in all_users)
     assert all(loaded[user].get("enforce_pw_change") for user in do_update)
     assert not any(loaded[user].get("enforce_pw_change") for user in dont_update)
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
+    "user_id, should_warn",
+    [
+        # --- previously allowed in wato
+        ("ↄ𝒽ѥ𝕔𖹬", True),
+        ("艋", True),
+        # --- previously possible via ldap
+        ("admin/", True),
+        (".", True),
+        ("@min", True),
+        ("adm!n", True),
+        ("%2F", True),
+        ("😀", True),
+        # --- still ok
+        ("123$admin", False),
+        ("Ädmün", False),
+        ("$-@._", False),
+        ("_ADMIN", False),
+    ],
+)
+def test_check_user_ids(
+    mocker: MockerFixture,
+    uc: update_config.UpdateConfig,
+    user_id: str,
+    should_warn: bool,
+) -> None:
+    mock_warner = mocker.patch.object(uc._logger, "warning")
+    save_users({UserId(user_id): {"connector": "mytestconnector"}})
+
+    uc._check_user_ids()
+
+    assert mock_warner.call_count == (1 if should_warn else 0)

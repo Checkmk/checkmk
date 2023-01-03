@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import re
 import sys
 from collections.abc import Container
 from dataclasses import dataclass
@@ -21,12 +22,15 @@ from typing import (
     NewType,
     NoReturn,
     Optional,
+    Pattern,
     Sequence,
     Set,
     Tuple,
     TypedDict,
     Union,
 )
+
+from cmk.utils.regex import regex
 
 
 def assert_never(x: NoReturn) -> NoReturn:
@@ -273,6 +277,18 @@ class DiscoveryResult:
 
 
 UserId = NewType("UserId", str)
+
+
+def user_id_22_regex() -> Pattern[str]:
+    """
+    The regex that will be used to validate all user IDs starting Checkmk 2.2.0.
+    Currently used for user creation and to warn about users that will become incompatible.
+    """
+    umlauts = "üöäßÜÖÄåÅØøÆæé"
+    allowed_start = rf"\w${umlauts}"
+    return regex(rf"^[{allowed_start}][-@.{allowed_start}]*$", re.ASCII)
+
+
 EventRule = Dict[str, Any]  # TODO Improve this
 
 # This def is used to keep the API-exposed object in sync with our

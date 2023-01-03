@@ -57,7 +57,7 @@ import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import Seconds
+from cmk.utils.type_defs import Seconds, user_id_22_regex
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
@@ -766,10 +766,10 @@ def ID(**kwargs):
 # TODO: Cleanup kwargs
 def UserID(**kwargs):
     return TextInput(
-        regex=re.compile(r"^[\w][-\w.@]*$", re.UNICODE),
+        regex=user_id_22_regex(),
         regex_error=_(
-            "An identifier must only consist of letters, digits, dash, dot, "
-            "at and underscore. But it must start with a digit, letter or underscore."
+            "An identifier must only consist of letters, digits, dollar, underscore, dash, dot, "
+            "and at. It must start with a letter, digit, dollar, or underscore."
         ),
         **kwargs,
     )

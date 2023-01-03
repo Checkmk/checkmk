@@ -44,9 +44,14 @@ class JSONStatefulSetMetaData(TypedDict):
     ownerReferences: NotRequired[JSONOwnerReferences]
 
 
+class RollingUpdate(TypedDict):
+    partition: int
+    maxUnavailable: NotRequired[str]
+
+
 class JSONStatefulSetRollingUpdate(TypedDict):
     type: Literal["RollingUpdate"]
-    rollingUpdate: NotRequired[Mapping[Literal["partition"], int]]
+    rollingUpdate: NotRequired[RollingUpdate]
 
 
 class JSONStatefulSetOnDelete(TypedDict):
@@ -125,12 +130,13 @@ def _statefulset_update_strategy_from_json(
     if statefulset_update_strategy["type"] == "OnDelete":
         return api.OnDelete()
     if statefulset_update_strategy["type"] == "RollingUpdate":
-        partition = (
-            rolling_update["partition"]
-            if (rolling_update := statefulset_update_strategy.get("rollingUpdate"))
-            else 0
-        )
-        return api.StatefulSetRollingUpdate(partition=partition)
+        if rolling_update := statefulset_update_strategy.get("rollingUpdate"):
+            partition = rolling_update["partition"]
+            max_unavailable = rolling_update.get("maxUnavailable")
+        else:
+            partition = 0
+            max_unavailable = None
+        return api.StatefulSetRollingUpdate(partition=partition, max_unavailable=max_unavailable)
     raise ValueError(f"Unknown strategy type: {statefulset_update_strategy['type']}")
 
 

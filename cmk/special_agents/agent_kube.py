@@ -1493,32 +1493,48 @@ def create_daemon_set_api_sections(
     )
 
 
-def write_statefulsets_api_sections(
-    api_statefulsets: Sequence[StatefulSet],
+def create_statefulset_api_sections(
+    api_statefulset: StatefulSet,
     host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    """Write the StatefulSet relevant sections based on k8 API information"""
-
-    def output_sections(cluster_statefulset: StatefulSet) -> None:
-        sections = {
-            "kube_pod_resources_v1": cluster_statefulset.pod_resources,
-            "kube_memory_resources_v1": cluster_statefulset.memory_resources,
-            "kube_cpu_resources_v1": cluster_statefulset.cpu_resources,
-            "kube_statefulset_info_v1": lambda: statefulset_info(
-                cluster_statefulset,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=api_statefulset.pod_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=api_statefulset.memory_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=api_statefulset.cpu_resources(),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_statefulset_info_v1"),
+            section=statefulset_info(
+                api_statefulset,
                 host_settings.cluster_name,
                 host_settings.kubernetes_cluster_hostname,
                 host_settings.annotation_key_pattern,
             ),
-            "kube_update_strategy_v1": lambda: controller_strategy(cluster_statefulset),
-            "kube_statefulset_replicas_v1": lambda: statefulset_replicas(cluster_statefulset),
-        }
-        _write_sections(sections)
-
-    for statefulset in api_statefulsets:
-        with ConditionalPiggybackSection(piggyback_formatter(statefulset)):
-            output_sections(statefulset)
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_update_strategy_v1"),
+            section=controller_strategy(api_statefulset),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_statefulset_replicas_v1"),
+            section=statefulset_replicas(api_statefulset),
+        ),
+    )
 
 
 def write_machine_sections(
@@ -2278,13 +2294,15 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
                 LOGGER.info("Write StatefulSets sections based on API data")
-                write_statefulsets_api_sections(
-                    kube_objects_from_namespaces(
-                        composed_entities.statefulsets, monitored_namespace_names
-                    ),
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                for statefulset in kube_objects_from_namespaces(
+                    composed_entities.statefulsets, monitored_namespace_names
+                ):
+                    statefulset_sections = create_statefulset_api_sections(
+                        statefulset,
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=piggyback_formatter(statefulset),
+                    )
+                    common.write_sections(statefulset_sections)
 
             monitored_api_cron_job_pods = [
                 api_pod

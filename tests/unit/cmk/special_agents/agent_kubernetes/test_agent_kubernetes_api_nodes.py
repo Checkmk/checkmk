@@ -4,16 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
 
+import pydantic
 from kubernetes import client  # type: ignore[import]
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import (
-    node_conditions,
-    node_info,
-    parse_metadata_no_namespace,
-)
+from cmk.special_agents.utils_kubernetes.transform import parse_metadata_no_namespace
+
+
+class NodeConditions(pydantic.BaseModel):
+    __root__: list[api.NodeCondition] | None
+
+    class Config:
+        orm_mode = True
 
 
 class TestAPINode:
@@ -75,25 +79,23 @@ class TestAPINode:
         assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:
-        node_list_with_info = {
-            "status": {
-                "nodeInfo": {
-                    "machineID": "abd0bd9c2f234af099e849787da63620",
-                    "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
-                    "bootID": "04bae495-8ea7-4230-9bf0-9ce841201c0c",
-                    "kernelVersion": "5.4.0-88-generic",
-                    "osImage": "Ubuntu 20.04.3 LTS",
-                    "containerRuntimeVersion": "docker://20.10.7",
-                    "kubeletVersion": "v1.21.7",
-                    "kubeProxyVersion": "v1.21.7",
-                    "operatingSystem": "linux",
-                    "architecture": "amd64",
-                },
-            },
+        node_info = {
+            "machineID": "abd0bd9c2f234af099e849787da63620",
+            "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
+            "bootID": "04bae495-8ea7-4230-9bf0-9ce841201c0c",
+            "kernelVersion": "5.4.0-88-generic",
+            "osImage": "Ubuntu 20.04.3 LTS",
+            "containerRuntimeVersion": "docker://20.10.7",
+            "kubeletVersion": "v1.21.7",
+            "kubeProxyVersion": "v1.21.7",
+            "operatingSystem": "linux",
+            "architecture": "amd64",
         }
 
-        node = core_client.api_client.deserialize(FakeResponse(node_list_with_info), "V1Node")
-        parsed_node_info = node_info(node)
+        client_node_info = core_client.api_client.deserialize(
+            FakeResponse(node_info), "V1NodeSystemInfo"
+        )
+        parsed_node_info = api.NodeInfo.from_orm(client_node_info)
         assert isinstance(parsed_node_info, api.NodeInfo)
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
@@ -147,7 +149,7 @@ class TestAPINode:
         }
 
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        conditions = node_conditions(node.status)
+        conditions = NodeConditions.from_orm(node.status.conditions).__root__
         assert conditions is not None
         assert len(conditions) == 5
         assert any(c.type_ == "DiskPressure" for c in conditions)
@@ -160,11 +162,13 @@ class TestAPINode:
     ) -> None:
         node_with_conditions = {"status": {}}  # type: ignore
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        assert node_conditions(node.status) is None
+        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        assert conditions is None
 
     def test_parse_conditions_no_conditions(
         self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
         node_with_conditions = {"status": {"conditions": []}}  # type: ignore
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
-        assert node_conditions(node.status) is None
+        conditions = NodeConditions.from_orm(node.status.conditions).__root__
+        assert conditions == []

@@ -276,7 +276,7 @@ def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Nod
     return agent.Node(
         metadata=node.metadata,
         status=node.status,
-        kubelet_info=node.kubelet_info,
+        kubelet_health=node.kubelet_health,
         pods=pods,
     )
 

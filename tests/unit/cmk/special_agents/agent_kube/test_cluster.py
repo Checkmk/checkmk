@@ -31,6 +31,10 @@ from .factory import (
 )
 
 
+def _create_labels_from_roles(roles: Sequence[str]) -> api.Labels:
+    return parse_labels({f"node-role.kubernetes.io/{role}": "" for role in roles})
+
+
 def cluster_api_sections() -> Sequence[str]:
     return [
         "kube_pod_resources_v1",
@@ -121,9 +125,9 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) 
 
 
 def test_node_control_plane_count() -> None:
+    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
     api_node = APINodeFactory.build(
-        roles=["master"],
-        status=node_status(api.NodeConditionStatus.TRUE),
+        metadata=metadata, status=node_status(api.NodeConditionStatus.TRUE)
     )
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
     node_count = cluster.node_count()
@@ -133,9 +137,9 @@ def test_node_control_plane_count() -> None:
 
 
 def test_node_control_plane_not_ready_count() -> None:
+    metadata = MetaDataFactory.build(labels=_create_labels_from_roles(["master"]))
     api_node = APINodeFactory.build(
-        roles=["master"],
-        status=node_status(api.NodeConditionStatus.FALSE),
+        metadata=metadata, status=node_status(api.NodeConditionStatus.FALSE)
     )
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=[api_node]))
     node_count = cluster.node_count()
@@ -200,12 +204,12 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
+                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(
                             memory=memory, factory_use_construct=True
                         )
                     ),
-                    roles=roles,
                 )
                 for roles in api_node_roles_per_node
             ],
@@ -253,10 +257,10 @@ def test_cluster_allocatable_cpu_resource_cluster(
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
+                    metadata=NodeMetaDataFactory.build(labels=_create_labels_from_roles(roles)),
                     status=NodeStatusFactory.build(
                         allocatable=NodeResourcesFactory.build(cpu=6.0, factory_use_construct=True)
                     ),
-                    roles=roles,
                 )
                 for roles in api_node_roles_per_node
             ],
@@ -296,7 +300,9 @@ def test_cluster_usage_resources(
         for pod in APIPodFactory.batch(count, spec=PodSpecFactory.build(node=node))
     ]
     nodes = [
-        APINodeFactory.build(metadata=NodeMetaDataFactory.build(name=node), roles=roles)
+        APINodeFactory.build(
+            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles))
+        )
         for node, _, roles in node_podcount_roles
     ]
     cluster = agent.Cluster.from_api_resources(
@@ -342,14 +348,13 @@ def test_cluster_allocatable_pods(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node),
+            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
             status=NodeStatusFactory.build(
                 allocatable=NodeResourcesFactory.build(
                     pods=allocatable, factory_use_construct=True
                 ),
                 capacity=NodeResourcesFactory.build(pods=capacity, factory_use_construct=True),
             ),
-            roles=roles,
         )
         for node, _, roles in node_podcount_roles
     ]
@@ -399,8 +404,7 @@ def test_create_correct_number_pod_names_for_cluster_host(
     ]
     nodes = [
         APINodeFactory.build(
-            metadata=NodeMetaDataFactory.build(name=node),
-            roles=roles,
+            metadata=NodeMetaDataFactory.build(name=node, labels=_create_labels_from_roles(roles)),
         )
         for node, _, roles in node_podcount_roles
     ]

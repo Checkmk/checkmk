@@ -17,13 +17,7 @@ from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
-from .schemata.api import (
-    convert_to_timestamp,
-    Label,
-    LabelName,
-    parse_cpu_cores,
-    parse_resource_value,
-)
+from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_value
 from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 
@@ -202,47 +196,6 @@ def pod_conditions(
     return result
 
 
-def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
-    """
-    >>> _give_root_if_prefix_present("123asd", "123")
-    'asd'
-    >>> _give_root_if_prefix_present("asd123", "123") is None
-    True
-    >>> _give_root_if_prefix_present("asd", "123") is None
-    True
-    """
-    if label.startswith(prefix):
-        return label[len(prefix) :]
-    return None
-
-
-def parse_node_roles(labels: Mapping[LabelName, Label] | None) -> Sequence[str]:
-    if labels is None:
-        return []
-    return [
-        role
-        for label in labels
-        if (role := _give_root_if_prefix_present(label, "node-role.kubernetes.io/")) is not None
-    ]
-
-
-def node_conditions(status: client.V1NodeStatus) -> Sequence[api.NodeCondition] | None:
-    conditions = status.conditions
-    if not conditions:
-        return None
-    return [api.NodeCondition.from_orm(c) for c in conditions]
-
-
-def node_info(node: client.V1Node) -> api.NodeInfo:
-    return api.NodeInfo(
-        architecture=node.status.node_info.architecture,
-        kernel_version=node.status.node_info.kernel_version,
-        os_image=node.status.node_info.os_image,
-        operating_system=node.status.node_info.operating_system,
-        container_runtime_version=node.status.node_info.container_runtime_version,
-    )
-
-
 def deployment_replicas(
     status: client.V1DeploymentStatus, spec: client.V1DeploymentSpec
 ) -> api.Replicas:
@@ -288,35 +241,11 @@ def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) ->
     )
 
 
-def node_addresses_from_client(
-    node_addresses: Sequence[client.V1NodeAdresses] | None,
-) -> api.NodeAddresses:
-    if not node_addresses:
-        return []
-    return [api.NodeAddress.from_orm(address) for address in node_addresses]
-
-
-def parse_node_resources(resource: dict[str, str] | None) -> api.NodeResources:
-    return api.NodeResources.parse_obj(resource or {})
-
-
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
-    metadata = parse_metadata_no_namespace(node.metadata, api.NodeName)
     return api.Node(
-        metadata=metadata,
-        status=api.NodeStatus(
-            capacity=parse_node_resources(node.status.capacity),
-            allocatable=parse_node_resources(node.status.allocatable),
-            conditions=node_conditions(node.status),
-            node_info=node_info(node),
-            addresses=node_addresses_from_client(node.status.addresses),
-        ),
-        roles=parse_node_roles(metadata.labels),
-        kubelet_info=api.KubeletInfo(
-            version=node.status.node_info.kubelet_version,
-            proxy_version=node.status.node_info.kube_proxy_version,
-            health=kubelet_health,
-        ),
+        metadata=parse_metadata_no_namespace(node.metadata, api.NodeName),
+        status=api.NodeStatus.from_orm(node.status),
+        kubelet_health=kubelet_health,
     )
 
 

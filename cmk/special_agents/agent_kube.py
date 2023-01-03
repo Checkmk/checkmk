@@ -492,7 +492,7 @@ def statefulset_info(
 class Node(PodOwner):
     metadata: api.MetaDataNoNamespace[api.NodeName]
     status: api.NodeStatus
-    kubelet_info: api.KubeletInfo
+    kubelet_health: api.HealthZ
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
@@ -501,7 +501,11 @@ class Node(PodOwner):
         )
 
     def kubelet(self) -> section.KubeletInfo:
-        return section.KubeletInfo.parse_obj(self.kubelet_info)
+        return section.KubeletInfo(
+            version=self.status.node_info.kubelet_version,
+            proxy_version=self.status.node_info.kube_proxy_version,
+            health=self.kubelet_health,
+        )
 
     def info(
         self,
@@ -603,7 +607,7 @@ def _node_is_ready(node: api.Node) -> bool:
 
 
 def _node_is_control_plane(node: api.Node) -> bool:
-    return "master" in node.roles or "control_plane" in node.roles
+    return "master" in node.roles() or "control_plane" in node.roles()
 
 
 @dataclass(frozen=True)
@@ -621,7 +625,7 @@ class Cluster:
             for api_node in api_data.nodes
             if not any(
                 any_match_from_list_of_infix_patterns(excluded_node_roles, role)
-                for role in api_node.roles
+                for role in api_node.roles()
             )
         ]
         aggregation_node_names = [node.metadata.name for node in aggregation_nodes]
@@ -794,7 +798,7 @@ class ComposedEntities:
             Node(
                 metadata=node_api.metadata,
                 status=node_api.status,
-                kubelet_info=node_api.kubelet_info,
+                kubelet_health=node_api.kubelet_health,
                 pods=node_to_api_pod[node_api.metadata.name],
             )
             for node_api in api_data.nodes

@@ -407,18 +407,14 @@ class KubeletMetricSample(BaseModel):
     __root__: _KubeletMetrics
 
 
-class KubeletInfo(BaseModel):
-    version: str
-    proxy_version: str
-    health: HealthZ
-
-
-class NodeInfo(BaseModel):
+class NodeInfo(ClientModel):
     architecture: str
     kernel_version: str
     os_image: str
     operating_system: str
     container_runtime_version: str
+    kubelet_version: str
+    kube_proxy_version: str
 
 
 class NodeAddress(ClientModel):
@@ -431,19 +427,39 @@ class NodeAddress(ClientModel):
 NodeAddresses = Sequence[NodeAddress]
 
 
-class NodeStatus(BaseModel):
-    allocatable: NodeResources
-    capacity: NodeResources
+class NodeStatus(ClientModel):
+    allocatable: NodeResources = NodeResources()
+    capacity: NodeResources = NodeResources()
     conditions: Sequence[NodeCondition] | None
     node_info: NodeInfo
     addresses: NodeAddresses = []
 
 
+def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
+    """
+    >>> _give_root_if_prefix_present("123asd", "123")
+    'asd'
+    >>> _give_root_if_prefix_present("asd123", "123") is None
+    True
+    >>> _give_root_if_prefix_present("asd", "123") is None
+    True
+    """
+    if label.startswith(prefix):
+        return label[len(prefix) :]
+    return None
+
+
 class Node(BaseModel):
     metadata: MetaDataNoNamespace[NodeName]
     status: NodeStatus
-    roles: Sequence[str]
-    kubelet_info: KubeletInfo
+    kubelet_health: HealthZ
+
+    def roles(self) -> Sequence[str]:
+        return [
+            role
+            for label in self.metadata.labels
+            if (role := _give_root_if_prefix_present(label, "node-role.kubernetes.io/")) is not None
+        ]
 
 
 class Replicas(BaseModel):

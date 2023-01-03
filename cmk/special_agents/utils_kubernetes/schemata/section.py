@@ -329,9 +329,16 @@ class NodeCount(Section):
     control_plane: ReadyCount = ReadyCount()
 
 
-class NodeInfo(api.NodeInfo, Section):
+class NodeInfo(Section):
     """section: kube_node_info_v1"""
 
+    # NodeSystemInfo
+    architecture: str
+    kernel_version: str
+    os_image: str
+    operating_system: str
+    container_runtime_version: str
+    # ObjectMeta
     name: api.NodeName
     creation_timestamp: api.Timestamp
     labels: api.Labels
@@ -612,8 +619,12 @@ class StartTime(Section):
     start_time: api.Timestamp
 
 
-class KubeletInfo(Section, api.KubeletInfo):
+class KubeletInfo(Section):
     """section: kube_node_kubelet_v1"""
+
+    version: str
+    proxy_version: str
+    health: api.HealthZ
 
 
 class HardResourceRequirement(Section, api.HardResourceRequirement):

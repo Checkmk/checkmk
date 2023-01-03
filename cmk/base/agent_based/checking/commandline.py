@@ -15,13 +15,13 @@ from cmk.fetchers import Mode
 
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult
+from cmk.checkers.submitters import Submitter
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
 from cmk.base.config import ConfigCache
 from cmk.base.sources import fetch_all, make_sources
-from cmk.base.submitters import Submitter
 
 from ._checking import execute_checkmk_checks
 

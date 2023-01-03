@@ -20,11 +20,11 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.checkers.submitters import Submitter
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.config import ConfigCache
-from cmk.base.submitters import Submitter
 
 from ._checking import execute_checkmk_checks
 

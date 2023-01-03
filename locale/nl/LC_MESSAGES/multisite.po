@@ -5767,6 +5767,10 @@ msgstr "Authenticatieprotocol"
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "Authenticatie aan webdienst mislukt.<br>Melding:<br>%s"
 
+#, fuzzy
+msgid "Authentication types"
+msgstr "Authenticatie"
+
 msgid "Authentication with TLS"
 msgstr "Authenticatie met TLS"
 
@@ -9592,6 +9596,10 @@ msgstr "Ontvangen aanvragen van cliënten"
 
 msgid "Client secret"
 msgstr "Geheim van de klant"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Klant ID"
 
 msgid "Clients"
 msgstr "Klanten"
@@ -33755,6 +33763,9 @@ msgstr "O"
 msgid "O2 levels"
 msgstr "O2 niveaus"
 
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
+
 msgid "OEM data interpretation"
 msgstr "OEM-gegevens interpretatie"
 
@@ -46056,6 +46067,9 @@ msgstr "Tijdelijk bestandssysteem gemount"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
+
+msgid "TenantID"
+msgstr ""
 
 msgid "Terminated containers"
 msgstr "Beëindigde containers"
@@ -58364,6 +58378,10 @@ msgstr "Gebruikersnaam voor inloggen"
 
 msgid "Username is unknown"
 msgstr "Gebruikersnaam is onbekend"
+
+#, fuzzy
+msgid "Username/Password"
+msgstr "Wachtwoord gebruiker"
 
 msgid "Username:"
 msgstr "Gebruikersnaam:"

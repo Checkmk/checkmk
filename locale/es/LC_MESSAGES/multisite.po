@@ -5798,6 +5798,10 @@ msgstr "Protocolo de autenticación"
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "Ha fallado la autenticación en el servicio web.<br>Mensaje:<br>%s"
 
+#, fuzzy
+msgid "Authentication types"
+msgstr "Autenticación"
+
 msgid "Authentication with TLS"
 msgstr "Autenticación con TLS"
 
@@ -9654,6 +9658,10 @@ msgstr "Solicitudes de clientes recibidas"
 
 msgid "Client secret"
 msgstr "Secreto de cliente"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Identificación del cliente"
 
 msgid "Clients"
 msgstr "Cliente"
@@ -34025,6 +34033,9 @@ msgstr "O"
 msgid "O2 levels"
 msgstr "Niveles de O2"
 
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
+
 msgid "OEM data interpretation"
 msgstr "Interpretación de datos OEM"
 
@@ -46472,6 +46483,9 @@ msgstr "Sistema de archivos temporal montado"
 msgid "Tenant ID / Directory ID"
 msgstr "ID de inquilino / ID de directorio"
 
+msgid "TenantID"
+msgstr ""
+
 msgid "Terminated containers"
 msgstr "Contenedores terminados"
 
@@ -58860,6 +58874,10 @@ msgstr "Nombre de usuario para iniciar sesión"
 
 msgid "Username is unknown"
 msgstr "El nombre de usuario es desconocido"
+
+#, fuzzy
+msgid "Username/Password"
+msgstr "Contraseña del usuario"
 
 msgid "Username:"
 msgstr "Nombre de usuario:"

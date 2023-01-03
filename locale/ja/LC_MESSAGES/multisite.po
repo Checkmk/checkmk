@@ -5529,6 +5529,10 @@ msgstr "認証プロトコル"
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr ""
 
+#, fuzzy
+msgid "Authentication types"
+msgstr "認証"
+
 msgid "Authentication with TLS"
 msgstr "TLS認証"
 
@@ -9165,6 +9169,10 @@ msgstr "受け取ったクライアント要求"
 
 msgid "Client secret"
 msgstr "Client secret"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "クライアントID"
 
 msgid "Clients"
 msgstr "クライアント"
@@ -32439,6 +32447,9 @@ msgstr "O"
 msgid "O2 levels"
 msgstr "O2レベル"
 
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
+
 msgid "OEM data interpretation"
 msgstr "OEMデータの解釈"
 
@@ -44310,6 +44321,9 @@ msgstr "一時ファイルシステムがマウントされました"
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
 
+msgid "TenantID"
+msgstr ""
+
 msgid "Terminated containers"
 msgstr "終了したコンテナの数"
 
@@ -55537,6 +55551,10 @@ msgstr "ログイン用のユーザー名"
 
 msgid "Username is unknown"
 msgstr "ユーザー名は不明です"
+
+#, fuzzy
+msgid "Username/Password"
+msgstr "ユーザーパスワード"
 
 msgid "Username:"
 msgstr "ユーザー名:"

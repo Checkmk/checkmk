@@ -5458,6 +5458,10 @@ msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr ""
 
 #, fuzzy
+msgid "Authentication types"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Authentication with TLS"
 msgstr "trimite notificare"
 
@@ -9016,6 +9020,10 @@ msgstr ""
 
 msgid "Client secret"
 msgstr ""
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Adaugă Conținut"
 
 #, fuzzy
 msgid "Clients"
@@ -32660,6 +32668,9 @@ msgstr ""
 msgid "O2 levels"
 msgstr "doua nivele"
 
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
+
 msgid "OEM data interpretation"
 msgstr ""
 
@@ -44779,6 +44790,9 @@ msgstr ""
 msgid "Tenant ID / Directory ID"
 msgstr ""
 
+msgid "TenantID"
+msgstr ""
+
 #, fuzzy
 msgid "Terminated containers"
 msgstr "doua nivele"
@@ -54816,6 +54830,10 @@ msgstr ""
 
 msgid "Username is unknown"
 msgstr ""
+
+#, fuzzy
+msgid "Username/Password"
+msgstr "Parola"
 
 msgid "Username:"
 msgstr ""

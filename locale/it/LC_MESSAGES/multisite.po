@@ -5829,6 +5829,10 @@ msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "Autenticazione al servizio web fallita.<br>Messaggio:<br>%s"
 
 #, fuzzy
+msgid "Authentication types"
+msgstr "Autenticazione"
+
+#, fuzzy
 msgid "Authentication with TLS"
 msgstr "Metodo di autenticazione"
 
@@ -9717,6 +9721,10 @@ msgstr "Richieste dei clienti ricevute"
 
 msgid "Client secret"
 msgstr "Segreto del cliente"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "ID cliente"
 
 msgid "Clients"
 msgstr "Cliente"
@@ -34317,6 +34325,9 @@ msgstr "O"
 msgid "O2 levels"
 msgstr "Livelli di O2"
 
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
+
 msgid "OEM data interpretation"
 msgstr "Interpretazione dei dati OEM"
 
@@ -46833,6 +46844,9 @@ msgstr "File system temporaneo montato"
 msgid "Tenant ID / Directory ID"
 msgstr "ID inquilino / ID elenco"
 
+msgid "TenantID"
+msgstr ""
+
 #, fuzzy
 msgid "Terminated containers"
 msgstr "Docker nodo e contenitori"
@@ -59253,6 +59267,10 @@ msgstr "Nome utente per il login"
 
 msgid "Username is unknown"
 msgstr "Il nome utente è sconosciuto"
+
+#, fuzzy
+msgid "Username/Password"
+msgstr "Password utente"
 
 msgid "Username:"
 msgstr "Nome utente:"

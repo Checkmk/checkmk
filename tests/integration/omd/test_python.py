@@ -48,6 +48,7 @@ def _get_import_names_from_pipfile() -> list[str]:
         "black",
         "idna",
         "jsonschema",
+        "more-itertools",
         "openapi-spec-validator",
         "ordered-set",
         "pyparsing",

@@ -25,6 +25,7 @@ from .factory import (
     node_status,
     NodeMetaDataFactory,
     NodeResourcesFactory,
+    NodeStatusFactory,
     PodSpecFactory,
     PodStatusFactory,
 )
@@ -64,14 +65,14 @@ def test_cluster_resources(cluster_pods: int) -> None:
 
 def test_cluster_allocatable_memory_resource() -> None:
     memory = 2.0 * 1024
-    resources = {
-        "capacity": NodeResourcesFactory.build(),
-        "allocatable": NodeResourcesFactory.build(memory=memory),
-    }
-    nodes = APINodeFactory.batch(size=3, resources=resources)
+    number_nodes = 3
+    status = NodeStatusFactory.build(
+        allocatable=NodeResourcesFactory.build(memory=memory, factory_use_construct=True)
+    )
+    nodes = APINodeFactory.batch(size=number_nodes, status=status)
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
-    expected = section.AllocatableResource(context="cluster", value=memory * 3)
+    expected = section.AllocatableResource(context="cluster", value=memory * number_nodes)
     actual = cluster.allocatable_memory_resource()
     assert actual == expected
 
@@ -79,11 +80,10 @@ def test_cluster_allocatable_memory_resource() -> None:
 def test_cluster_allocatable_cpu_resource():
     cpu = 2.0
     number_nodes = 3
-    resources = {
-        "capacity": NodeResourcesFactory.build(),
-        "allocatable": NodeResourcesFactory.build(cpu=cpu),
-    }
-    nodes = APINodeFactory.batch(size=number_nodes, resources=resources)
+    status = NodeStatusFactory.build(
+        allocatable=NodeResourcesFactory.build(cpu=cpu, factory_use_construct=True)
+    )
+    nodes = APINodeFactory.batch(size=number_nodes, status=status)
     cluster = agent.Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
@@ -200,7 +200,11 @@ def test_cluster_allocatable_memory_resource_exclude_roles(  # type:ignore[no-un
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    resources={"allocatable": NodeResourcesFactory.build(memory=memory)},
+                    status=NodeStatusFactory.build(
+                        allocatable=NodeResourcesFactory.build(
+                            memory=memory, factory_use_construct=True
+                        )
+                    ),
                     roles=roles,
                 )
                 for roles in api_node_roles_per_node
@@ -249,7 +253,9 @@ def test_cluster_allocatable_cpu_resource_cluster(  # type:ignore[no-untyped-def
         api_data=APIDataFactory.build(
             nodes=[
                 APINodeFactory.build(
-                    resources={"allocatable": NodeResourcesFactory.build(cpu=6.0)},
+                    status=NodeStatusFactory.build(
+                        allocatable=NodeResourcesFactory.build(cpu=6.0, factory_use_construct=True)
+                    ),
                     roles=roles,
                 )
                 for roles in api_node_roles_per_node
@@ -337,10 +343,12 @@ def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
     nodes = [
         APINodeFactory.build(
             metadata=NodeMetaDataFactory.build(name=node),
-            resources={
-                "allocatable": NodeResourcesFactory.build(pods=allocatable),
-                "capacity": NodeResourcesFactory.build(pods=capacity),
-            },
+            status=NodeStatusFactory.build(
+                allocatable=NodeResourcesFactory.build(
+                    pods=allocatable, factory_use_construct=True
+                ),
+                capacity=NodeResourcesFactory.build(pods=capacity, factory_use_construct=True),
+            ),
             roles=roles,
         )
         for node, _, roles in node_podcount_roles

@@ -335,6 +335,9 @@ class NodeResources(BaseModel):
     memory: float = 0.0
     pods: int = 0
 
+    _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
+    _parse_memory = validator("memory", pre=True, allow_reuse=True)(parse_resource_value)
+
 
 class HealthZ(BaseModel):
     status_code: int
@@ -407,6 +410,8 @@ NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeStatus(BaseModel):
+    allocatable: NodeResources
+    capacity: NodeResources
     conditions: Sequence[NodeCondition] | None
     node_info: NodeInfo
     addresses: NodeAddresses
@@ -416,7 +421,6 @@ class Node(BaseModel):
     metadata: MetaDataNoNamespace[NodeName]
     status: NodeStatus
     roles: Sequence[str]
-    resources: dict[str, NodeResources]
     kubelet_info: KubeletInfo
 
 

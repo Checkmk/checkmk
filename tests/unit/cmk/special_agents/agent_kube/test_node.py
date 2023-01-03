@@ -40,11 +40,10 @@ def nodes_api_sections() -> Sequence[str]:
 
 def test_node_allocatable_memory_resource() -> None:
     memory = 2.0 * 1024
-    resources = {
-        "capacity": NodeResourcesFactory.build(),
-        "allocatable": NodeResourcesFactory.build(memory=memory),
-    }
-    node = api_to_agent_node(APINodeFactory.build(resources=resources))
+    status = NodeStatusFactory.build(
+        allocatable=NodeResourcesFactory.build(memory=memory, factory_use_construct=True)
+    )
+    node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatableResource(context="node", value=memory)
     actual = node.allocatable_memory_resource()
     assert actual == expected
@@ -52,11 +51,10 @@ def test_node_allocatable_memory_resource() -> None:
 
 def test_node_allocatable_cpu_resource() -> None:
     cpu = 2.0
-    resources = {
-        "capacity": NodeResourcesFactory.build(),
-        "allocatable": NodeResourcesFactory.build(cpu=cpu),
-    }
-    node = api_to_agent_node(APINodeFactory.build(resources=resources))
+    status = NodeStatusFactory.build(
+        allocatable=NodeResourcesFactory.build(cpu=cpu, factory_use_construct=True)
+    )
+    node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatableResource(context="node", value=cpu)
     actual = node.allocatable_cpu_resource()
     assert actual == expected
@@ -65,11 +63,11 @@ def test_node_allocatable_cpu_resource() -> None:
 def test_node_alloctable_pods() -> None:
     capacity = 2
     allocatable = 3
-    resources = {
-        "capacity": NodeResourcesFactory.build(pods=capacity),
-        "allocatable": NodeResourcesFactory.build(pods=allocatable),
-    }
-    node = api_to_agent_node(APINodeFactory.build(resources=resources))
+    status = NodeStatusFactory.build(
+        allocatable=NodeResourcesFactory.build(pods=allocatable, factory_use_construct=True),
+        capacity=NodeResourcesFactory.build(pods=capacity, factory_use_construct=True),
+    )
+    node = api_to_agent_node(APINodeFactory.build(status=status))
     expected = section.AllocatablePods(capacity=capacity, allocatable=allocatable)
     actual = node.allocatable_pods()
     assert actual == expected

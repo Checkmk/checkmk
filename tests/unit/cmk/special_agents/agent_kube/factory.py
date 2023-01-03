@@ -228,10 +228,6 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
-class APINodeFactory(ModelFactory):
-    __model__ = api.Node
-
-
 NPD_NODE_CONDITION_TYPES = [
     "KernelDeadlock",
     "ReadonlyFilesystem",
@@ -255,6 +251,8 @@ class NodeStatusFactory(ModelFactory):
         NodeConditionFactory.batch,
         size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
     )
+    allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
+    capacity = Use(NodeResourcesFactory.build, factory_use_construct=True)
 
 
 def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
@@ -266,11 +264,16 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
     )
 
 
+class APINodeFactory(ModelFactory):
+    __model__ = api.Node
+
+    status = NodeStatusFactory.build
+
+
 def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
     return agent.Node(
         metadata=node.metadata,
         status=node.status,
-        resources=node.resources,
         kubelet_info=node.kubelet_info,
         pods=pods,
     )
@@ -302,6 +305,7 @@ class APIDataFactory(ModelFactory):
     __model__ = APIData
 
     persistent_volume_claims = Use(PersistentVolumeClaimFactory.batch, size=2)
+    nodes = Use(APINodeFactory.batch, size=3)
 
 
 class ClusterDetailsFactory(ModelFactory):

@@ -492,13 +492,12 @@ def statefulset_info(
 class Node(PodOwner):
     metadata: api.MetaDataNoNamespace[api.NodeName]
     status: api.NodeStatus
-    resources: dict[str, api.NodeResources]
     kubelet_info: api.KubeletInfo
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
-            capacity=self.resources["capacity"].pods,
-            allocatable=self.resources["allocatable"].pods,
+            capacity=self.status.capacity.pods,
+            allocatable=self.status.allocatable.pods,
         )
 
     def kubelet(self) -> section.KubeletInfo:
@@ -536,13 +535,13 @@ class Node(PodOwner):
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="node",
-            value=self.resources["allocatable"].memory,
+            value=self.status.allocatable.memory,
         )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="node",
-            value=self.resources["allocatable"].cpu,
+            value=self.status.allocatable.cpu,
         )
 
     def conditions(self) -> section.NodeConditions | None:
@@ -647,8 +646,8 @@ class Cluster:
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
-            capacity=sum(node.resources["capacity"].pods for node in self.aggregation_nodes),
-            allocatable=sum(node.resources["allocatable"].pods for node in self.aggregation_nodes),
+            capacity=sum(node.status.capacity.pods for node in self.aggregation_nodes),
+            allocatable=sum(node.status.allocatable.pods for node in self.aggregation_nodes),
         )
 
     def node_count(self) -> section.NodeCount:
@@ -676,13 +675,13 @@ class Cluster:
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
-            value=sum(node.resources["allocatable"].memory for node in self.aggregation_nodes),
+            value=sum(node.status.allocatable.memory for node in self.aggregation_nodes),
         )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
-            value=sum(node.resources["allocatable"].cpu for node in self.aggregation_nodes),
+            value=sum(node.status.allocatable.cpu for node in self.aggregation_nodes),
         )
 
     def version(self) -> api.GitVersion:
@@ -795,7 +794,6 @@ class ComposedEntities:
             Node(
                 metadata=node_api.metadata,
                 status=node_api.status,
-                resources=node_api.resources,
                 kubelet_info=node_api.kubelet_info,
                 pods=node_to_api_pod[node_api.metadata.name],
             )

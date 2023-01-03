@@ -246,42 +246,6 @@ def node_info(node: client.V1Node) -> api.NodeInfo:
     )
 
 
-def parse_node_resources(node: client.V1Node) -> dict[str, api.NodeResources]:
-    if node.status:
-        capacity = node.status.capacity
-        allocatable = node.status.allocatable
-    else:
-        capacity, allocatable = None, None
-
-    return node_resources(capacity, allocatable)
-
-
-def node_resources(  # type:ignore[no-untyped-def]
-    capacity, allocatable
-) -> dict[str, api.NodeResources]:
-    resources = {
-        "capacity": api.NodeResources(),
-        "allocatable": api.NodeResources(),
-    }
-
-    if not capacity and not allocatable:
-        return resources
-
-    if capacity:
-        resources["capacity"] = api.NodeResources(
-            cpu=parse_cpu_cores(capacity.get("cpu", 0.0)),
-            memory=parse_resource_value(capacity.get("memory", 0.0)),
-            pods=capacity.get("pods", 0),
-        )
-    if allocatable:
-        resources["allocatable"] = api.NodeResources(
-            cpu=parse_cpu_cores(allocatable.get("cpu", 0.0)),
-            memory=parse_resource_value(allocatable.get("memory", 0.0)),
-            pods=allocatable.get("pods", 0),
-        )
-    return resources
-
-
 def deployment_replicas(
     status: client.V1DeploymentStatus, spec: client.V1DeploymentSpec
 ) -> api.Replicas:
@@ -341,16 +305,21 @@ def node_addresses_from_client(
     ]
 
 
+def parse_node_resources(resource: dict[str, str] | None) -> api.NodeResources:
+    return api.NodeResources.parse_obj(resource or {})
+
+
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
     metadata = parse_metadata_no_namespace(node.metadata, api.NodeName)
     return api.Node(
         metadata=metadata,
         status=api.NodeStatus(
+            capacity=parse_node_resources(node.status.capacity),
+            allocatable=parse_node_resources(node.status.allocatable),
             conditions=node_conditions(node.status),
             node_info=node_info(node),
             addresses=node_addresses_from_client(node.status.addresses),
         ),
-        resources=parse_node_resources(node),
         roles=parse_node_roles(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,

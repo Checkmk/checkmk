@@ -330,6 +330,8 @@ def _vars_help() -> HTML:
     return (
         _("This script will be executed using the BASH shell. ")
         + _("This information is available as environment variables")
+        + HTMLWriter.render_br()
+        + HTMLWriter.render_br()
         + html.render_table(HTML().join(_help_rows), class_="help")
     )
 

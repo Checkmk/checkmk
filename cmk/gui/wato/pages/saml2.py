@@ -87,8 +87,8 @@ def _connection_properties() -> list[DictionaryEntry]:
             HTTPSUrl(
                 title=_("Checkmk server URL"),
                 help=_(
-                    "The full URL of the Checkmk server that can be used by the Identity Provider to "
-                    "contact its Assertion Consumer Service endpoint. For example: "
+                    "The URL of the server that hosts Checkmk. This is the URL your monitoring users "
+                    "use. It does not need to be accessible to your Identity Provider. For example: "
                     "https://mycheckmkserver.com. "
                     "Note that we only support HTTPS for this endpoint, because it specifies "
                     "certificates which should be trusted."

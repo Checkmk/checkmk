@@ -33,6 +33,14 @@ metric_info["connections_total"] = {
     "color": "14/a",
 }
 
+
+metric_info["clients_rejected"] = {
+    "title": _("Rejected connection requests"),
+    "unit": "1/s",
+    "color": "12/a",
+}
+
+
 metric_info["clients_output"] = {
     "title": _("Longest output list"),
     "unit": "count",

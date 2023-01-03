@@ -421,11 +421,11 @@ class NodeInfo(BaseModel):
     container_runtime_version: str
 
 
-class NodeAddress(BaseModel):
+class NodeAddress(ClientModel):
     address: IpAddress
     # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
     # "InternalDNS" and "ExternalDNS" on an eks cluster
-    type_: str
+    type_: str = Field(..., alias="type")
 
 
 NodeAddresses = Sequence[NodeAddress]
@@ -436,7 +436,7 @@ class NodeStatus(BaseModel):
     capacity: NodeResources
     conditions: Sequence[NodeCondition] | None
     node_info: NodeInfo
-    addresses: NodeAddresses
+    addresses: NodeAddresses = []
 
 
 class Node(BaseModel):

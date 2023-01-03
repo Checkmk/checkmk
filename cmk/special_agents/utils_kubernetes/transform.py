@@ -293,13 +293,7 @@ def node_addresses_from_client(
 ) -> api.NodeAddresses:
     if not node_addresses:
         return []
-    return [
-        api.NodeAddress(
-            address=address.address,
-            type_=address.type,
-        )
-        for address in node_addresses
-    ]
+    return [api.NodeAddress.from_orm(address) for address in node_addresses]
 
 
 def parse_node_resources(resource: dict[str, str] | None) -> api.NodeResources:

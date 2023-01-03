@@ -967,6 +967,12 @@ REDIS = Service(
             ),
         ),
         Metric(
+            name="redis.googleapis.com/stats/connections/total",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_RATE,
+            ),
+        ),
+        Metric(
             name="redis.googleapis.com/replication/master/slaves/lag",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,

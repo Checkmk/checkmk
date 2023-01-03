@@ -27,6 +27,12 @@ metric_info["clients_connected"] = {
     "color": "11/a",
 }
 
+metric_info["connections_total"] = {
+    "title": _("Accepted connection requests"),
+    "unit": "1/s",
+    "color": "14/a",
+}
+
 metric_info["clients_output"] = {
     "title": _("Longest output list"),
     "unit": "count",

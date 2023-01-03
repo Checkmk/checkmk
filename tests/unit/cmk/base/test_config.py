@@ -27,12 +27,13 @@ from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
+from cmk.checkers.check_table import ConfiguredService
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
 from cmk.base.autochecks import AutocheckEntry
-from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import ConfigCache
 
 

@@ -11,6 +11,7 @@ from collections.abc import Sequence
 import cmk.utils.paths
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
+from cmk.utils.labels import HostLabel
 from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -29,7 +30,6 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
-from cmk.base.discovered_labels import HostLabel
 
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels

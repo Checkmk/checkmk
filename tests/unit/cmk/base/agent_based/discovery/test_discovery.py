@@ -14,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
@@ -60,7 +60,6 @@ from cmk.base.agent_based.discovery.autodiscovery import (
 )
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
 from cmk.base.config import ConfigCache
-from cmk.base.discovered_labels import HostLabel
 
 
 @pytest.fixture

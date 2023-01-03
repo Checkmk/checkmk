@@ -14,7 +14,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import ObjectStore
 from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
 
-from cmk.base.check_utils import LegacyCheckParameters
+from cmk.checkers.check_table import LegacyCheckParameters
 
 
 # If we switched to something less stupid than "LegacyCheckParameters", see

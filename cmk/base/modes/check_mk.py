@@ -54,7 +54,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios

@@ -29,7 +29,7 @@ import cmk.utils.password_store
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
-from cmk.utils.labels import DiscoveredHostLabelsStore
+from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
@@ -77,7 +77,6 @@ from cmk.checkers.type_defs import NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_config as core_config
@@ -94,7 +93,6 @@ from cmk.base.config import ConfigCache
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources import make_parser
 from cmk.base.sources import parse as parse_raw_data
 

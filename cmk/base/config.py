@@ -115,11 +115,16 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkers import AgentParser
+from cmk.checkers.check_table import (
+    ConfiguredService,
+    FilterMode,
+    HostCheckTable,
+    LegacyCheckParameters,
+)
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.check_utils
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -135,8 +140,6 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
 )
 from cmk.base.autochecks import AutocheckServiceWithNodes
-from cmk.base.check_table import FilterMode, HostCheckTable
-from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # TODO: Prefix helper functions with "_".
@@ -1470,14 +1473,14 @@ def _checktype_ignored_for_host(
 def resolve_service_dependencies(
     *,
     host_name: HostName,
-    services: Sequence[cmk.base.check_utils.ConfiguredService],
-) -> Sequence[cmk.base.check_utils.ConfiguredService]:
+    services: Sequence[ConfiguredService],
+) -> Sequence[ConfiguredService]:
     if is_cmc():
         return services
 
     unresolved = [(s, set(service_depends_on(host_name, s.description))) for s in services]
 
-    resolved: list[cmk.base.check_utils.ConfiguredService] = []
+    resolved: list[ConfiguredService] = []
     while unresolved:
         resolved_descriptions = {service.description for service in resolved}
         newly_resolved = {
@@ -2677,8 +2680,8 @@ class ConfigCache:
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
-                cmk.base.check_utils.ServiceID,
-                tuple[RulesetName, cmk.base.check_utils.ConfiguredService],
+                ServiceID,
+                tuple[RulesetName, ConfiguredService],
             ],
         ] = {}
         self.__is_piggyback_host: dict[HostName, bool] = {}
@@ -3000,9 +3003,7 @@ class ConfigCache:
 
     def enforced_services_table(
         self, hostname: HostName
-    ) -> Mapping[
-        cmk.base.check_utils.ServiceID, tuple[RulesetName, cmk.base.check_utils.ConfiguredService]
-    ]:
+    ) -> Mapping[ServiceID, tuple[RulesetName, ConfiguredService],]:
         """Return a table of enforced services
 
         Note: We need to reverse the order of the enforced services.
@@ -3015,7 +3016,7 @@ class ConfigCache:
             {
                 ServiceID(check_plugin_name, item): (
                     RulesetName(checkgroup_name),
-                    cmk.base.check_utils.ConfiguredService(
+                    ConfiguredService(
                         check_plugin_name=check_plugin_name,
                         item=item,
                         description=descr,
@@ -4107,9 +4108,7 @@ class ConfigCache:
         self._cache_match_object_host[hostname] = match_object
         return match_object
 
-    def get_autochecks_of(
-        self, hostname: HostName
-    ) -> Sequence[cmk.base.check_utils.ConfiguredService]:
+    def get_autochecks_of(self, hostname: HostName) -> Sequence[ConfiguredService]:
         return self._autochecks_manager.get_autochecks_of(
             hostname,
             compute_check_parameters,

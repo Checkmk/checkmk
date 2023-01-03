@@ -27,11 +27,12 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.checkers.check_table import LegacyCheckParameters
+
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
-from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.config import ConfigCache
 
 

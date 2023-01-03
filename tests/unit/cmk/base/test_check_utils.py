@@ -7,7 +7,7 @@
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.check_utils import ConfiguredService
+from cmk.checkers.check_table import ConfiguredService
 
 
 def _service(plugin: str, item: str | None) -> ConfiguredService:

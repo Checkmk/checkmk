@@ -29,7 +29,6 @@ from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks
-import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting

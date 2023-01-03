@@ -39,6 +39,7 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
 from cmk.checkers import HostKey
+from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
 from cmk.checkers.type_defs import SectionNameCollection
@@ -65,7 +66,6 @@ from cmk.base.agent_based.utils import (
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, HWSWInventoryParameters
 
 from . import _cluster_modes

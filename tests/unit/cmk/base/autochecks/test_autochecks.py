@@ -16,8 +16,9 @@ import cmk.utils.paths
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import CheckPluginName, HostName
 
+from cmk.checkers.check_table import ConfiguredService
+
 import cmk.base.autochecks as autochecks
-from cmk.base.check_utils import ConfiguredService
 from cmk.base.config import ConfigCache
 
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())

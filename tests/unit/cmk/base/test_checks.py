@@ -15,8 +15,6 @@ from tests.unit.conftest import FixPluginLegacy
 
 import cmk.utils.paths
 
-import cmk.base.check_utils
-
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):
     try:

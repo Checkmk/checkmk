@@ -46,6 +46,7 @@ def _get_import_names_from_pipfile() -> list[str]:
     # TODO: "ordered-set" is not even an import name
     static_import_names = [
         "black",
+        "docstring_parser",
         "idna",
         "jsonschema",
         "more-itertools",

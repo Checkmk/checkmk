@@ -292,7 +292,7 @@ class Filter(abc.ABC):
 
     @property
     def description(self) -> Optional[str]:
-        return str(self._description)
+        return None if self._description is None else str(self._description)
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration

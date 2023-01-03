@@ -1,75 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: Checkmk Enterprise License
+# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 
 import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import UserId
 
-if not version.is_raw_edition():
-    from cmk.gui.cee.plugins.metrics.customgraphs import (  # pylint: disable=no-name-in-module
-        CustomGraphPage,
-    )
-
-from cmk.gui.pagetypes import OverridableInstances
-
-GRAPH_ENDPOINT_TEMPLATE = "/NO_SITE/check_mk/api/1.0/domain-types/graph/actions/{name}/invoke"
-
-not_in_cre = pytest.mark.skipif(version.is_raw_edition(), reason="Enpoint not available in CRE")
-
-
-def endpoint(name: str) -> str:
-    return GRAPH_ENDPOINT_TEMPLATE.format(name=name)
-
-
-@not_in_cre
-def test_openapi_graph_custom(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    mock_livestatus: MockLiveStatusConnection,
-    with_automation_user: tuple[UserId, str],
-) -> None:
-    mock_livestatus.set_sites(["NO_SITE"])
-    username, _ = with_automation_user
-
-    graph_spec = {
-        "owner": username,
-        "title": "My Cool Graph",
-        "name": "my_cool_graph",
-        "topic": CustomGraphPage.default_topic(),
-        "context": {},
-        "add_context_to_title": False,
-    }
-    new_page = CustomGraphPage(graph_spec)  # type: ignore
-    instances: OverridableInstances[CustomGraphPage] = OverridableInstances()
-    instances.add_page(new_page)
-    CustomGraphPage.save_user_instances(instances, owner=username)
-
-    with mock_livestatus():
-        resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get_custom_graph"),
-            content_type="application/json",
-            headers={"Accept": "application/json"},
-            status=200,
-            params=json.dumps(
-                {
-                    "name": "my_cool_graph",
-                    "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "reduce": "max",
-                }
-            ),
-        )
-    expected = {
-        "curves": [],
-        "step": 60,
-        "time_range": {"end": "1970-01-01T00:00:30+00:00", "start": "1970-01-01T00:00:00+00:00"},
-    }
-    assert resp.json == expected
+GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/graph/actions/get/invoke"
 
 
 @pytest.mark.usefixtures("with_host")
@@ -103,7 +45,7 @@ def test_openapi_get_graph_graph(
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get"),
+            url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
             status=200,
@@ -162,7 +104,7 @@ def test_openapi_get_graph_metric(
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("get"),
+            url=GRAPH_ENDPOINT_GET,
             content_type="application/json",
             headers={"Accept": "application/json"},
             status=200,
@@ -188,34 +130,5 @@ def test_openapi_get_graph_metric(
         ],
         "step": 60,
         "time_range": {"end": "1970-01-01T00:01:00+00:00", "start": "1970-01-01T00:00:00+00:00"},
-    }
-    assert resp.json == expected
-
-
-@not_in_cre
-def test_openapi_filter_graph(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
-) -> None:
-    with mock_livestatus():
-        resp = aut_user_auth_wsgi_app.post(
-            url=endpoint("filter"),
-            content_type="application/json",
-            headers={"Accept": "application/json"},
-            status=200,
-            params=json.dumps(
-                {
-                    "filter": {"host": {"host": "heute"}, "siteopt": {"site": "heute"}},
-                    "only_from": ["host"],
-                    "type": "graph",
-                    "graph_name": "cpu_utilization_5_util",
-                    "time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"},
-                    "reduce": "max",
-                }
-            ),
-        )
-    expected = {
-        "curves": [],
-        "step": 60,
-        "time_range": {"end": "1970-01-01T00:00:30+00:00", "start": "1970-01-01T00:00:00+00:00"},
     }
     assert resp.json == expected

@@ -62,11 +62,13 @@ from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Mode
+from .._abstract import Mode
 
 __all__ = [
     "FileCache",
+    "FileCacheMode",
     "FileCacheOptions",
+    "MaxAge",
 ]
 
 

@@ -6,7 +6,7 @@
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING
 
-from cmk.checkers.cache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.base.config as config
 from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter

@@ -19,21 +19,10 @@ from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from cmk.fetchers.cache import SectionStore
 
-from ._base import Parser
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache
+from ._parser import Parser
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
-
-
-class AgentFileCache(FileCache[AgentRawData]):
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return AgentRawData(raw_data)
-
-    @staticmethod
-    def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        return raw_data
 
 
 class SectionWithHeader(NamedTuple):

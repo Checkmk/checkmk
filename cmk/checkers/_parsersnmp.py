@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import logging
 import time
 from collections.abc import Mapping, MutableMapping
@@ -15,22 +14,11 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers.cache import SectionStore
 
-from ._base import Parser
-from .cache import FileCache
+from ._parser import Parser
 from .host_sections import HostSections
 from .type_defs import SectionNameCollection
 
-__all__ = ["SNMPFileCache", "SNMPParser"]
-
-
-class SNMPFileCache(FileCache[SNMPRawData]):
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
-        return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
-
-    @staticmethod
-    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
-        return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
+__all__ = ["SNMPParser"]
 
 
 class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):

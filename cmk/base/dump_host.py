@@ -25,9 +25,7 @@ from cmk.fetchers import (
     SourceType,
     TCPFetcher,
 )
-
-import cmk.checkers.cache as file_cache
-from cmk.checkers.cache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -187,7 +185,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
-            file_cache_max_age=file_cache.MaxAge.none(),
+            file_cache_max_age=MaxAge.none(),
         )
     ]
 

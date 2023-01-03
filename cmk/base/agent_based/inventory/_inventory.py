@@ -43,9 +43,9 @@ from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, res
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Mode, SourceInfo, SourceType
+from cmk.fetchers.filecache import FileCacheOptions
 
 from cmk.checkers import HostKey
-from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection

@@ -12,8 +12,8 @@ from cmk.utils.type_defs import SectionName
 
 from cmk.fetchers import Mode
 from cmk.fetchers.cache import PersistedSections, SectionStore
+from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers.cache import MaxAge
 from cmk.checkers.type_defs import AgentRawDataSection
 
 

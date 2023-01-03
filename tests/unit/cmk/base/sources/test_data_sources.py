@@ -8,9 +8,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
-
-import cmk.checkers.cache as file_cache
-from cmk.checkers.cache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.base.sources import make_sources
 
@@ -103,6 +101,6 @@ def test_host_config_creates_passing_source_sources(
             config_cache=config_cache,
             simulation_mode=True,
             file_cache_options=FileCacheOptions(),
-            file_cache_max_age=file_cache.MaxAge.none(),
+            file_cache_max_age=MaxAge.none(),
         )
     ] == sources

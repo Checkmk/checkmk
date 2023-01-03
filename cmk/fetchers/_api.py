@@ -3,20 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 from functools import partial
-from typing import Generic
 
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.fetchers import Fetcher, Mode
-
-from .cache import FileCache
-from .host_sections import HostSections, TRawDataSection
-from .type_defs import SectionNameCollection
+from ._abstract import Fetcher, Mode
+from .filecache import FileCache
 
 __all__ = ["get_raw_data"]
 
@@ -42,13 +37,3 @@ def get_raw_data(
 
     except Exception as exc:
         return result.Error(exc)
-
-
-class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
-    """Parse raw data into host sections."""
-
-    @abc.abstractmethod
-    def parse(
-        self, raw_data: TRawData, *, selection: SectionNameCollection
-    ) -> HostSections[TRawDataSection]:
-        raise NotImplementedError

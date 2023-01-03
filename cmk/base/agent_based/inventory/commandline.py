@@ -14,7 +14,8 @@ import cmk.utils.store as store
 from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, RuleSetName
 
-from cmk.checkers.cache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions
+
 from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.section as section

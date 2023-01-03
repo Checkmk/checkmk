@@ -112,10 +112,10 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers.filecache import MaxAge
 
-import cmk.checkers.cache as cache_file
-from cmk.checkers.agent import AgentParser, AgentRawDataSection
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.checkers import AgentParser
+from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -1700,8 +1700,8 @@ def max_cachefile_age(
     checking: int | None = None,
     discovery: int | None = None,
     inventory: int | None = None,
-) -> cache_file.MaxAge:
-    return cache_file.MaxAge(
+) -> MaxAge:
+    return MaxAge(
         checking=check_max_cachefile_age if checking is None else checking,
         # next line: inventory_max_cachefile_age is *not a typo*, old name for discovery!
         discovery=inventory_max_cachefile_age if discovery is None else discovery,
@@ -3587,7 +3587,7 @@ class ConfigCache:
             host_name, self.ruleset_matcher.label_sources_of_host(host_name)
         )
 
-    def max_cachefile_age(self, hostname: HostName) -> cache_file.MaxAge:
+    def max_cachefile_age(self, hostname: HostName) -> MaxAge:
         return max_cachefile_age(
             checking=None if self.nodes_of(hostname) is None else cluster_max_cachefile_age,
         )

@@ -11,7 +11,8 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName, ServiceState
 
-from cmk.checkers.cache import FileCacheOptions
+from cmk.fetchers.filecache import FileCacheOptions
+
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 

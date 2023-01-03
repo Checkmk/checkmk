@@ -22,8 +22,7 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers.cache import PersistedSections, SectionStore
 
-from cmk.checkers.agent import AgentParser, PiggybackMarker, SectionMarker
-from cmk.checkers.snmp import SNMPParser
+from cmk.checkers import AgentParser, PiggybackMarker, SectionMarker, SNMPParser
 from cmk.checkers.type_defs import AgentRawDataSection, NO_SELECTION
 
 

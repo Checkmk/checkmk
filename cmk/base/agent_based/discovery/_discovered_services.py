@@ -16,7 +16,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, Se
 
 from cmk.fetchers import SourceType
 
-import cmk.checkers.cache
 from cmk.checkers import HostKey
 
 import cmk.base.api.agent_based.register as agent_based_register

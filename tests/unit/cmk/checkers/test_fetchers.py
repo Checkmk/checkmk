@@ -30,10 +30,12 @@ from cmk.snmplib.type_defs import (
     SNMPHostConfig,
     SNMPRawData,
     SNMPTable,
+    TRawData,
 )
 
 import cmk.fetchers._snmp as snmp
 from cmk.fetchers import (
+    get_raw_data,
     IPMIFetcher,
     Mode,
     PiggybackFetcher,
@@ -44,12 +46,8 @@ from cmk.fetchers import (
     TCPFetcher,
 )
 from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
+from cmk.fetchers.filecache import AgentFileCache, FileCache, FileCacheMode, MaxAge, SNMPFileCache
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
-
-from cmk.checkers import get_raw_data
-from cmk.checkers.agent import AgentFileCache
-from cmk.checkers.cache import FileCache, FileCacheMode, MaxAge, TRawData
-from cmk.checkers.snmp import SNMPFileCache
 
 
 class SensorReading(NamedTuple):

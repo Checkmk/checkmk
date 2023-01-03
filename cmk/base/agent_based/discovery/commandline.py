@@ -22,9 +22,8 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Mode, SourceInfo
+from cmk.fetchers.filecache import FileCacheOptions
 
-import cmk.checkers.cache
-from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 

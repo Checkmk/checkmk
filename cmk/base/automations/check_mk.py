@@ -67,12 +67,10 @@ import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
-from cmk.fetchers import FetcherType, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-import cmk.checkers.cache
-from cmk.checkers import get_raw_data
-from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.summarize import summarize
 from cmk.checkers.type_defs import NO_SELECTION
 

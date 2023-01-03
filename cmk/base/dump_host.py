@@ -11,7 +11,7 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostName, SourceType
+from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
@@ -21,12 +21,13 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SourceInfo,
+    SourceType,
     TCPFetcher,
 )
 
 import cmk.checkers.cache as file_cache
 from cmk.checkers.cache import FileCacheOptions
-from cmk.checkers.type_defs import SourceInfo
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

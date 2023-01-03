@@ -15,7 +15,11 @@ from collections.abc import Mapping, Sequence
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostKey, HostName, SourceType
+from cmk.utils.type_defs import HostName
+
+from cmk.fetchers import SourceType
+
+from cmk.checkers import HostKey
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker

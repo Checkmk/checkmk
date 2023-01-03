@@ -24,13 +24,11 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     EVERYTHING,
     ExitSpec,
-    HostKey,
     HostName,
     MetricTuple,
     ParsedSectionName,
     RuleSetName,
     ServiceName,
-    SourceType,
     state_markers,
     TimeperiodName,
 )
@@ -38,11 +36,12 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import FetcherType
+from cmk.fetchers import FetcherType, SourceInfo, SourceType
 
+from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkers.submitters import Submittee, Submitter
-from cmk.checkers.type_defs import SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

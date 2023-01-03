@@ -6,11 +6,10 @@
 from __future__ import annotations
 
 import dataclasses
-import enum
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, Literal, NamedTuple, NewType, TypeVar, Union
+from typing import Any, Generic, Literal, NewType, TypeVar, Union
 
 if sys.version_info < (3, 11):
     # Generic typed dict
@@ -253,18 +252,6 @@ SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
 # can easily transform back and forth for serialization.
 TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
 TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
-
-
-class SourceType(enum.Enum):
-    """Classification of management sources vs regular hosts"""
-
-    HOST = enum.auto()
-    MANAGEMENT = enum.auto()
-
-
-class HostKey(NamedTuple):
-    hostname: HostName
-    source_type: SourceType
 
 
 # TODO: We should really parse our configuration file and use a

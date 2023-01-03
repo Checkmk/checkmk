@@ -38,24 +38,17 @@ from cmk.utils.structured_data import (
     TABLE_KEY,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    AgentRawData,
-    HostKey,
-    HostName,
-    InventoryPluginName,
-    result,
-    RuleSetName,
-    SourceType,
-)
+from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, result, RuleSetName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode
+from cmk.fetchers import Mode, SourceInfo, SourceType
 
+from cmk.checkers import HostKey
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

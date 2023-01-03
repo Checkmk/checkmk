@@ -21,12 +21,12 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import Mode
+from cmk.fetchers import Mode, SourceInfo
 
 import cmk.checkers.cache
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks

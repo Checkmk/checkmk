@@ -15,8 +15,10 @@ from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.fetchers import SourceInfo
+
 from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import (

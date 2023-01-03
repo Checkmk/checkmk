@@ -6,21 +6,11 @@
 
 import enum
 from collections.abc import Sequence
-from typing import Final, NamedTuple
+from typing import Final
 
-from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import SectionName
 
-from cmk.fetchers import FetcherType
-
-__all__ = ["NO_SELECTION", "SectionNameCollection", "SourceInfo", "FetcherType"]
-
-
-class SourceInfo(NamedTuple):
-    hostname: HostName
-    ipaddress: HostAddress | None
-    ident: str
-    fetcher_type: FetcherType
-    source_type: SourceType
+__all__ = ["NO_SELECTION", "SectionNameCollection"]
 
 
 # Note that the inner Sequence[str] to AgentRawDataSection

@@ -10,7 +10,7 @@ from typing import Final
 import cmk.utils.paths
 from cmk.utils.type_defs import HostName
 
-from ._abstract import FetcherType
+from ._typedefs import FetcherType
 
 __all__ = ["make_file_cache_path_template", "make_persisted_section_dir"]
 

@@ -15,18 +15,7 @@ from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
 
-__all__ = ["Fetcher", "FetcherType", "Mode"]
-
-
-class FetcherType(enum.Enum):
-    NONE = enum.auto()
-    PUSH_AGENT = enum.auto()
-    IPMI = enum.auto()
-    PIGGYBACK = enum.auto()
-    PROGRAM = enum.auto()
-    SPECIAL_AGENT = enum.auto()
-    SNMP = enum.auto()
-    TCP = enum.auto()
+__all__ = ["Fetcher", "Mode"]
 
 
 class Mode(enum.Enum):

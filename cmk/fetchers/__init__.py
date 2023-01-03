@@ -14,13 +14,14 @@ from typing import Any
 
 from typing_extensions import assert_never
 
-from ._abstract import Fetcher, FetcherType, Mode
+from ._abstract import Fetcher, Mode
 from ._ipmi import IPMIFetcher
 from ._nofetcher import NoFetcher
 from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
 from ._snmp import SNMPFetcher, SNMPSectionMeta
 from ._tcp import TCPEncryptionHandling, TCPFetcher
+from ._typedefs import FetcherType, SourceInfo, SourceType
 
 __all__ = [
     "Fetcher",

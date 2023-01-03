@@ -6,12 +6,14 @@
 from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostKey, ParsedSectionName, result, ServiceState
+from cmk.utils.type_defs import ExitSpec, ParsedSectionName, result, ServiceState
 
+from cmk.fetchers import SourceInfo
+
+from cmk.checkers import HostKey
 from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.summarize import summarize
-from cmk.checkers.type_defs import SourceInfo
 
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker
 

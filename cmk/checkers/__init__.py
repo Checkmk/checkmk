@@ -29,12 +29,14 @@ See Also:
 
 from . import cache
 from ._base import FileCache, get_raw_data, Parser
+from ._typedefs import HostKey
 from .summarize import summarize
 
 __all__ = [
     "cache",
     "get_raw_data",
     "FileCache",
+    "HostKey",
     "Parser",
     "summarize",
 ]

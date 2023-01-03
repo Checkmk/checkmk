@@ -12,20 +12,15 @@ from typing import Any, Final, NamedTuple
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    AgentRawData,
-    HostKey,
-    HostName,
-    ParsedSectionName,
-    result,
-    SectionName,
-    SourceType,
-)
+from cmk.utils.type_defs import AgentRawData, HostName, ParsedSectionName, result, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
+from cmk.fetchers import SourceInfo, SourceType
+
+from cmk.checkers import HostKey
 from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin

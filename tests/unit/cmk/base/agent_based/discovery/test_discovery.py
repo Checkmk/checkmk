@@ -19,17 +19,18 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
-    HostKey,
     HostName,
     Ruleset,
     RuleSetName,
     SectionName,
     ServiceID,
-    SourceType,
 )
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
+from cmk.fetchers import SourceType
+
+from cmk.checkers import HostKey
 from cmk.checkers.agent import AgentRawDataSection
 from cmk.checkers.cache import FileCacheOptions
 from cmk.checkers.checkresults import ActiveCheckResult

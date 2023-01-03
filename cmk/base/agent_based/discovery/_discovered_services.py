@@ -12,16 +12,12 @@ import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostKey,
-    HostName,
-    ParsedSectionName,
-    ServiceID,
-    SourceType,
-)
+from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
+
+from cmk.fetchers import SourceType
 
 import cmk.checkers.cache
+from cmk.checkers import HostKey
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

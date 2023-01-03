@@ -17,11 +17,20 @@ import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, result, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
-from cmk.fetchers import Fetcher, FetcherType, Mode, NoFetcher, ProgramFetcher, SNMPFetcher
+from cmk.fetchers import (
+    Fetcher,
+    FetcherType,
+    Mode,
+    NoFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SourceInfo,
+    SourceType,
+)
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_file_cache_path_template, make_persisted_section_dir
 
@@ -30,7 +39,7 @@ from cmk.checkers.agent import AgentFileCache, AgentRawData, AgentRawDataSection
 from cmk.checkers.cache import FileCacheMode, FileCacheOptions, MaxAge
 from cmk.checkers.host_sections import HostSections
 from cmk.checkers.snmp import SNMPFileCache, SNMPParser
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
+from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config

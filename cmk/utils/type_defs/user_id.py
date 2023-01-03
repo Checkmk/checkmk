@@ -9,21 +9,43 @@ import re
 
 
 class UserId(str):
-    USER_ID_REGEX = re.compile(r"^[\w_$][-\w.@_$]*$")
+    _umlauts = "üöäßÜÖÄåÅØøÆæé"
+    USER_ID_REGEX = re.compile(rf"^[\w${_umlauts}][-@.\w${_umlauts}]*$")
 
     @classmethod
     def validate(cls, text: str) -> None:
         """Check if it is a valid UserId
-        We use the userid to create file paths, so we we need to be strict...
-        >>> UserId.validate("cmkadmin")
-        >>> UserId.validate("")
-        >>> UserId.validate("foo/../")
-        Traceback (most recent call last):
-        ...
-        ValueError: Invalid username: 'foo/../'
+
+        UserIds are used in a variety of contexts, including HTML, file paths and other external
+        systems. Currently we have no means of ensuring proper output encoding wherever UserIds
+        are used. Thus, we strictly limit the characters that can be used in a UserId.
+
+        Examples:
+
+            The empty UserId is allowed for historical reasons (see `UserId.builtin`).
+
+                >>> UserId.validate("")
+
+            ASCII letters, digits, and selected special characters are allowed.
+
+                >>> UserId.validate("cmkadmin")
+                >>> UserId.validate("$cmk_@dmün.1")
+
+            Special characters other than '$_-@.' are not allowed (see `USER_ID_REGEX`).
+
+                >>> UserId.validate("foo/../")
+                Traceback (most recent call last):
+                ...
+                ValueError: Invalid username: 'foo/../'
+
+                >>> UserId.validate("%2F")
+                Traceback (most recent call last):
+                ...
+                ValueError: Invalid username: '%2F'
+
         """
         if text == "":
-            # For legacy reasons (e.g. cmk.gui.visuals)
+            # see UserId.builtin
             return
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")

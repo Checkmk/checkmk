@@ -868,8 +868,8 @@ def UserID(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
             raise MKUserError(
                 varprefix,
                 _(
-                    "An identifier must only consist of letters, digits, dash, dot, "
-                    "at and underscore. But it must start with a digit, letter or underscore."
+                    "An identifier must only consist of letters, digits, dollar, underscore, dash, "
+                    "dot, and at. It must start with a letter, digit, dollar, or underscore."
                 ),
             ) from exception
 

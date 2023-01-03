@@ -41,7 +41,7 @@ class GraphCollectionSchema(BaseSchema):
     )
     # Not sure about the unit here
     step = Integer(
-        description="The distance in seconds inbetween each sample.", example=60, required=True
+        description="The interval between two samples in seconds.", example=60, required=True
     )
     curves = Nested(
         GraphSchema(),

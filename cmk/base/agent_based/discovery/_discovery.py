@@ -9,6 +9,7 @@ from collections import Counter
 from collections.abc import Sequence
 
 import cmk.utils.paths
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import HostLabel
@@ -28,7 +29,6 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
-from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
 from ._filters import ServiceFilters as _ServiceFilters

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.log import console
 from cmk.utils.type_defs import EVERYTHING
 
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.base.config as config
-from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 
 from .active import execute_active_check_inventory
 

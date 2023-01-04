@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.base.auto_queue
-from cmk.base.auto_queue import AutoQueue, TimeLimitFilter
+import cmk.utils.auto_queue
+from cmk.utils.auto_queue import AutoQueue, TimeLimitFilter
 
 
 def test_time_limit_filter_iterates() -> None:
@@ -72,7 +72,7 @@ class TestAutoQueue:
         auto_queue = AutoQueue(tmpdir / "dir2")
         auto_queue.add("most")
 
-        mock_touch = mocker.patch.object(cmk.base.auto_queue.Path, "touch")
+        mock_touch = mocker.patch.object(cmk.utils.auto_queue.Path, "touch")
         auto_queue.add("most")
 
         mock_touch.assert_not_called()

@@ -17,6 +17,7 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
@@ -50,7 +51,6 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 from cmk.base.sources import make_sources

@@ -7,6 +7,7 @@ from collections.abc import Callable
 from functools import partial
 
 import cmk.utils.paths
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, RuleSetName, ServiceState
@@ -17,7 +18,6 @@ from cmk.checkers.checkresults import ActiveCheckResult
 from cmk.checkers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
-from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import ConfigCache, HWSWInventoryParameters
 
 from ._inventory import check_inventory_tree

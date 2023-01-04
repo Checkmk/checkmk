@@ -96,7 +96,7 @@ $(LIBLIVESTATUS_SO):
 	@echo Building lib livestatus...
 	$(LIBLIVESTATUS_RUN_CI) --build
 
-unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
+unit-test: $(LIBLIVESTATUS_SO) test_neb$(EXEEXT)
 	LD_LIBRARY_PATH=$(dir $(LIBLIVESTATUS_SO)) \
 		GTEST_OUTPUT=xml \
 		$(VALGRIND) \
@@ -239,7 +239,7 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	tar xzf $<
 	touch $@
 
-livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
+livestatus.o: $(LIBLIVESTATUS_SO) $(liblivestatusneb_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky. For
 # RE2 we make sure that this is the case, too.
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(LIBLIVESTATUS_SO) $(RRDTOOL_LD_FLAGS)

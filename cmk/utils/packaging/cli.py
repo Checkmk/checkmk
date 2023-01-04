@@ -11,10 +11,12 @@ from pathlib import Path
 from typing import Callable
 
 from cmk.utils import tty
+from cmk.utils.log import VERBOSE
 
 from . import (
     disable,
     disable_outdated,
+    get_enabled_manifests,
     get_optional_manifests,
     install_optional_package,
     PackageStore,
@@ -102,6 +104,18 @@ def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
+def _command_remove(args: argparse.Namespace, logger: logging.Logger) -> int:
+    """Remove a package from the site"""
+    package_id = _get_package_id(args.name, args.version)
+    if package_id in get_enabled_manifests():
+        raise PackageException("This package is enabled! Please disable it first.")
+
+    logger.log(VERBOSE, "Removing package %s...", package_id.name)
+    PackageStore().remove(package_id)
+    logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
+    return 0
+
+
 def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Disable MKP packages that are declared to be outdated with the new version
 
@@ -179,6 +193,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "store", _args_store, _command_store)
+    _add_command(subparsers, "remove", _args_package_id, _command_remove)
     _add_command(subparsers, "enable", _args_package_id, _command_enable)
     _add_command(subparsers, "disable", _args_package_id, _command_disable)
     _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)

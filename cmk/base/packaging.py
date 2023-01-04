@@ -19,7 +19,6 @@ from cmk.utils.packaging import (
     CONFIG_PARTS,
     create_mkp_object,
     format_file_name,
-    get_enabled_manifests,
     get_installed_manifest,
     get_installed_manifests,
     get_unpackaged_files,
@@ -29,10 +28,8 @@ from cmk.utils.packaging import (
     package_num_files,
     PACKAGE_PARTS,
     PackageException,
-    PackageID,
     PackageName,
     PACKAGES_DIR,
-    PackageStore,
     PackageVersion,
     release,
 )
@@ -82,7 +79,7 @@ def do_packaging(args: list[str]) -> None:
         "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show": package_show,
         "pack": package_pack,
-        "remove": package_remove,
+        "remove": lambda args: cli.main(["remove", *args], logger),
         "disable": lambda args: cli.main(["disable", *args], logger),
         "enable": lambda args: cli.main(["enable", *args], logger),
         "disable-outdated": lambda args: cli.main(["disable-outdated", *args], logger),
@@ -229,16 +226,3 @@ def package_pack(args: list[str]) -> None:
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     Path(tarfilename).write_bytes(create_mkp_object(package))
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
-
-
-def package_remove(args: list[str]) -> None:
-    if len(args) != 2:
-        raise PackageException("Usage: check_mk -P remove NAME VERSION")
-
-    package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    if any(package_id == package.id for package in get_enabled_manifests().values()):
-        raise PackageException("This package is enabled! Please disable it first.")
-
-    logger.log(VERBOSE, "Removing package %s...", package_id.name)
-    PackageStore().remove(package_id)
-    logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)

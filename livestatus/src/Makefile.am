@@ -92,6 +92,7 @@ test_neb_LDADD = \
     -lrrd \
     -lpthread
 
+.PHONY: $(LIBLIVESTATUS_SO)
 $(LIBLIVESTATUS_SO):
 	@echo Building lib livestatus...
 	$(LIBLIVESTATUS_RUN_CI) --build

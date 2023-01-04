@@ -16,7 +16,7 @@ from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
 from cmk.gui.session import session
 from cmk.gui.userdb.saml2.connector import Connector
-from cmk.gui.userdb.saml2.interface import Interface, XMLData
+from cmk.gui.userdb.saml2.interface import XMLData
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.urls import makeuri_contextless
@@ -63,28 +63,14 @@ class Metadata(Page):
     The Identity Provider requests this service to validate that it is dealing with a known entity.
     """
 
-    @property
-    def relay_state(self) -> RelayState:
-        return _relay_state_from_url(request.get_ascii_input_mandatory("RelayState"))
-
-    @property
-    def connector(self) -> Connector:
-        return _connector(self.relay_state.connection_id)
-
     def page(self) -> XMLData:
-        if not self.connector.is_enabled():
-            LOGGER.debug(
-                "Requested metadata for connection %s at URL %s but is currently disabled",
-                (self.relay_state.connection_id, self.connector.identity_provider_url),
-            )
-            raise MKUserError(
-                varname=None,
-                message=_(
-                    "This connection is currently disabled. Please contact your system administrator."
-                ),
-            )
+        connector, _relay_state = _initialise_page(
+            request_method=request.request_method,
+            allowed_method="GET",
+            relay_state_string=request.get_ascii_input_mandatory("RelayState"),
+        )
 
-        return self.connector.interface.metadata
+        return connector.interface.metadata
 
     def handle_page(self) -> None:
         try:
@@ -110,53 +96,28 @@ class SingleSignOn(Page):
     Responses to authentication requests are sent to a different endpoint: AssertionConsumerService.
     """
 
-    @property
-    def relay_state_string(self) -> str:
-        return request.get_ascii_input_mandatory("RelayState")
-
-    @property
-    def relay_state(self) -> RelayState:
-        return _relay_state_from_url(self.relay_state_string)
-
-    @property
-    def connector(self) -> Connector:
-        return _connector(self.relay_state.connection_id)
-
-    @property
-    def interface(self) -> Interface:
-        return self.connector.interface
-
     def page(self) -> None:
-        if request.request_method != "GET":
-            raise MKUserError(varname=None, message=_("Method not allowed"))
+        relay_state_string = request.get_ascii_input_mandatory("RelayState")
+
+        connector, relay_state = _initialise_page(
+            request_method=request.request_method,
+            allowed_method="GET",
+            relay_state_string=relay_state_string,
+        )
 
         # NOTE: more than one IdP connection is possible. If more IdPs should be supported in the
         # future, the connection_id parameter would enable us to decide which one the user has chosen.
         LOGGER.debug(
             "Authentication request to Identity Provider %s at URL %s",
-            (self.relay_state.connection_id, self.connector.identity_provider_url),
+            (relay_state.connection_id, connector.identity_provider_url),
         )
-
-        if not self.connector.is_enabled():
-            LOGGER.debug(
-                "Connection for ID %s is currently disabled", self.relay_state.connection_id
-            )
-            raise MKUserError(
-                varname=None,
-                message=_(
-                    "This connection is currently disabled. Please contact your system administrator."
-                ),
-            )
-
-        LOGGER.debug("Authentication request with RelayState=%s", self.relay_state_string)
+        LOGGER.debug("Authentication request with RelayState=%s", relay_state_string)
 
         try:
-            authentication_request = self.connector.interface.authentication_request(
-                self.relay_state_string
-            )
+            authentication_request = connector.interface.authentication_request(relay_state_string)
         except Exception as e:  # pylint: disable=broad-except
             LOGGER.warning(
-                "%s - %s: %s", self.connector.identity_provider_url(), type(e).__name__, str(e)
+                "%s - %s: %s", connector.identity_provider_url(), type(e).__name__, str(e)
             )
             raise MKUserError(
                 varname=None, message=_("Unable to create authentication request")
@@ -169,21 +130,9 @@ class SingleSignOn(Page):
     def handle_page(self) -> None:
         try:
             self.page()
-        except HTTPRedirect:
-            raise
-        except MKUserError as e:
-            LOGGER.debug(e, exc_info=True)
-            raise _redirect_to_login_with_error(
-                origtarget=self.relay_state.target_url, error_message=str(e)
-            )
         except Exception as e:  # pylint: disable=broad-except
-            # Messages of exceptions may contain sensitive information that the user should not
-            # see in the front-end. We only show messages in the GUI if they stem from
-            # 'MKUserError' exception types.
-            LOGGER.exception(e)
-            raise _redirect_to_login_with_error(
-                origtarget=self.relay_state.target_url,
-                error_message=_("Unhandled exception occurred"),
+            page_exception_handler(
+                exception=e, relay_state_string=request.get_ascii_input_mandatory("RelayState")
             )
 
 
@@ -193,39 +142,23 @@ class AssertionConsumerService(Page):
     Authentication requests are made by the SingleSignOn page.
     """
 
-    @property
-    def relay_state(self) -> RelayState:
-        return _relay_state_from_url(request.get_ascii_input_mandatory("RelayState"))
-
-    @property
-    def connector(self) -> Connector:
-        return _connector(self.relay_state.connection_id)
-
     def page(self) -> None:
-        if request.request_method != "POST":
-            raise MKUserError(varname=None, message=_("Method not allowed"))
+        connector, relay_state = _initialise_page(
+            request_method=request.request_method,
+            allowed_method="POST",
+            relay_state_string=request.get_ascii_input_mandatory("RelayState"),
+        )
 
         LOGGER.debug(
             "Authentication request response from Identity Provider %s at URL %s",
-            (self.relay_state.connection_id, self.connector.identity_provider_url),
+            (relay_state.connection_id, connector.identity_provider_url),
         )
-
-        if not self.connector.is_enabled():
-            LOGGER.debug(
-                "Connection for ID %s is currently disabled", self.relay_state.connection_id
-            )
-            raise MKUserError(
-                varname=None,
-                message=_(
-                    "This connection is currently disabled. Please contact your system administrator."
-                ),
-            )
 
         if not (saml_response := request.form.get("SAMLResponse")):
             raise MKUserError(varname=None, message=_("Got no response from IdP"))
 
         try:
-            authn_response = self.connector.interface.parse_authentication_request_response(
+            authn_response = connector.interface.parse_authentication_request_response(
                 saml_response=saml_response
             )
         except Exception as e:  # pylint: disable=broad-except
@@ -233,12 +166,12 @@ class AssertionConsumerService(Page):
             # not met. Note that the type of the exception raised by the client may be a bare
             # Exception.
             LOGGER.warning(
-                "%s - %s: %s", self.connector.identity_provider_url(), type(e).__name__, str(e)
+                "%s - %s: %s", connector.identity_provider_url(), type(e).__name__, str(e)
             )
             raise MKUserError(message=_("Authentication failed"), varname=None) from e
 
         try:
-            self.connector.create_and_update_user(authn_response.user_id)
+            connector.create_and_update_user(authn_response.user_id)
         except ValueError as e:
             LOGGER.warning("%s: %s", type(e).__name__, str(e))
             raise MKUserError(message=_("Unknown user"), varname=None) from e
@@ -248,27 +181,59 @@ class AssertionConsumerService(Page):
         session.user = LoggedInUser(authn_response.user_id)
 
         # self.connector.update_user(authn_response.user_id)
-        raise HTTPRedirect(self.relay_state.target_url)
+        raise HTTPRedirect(relay_state.target_url)
 
     def handle_page(self) -> None:
         try:
             self.page()
-        except HTTPRedirect:
-            raise
-        except MKUserError as e:
-            LOGGER.debug(e, exc_info=True)
-            raise _redirect_to_login_with_error(
-                origtarget=self.relay_state.target_url, error_message=str(e)
-            )
         except Exception as e:  # pylint: disable=broad-except
-            # Messages of exceptions may contain sensitive information that the user should not
-            # see in the front-end. We only show messages in the GUI if they stem from
-            # 'MKUserError' exception types.
-            LOGGER.exception(e)
-            raise _redirect_to_login_with_error(
-                origtarget=self.relay_state.target_url,
-                error_message=_("Unhandled exception occurred"),
+            page_exception_handler(
+                exception=e, relay_state_string=request.get_ascii_input_mandatory("RelayState")
             )
+
+
+def _initialise_page(
+    request_method: str, allowed_method: str, relay_state_string: str
+) -> tuple[Connector, RelayState]:
+    if request_method != allowed_method:
+        raise MKUserError(varname=None, message=_("Method not allowed"))
+
+    relay_state = _relay_state_from_url(relay_state_string)
+
+    connector = _connector(relay_state.connection_id)
+
+    if not connector.is_enabled():
+        LOGGER.debug("Connection for ID %s is currently disabled", relay_state.connection_id)
+        raise MKUserError(
+            varname=None,
+            message=_(
+                "This connection is currently disabled. Please contact your system administrator."
+            ),
+        )
+
+    return connector, relay_state
+
+
+def page_exception_handler(exception: Exception, relay_state_string: str) -> None:
+    relay_state = _relay_state_from_url(relay_state_string)
+
+    if isinstance(exception, HTTPRedirect):
+        raise exception
+
+    if isinstance(exception, MKUserError):
+        LOGGER.debug(exception, exc_info=True)
+        raise _redirect_to_login_with_error(
+            origtarget=relay_state.target_url, error_message=str(exception)
+        )
+
+    # Messages of exceptions may contain sensitive information that the user should not
+    # see in the front-end. We only show messages in the GUI if they stem from
+    # 'MKUserError' exception types.
+    LOGGER.exception(exception)
+    raise _redirect_to_login_with_error(
+        origtarget=relay_state.target_url,
+        error_message=_("Unhandled exception occurred"),
+    )
 
 
 def _redirect_to_login_with_error(origtarget: str, error_message: str) -> HTTPRedirect:

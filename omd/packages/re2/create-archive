@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+# Google just creates tags on a regular bases, there are no real "releases".
+TAG=2022-12-01
+
+curl --silent \
+    --show-error \
+    --fail \
+    --location \
+    -o re2-${TAG}.tar.gz \
+    https://github.com/google/re2/archive/refs/tags/${TAG}.tar.gz

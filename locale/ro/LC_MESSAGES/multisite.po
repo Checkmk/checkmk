@@ -2146,6 +2146,10 @@ msgid "AWS/S3 Limits"
 msgstr "Adaugă limite"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "Adaugă limite"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "Adaugă limite"
 
@@ -8981,6 +8985,9 @@ msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
 
 msgid "Click here to see the activation status per site."
+msgstr ""
+
+msgid "Click to toggle this setting"
 msgstr ""
 
 msgid "Clickable URLs"
@@ -20897,6 +20904,10 @@ msgid "Hide names of configuration variables"
 msgstr ""
 
 #, fuzzy
+msgid "Hide page navigation"
+msgstr "Agregare noua"
+
+#, fuzzy
 msgid "Hide plugin names"
 msgstr "Numele Aplicatiei"
 
@@ -23233,9 +23244,6 @@ msgid "Images"
 msgstr "Dimensiunea Maxima"
 
 msgid "Immediately scheduled checks"
-msgstr ""
-
-msgid "Immediately toggle this setting"
 msgstr ""
 
 msgid "Impact"
@@ -27462,6 +27470,18 @@ msgid "Lower levels for CPU balance"
 msgstr ""
 
 #, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Lower levels for burst balance"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -31349,9 +31369,6 @@ msgid "No search"
 msgstr "Cautare noua"
 
 msgid "No search, specify list of arguments"
-msgstr ""
-
-msgid "No service level is set in event"
 msgstr ""
 
 #, fuzzy
@@ -41157,6 +41174,10 @@ msgid "Show only unused rules"
 msgstr "Arata regulile de utilizator"
 
 #, fuzzy
+msgid "Show page navigation"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Show per day"
 msgstr "afiseaza erori"
 
@@ -43602,10 +43623,6 @@ msgstr "Întreruperi adhoc"
 
 #, fuzzy
 msgid "Status stale"
-msgstr "Întreruperi adhoc"
-
-#, fuzzy
-msgid "Status view"
 msgstr "Întreruperi adhoc"
 
 msgid "Status: DISBALE"
@@ -49495,12 +49512,6 @@ msgstr ""
 msgid "This page was not found. Sorry."
 msgstr ""
 
-msgid "This page with navigation"
-msgstr ""
-
-msgid "This page without navigation"
-msgstr ""
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -53447,6 +53458,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -55372,6 +55395,10 @@ msgid "View and edit the rules and aggregations in this BI pack"
 msgstr ""
 
 #, fuzzy
+msgid "View history"
+msgstr "(selectează directorul)"
+
+#, fuzzy
 msgid "View layout"
 msgstr "Matrice"
 
@@ -55379,8 +55406,16 @@ msgstr "Matrice"
 msgid "View name"
 msgstr "Nume nou"
 
+#, fuzzy
+msgid "View table"
+msgstr "Nume nou"
+
 msgid "View the rule based effective parameters of this host"
 msgstr ""
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Sterge Elementul"
 
 msgid "Views"
 msgstr ""
@@ -60727,6 +60762,10 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Status view"
+#~ msgstr "Întreruperi adhoc"
+
+#, fuzzy
 #~ msgid "Disable two-factor authentication"
 #~ msgstr "Confirma Parola"
 
@@ -62546,10 +62585,6 @@ msgstr ""
 #~ msgid "Scheduled downtimes"
 #~ msgstr "Întreruperi adhoc"
 
-#, fuzzy
-#~ msgid "Search history"
-#~ msgstr "(selectează directorul)"
-
 # georgem ##############
 #, fuzzy
 #~ msgid "Search time graphs"
@@ -62926,10 +62961,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New snapin"
 #~ msgstr "Nume nou"
-
-#, fuzzy
-#~ msgid "Alert timeline"
-#~ msgstr "Sterge Elementul"
 
 #, fuzzy
 #~ msgid "Host and service"

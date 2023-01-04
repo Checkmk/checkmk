@@ -2507,6 +2507,10 @@ msgstr "AWS/S3 Latenzzeit"
 msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzwerte"
 
+#, fuzzy
+msgid "AWS/SNS"
+msgstr "AWS/SNS Grenzwerte"
+
 msgid "AWS/SNS Limits"
 msgstr "AWS/SNS Grenzwerte"
 
@@ -9561,6 +9565,10 @@ msgstr ""
 
 msgid "Click here to see the activation status per site."
 msgstr "Klicken Sie hier, um den Aktivierungsstatus pro Seite zu sehen."
+
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Einstellung sofort umschalten"
 
 msgid "Clickable URLs"
 msgstr "Anklickbare URLs"
@@ -21734,6 +21742,10 @@ msgstr "Interne Ordnernamen in WATO verstecken"
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
 
+#, fuzzy
+msgid "Hide page navigation"
+msgstr "Diese Seite mit Navigation"
+
 msgid "Hide plugin names"
 msgstr "Namen von Plugins ausblenden"
 
@@ -24577,9 +24589,6 @@ msgstr "Bilder"
 
 msgid "Immediately scheduled checks"
 msgstr "Sofort eingeplante Checks"
-
-msgid "Immediately toggle this setting"
-msgstr "Einstellung sofort umschalten"
 
 msgid "Impact"
 msgstr "Auswirkung"
@@ -28837,6 +28846,18 @@ msgstr "Untergrenze für GC-Run-Rate"
 msgid "Lower levels for CPU balance"
 msgstr "Untere Schwellen für CPU-Bilanz"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Untere Schwellen für das Alter des Zertifikats"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Untere Schwellen für %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Untergrenze für Nachrichtenrate"
+
 msgid "Lower levels for burst balance"
 msgstr "Untere Schwellen für Burst-Balance"
 
@@ -32527,9 +32548,6 @@ msgstr "Keine Suche"
 
 msgid "No search, specify list of arguments"
 msgstr "Keine Suche, Liste der Argumente angeben"
-
-msgid "No service level is set in event"
-msgstr "Im Event ist kein Servicelevel eingetragen"
 
 msgid "No status host"
 msgstr "Kein Status-Host"
@@ -42359,6 +42377,10 @@ msgstr "Zeige nur diese Aggregation"
 msgid "Show only unused rules"
 msgstr "Nur unbenutzte Regeln anzeigen"
 
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Diese Seite mit Navigation"
+
 msgid "Show per day"
 msgstr "Pro Tag anzeigen"
 
@@ -45051,9 +45073,6 @@ msgstr "Status-Schatten"
 
 msgid "Status stale"
 msgstr "Zustand stale"
-
-msgid "Status view"
-msgstr "Statusansicht"
 
 msgid "Status: DISBALE"
 msgstr "Status: DISABLE"
@@ -52438,12 +52457,6 @@ msgstr "Diese Ansicht unterstützt keine Cluster-Hosts."
 msgid "This page was not found. Sorry."
 msgstr "Diese Seite konnte leider nicht gefunden werden."
 
-msgid "This page with navigation"
-msgstr "Diese Seite mit Navigation"
-
-msgid "This page without navigation"
-msgstr "Diese Seite ohne Navigation"
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -57061,6 +57074,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "Obere Schwellwerte für Load Balancers"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Obere Schwellen für das Alter"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Obergrenze für anstehende Aufgaben"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Obere Stufen für die Nutzung"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "Obere Schwellen für die CPU-Zeit"
 
@@ -59064,14 +59089,26 @@ msgstr "Parameter für diesen Service ansehen und bearbeiten"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Regeln und Aggregationen in diesem BI-Paket anzeigen und bearbeiten"
 
+#, fuzzy
+msgid "View history"
+msgstr "Suchhistorie"
+
 msgid "View layout"
 msgstr "Ansicht Layout"
 
 msgid "View name"
 msgstr "Name anzeigen"
 
+#, fuzzy
+msgid "View table"
+msgstr "Name anzeigen"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "Anzeigen der regelbasierten effektiven Parameter dieses Hosts"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Zeitachse der Warnungen"
 
 msgid "Views"
 msgstr "Ansichten"
@@ -65325,6 +65362,15 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Im Event ist kein Servicelevel eingetragen"
+
+#~ msgid "Status view"
+#~ msgstr "Statusansicht"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Diese Seite ohne Navigation"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -70304,9 +70350,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Nach Services suchen und deren Graphen anzeigen"
 
-#~ msgid "Search history"
-#~ msgstr "Suchhistorie"
-
 #~ msgid "Search performance data"
 #~ msgstr "Nach Metriken suchen"
 
@@ -71544,9 +71587,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "%s %s"
 #~ msgstr "%s %s"
-
-#~ msgid "Alert timeline"
-#~ msgstr "Zeitachse der Warnungen"
 
 #~ msgid ""
 #~ "Defines the scheme (either HTTP or HTTPS) and host part of Kubernetes API "

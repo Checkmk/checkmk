@@ -2529,6 +2529,10 @@ msgid "AWS/S3 Limits"
 msgstr "Limites de AWS/S3"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "Limites de AWS/S3"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "Limites de AWS/S3"
 
@@ -9676,6 +9680,10 @@ msgstr ""
 
 msgid "Click here to see the activation status per site."
 msgstr "Cliquez ici pour voir le statut d'activation par site."
+
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Basculer immédiatement ce paramètre"
 
 msgid "Clickable URLs"
 msgstr "URLs cliquables"
@@ -21938,6 +21946,10 @@ msgid "Hide names of configuration variables"
 msgstr "Cacher les noms des variables de configuration"
 
 #, fuzzy
+msgid "Hide page navigation"
+msgstr "Cette page avec la navigation"
+
+#, fuzzy
 msgid "Hide plugin names"
 msgstr "Afficher les noms des plugins"
 
@@ -24825,9 +24837,6 @@ msgstr "Images"
 
 msgid "Immediately scheduled checks"
 msgstr "Contrôles immédiatement programmés"
-
-msgid "Immediately toggle this setting"
-msgstr "Basculer immédiatement ce paramètre"
 
 msgid "Impact"
 msgstr "Impact"
@@ -29130,6 +29139,18 @@ msgstr "Niveau inférieur pour le taux d'exécution du GC"
 msgid "Lower levels for CPU balance"
 msgstr "Niveaux inférieurs pour l'équilibre du CPU"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Niveaux inférieurs pour l'âge du certificat"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Niveaux inférieurs pour %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Niveau inférieur pour le taux de messages"
+
 msgid "Lower levels for burst balance"
 msgstr "Niveaux inférieurs pour l'équilibre des rafales"
 
@@ -32858,9 +32879,6 @@ msgstr "Pas de recherche"
 
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
-
-msgid "No service level is set in event"
-msgstr "Aucun niveau de service n'est défini dans l'événement"
 
 msgid "No status host"
 msgstr "Pas de statut hôte"
@@ -42787,6 +42805,10 @@ msgstr "Afficher uniquement cette agrégation"
 msgid "Show only unused rules"
 msgstr "Afficher uniquement les règles inutilisées"
 
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Cette page avec la navigation"
+
 msgid "Show per day"
 msgstr "Spectacle par jour"
 
@@ -45506,9 +45528,6 @@ msgstr "Statut d'ombre"
 
 msgid "Status stale"
 msgstr "Statut périmé"
-
-msgid "Status view"
-msgstr "Vue d'ensemble du statut"
 
 msgid "Status: DISBALE"
 msgstr "Statut : DISBALE"
@@ -53009,12 +53028,6 @@ msgstr "Cette page ne prend pas en charge les hôtes en grappe."
 msgid "This page was not found. Sorry."
 msgstr "Cette page n'a pas été trouvée. Désolé."
 
-msgid "This page with navigation"
-msgstr "Cette page avec la navigation"
-
-msgid "This page without navigation"
-msgstr "Cette page sans navigation"
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -57700,6 +57713,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "Niveaux supérieurs pour les équilibreurs de charge"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Niveau supérieur pour les tâches en attente"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Niveaux supérieurs d'utilisation"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "Niveaux supérieurs pour le temps CPU"
 
@@ -59734,14 +59759,26 @@ msgstr "Visualiser et modifier les paramètres de ce service"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Visualisez et modifiez les règles et les agrégations de ce pack BI."
 
+#, fuzzy
+msgid "View history"
+msgstr "Historique de recherche"
+
 msgid "View layout"
 msgstr "Voir la présentation"
 
 msgid "View name"
 msgstr "Voir le nom"
 
+#, fuzzy
+msgid "View table"
+msgstr "Voir le nom"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "Voir les paramètres effectifs de cet hôte basés sur des règles"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Ligne du temps"
 
 msgid "Views"
 msgstr "Vues"
@@ -66098,6 +66135,15 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Aucun niveau de service n'est défini dans l'événement"
+
+#~ msgid "Status view"
+#~ msgstr "Vue d'ensemble du statut"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Cette page sans navigation"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -71134,9 +71180,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Rechercher des services et afficher leurs graphiques"
-
-#~ msgid "Search history"
-#~ msgstr "Historique de recherche"
 
 #~ msgid "Search performance data"
 #~ msgstr "Données sur les performances de recherche"

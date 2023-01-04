@@ -119,7 +119,7 @@ oauthlib = "==3.1.0"  # needed by requests-oauthlib and jira
 requests-oauthlib = "==1.3.0"  # needed by jira
 requests-toolbelt = "==0.9.1"  # needed by jira
 docutils = "==0.17.1"  # needed by boto3 (aws)
-jira = "==2.0.0"  # needed by jira
+jira = "==3.4.1"  # needed by jira
 adal = "==1.2.0"  # needed by agent_azure
 Pillow = "==9.1.1"
 python-ldap = "==3.4.0"  # needed by GUI (User sync), python-active-directory

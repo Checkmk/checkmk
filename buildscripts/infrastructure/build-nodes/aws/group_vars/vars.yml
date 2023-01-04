@@ -10,7 +10,7 @@ ami_cleanup_age_in_days: 7
 
 # AWS EC2 Global config
 ec2_auto_shutdown: 30  # Autoshutdown/terminate after x min, if 0 then disable
-ec2_region: us-east-1  # is needed in order to get into the market place
+ec2_region: eu-central-1  # EC2 region
 ec2_security_group_vms:  amit-toolchainsec  # EC2 generate securitygroup
 ec2_vpc_subnet_id: subnet-0b097bf61fe0763a1  # EC2 subnet default
 ami_id: ami-05f7491af5eef733a  # EC2 instance template (ubuntu20.04)

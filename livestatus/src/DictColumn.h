@@ -18,9 +18,9 @@
 
 #include "Column.h"
 #include "DictFilter.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "livestatus/Filter.h"
+#include "livestatus/Renderer.h"
 #include "opids.h"
 enum class AttributeKind;
 class Aggregator;

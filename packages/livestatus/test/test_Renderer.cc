@@ -12,11 +12,11 @@
 #include <string>
 #include <vector>
 
-#include "Renderer.h"
-#include "RendererBrokenCSV.h"
 #include "gtest/gtest.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OStreamStateSaver.h"
+#include "livestatus/Renderer.h"
+#include "livestatus/RendererBrokenCSV.h"
 #include "livestatus/data_encoding.h"
 
 using namespace std::chrono_literals;

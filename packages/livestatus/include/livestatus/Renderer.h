@@ -6,8 +6,6 @@
 #ifndef Renderer_h
 #define Renderer_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <iomanip>
 #include <iosfwd>

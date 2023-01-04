@@ -69,7 +69,6 @@ test_neb_SOURCES = \
     test/test_Metric.cc \
     test/test_Queue.cc \
     test/test_RegExp.cc \
-    test/test_Renderer.cc \
     test/test_StringColumn.cc \
     test/test_Table.cc \
     test/test_TimeColumn.cc \
@@ -143,11 +142,6 @@ liblivestatusneb_a_SOURCES = \
         PerfdataAggregator.cc \
         Query.cc \
         RegExp.cc \
-        Renderer.cc \
-        RendererBrokenCSV.cc \
-        RendererCSV.cc \
-        RendererJSON.cc \
-        RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceListRenderer.cc \
@@ -215,7 +209,7 @@ $(RRDTOOL_VERSION):
 	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
-$(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
+$(GOOGLEfINCLUDE): $(GOOGLETEST_VERSION)/Makefile
 # NOTE: We don't want the googletest files in our compile_commands.json!
 	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
 	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a

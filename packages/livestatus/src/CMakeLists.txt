@@ -13,6 +13,11 @@ set(livestatus_headers
     ${header_location}/OutputBuffer.h
     ${header_location}/POSIXUtils.h
     ${header_location}/Poller.h
+    ${header_location}/Renderer.h
+    ${header_location}/RendererBrokenCSV.h
+    ${header_location}/RendererCSV.h
+    ${header_location}/RendererJSON.h
+    ${header_location}/RendererPython3.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h)
 set(livestatus_sources
@@ -24,6 +29,11 @@ set(livestatus_sources
     Logger.cc
     OutputBuffer.cc
     POSIXUtils.cc
+    Renderer.cc
+    RendererBrokenCSV.cc
+    RendererCSV.cc
+    RendererJSON.cc
+    RendererPython3.cc
     StringUtils.cc
     strutil.cc)
 

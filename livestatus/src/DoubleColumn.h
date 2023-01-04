@@ -18,9 +18,9 @@
 #include "Column.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "livestatus/Filter.h"
+#include "livestatus/Renderer.h"
 #include "opids.h"
 class User;
 

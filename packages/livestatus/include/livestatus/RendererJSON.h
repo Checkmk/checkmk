@@ -3,23 +3,20 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef RendererCSV_h
-#define RendererCSV_h
-
-#include "config.h"  // IWYU pragma: keep
+#ifndef RendererJSON_h
+#define RendererJSON_h
 
 #include <iosfwd>
 #include <string>
 #include <vector>
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
+enum class Encoding;
 class Logger;
 
-// Note: The CSV format is a bit underspecified, but the most "authorative"
-// reference seems to be https://tools.ietf.org/html/rfc4180.
-class RendererCSV : public Renderer {
+class RendererJSON : public Renderer {
 public:
-    RendererCSV(std::ostream &os, Logger *logger, Encoding data_encoding);
+    RendererJSON(std::ostream &os, Logger *logger, Encoding data_encoding);
 
     [[nodiscard]] bool useSurrogatePairs() const override;
     void outputNull() override;
@@ -48,9 +45,6 @@ public:
     void separateDictElements() override;
     void separateDictKeyValue() override;
     void endDict() override;
-
-private:
-    void outputEscaped(char ch);
 };
 
-#endif  // RendererCSV_h
+#endif  // RendererJSON_h

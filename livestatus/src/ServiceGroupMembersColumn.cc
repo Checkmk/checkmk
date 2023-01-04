@@ -5,8 +5,8 @@
 
 #include "ServiceGroupMembersColumn.h"
 
-#include "Renderer.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Renderer.h"
 
 void ServiceGroupMembersRenderer::output(
     ListRenderer &l, const column::service_group_members::Entry &entry) const {

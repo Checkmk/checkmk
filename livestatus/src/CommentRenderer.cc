@@ -5,7 +5,7 @@
 
 #include "CommentRenderer.h"
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 
 void CommentRenderer::output(ListRenderer &l,
                              const CommentData &comment) const {

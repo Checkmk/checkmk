@@ -6,14 +6,12 @@
 #ifndef RendererBrokenCSV_h
 #define RendererBrokenCSV_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <iosfwd>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 enum class Encoding;
 class Logger;
 

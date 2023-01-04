@@ -3,15 +3,15 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 
 #include <cmath>
 
-#include "RendererBrokenCSV.h"
-#include "RendererCSV.h"
-#include "RendererJSON.h"
-#include "RendererPython3.h"
 #include "livestatus/Logger.h"
+#include "livestatus/RendererBrokenCSV.h"
+#include "livestatus/RendererCSV.h"
+#include "livestatus/RendererJSON.h"
+#include "livestatus/RendererPython3.h"
 #include "livestatus/data_encoding.h"
 
 // static

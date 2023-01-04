@@ -6,13 +6,11 @@
 #ifndef RendererPython3_h
 #define RendererPython3_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <iosfwd>
 #include <string>
 #include <vector>
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 class Logger;
 
 class RendererPython3 : public Renderer {

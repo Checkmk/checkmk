@@ -11,8 +11,8 @@
 #include <cmath>
 #include <functional>
 
-#include "Renderer.h"
 #include "Row.h"
+#include "livestatus/Renderer.h"
 class Query;
 class User;
 

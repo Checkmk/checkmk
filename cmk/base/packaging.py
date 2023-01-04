@@ -18,7 +18,6 @@ from cmk.utils.packaging import (
     cli,
     CONFIG_PARTS,
     create_mkp_object,
-    disable,
     format_file_name,
     get_enabled_manifests,
     get_installed_manifest,
@@ -84,7 +83,7 @@ def do_packaging(args: list[str]) -> None:
         "show": package_show,
         "pack": package_pack,
         "remove": package_remove,
-        "disable": package_disable,
+        "disable": lambda args: cli.main(["disable", *args], logger),
         "enable": lambda args: cli.main(["enable", *args], logger),
         "disable-outdated": lambda args: cli.main(["disable-outdated", *args], logger),
         "update-active": lambda args: cli.main(["update-active", *args], logger),
@@ -243,9 +242,3 @@ def package_remove(args: list[str]) -> None:
     logger.log(VERBOSE, "Removing package %s...", package_id.name)
     PackageStore().remove(package_id)
     logger.log(VERBOSE, "Successfully removed package %s.", package_id.name)
-
-
-def package_disable(args: list[str]) -> None:
-    if len(args) not in {1, 2}:
-        raise PackageException("Usage: check_mk -P disable NAME [VERSION]")
-    disable(PackageName(args[0]), PackageVersion(args[1]) if len(args) == 2 else None)

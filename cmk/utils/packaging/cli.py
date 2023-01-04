@@ -13,6 +13,7 @@ from typing import Callable
 from cmk.utils import tty
 
 from . import (
+    disable,
     disable_outdated,
     get_optional_manifests,
     install_optional_package,
@@ -136,13 +137,19 @@ def _args_package_id(
         "version",
         type=PackageVersion,
         default=None,
-        help="The package version. If only one package by the given name is known, the version can be omitted.",
+        help="The package version. If only one package by the given name is applicable, the version can be omitted.",
     )
 
 
 def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Enable previously disabled package NAME"""
     install_optional_package(PackageStore(), _get_package_id(args.name, args.verison))
+    return 0
+
+
+def _command_disable(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Disable an enabled package"""
+    disable(args.name, args.version)
     return 0
 
 
@@ -173,6 +180,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "store", _args_store, _command_store)
     _add_command(subparsers, "enable", _args_package_id, _command_enable)
+    _add_command(subparsers, "disable", _args_package_id, _command_disable)
     _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)
     _add_command(subparsers, "update-active", _no_args, _command_update_active)
 

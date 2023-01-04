@@ -93,6 +93,7 @@ test_neb_LDADD = \
     -lpthread
 
 $(LIBLIVESTATUS_SO):
+	@echo Building lib livestatus...
 	$(LIBLIVESTATUS_RUN_CI) --build
 
 unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)

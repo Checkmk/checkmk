@@ -24,7 +24,7 @@ class _Spec(Protocol):
 
 def _FixedLevels(
     value_spec: _Spec,
-    default_value: tuple[float, float],
+    default_value: tuple[float | int, float | int],
 ) -> Tuple:
     return Tuple(
         title=_("Fixed Levels"),
@@ -44,7 +44,7 @@ def _FixedLevels(
 def SimpleLevels(
     spec: _Spec = Float,
     help: str | None = None,  # pylint: disable=redefined-builtin
-    default_levels: tuple[float, float] = (0.0, 0.0),
+    default_levels: tuple[float | int, float | int] = (0.0, 0.0),
     default_value: tuple[float, float] | None = None,
     title: str | None = None,
     unit: str | None = None,

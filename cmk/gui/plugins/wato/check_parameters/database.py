@@ -20,7 +20,7 @@ def _parameter_valuespec_replication_lag():
         elements=[
             (
                 "levels",
-                SimpleLevels(Age, title=_("Replication lag")),
+                SimpleLevels(Age, title=_("Replication lag"), default_levels=(0, 0)),
             ),
         ],
     )

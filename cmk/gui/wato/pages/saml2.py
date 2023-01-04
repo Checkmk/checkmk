@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
+import json
 from collections.abc import Collection, Iterator
+from contextlib import suppress
 from pathlib import Path
-from typing import Literal
 
-from cmk.utils.paths import saml2_signature_private_keyfile, saml2_signature_public_keyfile
+from cmk.utils.paths import (
+    saml2_custom_signature_private_keyfile,
+    saml2_custom_signature_public_keyfile,
+    saml2_signature_private_keyfile,
+    saml2_signature_public_keyfile,
+)
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -35,6 +41,7 @@ from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CertificateWithPrivateKey,
     Checkbox,
     Dictionary,
     DictionaryEntry,
@@ -162,15 +169,17 @@ def _security_properties() -> list[DictionaryEntry]:
         (
             "signature_certificate",
             CascadingDropdown(
-                title=_("Certificate to sign requests"),
+                title=_("Certificate to sign requests (PEM)"),
                 help=_(
                     "Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use the "
                     "certificate that is shipped with Checkmk. Alternatively, if your organisation "
-                    "manages its own certificates, you can also add a custom certificate."
+                    "manages its own certificates, you can also add a custom certificate. Note that "
+                    "the public certificate needs to be a single certificate (not a certificate "
+                    "chain)."
                 ),
                 choices=[
                     ("default", "Use Checkmk certificate", None),
-                    # TODO (CMK-11853): implement valuespec to add custom certificate
+                    ("custom", "Use custom certificate", CertificateWithPrivateKey()),
                 ],
                 default_value="default",
             ),
@@ -301,7 +310,13 @@ class ModeSAML2Config(WatoMode):
         return _config_to_valuespec(ConnectorConfig(**connections[0]))
 
     def to_config_file(self, user_input: DictionaryModel) -> DictionaryModel:
-        return _valuespec_to_config(user_input).dict()
+        # The config needs to be serialised to JSON and loaded back into a dict because the .dict()
+        # method preserves complex types, which may not be imported depending on the context. E.g.
+        # 'Path' should be serialised to 'str'.
+        # It can't be serialised to JSON permanently due to existing connectors that have config
+        # information in the same file and are serialised to a Python object (i.e. use
+        # 'ast.literal_eval' for loading).
+        return json.loads(_valuespec_to_config(user_input).json())
 
     def _connection_id(self) -> str:
         return self.__configuration.get("id", self._user_input()["id"])
@@ -337,34 +352,57 @@ def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
     raw_user_input = copy.deepcopy(user_input)
     interface_config = {k: raw_user_input.pop(k) for k in interface_config_keys}
     raw_user_input["interface_config"] = interface_config
-    raw_user_input["interface_config"]["signature_certificate"] = _signature_certificate_to_config(
-        raw_user_input.pop("signature_certificate")
+    raw_user_input["interface_config"]["signature_certificate"] = _certificate_to_config(
+        raw_user_input.pop("signature_certificate"),
     )
     return ConnectorConfig(**raw_user_input)
 
 
-def _signature_certificate_to_config(mode: Literal["default", "custom"]) -> dict[str, Path]:
-    match mode:
-        case "default":
-            return {
-                "private": saml2_signature_private_keyfile,
-                "public": saml2_signature_public_keyfile,
-            }
-        case "custom":
-            # TODO (CMK-11853): Implement this
-            return {"private": Path(), "public": Path()}
-        case _:
-            raise ValueError(f"Option {mode} for signature certificate not supported")
+def _certificate_to_config(certificate: str | tuple[str, tuple[str, str]]) -> dict[str, Path]:
+    if isinstance(certificate, str):
+        return {
+            "private": saml2_signature_private_keyfile,
+            "public": saml2_signature_public_keyfile,
+        }
+
+    if not isinstance(certificate, tuple):
+        raise ValueError(
+            f"Expected str or tuple for signature_certificate, got {type(certificate).__name__}"
+        )
+
+    _, (private_key, cert) = certificate
+    # The pysaml2 client expects certificates in an actual file
+    saml2_custom_signature_public_keyfile.write_text(cert)
+    saml2_custom_signature_private_keyfile.write_text(private_key)
+    return {
+        "private": saml2_custom_signature_private_keyfile,
+        "public": saml2_custom_signature_public_keyfile,
+    }
 
 
-def _signature_certificate_from_config(signature_certificate: dict[str, Path]) -> str:
+def _certificate_from_config(
+    signature_certificate: dict[str, Path]
+) -> str | tuple[str, tuple[str, str]] | tuple[str, tuple[None, None]]:
     certificate_paths = list(signature_certificate.values())
     if certificate_paths == [
         saml2_signature_private_keyfile,
         saml2_signature_public_keyfile,
     ]:
         return "default"
-    raise ValueError(f"Unknown paths for certificate: {', '.join(map(str, certificate_paths))}")
+
+    with suppress(FileNotFoundError):
+        # If the file has disappeared for some reason, there is nothing the user can do except
+        # recreate it, so there is no point in failing. If we do, the user will never get a chance
+        # to enter certificate details over the GUI configuration page again.
+        return (
+            "custom",
+            (
+                saml2_custom_signature_private_keyfile.read_text(),
+                saml2_custom_signature_public_keyfile.read_text(),
+            ),
+        )
+
+    return ("custom", (None, None))
 
 
 def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
@@ -374,7 +412,7 @@ def _config_to_valuespec(config: ConnectorConfig) -> DictionaryModel:
     return {
         **config_dict,
         **interface_config,
-        "signature_certificate": _signature_certificate_from_config(signature_certificate),
+        "signature_certificate": _certificate_from_config(signature_certificate),
     }
 
 

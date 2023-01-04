@@ -77,13 +77,13 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> dict[s
         "docu_url": "",
         "disabled": False,
         "interface_config": {
-            "connection_timeout": (12, 12),
+            "connection_timeout": [12, 12],
             "checkmk_server_url": "http://localhost",
             "idp_metadata_endpoint": "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
             "user_id_attribute": "username",
             "signature_certificate": {
-                "private": private_keyfile_path,
-                "public": public_keyfile_path,
+                "private": str(private_keyfile_path),
+                "public": str(public_keyfile_path),
             },
         },
         "create_users_on_login": False,

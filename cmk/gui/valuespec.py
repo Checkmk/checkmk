@@ -7706,6 +7706,78 @@ class AjaxFetchCA(AjaxPage):
         raise MKUserError(None, _("Found no CA"))
 
 
+def analyse_cert(value: Any) -> dict[str, dict[str, str]]:
+    # ? type of the value argument is unclear
+    cert = crypto.load_certificate(
+        crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
+    )
+    titles = {
+        "C": _("Country"),
+        "ST": _("State or Province Name"),
+        "L": _("Locality Name"),
+        "O": _("Organization Name"),
+        "CN": _("Common Name"),
+    }
+    cert_info: dict[str, dict[str, str]] = {}
+    for what, x509 in [
+        ("issuer", cert.get_issuer()),
+        ("subject", cert.get_subject()),
+    ]:
+        cert_info[what] = {}
+        for raw_key, raw_val in x509.get_components():
+            key = raw_key.decode("utf-8")
+            if key in titles:
+                cert_info[what][titles[key]] = raw_val.decode("utf-8")
+    return cert_info
+
+
+def validate_certificate(value: Any, varprefix: str) -> None:
+    try:
+        analyse_cert(value)
+    except Exception as e:
+        raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
+
+
+def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
+    *,
+    title: str | None = None,
+    help: ValueSpecHelp | None = None,
+) -> Tuple:
+    """A single certificate with a matching private key."""
+
+    def _validate_is_single_cert(value: str, varprefix: str) -> None:
+        header_occurances = len([s for s in value.split("\n") if s.startswith("-----BEGIN")])
+        if header_occurances == 1:
+            return
+        raise MKUserError(varprefix, _("Cannot be a certificate chain"))
+
+    def _validate_private_key(value: str, varprefix: str) -> None:
+        if not value.startswith("-----BEGIN PRIVATE"):
+            raise MKUserError(varprefix, _("Invalid private key"))
+        _validate_is_single_cert(value, varprefix)
+
+    def _validate_certificate(value: str, varprefix: str) -> None:
+        validate_certificate(value, varprefix)
+        _validate_is_single_cert(value, varprefix)
+
+    return Tuple(
+        elements=[
+            TextAreaUnicode(
+                allow_empty=False,
+                title="Private key",
+                validate=_validate_private_key,
+            ),
+            TextAreaUnicode(
+                allow_empty=False,
+                title="Certificate",
+                validate=_validate_certificate,
+            ),
+        ],
+        title=title,
+        help=help,
+    )
+
+
 class CAorCAChain(UploadOrPasteTextFile):
     def __init__(  # pylint: disable=redefined-builtin
         self,
@@ -7741,37 +7813,10 @@ class CAorCAChain(UploadOrPasteTextFile):
         )
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
-        try:
-            self.analyse_cert(value)
-        except Exception as e:
-            raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
-
-    def analyse_cert(self, value):
-        # ? type of the value argument is unclear
-        cert = crypto.load_certificate(
-            crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
-        )
-        titles = {
-            "C": _("Country"),
-            "ST": _("State or Province Name"),
-            "L": _("Locality Name"),
-            "O": _("Organization Name"),
-            "CN": _("Common Name"),
-        }
-        cert_info: dict[str, dict[str, str]] = {}
-        for what, x509 in [
-            ("issuer", cert.get_issuer()),
-            ("subject", cert.get_subject()),
-        ]:
-            cert_info[what] = {}
-            for raw_key, raw_val in x509.get_components():
-                key = raw_key.decode("utf-8")
-                if key in titles:
-                    cert_info[what][titles[key]] = raw_val.decode("utf-8")
-        return cert_info
+        validate_certificate(value, varprefix)
 
     def value_to_html(self, value: Any) -> ValueSpecText:
-        cert_info = self.analyse_cert(value)
+        cert_info = analyse_cert(value)
 
         rows = []
         for what, title in [

@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "InputBuffer.h"
+#include "livestatus/InputBuffer.h"
 
 #include <unistd.h>
 
@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <cstring>
 #include <ostream>
+#include <type_traits>
 #include <utility>
 
 #include "livestatus/ChronoUtils.h"

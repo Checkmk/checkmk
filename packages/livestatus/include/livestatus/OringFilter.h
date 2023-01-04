@@ -3,10 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef AndingFilter_h
-#define AndingFilter_h
-
-#include "config.h"  // IWYU pragma: keep
+#ifndef OringFilter_h
+#define OringFilter_h
 
 #include <bitset>
 #include <chrono>
@@ -22,7 +20,7 @@ class ColumnFilter;
 class Row;
 class User;
 
-class AndingFilter : public Filter {
+class OringFilter : public Filter {
     struct Secret {};
 
 public:
@@ -53,7 +51,7 @@ public:
 
     // NOTE: This is effectively private, but it can't be declared like this
     // because of std::make_unique.
-    AndingFilter(Kind kind, Filters subfilters, Secret /*unused*/)
+    OringFilter(Kind kind, Filters subfilters, Secret /*unused*/)
         : Filter(kind), _subfilters(std::move(subfilters)) {}
 
 private:
@@ -62,4 +60,4 @@ private:
     std::ostream &print(std::ostream &os) const override;
 };
 
-#endif  // AndingFilter_h
+#endif  // OringFilter_h

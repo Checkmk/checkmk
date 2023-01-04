@@ -14,10 +14,10 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
+#include "livestatus/Row.h"
 #include "nagios.h"
 
 // TODO(sp) This shouldn't live here...

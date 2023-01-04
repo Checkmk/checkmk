@@ -13,9 +13,9 @@
 #include "DynamicFileColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/Row.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};

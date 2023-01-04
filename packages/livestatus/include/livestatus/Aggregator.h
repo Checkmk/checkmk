@@ -6,13 +6,11 @@
 #ifndef Aggregator_h
 #define Aggregator_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <cmath>
 #include <functional>
 
-#include "Row.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Row.h"
 class Query;
 class User;
 

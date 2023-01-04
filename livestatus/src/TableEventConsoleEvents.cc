@@ -11,11 +11,11 @@
 #include "Column.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
+#include "livestatus/Row.h"
 
 #ifdef CMC
 #include "User.h"

@@ -112,13 +112,10 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        AndingFilter.cc \
         AttributeListColumn.cc \
-        Average.cc \
         Column.cc \
         ColumnFilter.cc \
         CommentRenderer.cc \
-        CountAggregator.cc \
         DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
@@ -128,7 +125,6 @@ liblivestatusneb_a_SOURCES = \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
-        InputBuffer.cc \
         IntFilter.cc \
         ListFilter.cc \
         LogCache.cc \
@@ -138,7 +134,6 @@ liblivestatusneb_a_SOURCES = \
         Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
-        OringFilter.cc \
         PerfdataAggregator.cc \
         Query.cc \
         RegExp.cc \
@@ -176,9 +171,7 @@ liblivestatusneb_a_SOURCES = \
         TableTimeperiods.cc \
         TimeFilter.cc \
         TimeperiodsCache.cc \
-        Triggers.cc \
         User.cc \
-        mk_inventory.cc \
         mk_logwatch.cc \
         module.cc \
         opids.cc \

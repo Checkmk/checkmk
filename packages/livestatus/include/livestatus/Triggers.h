@@ -6,8 +6,6 @@
 #ifndef Triggers_h
 #define Triggers_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <condition_variable>
 #include <mutex>

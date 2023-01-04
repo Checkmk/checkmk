@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "mk_inventory.h"
+#include "livestatus/mk_inventory.h"
 
 #include <sys/stat.h>
 

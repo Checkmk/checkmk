@@ -6,8 +6,6 @@
 #ifndef Row_h
 #define Row_h
 
-#include "config.h"  // IWYU pragma: keep
-
 class Row {
 public:
     // Here we basically forget the actual type of the row...

@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "AndingFilter.h"
+#include "livestatus/AndingFilter.h"
 
 #include <algorithm>
 #include <iterator>
@@ -11,8 +11,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "OringFilter.h"
-#include "Row.h"
+#include "livestatus/OringFilter.h"
+#include "livestatus/Row.h"
 
 // static
 std::unique_ptr<Filter> AndingFilter::make(Kind kind,

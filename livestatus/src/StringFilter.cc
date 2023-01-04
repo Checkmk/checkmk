@@ -8,7 +8,7 @@
 #include <utility>
 
 #include "RegExp.h"
-#include "Row.h"
+#include "livestatus/Row.h"
 
 StringFilter::StringFilter(Kind kind, std::string columnName,
                            std::function<std::string(Row)> getValue,

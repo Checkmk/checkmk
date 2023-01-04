@@ -49,7 +49,7 @@
 #include "User.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
-#include "mk_inventory.h"
+#include "livestatus/mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

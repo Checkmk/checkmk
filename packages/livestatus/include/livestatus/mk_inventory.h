@@ -6,8 +6,6 @@
 #ifndef mk_inventory_h
 #define mk_inventory_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <string>
 

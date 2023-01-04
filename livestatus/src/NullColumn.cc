@@ -7,8 +7,8 @@
 
 #include <stdexcept>
 
-#include "Row.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Row.h"
 
 void NullColumn::output(Row /*row*/, RowRenderer &r, const User & /*user*/,
                         std::chrono::seconds /*timezone_offset*/) const {

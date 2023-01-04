@@ -11,7 +11,7 @@
 #include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
 #include "Query.h"
-#include "Row.h"
+#include "livestatus/Row.h"
 
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
     : Table(mc) {

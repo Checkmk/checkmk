@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "ListColumn.h"
-#include "Row.h"
 #include "User.h"
 #include "livestatus/Filter.h"
+#include "livestatus/Row.h"
 #include "opids.h"
 class IntFilter;
 class Logger;

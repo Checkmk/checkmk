@@ -6,8 +6,6 @@
 #ifndef Average_h
 #define Average_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <mutex>
 

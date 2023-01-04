@@ -13,9 +13,9 @@
 #include <utility>
 #include <variant>
 
-#include "Aggregator.h"
 #include "Column.h"
 #include "User.h"
+#include "livestatus/Aggregator.h"
 class Row;
 class RowRenderer;
 class User;

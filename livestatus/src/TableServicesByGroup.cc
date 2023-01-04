@@ -9,11 +9,11 @@
 
 #include "Column.h"
 #include "Query.h"
-#include "Row.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "User.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Row.h"
 #include "nagios.h"
 
 namespace {

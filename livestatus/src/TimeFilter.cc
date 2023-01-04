@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <utility>
 
-#include "Row.h"
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/Row.h"
 
 TimeFilter::TimeFilter(Kind kind, std::string columnName,
                        std::function<std::chrono::system_clock::time_point(

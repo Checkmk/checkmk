@@ -20,7 +20,6 @@
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -30,6 +29,7 @@
 #include "livestatus/Filter.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringUtils.h"
 
 #ifdef CMC

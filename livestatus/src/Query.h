@@ -24,14 +24,14 @@
 #include <utility>
 #include <vector>
 
-#include "Aggregator.h"  // IWYU pragma: keep
-#include "Row.h"
 #include "StatsColumn.h"
-#include "Triggers.h"
 #include "User.h"
+#include "livestatus/Aggregator.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/RendererBrokenCSV.h"
+#include "livestatus/Row.h"
+#include "livestatus/Triggers.h"
 class Column;
 class Logger;
 class OutputBuffer;

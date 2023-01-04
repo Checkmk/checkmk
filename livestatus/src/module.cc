@@ -35,19 +35,19 @@
 #include <utility>
 #include <vector>
 
-#include "Average.h"
 #include "DowntimeOrComment.h"
-#include "InputBuffer.h"
 #include "NagiosCore.h"
 #include "Queue.h"
 #include "RegExp.h"
 #include "TimeperiodsCache.h"
-#include "Triggers.h"
 #include "User.h"
+#include "livestatus/Average.h"
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/InputBuffer.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/Poller.h"
+#include "livestatus/Triggers.h"
 #include "livestatus/data_encoding.h"
 #include "livestatus/global_counters.h"
 #include "livestatus/strutil.h"

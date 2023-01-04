@@ -3,11 +3,11 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "CountAggregator.h"
+#include "livestatus/CountAggregator.h"
 
-#include "Row.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
+#include "livestatus/Row.h"
 
 void CountAggregator::consume(Row row, const User &user,
                               std::chrono::seconds timezone_offset) {

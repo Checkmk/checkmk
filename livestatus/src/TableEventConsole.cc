@@ -24,10 +24,10 @@
 #include "EventConsoleConnection.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
 #include "livestatus/Filter.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringUtils.h"
 #include "opids.h"
 

@@ -1,32 +1,50 @@
 set(header_location ${Livestatus_SOURCE_DIR}/include/livestatus)
 set(livestatus_headers
+    ${header_location}/Aggregator.h
+    ${header_location}/AndingFilter.h
+    ${header_location}/Average.h
     ${header_location}/BitMask.h
     ${header_location}/ChronoUtils.h
-    ${header_location}/LogEntry.h
+    ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
+    ${header_location}/data_encoding.h
+    ${header_location}/LogEntry.h
     ${header_location}/data_encoding.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
+    ${header_location}/InputBuffer.h
     ${header_location}/Logger.h
+    ${header_location}/MapUtils.h
+    ${header_location}/mk_inventory.h
+    ${header_location}/OringFilter.h
     ${header_location}/OStreamStateSaver.h
     ${header_location}/OutputBuffer.h
-    ${header_location}/POSIXUtils.h
+    ${header_location}/overload.h
     ${header_location}/Poller.h
+    ${header_location}/POSIXUtils.h
     ${header_location}/Renderer.h
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
     ${header_location}/RendererJSON.h
     ${header_location}/RendererPython3.h
+    ${header_location}/Row.h
     ${header_location}/StringUtils.h
-    ${header_location}/strutil.h)
+    ${header_location}/strutil.h
+    ${header_location}/Triggers.h)
 set(livestatus_sources
+    AndingFilter.cc
+    Average.cc
     CrashReport.cc
+    CountAggregator.cc
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
+    InputBuffer.cc
     LogEntry.cc
     Logger.cc
+    mk_inventory.cc
+    OringFilter.cc
     OutputBuffer.cc
     POSIXUtils.cc
     Renderer.cc
@@ -35,7 +53,8 @@ set(livestatus_sources
     RendererJSON.cc
     RendererPython3.cc
     StringUtils.cc
-    strutil.cc)
+    strutil.cc
+    Triggers.cc)
 
 add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})
 

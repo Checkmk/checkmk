@@ -16,7 +16,6 @@
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
@@ -26,6 +25,7 @@
 #include "User.h"
 #include "contact_fwd.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/Row.h"
 
 #ifdef CMC
 #include "cmc.h"

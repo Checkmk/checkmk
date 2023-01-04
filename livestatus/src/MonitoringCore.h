@@ -16,9 +16,9 @@
 #include <vector>
 
 #include "Metric.h"
-#include "Triggers.h"
 #include "User.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/Triggers.h"
 enum class Encoding;
 class Logger;
 

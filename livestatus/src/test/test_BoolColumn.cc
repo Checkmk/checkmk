@@ -10,9 +10,9 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "IntColumn.h"
-#include "Row.h"
 #include "User.h"
 #include "gtest/gtest.h"
+#include "livestatus/Row.h"
 
 using namespace std::string_literals;
 

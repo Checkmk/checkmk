@@ -15,12 +15,12 @@ from typing import Any, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
+from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
     HostOrServiceConditionRegex,
     HostOrServiceConditions,
-    Labels,
     RuleConditionsSpec,
     RuleOptions,
     RulesetName,

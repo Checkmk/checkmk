@@ -9,7 +9,8 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.type_defs import HostName, LabelSources, TaggroupIDToTagID
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.type_defs import HostName, TaggroupIDToTagID
 
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter

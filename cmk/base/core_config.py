@@ -20,6 +20,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import core_helper_config_dir
@@ -30,7 +31,6 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     Item,
-    Labels,
     ServiceID,
     ServiceName,
 )

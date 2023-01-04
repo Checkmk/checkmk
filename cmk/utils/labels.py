@@ -9,22 +9,21 @@ from __future__ import annotations
 import os
 from ast import literal_eval
 from collections.abc import Callable, Mapping
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import (
-    HostLabelValueDict,
-    HostName,
-    Labels,
-    Ruleset,
-    SectionName,
-    ServiceName,
-)
+from cmk.utils.type_defs import HostName, Ruleset, SectionName, ServiceName
 
+Labels = Mapping[str, str]
 UpdatedHostLabelsEntry = tuple[str, float, str]
+
+
+class HostLabelValueDict(TypedDict):
+    value: str
+    plugin_name: str | None
 
 
 class _Label:

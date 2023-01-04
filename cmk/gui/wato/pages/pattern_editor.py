@@ -7,7 +7,8 @@
 import re
 from collections.abc import Collection, Iterable
 
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, Labels, ServiceName
+from cmk.utils.labels import Labels
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place

@@ -14,8 +14,9 @@ from pathlib import Path
 from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
+from cmk.utils.labels import Labels
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
-from cmk.utils.type_defs import ContactgroupName, HostName, Labels, TaggroupIDToTagID
+from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
 
 HostAttributeMapping = tuple[
     str, str, dict[str, Any], str

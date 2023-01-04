@@ -16,13 +16,13 @@ from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import PasswordHash
+from cmk.utils.labels import Labels
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import (
     ContactgroupName,
     DisabledNotificationsOptions,
     EventRule,
     HostName,
-    Labels,
     MetricName,
     ServiceName,
     UserId,

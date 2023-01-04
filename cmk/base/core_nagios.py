@@ -23,6 +23,7 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
@@ -34,7 +35,6 @@ from cmk.utils.type_defs import (
     HostName,
     HostsToUpdate,
     InventoryPluginName,
-    Labels,
     ServicegroupName,
     ServiceName,
     TimeperiodName,

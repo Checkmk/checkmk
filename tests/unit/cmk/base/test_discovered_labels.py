@@ -10,8 +10,14 @@ from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import _Label, DiscoveredHostLabelsStore, HostLabel, ServiceLabel
-from cmk.utils.type_defs import HostLabelValueDict, HostName, SectionName
+from cmk.utils.labels import (
+    _Label,
+    DiscoveredHostLabelsStore,
+    HostLabel,
+    HostLabelValueDict,
+    ServiceLabel,
+)
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.base.config as config
 

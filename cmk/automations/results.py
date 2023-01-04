@@ -11,16 +11,16 @@ from typing import Any, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr, DiscoveredHostLabelsDict
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
 from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
     Gateways,
     HostName,
     Item,
-    Labels,
-    LabelSources,
     LegacyCheckParameters,
     MetricTuple,
     NotifyAnalysisInfo,
@@ -31,6 +31,8 @@ from cmk.utils.type_defs import (
     ServiceName,
     ServiceState,
 )
+
+DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
@@ -149,6 +151,12 @@ class SetAutochecksResult(ABCAutomationResult):
 
 
 result_type_registry.register(SetAutochecksResult)
+
+
+SetAutochecksTable = dict[
+    tuple[str, Item], tuple[ServiceName, LegacyCheckParameters, Labels, list[HostName]]
+]
+SetAutochecksTablePre20 = dict[tuple[str, Item], tuple[dict[str, Any], Labels]]
 
 
 @dataclass

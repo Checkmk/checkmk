@@ -19,8 +19,9 @@ import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import Labels
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, HostName, Labels
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.checkers.check_table import ConfiguredService
 

@@ -124,8 +124,6 @@ Ruleset = list[RuleSpec[T_Ruletype]]
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = str | None
-Labels = Mapping[str, str]
-LabelSources = dict[str, str]
 
 TagID = str
 TaggroupID = str
@@ -215,12 +213,6 @@ ClusterMode = Literal["native", "failover", "worst", "best"]
 LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
-SetAutochecksTable = dict[
-    tuple[str, Item], tuple[ServiceName, LegacyCheckParameters, Labels, list[HostName]]
-]
-
-SetAutochecksTablePre20 = dict[tuple[str, Item], tuple[dict[str, Any], Labels]]
-
 
 @dataclass
 class DiscoveryResult:
@@ -300,14 +292,6 @@ class ExitSpec(TypedDict, total=False):
     specific_missing_sections: list[tuple[str, int]]
     restricted_address_mismatch: int
     legacy_pull_mode: int
-
-
-class HostLabelValueDict(TypedDict):
-    value: str
-    plugin_name: str | None
-
-
-DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 
 InfluxDBConnectionSpec = dict[str, Any]

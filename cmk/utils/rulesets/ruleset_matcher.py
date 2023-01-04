@@ -9,7 +9,7 @@ from re import Pattern
 from typing import Any, cast
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
+from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager, Labels
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import (
@@ -24,8 +24,6 @@ from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
-    Labels,
-    LabelSources,
     RuleConditionsSpec,
     Ruleset,
     RuleSpec,
@@ -45,6 +43,7 @@ from cmk.utils.type_defs import (
 )
 
 LabelConditions = dict  # TODO: Optimize this
+LabelSources = dict[str, str]
 PreprocessedHostRuleset = dict[HostName, list[T]]
 PreprocessedPattern = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset = list[

@@ -17,13 +17,13 @@ from enum import auto, Enum
 from typing import Any, cast, overload
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
     HostName,
     HostOrServiceConditions,
     HostOrServiceConditionsSimple,
-    Labels,
     RuleOptions,
     ServiceName,
     TagConditionNE,

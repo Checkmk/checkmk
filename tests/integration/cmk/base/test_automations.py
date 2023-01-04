@@ -16,9 +16,10 @@ from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
 from cmk.utils.tags import TagConfig
-from cmk.utils.type_defs import DiscoveryResult, HostName, SetAutochecksTable
+from cmk.utils.type_defs import DiscoveryResult, HostName
 
 from cmk.automations import results
+from cmk.automations.results import SetAutochecksTable
 
 import cmk.base.autochecks as autochecks
 

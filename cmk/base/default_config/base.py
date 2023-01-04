@@ -5,6 +5,7 @@
 
 from typing import Any, Final, Literal
 
+from cmk.utils.labels import Labels
 from cmk.utils.password_store import Password
 from cmk.utils.store.host_storage import FolderAttributes
 from cmk.utils.type_defs import (
@@ -15,7 +16,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostgroupName,
     HostName,
-    Labels,
     Ruleset,
     ServicegroupName,
     ServiceName,

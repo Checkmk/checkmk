@@ -15,8 +15,8 @@ from redis.client import Pipeline
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
+from cmk.utils.labels import Labels as _Labels
 from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
-from cmk.utils.type_defs import Labels as _Labels
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError

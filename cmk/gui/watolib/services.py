@@ -17,9 +17,9 @@ from mypy_extensions import NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import HostOrServiceConditions, Item, SetAutochecksTable
+from cmk.utils.type_defs import HostOrServiceConditions, Item
 
-from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
+from cmk.automations.results import CheckPreviewEntry, SetAutochecksTable, TryDiscoveryResult
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (

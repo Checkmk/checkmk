@@ -11,7 +11,9 @@ from typing import Any
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTagID, TagID
+from cmk.utils.labels import Labels
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter

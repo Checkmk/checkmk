@@ -26,6 +26,8 @@ from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from cmk.fetchers import Fetcher, Mode
 
+__all__ = ["IPMIFetcher"]
+
 
 class IPMIFetcher(Fetcher[AgentRawData]):
     """Fetch IPMI data using `pyghmi`.

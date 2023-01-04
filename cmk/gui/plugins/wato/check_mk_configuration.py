@@ -5752,7 +5752,7 @@ def _valuespec_snmpv3_contexts():
         elements=[
             DropdownChoice(
                 title=_("Section name"),
-                choices=get_snmp_section_names,
+                choices=lambda: [(None, _("All SNMP sections"))] + get_snmp_section_names(),
             ),
             ListOfStrings(
                 title=_("SNMP Context IDs"),

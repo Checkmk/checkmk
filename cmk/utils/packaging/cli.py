@@ -12,7 +12,7 @@ from typing import Callable
 
 from cmk.utils import tty
 
-from . import PackageStore
+from . import disable_outdated, PackageStore, update_active_packages
 from ._manifest import extract_manifest
 from ._reporter import files_inventory
 from ._type_defs import PackageException
@@ -95,6 +95,29 @@ def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
+def _command_disable_outdated(_args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Disable MKP packages that are declared to be outdated with the new version
+
+    Since 1.6 there is the option version.usable_until available in MKP packages.
+    For all installed packages, this command compares that version with the Checkmk version.
+    In case it is outdated, the package is disabled.
+    """
+    disable_outdated()
+    return 0
+
+
+def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) -> int:
+    """Disable MKP packages that are not suitable for this version, and enable others
+
+    Packages can declare their minimum or maximum required Checkmk versions.
+    Also packages can collide with one another or fail to load for other reasons.
+
+    This command disables all packages that are not applicable, and then enables the ones that are.
+    """
+    update_active_packages(logger)
+    return 0
+
+
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="mkp", description=__doc__)
     parser.add_argument("--debug", "-d", action="store_true")
@@ -103,8 +126,14 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "store", _args_store, _command_store)
+    _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)
+    _add_command(subparsers, "update-active", _no_args, _command_update_active)
 
     return parser.parse_args(argv)
+
+
+def _no_args(subparser: argparse.ArgumentParser) -> None:
+    """This command has no arguments"""
 
 
 def _add_command(

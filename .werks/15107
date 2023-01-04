@@ -29,3 +29,5 @@ This command corresponds to the "<i>upload</i>" action in the GUI.
 
 <tt>install</tt>:
 This command is replaced by the commands <tt>store</tt> and <tt>enable</tt>, to reflect the GUI actions.
+
+<tt>update-active-packages</tt> is renamed to <tt>update-active</tt>.

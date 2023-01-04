@@ -19,7 +19,6 @@ from cmk.utils.packaging import (
     CONFIG_PARTS,
     create_mkp_object,
     disable,
-    disable_outdated,
     format_file_name,
     get_enabled_manifests,
     get_installed_manifest,
@@ -38,7 +37,6 @@ from cmk.utils.packaging import (
     PackageStore,
     PackageVersion,
     release,
-    update_active_packages,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -62,7 +60,7 @@ Available commands are:
    disable NAME [VERSION]  ...  Disable package NAME
    enable NAME VERSION     ...  Enable previously disabled package NAME
    disable-outdated        ...  Disable outdated packages
-   update-active-packages  ...  Update the selection of active packages (according to Checkmk version)
+   update-active           ...  Update the selection of active packages (according to Checkmk version)
 
    -v  enables verbose output
 
@@ -89,8 +87,8 @@ def do_packaging(args: list[str]) -> None:
         "remove": package_remove,
         "disable": package_disable,
         "enable": package_enable,
-        "disable-outdated": package_disable_outdated,
-        "update-active-packages": package_update_active,
+        "disable-outdated": lambda args: cli.main(["disable-outdated", *args], logger),
+        "update-active": lambda args: cli.main(["update-active", *args], logger),
     }
     f = commands.get(command)
     if f:
@@ -259,29 +257,3 @@ def package_enable(args: list[str]) -> None:
         raise PackageException("Usage: check_mk -P enable NAME VERSION")
     package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
     install_optional_package(PackageStore(), package_id)
-
-
-def package_disable_outdated(args: list[str]) -> None:
-    """Disable MKP packages that are declared to be outdated with the new version
-
-    Since 1.6 there is the option version.usable_until available in MKP packages.
-    Iterate over all installed packages, check that field and once it is set, compare
-    the version with the new Checkmk version. In case it is outdated, move the
-    package to the disabled packages.
-    """
-    if args:
-        raise PackageException("Usage: check_mk -P disable-outdated")
-    disable_outdated()
-
-
-def package_update_active(args: list[str]) -> None:
-    """Disable MKP packages that are not suitable for this version, and enable others
-
-    Packages can declare their minimum or maximum required Checkmk versions.
-    Also packages can collide with one another or fail to load for other reasons.
-
-    This command disables all packages that are not applicable, and then enables the ones that are.
-    """
-    if args:
-        raise PackageException("Usage: check_mk -P update-active")
-    update_active_packages(logger)

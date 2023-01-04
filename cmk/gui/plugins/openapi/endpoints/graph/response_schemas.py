@@ -8,7 +8,7 @@ from cmk.gui.plugins.openapi.endpoints.graph.common import TimeRange
 from cmk.fields import Float, Integer, List, Nested, String
 
 
-class GraphSchema(BaseSchema):
+class CurveSchema(BaseSchema):
     color = String(description="The color of the graph in HTML notation.", example="#80ff40")
     rrd_data = List(
         Float(),
@@ -44,11 +44,9 @@ class GraphCollectionSchema(BaseSchema):
         description="The interval between two samples in seconds.", example=60, required=True
     )
     curves = Nested(
-        GraphSchema(),
+        CurveSchema,
         description="The actual graph data.",
         required=True,
-        # TODO: something is wrong with many:
-        # rendered as object in redoc!
         many=True,
         example=[
             {

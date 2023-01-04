@@ -16,7 +16,7 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-1.24.0
+ASIO_VERSION := asio-1.24.0-patched
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 LIBLIVESTATUS_PATH := $(abs_top_srcdir)/packages/livestatus
@@ -199,10 +199,9 @@ $(ASIO_INCLUDE): $(ASIO_VERSION)
 	rsync -a --delete --exclude="Makefile.*" --exclude=.gitignore $</include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff
+$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	$(RM) -r $@
 	tar xzf $<
-	patch -p0 < $(PACKAGE_ASIO)/asio.diff
 	touch $@
 
 $(RRDTOOL_VERSION):

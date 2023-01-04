@@ -23,7 +23,7 @@
     <ProjectGuid>{343045B4-F20A-4E48-AB2F-83E1C22C9710}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
-    <AsioVersion>asio-1.24.0</AsioVersion>
+    <AsioVersion>asio-1.24.0-patched</AsioVersion>
     <FmtVersion>fmt-9.0.0</FmtVersion>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

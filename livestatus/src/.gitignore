@@ -9,7 +9,7 @@
 .deps
 Makefile
 Makefile.in
-asio-1.24.0/
+asio-*-patched/
 compile_commands.json
 cppcheck-result.xml
 googletest-*-patched/

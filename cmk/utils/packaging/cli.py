@@ -12,10 +12,16 @@ from typing import Callable
 
 from cmk.utils import tty
 
-from . import disable_outdated, PackageStore, update_active_packages
+from . import (
+    disable_outdated,
+    get_optional_manifests,
+    install_optional_package,
+    PackageStore,
+    update_active_packages,
+)
 from ._manifest import extract_manifest
 from ._reporter import files_inventory
-from ._type_defs import PackageException
+from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
 
 def _args_find(
@@ -118,6 +124,46 @@ def _command_update_active(_args: argparse.Namespace, logger: logging.Logger) ->
     return 0
 
 
+def _args_package_id(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument(
+        "name",
+        type=PackageName,
+        help="The package name",
+    )
+    subparser.add_argument(
+        "version",
+        type=PackageVersion,
+        default=None,
+        help="The package version. If only one package by the given name is known, the version can be omitted.",
+    )
+
+
+def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Enable previously disabled package NAME"""
+    install_optional_package(PackageStore(), _get_package_id(args.name, args.verison))
+    return 0
+
+
+def _get_package_id(
+    name: PackageName,
+    version: PackageVersion | None,
+) -> PackageID:
+    if version is not None:
+        return PackageID(name=name, version=version)
+
+    match [p for p in get_optional_manifests(PackageStore()) if p.name == name]:
+        case ():
+            raise PackageException(f"No such package: {name}")
+        case (single_match,):
+            return single_match
+        case multiple_matches:
+            raise PackageException(
+                f"Please specify version ({', '.join(pid.version for pid in multiple_matches)})"
+            )
+
+
 def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="mkp", description=__doc__)
     parser.add_argument("--debug", "-d", action="store_true")
@@ -126,6 +172,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "store", _args_store, _command_store)
+    _add_command(subparsers, "enable", _args_package_id, _command_enable)
     _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)
     _add_command(subparsers, "update-active", _no_args, _command_update_active)
 

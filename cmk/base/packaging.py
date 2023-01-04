@@ -24,7 +24,6 @@ from cmk.utils.packaging import (
     get_installed_manifest,
     get_installed_manifests,
     get_unpackaged_files,
-    install_optional_package,
     is_installed,
     Manifest,
     manifest_template,
@@ -58,7 +57,7 @@ Available commands are:
    install PACK.mkp        ...  Install or update package from file PACK.mkp
    remove NAME VERSION     ...  Uninstall and delete package NAME
    disable NAME [VERSION]  ...  Disable package NAME
-   enable NAME VERSION     ...  Enable previously disabled package NAME
+   enable NAME [VERSION]   ...  Enable previously disabled package NAME
    disable-outdated        ...  Disable outdated packages
    update-active           ...  Update the selection of active packages (according to Checkmk version)
 
@@ -86,7 +85,7 @@ def do_packaging(args: list[str]) -> None:
         "pack": package_pack,
         "remove": package_remove,
         "disable": package_disable,
-        "enable": package_enable,
+        "enable": lambda args: cli.main(["enable", *args], logger),
         "disable-outdated": lambda args: cli.main(["disable-outdated", *args], logger),
         "update-active": lambda args: cli.main(["update-active", *args], logger),
     }
@@ -250,10 +249,3 @@ def package_disable(args: list[str]) -> None:
     if len(args) not in {1, 2}:
         raise PackageException("Usage: check_mk -P disable NAME [VERSION]")
     disable(PackageName(args[0]), PackageVersion(args[1]) if len(args) == 2 else None)
-
-
-def package_enable(args: list[str]) -> None:
-    if len(args) != 2:
-        raise PackageException("Usage: check_mk -P enable NAME VERSION")
-    package_id = PackageID(name=PackageName(args[0]), version=PackageVersion(args[1]))
-    install_optional_package(PackageStore(), package_id)

@@ -247,12 +247,12 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
     assert [p.metadata.name for p in high_medium_pods_from_not_in_operator] == ["pod-1", "pod-2"]
 
 
-def _pod_with_scopes_factory(  # type:ignore[no-untyped-def]
+def _pod_with_scopes_factory(
     name: str | None = None,
     priority_class: str | None = None,
     best_effort: bool = False,
     terminating: bool = False,
-):
+) -> api.Pod:
     return APIPodFactory.build(
         metadata=MetaDataFactory.build(name=name) if name else MetaDataFactory.build(),
         status=PodStatusFactory.build(qos_class="besteffort" if best_effort else "guaranteed"),

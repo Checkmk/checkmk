@@ -182,12 +182,12 @@ def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets: int)
         ),
     ],
 )
-def test_cluster_allocatable_memory_resource_exclude_roles(  # type:ignore[no-untyped-def]
+def test_cluster_allocatable_memory_resource_exclude_roles(
     api_node_roles_per_node: Sequence[Sequence[str]],
     cluster_nodes: int,
     excluded_node_roles: Sequence[str],
     expected_control_nodes: int,
-):
+) -> None:
     memory = 7.0 * 1024**3
     counted_nodes = (
         cluster_nodes - expected_control_nodes
@@ -236,12 +236,12 @@ def test_cluster_allocatable_memory_resource_exclude_roles(  # type:ignore[no-un
         ),
     ],
 )
-def test_cluster_allocatable_cpu_resource_cluster(  # type:ignore[no-untyped-def]
+def test_cluster_allocatable_cpu_resource_cluster(
     api_node_roles_per_node: Sequence[Sequence[str]],
     cluster_nodes: int,
     excluded_node_roles: Sequence[str],
     expected_control_nodes: int,
-):
+) -> None:
     counted_nodes = (
         cluster_nodes - expected_control_nodes
         if "control-plane" in excluded_node_roles
@@ -285,10 +285,10 @@ def test_cluster_allocatable_cpu_resource_cluster(  # type:ignore[no-untyped-def
         ),
     ],
 )
-def test_cluster_usage_resources(  # type:ignore[no-untyped-def]
+def test_cluster_usage_resources(
     excluded_node_role: str,
     node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
-):
+) -> None:
     total = sum(count for _, count, roles in node_podcount_roles if excluded_node_role not in roles)
     pods = [
         pod
@@ -328,10 +328,10 @@ def test_cluster_usage_resources(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
+def test_cluster_allocatable_pods(
     excluded_node_role: str,
     node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
-):
+) -> None:
     allocatable = 110
     capacity = 111  # can not be different in pratice, but better for testing
     total = sum(1 for *_, roles in node_podcount_roles if excluded_node_role not in roles)

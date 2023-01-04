@@ -73,8 +73,8 @@ def test_node_alloctable_pods() -> None:
     assert actual == expected
 
 
-def test_write_nodes_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    write_sections_mock,
+def test_write_nodes_api_sections_registers_sections_to_be_written(
+    write_sections_mock: MagicMock,
 ) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(

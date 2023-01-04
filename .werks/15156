@@ -1,0 +1,18 @@
+Title: Send metrics to InfluxDB in batch
+Class: feature
+Compatible: compat
+Component: core
+Date: 1672845211
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p21
+
+Metrics are collected and sent together after either about 5000
+metrics have been enqueued or 10 seconds, whichever comes first.
+
+This follows the "Optimize writes to InfluxDB" best practice
+documented on influxdata.com and should improve the overall
+performance of the connector.
+

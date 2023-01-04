@@ -2152,7 +2152,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
     arguments = parse_arguments(args)
     checkmk_host_settings = CheckmkHostSettings(
         cluster_name=arguments.cluster,
-        kubernetes_cluster_hostname=arguments.kubernetes_cluster_name,
+        kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
         annotation_key_pattern=arguments.annotation_key_pattern,
     )
 

@@ -202,7 +202,7 @@ $(RRDTOOL_VERSION):
 	LANG=C make -j4 -C $$(dirname $$(dirname $$(dirname $(RRDTOOL_PATH)))) rrdtool-build-library >$(RRDTOOL_BUILD_LOG) 2>&1
 	touch $@
 
-$(GOOGLEfINCLUDE): $(GOOGLETEST_VERSION)/Makefile
+$(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
 # NOTE: We don't want the googletest files in our compile_commands.json!
 	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
 	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a

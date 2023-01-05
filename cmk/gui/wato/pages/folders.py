@@ -349,52 +349,15 @@ class ModeFolder(WatoMode):
             if effective.get("imported_folder"):
                 at_least_one_imported = True
 
-        if not self._folder.locked_hosts():
-            if user.may("wato.manage_hosts"):
-                yield PageMenuEntry(
-                    title=_("Delete hosts"),
-                    icon_name="delete",
-                    item=make_confirmed_form_submit_link(
-                        form_name="hosts",
-                        button_name="_bulk_delete",
-                        message=_("Do you really want to delete the selected hosts?"),
-                    ),
-                    is_enabled=is_enabled,
-                )
-
-            if user.may("wato.edit_hosts"):
-                yield PageMenuEntry(
-                    title=_("Edit attributes"),
-                    icon_name="edit",
-                    item=make_form_submit_link(
-                        form_name="hosts",
-                        button_name="_bulk_edit",
-                    ),
-                    is_enabled=is_enabled,
-                )
-
-                yield PageMenuEntry(
-                    title=_("Remove explicit attribute settings"),
-                    icon_name="cleanup",
-                    item=make_form_submit_link(
-                        form_name="hosts",
-                        button_name="_bulk_cleanup",
-                    ),
-                    is_enabled=is_enabled,
-                )
-
-        if user.may("wato.manage_hosts"):
+        if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(
-                title=_("Remove TLS registration"),
-                icon_name="delete",
-                item=make_confirmed_form_submit_link(
+                title=_("Edit attributes"),
+                icon_name="edit",
+                item=make_form_submit_link(
                     form_name="hosts",
-                    button_name="_remove_tls_registration_from_selection",
-                    message=_(
-                        "Do you really want to remove the TLS registration of the selected hosts?"
-                    )
-                    + remove_tls_registration_help(),
+                    button_name="_bulk_edit",
                 ),
+                is_enabled=is_enabled,
             )
 
         if user.may("wato.services"):
@@ -409,16 +372,6 @@ class ModeFolder(WatoMode):
             )
 
         if not self._folder.locked_hosts():
-            if user.may("wato.parentscan"):
-                yield PageMenuEntry(
-                    title=_("Detect network parent hosts"),
-                    icon_name="parentscan",
-                    item=make_form_submit_link(
-                        form_name="hosts",
-                        button_name="_parentscan",
-                    ),
-                    is_enabled=is_enabled,
-                )
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 yield PageMenuEntry(
                     title=_("Move to other folder"),
@@ -444,6 +397,54 @@ class ModeFolder(WatoMode):
                         ),
                         is_enabled=is_enabled,
                     )
+
+            if user.may("wato.parentscan"):
+                yield PageMenuEntry(
+                    title=_("Detect network parent hosts"),
+                    icon_name="parentscan",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_parentscan",
+                    ),
+                    is_enabled=is_enabled,
+                )
+
+            if user.may("wato.edit_hosts"):
+                yield PageMenuEntry(
+                    title=_("Remove explicit attribute settings"),
+                    icon_name="cleanup",
+                    item=make_form_submit_link(
+                        form_name="hosts",
+                        button_name="_bulk_cleanup",
+                    ),
+                    is_enabled=is_enabled,
+                )
+
+        if user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Remove TLS registration"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_remove_tls_registration_from_selection",
+                    message=_(
+                        "Do you really want to remove the TLS registration of the selected hosts?"
+                    )
+                    + remove_tls_registration_help(),
+                ),
+            )
+
+        if not self._folder.locked_hosts() and user.may("wato.manage_hosts"):
+            yield PageMenuEntry(
+                title=_("Delete hosts"),
+                icon_name="delete",
+                item=make_confirmed_form_submit_link(
+                    form_name="hosts",
+                    button_name="_bulk_delete",
+                    message=_("Do you really want to delete the selected hosts?"),
+                ),
+                is_enabled=is_enabled,
+            )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
         if self._folder.may("read"):

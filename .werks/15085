@@ -1,0 +1,14 @@
+Title: mk_postgres: relax strict instance process name filtering
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1672922876
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Prior to this werk, some instances were ignored because their respective
+process name was written in capital letters. With this werk, this strict
+filtering is relaxed.
+

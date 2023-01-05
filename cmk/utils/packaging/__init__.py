@@ -79,18 +79,18 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
-def release(pacname: PackageName) -> None:
+def release(pacname: PackageName, logger: logging.Logger) -> None:
     if (manifest := get_installed_manifest(pacname)) is None:
         raise PackageException(f"Package {pacname} not installed or corrupt.")
 
-    g_logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
+    logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in PACKAGE_PARTS + CONFIG_PARTS:
         if not (filenames := manifest.files.get(part, [])):
             continue
 
-        g_logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
+        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
         for f in filenames:
-            g_logger.log(VERBOSE, "    %s", f)
+            logger.log(VERBOSE, "    %s", f)
         if part is PackagePart.EC_RULE_PACKS:
             ec.release_packaged_rule_packs([str(f) for f in filenames])
 

@@ -197,7 +197,7 @@ def package_create(args: list[str]) -> None:
 def package_release(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P release NAME")
-    release(PackageName(args[0]))
+    release(PackageName(args[0]), logger)
 
 
 def package_pack(args: list[str]) -> None:

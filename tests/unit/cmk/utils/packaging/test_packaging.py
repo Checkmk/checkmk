@@ -188,7 +188,7 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
 
 def test_release_not_existing() -> None:
     with pytest.raises(packaging.PackageException):
-        packaging.release(packaging.PackageName("abc"))
+        packaging.release(packaging.PackageName("abc"), packaging.g_logger)
 
 
 def test_release() -> None:
@@ -196,7 +196,7 @@ def test_release() -> None:
     assert packaging.is_installed(packaging.PackageName("aaa")) is True
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
-    packaging.release(packaging.PackageName("aaa"))
+    packaging.release(packaging.PackageName("aaa"), packaging.g_logger)
 
     assert packaging.is_installed(packaging.PackageName("aaa")) is False
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()

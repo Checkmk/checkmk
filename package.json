@@ -97,7 +97,6 @@
     "select2": "^4.0.13",
     "simplebar": "^5.3.6",
     "sweetalert2": "^11.2.1",
-    "whatwg-fetch": "^3.6.2",
     "yargs-parser": "^20.2.9"
   },
   "//": "COMMENT: This is here, so the that the build doesn't fail on a npm version missmatch.",

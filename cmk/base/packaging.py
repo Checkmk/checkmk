@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -15,7 +14,6 @@ import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     cli,
-    CONFIG_PARTS,
     create_mkp_object,
     get_installed_manifest,
     get_installed_manifests,
@@ -176,19 +174,6 @@ def package_template(args: list[str]) -> None:
 def package_package(args: list[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P package MANIFEST_FILE")
-
-    # Make sure user is not in data directories of Checkmk
-    abs_curdir = os.path.abspath(os.curdir)
-    for directory in [
-        cmk.utils.paths.var_dir,
-        *(str(p.path) for p in PACKAGE_PARTS + CONFIG_PARTS),
-    ]:
-        if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
-            raise PackageException(
-                "You are in %s!\n"
-                "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % abs_curdir
-            )
 
     if (package := read_manifest_optionally(Path(args[0]), logger=logger)) is None:
         return

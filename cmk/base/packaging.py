@@ -31,7 +31,6 @@ from cmk.utils.packaging import (
     PackageName,
     PACKAGES_DIR,
     PackageVersion,
-    release,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -73,7 +72,7 @@ def do_packaging(args: list[str]) -> None:
 
     commands = {
         "create": package_create,
-        "release": package_release,
+        "release": lambda args: cli.main(["release", *args], logger),
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
@@ -192,12 +191,6 @@ def package_create(args: list[str]) -> None:
         PACKAGES_DIR / pacname,
         tty.normal,
     )
-
-
-def package_release(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P release NAME")
-    release(PackageName(args[0]), logger)
 
 
 def package_pack(args: list[str]) -> None:

@@ -20,6 +20,7 @@ from . import (
     get_optional_manifests,
     install_optional_package,
     PackageStore,
+    release,
     update_active_packages,
 )
 from ._manifest import extract_manifest
@@ -101,6 +102,25 @@ def _command_store(args: argparse.Namespace, _logger: logging.Logger) -> int:
     manifest = PackageStore().store(file_content)
 
     sys.stdout.write(f"{manifest.name} {manifest.version}\n")
+    return 0
+
+
+def _args_release(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument(
+        "name",
+        type=PackageName,
+        help="The packages name",
+    )
+
+
+def _command_release(args: argparse.Namespace, logger: logging.Logger) -> int:
+    """Release package
+
+    This command removes the package, and leaves its contained files as unpackaged files behind.
+    """
+    release(args.name, logger)
     return 0
 
 
@@ -193,6 +213,7 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "store", _args_store, _command_store)
+    _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
     _add_command(subparsers, "enable", _args_package_id, _command_enable)
     _add_command(subparsers, "disable", _args_package_id, _command_disable)

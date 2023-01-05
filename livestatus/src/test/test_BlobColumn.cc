@@ -12,8 +12,8 @@
 #include <vector>
 
 #include "BlobColumn.h"
-#include "Row.h"
 #include "gtest/gtest.h"
+#include "livestatus/Row.h"
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;

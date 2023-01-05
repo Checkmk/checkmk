@@ -189,7 +189,7 @@ $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) --exclude=build packages/livestatus omd/packages/asio omd/packages/googletest | tar xf - -C mk-livestatus-$(VERSION)
+	tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 omd/packages/asio omd/packages/googletest | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
@@ -439,15 +439,8 @@ config.status: $(CONFIG_DEPS)
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \
-	  if test -d ../re2/destdir ; then \
-	    RE2_OPT="--with-re2=$(abspath ../re2/destdir)" ; \
-	  elif test -d omd/packages/re2/destdir ; then \
-	    RE2_OPT="--with-re2=$(abspath omd/packages/re2/destdir)" ; \
-	  else \
-	    RE2_OPT="DUMMY3=" ; \
-	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" "$$RE2_OPT" ; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
 	fi
 
 protobuf-files:
@@ -483,7 +476,6 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
-	packages/livestatus/run-ci --build-all
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -493,14 +485,12 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	packages/livestatus/run-ci --clang-tidy
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	packages/livestatus/run-ci --iwyu
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
@@ -519,11 +509,9 @@ format: format-python format-c format-shell format-js format-css
 clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
 
 format-c:
-	packages/livestatus/run-ci --format
 	$(call clang-format-with,-i)
 
 test-format-c:
-	packages/livestatus/run-ci --check-format
 	@$(call clang-format-with,-Werror --dry-run)
 
 format-cmake:

@@ -42,9 +42,9 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
-#include "Triggers.h"
 #include "gtest/gtest.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Triggers.h"
 
 #ifdef CMC
 #include "TableCachedStatehist.h"

@@ -21,7 +21,8 @@ def test_strategy_text() -> None:
     assert strategy_text(Recreate()) == "Recreate"
     assert strategy_text(OnDelete()) == "OnDelete"
     assert (
-        strategy_text(StatefulSetRollingUpdate(partition=0)) == "RollingUpdate (partitioned at: 0)"
+        strategy_text(StatefulSetRollingUpdate(partition=0, max_unavailable="2"))
+        == "RollingUpdate (partitioned at: 0, max unavailable: 2)"
     )
 
 

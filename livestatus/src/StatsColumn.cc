@@ -8,9 +8,9 @@
 #include <stdexcept>
 #include <utility>
 
-#include "Aggregator.h"
-#include "AndingFilter.h"
-#include "CountAggregator.h"
+#include "livestatus/Aggregator.h"
+#include "livestatus/AndingFilter.h"
+#include "livestatus/CountAggregator.h"
 #include "livestatus/Logger.h"
 
 StatsColumnCount::StatsColumnCount(std::unique_ptr<Filter> filter)

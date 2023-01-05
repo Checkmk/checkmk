@@ -21,9 +21,9 @@
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
-#include "Triggers.h"
 #include "User.h"
 #include "contact_fwd.h"
+#include "livestatus/Triggers.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;

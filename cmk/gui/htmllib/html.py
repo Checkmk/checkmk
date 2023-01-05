@@ -147,15 +147,17 @@ class HTMLGenerator(HTMLWriter):
         if not text:
             return HTML("")
 
-        stripped = text.strip()
+        stripped: str = text.strip()
         if not stripped:
             return HTML("")
 
-        help_text = HTMLGenerator.resolve_help_text_macros(stripped)
+        help_text: str = self.resolve_help_text_macros(stripped)
 
         self.enable_help_toggle()
-        style = "display:%s;" % ("block" if user.show_help else "none")
-        return HTMLWriter.render_div(HTML(help_text), class_="help", style=style)
+        style: str = "display:%s;" % ("flex" if user.show_help else "none")
+        inner_html: HTML = HTMLWriter.render_div(self.render_icon("info"), class_="info_icon")
+        inner_html += HTMLWriter.render_div(HTML(help_text), class_="help_text")
+        return HTMLWriter.render_div(inner_html, class_="help", style=style)
 
     @staticmethod
     def resolve_help_text_macros(text: str) -> str:

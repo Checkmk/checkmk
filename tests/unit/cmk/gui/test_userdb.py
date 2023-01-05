@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
+from freezegun import freeze_time
 
 from tests.testlib import is_managed_repo
 
@@ -48,6 +49,12 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 @pytest.fixture(name="zero_uuid")
 def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
+
+
+@pytest.fixture(autouse=True)
+def current_time() -> Iterable[None]:
+    with freeze_time("2023-01-05 14:33:57"):
+        yield
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of

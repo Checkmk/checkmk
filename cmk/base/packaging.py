@@ -138,19 +138,8 @@ def package_show(args: list[str]) -> None:
     if len(args) == 0:
         raise PackageException("Usage: check_mk -P show NAME|PACKAGE.mkp")
 
-    for package in (_resolve_package_argument(arg) for arg in args):
-        sys.stdout.write(f"Name:                          {package.name}\n")
-        sys.stdout.write(f"Version:                       {package.version}\n")
-        sys.stdout.write(f"Packaged on Checkmk Version:   {package.version_packaged}\n")
-        sys.stdout.write(f"Required Checkmk Version:      {package.version_min_required}\n")
-        valid_until_text = package.version_usable_until or "No version limitation"
-        sys.stdout.write(f"Valid until Checkmk version:   {valid_until_text}\n")
-        sys.stdout.write(f"Title:                         {package.title}\n")
-        sys.stdout.write(f"Author:                        {package.author}\n")
-        sys.stdout.write(f"Download-URL:                  {package.download_url}\n")
-        files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package.files.items()])
-        sys.stdout.write(f"Files:                         {files}\n")
-        sys.stdout.write(f"Description:\n  {package.description}\n")
+    for manifest in (_resolve_package_argument(arg) for arg in args):
+        sys.stdout.write(f"{manifest.to_text()}\n")
 
 
 def _list_package(package: Manifest) -> None:

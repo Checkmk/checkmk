@@ -19,6 +19,7 @@ interface Dialog {
     user_roles;
     hide_attributes;
 }
+
 var dialog_properties: null | Dialog = null;
 
 export function prepare_edit_dialog(attrs) {
@@ -272,10 +273,10 @@ export function toggle_container(id) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-export function open_folder(event, link) {
+export function open_folder(event: Event | undefined, link) {
     if (!event) event = window.event;
-    var target = utils.get_target(event);
-    if (target.tagName != "DIV") {
+    var target = event!.target;
+    if ((target as HTMLElement).tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div
         return false;
     }

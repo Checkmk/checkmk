@@ -262,18 +262,40 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
 #   '----------------------------------------------------------------------'
 
 
+def _fix_lazy_strings(obj: T) -> T:
+    """
+    Recursively evaluate all LazyStrings in the object to fixed strings by running them through
+    str()
+    """
+
+    match obj:
+        case dict():
+            # cast is needed for the TypedDicts
+            return cast(T, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
+        case list():
+            return list(map(_fix_lazy_strings, obj))
+        case tuple():
+            return tuple(map(_fix_lazy_strings, obj))
+        case utils.speaklater.LazyString():
+            return str(obj)
+
+    return obj
+
+
 def save(
     what: VisualTypeName, visuals: dict[tuple[UserId, VisualName], T], user_id: UserId | None = None
 ) -> None:
     if user_id is None:
-        user_id = user.id
-    assert user_id is not None
+        user_id = user.ident
 
-    uservisuals = {}
-    for (owner_id, name), visual in visuals.items():
-        if user_id == owner_id:
-            uservisuals[name] = visual
-    save_user_file("user_" + what, uservisuals, user_id=user_id)
+    user_visuals = {
+        # Since we're de/serializing the Visuals via literal_eval/repr, we will not be able to
+        # deserialize LasyStrings again. Decide on their fixed str representation now.
+        name: _fix_lazy_strings(visual)
+        for (owner_id, name), visual in visuals.items()
+        if user_id == owner_id
+    }
+    save_user_file("user_" + what, user_visuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
 
 
@@ -282,21 +304,15 @@ def load(
     builtin_visuals: dict[VisualName, T],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
 ) -> dict[tuple[UserId, VisualName], T]:
-    visuals: dict[tuple[UserId, VisualName], T] = {}
-
-    for name, visual in builtin_visuals.items():
+    visuals = {
         # Ensure converting _l to str. During "import time" the may not be localized since the
         # user language is not known. Here we are in a request context and may resolve the
         # localization. It might be better to keep the LazyString objects unresolved during run
         # time, but we had some call sites which were not correctly handling the LazyStrings. So
         # we took the approach to resolve them in a central early stage instead.
-        for key, value in visual.items():
-            if not isinstance(value, utils.speaklater.LazyString):
-                continue
-            # TODO: Figure out later which elements can contain these types and change them explicitly
-            visual[key] = str(value)  # type: ignore[literal-required]
-
-        visuals[(UserId.builtin(), name)] = visual
+        (UserId.builtin(), name): _fix_lazy_strings(visual)
+        for name, visual in builtin_visuals.items()
+    }
 
     # Add custom "user_*.mk" visuals
     visuals.update(
@@ -2388,6 +2404,11 @@ def set_page_context(page_context: VisualContext) -> None:
     g.page_context = page_context
 
 
+class CreateInfoModel(BaseModel):
+    params: dict
+    context: VisualContext | None
+
+
 def ajax_add_visual() -> None:
     check_csrf_token()
     visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
@@ -2401,12 +2422,11 @@ def ajax_add_visual() -> None:
     # type of the visual to add (e.g. view)
     element_type = request.get_str_input_mandatory("type")
 
-    class CreateInfo(BaseModel):
-        context: VisualContext
-        params: dict
-
-    create_info = request.get_model_mandatory(CreateInfo, "create_info")
+    create_info = request.get_model_mandatory(CreateInfoModel, "create_info")
 
     visual_type.add_visual_handler(
-        visual_name, element_type, create_info.context, create_info.params
+        visual_name,
+        element_type,
+        create_info.context,
+        create_info.params,
     )

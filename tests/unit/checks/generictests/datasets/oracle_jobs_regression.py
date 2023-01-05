@@ -31,7 +31,7 @@ checks = {
     '': [
         (
             'ORCLCDB.CDB$ROOT.SYS.CLEANUP_ONLINE_PMO', {
-                'disabled': True,
+                'consider_job_status': 'ignore',
                 'status_missing_jobs': 2,
                 'missinglog': 1
             }, [
@@ -44,7 +44,7 @@ checks = {
         ),
         (
             'ORCLCDB.CDB$ROOT.SYS.PURGE_LOG', {
-                'disabled': True,
+                'consider_job_status': 'ignore',
                 'status_missing_jobs': 2,
                 'missinglog': 1
             }, [

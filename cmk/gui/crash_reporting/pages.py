@@ -347,7 +347,7 @@ class PageCrash(ABCCrashReportPage):
         vs.render_input("_report", details)
         vs.set_focus("report")
         forms.end()
-        html.button("_report", _("Submit Report"))
+        html.button("_report", _("Submit report"), cssclass="hot")
         html.hidden_fields()
         html.end_form()
 

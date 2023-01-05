@@ -2497,6 +2497,10 @@ msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzen"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "AWS/S3 Grenzen"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "AWS/S3 Grenzen"
 
@@ -5766,6 +5770,10 @@ msgstr "Authenticatieprotocol"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "Authenticatie aan webdienst mislukt.<br>Melding:<br>%s"
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "Authenticatie"
 
 msgid "Authentication with TLS"
 msgstr "Authenticatie met TLS"
@@ -9557,6 +9565,10 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr "Klik hier om de activeringsstatus per site te zien."
 
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Zet deze instelling onmiddellijk aan"
+
 msgid "Clickable URLs"
 msgstr "Klikbare URL's"
 
@@ -9592,6 +9604,10 @@ msgstr "Ontvangen aanvragen van cliënten"
 
 msgid "Client secret"
 msgstr "Geheim van de klant"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Klant ID"
 
 msgid "Clients"
 msgstr "Klanten"
@@ -21652,6 +21668,10 @@ msgid "Hide names of configuration variables"
 msgstr "Verberg namen van configuratievariabelen"
 
 #, fuzzy
+msgid "Hide page navigation"
+msgstr "Deze pagina met navigatie"
+
+#, fuzzy
 msgid "Hide plugin names"
 msgstr "Toon plugin namen"
 
@@ -24505,9 +24525,6 @@ msgstr "Afbeeldingen"
 
 msgid "Immediately scheduled checks"
 msgstr "Onmiddellijk geplande controles"
-
-msgid "Immediately toggle this setting"
-msgstr "Zet deze instelling onmiddellijk aan"
 
 msgid "Impact"
 msgstr "Impact"
@@ -28772,6 +28789,18 @@ msgstr "Lager niveau voor GC run rate"
 msgid "Lower levels for CPU balance"
 msgstr "Lagere niveaus voor CPU-balans"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Lagere niveaus voor certificaatleeftijd"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Lagere niveaus voor %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Lager niveau voor berichtensnelheid"
+
 msgid "Lower levels for burst balance"
 msgstr "Lagere niveaus voor burst balans"
 
@@ -32456,9 +32485,6 @@ msgstr "Geen zoekopdracht"
 msgid "No search, specify list of arguments"
 msgstr "Geen zoekfunctie, geef een lijst met argumenten"
 
-msgid "No service level is set in event"
-msgstr "Er is geen serviceniveau ingesteld in de gebeurtenis"
-
 msgid "No status host"
 msgstr "Geen status host"
 
@@ -33754,6 +33780,9 @@ msgstr "O"
 
 msgid "O2 levels"
 msgstr "O2 niveaus"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr "OEM-gegevens interpretatie"
@@ -42231,6 +42260,10 @@ msgstr "Toon alleen deze aggregatie"
 msgid "Show only unused rules"
 msgstr "Toon alleen ongebruikte regels"
 
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Deze pagina met navigatie"
+
 msgid "Show per day"
 msgstr "Toon per dag"
 
@@ -44917,9 +44950,6 @@ msgstr "Status schaduw"
 msgid "Status stale"
 msgstr "Status oud"
 
-msgid "Status view"
-msgstr "Statusweergave"
-
 msgid "Status: DISBALE"
 msgstr "Status: DISBALE"
 
@@ -46056,6 +46086,9 @@ msgstr "Tijdelijk bestandssysteem gemount"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
+
+msgid "TenantID"
+msgstr ""
 
 msgid "Terminated containers"
 msgstr "Beëindigde containers"
@@ -52328,12 +52361,6 @@ msgstr "Deze pagina ondersteunt geen cluster hosts."
 msgid "This page was not found. Sorry."
 msgstr "Deze pagina werd niet gevonden. Sorry."
 
-msgid "This page with navigation"
-msgstr "Deze pagina met navigatie"
-
-msgid "This page without navigation"
-msgstr "Deze pagina zonder navigatie"
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -56957,6 +56984,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "Hogere niveaus voor Load Balancers"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Bovenste niveau voor lopende taken"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Bovenste niveaus voor gebruik"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "Bovenste niveaus voor CPU-tijd"
 
@@ -58365,6 +58404,10 @@ msgstr "Gebruikersnaam voor inloggen"
 msgid "Username is unknown"
 msgstr "Gebruikersnaam is onbekend"
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "Wachtwoord gebruiker"
+
 msgid "Username:"
 msgstr "Gebruikersnaam:"
 
@@ -58944,14 +58987,26 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
 
+#, fuzzy
+msgid "View history"
+msgstr "Zoekgeschiedenis"
+
 msgid "View layout"
 msgstr "Bekijk lay-out"
 
 msgid "View name"
 msgstr "Naam bekijken"
 
+#, fuzzy
+msgid "View table"
+msgstr "Naam bekijken"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "Bekijk de regelgebaseerde effectieve parameters van deze host"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Tijdlijn"
 
 msgid "Views"
 msgstr "Bekeken"
@@ -65214,6 +65269,15 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Er is geen serviceniveau ingesteld in de gebeurtenis"
+
+#~ msgid "Status view"
+#~ msgstr "Statusweergave"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Deze pagina zonder navigatie"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -70180,9 +70244,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Zoeken naar diensten en hun grafieken weergeven"
-
-#~ msgid "Search history"
-#~ msgstr "Zoekgeschiedenis"
 
 #~ msgid "Search performance data"
 #~ msgstr "Prestatiegegevens zoeken"

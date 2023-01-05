@@ -81,10 +81,10 @@ var g_snapin_offset = [0, 0];
 var g_snapin_start_pos = [0, 0];
 var g_snapin_scroll_top = 0;
 
-export function snapin_start_drag(event) {
-    if (!event) event = window.event;
+export function snapin_start_drag(event: MouseEvent | undefined) {
+    if (!event) event = window.event as MouseEvent;
 
-    const target = utils.get_target(event);
+    const target = event.target as HTMLElement;
     const button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
@@ -97,12 +97,13 @@ export function snapin_start_drag(event) {
 
     event.cancelBubble = true;
 
-    g_snapin_dragging = target.parentNode;
+    let targetParent = target.parentNode as HTMLElement;
+    g_snapin_dragging = targetParent;
 
     // Save relative offset of the mouse to the snapin title to prevent flipping on drag start
     g_snapin_offset = [
-        event.clientY - target.parentNode.offsetTop,
-        event.clientX - target.parentNode.offsetLeft,
+        event.clientY - targetParent.offsetTop,
+        event.clientX - targetParent.offsetLeft,
     ];
     g_snapin_start_pos = [event.clientY, event.clientX];
     g_snapin_scroll_top = document.getElementById("side_content")!.scrollTop;

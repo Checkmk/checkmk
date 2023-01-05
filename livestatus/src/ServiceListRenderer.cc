@@ -5,7 +5,7 @@
 
 #include "ServiceListRenderer.h"
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 
 void ServiceListRenderer::output(
     ListRenderer &l, const column::service_list::Entry &entry) const {

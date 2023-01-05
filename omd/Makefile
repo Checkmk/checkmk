@@ -26,7 +26,6 @@ PACKAGES := \
     perl-modules \
     Python \
     freetds \
-    re2 \
     protobuf \
     python3-modules \
     rrdtool \

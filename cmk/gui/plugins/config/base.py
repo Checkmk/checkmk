@@ -96,6 +96,7 @@ class CREConfig:
         default_factory=lambda: {
             "cmk.web": 30,
             "cmk.web.ldap": 30,
+            "cmk.web.saml2": 30,
             "cmk.web.auth": 30,
             "cmk.web.bi.compilation": 30,
             "cmk.web.automations": 30,

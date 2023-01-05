@@ -139,10 +139,6 @@ export function del_event_handler(type, func, obj: any = undefined) {
     }
 }
 
-export function get_target(event) {
-    return event.target ? event.target : event.srcElement;
-}
-
 export function get_button(event) {
     if (event.which == null)
         /* IE case */

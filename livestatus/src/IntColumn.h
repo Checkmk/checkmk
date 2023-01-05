@@ -15,11 +15,11 @@
 #include <variant>
 
 #include "Column.h"
-#include "Filter.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
-#include "Renderer.h"
 #include "User.h"
+#include "livestatus/Filter.h"
+#include "livestatus/Renderer.h"
 #include "opids.h"
 class Row;
 

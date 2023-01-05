@@ -50,11 +50,11 @@ function get_id_of_graph(ajax_context) {
         // JSON.stringify seems to be the easiest way to compare the both dicts
         if (
             JSON.stringify(ajax_context.definition.specification) ==
-                JSON.stringify(
-                    g_graphs[graph_id].ajax_context.definition.specification
-                ) &&
+            JSON.stringify(
+                g_graphs[graph_id].ajax_context.definition.specification
+            ) &&
             JSON.stringify(ajax_context.render_options) ==
-                JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
+            JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
         ) {
             return graph_id;
         }
@@ -877,13 +877,17 @@ function get_graph_id_of_dom_node(target) {
     return graph_container.id;
 }
 
-function graph_global_mouse_wheel(event) {
+function graph_global_mouse_wheel(event: Event | undefined) {
     event = event || window.event; // IE FIX
 
-    var obj = utils.get_target(event);
+    var obj = event!.target;
     // prevent page scrolling when making wheelies over graphs
-    while (obj && !obj.className) obj = obj.parentNode;
-    if (obj && obj.tagName == "DIV" && obj.className == "graph_container")
+    while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode;
+    if (
+        obj instanceof HTMLElement &&
+        obj.tagName == "DIV" &&
+        obj.className == "graph_container"
+    )
         return utils.prevent_default_events(event);
 }
 
@@ -1012,7 +1016,7 @@ function has_mouse_moved(pos1, pos2) {
     else return true;
 }
 
-function global_graph_mouse_up(event) {
+function global_graph_mouse_up(event: Event | undefined) {
     event = event || window.event; // IE FIX
 
     var graph_id, graph;
@@ -1033,7 +1037,7 @@ function global_graph_mouse_up(event) {
                 sync_all_graph_timeranges(graph_id);
         }
     } else if (!g_resizing_graph) {
-        var target = utils.get_target(event);
+        var target = event!.target as HTMLElement;
         if (
             target.tagName == "TH" &&
             utils.has_class(target, "scalar") &&
@@ -1184,8 +1188,9 @@ function update_mouse_hovering(event) {
     update_graph_hover_popup(event, graph);
 }
 
-function mouse_hovering_canvas_graph_area(event) {
-    var obj = utils.get_target(event);
+function mouse_hovering_canvas_graph_area(event: MouseEvent | undefined) {
+    if (!event) throw new Error(`Expected event, got ${event} instead`);
+    const obj = event.target;
     if (!obj) return null;
 
     var graph_id = get_graph_id_of_dom_node(obj);
@@ -1286,7 +1291,7 @@ function graph_mouse_wheel(event, graph) {
 }
 
 function graph_get_click_time(event, graph) {
-    var canvas = utils.get_target(event);
+    var canvas = event.target;
 
     // Get X position of mouse click, converted to canvas pixels
     var x = (get_event_offset_x(event) * canvas.width) / canvas.clientWidth;
@@ -1298,7 +1303,7 @@ function graph_get_click_time(event, graph) {
 }
 
 function graph_get_click_value(event, graph) {
-    var canvas = utils.get_target(event);
+    var canvas = event.target;
 
     // Get Y position of mouse click, converted to canvas pixels
     var y = (get_event_offset_y(event) * canvas.height) / canvas.clientHeight;

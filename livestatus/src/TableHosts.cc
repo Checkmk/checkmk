@@ -35,7 +35,6 @@
 #include "HostListRenderer.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
-#include "LogEntry.h"
 #include "LogwatchList.h"
 #include "MacroExpander.h"
 #include "Metric.h"
@@ -48,8 +47,9 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "User.h"
+#include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
-#include "mk_inventory.h"
+#include "livestatus/mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 

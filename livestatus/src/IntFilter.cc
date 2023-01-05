@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "Row.h"
+#include "livestatus/Row.h"
 
 IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)

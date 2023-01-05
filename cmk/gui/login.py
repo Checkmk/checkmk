@@ -253,6 +253,9 @@ class LoginPage(Page):
         html.br()
         html.password_input("_password", id_="input_pass", size=None)
 
+        if saml2_user_error := request.get_str_input("_saml2_user_error"):
+            user_errors.add(MKUserError(varname=None, message=saml2_user_error))
+
         if user_errors:
             html.open_div(id_="login_error")
             html.show_user_errors()

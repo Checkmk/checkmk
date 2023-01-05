@@ -11,8 +11,8 @@
 #include <chrono>
 #include <functional>
 
-#include "Aggregator.h"
 #include "Column.h"
+#include "livestatus/Aggregator.h"
 class Row;
 class RowRenderer;
 class User;

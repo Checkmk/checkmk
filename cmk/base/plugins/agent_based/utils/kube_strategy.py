@@ -20,5 +20,8 @@ def strategy_text(strategy: DisplayableStrategy) -> str:
             f"max unavailable: {strategy.max_unavailable})"
         )
     if isinstance(strategy, StatefulSetRollingUpdate):
-        return f"RollingUpdate (partitioned at: {strategy.partition})"
+        details = f"partitioned at: {strategy.partition}"
+        if (max_unavailable := strategy.max_unavailable) is not None:
+            details = f"{details}, max unavailable: {max_unavailable}"
+        return f"RollingUpdate ({details})"
     return strategy.type_

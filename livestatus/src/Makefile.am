@@ -16,13 +16,14 @@ INCLUDES_DIR := includes
 LIBS_DIR := libs
 
 PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
-ASIO_VERSION := asio-1.24.0
+ASIO_VERSION := asio-1.24.0-patched
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
 LIBLIVESTATUS_PATH := $(abs_top_srcdir)/packages/livestatus
 LIBLIVESTATUS_RUN_CI := $(LIBLIVESTATUS_PATH)/run-ci
 LIBLIVESTATUS_INCLUDE := $(LIBLIVESTATUS_PATH)/include
 LIBLIVESTATUS_SO := $(LIBLIVESTATUS_PATH)/build/src/liblivestatus.so
+RE2_INCLUDE := $(LIBLIVESTATUS_PATH)/build/_deps/re2-src
 
 RRDTOOL_VERSION := rrdtool-1.7.2
 RRDTOOL_PATH := $(abs_top_srcdir)/omd/build/intermediate_install/$(RRDTOOL_VERSION)
@@ -41,11 +42,10 @@ AM_CPPFLAGS = \
     -I$(LIBLIVESTATUS_INCLUDE) \
     -isystem $(ASIO_INCLUDE) \
     -DASIO_DISABLE_CONCEPTS \
-    @RE2_CPPFLAGS@
+    -DHAVE_RE2
 
 AM_LDFLAGS = \
-    -static-libstdc++ \
-    @RE2_LDFLAGS@
+    -static-libstdc++
 
 bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
@@ -63,15 +63,11 @@ test_neb_SOURCES = \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
     test/test_DoubleColumn.cc \
-    test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
     test/test_ListColumn.cc \
-    test/test_LogEntry.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
     test/test_Queue.cc \
-    test/test_RegExp.cc \
-    test/test_Renderer.cc \
     test/test_StringColumn.cc \
     test/test_Table.cc \
     test/test_TimeColumn.cc \
@@ -87,14 +83,15 @@ test_neb_LDFLAGS = \
 test_neb_LDADD = \
     liblivestatusneb.a \
     -lstdc++fs \
-    @RE2_LIBS@ \
     $(LIBLIVESTATUS_SO) \
     $(LIBS_DIR)/libgtest.a \
     $(LIBS_DIR)/libgtest_main.a \
     -lrrd \
     -lpthread
 
+.PHONY: $(LIBLIVESTATUS_SO)
 $(LIBLIVESTATUS_SO):
+	@echo Building lib livestatus...
 	$(LIBLIVESTATUS_RUN_CI) --build
 
 unit-test: test_neb$(EXEEXT) $(LIBLIVESTATUS_SO)
@@ -113,46 +110,30 @@ liblivestatusneb_a_LD_FLAGS = \
     $(AM_LDFLAGS) \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
-        AndingFilter.cc \
         AttributeListColumn.cc \
-        Average.cc \
         Column.cc \
         ColumnFilter.cc \
         CommentRenderer.cc \
-        CountAggregator.cc \
-        CrashReport.cc \
         DictFilter.cc \
         DoubleFilter.cc \
         DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         EventConsoleConnection.cc \
-        FileSystemHelper.cc \
-        Filter.cc \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
-        InputBuffer.cc \
         IntFilter.cc \
         ListFilter.cc \
         LogCache.cc \
-        LogEntry.cc \
         Logfile.cc \
         LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
         NullColumn.cc \
-        OringFilter.cc \
-        OutputBuffer.cc \
         PerfdataAggregator.cc \
         Query.cc \
-        RegExp.cc \
-        Renderer.cc \
-        RendererBrokenCSV.cc \
-        RendererCSV.cc \
-        RendererJSON.cc \
-        RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceListRenderer.cc \
@@ -187,10 +168,7 @@ liblivestatusneb_a_SOURCES = \
         TableTimeperiods.cc \
         TimeFilter.cc \
         TimeperiodsCache.cc \
-        Triggers.cc \
         User.cc \
-        global_counters.cc \
-        mk_inventory.cc \
         mk_logwatch.cc \
         module.cc \
         opids.cc \
@@ -205,10 +183,9 @@ $(ASIO_INCLUDE): $(ASIO_VERSION)
 	rsync -a --delete --exclude="Makefile.*" --exclude=.gitignore $</include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz $(PACKAGE_ASIO)/asio.diff
+$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	$(RM) -r $@
 	tar xzf $<
-	patch -p0 < $(PACKAGE_ASIO)/asio.diff
 	touch $@
 
 $(RRDTOOL_VERSION):
@@ -247,9 +224,8 @@ $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION
 	touch $@
 
 livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
-# Note: libstdc++fs is only available as a static library, so we are lucky. For
-# RE2 we make sure that this is the case, too.
-	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(LIBLIVESTATUS_SO) $(RRDTOOL_LD_FLAGS)
+# Note: libstdc++fs is only available as a static library, so we are lucky.
+	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO) $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)

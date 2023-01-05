@@ -11,8 +11,8 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "Renderer.h"
-#include "Row.h"
+#include "livestatus/Renderer.h"
+#include "livestatus/Row.h"
 
 void PerfdataAggregator::consume(Row row, const User & /*user*/,
                                  std::chrono::seconds /*timezone_offset*/) {

@@ -2371,6 +2371,10 @@ msgid "AWS/S3 Limits"
 msgstr "AWS/S3の制限"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "AWS/S3の制限"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "AWS/S3の制限"
 
@@ -5528,6 +5532,10 @@ msgstr "認証プロトコル"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr ""
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "認証"
 
 msgid "Authentication with TLS"
 msgstr "TLS認証"
@@ -9130,6 +9138,10 @@ msgstr ""
 "サイトごとのアクティベーションステータスを確認するには、ここをクリックしてく"
 "ださい。"
 
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "この設定をすぐに切り替えます"
+
 msgid "Clickable URLs"
 msgstr "クリック可能なURL"
 
@@ -9165,6 +9177,10 @@ msgstr "受け取ったクライアント要求"
 
 msgid "Client secret"
 msgstr "Client secret"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "クライアントID"
 
 msgid "Clients"
 msgstr "クライアント"
@@ -20808,6 +20824,10 @@ msgid "Hide names of configuration variables"
 msgstr "構成変数の名前を非表示にする"
 
 #, fuzzy
+msgid "Hide page navigation"
+msgstr "ナビゲーションあり"
+
+#, fuzzy
 msgid "Hide plugin names"
 msgstr "プラグイン名を表示する"
 
@@ -23451,9 +23471,6 @@ msgstr "イメージ"
 
 msgid "Immediately scheduled checks"
 msgstr "すぐにスケジュールされたチェック"
-
-msgid "Immediately toggle this setting"
-msgstr "この設定をすぐに切り替えます"
 
 msgid "Impact"
 msgstr "影響"
@@ -27579,6 +27596,18 @@ msgstr "GC実行率の低レベル"
 msgid "Lower levels for CPU balance"
 msgstr "CPUバランスの低レベル"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "証明書の期間の下位レベル"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "%s の低レベル"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "メッセージレートの下位レベル"
+
 msgid "Lower levels for burst balance"
 msgstr "バーストバランスの低レベル"
 
@@ -31187,9 +31216,6 @@ msgstr "検索なし"
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
 
-msgid "No service level is set in event"
-msgstr "イベントでサービスレベルが設定されていません"
-
 msgid "No status host"
 msgstr "ステータスホストなし"
 
@@ -32438,6 +32464,9 @@ msgstr "O"
 
 msgid "O2 levels"
 msgstr "O2レベル"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr "OEMデータの解釈"
@@ -40636,6 +40665,10 @@ msgstr "この集計のみを表示"
 msgid "Show only unused rules"
 msgstr "未使用のルールのみを表示する"
 
+#, fuzzy
+msgid "Show page navigation"
+msgstr "ナビゲーションあり"
+
 msgid "Show per day"
 msgstr "1日あたりの表示"
 
@@ -43194,9 +43227,6 @@ msgstr "ステータスシャドウ"
 msgid "Status stale"
 msgstr "ステータスが古くなっています"
 
-msgid "Status view"
-msgstr "ステータスビュー"
-
 msgid "Status: DISBALE"
 msgstr "ステータス: 無効"
 
@@ -44309,6 +44339,9 @@ msgstr "一時ファイルシステムがマウントされました"
 
 msgid "Tenant ID / Directory ID"
 msgstr "テナントID / ディレクトリID"
+
+msgid "TenantID"
+msgstr ""
 
 msgid "Terminated containers"
 msgstr "終了したコンテナの数"
@@ -49890,12 +49923,6 @@ msgstr "このページはクラスターホストをサポートしていませ
 msgid "This page was not found. Sorry."
 msgstr "このページは見つかりませんでした。"
 
-msgid "This page with navigation"
-msgstr "ナビゲーションあり"
-
-msgid "This page without navigation"
-msgstr "ナビゲーションなし"
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -54192,6 +54219,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "ロードバランサーの上位レベル"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "バックアップ経過日数の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "保留中のタスクの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "使用量の上位レベル"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "CPU時間の上位レベル"
 
@@ -55538,6 +55577,10 @@ msgstr "ログイン用のユーザー名"
 msgid "Username is unknown"
 msgstr "ユーザー名は不明です"
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "ユーザーパスワード"
+
 msgid "Username:"
 msgstr "ユーザー名:"
 
@@ -56088,14 +56131,26 @@ msgstr "このサービスのパラメーターを表示および編集します
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集します"
 
+#, fuzzy
+msgid "View history"
+msgstr "検索履歴"
+
 msgid "View layout"
 msgstr "レイアウトを表示"
 
 msgid "View name"
 msgstr "名前を表示"
 
+#, fuzzy
+msgid "View table"
+msgstr "名前を表示"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "このホストのルールベースの有効パラメータを表示する"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "タイムライン"
 
 msgid "Views"
 msgstr "ビュー"
@@ -61886,6 +61941,15 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "イベントでサービスレベルが設定されていません"
+
+#~ msgid "Status view"
+#~ msgstr "ステータスビュー"
+
+#~ msgid "This page without navigation"
+#~ msgstr "ナビゲーションなし"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -66419,9 +66483,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "サービスを検索してグラフを表示する"
-
-#~ msgid "Search history"
-#~ msgstr "検索履歴"
 
 #~ msgid "Search performance data"
 #~ msgstr "パフォーマンスデータの検索"

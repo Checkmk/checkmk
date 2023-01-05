@@ -141,6 +141,13 @@ r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
 r4r_ready_dir = _r4r_base_dir.joinpath("READY")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
+# SAML 2.0 certificates
+# TODO (CMK-11853): find a suitable path for this
+saml2_signature_private_keyfile = _omd_path("etc/saml2/signature_builtin_private.pem")
+saml2_signature_public_keyfile = _omd_path("etc/saml2/signature_builtin_public.pem")
+saml2_custom_signature_private_keyfile = _omd_path("etc/saml2/signature_custom_private.pem")
+saml2_custom_signature_public_keyfile = _omd_path("etc/saml2/signature_custom_public.pem")
+
 
 def make_experimental_config_file() -> Path:
     """Returns file with experimental settings to be used.

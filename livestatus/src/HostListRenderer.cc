@@ -5,7 +5,7 @@
 
 #include "HostListRenderer.h"
 
-#include "Renderer.h"
+#include "livestatus/Renderer.h"
 
 void HostListRenderer::output(ListRenderer &l,
                               const column::host_list::Entry &entry) const {

@@ -2472,6 +2472,10 @@ msgid "AWS/S3 Limits"
 msgstr "Limites AWS/S3"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "Limites AWS/S3"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "Limites AWS/S3"
 
@@ -5763,6 +5767,10 @@ msgstr "Protocolo de autenticação"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "A autenticação para o serviço web falhou.<br>Mensagem:<br>%s"
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "Autenticação"
 
 #, fuzzy
 msgid "Authentication with TLS"
@@ -9578,6 +9586,10 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr "Clique aqui para ver o status de ativação por site."
 
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Alternar imediatamente esta configuração"
+
 msgid "Clickable URLs"
 msgstr "URLs clicáveis"
 
@@ -9613,6 +9625,10 @@ msgstr "Pedidos de clientes recebidos"
 
 msgid "Client secret"
 msgstr "Segredo do cliente"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Identificação do cliente"
 
 #, fuzzy
 msgid "Clients"
@@ -21787,6 +21803,10 @@ msgid "Hide names of configuration variables"
 msgstr "Ocultar nomes de variáveis de configuração"
 
 #, fuzzy
+msgid "Hide page navigation"
+msgstr "Esta página com navegação"
+
+#, fuzzy
 msgid "Hide plugin names"
 msgstr "Mostrar nomes de plugins"
 
@@ -24631,9 +24651,6 @@ msgstr "Imagens"
 
 msgid "Immediately scheduled checks"
 msgstr "Verificações imediatamente programadas"
-
-msgid "Immediately toggle this setting"
-msgstr "Alternar imediatamente esta configuração"
 
 msgid "Impact"
 msgstr "Impacto"
@@ -28971,6 +28988,18 @@ msgstr "Nível mais baixo para a taxa de execução da GC"
 msgid "Lower levels for CPU balance"
 msgstr "Níveis mais baixos para o equilíbrio da CPU"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Níveis mais baixos para a idade do certificado"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Níveis mais baixos para %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Nível inferior para a taxa de mensagens"
+
 msgid "Lower levels for burst balance"
 msgstr "Níveis mais baixos para o equilíbrio de rebentamento"
 
@@ -32720,9 +32749,6 @@ msgstr "Nenhuma busca"
 msgid "No search, specify list of arguments"
 msgstr "Sem pesquisa, especificar lista de argumentos"
 
-msgid "No service level is set in event"
-msgstr "Nenhum nível de serviço é definido em caso de"
-
 msgid "No status host"
 msgstr "Sem status de anfitrião"
 
@@ -34042,6 +34068,9 @@ msgstr "O"
 
 msgid "O2 levels"
 msgstr "Níveis de O2"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr "interpretação de dados OEM"
@@ -42626,6 +42655,10 @@ msgstr "Mostrar apenas esta agregação"
 msgid "Show only unused rules"
 msgstr "Mostrar apenas regras não utilizadas"
 
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Esta página com navegação"
+
 msgid "Show per day"
 msgstr "Show por dia"
 
@@ -45321,9 +45354,6 @@ msgstr "Sombra de status"
 msgid "Status stale"
 msgstr "Status stale"
 
-msgid "Status view"
-msgstr "Vista de status"
-
 msgid "Status: DISBALE"
 msgstr "Status: DISBALE"
 
@@ -46473,6 +46503,9 @@ msgstr "Sistema de arquivo temporário montado"
 
 msgid "Tenant ID / Directory ID"
 msgstr "Identificação do locatário / Identificação do directório"
+
+msgid "TenantID"
+msgstr ""
 
 #, fuzzy
 msgid "Terminated containers"
@@ -52652,12 +52685,6 @@ msgstr "Esta página não suporta alojamentos de cluster."
 msgid "This page was not found. Sorry."
 msgstr "Esta página não foi encontrada. Desculpe."
 
-msgid "This page with navigation"
-msgstr "Esta página com navegação"
-
-msgid "This page without navigation"
-msgstr "Esta página sem navegação"
-
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
 "be determined by the discovery rule <i>Microsoft Exchange Queues Discovery</"
@@ -57285,6 +57312,18 @@ msgid "Upper levels for Load Balancers"
 msgstr "Níveis superiores para Balanceadores de Carga"
 
 #, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Níveis superiores para a idade"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Nível superior para tarefas pendentes"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Níveis superiores para uso do disco"
+
+#, fuzzy
 msgid "Upper levels for SSL handshake time"
 msgstr "Níveis superiores para o tempo de CPU"
 
@@ -58716,6 +58755,10 @@ msgstr "Nome de usuário para login"
 msgid "Username is unknown"
 msgstr "O nome de usuário é desconhecido"
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "Senha do usuário"
+
 msgid "Username:"
 msgstr "Nome de usuário:"
 
@@ -59298,6 +59341,10 @@ msgstr "Ver e editar os parâmetros para este serviço"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Veja e edite as regras e agregações neste pacote de BI"
 
+#, fuzzy
+msgid "View history"
+msgstr "Histórico de pesquisa"
+
 msgid "View layout"
 msgstr "Ver layout"
 
@@ -59305,8 +59352,16 @@ msgid "View name"
 msgstr "Ver nome"
 
 #, fuzzy
+msgid "View table"
+msgstr "Ver nome"
+
+#, fuzzy
 msgid "View the rule based effective parameters of this host"
 msgstr "Veja os parâmetros baseados em regras deste host"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Linha do tempo"
 
 msgid "Views"
 msgstr "Vistas"
@@ -65526,6 +65581,15 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Nenhum nível de serviço é definido em caso de"
+
+#~ msgid "Status view"
+#~ msgstr "Vista de status"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Esta página sem navegação"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -70589,9 +70653,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Pesquisar serviços e exibir seus gráficos"
-
-#~ msgid "Search history"
-#~ msgstr "Histórico de pesquisa"
 
 #~ msgid "Search performance data"
 #~ msgstr "Pesquisar dados de desempenho"

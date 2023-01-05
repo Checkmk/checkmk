@@ -14,13 +14,13 @@
 #include <string>
 #include <utility>
 
-#include "Aggregator.h"
 #include "Column.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
-#include "Filter.h"
-#include "Renderer.h"
-#include "Row.h"
+#include "livestatus/Aggregator.h"
+#include "livestatus/Filter.h"
+#include "livestatus/Renderer.h"
+#include "livestatus/Row.h"
 #include "opids.h"
 class User;
 

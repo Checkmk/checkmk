@@ -8,6 +8,7 @@ add_compile_options(
   -Wall
   -Wextra
   -Werror
+  -DHAVE_RE2
   -fPIC
   -gdwarf-4
   -std=c++17

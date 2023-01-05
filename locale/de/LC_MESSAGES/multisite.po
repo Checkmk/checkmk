@@ -5743,6 +5743,10 @@ msgstr "Quelle der Authentifizierung"
 msgid "Authentication System Errors"
 msgstr "Fehler im Authentifizierungssystem"
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "Authentifizierungsfehler"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr "Anmeldung fehlgeschlagen. Benutzername/Passwort ungültig."
 
@@ -10890,6 +10894,10 @@ msgstr "Betrachten Sie die Eingabezustände während der Erkennung als OK"
 msgid "Consider the state of the job"
 msgstr "Den Zustand des Jobs berücksichtigen"
 
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
+msgstr "Den Zustand des Jobs berücksichtigen"
+
 msgid "Consider times where the host is down"
 msgstr "Zeiten berücksichtigen wo der Host unten ist"
 
@@ -12405,6 +12413,10 @@ msgstr "DB-Sicherheitsgruppen"
 
 msgid "DB subnet groups"
 msgstr "DB-Subnetzgruppen"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% Nutzung"
 
 msgid "DB username"
 msgstr "Datenbank-Benutzername"
@@ -20147,6 +20159,10 @@ msgstr "Von keiner Instanz Daten erhalten"
 msgid "Got no data from this site"
 msgstr "Keine Daten von dieser Instanz"
 
+#, fuzzy
+msgid "Got no response from IdP"
+msgstr "Keine Antwort vom Update-Thread"
+
 msgid "Got no result to create dump file"
 msgstr "Kein Ergebnis beim Erstellen der Dump-Datei"
 
@@ -24547,7 +24563,8 @@ msgstr "Ignoriere Betriebszustand"
 msgid "Ignore the state"
 msgstr "Ignoriere den Status"
 
-msgid "Ignore the state of the Job"
+#, fuzzy
+msgid "Ignore the state of the job"
 msgstr "Zustand des Jobs ignorieren"
 
 msgid "Ignore the version"
@@ -39949,6 +39966,9 @@ msgstr "Rx-Leistungspegel"
 msgid "S."
 msgstr "s."
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -46960,6 +46980,13 @@ msgstr ""
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "Die URL muss mit <tt>https</tt> beginnen."
 
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
+
 msgid "The URL of the target page the link of the element should link to."
 msgstr "Die URL der Zielseite, auf die der Link des Elements verweisen soll."
 
@@ -48154,13 +48181,6 @@ msgid "The found hosts' parents"
 msgstr "Die 'Parents' des Hosts"
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -48639,6 +48659,10 @@ msgid "The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s."
 msgstr "Logdatei <tt>%s</tt> von <tt>%s</tt> kann nicht gelöscht werden: %s."
 
 msgid "The log level for LDAP related log entries."
+msgstr "Der Loglevel für die LDAP-Synchronisation."
+
+#, fuzzy
+msgid "The log level for SAML 2.0 related log entries."
 msgstr "Der Loglevel für die LDAP-Synchronisation."
 
 msgid ""
@@ -51476,6 +51500,13 @@ msgstr "Diese Verbindung"
 
 msgid "This connection is currently disabled"
 msgstr "Diese Verbindung ist derzeit deaktiviert"
+
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr ""
+"Diese Verbindung wird momentan nicht für die Synchronisation verwendet."
 
 msgid "This connection is currently enabled"
 msgstr "Diese Verbindung ist derzeit aktiviert"
@@ -56111,6 +56142,10 @@ msgstr "URL vom Host zur Remote Instanz"
 msgid "URL from password store"
 msgstr "URL aus dem Passwortspeicher"
 
+#, fuzzy
+msgid "URL not allowed"
+msgstr "Methode nicht erlaubt"
+
 msgid "URL of remote site"
 msgstr "URL der entfernten Instanz"
 
@@ -56302,6 +56337,10 @@ msgstr ""
 "Die Verbindung zur Instanz %s kann nicht hergestellt werden. Bitte "
 "überprüfen Sie die Anmeldedaten unter Globale Einstellungen."
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Zwei-Faktor-Authentifizierung deaktivieren"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Gruppe kann nicht gelöscht werden, da sie noch in Benutzung ist: %s"
@@ -56355,6 +56394,10 @@ msgstr "Die Daten können nicht geparst werden: %s"
 #, python-format
 msgid "Unable to parse version: %r"
 msgstr "Version kann nicht geparst werden: %r"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Profiling pro Anfrage aktivieren"
 
 #, python-format
 msgid ""
@@ -56519,6 +56562,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr "offen"
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Es ist eine Ausnahme aufgetreten"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -65390,9 +65437,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "Nicht in Instanz ausgeführt!"
-
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Zwei-Faktor-Authentifizierung deaktivieren"
 
 #~ msgid ""
 #~ "This check connects to the specified database, sends a custom SQL-"

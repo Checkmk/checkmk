@@ -5742,6 +5742,10 @@ msgstr "Modo de Autenticação"
 msgid "Authentication System Errors"
 msgstr "Erros do Sistema de Autenticação"
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "Falhas de Autenticação"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr "A autenticação falhou. Login/password inválidos."
 
@@ -10903,6 +10907,10 @@ msgstr "Considere os estados de entrada durante a descoberta como sendo OK."
 msgid "Consider the state of the job"
 msgstr "Considere o estado do trabalho"
 
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
+msgstr "Considere o estado do trabalho"
+
 msgid "Consider times where the host is down"
 msgstr "Considere os horários em que o anfitrião está em baixo"
 
@@ -12430,6 +12438,10 @@ msgstr "Grupos de segurança de BD"
 
 msgid "DB subnet groups"
 msgstr "Grupos de sub-rede DB"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% utilização"
 
 msgid "DB username"
 msgstr "nome de usuário do BD"
@@ -20229,6 +20241,10 @@ msgid "Got no data from this site"
 msgstr "Não tenho dados deste site"
 
 #, fuzzy
+msgid "Got no response from IdP"
+msgstr "Nenhuma resposta do tópico de atualização"
+
+#, fuzzy
 msgid "Got no result to create dump file"
 msgstr "%s Recuperar ficheiro dump criado"
 
@@ -24612,7 +24628,8 @@ msgstr "Ignorar o estado operacional"
 msgid "Ignore the state"
 msgstr "Ignorar o Estado"
 
-msgid "Ignore the state of the Job"
+#, fuzzy
+msgid "Ignore the state of the job"
 msgstr "Ignorar o estado do trabalho"
 
 msgid "Ignore the version"
@@ -40220,6 +40237,9 @@ msgstr "Nível de potência Rx"
 msgid "S."
 msgstr "S."
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -47268,6 +47288,13 @@ msgstr ""
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "O URL deve começar com <tt>https</tt>."
 
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
+
 msgid "The URL of the target page the link of the element should link to."
 msgstr ""
 "A URL da página de destino para a qual o link do elemento deve fazer o link."
@@ -48444,13 +48471,6 @@ msgid "The found hosts' parents"
 msgstr "Os pais dos anfitriões encontrados"
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -48922,6 +48942,10 @@ msgstr ""
 "%s."
 
 msgid "The log level for LDAP related log entries."
+msgstr "O nível de log para as entradas de log relacionadas com o LDAP."
+
+#, fuzzy
+msgid "The log level for SAML 2.0 related log entries."
 msgstr "O nível de log para as entradas de log relacionadas com o LDAP."
 
 msgid ""
@@ -51737,6 +51761,12 @@ msgstr "Esta ligação"
 #, fuzzy
 msgid "This connection is currently disabled"
 msgstr "Esta agregação está actualmente desactivada."
+
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr "Esta conexão não está sendo usada atualmente para sincronização."
 
 #, fuzzy
 msgid "This connection is currently enabled"
@@ -56345,6 +56375,10 @@ msgstr "URL do host para o site remoto"
 msgid "URL from password store"
 msgstr "URL da loja de senhas"
 
+#, fuzzy
+msgid "URL not allowed"
+msgstr "Tempo permitido"
+
 msgid "URL of remote site"
 msgstr "URL do sítio remoto"
 
@@ -56535,6 +56569,10 @@ msgstr ""
 "Incapaz de se conectar a exemplo %s. Por favor verifique as credenciais em "
 "Global Settings."
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Desactivar notificações do anfitrião"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Incapaz de apagar grupo. Ainda está em uso por: %s"
@@ -56586,6 +56624,10 @@ msgstr "Incapacidade de analisar os dados fornecidos: %s"
 #, fuzzy, python-format
 msgid "Unable to parse version: %r"
 msgstr "Impossível carregar o ícone: %s"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Habilitar a criação de perfis por pedido"
 
 #, python-format
 msgid ""
@@ -56747,6 +56789,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr "Desatendido"
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Ocorreu uma excepção"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -65610,11 +65656,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "Não executado em ambiente OMD!"
-
-#, fuzzy
-#~| msgid "Disable host notifications"
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Desactivar notificações do anfitrião"
 
 #~ msgid ""
 #~ "This check connects to the specified database, sends a custom SQL-"

@@ -5508,6 +5508,10 @@ msgstr "認証ソース"
 msgid "Authentication System Errors"
 msgstr "認証システムエラー"
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "認証の失敗"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr "認証に失敗しました。ログイン/パスワードが無効です。"
 
@@ -10384,6 +10388,10 @@ msgstr ""
 msgid "Consider the state of the job"
 msgstr "ジョブの状態を考慮してください"
 
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
+msgstr "ジョブの状態を考慮してください"
+
 msgid "Consider times where the host is down"
 msgstr "ホストがダウンしている時間を考慮してください"
 
@@ -11866,6 +11874,10 @@ msgstr "DBセキュリティグループ"
 
 msgid "DB subnet groups"
 msgstr "DBサブネットグループ"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "%使用法"
 
 msgid "DB username"
 msgstr "DBユーザー名"
@@ -19364,6 +19376,10 @@ msgstr "どのサイトからもデータを取得していません"
 msgid "Got no data from this site"
 msgstr "このサイトからデータを取得していません"
 
+#, fuzzy
+msgid "Got no response from IdP"
+msgstr "更新スレッドからの応答がありません"
+
 msgid "Got no result to create dump file"
 msgstr "ダンプファイルの作成に失敗しました"
 
@@ -23432,7 +23448,8 @@ msgstr "動作状態を無視する"
 msgid "Ignore the state"
 msgstr "状態を無視する"
 
-msgid "Ignore the state of the Job"
+#, fuzzy
+msgid "Ignore the state of the job"
 msgstr "ジョブの状態を無視します"
 
 msgid "Ignore the version"
@@ -38319,6 +38336,9 @@ msgstr "Rxパワーレベル"
 msgid "S."
 msgstr "S."
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -45027,6 +45047,13 @@ msgstr ""
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "URLは次から開始する必要があります。<tt>https</tt>"
 
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
+
 msgid "The URL of the target page the link of the element should link to."
 msgstr "要素のリンクがリンクする必要のあるターゲットページのURL。"
 
@@ -46070,13 +46097,6 @@ msgid "The found hosts' parents"
 msgstr "見つかったホストの両親"
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -46515,6 +46535,10 @@ msgstr ""
 "ログファイル<tt>%s</tt> (ホスト<tt>%s</tt>の)を削除できませんした: %s。"
 
 msgid "The log level for LDAP related log entries."
+msgstr "ログエントリに関わるLDAPのログレベル。"
+
+#, fuzzy
+msgid "The log level for SAML 2.0 related log entries."
 msgstr "ログエントリに関わるLDAPのログレベル。"
 
 msgid ""
@@ -49084,6 +49108,12 @@ msgstr "この接続"
 
 msgid "This connection is currently disabled"
 msgstr "この接続は現在無効になっています"
+
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr "この接続は現在、同期に使用されていません。"
 
 msgid "This connection is currently enabled"
 msgstr "この接続は現在有効になっています"
@@ -53286,6 +53316,10 @@ msgstr "ホストからリモートサイトへのURL"
 msgid "URL from password store"
 msgstr "パスワードストアからのURL"
 
+#, fuzzy
+msgid "URL not allowed"
+msgstr "許可された時間"
+
 msgid "URL of remote site"
 msgstr "リモートサイトのURL"
 
@@ -53472,6 +53506,10 @@ msgid ""
 msgstr ""
 "インスタンス %sに接続できません。グローバル設定で資格情報を確認してください。"
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "2ファクタ認証を無効にする"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "グループを削除できません。まだ使用中です: %s"
@@ -53519,6 +53557,10 @@ msgstr "提供されたデータを解析できません: %s"
 #, python-format
 msgid "Unable to parse version: %r"
 msgstr "アップロードファイルを解析できません。%r"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "リクエストによるプロファイリングを有効にする"
 
 #, python-format
 msgid ""
@@ -53669,6 +53711,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr "未処理"
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "例外が発生しました"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -61957,9 +62003,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "OMD環境では実行されません！"
-
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "2ファクタ認証を無効にする"
 
 #~ msgid ""
 #~ "This check connects to the specified database, sends a custom SQL-"

@@ -5435,6 +5435,10 @@ msgstr "trimite notificare"
 msgid "Authentication System Errors"
 msgstr ""
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "trimite notificare"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr ""
 
@@ -10258,6 +10262,10 @@ msgstr "Starea porturilor pentru inventariere"
 msgid "Consider the state of the job"
 msgstr ""
 
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Consider times where the host is down"
 msgstr ""
 
@@ -11853,6 +11861,10 @@ msgstr "grupuri de servicii"
 #, fuzzy
 msgid "DB subnet groups"
 msgstr "Grup nou"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% utilizare"
 
 #, fuzzy
 msgid "DB username"
@@ -19585,6 +19597,9 @@ msgstr ""
 msgid "Got no data from this site"
 msgstr ""
 
+msgid "Got no response from IdP"
+msgstr ""
+
 msgid "Got no result to create dump file"
 msgstr ""
 
@@ -23202,8 +23217,9 @@ msgstr ""
 msgid "Ignore the state"
 msgstr " Ignoră această opțiune"
 
-msgid "Ignore the state of the Job"
-msgstr ""
+#, fuzzy
+msgid "Ignore the state of the job"
+msgstr " Ignoră această opțiune"
 
 msgid "Ignore the version"
 msgstr ""
@@ -38714,6 +38730,9 @@ msgstr "trei nivele"
 msgid "S."
 msgstr ""
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -45360,6 +45379,13 @@ msgstr ""
 msgid "The URL must begin with <tt>https</tt>."
 msgstr ""
 
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
+
 msgid "The URL of the target page the link of the element should link to."
 msgstr ""
 
@@ -46241,13 +46267,6 @@ msgid "The found hosts' parents"
 msgstr ""
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -46653,6 +46672,9 @@ msgid "The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s."
 msgstr ""
 
 msgid "The log level for LDAP related log entries."
+msgstr ""
+
+msgid "The log level for SAML 2.0 related log entries."
 msgstr ""
 
 msgid ""
@@ -48827,6 +48849,12 @@ msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "This connection is currently disabled"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
 msgstr "Conexiune Noua"
 
 #, fuzzy
@@ -52496,6 +52524,10 @@ msgid "URL from password store"
 msgstr ""
 
 #, fuzzy
+msgid "URL not allowed"
+msgstr "Timpul maxim permis pentru uptime"
+
+#, fuzzy
 msgid "URL of remote site"
 msgstr "(Nu trimite site-ului de la distanță)"
 
@@ -52667,6 +52699,10 @@ msgid ""
 "Settings."
 msgstr ""
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Confirma Parola"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr ""
@@ -52709,6 +52745,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unable to parse version: %r"
 msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Numarul maxim de mesaje"
 
 #, python-format
 msgid ""
@@ -52846,6 +52886,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr ""
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Adaugă Excepție"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -60764,10 +60808,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Status view"
 #~ msgstr "Întreruperi adhoc"
-
-#, fuzzy
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Confirma Parola"
 
 #, fuzzy
 #~ msgid "Discover services"

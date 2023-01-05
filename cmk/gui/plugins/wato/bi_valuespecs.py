@@ -905,7 +905,7 @@ class BIConfigAggregationFunctionCountOK(
             return tuple(result)
 
         def convert_from_vs(value):
-            result: Dict[str, Union[str, Dict[str, Union[int, str]]]] = {"type": cls.kind()}
+            result: dict[str, str | dict[str, int | str]] = {"type": cls.kind()}
 
             for name, number in [("levels_ok", value[0]), ("levels_warn", value[1])]:
                 result[name] = {

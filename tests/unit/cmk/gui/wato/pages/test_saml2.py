@@ -4,9 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package
 
 
+from pathlib import Path
 from typing import Any, Iterable, NamedTuple
 
 import pytest
+
+from cmk.utils.paths import (
+    saml2_custom_signature_private_keyfile,
+    saml2_custom_signature_public_keyfile,
+    saml2_signature_private_keyfile,
+    saml2_signature_public_keyfile,
+)
 
 from cmk.gui.http import Request
 from cmk.gui.wato.pages.saml2 import ModeSAML2Config
@@ -18,8 +26,58 @@ class Variables(NamedTuple):
     serialised: dict[str, Any]
 
 
+CERTIFICATE_DIR = Path(__file__).parent.parent.parent / "userdb/saml2/certificate_files"
+PRIVATE_KEY = Path(CERTIFICATE_DIR / "signature_private.pem").read_text()
+CERTIFICATE = Path(CERTIFICATE_DIR / "signature_public.pem").read_text()
+
+
+@pytest.fixture(
+    name="signature_certificate",
+    params=[
+        Variables(
+            http={
+                "vs_p_signature_certificate_sel": "0",
+                "vs_p_signature_certificate_1_0": "",
+                "vs_p_signature_certificate_1_1": "",
+            },
+            valuespec={
+                "signature_certificate": "default",
+            },
+            serialised={
+                "signature_certificate": {
+                    "private": str(saml2_signature_private_keyfile),
+                    "public": str(saml2_signature_public_keyfile),
+                },
+            },
+        ),
+        Variables(
+            http={
+                "vs_p_signature_certificate_sel": "1",
+                "vs_p_signature_certificate_1_0": PRIVATE_KEY,
+                "vs_p_signature_certificate_1_1": CERTIFICATE,
+            },
+            valuespec={
+                "signature_certificate": ("custom", (PRIVATE_KEY, CERTIFICATE)),
+            },
+            serialised={
+                "signature_certificate": {
+                    "private": str(saml2_custom_signature_private_keyfile),
+                    "public": str(saml2_custom_signature_public_keyfile),
+                },
+            },
+        ),
+    ],
+    ids=[
+        "Default: use Checkmk certificate",
+        "Use own certificates",
+    ],
+)
+def fixture_signature_certificate(request: pytest.FixtureRequest) -> Variables:
+    return request.param
+
+
 @pytest.fixture(name="config_variables")
-def fixture_config_variables() -> Variables:
+def fixture_config_variables(signature_certificate: Variables) -> Variables:
     return Variables(
         http={
             "vs_p_type": "saml2",
@@ -32,6 +90,7 @@ def fixture_config_variables() -> Variables:
             "vs_p_checkmk_server_url": "https://mycheckmk.com",
             "vs_p_connection_timeout_0": "12",
             "vs_p_connection_timeout_1": "12",
+            **signature_certificate.http,
             "vs_p_user_id_attribute": "username",
             "vs_p_create_users_on_login": "on",
         },
@@ -46,6 +105,7 @@ def fixture_config_variables() -> Variables:
             "connection_timeout": (12, 12),
             "checkmk_server_url": "https://mycheckmk.com",
             "idp_metadata_endpoint": "https://myidp.com",
+            **signature_certificate.valuespec,
             "user_id_attribute": "username",
             "create_users_on_login": True,
         },
@@ -59,9 +119,10 @@ def fixture_config_variables() -> Variables:
             "docu_url": "",
             "interface_config": {
                 "checkmk_server_url": "https://mycheckmk.com",
-                "connection_timeout": (12, 12),
+                "connection_timeout": [12, 12],
                 "idp_metadata_endpoint": "https://myidp.com",
                 "user_id_attribute": "username",
+                **signature_certificate.serialised,
             },
             "create_users_on_login": True,
         },
@@ -80,7 +141,11 @@ def fixture_mocked_request(
     yield mock_request
 
 
-def test_to_config_file(mocked_request: Request, config_variables: Variables) -> None:
+def test_to_config_file(
+    monkeypatch: pytest.MonkeyPatch, mocked_request: Request, config_variables: Variables
+) -> None:
+    monkeypatch.setattr("pathlib.Path.write_text", lambda s, t: None)
+
     wato_mode = ModeSAML2Config()
     valuespec_config = wato_mode._user_input()
     actual_serialised_config = wato_mode.to_config_file(valuespec_config)
@@ -90,6 +155,11 @@ def test_to_config_file(mocked_request: Request, config_variables: Variables) ->
 
 
 def test_from_config_file(monkeypatch: pytest.MonkeyPatch, config_variables: Variables) -> None:
+    file_content = {
+        str(saml2_custom_signature_private_keyfile): PRIVATE_KEY,
+        str(saml2_custom_signature_public_keyfile): CERTIFICATE,
+    }
+    monkeypatch.setattr("pathlib.Path.read_text", lambda s: file_content[str(s)])
     monkeypatch.setattr(
         "cmk.gui.plugins.userdb.utils.active_config.user_connections", [config_variables.serialised]
     )

@@ -190,15 +190,15 @@ function highlight_elem(elem, on) {
     else utils.remove_class(elem, "checkbox_hover");
 }
 
-function toggle_row(e, elem) {
-    if (!e) e = window.event;
+function toggle_row(e: Event | undefined, elem) {
+    if (!e) e = window.event!;
 
     // Skip handling clicks on links/images/...
-    var target = utils.get_target(e);
+    const target = e.target as HTMLElement;
     if (target.tagName != "TD" && target.tagName != "LABEL") return true;
 
     // Find the checkbox for this element
-    var checkbox = find_checkbox(elem);
+    const checkbox = find_checkbox(elem);
     if (checkbox === null) return;
 
     // Is SHIFT pressed?
@@ -206,7 +206,7 @@ function toggle_row(e, elem) {
     //   Select all from the last selection
 
     // Is the current row already selected?
-    var row_pos = selection_properties.selected_rows.indexOf(checkbox.name);
+    const row_pos = selection_properties.selected_rows.indexOf(checkbox.name);
     if (row_pos > -1) {
         // Yes: Unselect it
         checkbox.checked = false;

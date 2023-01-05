@@ -21,7 +21,7 @@ EXTLIBS         := extlibs
 
 PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\omd\packages\asio
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-ASIO_VERSION 	:= asio-1.24.0
+ASIO_VERSION 	:= asio-1.24.0-patched
 
 PACKAGE_FMT     := $(TOP_SRC_DIR)\omd\packages\fmt
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too

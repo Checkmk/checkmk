@@ -1,0 +1,19 @@
+Title: Add monitoring for PrimeKey appliances
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1663600844
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk enables the monitoring of PrimeKey appliances via SNMP.
+It supports the monitoring of
+LI: CPU temperature
+LI: speed and state of CPU and systems fans
+LI: database usage
+LI: voltage and state of HSM (Hardware Security Module) battery
+LI: state of VMs, RAID, EJBCA, Signserver and HSM
+LI: inventory data: node name and version of PKI appliance
+ 

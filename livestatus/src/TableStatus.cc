@@ -13,7 +13,6 @@
 #include <sstream>
 #include <variant>  // IWYU pragma: keep
 
-#include "Average.h"
 #include "BlobColumn.h"
 #include "Column.h"
 #include "DoubleColumn.h"
@@ -22,7 +21,8 @@
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
-#include "mk_inventory.h"
+#include "livestatus/Average.h"
+#include "livestatus/mk_inventory.h"
 #include "nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

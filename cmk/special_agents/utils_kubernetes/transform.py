@@ -17,8 +17,14 @@ from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
-from .schemata.api import Label, LabelName, parse_frac_prefix, parse_resource_value
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
+from .schemata.api import (
+    convert_to_timestamp,
+    Label,
+    LabelName,
+    parse_cpu_cores,
+    parse_resource_value,
+)
+from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 
 def parse_metadata_no_namespace(
@@ -54,12 +60,12 @@ def container_resources(container: client.V1Container) -> api.ContainerResources
         if limits := container.resources.limits:
             parsed_limits = api.ResourcesRequirements(
                 memory=parse_resource_value(limits["memory"]) if "memory" in limits else None,
-                cpu=parse_frac_prefix(limits["cpu"]) if "cpu" in limits else None,
+                cpu=parse_cpu_cores(limits["cpu"]) if "cpu" in limits else None,
             )
         if requests := container.resources.requests:
             parsed_requests = api.ResourcesRequirements(
                 memory=parse_resource_value(requests["memory"]) if "memory" in requests else None,
-                cpu=parse_frac_prefix(requests["cpu"]) if "cpu" in requests else None,
+                cpu=parse_cpu_cores(requests["cpu"]) if "cpu" in requests else None,
             )
 
     return api.ContainerResources(
@@ -224,16 +230,7 @@ def node_conditions(status: client.V1NodeStatus) -> Sequence[api.NodeCondition] 
     conditions = status.conditions
     if not conditions:
         return None
-    return [
-        api.NodeCondition(
-            status=c.status,
-            type_=c.type,
-            reason=c.reason,
-            detail=c.message,
-            last_transition_time=int(convert_to_timestamp(c.last_transition_time)),
-        )
-        for c in conditions
-    ]
+    return [api.NodeCondition.from_orm(c) for c in conditions]
 
 
 def node_info(node: client.V1Node) -> api.NodeInfo:
@@ -244,42 +241,6 @@ def node_info(node: client.V1Node) -> api.NodeInfo:
         operating_system=node.status.node_info.operating_system,
         container_runtime_version=node.status.node_info.container_runtime_version,
     )
-
-
-def parse_node_resources(node: client.V1Node) -> dict[str, api.NodeResources]:
-    if node.status:
-        capacity = node.status.capacity
-        allocatable = node.status.allocatable
-    else:
-        capacity, allocatable = None, None
-
-    return node_resources(capacity, allocatable)
-
-
-def node_resources(  # type:ignore[no-untyped-def]
-    capacity, allocatable
-) -> dict[str, api.NodeResources]:
-    resources = {
-        "capacity": api.NodeResources(),
-        "allocatable": api.NodeResources(),
-    }
-
-    if not capacity and not allocatable:
-        return resources
-
-    if capacity:
-        resources["capacity"] = api.NodeResources(
-            cpu=parse_frac_prefix(capacity.get("cpu", 0.0)),
-            memory=parse_resource_value(capacity.get("memory", 0.0)),
-            pods=capacity.get("pods", 0),
-        )
-    if allocatable:
-        resources["allocatable"] = api.NodeResources(
-            cpu=parse_frac_prefix(allocatable.get("cpu", 0.0)),
-            memory=parse_resource_value(allocatable.get("memory", 0.0)),
-            pods=allocatable.get("pods", 0),
-        )
-    return resources
 
 
 def deployment_replicas(
@@ -341,16 +302,21 @@ def node_addresses_from_client(
     ]
 
 
+def parse_node_resources(resource: dict[str, str] | None) -> api.NodeResources:
+    return api.NodeResources.parse_obj(resource or {})
+
+
 def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
     metadata = parse_metadata_no_namespace(node.metadata, api.NodeName)
     return api.Node(
         metadata=metadata,
         status=api.NodeStatus(
+            capacity=parse_node_resources(node.status.capacity),
+            allocatable=parse_node_resources(node.status.allocatable),
             conditions=node_conditions(node.status),
             node_info=node_info(node),
             addresses=node_addresses_from_client(node.status.addresses),
         ),
-        resources=parse_node_resources(node),
         roles=parse_node_roles(metadata.labels),
         kubelet_info=api.KubeletInfo(
             version=node.status.node_info.kubelet_version,
@@ -599,7 +565,7 @@ def parse_resource_requirement(
             continue
         requirement_type = "limit" if "limits" in requirement else "request"
         requirements[requirement_type] = (
-            parse_frac_prefix(value) if resource == "cpu" else parse_resource_value(value)
+            parse_cpu_cores(value) if resource == "cpu" else parse_resource_value(value)
         )
 
     if not requirements:

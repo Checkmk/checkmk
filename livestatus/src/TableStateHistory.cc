@@ -16,20 +16,20 @@
 
 #include "Column.h"
 #include "DoubleColumn.h"
-#include "Filter.h"
 #include "HostServiceState.h"
 #include "IntColumn.h"
-#include "LogEntry.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/Filter.h"
+#include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Row.h"
 #include "livestatus/StringUtils.h"
 
 #ifdef CMC

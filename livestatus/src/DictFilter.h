@@ -14,8 +14,8 @@
 #include <string>
 
 #include "ColumnFilter.h"
-#include "Filter.h"
 #include "MonitoringCore.h"
+#include "livestatus/Filter.h"
 #include "opids.h"
 class RegExp;
 class Row;

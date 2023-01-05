@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "Row.h"
 #include "Table.h"
+#include "livestatus/Row.h"
 class MonitoringCore;
 class Query;
 class User;

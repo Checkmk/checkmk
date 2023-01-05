@@ -6,6 +6,7 @@
 from cmk.base.check_api import check_levels
 
 
+# migrated to cmk/base/plugins/agent_based/utils/fan.py
 def check_fan(rpm, params):
     if isinstance(params, tuple):
         params = {"lower": params}

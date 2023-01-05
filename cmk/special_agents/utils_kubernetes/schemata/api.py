@@ -12,7 +12,9 @@ except the python standard library or pydantic.
 """
 from __future__ import annotations
 
+import datetime
 import enum
+import math
 from collections.abc import Mapping, Sequence
 from typing import Generic, Literal, NewType, TypeVar
 
@@ -132,63 +134,78 @@ IpAddress = NewType("IpAddress", str)
 ObjectName = TypeVar("ObjectName", bound=str)
 
 
-def parse_frac_prefix(value: str) -> float:
-    """Parses the string `value` with a suffix of 'm' or 'k' into a float.
+def parse_cpu_cores(value: str) -> float:
+    """Parses and then rounds up to nearest millicore.
+
+    This is how it is done internally by the Kubernetes API server.
 
     Examples:
-       >>> parse_frac_prefix("359m")
+       >>> parse_cpu_cores("359m")
        0.359
-       >>> parse_frac_prefix("4k")
+       >>> parse_cpu_cores("4k")
        4000.0
+       >>> parse_cpu_cores("200Mi")
+       209715200.0
+       >>> parse_cpu_cores("1M")
+       1000000.0
     """
-
-    if value.endswith("m"):
-        return 0.001 * float(value[:-1])
-    if value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    return float(value)
+    return math.ceil(1000 * _parse_quantity(value)) / 1000
 
 
-def parse_resource_value(value: str) -> float:  # pylint: disable=too-many-branches
+def parse_resource_value(value: str) -> float:
     """Function which converts the reported resource value to its value in the appropriate
     base unit
+
+    millibytes are useless, but valid. This is because Kubernetes uses Quantity everywhere
+    https://github.com/kubernetes/kubernetes/issues/28741
+    Internally, Kubernetes rounds millibytes up to the nearest byte.
 
     Targeted resources:
         * memory
         * storage
     """
-    if value.endswith("Ki"):
-        return 1024**1 * float(value[:-2])
-    if value.endswith("Mi"):
-        return 1024**2 * float(value[:-2])
-    if value.endswith("Gi"):
-        return 1024**3 * float(value[:-2])
-    if value.endswith("Ti"):
-        return 1024**4 * float(value[:-2])
-    if value.endswith("Pi"):
-        return 1024**5 * float(value[:-2])
-    if value.endswith("Ei"):
-        return 1024**6 * float(value[:-2])
+    return math.ceil(_parse_quantity(value))
 
-    if value.endswith("K") or value.endswith("k"):
-        return 1e3 * float(value[:-1])
-    if value.endswith("M"):
-        return 1e6 * float(value[:-1])
-    if value.endswith("G"):
-        return 1e9 * float(value[:-1])
-    if value.endswith("T"):
-        return 1e12 * float(value[:-1])
-    if value.endswith("P"):
-        return 1e15 * float(value[:-1])
-    if value.endswith("E"):
-        return 1e18 * float(value[:-1])
 
-    # millibytes are a useless, but valid option:
-    # https://github.com/kubernetes/kubernetes/issues/28741
-    if value.endswith("m"):
-        return 1e-3 * float(value[:-1])
-
+def _parse_quantity(value: str) -> float:
+    # Kubernetes uses a common field for any entry in resources, which it refers to as Quantity.
+    # See staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go
+    for unit, factor in [
+        ("Ki", 1024**1),
+        ("Mi", 1024**2),
+        ("Gi", 1024**3),
+        ("Ti", 1024**4),
+        ("Pi", 1024**5),
+        ("Ei", 1024**6),
+        ("K", 1e3),
+        ("k", 1e3),
+        ("M", 1e6),
+        ("G", 1e9),
+        ("T", 1e12),
+        ("P", 1e15),
+        ("E", 1e18),
+        ("m", 1e-3),
+    ]:
+        if value.endswith(unit):
+            return factor * float(value.removesuffix(unit))
     return float(value)
+
+
+def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
+    if isinstance(kube_date_time, str):
+        date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
+            tzinfo=datetime.timezone.utc
+        )
+    elif isinstance(kube_date_time, datetime.datetime):
+        date_time = kube_date_time
+        if date_time.tzinfo is None:
+            raise ValueError(f"Can not convert to timestamp: '{kube_date_time}' is missing tzinfo")
+    else:
+        raise TypeError(
+            f"Can not convert to timestamp: '{kube_date_time}' of type {type(kube_date_time)}"
+        )
+
+    return Timestamp(date_time.timestamp())
 
 
 class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
@@ -323,18 +340,25 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
-class NodeCondition(BaseModel):
+class NodeCondition(ClientModel):
     status: NodeConditionStatus
-    type_: str
+    type_: str = Field(..., alias="type")
     reason: str | None
     detail: str | None
     last_transition_time: int | None
+
+    _parse_last_transition_time = validator("last_transition_time", pre=True, allow_reuse=True)(
+        convert_to_timestamp
+    )
 
 
 class NodeResources(BaseModel):
     cpu: float = 0.0
     memory: float = 0.0
     pods: int = 0
+
+    _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
+    _parse_memory = validator("memory", pre=True, allow_reuse=True)(parse_resource_value)
 
 
 class HealthZ(BaseModel):
@@ -408,6 +432,8 @@ NodeAddresses = Sequence[NodeAddress]
 
 
 class NodeStatus(BaseModel):
+    allocatable: NodeResources
+    capacity: NodeResources
     conditions: Sequence[NodeCondition] | None
     node_info: NodeInfo
     addresses: NodeAddresses
@@ -417,7 +443,6 @@ class Node(BaseModel):
     metadata: MetaDataNoNamespace[NodeName]
     status: NodeStatus
     roles: Sequence[str]
-    resources: dict[str, NodeResources]
     kubelet_info: KubeletInfo
 
 
@@ -487,8 +512,23 @@ class RollingUpdate(BaseModel):
 
 
 class StatefulSetRollingUpdate(BaseModel):
+    """
+    max_unavailable:
+        * only available since 1.24
+        * requirement: the field is only honored by servers that enable the
+        MaxUnavailableStatefulSet gate-feature (https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/)
+        * maximum number of pods that can be unavailable during the update
+        * value can be an absolute number or a percentage of desired pods (10%); absolute number is
+        calculate from percentage by rounding up
+        * defaults to 1 (which is the same behaviour as pre 1.24)
+        * field applies to all pods in the range 0 to (replicas - 1); any unavailable pod in the
+        range 0 to (replicas -1) will be counted towards maxunavailable
+
+    """
+
     type_: Literal["StatefulSetRollingUpdate"] = Field("StatefulSetRollingUpdate", const=True)
     partition: int
+    max_unavailable: str | None
 
 
 class Recreate(BaseModel):

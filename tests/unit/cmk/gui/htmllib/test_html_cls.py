@@ -31,14 +31,24 @@ def test_render_help_empty(request_context) -> None:  # type:ignore[no-untyped-d
 def test_render_help_html(request_context) -> None:  # type:ignore[no-untyped-def]
     assert html.have_help is False
     assert compare_html(
-        html.render_help(HTML("<abc>")), HTML('<div style="display:none" class="help"><abc></div>')
+        html.render_help(HTML("<abc>")),
+        HTML(
+            '<div style="display:none;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text"><abc></div></div>'
+        ),
     )
     assert html.have_help is True
 
 
 def test_render_help_text(request_context) -> None:  # type:ignore[no-untyped-def]
     assert compare_html(
-        html.render_help("äbc"), HTML('<div style="display:none" class="help">äbc</div>')
+        html.render_help("äbc"),
+        HTML(
+            '<div style="display:none;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text">äbc</div></div>'
+        ),
     )
 
 
@@ -46,7 +56,12 @@ def test_render_help_visible(request_context, monkeypatch) -> None:  # type:igno
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
     assert compare_html(
-        html.render_help("äbc"), HTML('<div style="display:block" class="help">äbc</div>')
+        html.render_help("äbc"),
+        HTML(
+            '<div style="display:flex;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text">äbc</div></div>'
+        ),
     )
 
 
@@ -55,7 +70,10 @@ def test_add_manual_link(request_context) -> None:  # type:ignore[no-untyped-def
     assert compare_html(
         html.render_help("[intro_welcome|Welcome]"),
         HTML(
-            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/en/intro_welcome.html" target="_blank">Welcome</a></div>'
+            '<div style="display:none;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text"><a href="https://docs.checkmk.com/master/en/intro_welcome.html" '
+            'target="_blank">Welcome</a></div></div>'
         ),
     )
 
@@ -67,7 +85,10 @@ def test_add_manual_link_localized(  # type:ignore[no-untyped-def]
     assert compare_html(
         html.render_help("[intro_welcome|Welcome]"),
         HTML(
-            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" target="_blank">Welcome</a></div>'
+            '<div style="display:none;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" '
+            'target="_blank">Welcome</a></div></div>'
         ),
     )
 
@@ -79,7 +100,10 @@ def test_add_manual_link_anchor(  # type:ignore[no-untyped-def]
     assert compare_html(
         html.render_help("[graphing#rrds|RRDs]"),
         HTML(
-            '<div style="display:none" class="help"><a href="https://docs.checkmk.de/master/de/graphing.html#rrds" target="_blank">RRDs</a></div>'
+            '<div style="display:none;" class="help"><div class="info_icon"><img '
+            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+            'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
+            'target="_blank">RRDs</a></div></div>'
         ),
     )
 

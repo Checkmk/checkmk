@@ -2529,6 +2529,10 @@ msgid "AWS/S3 Limits"
 msgstr "Limites de AWS/S3"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "Limites de AWS/S3"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "Limites de AWS/S3"
 
@@ -5801,6 +5805,10 @@ msgstr "Source d'authentification"
 msgid "Authentication System Errors"
 msgstr "Erreurs du système d'authentification"
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "Échecs d'authentification"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr "L'authentification a échoué. Identifiant/mot de passe invalide."
 
@@ -5825,6 +5833,10 @@ msgstr "Protocole d'authentification"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "L'authentification au service web a échoué.<br>Message:<br>%s"
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "Authentification"
 
 msgid "Authentication with TLS"
 msgstr "Authentification avec TLS"
@@ -9673,6 +9685,10 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr "Cliquez ici pour voir le statut d'activation par site."
 
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Basculer immédiatement ce paramètre"
+
 msgid "Clickable URLs"
 msgstr "URLs cliquables"
 
@@ -9708,6 +9724,10 @@ msgstr "Demandes des clients reçues"
 
 msgid "Client secret"
 msgstr "Secret du client"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "ID du client"
 
 msgid "Clients"
 msgstr "Clients"
@@ -10996,6 +11016,10 @@ msgid "Consider the input states during discovery to be OK"
 msgstr "Considérer que les états d'entrée pendant la découverte sont OK"
 
 msgid "Consider the state of the job"
+msgstr "Tenir compte de l'état de l'emploi"
+
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
 msgstr "Tenir compte de l'état de l'emploi"
 
 msgid "Consider times where the host is down"
@@ -12527,6 +12551,10 @@ msgstr "Groupes de sécurité de la DB"
 
 msgid "DB subnet groups"
 msgstr "Groupes de sous-réseaux DB"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% d'utilisation"
 
 msgid "DB username"
 msgstr "Nom d'utilisateur DB"
@@ -20315,6 +20343,10 @@ msgstr "Je n'ai reçu aucune donnée d'aucun site"
 msgid "Got no data from this site"
 msgstr "Je n'ai obtenu aucune donnée de ce site"
 
+#, fuzzy
+msgid "Got no response from IdP"
+msgstr "Aucune réponse du fil de mise à jour"
+
 msgid "Got no result to create dump file"
 msgstr "Aucun résultat pour créer le fichier de vidage"
 
@@ -21928,6 +21960,10 @@ msgstr "Masquer les noms de dossiers internes dans WATO"
 
 msgid "Hide names of configuration variables"
 msgstr "Cacher les noms des variables de configuration"
+
+#, fuzzy
+msgid "Hide page navigation"
+msgstr "Cette page avec la navigation"
 
 #, fuzzy
 msgid "Hide plugin names"
@@ -24775,7 +24811,8 @@ msgstr "Ignorer l'état opérationnel"
 msgid "Ignore the state"
 msgstr "Ignorer l'État"
 
-msgid "Ignore the state of the Job"
+#, fuzzy
+msgid "Ignore the state of the job"
 msgstr "Ignorer l'état de l'emploi"
 
 msgid "Ignore the version"
@@ -24817,9 +24854,6 @@ msgstr "Images"
 
 msgid "Immediately scheduled checks"
 msgstr "Contrôles immédiatement programmés"
-
-msgid "Immediately toggle this setting"
-msgstr "Basculer immédiatement ce paramètre"
 
 msgid "Impact"
 msgstr "Impact"
@@ -29122,6 +29156,18 @@ msgstr "Niveau inférieur pour le taux d'exécution du GC"
 msgid "Lower levels for CPU balance"
 msgstr "Niveaux inférieurs pour l'équilibre du CPU"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Niveaux inférieurs pour l'âge du certificat"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Niveaux inférieurs pour %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Niveau inférieur pour le taux de messages"
+
 msgid "Lower levels for burst balance"
 msgstr "Niveaux inférieurs pour l'équilibre des rafales"
 
@@ -32851,9 +32897,6 @@ msgstr "Pas de recherche"
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
 
-msgid "No service level is set in event"
-msgstr "Aucun niveau de service n'est défini dans l'événement"
-
 msgid "No status host"
 msgstr "Pas de statut hôte"
 
@@ -34165,6 +34208,9 @@ msgstr "O"
 
 msgid "O2 levels"
 msgstr "Niveaux d'O2"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr "Interprétation des données OEM"
@@ -40313,6 +40359,9 @@ msgstr "Niveau de puissance Rx"
 msgid "S."
 msgstr "S."
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -42775,6 +42824,10 @@ msgstr "Afficher uniquement cette agrégation"
 
 msgid "Show only unused rules"
 msgstr "Afficher uniquement les règles inutilisées"
+
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Cette page avec la navigation"
 
 msgid "Show per day"
 msgstr "Spectacle par jour"
@@ -45496,9 +45549,6 @@ msgstr "Statut d'ombre"
 msgid "Status stale"
 msgstr "Statut périmé"
 
-msgid "Status view"
-msgstr "Vue d'ensemble du statut"
-
 msgid "Status: DISBALE"
 msgstr "Statut : DISBALE"
 
@@ -46655,6 +46705,9 @@ msgstr "Système de fichiers temporaire monté"
 msgid "Tenant ID / Directory ID"
 msgstr "ID locataire / ID répertoire"
 
+msgid "TenantID"
+msgstr ""
+
 msgid "Terminated containers"
 msgstr "Conteneurs terminés"
 
@@ -47415,6 +47468,13 @@ msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "L'URL doit commencer par <tt>https</tt>."
+
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
 msgstr ""
@@ -48621,13 +48681,6 @@ msgid "The found hosts' parents"
 msgstr "Les parents des hôtes trouvés"
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -49115,6 +49168,10 @@ msgstr ""
 "supprimé : %s."
 
 msgid "The log level for LDAP related log entries."
+msgstr "Le niveau de journal pour les entrées de journal liées à LDAP."
+
+#, fuzzy
+msgid "The log level for SAML 2.0 related log entries."
 msgstr "Le niveau de journal pour les entrées de journal liées à LDAP."
 
 msgid ""
@@ -52003,6 +52060,13 @@ msgstr "Cette connexion"
 msgid "This connection is currently disabled"
 msgstr "Cette connexion est actuellement désactivée"
 
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr ""
+"Cette connexion n'est actuellement pas utilisée pour la synchronisation."
+
 msgid "This connection is currently enabled"
 msgstr "Cette connexion est actuellement activée"
 
@@ -52994,12 +53058,6 @@ msgstr "Cette page ne prend pas en charge les hôtes en grappe."
 
 msgid "This page was not found. Sorry."
 msgstr "Cette page n'a pas été trouvée. Désolé."
-
-msgid "This page with navigation"
-msgstr "Cette page avec la navigation"
-
-msgid "This page without navigation"
-msgstr "Cette page sans navigation"
 
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
@@ -56713,6 +56771,10 @@ msgstr "URL de l'hôte vers le site distant"
 msgid "URL from password store"
 msgstr "URL du magasin de mots de passe"
 
+#, fuzzy
+msgid "URL not allowed"
+msgstr "Temps alloué"
+
 msgid "URL of remote site"
 msgstr "URL du site distant"
 
@@ -56906,6 +56968,10 @@ msgstr ""
 "Impossible de se connecter à l'instance %s. Veuillez vérifier les "
 "informations d'identification sous Global Settings."
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Désactiver l'authentification à deux facteurs"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Impossible de supprimer le groupe. Il est toujours utilisé par : %s"
@@ -56960,6 +57026,10 @@ msgstr "Impossible d'analyser les données fournies : %s"
 #, python-format
 msgid "Unable to parse version: %r"
 msgstr "Impossible d'analyser la version : %r"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Activer le profilage par demande"
 
 #, python-format
 msgid ""
@@ -57123,6 +57193,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr "Non gérée"
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Une exception s'est produite"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -57684,6 +57758,18 @@ msgstr "Niveaux supérieurs d'utilisation des swaps IVE"
 
 msgid "Upper levels for Load Balancers"
 msgstr "Niveaux supérieurs pour les équilibreurs de charge"
+
+#, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Niveaux supérieurs pour l'âge"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Niveau supérieur pour les tâches en attente"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Niveaux supérieurs d'utilisation"
 
 #, fuzzy
 msgid "Upper levels for SSL handshake time"
@@ -59126,6 +59212,10 @@ msgstr "Nom d'utilisateur pour la connexion"
 msgid "Username is unknown"
 msgstr "Le nom d'utilisateur est inconnu"
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "Mot de passe de l'utilisateur"
+
 msgid "Username:"
 msgstr "Nom d'utilisateur :"
 
@@ -59716,14 +59806,26 @@ msgstr "Visualiser et modifier les paramètres de ce service"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Visualisez et modifiez les règles et les agrégations de ce pack BI."
 
+#, fuzzy
+msgid "View history"
+msgstr "Historique de recherche"
+
 msgid "View layout"
 msgstr "Voir la présentation"
 
 msgid "View name"
 msgstr "Voir le nom"
 
+#, fuzzy
+msgid "View table"
+msgstr "Voir le nom"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "Voir les paramètres effectifs de cet hôte basés sur des règles"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Ligne du temps"
 
 msgid "Views"
 msgstr "Vues"
@@ -66080,6 +66182,15 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Aucun niveau de service n'est défini dans l'événement"
+
+#~ msgid "Status view"
+#~ msgstr "Vue d'ensemble du statut"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Cette page sans navigation"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -66100,9 +66211,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "Non exécuté dans l'environnement OMD !"
-
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Désactiver l'authentification à deux facteurs"
 
 #~ msgid ""
 #~ "This check connects to the specified database, sends a custom SQL-"
@@ -71116,9 +71224,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Rechercher des services et afficher leurs graphiques"
-
-#~ msgid "Search history"
-#~ msgstr "Historique de recherche"
 
 #~ msgid "Search performance data"
 #~ msgstr "Données sur les performances de recherche"

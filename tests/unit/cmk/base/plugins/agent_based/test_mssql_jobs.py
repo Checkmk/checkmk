@@ -3,7 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+import pytest
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.mssql_jobs import (
     check_mssql_jobs,
     discover_mssql_jobs,
@@ -377,7 +382,7 @@ def test_check1() -> None:
         check_mssql_jobs(
             "teststsssss",
             {
-                "ignore_db_status": True,
+                "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": None,
@@ -399,7 +404,7 @@ def test_check2() -> None:
         check_mssql_jobs(
             "Wartung Stündlich",
             {
-                "ignore_db_status": False,
+                "consider_job_status": "consider",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
@@ -427,7 +432,7 @@ def test_check3() -> None:
         check_mssql_jobs(
             "aller 2h",
             {
-                "ignore_db_status": True,
+                "consider_job_status": "ignore",
                 "status_disabled_jobs": 0,
                 "status_missing_jobs": 2,
                 "run_duration": (1800, 2400),
@@ -448,3 +453,87 @@ def test_check3() -> None:
             ),
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    "string_table, item, params, expected_result",
+    [
+        pytest.param(
+            [
+                ["MSSQLSERVER"],
+                [
+                    "{ABC-1234}",
+                    "MyJob",
+                    "0",
+                    "20221226",
+                    "40000",
+                    "5",
+                    "An error occurred.",
+                    "20221219",
+                    "40000",
+                    "0",
+                    "0",
+                    "2022-12-23 08:52:50",
+                ],
+            ],
+            "MyJob",
+            {
+                "consider_job_status": "consider_if_enabled",
+                "status_disabled_jobs": 0,
+                "status_missing_jobs": 2,
+            },
+            [
+                Result(state=State.OK, summary="Last duration: 0 seconds"),
+                Metric("database_job_duration", 0.0),
+                Result(state=State.OK, summary="MSSQL status: Unknown"),
+                Result(state=State.OK, summary="Last run: 2022-12-19 04:00:00"),
+                Result(state=State.OK, summary="Job is disabled"),
+                Result(state=State.OK, notice="Outcome message: An error occurred."),
+            ],
+            id="consider_if_enabled on, job disabled",
+        ),
+        pytest.param(
+            [
+                ["MSSQLSERVER"],
+                [
+                    "{ABC-1234}",
+                    "MyJob",
+                    "1",
+                    "20221226",
+                    "40000",
+                    "5",
+                    "An error occurred.",
+                    "20221219",
+                    "40000",
+                    "0",
+                    "0",
+                    "2022-12-23 08:52:50",
+                ],
+            ],
+            "MyJob",
+            {
+                "consider_job_status": "consider_if_enabled",
+                "status_disabled_jobs": 0,
+                "status_missing_jobs": 2,
+            },
+            [
+                Result(state=State.OK, summary="Last duration: 0 seconds"),
+                Metric("database_job_duration", 0.0),
+                Result(state=State.UNKNOWN, summary="MSSQL status: Unknown"),
+                Result(state=State.OK, summary="Last run: 2022-12-19 04:00:00"),
+                Result(state=State.OK, summary="Schedule is disabled"),
+                Result(state=State.OK, notice="Outcome message: An error occurred."),
+            ],
+            id="consider_if_enabled on, job enabled",
+        ),
+    ],
+)
+def test_check_mssql_jobs(
+    string_table: StringTable,
+    item: str,
+    params: Mapping[str, object],
+    expected_result: CheckResult,
+) -> None:
+    section = parse_mssql_jobs(string_table)
+
+    assert list(check_mssql_jobs(item, params, section)) == expected_result

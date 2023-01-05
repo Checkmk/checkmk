@@ -10,8 +10,8 @@
 
 #include "Column.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
+#include "livestatus/Row.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};

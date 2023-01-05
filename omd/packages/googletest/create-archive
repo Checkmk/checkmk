@@ -7,7 +7,6 @@ SHA=71140c3ca7
 rm -rf googletest
 git clone \
     --depth=1 \
-    --single-branch \
     --branch=main \
     git@github.com:google/googletest.git
 cd googletest

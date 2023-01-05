@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "Column.h"
-#include "Filter.h"
+#include "livestatus/Filter.h"
 class Aggregator;
 class Logger;
 

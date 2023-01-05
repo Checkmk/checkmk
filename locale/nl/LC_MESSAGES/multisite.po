@@ -2497,6 +2497,10 @@ msgid "AWS/S3 Limits"
 msgstr "AWS/S3 Grenzen"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "AWS/S3 Grenzen"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "AWS/S3 Grenzen"
 
@@ -5742,6 +5746,10 @@ msgstr "Authenticatiebron"
 msgid "Authentication System Errors"
 msgstr "Authenticatie systeemfouten"
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "Authenticatie mislukkingen"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr "Authenticatie mislukt. Ongeldig login/wachtwoord."
 
@@ -5766,6 +5774,10 @@ msgstr "Authenticatieprotocol"
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr "Authenticatie aan webdienst mislukt.<br>Melding:<br>%s"
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "Authenticatie"
 
 msgid "Authentication with TLS"
 msgstr "Authenticatie met TLS"
@@ -9557,6 +9569,10 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr "Klik hier om de activeringsstatus per site te zien."
 
+#, fuzzy
+msgid "Click to toggle this setting"
+msgstr "Zet deze instelling onmiddellijk aan"
+
 msgid "Clickable URLs"
 msgstr "Klikbare URL's"
 
@@ -9592,6 +9608,10 @@ msgstr "Ontvangen aanvragen van cliënten"
 
 msgid "Client secret"
 msgstr "Geheim van de klant"
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Klant ID"
 
 msgid "Clients"
 msgstr "Klanten"
@@ -10866,6 +10886,10 @@ msgid "Consider the input states during discovery to be OK"
 msgstr "Neem aan dat de invoer status tijdens ontdekking OK is"
 
 msgid "Consider the state of the job"
+msgstr "Denk aan de toestand van de baan"
+
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
 msgstr "Denk aan de toestand van de baan"
 
 msgid "Consider times where the host is down"
@@ -12375,6 +12399,10 @@ msgstr "DB-beveiligingsgroepen"
 
 msgid "DB subnet groups"
 msgstr "DB subnet groepen"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% gebruikt"
 
 msgid "DB username"
 msgstr "DB-gebruikersnaam"
@@ -20069,6 +20097,10 @@ msgstr "Ik heb geen gegevens van geen enkele site"
 msgid "Got no data from this site"
 msgstr "Ik heb geen gegevens van deze site."
 
+#, fuzzy
+msgid "Got no response from IdP"
+msgstr "Geen reactie op update draad"
+
 msgid "Got no result to create dump file"
 msgstr "Ik heb geen resultaat om een dump bestand te maken"
 
@@ -21650,6 +21682,10 @@ msgstr "Interne mapnamen in WATO verbergen"
 
 msgid "Hide names of configuration variables"
 msgstr "Verberg namen van configuratievariabelen"
+
+#, fuzzy
+msgid "Hide page navigation"
+msgstr "Deze pagina met navigatie"
 
 #, fuzzy
 msgid "Hide plugin names"
@@ -24464,7 +24500,8 @@ msgstr "Negeer de operationele toestand"
 msgid "Ignore the state"
 msgstr "Negeer de staat"
 
-msgid "Ignore the state of the Job"
+#, fuzzy
+msgid "Ignore the state of the job"
 msgstr "Negeer de toestand van de baan"
 
 msgid "Ignore the version"
@@ -24505,9 +24542,6 @@ msgstr "Afbeeldingen"
 
 msgid "Immediately scheduled checks"
 msgstr "Onmiddellijk geplande controles"
-
-msgid "Immediately toggle this setting"
-msgstr "Zet deze instelling onmiddellijk aan"
 
 msgid "Impact"
 msgstr "Impact"
@@ -28772,6 +28806,18 @@ msgstr "Lager niveau voor GC run rate"
 msgid "Lower levels for CPU balance"
 msgstr "Lagere niveaus voor CPU-balans"
 
+#, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Lagere niveaus voor certificaatleeftijd"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Lagere niveaus voor %s"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Lager niveau voor berichtensnelheid"
+
 msgid "Lower levels for burst balance"
 msgstr "Lagere niveaus voor burst balans"
 
@@ -32456,9 +32502,6 @@ msgstr "Geen zoekopdracht"
 msgid "No search, specify list of arguments"
 msgstr "Geen zoekfunctie, geef een lijst met argumenten"
 
-msgid "No service level is set in event"
-msgstr "Er is geen serviceniveau ingesteld in de gebeurtenis"
-
 msgid "No status host"
 msgstr "Geen status host"
 
@@ -33754,6 +33797,9 @@ msgstr "O"
 
 msgid "O2 levels"
 msgstr "O2 niveaus"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr "OEM-gegevens interpretatie"
@@ -39800,6 +39846,9 @@ msgstr "Rx vermogensniveau"
 msgid "S."
 msgstr "S."
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -42230,6 +42279,10 @@ msgstr "Toon alleen deze aggregatie"
 
 msgid "Show only unused rules"
 msgstr "Toon alleen ongebruikte regels"
+
+#, fuzzy
+msgid "Show page navigation"
+msgstr "Deze pagina met navigatie"
 
 msgid "Show per day"
 msgstr "Toon per dag"
@@ -44917,9 +44970,6 @@ msgstr "Status schaduw"
 msgid "Status stale"
 msgstr "Status oud"
 
-msgid "Status view"
-msgstr "Statusweergave"
-
 msgid "Status: DISBALE"
 msgstr "Status: DISBALE"
 
@@ -46057,6 +46107,9 @@ msgstr "Tijdelijk bestandssysteem gemount"
 msgid "Tenant ID / Directory ID"
 msgstr "Huurder ID / Directory ID"
 
+msgid "TenantID"
+msgstr ""
+
 msgid "Terminated containers"
 msgstr "Beëindigde containers"
 
@@ -46811,6 +46864,13 @@ msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
 msgstr "De URL moet beginnen met <tt>https</tt>."
+
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
+msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
 msgstr "De URL van de doelpagina waarnaar de link van het element moet linken."
@@ -48011,13 +48071,6 @@ msgid "The found hosts' parents"
 msgstr "De ouders van de gevonden gastheren"
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -48499,6 +48552,10 @@ msgstr ""
 "%s."
 
 msgid "The log level for LDAP related log entries."
+msgstr "Het logniveau voor LDAP-gerelateerde logboekitems."
+
+#, fuzzy
+msgid "The log level for SAML 2.0 related log entries."
 msgstr "Het logniveau voor LDAP-gerelateerde logboekitems."
 
 msgid ""
@@ -51353,6 +51410,12 @@ msgstr "Deze verbinding"
 msgid "This connection is currently disabled"
 msgstr "Deze verbinding is momenteel uitgeschakeld"
 
+#, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr "Deze verbinding wordt momenteel niet gebruikt voor synchronisatie."
+
 msgid "This connection is currently enabled"
 msgstr "Deze verbinding is momenteel ingeschakeld"
 
@@ -52327,12 +52390,6 @@ msgstr "Deze pagina ondersteunt geen cluster hosts."
 
 msgid "This page was not found. Sorry."
 msgstr "Deze pagina werd niet gevonden. Sorry."
-
-msgid "This page with navigation"
-msgstr "Deze pagina met navigatie"
-
-msgid "This page without navigation"
-msgstr "Deze pagina zonder navigatie"
 
 msgid ""
 "This parameter should only be used for enforced services, otherwise it will "
@@ -55998,6 +56055,10 @@ msgstr "URL van host naar externe site"
 msgid "URL from password store"
 msgstr "URL van wachtwoord opslag"
 
+#, fuzzy
+msgid "URL not allowed"
+msgstr "Toegestane tijd"
+
 msgid "URL of remote site"
 msgstr "URL van externe site"
 
@@ -56188,6 +56249,10 @@ msgstr ""
 "Kan geen verbinding maken met instantie %s. Controleer de credentials onder "
 "Global Settings."
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Twee-factor authenticatie uitschakelen"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr "Kan groep niet verwijderen. Deze is nog in gebruik door: %s"
@@ -56237,6 +56302,10 @@ msgstr "Kan verstrekte gegevens niet ontleden: %s"
 #, python-format
 msgid "Unable to parse version: %r"
 msgstr "Kan versie niet ontleden: %r"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Profilering op verzoek inschakelen"
 
 #, python-format
 msgid ""
@@ -56398,6 +56467,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr "Onbehandeld"
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Er is een uitzondering opgetreden"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -56955,6 +57028,18 @@ msgstr "Bovenste niveaus voor IVE-swapgebruik"
 
 msgid "Upper levels for Load Balancers"
 msgstr "Hogere niveaus voor Load Balancers"
+
+#, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Bovenste niveaus voor de leeftijd"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Bovenste niveau voor lopende taken"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
+msgstr "Bovenste niveaus voor gebruik"
 
 #, fuzzy
 msgid "Upper levels for SSL handshake time"
@@ -58365,6 +58450,10 @@ msgstr "Gebruikersnaam voor inloggen"
 msgid "Username is unknown"
 msgstr "Gebruikersnaam is onbekend"
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "Wachtwoord gebruiker"
+
 msgid "Username:"
 msgstr "Gebruikersnaam:"
 
@@ -58944,14 +59033,26 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
 
+#, fuzzy
+msgid "View history"
+msgstr "Zoekgeschiedenis"
+
 msgid "View layout"
 msgstr "Bekijk lay-out"
 
 msgid "View name"
 msgstr "Naam bekijken"
 
+#, fuzzy
+msgid "View table"
+msgstr "Naam bekijken"
+
 msgid "View the rule based effective parameters of this host"
 msgstr "Bekijk de regelgebaseerde effectieve parameters van deze host"
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Tijdlijn"
 
 msgid "Views"
 msgstr "Bekeken"
@@ -65214,6 +65315,15 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "No service level is set in event"
+#~ msgstr "Er is geen serviceniveau ingesteld in de gebeurtenis"
+
+#~ msgid "Status view"
+#~ msgstr "Statusweergave"
+
+#~ msgid "This page without navigation"
+#~ msgstr "Deze pagina zonder navigatie"
+
 #, fuzzy
 #~| msgid "Integration Key"
 #~ msgid "SAML2.0 Integration"
@@ -65234,9 +65344,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Not executed in OMD environment!"
 #~ msgstr "Niet uitgevoerd in OMD omgeving!"
-
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Twee-factor authenticatie uitschakelen"
 
 #~ msgid ""
 #~ "This check connects to the specified database, sends a custom SQL-"
@@ -70180,9 +70287,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Search for services and display their graphs"
 #~ msgstr "Zoeken naar diensten en hun grafieken weergeven"
-
-#~ msgid "Search history"
-#~ msgstr "Zoekgeschiedenis"
 
 #~ msgid "Search performance data"
 #~ msgstr "Prestatiegegevens zoeken"

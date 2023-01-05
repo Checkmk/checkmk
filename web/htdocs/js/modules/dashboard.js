@@ -779,7 +779,7 @@ function drag_dashlet_start(event) {
 
     if (!g_editing) return true;
 
-    var target = utils.get_target(event);
+    var target = event.target;
     var button = utils.get_button(event);
 
     if (g_dragging === false && button == "LEFT" && utils.has_class(target, "controls")) {
@@ -983,7 +983,7 @@ function resize_dashlet_start(event) {
 
     if (!g_editing) return true;
 
-    var target = utils.get_target(event);
+    var target = event.target;
     var button = utils.get_button(event);
 
     if (g_resizing === false && button == "LEFT" && utils.has_class(target, "resize")) {

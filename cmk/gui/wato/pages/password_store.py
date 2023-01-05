@@ -162,6 +162,7 @@ class ModeEditPassword(SimpleEditMode):
                 PasswordValuespec(
                     title=_("Password"),
                     allow_empty=False,
+                    size=32,
                 ),
             ),
             (
@@ -203,6 +204,7 @@ class ModeEditPassword(SimpleEditMode):
                     ),
                     choices=sorted_contact_group_choices,
                     autoheight=False,
+                    size=43,
                 ),
             ),
         ]

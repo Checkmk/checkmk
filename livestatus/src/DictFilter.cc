@@ -11,8 +11,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "RegExp.h"
-#include "Row.h"
+#include "livestatus/RegExp.h"
+#include "livestatus/Row.h"
 
 namespace {
 constexpr const char *whitespace = " \t\n\v\f\r";

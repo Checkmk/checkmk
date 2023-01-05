@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <utility>
 
-#include "Row.h"
 #include "livestatus/Logger.h"
+#include "livestatus/Row.h"
 
 DoubleFilter::DoubleFilter(Kind kind, std::string columnName,
                            std::function<double(Row)> getValue,

@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "RegExp.h"
+#include "livestatus/RegExp.h"
 
 namespace {
 const std::unordered_map<std::string, RelationalOperator> fl_from_string = {

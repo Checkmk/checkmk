@@ -154,7 +154,9 @@ $pnp4nagios-img-filter: invert(84%);
 
 $matches-search-bg-color: $success-dimmed;
 
-$help-bg-color: rgba(255, 235, 131, 0.85);
+$help-bg-color: $navbar-color;
+$help-icon-bg-color: rgb(6, 103, 193);
+$help-tt-font-color: $grey-2;
 
 $timeline-hilite-border: 2px solid $midgrey;
 $timetable-hilite-bg-color: lighten($ux-theme-1, 15%);

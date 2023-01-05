@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "Row.h"
 #include "TableEventConsole.h"
+#include "livestatus/Row.h"
 class MonitoringCore;
 
 class TableEventConsoleStatus : public TableEventConsole {

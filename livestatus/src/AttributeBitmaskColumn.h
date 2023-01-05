@@ -15,10 +15,10 @@
 #include <string>
 
 #include "AttributeListColumn.h"
-#include "Filter.h"
 #include "IntColumn.h"
-#include "Row.h"
 #include "contact_fwd.h"
+#include "livestatus/Filter.h"
+#include "livestatus/Row.h"
 #include "opids.h"
 class Logger;
 class IntFilter;

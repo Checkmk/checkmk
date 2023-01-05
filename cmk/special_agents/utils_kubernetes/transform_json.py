@@ -18,7 +18,7 @@ from typing import cast, Literal, TypedDict
 from typing_extensions import NotRequired
 
 from .schemata import api
-from .transform_any import convert_to_timestamp, parse_annotations, parse_labels, parse_match_labels
+from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 # StatefulSet
 
@@ -44,9 +44,14 @@ class JSONStatefulSetMetaData(TypedDict):
     ownerReferences: NotRequired[JSONOwnerReferences]
 
 
+class RollingUpdate(TypedDict):
+    partition: int
+    maxUnavailable: NotRequired[str]
+
+
 class JSONStatefulSetRollingUpdate(TypedDict):
     type: Literal["RollingUpdate"]
-    rollingUpdate: NotRequired[Mapping[Literal["partition"], int]]
+    rollingUpdate: NotRequired[RollingUpdate]
 
 
 class JSONStatefulSetOnDelete(TypedDict):
@@ -93,7 +98,7 @@ def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
     return api.MetaData(
         name=metadata["name"],
         namespace=api.NamespaceName(metadata["namespace"]),
-        creation_timestamp=convert_to_timestamp(metadata["creationTimestamp"]),
+        creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
         labels=parse_labels(metadata.get("labels", {})),
         annotations=parse_annotations(metadata.get("annotations", {})),
     )
@@ -125,12 +130,13 @@ def _statefulset_update_strategy_from_json(
     if statefulset_update_strategy["type"] == "OnDelete":
         return api.OnDelete()
     if statefulset_update_strategy["type"] == "RollingUpdate":
-        partition = (
-            rolling_update["partition"]
-            if (rolling_update := statefulset_update_strategy.get("rollingUpdate"))
-            else 0
-        )
-        return api.StatefulSetRollingUpdate(partition=partition)
+        if rolling_update := statefulset_update_strategy.get("rollingUpdate"):
+            partition = rolling_update["partition"]
+            max_unavailable = rolling_update.get("maxUnavailable")
+        else:
+            partition = 0
+            max_unavailable = None
+        return api.StatefulSetRollingUpdate(partition=partition, max_unavailable=max_unavailable)
     raise ValueError(f"Unknown strategy type: {statefulset_update_strategy['type']}")
 
 

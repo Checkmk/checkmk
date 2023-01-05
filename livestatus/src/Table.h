@@ -13,7 +13,7 @@
 #include <string>
 #include <utility>
 
-#include "Row.h"
+#include "livestatus/Row.h"
 class Column;
 class DynamicColumn;
 class Logger;

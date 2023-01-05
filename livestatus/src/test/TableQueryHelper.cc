@@ -7,10 +7,10 @@
 
 #include <functional>
 
-#include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
-#include "data_encoding.h"
+#include "livestatus/OutputBuffer.h"
+#include "livestatus/data_encoding.h"
 
 std::string mk::test::query(Table &table, const std::list<std::string> &q) {
     bool flag{false};

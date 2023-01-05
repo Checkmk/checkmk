@@ -34,7 +34,7 @@ h3:not(.table) {
   padding: 6px 0 4px 8px;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
-  border-radius: $theme-border-radius $theme-border-radius 0 0;
+  border-radius: $border-radius-top;
 }
 
 h3.table {
@@ -847,7 +847,7 @@ table.nform {
       vertical-align: middle;
       cursor: pointer;
       background-color: transparent;
-      border-radius: $theme-border-radius $theme-border-radius 0 0;
+      border-radius: $border-radius-top;
     }
 
     td {
@@ -1001,7 +1001,7 @@ table.nform {
     line-height: 22px;
 
     div.title {
-      max-width: 450px;
+      max-width: 500px;
 
       &.withcheckbox {
         max-width: 420px;
@@ -1051,56 +1051,45 @@ textarea.try_max_width {
 '-------------------------------------------------------------------------*/
 
 div.help {
-  display: inline-block;
-  width: auto;
-  padding: 8px 16px;
+  display: flex;
   margin: 8px 0;
-  font-weight: normal;
-  color: $font-color-black;
-  text-align: left;
-  text-transform: none; /* Necessary due to help in H3 */
-  background-color: $help-bg-color;
-  background-image: none;
-  border-radius: 5px;
-  box-shadow: none;
 
-  &:before {
-    display: inline-block;
-    height: 100%;
-    margin-right: $spacing;
-    font-family: serif;
-    font-size: $font-size-large;
-    font-weight: $font-weight-bold;
-    content: "i";
-  }
+  div.info_icon {
+    display: flex;
+    align-items: center;
+    background-color: $help-icon-bg-color;
+    border-radius: $border-radius-left;
 
-  a,
-  a:link,
-  a:visited {
-    color: $font-color-light-bg;
-
-    &:hover {
-      text-decoration: none;
+    img {
+      width: 6px;
+      height: 12px;
+      padding: 0.8 * $spacing;
     }
   }
 
-  table.help {
-    border-collapse: collapse;
-    empty-cells: show;
-  }
+  div.help_text {
+    flex-grow: 1;
+    padding: $spacing;
+    background-color: $help-bg-color;
+    border-radius: $border-radius-right;
 
-  table.help td {
-    vertical-align: top;
-    border: 1px solid $black;
-  }
+    a:hover {
+      text-decoration: none;
+    }
 
-  table.help td.tt {
-    font-family: $font-family-courier;
-  }
+    table.help {
+      border-collapse: collapse;
 
-  tt {
-    font-family: $font-family-courier;
-    color: $font-color-blue-2;
+      td {
+        padding-right: $spacing;
+        vertical-align: top;
+      }
+    }
+
+    tt {
+      font-family: $font-family-courier;
+      color: $help-tt-font-color;
+    }
   }
 }
 

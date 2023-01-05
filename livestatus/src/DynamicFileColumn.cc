@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "BlobColumn.h"
-#include "FileSystemHelper.h"
+#include "livestatus/FileSystemHelper.h"
 
 template <class T>
 DynamicFileColumn<T>::DynamicFileColumn(

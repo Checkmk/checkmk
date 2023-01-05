@@ -18,13 +18,13 @@
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/Row.h"
 #include "nagios.h"  // IWYU pragma: keep
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex

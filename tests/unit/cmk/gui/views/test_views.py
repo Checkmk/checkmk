@@ -2100,6 +2100,7 @@ def test_registered_display_hints() -> None:
         ".hardware.system.model_name",
         ".hardware.system.node_name",
         ".hardware.system.partition_name",
+        ".hardware.system.pki_appliance_version",
         ".hardware.system.product",
         ".hardware.system.serial",
         ".hardware.system.serial_number",

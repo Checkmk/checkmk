@@ -280,6 +280,7 @@ class ConfigVariableLogLevels(ConfigVariable):
                 _("The log level for user authentication related log entries."),
             ),
             ("cmk.web.ldap", _("LDAP"), _("The log level for LDAP related log entries.")),
+            ("cmk.web.saml2", _("SAML"), _("The log level for SAML 2.0 related log entries.")),
             (
                 "cmk.web.bi.compilation",
                 _("BI compilation"),

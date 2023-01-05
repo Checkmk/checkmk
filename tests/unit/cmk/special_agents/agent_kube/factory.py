@@ -228,10 +228,6 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
-class APINodeFactory(ModelFactory):
-    __model__ = api.Node
-
-
 NPD_NODE_CONDITION_TYPES = [
     "KernelDeadlock",
     "ReadonlyFilesystem",
@@ -244,9 +240,6 @@ NPD_NODE_CONDITION_TYPES = [
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
 
-    # TODO: the ignore should be removed when mypy is unpinned
-    type_ = Use(next, itertools.cycle(agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES))  # type: ignore
-
 
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
@@ -254,23 +247,35 @@ class NodeStatusFactory(ModelFactory):
     conditions = Use(
         NodeConditionFactory.batch,
         size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+        factory_use_construct=True,
     )
+    allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
+    capacity = Use(NodeResourcesFactory.build, factory_use_construct=True)
 
 
 def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
     return NodeStatusFactory.build(
-        conditions=NodeConditionFactory.batch(
-            len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-            status=node_condition_status,
-        )
+        conditions=[
+            NodeConditionFactory.build(
+                type_=type_,
+                status=node_condition_status,
+                factory_use_construct=True,
+            )
+            for type_ in agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
+        ],
     )
+
+
+class APINodeFactory(ModelFactory):
+    __model__ = api.Node
+
+    status = NodeStatusFactory.build
 
 
 def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
     return agent.Node(
         metadata=node.metadata,
         status=node.status,
-        resources=node.resources,
         kubelet_info=node.kubelet_info,
         pods=pods,
     )
@@ -302,6 +307,7 @@ class APIDataFactory(ModelFactory):
     __model__ = APIData
 
     persistent_volume_claims = Use(PersistentVolumeClaimFactory.batch, size=2)
+    nodes = Use(APINodeFactory.batch, size=3)
 
 
 class ClusterDetailsFactory(ModelFactory):

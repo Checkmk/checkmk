@@ -2146,6 +2146,10 @@ msgid "AWS/S3 Limits"
 msgstr "Adaugă limite"
 
 #, fuzzy
+msgid "AWS/SNS"
+msgstr "Adaugă limite"
+
+#, fuzzy
 msgid "AWS/SNS Limits"
 msgstr "Adaugă limite"
 
@@ -5431,6 +5435,10 @@ msgstr "trimite notificare"
 msgid "Authentication System Errors"
 msgstr ""
 
+#, fuzzy
+msgid "Authentication failed"
+msgstr "trimite notificare"
+
 msgid "Authentication failed. Invalid login/password."
 msgstr ""
 
@@ -5456,6 +5464,10 @@ msgstr ""
 #, python-format
 msgid "Authentication to web service failed.<br>Message:<br>%s"
 msgstr ""
+
+#, fuzzy
+msgid "Authentication types"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Authentication with TLS"
@@ -8979,6 +8991,9 @@ msgstr ""
 msgid "Click here to see the activation status per site."
 msgstr ""
 
+msgid "Click to toggle this setting"
+msgstr ""
+
 msgid "Clickable URLs"
 msgstr ""
 
@@ -9016,6 +9031,10 @@ msgstr ""
 
 msgid "Client secret"
 msgstr ""
+
+#, fuzzy
+msgid "ClientID"
+msgstr "Adaugă Conținut"
 
 #, fuzzy
 msgid "Clients"
@@ -10242,6 +10261,10 @@ msgstr "Starea porturilor pentru inventariere"
 
 msgid "Consider the state of the job"
 msgstr ""
+
+#, fuzzy
+msgid "Consider the state of the job only if the job is enabled"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Consider times where the host is down"
 msgstr ""
@@ -11838,6 +11861,10 @@ msgstr "grupuri de servicii"
 #, fuzzy
 msgid "DB subnet groups"
 msgstr "Grup nou"
+
+#, fuzzy
+msgid "DB usage"
+msgstr "% utilizare"
 
 #, fuzzy
 msgid "DB username"
@@ -19570,6 +19597,9 @@ msgstr ""
 msgid "Got no data from this site"
 msgstr ""
 
+msgid "Got no response from IdP"
+msgstr ""
+
 msgid "Got no result to create dump file"
 msgstr ""
 
@@ -20887,6 +20917,10 @@ msgstr ""
 
 msgid "Hide names of configuration variables"
 msgstr ""
+
+#, fuzzy
+msgid "Hide page navigation"
+msgstr "Agregare noua"
 
 #, fuzzy
 msgid "Hide plugin names"
@@ -23183,8 +23217,9 @@ msgstr ""
 msgid "Ignore the state"
 msgstr " Ignoră această opțiune"
 
-msgid "Ignore the state of the Job"
-msgstr ""
+#, fuzzy
+msgid "Ignore the state of the job"
+msgstr " Ignoră această opțiune"
 
 msgid "Ignore the version"
 msgstr ""
@@ -23225,9 +23260,6 @@ msgid "Images"
 msgstr "Dimensiunea Maxima"
 
 msgid "Immediately scheduled checks"
-msgstr ""
-
-msgid "Immediately toggle this setting"
 msgstr ""
 
 msgid "Impact"
@@ -27454,6 +27486,18 @@ msgid "Lower levels for CPU balance"
 msgstr ""
 
 #, fuzzy
+msgid "Lower levels for Notification Delivery Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Lower levels for SMS Spending"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
+msgid "Lower levels for SMS Success Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Lower levels for burst balance"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -31343,9 +31387,6 @@ msgstr "Cautare noua"
 msgid "No search, specify list of arguments"
 msgstr ""
 
-msgid "No service level is set in event"
-msgstr ""
-
 #, fuzzy
 msgid "No status host"
 msgstr "(element fără element)"
@@ -32659,6 +32700,9 @@ msgstr ""
 #, fuzzy
 msgid "O2 levels"
 msgstr "doua nivele"
+
+msgid "OAuth2 (ClientID/TenantID)"
+msgstr ""
 
 msgid "OEM data interpretation"
 msgstr ""
@@ -38686,6 +38730,9 @@ msgstr "trei nivele"
 msgid "S."
 msgstr ""
 
+msgid "SAML"
+msgstr ""
+
 msgid "SAML 2.0"
 msgstr ""
 
@@ -41146,6 +41193,10 @@ msgid "Show only unused rules"
 msgstr "Arata regulile de utilizator"
 
 #, fuzzy
+msgid "Show page navigation"
+msgstr "trimite notificare"
+
+#, fuzzy
 msgid "Show per day"
 msgstr "afiseaza erori"
 
@@ -43593,10 +43644,6 @@ msgstr "Întreruperi adhoc"
 msgid "Status stale"
 msgstr "Întreruperi adhoc"
 
-#, fuzzy
-msgid "Status view"
-msgstr "Întreruperi adhoc"
-
 msgid "Status: DISBALE"
 msgstr ""
 
@@ -44779,6 +44826,9 @@ msgstr ""
 msgid "Tenant ID / Directory ID"
 msgstr ""
 
+msgid "TenantID"
+msgstr ""
+
 #, fuzzy
 msgid "Terminated containers"
 msgstr "doua nivele"
@@ -45327,6 +45377,13 @@ msgid ""
 msgstr ""
 
 msgid "The URL must begin with <tt>https</tt>."
+msgstr ""
+
+msgid ""
+"The URL of the server that hosts Checkmk. This is the URL your monitoring "
+"users use. It does not need to be accessible to your Identity Provider. For "
+"example: https://mycheckmkserver.com. Note that we only support HTTPS for "
+"this endpoint, because it specifies certificates which should be trusted."
 msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
@@ -46210,13 +46267,6 @@ msgid "The found hosts' parents"
 msgstr ""
 
 msgid ""
-"The full URL of the Checkmk server that can be used by the Identity Provider "
-"to contact its Assertion Consumer Service endpoint. For example: https://"
-"mycheckmkserver.com. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
-msgstr ""
-
-msgid ""
 "The full URL to the Cluster Collector service including the protocol (http "
 "or https) and the port. Depending on the deployed configuration of the "
 "service this can either be the NodePort or the Ingress endpoint."
@@ -46622,6 +46672,9 @@ msgid "The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s."
 msgstr ""
 
 msgid "The log level for LDAP related log entries."
+msgstr ""
+
+msgid "The log level for SAML 2.0 related log entries."
 msgstr ""
 
 msgid ""
@@ -48799,6 +48852,12 @@ msgid "This connection is currently disabled"
 msgstr "Conexiune Noua"
 
 #, fuzzy
+msgid ""
+"This connection is currently disabled. Please contact your system "
+"administrator."
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "This connection is currently enabled"
 msgstr "Conexiune Noua"
 
@@ -49479,12 +49538,6 @@ msgid "This page does not support cluster hosts."
 msgstr ""
 
 msgid "This page was not found. Sorry."
-msgstr ""
-
-msgid "This page with navigation"
-msgstr ""
-
-msgid "This page without navigation"
 msgstr ""
 
 msgid ""
@@ -52471,6 +52524,10 @@ msgid "URL from password store"
 msgstr ""
 
 #, fuzzy
+msgid "URL not allowed"
+msgstr "Timpul maxim permis pentru uptime"
+
+#, fuzzy
 msgid "URL of remote site"
 msgstr "(Nu trimite site-ului de la distanță)"
 
@@ -52642,6 +52699,10 @@ msgid ""
 "Settings."
 msgstr ""
 
+#, fuzzy
+msgid "Unable to create authentication request"
+msgstr "Confirma Parola"
+
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
 msgstr ""
@@ -52684,6 +52745,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Unable to parse version: %r"
 msgstr "Optiuni tabel"
+
+#, fuzzy
+msgid "Unable to process request"
+msgstr "Numarul maxim de mesaje"
 
 #, python-format
 msgid ""
@@ -52821,6 +52886,10 @@ msgstr ""
 
 msgid "Unhandled"
 msgstr ""
+
+#, fuzzy
+msgid "Unhandled exception occurred"
+msgstr "Adaugă Excepție"
 
 #, python-format
 msgid "Unhandled exception: %s"
@@ -53430,6 +53499,18 @@ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Upper levels for Load Balancers"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for Notification Delivery Rate"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for SMS Spending"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Upper levels for SMS Success Rate"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
@@ -54817,6 +54898,10 @@ msgstr ""
 msgid "Username is unknown"
 msgstr ""
 
+#, fuzzy
+msgid "Username/Password"
+msgstr "Parola"
+
 msgid "Username:"
 msgstr ""
 
@@ -55354,6 +55439,10 @@ msgid "View and edit the rules and aggregations in this BI pack"
 msgstr ""
 
 #, fuzzy
+msgid "View history"
+msgstr "(selectează directorul)"
+
+#, fuzzy
 msgid "View layout"
 msgstr "Matrice"
 
@@ -55361,8 +55450,16 @@ msgstr "Matrice"
 msgid "View name"
 msgstr "Nume nou"
 
+#, fuzzy
+msgid "View table"
+msgstr "Nume nou"
+
 msgid "View the rule based effective parameters of this host"
 msgstr ""
+
+#, fuzzy
+msgid "View timeline"
+msgstr "Sterge Elementul"
 
 msgid "Views"
 msgstr ""
@@ -60709,8 +60806,8 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
-#~ msgid "Disable two-factor authentication"
-#~ msgstr "Confirma Parola"
+#~ msgid "Status view"
+#~ msgstr "Întreruperi adhoc"
 
 #, fuzzy
 #~ msgid "Discover services"
@@ -62528,10 +62625,6 @@ msgstr ""
 #~ msgid "Scheduled downtimes"
 #~ msgstr "Întreruperi adhoc"
 
-#, fuzzy
-#~ msgid "Search history"
-#~ msgstr "(selectează directorul)"
-
 # georgem ##############
 #, fuzzy
 #~ msgid "Search time graphs"
@@ -62908,10 +63001,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "New snapin"
 #~ msgstr "Nume nou"
-
-#, fuzzy
-#~ msgid "Alert timeline"
-#~ msgstr "Sterge Elementul"
 
 #, fuzzy
 #~ msgid "Host and service"

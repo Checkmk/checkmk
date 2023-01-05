@@ -7,7 +7,7 @@
 
 #include <functional>
 
-#include "AndingFilter.h"
+#include "livestatus/AndingFilter.h"
 
 std::unique_ptr<Filter> ColumnFilter::partialFilter(
     columnNamePredicate predicate) const {

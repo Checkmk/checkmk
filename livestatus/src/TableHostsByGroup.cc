@@ -7,10 +7,10 @@
 
 #include "Column.h"
 #include "Query.h"
-#include "Row.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "User.h"
+#include "livestatus/Row.h"
 #include "nagios.h"
 
 namespace {

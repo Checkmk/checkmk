@@ -275,7 +275,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
             )
         )
         if self._new:
-            html.text_input("name")
+            html.text_input("name", size=50)
             html.set_focus("name")
         else:
             html.write_text(self._name)
@@ -283,7 +283,7 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
 
         forms.section(_("Alias"), is_required=True)
         html.help(_("An alias or description of this group."))
-        html.text_input("alias", self.group["alias"])
+        html.text_input("alias", self.group["alias"], size=50)
 
         self._show_extra_page_elements()
 

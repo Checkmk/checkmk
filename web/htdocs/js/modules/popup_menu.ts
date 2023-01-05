@@ -96,9 +96,9 @@ export function open_popup() {
 
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
-function handle_popup_close(event) {
+function handle_popup_close(event: Event) {
     const container = active_popup.container;
-    const target = utils.get_target(event);
+    const target = event.target as HTMLElement;
 
     if (container && container.contains(target)) {
         return true; // clicked menu or statusicon

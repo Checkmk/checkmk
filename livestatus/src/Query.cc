@@ -16,17 +16,17 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "Aggregator.h"
-#include "AndingFilter.h"
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "NullColumn.h"
-#include "OringFilter.h"
-#include "OutputBuffer.h"
 #include "Table.h"
 #include "User.h"
+#include "livestatus/Aggregator.h"
+#include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
+#include "livestatus/OringFilter.h"
+#include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/strutil.h"
 #include "opids.h"

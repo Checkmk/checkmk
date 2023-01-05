@@ -11,13 +11,13 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "CrashReport.h"
 #include "EventConsoleConnection.h"
-#include "InputBuffer.h"
 #include "MonitoringCore.h"
-#include "OutputBuffer.h"
 #include "Query.h"
+#include "livestatus/CrashReport.h"
+#include "livestatus/InputBuffer.h"
 #include "livestatus/Logger.h"
+#include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
 #include "mk_logwatch.h"
 #include "nagios.h"

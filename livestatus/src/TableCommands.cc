@@ -11,8 +11,8 @@
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "Row.h"
 #include "StringColumn.h"
+#include "livestatus/Row.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});

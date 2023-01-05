@@ -372,8 +372,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
             optional_keys=self._vs_optional_keys(),
             show_more_keys=["docu_url"],
             headers=[
-                (_("General Properties"), general_keys),
-                (_("%s Properties") % self._mode_type.name_singular().title(), individual_keys),
+                (_("General properties"), general_keys),
+                (_("%s properties") % self._mode_type.name_singular().title(), individual_keys),
             ],
             render="form",
         )

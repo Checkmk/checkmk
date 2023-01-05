@@ -5,30 +5,19 @@
 
 import logging
 import sys
-from pathlib import Path
 
-import cmk.utils.debug
-import cmk.utils.paths
 import cmk.utils.tty as tty
-import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     cli,
-    create_mkp_object,
     get_installed_manifest,
     get_installed_manifests,
-    get_unpackaged_files,
-    install,
     Manifest,
-    manifest_template,
     package_num_files,
     PACKAGE_PARTS,
     PackageException,
     PackageName,
     PACKAGES_DIR,
-    PackageStore,
-    PackageVersion,
-    read_manifest_optionally,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -69,13 +58,13 @@ def do_packaging(args: list[str]) -> None:
     args = args[1:]
 
     commands = {
-        "template": package_template,
+        "template": lambda args: cli.main(["template", *args], logger),
         "release": lambda args: cli.main(["release", *args], logger),
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show": package_show,
-        "package": package_package,
+        "package": lambda args: cli.main(["package", *args], logger),
         "remove": lambda args: cli.main(["remove", *args], logger),
         "disable": lambda args: cli.main(["disable", *args], logger),
         "enable": lambda args: cli.main(["enable", *args], logger),
@@ -147,48 +136,3 @@ def _resolve_package_argument(name: str) -> Manifest:
     if (package := get_installed_manifest(PackageName(name))) is None:
         raise PackageException(f"No such package: {name}")
     return package
-
-
-def package_template(args: list[str]) -> None:
-    """Create a template of a package manifest"""
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P template NAME")
-    pacname = PackageName(args[0])
-
-    unpackaged = get_unpackaged_files()
-
-    package = manifest_template(
-        name=pacname,
-        files={part: files_ for part in PACKAGE_PARTS if (files_ := unpackaged.get(part))},
-    )
-
-    temp_file = Path(cmk.utils.paths.tmp_dir, f"{pacname}.manifest.temp")
-    temp_file.write_text(package.file_content())
-    sys.stdout.write(
-        "Created '{temp_file}'.\n"
-        "You may now edit it.\n"
-        "Create the package using `mkp package {temp_file}`.\n"
-    )
-
-
-def package_package(args: list[str]) -> None:
-    if len(args) != 1:
-        raise PackageException("Usage: check_mk -P package MANIFEST_FILE")
-
-    if (package := read_manifest_optionally(Path(args[0]), logger=logger)) is None:
-        return
-
-    try:
-        _ = PackageVersion.parse_semver(package.version)
-    except ValueError as exc:
-        raise PackageException from exc
-
-    store = PackageStore()
-    try:
-        manifest = store.store(create_mkp_object(package))
-        install(store, manifest.id)
-    except PackageException as exc:
-        sys.stderr.write(f"{exc}\n")
-        sys.exit(1)
-
-    logger.log(VERBOSE, "Successfully created %s %s", manifest.name, manifest.version)

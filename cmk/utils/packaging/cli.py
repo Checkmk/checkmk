@@ -10,20 +10,24 @@ import sys
 from pathlib import Path
 from typing import Callable
 
-from cmk.utils import tty
+from cmk.utils import paths, tty
 from cmk.utils.log import VERBOSE
 
 from . import (
+    create_mkp_object,
     disable,
     disable_outdated,
     get_enabled_manifests,
     get_optional_manifests,
+    get_unpackaged_files,
+    install,
     install_optional_package,
     PackageStore,
     release,
     update_active_packages,
 )
-from ._manifest import extract_manifest
+from ._manifest import extract_manifest, manifest_template, read_manifest_optionally
+from ._parts import PackagePart
 from ._reporter import files_inventory
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
 
@@ -187,6 +191,68 @@ def _command_disable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     return 0
 
 
+def _args_template(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument(
+        "name",
+        type=PackageName,
+        help="The packages name",
+    )
+
+
+def _command_template(args: argparse.Namespace, _logger: logging.Logger) -> int:
+    """Create a template of a package manifest"""
+
+    unpackaged = get_unpackaged_files()
+
+    package = manifest_template(
+        name=args.name,
+        files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
+    )
+
+    temp_file = Path(paths.tmp_dir, f"{args.name}.manifest.temp")
+    temp_file.write_text(package.file_content())
+    sys.stdout.write(
+        "Created '{temp_file}'.\n"
+        "You may now edit it.\n"
+        "Create the package using `mkp package {temp_file}`.\n"
+    )
+    return 0
+
+
+def _args_package(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument(
+        "manifest_file",
+        type=Path,
+        help="The path to an package manifest file",
+    )
+
+
+def _command_package(args: argparse.Namespace, logger: logging.Logger) -> int:
+    if (package := read_manifest_optionally(args.manifest_file, logger=logger)) is None:
+        return 1
+
+    try:
+        _ = PackageVersion.parse_semver(package.version)
+    except ValueError as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 1
+
+    store = PackageStore()
+    try:
+        manifest = store.store(create_mkp_object(package))
+        install(store, manifest.id)
+    except PackageException as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 1
+
+    logger.log(VERBOSE, "Successfully created %s %s", manifest.name, manifest.version)
+    return 0
+
+
 def _get_package_id(
     name: PackageName,
     version: PackageVersion | None,
@@ -217,6 +283,8 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
     _add_command(subparsers, "enable", _args_package_id, _command_enable)
     _add_command(subparsers, "disable", _args_package_id, _command_disable)
+    _add_command(subparsers, "template", _args_template, _command_template)
+    _add_command(subparsers, "package", _args_package, _command_package)
     _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)
     _add_command(subparsers, "update-active", _no_args, _command_update_active)
 

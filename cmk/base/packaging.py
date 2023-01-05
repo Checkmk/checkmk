@@ -159,24 +159,13 @@ def package_template(args: list[str]) -> None:
 
     unpackaged = get_unpackaged_files()
 
-    logger.log(VERBOSE, "Creating package template: %s...", pacname)
     package = manifest_template(
         name=pacname,
         files={part: files_ for part in PACKAGE_PARTS if (files_ := unpackaged.get(part))},
     )
-    for part, files in package.files.items():
-        logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.ui_title, tty.normal)
-        for f in files:
-            logger.log(VERBOSE, "    %s", f)
 
     temp_file = Path(cmk.utils.paths.tmp_dir, f"{pacname}.manifest.temp")
     temp_file.write_text(package.file_content())
-    logger.log(
-        VERBOSE,
-        "New package %s created with %d files.",
-        pacname,
-        package_num_files(package),
-    )
     sys.stdout.write(
         "Created '{temp_file}'.\n"
         "You may now edit it.\n"

@@ -94,10 +94,37 @@ class JSONStatefulSetList(TypedDict):
     items: Sequence[JSONStatefulSet]
 
 
+class JSONNodeMetaData(TypedDict):
+    name: api.NodeName
+    creationTimestamp: str
+    labels: NotRequired[Mapping[str, str]]
+    annotations: NotRequired[Mapping[str, str]]
+
+
+class JSONNode(TypedDict):
+    metadata: JSONNodeMetaData
+    status: object
+
+
+class JSONNodeList(TypedDict):
+    items: Sequence[JSONNode]
+
+
 def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
     return api.MetaData(
         name=metadata["name"],
         namespace=api.NamespaceName(metadata["namespace"]),
+        creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
+        labels=parse_labels(metadata.get("labels", {})),
+        annotations=parse_annotations(metadata.get("annotations", {})),
+    )
+
+
+def _metadata_no_namespace_from_json(
+    metadata: JSONNodeMetaData,
+) -> api.MetaDataNoNamespace[api.NodeName]:
+    return api.MetaDataNoNamespace(
+        name=metadata["name"],
         creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
         labels=parse_labels(metadata.get("labels", {})),
         annotations=parse_annotations(metadata.get("annotations", {})),
@@ -197,4 +224,18 @@ def dependent_object_owner_refererences_from_json(
             namespace=dependent["metadata"].get("namespace"),
         )
         for ref in dependent["metadata"].get("ownerReferences", [])
+    ]
+
+
+def node_list_from_json(
+    node_list_raw: JSONNodeList,
+    node_to_kubelet_health: Mapping[str, api.HealthZ],
+) -> Sequence[api.Node]:
+    return [
+        api.Node(
+            metadata=_metadata_no_namespace_from_json(node["metadata"]),
+            status=api.NodeStatus.parse_obj(node["status"]),
+            kubelet_health=node_to_kubelet_health[node["metadata"]["name"]],
+        )
+        for node in node_list_raw["items"]
     ]

@@ -108,6 +108,7 @@ def namespaced_name(namespace: str, name: str) -> str:
 class ClientModel(BaseModel):
     class Config:
         orm_mode = True
+        allow_population_by_field_name = True
 
 
 class Label(BaseModel):
@@ -345,7 +346,7 @@ class NodeCondition(ClientModel):
     type_: str = Field(..., alias="type")
     reason: str | None
     detail: str | None
-    last_transition_time: int | None
+    last_transition_time: int | None = Field(..., alias="lastTransitionTime")
 
     _parse_last_transition_time = validator("last_transition_time", pre=True, allow_reuse=True)(
         convert_to_timestamp
@@ -409,12 +410,12 @@ class KubeletMetricSample(BaseModel):
 
 class NodeInfo(ClientModel):
     architecture: str
-    kernel_version: str
-    os_image: str
-    operating_system: str
-    container_runtime_version: str
-    kubelet_version: str
-    kube_proxy_version: str
+    kernel_version: str = Field(..., alias="kernelVersion")
+    os_image: str = Field(..., alias="osImage")
+    operating_system: str = Field(..., alias="operatingSystem")
+    container_runtime_version: str = Field(..., alias="containerRuntimeVersion")
+    kubelet_version: str = Field(..., alias="kubeletVersion")
+    kube_proxy_version: str = Field(..., alias="kubeProxyVersion")
 
 
 class NodeAddress(ClientModel):
@@ -431,7 +432,7 @@ class NodeStatus(ClientModel):
     allocatable: NodeResources = NodeResources()
     capacity: NodeResources = NodeResources()
     conditions: Sequence[NodeCondition] | None
-    node_info: NodeInfo
+    node_info: NodeInfo = Field(..., alias="nodeInfo")
     addresses: NodeAddresses = []
 
 

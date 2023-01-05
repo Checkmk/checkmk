@@ -24,7 +24,6 @@ from cmk.special_agents.utils_kubernetes.transform import (
     deployment_from_client,
     job_from_client,
     namespace_from_client,
-    node_from_client,
     parse_object_to_owners,
     persistent_volume_claim_from_client,
     pod_from_client,
@@ -33,7 +32,9 @@ from cmk.special_agents.utils_kubernetes.transform import (
 )
 from cmk.special_agents.utils_kubernetes.transform_any import parse_open_metric_samples
 from cmk.special_agents.utils_kubernetes.transform_json import (
+    JSONNodeList,
     JSONStatefulSetList,
+    node_list_from_json,
     statefulset_list_from_json,
 )
 
@@ -60,9 +61,6 @@ class CoreAPI:
     def __init__(self, api_client: client.ApiClient, timeout: tuple[int, int]) -> None:
         self.connection = client.CoreV1Api(api_client)
         self.timeout = timeout
-
-    def query_raw_nodes(self) -> Sequence[client.V1Node]:
-        return self.connection.list_node(_request_timeout=self.timeout).items
 
     def query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
@@ -178,6 +176,9 @@ class RawAPI:
 
     def query_kubelet_metrics(self, node_name: str) -> str:
         return self._request("GET", f"/api/v1/nodes/{node_name}/proxy/metrics").response
+
+    def query_raw_nodes(self) -> JSONNodeList:
+        return json.loads(self._request("GET", "/api/v1/nodes").response)
 
 
 def _extract_sequence_based_identifier(git_version: str) -> str | None:
@@ -327,7 +328,7 @@ class UnparsedAPIData(Generic[StatefulSets]):
     raw_jobs: Sequence[client.V1Job]
     raw_cron_jobs: Sequence[client.V1CronJob]
     raw_pods: Sequence[client.V1Pod]
-    raw_nodes: Sequence[client.V1Node]
+    raw_nodes: JSONNodeList
     raw_namespaces: Sequence[client.V1Namespace]
     raw_resource_quotas: Sequence[client.V1ResourceQuota]
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim]
@@ -346,7 +347,7 @@ def query_raw_api_data_v1(
     raw_api: RawAPI,
     external_api: AppsAPI,
 ) -> UnparsedAPIData[Sequence[client.V1StatefulSet]]:
-    raw_nodes = core_api.query_raw_nodes()
+    raw_nodes = raw_api.query_raw_nodes()
     return UnparsedAPIData(
         raw_jobs=batch_api.query_raw_jobs(),
         raw_cron_jobs=batch_api.query_raw_cron_jobs(),
@@ -360,12 +361,13 @@ def query_raw_api_data_v1(
         raw_statefulsets=external_api.query_raw_statefulsets(),
         raw_replica_sets=external_api.query_raw_replica_sets(),
         node_to_kubelet_health={
-            raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
-            for raw_node in raw_nodes
+            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
+            for raw_node in raw_nodes["items"]
         },
         api_health=raw_api.query_api_health(),
         raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node.metadata.name) for raw_node in raw_nodes
+            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
+            for raw_node in raw_nodes["items"]
         ],
     )
 
@@ -376,7 +378,7 @@ def query_raw_api_data_v2(
     raw_api: RawAPI,
     external_api: AppsAPI,
 ) -> UnparsedAPIData[JSONStatefulSetList]:
-    raw_nodes = core_api.query_raw_nodes()
+    raw_nodes = raw_api.query_raw_nodes()
     return UnparsedAPIData(
         raw_jobs=batch_api.query_raw_jobs(),
         raw_cron_jobs=batch_api.query_raw_cron_jobs(),
@@ -390,12 +392,13 @@ def query_raw_api_data_v2(
         raw_statefulsets=raw_api.query_raw_statefulsets(),
         raw_replica_sets=external_api.query_raw_replica_sets(),
         node_to_kubelet_health={
-            raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
-            for raw_node in raw_nodes
+            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
+            for raw_node in raw_nodes["items"]
         },
         api_health=raw_api.query_api_health(),
         raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node.metadata.name) for raw_node in raw_nodes
+            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
+            for raw_node in raw_nodes["items"]
         ],
     )
 
@@ -416,7 +419,7 @@ def parse_api_data(
     raw_cron_jobs: Sequence[client.V1CronJob],
     raw_pods: Sequence[client.V1Pod],
     raw_jobs: Sequence[client.V1Job],
-    raw_nodes: Sequence[client.V1Node],
+    raw_nodes: JSONNodeList,
     raw_namespaces: Sequence[client.V1Namespace],
     raw_resource_quotas: Sequence[client.V1ResourceQuota],
     raw_deployments: Sequence[client.V1Deployment],
@@ -473,10 +476,7 @@ def parse_api_data(
     ]
     statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
-    nodes = [
-        node_from_client(raw_node, node_to_kubelet_health[raw_node.metadata.name])
-        for raw_node in raw_nodes
-    ]
+    nodes = node_list_from_json(raw_nodes, node_to_kubelet_health)
     pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
     persistent_volume_claims = [
         persistent_volume_claim_from_client(pvc) for pvc in raw_persistent_volume_claims

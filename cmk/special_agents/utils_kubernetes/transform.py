@@ -241,14 +241,6 @@ def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) ->
     )
 
 
-def node_from_client(node: client.V1Node, kubelet_health: api.HealthZ) -> api.Node:
-    return api.Node(
-        metadata=parse_metadata_no_namespace(node.metadata, api.NodeName),
-        status=api.NodeStatus.from_orm(node.status),
-        kubelet_health=kubelet_health,
-    )
-
-
 def parse_match_expressions(
     match_expressions: Iterable[client.V1LabelSelectorRequirement] | None,
 ) -> api.MatchExpressions:

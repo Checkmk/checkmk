@@ -40,6 +40,10 @@ module.exports = {
         libraryTarget: "window",
         libraryExport: "cmk_export",
     },
+    externals: {
+        // canvas-5-polyfill for IE11: tell webpack that canvas is provided by the browser
+        canvas: "canvas",
+    },
     resolve: {
         modules: [
             "node_modules",

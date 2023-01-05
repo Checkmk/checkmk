@@ -109,7 +109,8 @@ class SingleSignOn(Page):
         # future, the connection_id parameter would enable us to decide which one the user has chosen.
         LOGGER.debug(
             "Authentication request to Identity Provider %s at URL %s",
-            (relay_state.connection_id, connector.identity_provider_url),
+            relay_state.connection_id,
+            connector.identity_provider_url,
         )
         LOGGER.debug("Authentication request with RelayState=%s", relay_state_string)
 
@@ -151,7 +152,8 @@ class AssertionConsumerService(Page):
 
         LOGGER.debug(
             "Authentication request response from Identity Provider %s at URL %s",
-            (relay_state.connection_id, connector.identity_provider_url),
+            relay_state.connection_id,
+            connector.identity_provider_url,
         )
 
         if not (saml_response := request.form.get("SAMLResponse")):

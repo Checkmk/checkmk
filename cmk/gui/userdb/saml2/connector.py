@@ -109,7 +109,7 @@ class Connector(UserConnector):
 
     def _create_user(self, user_id: UserId, user_profile: UserSpec, user_store: Users) -> None:
         if not self.__config.create_users_on_login:
-            LOGGER.debug("User %s does not exist, and not configured to create", user_id)
+            LOGGER.debug("User %s does not exist, and not configured to create", repr(user_id))
             raise ValueError("User does not exist")
 
         user_store[user_id] = user_profile
@@ -120,14 +120,17 @@ class Connector(UserConnector):
         if not connection_id or not (connection := get_connection(connection_id)):
             LOGGER.debug(
                 "Attempting to update user %s for connection %s, but does not exist",
-                (user_id, connection_id),
+                repr(user_id),
+                connection_id,
             )
             raise ValueError("Unknown connection")
 
         if connection.id != self.id:
             LOGGER.debug(
                 "Attempting to create user %s but already exists for connection %s of type %s",
-                (user_id, connection.id, connection.type()),
+                repr(user_id),
+                connection.id,
+                connection.type(),
             )
             raise ValueError("User already exists for different connection")
 

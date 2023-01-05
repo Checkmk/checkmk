@@ -17,7 +17,7 @@
 #include "ListFilter.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 enum class ServiceState;
 class Logger;
 class ListRenderer;

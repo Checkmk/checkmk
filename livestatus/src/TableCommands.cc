@@ -8,10 +8,10 @@
 #include <memory>
 #include <vector>
 
-#include "Column.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "StringColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {

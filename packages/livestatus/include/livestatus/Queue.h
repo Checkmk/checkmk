@@ -6,8 +6,6 @@
 #ifndef Queue_h
 #define Queue_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <condition_variable>
 #include <deque>
 #include <mutex>

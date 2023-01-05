@@ -6,17 +6,15 @@
 #ifndef StringFilter_h
 #define StringFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 
-#include "ColumnFilter.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class RegExp;
 class Row;
 class User;

@@ -11,12 +11,12 @@
 #include <memory>
 #include <string>
 
-#include "Column.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
 #include "Store.h"
 #include "StringColumn.h"
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "livestatus/data_encoding.h"
 #include "nagios.h"

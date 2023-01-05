@@ -12,14 +12,14 @@
 #include <string>
 #include <utility>
 
-#include "Column.h"
-#include "TimeAggregator.h"
-#include "TimeFilter.h"
 #include "livestatus/Aggregator.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/TimeAggregator.h"
+#include "livestatus/TimeFilter.h"
+#include "livestatus/opids.h"
 class User;
 
 // TODO(sp): Is there a way to have a default value in the template parameters?

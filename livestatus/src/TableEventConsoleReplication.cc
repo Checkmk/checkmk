@@ -7,10 +7,10 @@
 
 #include <memory>
 
-#include "Column.h"
 #include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
 #include "Query.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)

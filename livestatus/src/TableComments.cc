@@ -13,7 +13,6 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "Column.h"
 #include "DowntimeOrComment.h"
 #include "IntColumn.h"
 #include "MonitoringCore.h"
@@ -24,6 +23,7 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "nagios.h"  // IWYU pragma: keep
 

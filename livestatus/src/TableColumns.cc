@@ -8,9 +8,9 @@
 #include <map>
 #include <memory>
 
-#include "Column.h"
 #include "Query.h"
 #include "StringColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {

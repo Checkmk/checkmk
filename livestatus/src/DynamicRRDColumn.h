@@ -14,7 +14,7 @@
 
 #include "DynamicColumn.h"
 #include "RRDColumn.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Column;
 class ColumnOffsets;
 class Filter;

@@ -9,7 +9,6 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "Column.h"
 #include "HostListRenderer.h"
 #include "HostListState.h"
 #include "IntColumn.h"
@@ -17,6 +16,7 @@
 #include "Query.h"
 #include "StringColumn.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "nagios.h"
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {

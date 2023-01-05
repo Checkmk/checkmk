@@ -6,8 +6,6 @@
 #ifndef PerfdataAggregator_h
 #define PerfdataAggregator_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <map>
@@ -15,8 +13,8 @@
 #include <string>
 #include <utility>
 
-#include "Column.h"
 #include "livestatus/Aggregator.h"
+#include "livestatus/Column.h"
 class Row;
 class RowRenderer;
 class User;

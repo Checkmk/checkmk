@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "LogCache.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -43,6 +42,7 @@
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Triggers.h"
 

@@ -67,7 +67,6 @@ test_neb_SOURCES = \
     test/test_ListColumn.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
-    test/test_Queue.cc \
     test/test_StringColumn.cc \
     test/test_Table.cc \
     test/test_TimeColumn.cc \
@@ -111,15 +110,11 @@ liblivestatusneb_a_LD_FLAGS = \
     $(RRDTOOL_LD_FLAGS)
 liblivestatusneb_a_SOURCES = \
         AttributeListColumn.cc \
-        Column.cc \
-        ColumnFilter.cc \
         CommentRenderer.cc \
         DictFilter.cc \
-        DoubleFilter.cc \
         DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
-        EventConsoleConnection.cc \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
@@ -127,20 +122,15 @@ liblivestatusneb_a_SOURCES = \
         ListFilter.cc \
         LogCache.cc \
         Logfile.cc \
-        LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \
-        NullColumn.cc \
-        PerfdataAggregator.cc \
         Query.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceListRenderer.cc \
         ServiceListState.cc \
-        StatsColumn.cc \
         Store.cc \
-        StringFilter.cc \
         Table.cc \
         TableColumns.cc \
         TableCommands.cc \
@@ -166,12 +156,10 @@ liblivestatusneb_a_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
-        TimeFilter.cc \
         TimeperiodsCache.cc \
         User.cc \
         mk_logwatch.cc \
         module.cc \
-        opids.cc \
         pnp4nagios.cc
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE) $(RRDTOOL_VERSION)
 

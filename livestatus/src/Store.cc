@@ -11,10 +11,10 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "EventConsoleConnection.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/EventConsoleConnection.h"
 #include "livestatus/InputBuffer.h"
 #include "livestatus/Logger.h"
 #include "livestatus/OutputBuffer.h"

@@ -3,14 +3,15 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <optional>
 #include <string>
 #include <utility>
 
-#include "Queue.h"
 #include "gtest/gtest.h"
+#include "livestatus/Queue.h"
 
 using namespace std::chrono_literals;
 

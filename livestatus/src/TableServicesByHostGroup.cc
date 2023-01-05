@@ -5,11 +5,11 @@
 
 #include "TableServicesByHostGroup.h"
 
-#include "Column.h"
 #include "Query.h"
 #include "TableHostGroups.h"
 #include "TableServices.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 #include "nagios.h"
 

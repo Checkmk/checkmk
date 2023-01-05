@@ -14,13 +14,13 @@
 #include <utility>
 #include <variant>
 
-#include "Column.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Row;
 
 template <class T, int32_t Default = 0>

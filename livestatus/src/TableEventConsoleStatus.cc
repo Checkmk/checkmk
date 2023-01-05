@@ -8,12 +8,12 @@
 #include <memory>
 #include <vector>
 
-#include "Column.h"
 #include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
+#include "livestatus/Column.h"
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole{mc} {

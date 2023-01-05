@@ -18,18 +18,18 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "Column.h"
-#include "ColumnFilter.h"
 #include "DoubleColumn.h"
-#include "EventConsoleConnection.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
+#include "livestatus/Column.h"
+#include "livestatus/ColumnFilter.h"
+#include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringUtils.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 
 using namespace std::chrono_literals;
 

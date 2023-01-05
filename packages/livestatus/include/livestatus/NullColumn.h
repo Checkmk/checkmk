@@ -6,15 +6,13 @@
 #ifndef NullColumn_h
 #define NullColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <memory>
 #include <string>
 
-#include "Column.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Aggregator;
 class Row;
 class RowRenderer;

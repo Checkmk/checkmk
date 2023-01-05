@@ -3,12 +3,12 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "LogwatchList.h"
+#include "livestatus/LogwatchList.h"
 
 #include <algorithm>
 #include <iterator>
 
-#include "Column.h"
+#include "livestatus/Column.h"
 #include "livestatus/Logger.h"
 
 std::vector<std::string> getLogwatchList(const std::filesystem::path &dir,

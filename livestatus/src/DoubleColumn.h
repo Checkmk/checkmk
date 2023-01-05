@@ -14,14 +14,14 @@
 #include <string>
 #include <utility>
 
-#include "Column.h"
 #include "DoubleAggregator.h"
-#include "DoubleFilter.h"
 #include "livestatus/Aggregator.h"
+#include "livestatus/Column.h"
+#include "livestatus/DoubleFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class User;
 
 // NOTE: The C++ spec explicitly disallows doubles as non-type template

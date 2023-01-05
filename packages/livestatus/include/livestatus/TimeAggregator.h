@@ -6,12 +6,10 @@
 #ifndef TimeAggregator_h
 #define TimeAggregator_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 
-#include "Column.h"
 #include "livestatus/Aggregator.h"
+#include "livestatus/Column.h"
 class Row;
 class RowRenderer;
 class User;

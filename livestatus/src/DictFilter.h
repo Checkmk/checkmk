@@ -13,10 +13,10 @@
 #include <memory>
 #include <string>
 
-#include "ColumnFilter.h"
 #include "MonitoringCore.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class RegExp;
 class Row;
 class User;

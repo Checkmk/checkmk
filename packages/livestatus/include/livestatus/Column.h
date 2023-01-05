@@ -6,8 +6,6 @@
 #ifndef Column_h
 #define Column_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <cstddef>
 #include <functional>
@@ -18,7 +16,7 @@
 #include "livestatus/Filter.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Aggregation;
 class Aggregator;
 class RowRenderer;

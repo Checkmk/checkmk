@@ -16,12 +16,12 @@
 #include <unordered_map>
 #include <utility>
 
-#include "Column.h"
 #include "DictFilter.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 enum class AttributeKind;
 class Aggregator;
 class RowRenderer;

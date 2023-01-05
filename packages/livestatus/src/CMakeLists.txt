@@ -5,24 +5,32 @@ set(livestatus_headers
     ${header_location}/Average.h
     ${header_location}/BitMask.h
     ${header_location}/ChronoUtils.h
+    ${header_location}/Column.h
+    ${header_location}/ColumnFilter.h
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
     ${header_location}/data_encoding.h
-    ${header_location}/LogEntry.h
-    ${header_location}/data_encoding.h
+    ${header_location}/DoubleFilter.h
+    ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
     ${header_location}/InputBuffer.h
+    ${header_location}/LogEntry.h
     ${header_location}/Logger.h
+    ${header_location}/LogwatchList.h
     ${header_location}/MapUtils.h
     ${header_location}/mk_inventory.h
+    ${header_location}/NullColumn.h
+    ${header_location}/opids.h
     ${header_location}/OringFilter.h
     ${header_location}/OStreamStateSaver.h
     ${header_location}/OutputBuffer.h
     ${header_location}/overload.h
+    ${header_location}/PerfdataAggregator.h
     ${header_location}/Poller.h
     ${header_location}/POSIXUtils.h
+    ${header_location}/Queue.h
     ${header_location}/RegExp.h
     ${header_location}/Renderer.h
     ${header_location}/RendererBrokenCSV.h
@@ -30,23 +38,35 @@ set(livestatus_headers
     ${header_location}/RendererJSON.h
     ${header_location}/RendererPython3.h
     ${header_location}/Row.h
+    ${header_location}/StatsColumn.h
+    ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
+    ${header_location}/TimeAggregator.h
+    ${header_location}/TimeFilter.h
     ${header_location}/Triggers.h)
 set(livestatus_sources
     AndingFilter.cc
     Average.cc
     CrashReport.cc
+    Column.cc
+    ColumnFilter.cc
     CountAggregator.cc
+    DoubleFilter.cc
+    EventConsoleConnection.cc
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
     InputBuffer.cc
     LogEntry.cc
     Logger.cc
+    LogwatchList.cc
     mk_inventory.cc
+    opids.cc
+    NullColumn.cc
     OringFilter.cc
     OutputBuffer.cc
+    PerfdataAggregator.cc
     POSIXUtils.cc
     RegExp.cc
     Renderer.cc
@@ -54,8 +74,11 @@ set(livestatus_sources
     RendererCSV.cc
     RendererJSON.cc
     RendererPython3.cc
+    StatsColumn.cc
+    StringFilter.cc
     StringUtils.cc
     strutil.cc
+    TimeFilter.cc
     Triggers.cc)
 
 add_library(livestatus SHARED ${livestatus_headers} ${livestatus_sources})

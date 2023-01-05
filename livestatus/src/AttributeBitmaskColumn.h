@@ -19,7 +19,7 @@
 #include "contact_fwd.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Logger;
 class IntFilter;
 

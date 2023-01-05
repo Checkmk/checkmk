@@ -6,15 +6,13 @@
 #ifndef ColumnFilter_h
 #define ColumnFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 #include <ostream>
 #include <string>
 #include <utility>
 
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 
 class ColumnFilter : public Filter {
 public:

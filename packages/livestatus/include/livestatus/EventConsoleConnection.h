@@ -6,8 +6,6 @@
 #ifndef EventConsoleConnection_h
 #define EventConsoleConnection_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>

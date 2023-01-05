@@ -17,9 +17,9 @@
 #include <string>
 #include <variant>
 
-#include "ColumnFilter.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Row;
 class User;
 

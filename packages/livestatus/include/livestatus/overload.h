@@ -6,8 +6,6 @@
 #ifndef overload_h
 #define overload_h
 
-#include "config.h"  // IWYU pragma: keep
-
 // A generic overload function, see e.g.
 //    * http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0051r3.pdf
 //    * https://www.bfilipek.com/2018/06/variant.html#overload

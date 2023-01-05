@@ -6,16 +6,14 @@
 #ifndef DoubleFilter_h
 #define DoubleFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
 
-#include "ColumnFilter.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Logger;
 class Row;
 class User;

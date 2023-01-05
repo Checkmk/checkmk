@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "BlobColumn.h"
-#include "EventConsoleConnection.h"
 #include "MonitoringCore.h"
+#include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Logger.h"
 
 class TableEventConsoleReplication;

@@ -17,12 +17,12 @@
 #include <variant>
 #include <vector>
 
-#include "Column.h"
 #include "ListFilter.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Aggregator;
 class User;
 

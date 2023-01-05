@@ -16,20 +16,20 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "Column.h"
 #include "MonitoringCore.h"
-#include "NullColumn.h"
 #include "Table.h"
 #include "User.h"
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
+#include "livestatus/Column.h"
 #include "livestatus/Logger.h"
+#include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
 #include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
+#include "livestatus/opids.h"
 #include "livestatus/strutil.h"
-#include "opids.h"
 
 using namespace std::chrono_literals;
 

@@ -9,7 +9,6 @@
 #include <sstream>
 #include <string>
 
-#include "Column.h"
 #include "CustomAttributeMap.h"
 #include "DictColumn.h"
 #include "DictFilter.h"
@@ -17,11 +16,12 @@
 #include "NagiosCore.h"
 #include "User.h"
 #include "gtest/gtest.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
 #include "livestatus/data_encoding.h"
+#include "livestatus/opids.h"
 #include "nagios.h"
-#include "opids.h"
 #include "test_utilities.h"
 class Comment;
 class Downtime;

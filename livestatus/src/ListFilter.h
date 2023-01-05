@@ -18,10 +18,10 @@
 #include <variant>
 #include <vector>
 
-#include "ColumnFilter.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class RegExp;
 class Logger;
 class User;

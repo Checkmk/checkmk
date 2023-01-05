@@ -19,13 +19,13 @@
 #include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "contact_fwd.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Aggregator;
 class RowRenderer;
 class User;

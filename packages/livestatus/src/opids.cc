@@ -3,10 +3,10 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "opids.h"
+#include "livestatus/opids.h"
 
 #include <algorithm>
-#include <functional>
+#include <functional>  // IWYU pragma: keep
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

@@ -14,7 +14,6 @@
 
 #include "AttributeBitmaskColumn.h"
 #include "AttributeListColumn.h"
-#include "Column.h"
 #include "CustomAttributeMap.h"
 #include "DictColumn.h"
 #include "IntColumn.h"
@@ -24,6 +23,7 @@
 #include "StringColumn.h"
 #include "TimeperiodsCache.h"
 #include "contact_fwd.h"
+#include "livestatus/Column.h"
 #include "nagios.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

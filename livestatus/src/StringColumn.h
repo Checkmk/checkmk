@@ -14,11 +14,11 @@
 #include <string>
 #include <utility>
 
-#include "Column.h"
-#include "PerfdataAggregator.h"
-#include "StringFilter.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/PerfdataAggregator.h"
+#include "livestatus/StringFilter.h"
+#include "livestatus/opids.h"
 class Aggregator;
 class Row;
 class RowRenderer;

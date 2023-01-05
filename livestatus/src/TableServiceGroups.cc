@@ -9,13 +9,13 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "Column.h"
 #include "IntColumn.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"
 #include "StringColumn.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "livestatus/LogEntry.h"
 #include "nagios.h"
 

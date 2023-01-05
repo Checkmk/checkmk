@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <variant>  // IWYU pragma: keep
 
-#include "Column.h"
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
@@ -24,6 +23,7 @@
 #include "TimeColumn.h"
 #include "User.h"
 #include "contact_fwd.h"
+#include "livestatus/Column.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Row.h"
 

@@ -5,15 +5,16 @@
 
 #include "TableContactGroups.h"
 
+#include <algorithm>
 #include <memory>
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "Column.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "StringColumn.h"
+#include "livestatus/Column.h"
 #include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {

@@ -14,7 +14,6 @@
 #include <variant>  // IWYU pragma: keep
 
 #include "BlobColumn.h"
-#include "Column.h"
 #include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "MonitoringCore.h"
@@ -22,6 +21,7 @@
 #include "StringColumn.h"
 #include "TimeColumn.h"
 #include "livestatus/Average.h"
+#include "livestatus/Column.h"
 #include "livestatus/mk_inventory.h"
 #include "nagios.h"
 

@@ -7,11 +7,11 @@
 
 #include <optional>
 
-#include "Column.h"
 #include "Query.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "User.h"
+#include "livestatus/Column.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
 #include "nagios.h"

@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include "Column.h"
+#include "livestatus/Column.h"
 
 class DynamicColumn {
 public:

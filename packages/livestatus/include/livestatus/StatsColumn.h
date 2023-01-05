@@ -6,11 +6,9 @@
 #ifndef StatsColumn_h
 #define StatsColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 
-#include "Column.h"
+#include "livestatus/Column.h"
 #include "livestatus/Filter.h"
 class Aggregator;
 class Logger;

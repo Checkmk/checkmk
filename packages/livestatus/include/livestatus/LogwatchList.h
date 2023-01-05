@@ -6,8 +6,6 @@
 #ifndef LogwatchListColumn_h
 #define LogwatchListColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <filesystem>
 #include <string>
 #include <vector>

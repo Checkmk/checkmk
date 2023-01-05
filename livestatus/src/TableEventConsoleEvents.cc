@@ -8,13 +8,13 @@
 #include <memory>
 #include <vector>
 
-#include "Column.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/Row.h"
 
 #ifdef CMC

@@ -6,8 +6,6 @@
 #ifndef TimeFilter_h
 #define TimeFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -16,9 +14,9 @@
 #include <optional>
 #include <string>
 
-#include "ColumnFilter.h"
+#include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
-#include "opids.h"
+#include "livestatus/opids.h"
 class Row;
 class User;
 

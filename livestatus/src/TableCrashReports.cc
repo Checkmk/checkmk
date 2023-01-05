@@ -8,12 +8,12 @@
 #include <filesystem>
 #include <memory>
 
-#include "Column.h"
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "StringColumn.h"
+#include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"
 #include "livestatus/Row.h"
 

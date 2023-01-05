@@ -348,6 +348,13 @@ class Interface:
         pages saml_sso.py/saml_acs.py), the authentication request IDs are stored in Redis and
         validated here.
 
+        Once the request response ID has been read from Redis, it is deleted, as it does not need to be
+        stored for later processing. This follows the principle of the 'OneTimeUse' condition the
+        Identity Provider may have specified regarding the validity of the response.
+
+        See also:
+            http://docs.oasis-open.org/security/saml/v2.0/saml-core-2.0-os.pdf
+
         Args:
             authentication_response: The unmodified authentication response object returned by the
                 pysaml2 client
@@ -383,7 +390,7 @@ class Interface:
                 data_key=self._redis_namespace,
                 integrity_callback=lambda: IntegrityCheckResponse.USE,
                 update_callback=lambda p: None,
-                query_callback=lambda: AUTHORIZATION_REQUEST_ID_DATABASE.get(
+                query_callback=lambda: AUTHORIZATION_REQUEST_ID_DATABASE.getdel(
                     f"{self._redis_namespace}:{in_response_to_id}"
                 ),
                 timeout=5,

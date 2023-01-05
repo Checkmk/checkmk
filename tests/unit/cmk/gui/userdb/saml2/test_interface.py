@@ -357,6 +357,18 @@ class TestInterface:
         assert not list(redis.keys("saml2_authentication_requests:*"))
 
     @freeze_time("2022-12-28T11:06:05Z")
+    def test_authentication_request_id_is_deleted_once_accessed(
+        self,
+        interface: Interface,
+        initialised_redis: Redis,
+        authentication_request_response: str,
+        ignore_signature: None,
+    ) -> None:
+        interface.parse_authentication_request_response(authentication_request_response)
+
+        assert not list(initialised_redis.keys("saml2_authentication_requests:*"))
+
+    @freeze_time("2022-12-28T11:06:05Z")
     @needs_xmlsec1
     def test_authentication_request_is_signed(self, interface: Interface) -> None:
         request = str(interface.authentication_request(relay_state="index.py"))

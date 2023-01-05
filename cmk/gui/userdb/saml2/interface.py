@@ -9,7 +9,7 @@ from typing import Mapping, NewType
 import requests
 from pydantic import BaseModel
 from redis.client import Pipeline
-from saml2 import BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
+from saml2 import BINDING_HTTP_POST
 from saml2.client import Saml2Client
 from saml2.config import SPConfig
 from saml2.metadata import create_metadata_string
@@ -36,7 +36,7 @@ LOGGER = logger.getChild("saml2")
 
 
 XMLData = NewType("XMLData", str)
-URLRedirect = NewType("URLRedirect", str)
+HTMLFormString = NewType("HTMLFormString", str)
 RequestId = NewType("RequestId", str)
 Milliseconds = NewType("Milliseconds", int)
 
@@ -54,6 +54,11 @@ class InterfaceConfig(BaseModel):
     idp_metadata_endpoint: str
     user_id_attribute: str
     signature_certificate: Certificate
+
+
+class HTTPPostRequest(BaseModel):
+    data: HTMLFormString
+    headers: list[tuple[str, str]]
 
 
 class Authenticated(BaseModel):
@@ -80,12 +85,10 @@ def saml_config(
     """Convert valuespecs into a valid SAML Service Provider configuration."""
     config = SPConfig()
     checkmk_base_url = f"{checkmk_server_url}{url_prefix()}check_mk"
-    acs_endpoint_url = f"{checkmk_base_url}/saml_acs.py?acs"
     sp_configuration = {
         "endpoints": {
             "assertion_consumer_service": [
-                (acs_endpoint_url, BINDING_HTTP_REDIRECT),
-                (acs_endpoint_url, BINDING_HTTP_POST),
+                (f"{checkmk_base_url}/saml_acs.py?acs", BINDING_HTTP_POST),
             ]
         },
         "allow_unsolicited": True,
@@ -153,7 +156,7 @@ class Interface:
 
         self.acs_endpoint, self.acs_binding = self._config.getattr("endpoints")[
             "assertion_consumer_service"
-        ]
+        ][0]
 
         if self._config.metadata is None:
             raise AttributeError("Got no metadata information from Identity Provider")
@@ -165,7 +168,7 @@ class Interface:
         try:
             self.idp_sso_binding, self.idp_sso_destination = self._client.pick_binding(
                 "single_sign_on_service",
-                [BINDING_HTTP_REDIRECT, BINDING_HTTP_POST],
+                [self.acs_binding],
                 "idpsso",
                 entity_id=self._identity_provider_entity_id,
             )
@@ -203,7 +206,7 @@ class Interface:
         """
         return XMLData(self._metadata)
 
-    def authentication_request(self, relay_state: str) -> URLRedirect:
+    def authentication_request(self, relay_state: str) -> HTTPPostRequest:
         """Authentication request to be forwarded to the Identity Provider.
 
         It is up to the Identity Provider to perform any authentication if the user is not already
@@ -211,6 +214,14 @@ class Interface:
 
         Additionally, the request IDs are tracked so that it can be verified that responses received
         are in response to a request that has actually been made.
+
+        A HTTP POST binding is used to send the requests. This means that the data is represented as
+        an HTML form, which gets automatically submitted once the client (user's browser) receives
+        it.
+
+        The alternative binding is HTTP Redirect, however, this means that the SAML request is
+        included as a HTTP parameter, which is limited in size. This size is easily exceeded when
+        the signature certificate is included (as per the SAML specification).
 
         Args:
             relay_state: The URL the user originally requested and any other state information
@@ -253,19 +264,17 @@ class Interface:
             timeout=5,
         )
 
-        http_headers = self._client.apply_binding(
+        http_request_params = self._client.apply_binding(
             self.idp_sso_binding,
             authn_request,
             self.idp_sso_destination,
             relay_state=relay_state,
-        )["headers"]
+        )
 
-        if (url_redirect := dict(http_headers).get("Location")) is None:
-            raise AttributeError("Unable to create redirect URL")
-
-        LOGGER.debug("Redirect URL: %s", url_redirect)
-
-        return URLRedirect(url_redirect)
+        LOGGER.debug("HTTP request: %s", repr(http_request_params))
+        return HTTPPostRequest(
+            data=HTMLFormString(http_request_params["data"]), headers=http_request_params["headers"]
+        )
 
     def parse_authentication_request_response(self, saml_response: str) -> Authenticated:
         """Parse responses received from the Identity Provider to authentication requests we made.
@@ -306,7 +315,7 @@ class Interface:
         # raise an Exception. The type of the Exception is highly inconsistent (see function
         # docstring).
         authentication_response = self._client.parse_authn_request_response(
-            saml_response, BINDING_HTTP_POST
+            saml_response, self.acs_binding
         )
         if any(
             (

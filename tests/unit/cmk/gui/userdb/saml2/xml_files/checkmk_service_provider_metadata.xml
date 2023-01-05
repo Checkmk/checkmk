@@ -14,7 +14,6 @@
             </ns1:X509Data>
          </ns1:KeyInfo>
       </ns0:KeyDescriptor>
-      <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="http://localhost/heute/check_mk/saml_acs.py?acs" index="1" />
-      <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://localhost/heute/check_mk/saml_acs.py?acs" index="2" />
+      <ns0:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://localhost/heute/check_mk/saml_acs.py?acs" index="1" />
    </ns0:SPSSODescriptor>
 </ns0:EntityDescriptor>

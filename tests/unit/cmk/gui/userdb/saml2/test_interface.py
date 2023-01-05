@@ -7,15 +7,16 @@ import base64
 import re
 import time
 import xml.etree.ElementTree as ET
-import zlib
+from enum import Enum
 from itertools import zip_longest
 from pathlib import Path
 from shutil import which
 from typing import Any, Iterable
-from urllib.parse import parse_qs, urlparse
 
+import lxml.html
 import pytest
 from freezegun import freeze_time
+from lxml.html import HtmlElement
 from redis import Redis
 from saml2.sigver import SignatureError
 from saml2.validate import ResponseLifetimeExceed, ToEarly
@@ -25,9 +26,14 @@ from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
-from cmk.gui.userdb.saml2.interface import Authenticated, Interface, Milliseconds
+from cmk.gui.userdb.saml2.interface import Authenticated, HTMLFormString, Interface, Milliseconds
 
 needs_xmlsec1 = pytest.mark.skipif(not which("xmlsec1"), reason="Needs xmlsec1 to run")
+
+
+class SAMLParamName(Enum):
+    REQUEST = "SAMLRequest"
+    RELAY_STATE = "RelayState"
 
 
 def _encode(string: str) -> str:
@@ -35,7 +41,7 @@ def _encode(string: str) -> str:
 
 
 def _decode(string: str) -> str:
-    return zlib.decompress(base64.b64decode(string), -15).decode("utf-8")
+    return base64.b64decode(string).decode("utf-8")
 
 
 def _reduce_xml_template_whitespace(template: str) -> str:
@@ -54,6 +60,19 @@ def _reconstruct_original_response_format(response: str) -> str:
     }.items():
         response = response.replace(string, replacement)
     return response
+
+
+def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str:
+    request = lxml.html.fromstring(html_string)
+    assert isinstance(request, HtmlElement)
+    message = dict(request.forms[0].fields).get(keyword.value)
+
+    assert message is not None
+
+    if keyword is SAMLParamName.RELAY_STATE:
+        return message
+
+    return _decode(message)
 
 
 class TestInterface:
@@ -204,15 +223,9 @@ class TestInterface:
         return _encode("\n".join(modified_response))
 
     def test_interface_properties(self, interface: Interface) -> None:
-        assert interface.acs_endpoint == (
-            "http://localhost/heute/check_mk/saml_acs.py?acs",
-            "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect",
-        )
-        assert interface.acs_binding == (
-            "http://localhost/heute/check_mk/saml_acs.py?acs",
-            "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
-        )
-        assert interface.idp_sso_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        assert interface.acs_endpoint == "http://localhost/heute/check_mk/saml_acs.py?acs"
+        assert interface.acs_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        assert interface.idp_sso_binding == "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
         assert (
             interface.idp_sso_destination
             == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
@@ -231,12 +244,12 @@ class TestInterface:
     def test_authentication_request_contains_relay_state(
         self, interface: Interface, ignore_sign_statement: None
     ) -> None:
-        request = str(interface.authentication_request(relay_state="index.py"))
-        parsed_query = parse_qs(urlparse(request).query)
+        relay_state = _field_from_html(
+            html_string=interface.authentication_request(relay_state="index.py").data,
+            keyword=SAMLParamName.RELAY_STATE,
+        )
 
-        relay_state = parsed_query.get("RelayState")
-
-        assert relay_state == ["index.py"]
+        assert relay_state == "index.py"
 
     def test_authentication_request_is_valid(
         self, interface: Interface, authentication_request: str, ignore_sign_statement: None
@@ -246,16 +259,13 @@ class TestInterface:
             "IssueInstant": re.compile("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z"),
         }  # These regex patterns are just to simplify comparison, they are not meant to test the conformity/standard of these fields
 
-        request = str(interface.authentication_request(relay_state="_"))
-        parsed_query = parse_qs(urlparse(request).query)
-
-        saml_request = parsed_query.get("SAMLRequest")
-
-        assert isinstance(saml_request, list)
-        assert len(saml_request) == 1
+        request = _field_from_html(
+            html_string=interface.authentication_request(relay_state="_").data,
+            keyword=SAMLParamName.REQUEST,
+        )
 
         for actual_element, expected_element in zip_longest(
-            sorted(ET.fromstring(_decode(saml_request[0])).items()),
+            sorted(ET.fromstring(request).items()),
             sorted(ET.fromstring(authentication_request).items()),
         ):
             if regex_to_match := dynamic_elements.get(actual_element[0]):
@@ -371,13 +381,17 @@ class TestInterface:
     @freeze_time("2022-12-28T11:06:05Z")
     @needs_xmlsec1
     def test_authentication_request_is_signed(self, interface: Interface) -> None:
-        request = str(interface.authentication_request(relay_state="index.py"))
-        parsed_query = ET.fromstring(_decode(parse_qs(urlparse(request).query)["SAMLRequest"][0]))
+        request = ET.fromstring(
+            _field_from_html(
+                html_string=interface.authentication_request(relay_state="_").data,
+                keyword=SAMLParamName.REQUEST,
+            )
+        )
 
         tags = {"DigestValue", "SignatureValue", "X509Certificate"}
         signature_elements = {
             re.sub("\\{.*\\}", "", element.tag): element.text
-            for element in parsed_query.iter()
+            for element in request.iter()
             if any(element.tag.endswith(t) for t in tags)
         }
 

@@ -16,7 +16,7 @@ from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import get_connection
 from cmk.gui.session import session
 from cmk.gui.userdb.saml2.connector import Connector
-from cmk.gui.userdb.saml2.interface import XMLData
+from cmk.gui.userdb.saml2.interface import HTTPPostRequest, XMLData
 from cmk.gui.userdb.session import on_succeeded_login
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.urls import makeuri_contextless
@@ -96,7 +96,7 @@ class SingleSignOn(Page):
     Responses to authentication requests are sent to a different endpoint: AssertionConsumerService.
     """
 
-    def page(self) -> None:
+    def page(self) -> HTTPPostRequest:
         relay_state_string = request.get_ascii_input_mandatory("RelayState")
 
         connector, relay_state = _initialise_page(
@@ -124,13 +124,16 @@ class SingleSignOn(Page):
                 varname=None, message=_("Unable to create authentication request")
             ) from e
 
-        LOGGER.debug("Authentication request to URL: %s", authentication_request)
-
-        raise HTTPRedirect(authentication_request)
+        return authentication_request
 
     def handle_page(self) -> None:
         try:
-            self.page()
+            # The client (user) receives a response which is actually a request it forwards to the
+            # Identity Provider. This is a HTML form that gets automatically submitted to the
+            # Identity Provider (POST method).
+            post_request = self.page()
+            response.headers.extend(post_request.headers)
+            response.set_data(post_request.data)
         except Exception as e:  # pylint: disable=broad-except
             page_exception_handler(
                 exception=e, relay_state_string=request.get_ascii_input_mandatory("RelayState")

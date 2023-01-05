@@ -4,7 +4,8 @@
                   Version="2.0"
                   IssueInstant="2022-12-28T11:06:35Z"
                   Destination="http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
-                  ProtocolBinding="('http://localhost/heute/check_mk/saml_acs.py?acs', 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST')"
+                  AssertionConsumerServiceURL="http://localhost/heute/check_mk/saml_acs.py?acs"
+                  ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
                   >
     <ns1:Issuer Format="urn:oasis:names:tc:SAML:2.0:nameid-format:entity">http://localhost/heute/check_mk/saml_metadata.py</ns1:Issuer>
     <ns0:NameIDPolicy Format="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"

@@ -36,7 +36,13 @@ from ._installed import (
     PACKAGES_DIR,
     remove_installed_manifest,
 )
-from ._manifest import extract_manifest, extract_manifest_optionally, Manifest, manifest_template
+from ._manifest import (
+    extract_manifest,
+    extract_manifest_optionally,
+    Manifest,
+    manifest_template,
+    read_manifest_optionally,
+)
 from ._parts import CONFIG_PARTS, PACKAGE_PARTS, PackagePart, PartName
 from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageException, PackageID, PackageName, PackageVersion

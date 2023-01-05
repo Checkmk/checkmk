@@ -31,3 +31,11 @@ This command corresponds to the "<i>upload</i>" action in the GUI.
 This command is replaced by the commands <tt>store</tt> and <tt>enable</tt>, to reflect the GUI actions.
 
 <tt>update-active-packages</tt> is renamed to <tt>update-active</tt>.
+
+<tt>create</tt>/<tt>pack</tt> are replaced by <tt>template</tt>/<tt>package</tt>:
+The <tt>template</tt> command will create a template of a package manifest for you, much like <tt>create</tt> used to.
+However:
+This template is created in the folder for temporary files.
+It will not alter the state of your packaging configuration in any way.
+After you have finalized your work on the template, you can create the actual package using the <tt>package</tt> command.
+This will create the package in the package store and install it.

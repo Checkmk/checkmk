@@ -14,15 +14,13 @@ import cmk.utils.tty as tty
 import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
-    add_installed_manifest,
     cli,
     CONFIG_PARTS,
     create_mkp_object,
-    format_file_name,
     get_installed_manifest,
     get_installed_manifests,
     get_unpackaged_files,
-    is_installed,
+    install,
     Manifest,
     manifest_template,
     package_num_files,
@@ -30,7 +28,9 @@ from cmk.utils.packaging import (
     PackageException,
     PackageName,
     PACKAGES_DIR,
+    PackageStore,
     PackageVersion,
+    read_manifest_optionally,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -41,8 +41,8 @@ def packaging_usage() -> None:
         f"""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
-   create NAME             ...  Collect unpackaged files into new package NAME
-   pack NAME               ...  Create package file from installed package
+   template NAME           ...  Collect unpackaged files into new package template NAME
+   package MANIFEST_FILE   ...  Create package file from package manifest
    release NAME            ...  Drop installed package NAME, release packaged files
    find [-h] [-a] [--json] ...  Find and display unpackaged files
    inspect FILE            ...  Show manifest of an `.mkp` file.
@@ -71,13 +71,13 @@ def do_packaging(args: list[str]) -> None:
     args = args[1:]
 
     commands = {
-        "create": package_create,
+        "template": package_template,
         "release": lambda args: cli.main(["release", *args], logger),
         "list": package_list,
         "find": lambda args: cli.main(["find", *args], logger),
         "inspect": lambda args: cli.main(["inspect", *args], logger),
         "show": package_show,
-        "pack": package_pack,
+        "package": package_package,
         "remove": lambda args: cli.main(["remove", *args], logger),
         "disable": lambda args: cli.main(["disable", *args], logger),
         "enable": lambda args: cli.main(["enable", *args], logger),
@@ -151,22 +151,15 @@ def _resolve_package_argument(name: str) -> Manifest:
     return package
 
 
-def package_create(args: list[str]) -> None:
-    # This function creates a template (!) of a package manifest.
-    # This template is then placed such that the "package" is considered installed.
-    # However, it is neither enabled nor present as an MKP in the store.
-    # That is an inconsistent state, but we should not create an MKP before the user has
-    # fine-tuned their package manifest.
+def package_template(args: list[str]) -> None:
+    """Create a template of a package manifest"""
     if len(args) != 1:
-        raise PackageException("Usage: check_mk -P create NAME")
-
+        raise PackageException("Usage: check_mk -P template NAME")
     pacname = PackageName(args[0])
-    if is_installed(pacname):
-        raise PackageException(f"Package {pacname} already existing.")
 
     unpackaged = get_unpackaged_files()
 
-    logger.log(VERBOSE, "Creating new package %s...", pacname)
+    logger.log(VERBOSE, "Creating package template: %s...", pacname)
     package = manifest_template(
         name=pacname,
         files={part: files_ for part in PACKAGE_PARTS if (files_ := unpackaged.get(part))},
@@ -176,29 +169,24 @@ def package_create(args: list[str]) -> None:
         for f in files:
             logger.log(VERBOSE, "    %s", f)
 
-    add_installed_manifest(package)
+    temp_file = Path(cmk.utils.paths.tmp_dir, f"{pacname}.manifest.temp")
+    temp_file.write_text(package.file_content())
     logger.log(
         VERBOSE,
         "New package %s created with %d files.",
         pacname,
         package_num_files(package),
     )
-    # TODO: why is this *vital* information only in verbose logging?!
-    logger.log(
-        VERBOSE,
-        "Please edit package details in %s%s%s",
-        tty.bold,
-        PACKAGES_DIR / pacname,
-        tty.normal,
+    sys.stdout.write(
+        "Created '{temp_file}'.\n"
+        "You may now edit it.\n"
+        "Create the package using `mkp package {temp_file}`.\n"
     )
 
 
-def package_pack(args: list[str]) -> None:
-    # Note: this function assumes an installed package (created by the 'create' command)
-    # that is neither enabled nor present as an mkp in the package store.
-    # This is a state that is not really desired.
+def package_package(args: list[str]) -> None:
     if len(args) != 1:
-        raise PackageException("Usage: check_mk -P pack NAME")
+        raise PackageException("Usage: check_mk -P package MANIFEST_FILE")
 
     # Make sure user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
@@ -213,17 +201,20 @@ def package_pack(args: list[str]) -> None:
                 "a packet file. Foreign files lying around here will mix up things." % abs_curdir
             )
 
-    pacname = PackageName(args[0])
-    if (package := get_installed_manifest(pacname)) is None:
-        raise PackageException("Package %s not existing or corrupt." % pacname)
+    if (package := read_manifest_optionally(Path(args[0]), logger=logger)) is None:
+        return
 
     try:
         _ = PackageVersion.parse_semver(package.version)
     except ValueError as exc:
         raise PackageException from exc
 
-    tarfilename = format_file_name(package.id)
+    store = PackageStore()
+    try:
+        manifest = store.store(create_mkp_object(package))
+        install(store, manifest.id)
+    except PackageException as exc:
+        sys.stderr.write(f"{exc}\n")
+        sys.exit(1)
 
-    logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
-    Path(tarfilename).write_bytes(create_mkp_object(package))
-    logger.log(VERBOSE, "Successfully created %s", tarfilename)
+    logger.log(VERBOSE, "Successfully created %s %s", manifest.name, manifest.version)

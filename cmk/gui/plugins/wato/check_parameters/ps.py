@@ -368,7 +368,7 @@ def process_match_options():
             ),
             Transform(
                 valuespec=RegExp(
-                    size=50,
+                    size=80,
                     label=_("Command line:"),
                     mode=RegExp.prefix,
                     validate=forbid_re_delimiters_inside_groups,

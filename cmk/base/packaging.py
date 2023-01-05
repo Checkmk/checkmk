@@ -153,6 +153,11 @@ def _resolve_package_argument(name: str) -> Manifest:
 
 
 def package_create(args: list[str]) -> None:
+    # This function creates a template (!) of a package manifest.
+    # This template is then placed such that the "package" is considered installed.
+    # However, it is neither enabled nor present as an MKP in the store.
+    # That is an inconsistent state, but we should not create an MKP before the user has
+    # fine-tuned their package manifest.
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P create NAME")
 
@@ -196,6 +201,9 @@ def package_release(args: list[str]) -> None:
 
 
 def package_pack(args: list[str]) -> None:
+    # Note: this function assumes an installed package (created by the 'create' command)
+    # that is neither enabled nor present as an mkp in the package store.
+    # This is a state that is not really desired.
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 

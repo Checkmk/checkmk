@@ -5,10 +5,12 @@
 
 # flake8: noqa
 
+import importlib
 import json
 import os
 import re
 import subprocess
+from typing import NewType
 
 import pkg_resources as pkg
 import pytest
@@ -18,12 +20,14 @@ from semver import VersionInfo  # type: ignore[import]
 from tests.testlib import repo_path
 from tests.testlib.site import Site
 
+ImportName = NewType("ImportName", "str")
+
 
 def _load_pipfile_data() -> dict:
     return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
 
 
-def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
+def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
 
     # We still have some exceptions to the rule...
     dist_renamings = {
@@ -33,36 +37,45 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[str]:
     metadata_dir = pkg.get_distribution(
         dist_renamings.get(dist_name, dist_name)
     ).egg_info  # type: ignore[attr-defined]
-    # TODO: More and more packages don't have a "toplevel.txt" anymore, so this whole idea is broken.
     with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
         import_names = top_level.read().rstrip().split("\n")
         # Skip the private modules (starting with an underscore)
-        return [name.replace("/", ".") for name in import_names if not name.startswith("_")]
+        return [
+            ImportName(name.replace("/", ".")) for name in import_names if not name.startswith("_")
+        ]
 
 
-def _get_import_names_from_pipfile() -> list[str]:
+def _get_import_names_from_pipfile() -> list[ImportName]:
 
-    # TODO: There are packages which are currently missing the top_level.txt, so we're hardcoding the import names
-    # TODO: "ordered-set" is not even an import name
-    static_import_names = [
-        "black",
-        "docstring_parser",
-        "idna",
-        "jsonschema",
-        "more-itertools",
-        "openapi-spec-validator",
-        "ordered-set",
-        "pyparsing",
-        "typing_extensions",
-        "uvicorn",
-    ]
+    # TODO: There are packages which are currently missing the top_level.txt,
+    # so we need to hardcode the import names for those packages.
+    # We couldn't find a better way to get from Pipfile package name to import name.
+    # What we've tried:
+    # * pip show <package_name> -> use the "Name" attribute
+    # --> fails e.g already for "docstring_parser" (Name: docstring-parser)
+    # --> pip show is really slow
+    # * listing *all* import names explicit
+    # --> huge maintenance effort...
+    packagename_to_importname = {
+        "black": "black",
+        "docstring_parser": "docstring_parser",
+        "idna": "idna",
+        "jsonschema": "jsonschema",
+        "pyparsing": "pyparsing",
+        "typing_extensions": "typing_extensions",
+        "uvicorn": "uvicorn",
+        "more-itertools": "more_itertools",
+        "ordered-set": "ordered_set",
+        "openapi-spec-validator": "openapi_spec_validator",
+    }
 
     import_names = []
     for dist_name in _load_pipfile_data()["default"].keys():
-        if dist_name not in static_import_names:
-            import_names.extend(_get_import_names_from_dist_name(dist_name))
+        if dist_name in packagename_to_importname:
+            import_names.append(ImportName(packagename_to_importname[dist_name]))
+            continue
+        import_names.extend(_get_import_names_from_dist_name(dist_name))
     assert import_names
-    import_names.extend(static_import_names)
     return import_names
 
 
@@ -133,17 +146,13 @@ def test_03_pip_interpreter_version(site: Site) -> None:
     assert version.startswith("pip 22.0.4")
 
 
-@pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())
-def test_python_modules(site: Site, module_name) -> None:  # type:ignore[no-untyped-def]
-    # TODO: Clarify and remove skipping of obscure modules
-    # Skip those modules for now, they throw:
-    # >       found = self._search_paths(context.pattern, context.path)
-    # E       AttributeError: 'Context' object has no attribute 'pattern'
-    if module_name in ("jsonschema", "more-itertools", "openapi-spec-validator", "ordered-set"):
-        return
-    import importlib  # pylint: disable=import-outside-toplevel
+@pytest.mark.parametrize("import_name", _get_import_names_from_pipfile())
+def test_import_python_packages_which_are_defined_in_pipfile(
+    site: Site,
+    import_name: ImportName,
+) -> None:
 
-    module = importlib.import_module(module_name)
+    module = importlib.import_module(import_name)
 
     # Skip namespace modules, they don't have __file__
     if module.__file__:

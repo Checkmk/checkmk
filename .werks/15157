@@ -1,0 +1,17 @@
+Title: Zip metrics sent to InfluxDB
+Class: feature
+Compatible: compat
+Component: core
+Date: 1673261470
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The batch of metrics from Werk 15156 is now compressed before
+it is sent.
+
+This follows the "Optimize writes to InfluxDB" best practice
+documented on influxdata.com and should improve the overall
+performance of the conenctor.
+

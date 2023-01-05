@@ -800,6 +800,8 @@ class StatefulSetReplicas(Section, CommonReplicas):
     # the StatefulSet. The StatefulSet only allows updating in order of the ordinals. Unlike the Pod
     # creation, this behaviour can't be configured as of v1.23.
 
+    available: int | None = None
+
 
 class DeploymentReplicas(Section, CommonReplicas):
     """section: kube_deployment_replicas_v1

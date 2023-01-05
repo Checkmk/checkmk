@@ -179,6 +179,7 @@ def _statefulset_status_from_json(status: JSONStatefulSetStatus) -> api.Stateful
     return api.StatefulSetStatus(
         ready_replicas=status.get("readyReplicas", 0),
         updated_replicas=status.get("updatedReplicas", 0),
+        available_replicas=status.get("availableReplicas"),
     )
 
 

@@ -657,3 +657,44 @@ def test_check_kube_replicas_value_store_reset(
         list(_check_kube_replicas(params, replicas, None, now=800.0, value_store=value_store))
         == expected_check_result
     )
+
+
+def test_check_kube_replicas_statefulset_available() -> None:
+    result = list(
+        _check_kube_replicas(
+            {},
+            StatefulSetReplicas(desired=3, updated=0, ready=3, available=3),
+            None,
+            now=800.0,
+            value_store={"not_ready_started_timestamp": None, "update_started_timestamp": None},
+        )
+    )
+
+    assert [r for r in result if isinstance(r, Result)] == [
+        Result(state=State.OK, summary="Available: 3/3"),
+        Result(state=State.OK, summary="Ready: 3/3"),
+        Result(state=State.OK, summary="Up-to-date: 0/3"),
+        Result(state=State.OK, summary="Not updated for: 0 seconds"),
+    ]
+    assert [r for r in result if isinstance(r, Metric)] == [
+        Metric("kube_available_replicas", 3.0, boundaries=(0.0, 3.0)),
+        Metric("kube_desired_replicas", 3.0, boundaries=(0.0, 3.0)),
+        Metric("kube_ready_replicas", 3.0, boundaries=(0.0, 3.0)),
+        Metric("kube_updated_replicas", 0.0, boundaries=(0.0, 3.0)),
+    ]
+
+
+def test_check_kube_replicas_statefuset_available_with_params() -> None:
+    result = list(
+        _check_kube_replicas(
+            {"not_available_duration": ("levels", (300, 500))},
+            StatefulSetReplicas(desired=3, updated=0, ready=3, available=2),
+            None,
+            now=800.0,
+            value_store={"not_available_started_timestamp": 100.0},
+        )
+    )
+    not_available_results = [
+        r for r in result if isinstance(r, Result) and r.summary.startswith("Not available for")
+    ]
+    assert [r.state for r in not_available_results] == [State.CRIT]

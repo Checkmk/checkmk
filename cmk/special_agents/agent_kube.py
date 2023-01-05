@@ -464,6 +464,7 @@ def statefulset_replicas(statefulset: StatefulSet) -> section.StatefulSetReplica
         desired=statefulset.spec.replicas,
         ready=statefulset.status.ready_replicas,
         updated=statefulset.status.updated_replicas,
+        available=statefulset.status.available_replicas,
     )
 
 

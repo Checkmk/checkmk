@@ -18,7 +18,8 @@ def _parameter_valuespec():
         help=_(
             "This ruleset is relevant for Kubernetes replicas. You can set "
             "a maximum allowed duration during which replicas may be in a not "
-            "ready or not up-to-date state. For DaemonSets, you may "
+            "ready or not up-to-date state. For StatefulSets, you may additionally "
+            "specify such a duration for the not available state. For DaemonSets, you may "
             "additionally specify the duration for which there may be a "
             "positive number of misscheduled replicas. Keep in mind that replicas "
             "may temporarily be in these states during the process of an "
@@ -28,6 +29,7 @@ def _parameter_valuespec():
         elements=[
             ("update_duration", age_levels_dropdown(_("Update duration"))),
             ("not_ready_duration", age_levels_dropdown(_("Not ready duration"))),
+            ("not_available_duration", age_levels_dropdown(_("Not available duration"))),
             (
                 "misscheduled_duration",
                 age_levels_dropdown(_("Misscheduled duration (DaemonSet only)")),

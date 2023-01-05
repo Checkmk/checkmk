@@ -83,7 +83,10 @@ def discover_kube_replicas(
 def _check_duration(
     transition_complete: bool,
     value_store_key: Literal[
-        "not_ready_started_timestamp", "update_started_timestamp", "misscheduled_timestamp"
+        "not_available_started_timestamp",
+        "not_ready_started_timestamp",
+        "update_started_timestamp",
+        "misscheduled_timestamp",
     ],
     now: float,
     value_store: MutableMapping[str, Any],
@@ -144,17 +147,29 @@ def _check_kube_replicas(
     if section_kube_replicas is None:
         return
 
+    metric_boundary = (0, section_kube_replicas.desired)
+
+    if (
+        isinstance(section_kube_replicas, StatefulSetReplicas)
+        and section_kube_replicas.available is not None
+    ):
+        yield Result(
+            state=State.OK,
+            summary=f"Available: {section_kube_replicas.available}/{section_kube_replicas.desired}",
+        )
+        yield Metric(
+            "kube_available_replicas", section_kube_replicas.available, boundaries=metric_boundary
+        )
+
     yield Result(
         state=State.OK,
         summary=f"Ready: {section_kube_replicas.ready}/{section_kube_replicas.desired}",
     )
-
     yield Result(
         state=State.OK,
         summary=f"Up-to-date: {section_kube_replicas.updated}/{section_kube_replicas.desired}",
     )
 
-    metric_boundary = (0, section_kube_replicas.desired)
     yield Metric("kube_desired_replicas", section_kube_replicas.desired, boundaries=metric_boundary)
     yield Metric("kube_ready_replicas", section_kube_replicas.ready, boundaries=metric_boundary)
     yield Metric("kube_updated_replicas", section_kube_replicas.updated, boundaries=metric_boundary)
@@ -165,6 +180,19 @@ def _check_kube_replicas(
             summary=f"Misscheduled: {section_kube_replicas.misscheduled}",
         )
         yield Metric("kube_misscheduled_replicas", section_kube_replicas.misscheduled)
+
+    if (
+        isinstance(section_kube_replicas, StatefulSetReplicas)
+        and section_kube_replicas.available is not None
+    ):
+        yield from _check_duration(
+            section_kube_replicas.available == section_kube_replicas.desired,
+            "not_available_started_timestamp",
+            now,
+            value_store,
+            _levels(params, "not_available_duration"),
+            "Not available for",
+        )
 
     yield from _check_duration(
         section_kube_replicas.ready == section_kube_replicas.desired,

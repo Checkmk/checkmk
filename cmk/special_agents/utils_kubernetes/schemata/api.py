@@ -9,6 +9,16 @@ The schemas should not be affected by different kubernetes server or client vers
 
 This file should not contain any code and should not import from anywhere
 except the python standard library or pydantic.
+
+Guideline when defining new models:
+* default values should be written out
+
+class Wrong(BaseModel):
+    a: int | None # pydantic implicit None default
+
+class Correct(BaseModel):
+    a: int | None = None
+
 """
 from __future__ import annotations
 
@@ -597,6 +607,7 @@ class StatefulSetSpec(BaseModel):
 class StatefulSetStatus(BaseModel):
     updated_replicas: int
     ready_replicas: int
+    available_replicas: int | None = None
 
 
 class StatefulSet(BaseModel):

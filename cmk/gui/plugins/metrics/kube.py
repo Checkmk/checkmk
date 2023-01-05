@@ -187,6 +187,12 @@ metric_info["kube_ready_replicas"] = {
     "color": "21/a",
 }
 
+metric_info["kube_available_replicas"] = {
+    "title": _("Available replicas"),
+    "unit": "count",
+    "color": "21/a",
+}
+
 metric_info["kube_updated_replicas"] = {
     "title": _("Up-to-date replicas"),
     "unit": "count",
@@ -329,8 +335,20 @@ graph_info["kube_pod_restarts"] = {
 }
 
 
+graph_info["kube_replica_available_state"] = {
+    "title": _("Replica available state"),
+    "metrics": [
+        ("kube_desired_replicas", "line"),
+        ("kube_available_replicas", "area"),
+    ],
+    "optional_metrics": [
+        "kube_available_replicas",
+    ],
+}
+
+
 graph_info["kube_replica_state"] = {
-    "title": _("Replica state"),
+    "title": _("Replica ready state"),
     "metrics": [
         ("kube_desired_replicas", "line"),
         ("kube_ready_replicas", "area"),

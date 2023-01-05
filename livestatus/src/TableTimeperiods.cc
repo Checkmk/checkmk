@@ -11,13 +11,13 @@
 #include <vector>
 
 #include "IntColumn.h"
-#include "ListColumn.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "livestatus/Column.h"
+#include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 #include "nagios.h"
 
 // TODO(sp) This shouldn't live here...

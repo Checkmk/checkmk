@@ -10,12 +10,18 @@ set(livestatus_headers
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
     ${header_location}/data_encoding.h
+    ${header_location}/DoubleAggregator.h
+    ${header_location}/DoubleColumn.h
     ${header_location}/DoubleFilter.h
+    ${header_location}/DynamicColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
     ${header_location}/InputBuffer.h
+    ${header_location}/IntFilter.h
+    ${header_location}/ListColumn.h
+    ${header_location}/ListFilter.h
     ${header_location}/LogEntry.h
     ${header_location}/Logger.h
     ${header_location}/LogwatchList.h
@@ -36,9 +42,14 @@ set(livestatus_headers
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
     ${header_location}/RendererJSON.h
+    ${header_location}/ServiceGroupMembersColumn.h
+    ${header_location}/ServiceListRenderer.h
     ${header_location}/RendererPython3.h
     ${header_location}/Row.h
+    ${header_location}/ServiceGroupMembersColumn.h
+    ${header_location}/ServiceListRenderer.h
     ${header_location}/StatsColumn.h
+    ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
     ${header_location}/strutil.h
@@ -58,6 +69,8 @@ set(livestatus_sources
     Filter.cc
     global_counters.cc
     InputBuffer.cc
+    IntFilter.cc
+    ListFilter.cc
     LogEntry.cc
     Logger.cc
     LogwatchList.cc
@@ -74,6 +87,8 @@ set(livestatus_sources
     RendererCSV.cc
     RendererJSON.cc
     RendererPython3.cc
+    ServiceGroupMembersColumn.cc
+    ServiceListRenderer.cc
     StatsColumn.cc
     StringFilter.cc
     StringUtils.cc

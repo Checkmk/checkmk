@@ -6,8 +6,6 @@
 #ifndef ListFilter_h
 #define ListFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <algorithm>
 #include <chrono>
 #include <functional>

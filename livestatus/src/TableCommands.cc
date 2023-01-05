@@ -10,9 +10,9 @@
 
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 
 TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});

@@ -9,9 +9,9 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "ListColumn.h"
 #include "User.h"
 #include "gtest/gtest.h"
+#include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
 
 using namespace std::chrono_literals;

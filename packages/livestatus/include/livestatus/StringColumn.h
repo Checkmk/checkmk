@@ -6,8 +6,6 @@
 #ifndef StringColumn_h
 #define StringColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <memory>

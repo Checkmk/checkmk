@@ -20,11 +20,13 @@ enable_testing()
 add_executable(
   test
   test.cc
+  test_DoubleColumn.cc
   test_FileSystemHelper.cc
   test_LogEntry.cc
   test_RegExp.cc
   test_Renderer.cc
   test_Queue.cc
+  test_StringColumn.cc
   test_StringUtil.cc)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})

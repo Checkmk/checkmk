@@ -12,11 +12,11 @@
 #include "HostListRenderer.h"
 #include "HostListState.h"
 #include "IntColumn.h"
-#include "ListColumn.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "User.h"
 #include "livestatus/Column.h"
+#include "livestatus/ListColumn.h"
+#include "livestatus/StringColumn.h"
 #include "nagios.h"
 
 TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {

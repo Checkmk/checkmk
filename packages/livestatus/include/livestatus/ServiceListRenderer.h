@@ -6,13 +6,11 @@
 #ifndef ServiceListRenderer_h
 #define ServiceListRenderer_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <cstdint>
 #include <string>
 #include <utility>
 
-#include "ListColumn.h"
+#include "livestatus/ListColumn.h"
 enum class ServiceState;
 class ListRenderer;
 

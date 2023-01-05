@@ -15,9 +15,9 @@
 #include <vector>
 
 #include "IntColumn.h"
-#include "ListColumn.h"
 #include "Table.h"
 #include "User.h"  // IWYU pragma: keep
+#include "livestatus/ListColumn.h"
 
 class ColumnOffsets;
 template <class T>

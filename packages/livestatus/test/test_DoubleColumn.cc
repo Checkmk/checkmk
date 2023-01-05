@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include "DoubleColumn.h"
 #include "gtest/gtest.h"
+#include "livestatus/DoubleColumn.h"
 #include "livestatus/Row.h"
 
 using namespace std::string_literals;

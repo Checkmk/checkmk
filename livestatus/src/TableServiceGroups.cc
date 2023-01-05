@@ -11,12 +11,12 @@
 
 #include "IntColumn.h"
 #include "Query.h"
-#include "ServiceGroupMembersColumn.h"
 #include "ServiceListState.h"
-#include "StringColumn.h"
 #include "User.h"
 #include "livestatus/Column.h"
 #include "livestatus/LogEntry.h"
+#include "livestatus/ServiceGroupMembersColumn.h"
+#include "livestatus/StringColumn.h"
 #include "nagios.h"
 
 namespace {

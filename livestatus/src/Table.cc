@@ -8,9 +8,9 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "DynamicColumn.h"
 #include "MonitoringCore.h"
 #include "livestatus/Column.h"
+#include "livestatus/DynamicColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/StringUtils.h"
 

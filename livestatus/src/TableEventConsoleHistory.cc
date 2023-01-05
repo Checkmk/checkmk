@@ -8,10 +8,10 @@
 #include <memory>
 
 #include "IntColumn.h"
-#include "StringColumn.h"
 #include "TableEventConsoleEvents.h"
 #include "TimeColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/StringColumn.h"
 
 TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole{mc} {

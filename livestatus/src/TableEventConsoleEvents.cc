@@ -9,13 +9,13 @@
 #include <vector>
 
 #include "IntColumn.h"
-#include "ListColumn.h"
-#include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
 #include "TimeColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/ListColumn.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 
 #ifdef CMC
 #include "User.h"

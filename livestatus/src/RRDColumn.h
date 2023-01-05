@@ -23,7 +23,7 @@
 #include "Object.h"
 #endif
 
-#include "ListColumn.h"
+#include "livestatus/ListColumn.h"
 #include "livestatus/overload.h"  // IWYU pragma: keep
 class ListRenderer;
 class MonitoringCore;

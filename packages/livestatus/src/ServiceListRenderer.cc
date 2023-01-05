@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "ServiceListRenderer.h"
+#include "livestatus/ServiceListRenderer.h"
 
 #include "livestatus/Renderer.h"
 

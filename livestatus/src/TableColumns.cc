@@ -9,9 +9,9 @@
 #include <memory>
 
 #include "Query.h"
-#include "StringColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 
 TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};

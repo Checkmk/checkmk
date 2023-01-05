@@ -8,8 +8,8 @@
 #include <memory>
 
 #include "IntColumn.h"
-#include "StringColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/StringColumn.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole{mc} {

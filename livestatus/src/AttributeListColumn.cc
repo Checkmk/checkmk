@@ -5,7 +5,6 @@
 
 #include "AttributeListColumn.h"
 
-#include <algorithm>
 #include <bitset>
 #include <cctype>
 #include <map>

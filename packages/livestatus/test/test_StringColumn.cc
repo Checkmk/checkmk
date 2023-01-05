@@ -7,9 +7,9 @@
 #include <memory>
 #include <string>
 
-#include "StringColumn.h"
 #include "gtest/gtest.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 
 using namespace std::string_literals;
 

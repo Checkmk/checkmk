@@ -14,22 +14,22 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "DoubleColumn.h"
 #include "HostServiceState.h"
 #include "IntColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
+#include "livestatus/DoubleColumn.h"
 #include "livestatus/Filter.h"
 #include "livestatus/LogEntry.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 
 #ifdef CMC

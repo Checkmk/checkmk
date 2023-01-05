@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-#include "DynamicColumn.h"
+#include "livestatus/DynamicColumn.h"
 class Column;
 class ColumnOffsets;
 class MonitoringCore;

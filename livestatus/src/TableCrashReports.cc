@@ -8,14 +8,14 @@
 #include <filesystem>
 #include <memory>
 
-#include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/DynamicColumn.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 
 TableCrashReports::TableCrashReports(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};

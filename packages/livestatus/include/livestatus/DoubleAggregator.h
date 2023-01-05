@@ -6,8 +6,6 @@
 #ifndef DoubleAggregator_h
 #define DoubleAggregator_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 

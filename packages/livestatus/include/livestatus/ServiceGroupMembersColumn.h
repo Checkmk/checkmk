@@ -6,16 +6,14 @@
 #ifndef ServiceGroupMembersColumn_h
 #define ServiceGroupMembersColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "ListColumn.h"
-#include "ListFilter.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
+#include "livestatus/ListColumn.h"
+#include "livestatus/ListFilter.h"  // IWYU pragma: keep
 #include "livestatus/Row.h"
 #include "livestatus/opids.h"
 enum class ServiceState;

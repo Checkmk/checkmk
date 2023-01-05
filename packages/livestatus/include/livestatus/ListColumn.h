@@ -17,9 +17,9 @@
 #include <variant>
 #include <vector>
 
-#include "ListFilter.h"
 #include "livestatus/Column.h"
 #include "livestatus/Filter.h"
+#include "livestatus/ListFilter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
 #include "livestatus/opids.h"

@@ -62,12 +62,10 @@ test_neb_SOURCES = \
     test/test_BoolColumn.cc \
     test/test_CrashReport.cc \
     test/test_DictFilter.cc \
-    test/test_DoubleColumn.cc \
     test/test_IntColumn.cc \
     test/test_ListColumn.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
-    test/test_StringColumn.cc \
     test/test_Table.cc \
     test/test_TimeColumn.cc \
     test/test_utilities.cc
@@ -118,8 +116,6 @@ liblivestatusneb_a_SOURCES = \
         HostListRenderer.cc \
         HostListState.cc \
         HostServiceState.cc \
-        IntFilter.cc \
-        ListFilter.cc \
         LogCache.cc \
         Logfile.cc \
         MacroExpander.cc \
@@ -127,8 +123,6 @@ liblivestatusneb_a_SOURCES = \
         NagiosCore.cc \
         Query.cc \
         RRDColumn.cc \
-        ServiceGroupMembersColumn.cc \
-        ServiceListRenderer.cc \
         ServiceListState.cc \
         Store.cc \
         Table.cc \

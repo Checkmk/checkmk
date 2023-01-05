@@ -18,16 +18,16 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "DoubleColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "TimeColumn.h"
 #include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
+#include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Row.h"
+#include "livestatus/StringColumn.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/opids.h"
 

@@ -13,8 +13,8 @@
 #include <memory>
 #include <string>
 
-#include "DynamicColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/DynamicColumn.h"
 
 template <class T>
 class DynamicFileColumn : public DynamicColumn {

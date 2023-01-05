@@ -10,11 +10,11 @@
 #include <variant>  // IWYU pragma: keep
 #include <vector>
 
-#include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "StringColumn.h"
 #include "livestatus/Column.h"
+#include "livestatus/ListColumn.h"
+#include "livestatus/StringColumn.h"
 #include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {

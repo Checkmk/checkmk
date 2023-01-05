@@ -6,8 +6,6 @@
 #ifndef DynamicColumn_h
 #define DynamicColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <memory>
 #include <string>
 #include <utility>

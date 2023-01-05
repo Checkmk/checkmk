@@ -10,8 +10,8 @@
 
 #include <string>
 
-#include "ListColumn.h"
 #include "MonitoringCore.h"
+#include "livestatus/ListColumn.h"
 class ListRenderer;
 
 class DowntimeRenderer : public ListColumnRenderer<DowntimeData> {

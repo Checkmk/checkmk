@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "ListColumn.h"
 #include "User.h"
+#include "livestatus/ListColumn.h"
 
 #ifdef CMC
 #include <unordered_set>

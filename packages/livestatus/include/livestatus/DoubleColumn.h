@@ -6,17 +6,15 @@
 #ifndef DoubleColumn_h
 #define DoubleColumn_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "DoubleAggregator.h"
 #include "livestatus/Aggregator.h"
 #include "livestatus/Column.h"
+#include "livestatus/DoubleAggregator.h"
 #include "livestatus/DoubleFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"

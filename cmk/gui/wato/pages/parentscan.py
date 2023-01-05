@@ -20,6 +20,7 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     job_registry,
 )
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -27,6 +28,14 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.page_menu import (
+    make_form_submit_link,
+    make_simple_form_page_menu,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
 from cmk.gui.plugins.wato.utils import get_hosts_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
@@ -315,6 +324,32 @@ class ModeParentScan(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(_("Parent scan"), breadcrumb)
+        menu.dropdowns.insert(
+            0,
+            PageMenuDropdown(
+                name="parent_scan",
+                title=_("Action"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Parent scan"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Start"),
+                                icon_name="background_jobs",
+                                item=make_form_submit_link("parentscan", "_start"),
+                                is_shortcut=True,
+                                is_suggested=True,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        )
+
+        return menu
+
     def _from_vars(self):
         self._start = bool(request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
@@ -416,11 +451,11 @@ class ModeParentScan(WatoMode):
         html.hidden_fields()
 
         # Mode of action
-        html.open_p()
         if not self._complete_folder:
             num_selected = len(get_hosts_from_checkboxes())
+            html.icon("toggle_details")
             html.write_text(_("You have selected <b>%d</b> hosts for parent scan. ") % num_selected)
-        html.p(
+        html.help(
             _(
                 "The parent scan will try to detect the last gateway "
                 "on layer 3 (IP) before a host. This will be done by "
@@ -565,7 +600,5 @@ class ModeParentScan(WatoMode):
 
         forms.end()
 
-        # Start button
-        html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()

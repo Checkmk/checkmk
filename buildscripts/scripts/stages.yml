@@ -87,13 +87,18 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
       REPLACE_NEWLINES: true
 
-      # Gather the list of changed lib livestatus files
     - NAME: CHANGED_LIVESTATUS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^packages/livestatus' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/livestatus/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_CLANG_FORMAT_FILE
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.clang-format$' || true"
+
     - NAME: CHANGED_CLANG_TIDY_FILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep -h '${WORKSPACE}/.clang-tidy' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.clang-tidy$' || true"
+
+    - NAME: CHANGED_IWYU_MAPPINGS
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^livestatus/iwyu-mappings/' || true"
 
       # Gather the list of changed JavaScript and CSS files in raw and enterprise edition
     - NAME: CHANGED_JS_FILES
@@ -264,104 +269,84 @@ STAGES:
       TEXT_ON_SKIP: 'No agent files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
+    - NAME: 'Compile & Test Livestatus'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES,CHANGED_CLANG_FORMAT_FILE,CHANGED_CLANG_TIDY_FILE,CHANGED_IWYU_MAPPINGS
+      DIR: 'packages/livestatus'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --all &> ${RESULTS}/livestatus.txt"
+      TEXT_ON_SKIP: 'No Livestatus files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
+
     - NAME: 'NEB/CMC Compile'
       COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
 
-    - NAME: 'Clang Tidy Lib Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_LIVESTATUS_FILES
-      DIR: 'packages/livestatus'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --clang-tidy &> ${RESULTS}/lib-livestatus-tidy.txt"
-      TEXT_ON_SKIP: 'No lib livestatus files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus-tidy.txt"
-
-    - NAME: 'Clang Tidy Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-tidy-livestatus-docker &> ${RESULTS}/livestatus-tidy.txt"
-      TEXT_ON_SKIP: 'No core files changed'
-      RESULT_CHECK_TYPE: "CLANG"
-      RESULT_CHECK_FILE_PATTERN: "results/livestatus-tidy.txt"
-
-    - NAME: 'Clang Tidy core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-tidy-core-docker &> ${RESULTS}/core-tidy.txt"
-      TEXT_ON_SKIP: 'No core files changed'
-      RESULT_CHECK_TYPE: "CLANG"
-      RESULT_CHECK_FILE_PATTERN: "results/core-tidy.txt"
-
-    - NAME: 'IWYU Lib Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES
-      DIR: 'packages/livestatus'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --iwyu &> ${RESULTS}/lib-livestatus-iwyu.txt"
-      TEXT_ON_SKIP: 'No lib livestatus files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus-iwyu.txt"
-
-    - NAME: 'IWYU Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-iwyu-livestatus-docker &> ${RESULTS}/livestatus-iwyu.txt"
-      TEXT_ON_SKIP: 'No core files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/livestatus-iwyu.txt"
-
-    - NAME: 'IWYU core'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
-      DIR: 'tests'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-iwyu-core-docker &> ${RESULTS}/core-iwyu.txt"
-      TEXT_ON_SKIP: 'No core files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/core-iwyu.txt"
-
-    - NAME: 'Unit Test Lib Livestatus'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_LIVESTATUS_FILES
-      DIR: 'packages/livestatus'
-      ENV_VARS:
-        RESULTS: "${RESULTS}"
-      COMMAND: "../../scripts/run-in-docker.sh ./run-ci --unit-tests &> ${RESULTS}/lib-livestatus.txt"
-      TEXT_ON_SKIP: 'No lib livestatus files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/lib-livestatus.txt"
-
-    - NAME: 'Unit Test Livestatus'
+    - NAME: 'Unit Test NEB'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES
       DIR: 'livestatus/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"
-      COMMAND: "./.f12 &> ${RESULTS}/livestatus-neb-cmc.txt"
-      TEXT_ON_SKIP: 'No core files changed'
+      COMMAND: "./.f12 &> ${RESULTS}/neb-unit.txt"
+      TEXT_ON_SKIP: 'No NEB files changed'
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/livestatus-neb-cmc.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/neb-unit.txt"
 
-    - NAME: 'Unit Test core'
+    - NAME: 'IWYU NEB'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-iwyu-livestatus-docker &> ${RESULTS}/neb-iwyu.txt"
+      TEXT_ON_SKIP: 'No NEB files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/neb-iwyu.txt"
+
+    - NAME: 'Clang Tidy NEB'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-tidy-livestatus-docker &> ${RESULTS}/neb-tidy.txt"
+      TEXT_ON_SKIP: 'No NEB files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/neb-tidy.txt"
+
+    - NAME: 'Unit Test CMC'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES
       DIR: 'enterprise/core/src/test'
       ENV_VARS:
         RESULTS: "${RESULTS}"
-      COMMAND: "./.f12 &> ${RESULTS}/core-neb-cmc.txt"
-      TEXT_ON_SKIP: 'No core files changed'
+      COMMAND: "./.f12 &> ${RESULTS}/cmc-unit.txt"
+      TEXT_ON_SKIP: 'No CMC files changed'
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/core-neb-cmc.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/cmc-unit.txt"
+
+    - NAME: 'IWYU CMC'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-iwyu-core-docker &> ${RESULTS}/cmc-iwyu.txt"
+      TEXT_ON_SKIP: 'No CMC files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/cmc-iwyu.txt"
+
+    - NAME: 'Clang Tidy CMC'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CLANG_TIDY_FILE,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE
+      DIR: 'tests'
+      ENV_VARS:
+        RESULTS: "${RESULTS}"
+        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
+      COMMAND: "make test-tidy-core-docker &> ${RESULTS}/cmc-tidy.txt"
+      TEXT_ON_SKIP: 'No core files changed'
+      RESULT_CHECK_TYPE: "CLANG"
+      RESULT_CHECK_FILE_PATTERN: "results/cmc-tidy.txt"
 
     - NAME: 'Software Documentation Generation'
       ONLY_WHEN_NOT_EMPTY: CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE

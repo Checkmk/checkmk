@@ -476,7 +476,6 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
-	packages/livestatus/run-ci --build-all
 	$(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
@@ -486,14 +485,12 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	packages/livestatus/run-ci --clang-tidy
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	packages/livestatus/run-ci --iwyu
 	$(MAKE) -C livestatus/src iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
@@ -512,11 +509,9 @@ format: format-python format-c format-shell format-js format-css
 clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
 
 format-c:
-	packages/livestatus/run-ci --format
 	$(call clang-format-with,-i)
 
 test-format-c:
-	packages/livestatus/run-ci --check-format
 	@$(call clang-format-with,-Werror --dry-run)
 
 format-cmake:

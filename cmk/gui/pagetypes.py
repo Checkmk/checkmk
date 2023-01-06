@@ -52,6 +52,7 @@ from cmk.gui.i18n import _, _l, _u
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    doc_reference_to_page_menu,
     make_confirmed_form_submit_link,
     make_external_link,
     make_form_submit_link,
@@ -936,6 +937,9 @@ class ListPage(Page, Generic[_Self]):
             breadcrumb,
             current_type_dropdown,
             self._type.type_name(),
+        )
+        doc_reference_to_page_menu(
+            page_menu, self._type.type_name(), self._type.phrase("title_plural")
         )
         make_header(html, title_plural, breadcrumb, page_menu)
 

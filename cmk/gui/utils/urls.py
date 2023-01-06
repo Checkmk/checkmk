@@ -328,7 +328,10 @@ class DocReference(Enum):
     AGENT_WINDOWS = "agent_windows"
     ALERT_HANDLERS = "alert_handlers"
     BI = "bi"  # Business Intelligence
+    BOOKMARK_LIST = "user_interface#bookmarks"
+    CUSTOM_GRAPH = "graphing#custom_graphs"
     DASHBOARD_HOST_PROBLEMS = "dashboards#host_problems"
+    DASHBOARDS = "dashboards"
     DCD = "dcd"  # dynamic host configuration
     DEVEL_CHECK_PLUGINS = "devel_check_plugins"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
@@ -343,10 +346,17 @@ class DocReference(Enum):
     PIGGYBACK = "piggyback"
     REGEXES = "regexes"
     REST_API = "rest_api"
+    REPORTS = "reporting"
+    SLA_CONFIGURATION = "sla"
+    VIEWS = "views"
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"
     WATO_SERVICES_ENFORCED_SERVICES = "wato_services#enforced_services"
     WATO_USER_2FA = "wato_user#2fa"
+
+    @classmethod
+    def has_key(cls, key: str) -> bool:
+        return key in cls._member_names_
 
 
 def doc_reference_url(doc_ref: DocReference | None = None) -> str:

@@ -47,6 +47,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    doc_reference_to_page_menu,
     make_javascript_link,
     make_simple_form_page_menu,
     make_simple_link,
@@ -720,6 +721,7 @@ def page_list(  # pylint: disable=too-many-branches
         current_type_dropdown,
         what,
     )
+    doc_reference_to_page_menu(page_menu, what, visual_plural_title)
     make_header(html, title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():

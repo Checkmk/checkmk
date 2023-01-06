@@ -851,3 +851,15 @@ class PageMenuPopupsRenderer:
             html.final_javascript(
                 "cmk.page_menu.side_popup_add_simplebar_scrollbar(%s);" % json.dumps(popup_id)
             )
+
+
+def doc_reference_to_page_menu(
+    page_menu: PageMenu,
+    page_type: str,
+    plural_title: str,
+) -> None:
+    if DocReference.has_key(doc_reference := page_type.upper()):
+        page_menu.add_doc_reference(
+            title=plural_title,
+            doc_ref=DocReference[doc_reference],
+        )

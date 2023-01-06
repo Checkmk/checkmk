@@ -44,6 +44,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -91,7 +92,7 @@ class ModeTimeperiods(WatoMode):
         return _("Time periods")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="timeperiods",
@@ -126,6 +127,8 @@ class ModeTimeperiods(WatoMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        menu.add_doc_reference(_("Time periods"), DocReference.TIMEPERIODS)
+        return menu
 
     def action(self) -> ActionResult:
         delname = request.var("_delete")

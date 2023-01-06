@@ -355,6 +355,7 @@ class DocReference(Enum):
     REST_API = "rest_api"
     REPORTS = "reporting"
     SLA_CONFIGURATION = "sla"
+    TIMEPERIODS = "timeperiods"
     VIEWS = "views"
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"

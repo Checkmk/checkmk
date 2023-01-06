@@ -44,7 +44,7 @@ from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.utils.urls import DocReference, makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ac_test_registry,
     ACResult,
@@ -99,7 +99,7 @@ class ModeAnalyzeConfig(WatoMode):
         return _("Analyze configuration")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="related",
@@ -120,6 +120,10 @@ class ModeAnalyzeConfig(WatoMode):
             ],
             breadcrumb=breadcrumb,
         )
+        menu.add_doc_reference(
+            _("Analyzing the Checkmk site configuration"), DocReference.ANALYZE_CONFIG
+        )
+        return menu
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():

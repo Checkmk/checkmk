@@ -18,7 +18,7 @@ function is_help_active() {
     const helpdivs = document.getElementsByClassName(
         "help"
     ) as HTMLCollectionOf<HTMLElement>;
-    return helpdivs.length !== 0 && helpdivs[0].style.display === "block";
+    return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
 }
 
 export function toggle(title_show, title_hide) {
@@ -38,7 +38,7 @@ function switch_help(how) {
     ) as HTMLCollectionOf<HTMLElement>;
     var i;
     for (i = 0; i < helpdivs.length; i++) {
-        helpdivs[i].style.display = how ? "block" : "none";
+        helpdivs[i].style.display = how ? "flex" : "none";
     }
 
     // small hack for wato ruleset lists, toggle the "float" and "nofloat"

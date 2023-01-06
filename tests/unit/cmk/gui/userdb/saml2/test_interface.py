@@ -28,8 +28,6 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
 from cmk.gui.userdb.saml2.interface import Authenticated, HTMLFormString, Interface, Milliseconds
 
-needs_xmlsec1 = pytest.mark.skipif(not which("xmlsec1"), reason="Needs xmlsec1 to run")
-
 
 class SAMLParamName(Enum):
     REQUEST = "SAMLRequest"
@@ -116,12 +114,6 @@ class TestInterface:
         return interface
 
     @pytest.fixture
-    def secure_interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
-        interface = Interface(ConnectorConfig(**raw_config).interface_config)
-        interface.authentication_request_id_expiry = Milliseconds(-1)
-        return Interface(ConnectorConfig(**raw_config).interface_config)
-
-    @pytest.fixture
     def authentication_request(self, xml_files_path: Path) -> str:
         return _reduce_xml_template_whitespace(
             Path(xml_files_path / "authentication_request.xml").read_text()
@@ -136,22 +128,6 @@ class TestInterface:
                 )
             )
         )
-
-    @pytest.fixture
-    def unsigned_authentication_request_response(self, xml_files_path: Path) -> str:
-        return _encode(
-            Path(xml_files_path / "unsigned_authentication_request_response.xml").read_text()
-        )
-
-    @pytest.fixture
-    def malicious_authentication_request_response(self, xml_files_path: Path) -> str:
-        original_response = _reconstruct_original_response_format(
-            _reduce_xml_template_whitespace(
-                Path(xml_files_path / "authentication_request_response.xml").read_text()
-            )
-        )
-        malicious_response = original_response.replace("user1", "mwahahaha")
-        return _encode(malicious_response)
 
     @pytest.fixture
     def authentication_request_response_not_for_us(self, xml_files_path: Path) -> str:
@@ -366,21 +342,55 @@ class TestInterface:
 
         assert not list(redis.keys("saml2_authentication_requests:*"))
 
+
+@pytest.mark.skipif(not which("xmlsec1"), reason="Needs xmlsec1 to run")
+class TestInterfaceSigning:
+    @pytest.fixture
+    def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
+        return Interface(ConnectorConfig(**raw_config).interface_config)
+
+    @pytest.fixture
+    def initialised_redis(self, monkeypatch: pytest.MonkeyPatch) -> Iterable[Redis]:
+        requests_db = get_redis_client()  # this is already monkeypatched to fakeredis
+        requests_db.set(
+            "saml2_authentication_requests:id-Ex1qiCa1tiZj1nBKe",
+            "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
+        )
+        monkeypatch.setattr(
+            "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", requests_db
+        )
+        yield requests_db
+
+    @pytest.fixture
+    def authentication_request_response(self, xml_files_path: Path) -> str:
+        return _encode(
+            _reconstruct_original_response_format(
+                _reduce_xml_template_whitespace(
+                    Path(xml_files_path / "authentication_request_response.xml").read_text()
+                )
+            )
+        )
+
+    @pytest.fixture
+    def unsigned_authentication_request_response(self, xml_files_path: Path) -> str:
+        return _encode(
+            Path(xml_files_path / "unsigned_authentication_request_response.xml").read_text()
+        )
+
+    @pytest.fixture
+    def malicious_authentication_request_response(self, xml_files_path: Path) -> str:
+        original_response = _reconstruct_original_response_format(
+            _reduce_xml_template_whitespace(
+                Path(xml_files_path / "authentication_request_response.xml").read_text()
+            )
+        )
+        malicious_response = original_response.replace("user1", "mwahahaha")
+        return _encode(malicious_response)
+
     @freeze_time("2022-12-28T11:06:05Z")
-    def test_authentication_request_id_is_deleted_once_accessed(
-        self,
-        interface: Interface,
-        initialised_redis: Redis,
-        authentication_request_response: str,
-        ignore_signature: None,
+    def test_authentication_request_is_signed(
+        self, interface: Interface, initialised_redis: Redis
     ) -> None:
-        interface.parse_authentication_request_response(authentication_request_response)
-
-        assert not list(initialised_redis.keys("saml2_authentication_requests:*"))
-
-    @freeze_time("2022-12-28T11:06:05Z")
-    @needs_xmlsec1
-    def test_authentication_request_is_signed(self, interface: Interface) -> None:
         request = ET.fromstring(
             _field_from_html(
                 html_string=interface.authentication_request(relay_state="_").data,
@@ -400,17 +410,17 @@ class TestInterface:
         assert signature_elements["SignatureValue"]
         assert signature_elements["X509Certificate"]
 
-    @needs_xmlsec1
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_signed_authentication_request_response(
-        self, interface: Interface, authentication_request_response: str
+        self, interface: Interface, authentication_request_response: str, initialised_redis: Redis
     ) -> None:
+        # SHA1 is normally disallowed, but used in the test data for performance reasons
+        interface._allowed_algorithms.add(SIG_RSA_SHA1)
         parsed_response = interface.parse_authentication_request_response(
             authentication_request_response
         )
         assert isinstance(parsed_response, Authenticated)
 
-    @needs_xmlsec1
     def test_reject_unsigned_authentication_request_response(
         self, interface: Interface, unsigned_authentication_request_response: str
     ) -> None:
@@ -419,7 +429,6 @@ class TestInterface:
                 unsigned_authentication_request_response
             )
 
-    @needs_xmlsec1
     def test_reject_malicious_authentication_request_response(
         self, interface: Interface, malicious_authentication_request_response: str
     ) -> None:
@@ -428,10 +437,9 @@ class TestInterface:
                 malicious_authentication_request_response
             )
 
-    @needs_xmlsec1
     @freeze_time("2022-12-28T11:06:05Z")
-    def test_response_rejected_if_signed_with_disallowed_algorithm(
-        self, secure_interface: Interface, authentication_request_response: str
+    def test_rejected_authentication_response_if_signed_with_disallowed_algorithm(
+        self, interface: Interface, authentication_request_response: str
     ) -> None:
         with pytest.raises(AttributeError, match="Insecure algorithm"):
-            secure_interface.parse_authentication_request_response(authentication_request_response)
+            interface.parse_authentication_request_response(authentication_request_response)

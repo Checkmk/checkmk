@@ -505,10 +505,6 @@ msgid "%s Preview of report finished"
 msgstr "%s Pré-visualização do relatório concluída"
 
 #, python-format
-msgid "%s Properties"
-msgstr "%s Propriedades"
-
-#, python-format
 msgid "%s Requests"
 msgstr "%s Pedidos"
 
@@ -613,6 +609,10 @@ msgstr "%s outro %s"
 #, python-format
 msgid "%s per Second"
 msgstr "%s por Segundo"
+
+#, fuzzy, python-format
+msgid "%s properties"
+msgstr "%s Propriedades"
 
 #, python-format
 msgid "%s rate"
@@ -8029,6 +8029,10 @@ msgid ""
 "Cannot activate changes: The license usage history is older than five days."
 msgstr ""
 
+#, fuzzy
+msgid "Cannot be a certificate chain"
+msgstr "Cadeia de certificados"
+
 msgid "Cannot calculate graph recipes"
 msgstr "Não é possível calcular receitas gráficas"
 
@@ -8384,6 +8388,9 @@ msgstr "Cadeia de certificados"
 
 msgid "Certificate details"
 msgstr "Detalhes do certificado"
+
+msgid "Certificate to sign requests (PEM)"
+msgstr ""
 
 msgid "Certificates for HTTPS verification"
 msgstr "Certificados para verificação HTTPS"
@@ -9092,6 +9099,14 @@ msgstr "Checkmk utilização do helper"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "Verifique o URL"
+
+msgid ""
+"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"the certificate that is shipped with Checkmk. Alternatively, if your "
+"organisation manages its own certificates, you can also add a custom "
+"certificate. Note that the public certificate needs to be a single "
+"certificate (not a certificate chain)."
+msgstr ""
 
 msgid "Checkmk site objects"
 msgstr "Checkmk objetos locais"
@@ -20067,6 +20082,10 @@ msgstr "Estado geral da instância"
 msgid "General messages"
 msgstr "Mensagens gerais"
 
+#, fuzzy
+msgid "General properties"
+msgstr "Propriedades Gerais"
+
 msgid "Generate"
 msgstr "Gerar"
 
@@ -26045,6 +26064,10 @@ msgstr "Declaração do perfómetro inválido: %r"
 #, python-format
 msgid "Invalid perfometer type: %s"
 msgstr "Tipo de perfómetro inválido: %s"
+
+#, fuzzy
+msgid "Invalid private key"
+msgstr "Local inválido"
 
 msgid "Invalid regular expression"
 msgstr "Expressão inválida regular"
@@ -45649,8 +45672,8 @@ msgstr "Assunto para notificações de serviço"
 msgid "Submit"
 msgstr "Envie para"
 
-msgid "Submit Report"
-msgstr "Submeter Relatório"
+msgid "Submit report"
+msgstr "Submeter relatório"
 
 #, fuzzy
 msgid "Submit verification request"
@@ -47292,7 +47315,7 @@ msgid ""
 "The URL of the server that hosts Checkmk. This is the URL your monitoring "
 "users use. It does not need to be accessible to your Identity Provider. For "
 "example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificates which should be trusted."
+"this endpoint, because it specifies certificate which should be trusted."
 msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
@@ -48493,7 +48516,7 @@ msgid ""
 "Provider. This endpoint is used to automatically discover the correct Single "
 "Sign-On endpoint and bindings for a successful SAML communication with the "
 "Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
+"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -65627,6 +65650,9 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#~ msgid "Submit Report"
+#~ msgstr "Submeter Relatório"
+
 #~ msgid "No service level is set in event"
 #~ msgstr "Nenhum nível de serviço é definido em caso de"
 
@@ -66155,9 +66181,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "Submit or download license usage report"
 #~ msgstr "Enviar ou fazer download do relatório de utilização da licença"
-
-#~ msgid "Submit report"
-#~ msgstr "Submeter relatório"
 
 #~ msgid "Submitting license usage report..."
 #~ msgstr "Apresentar relatório de utilização da licença..."

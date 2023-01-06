@@ -496,10 +496,6 @@ msgid "%s Preview of report finished"
 msgstr ""
 
 #, python-format
-msgid "%s Properties"
-msgstr ""
-
-#, python-format
 msgid "%s Requests"
 msgstr ""
 
@@ -603,6 +599,10 @@ msgstr ""
 #, python-format
 msgid "%s per Second"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "%s properties"
+msgstr "Grup nou"
 
 #, python-format
 msgid "%s rate"
@@ -7555,6 +7555,10 @@ msgid ""
 "Cannot activate changes: The license usage history is older than five days."
 msgstr ""
 
+#, fuzzy
+msgid "Cannot be a certificate chain"
+msgstr "Notificari"
+
 msgid "Cannot calculate graph recipes"
 msgstr ""
 
@@ -7872,6 +7876,9 @@ msgid "Certificate chain"
 msgstr "Notificari"
 
 msgid "Certificate details"
+msgstr ""
+
+msgid "Certificate to sign requests (PEM)"
 msgstr ""
 
 #, fuzzy
@@ -8562,6 +8569,14 @@ msgstr "Nivelurile maxime pentru voltaj"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "Privire de ansamblu"
+
+msgid ""
+"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"the certificate that is shipped with Checkmk. Alternatively, if your "
+"organisation manages its own certificates, you can also add a custom "
+"certificate. Note that the public certificate needs to be a single "
+"certificate (not a certificate chain)."
+msgstr ""
 
 msgid "Checkmk site objects"
 msgstr ""
@@ -19432,6 +19447,10 @@ msgstr ""
 msgid "General messages"
 msgstr ""
 
+#, fuzzy
+msgid "General properties"
+msgstr "Proprietatile Folderului"
+
 msgid "Generate"
 msgstr ""
 
@@ -24463,6 +24482,10 @@ msgstr " Parametrul este: %r"
 #, python-format
 msgid "Invalid perfometer type: %s"
 msgstr ""
+
+#, fuzzy
+msgid "Invalid private key"
+msgstr "Nume tablespace"
 
 msgid "Invalid regular expression"
 msgstr ""
@@ -43923,8 +43946,9 @@ msgstr ""
 msgid "Submit"
 msgstr ""
 
-msgid "Submit Report"
-msgstr ""
+#, fuzzy
+msgid "Submit report"
+msgstr "Adaugă element"
 
 #, fuzzy
 msgid "Submit verification request"
@@ -45383,7 +45407,7 @@ msgid ""
 "The URL of the server that hosts Checkmk. This is the URL your monitoring "
 "users use. It does not need to be accessible to your Identity Provider. For "
 "example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificates which should be trusted."
+"this endpoint, because it specifies certificate which should be trusted."
 msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
@@ -46289,7 +46313,7 @@ msgid ""
 "Provider. This endpoint is used to automatically discover the correct Single "
 "Sign-On endpoint and bindings for a successful SAML communication with the "
 "Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
+"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -60814,10 +60838,6 @@ msgstr ""
 #~ msgstr "servicii"
 
 #, fuzzy
-#~ msgid "Invalid package name"
-#~ msgstr "Nume tablespace"
-
-#, fuzzy
 #~ msgid "Save & go to service configuration"
 #~ msgstr "Salveaza configuratia manuala a verificarilor"
 
@@ -60973,10 +60993,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Submit or download license usage report"
 #~ msgstr "% utilizare"
-
-#, fuzzy
-#~ msgid "Submit report"
-#~ msgstr "Adaugă element"
 
 #, fuzzy
 #~ msgid "Successfully submitted the license usage report."

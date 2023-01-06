@@ -499,10 +499,6 @@ msgid "%s Preview of report finished"
 msgstr "%s レポートのプレビューが終了しました"
 
 #, python-format
-msgid "%s Properties"
-msgstr "%s プロパティ"
-
-#, python-format
 msgid "%s Requests"
 msgstr "%s リクエスト"
 
@@ -606,6 +602,10 @@ msgstr "%sその他%s"
 #, python-format
 msgid "%s per Second"
 msgstr "%s/秒"
+
+#, fuzzy, python-format
+msgid "%s properties"
+msgstr "%s プロパティ"
 
 #, python-format
 msgid "%s rate"
@@ -7664,6 +7664,10 @@ msgid ""
 "Cannot activate changes: The license usage history is older than five days."
 msgstr ""
 
+#, fuzzy
+msgid "Cannot be a certificate chain"
+msgstr "証明書チェーン"
+
 msgid "Cannot calculate graph recipes"
 msgstr "グラフレシピを計算できません"
 
@@ -8004,6 +8008,9 @@ msgstr "証明書チェーン"
 
 msgid "Certificate details"
 msgstr "証明書の詳細"
+
+msgid "Certificate to sign requests (PEM)"
+msgstr ""
 
 msgid "Certificates for HTTPS verification"
 msgstr "HTTPS検証用の証明書"
@@ -8685,6 +8692,14 @@ msgstr "Checkmkヘルパーの使用法"
 #, fuzzy
 msgid "Checkmk server URL"
 msgstr "URLを確認する"
+
+msgid ""
+"Checkmk signs its SAML 2.0 requests to your Identity Provider. You can use "
+"the certificate that is shipped with Checkmk. Alternatively, if your "
+"organisation manages its own certificates, you can also add a custom "
+"certificate. Note that the public certificate needs to be a single "
+"certificate (not a certificate chain)."
+msgstr ""
 
 msgid "Checkmk site objects"
 msgstr "Checkmkサイトオブジェクト"
@@ -19213,6 +19228,10 @@ msgstr "一般的なインスタンスのステータス"
 msgid "General messages"
 msgstr "一般的なメッセージ"
 
+#, fuzzy
+msgid "General properties"
+msgstr "一般的なプロパティ"
+
 msgid "Generate"
 msgstr "生成する"
 
@@ -24783,6 +24802,10 @@ msgstr "無効な性能計宣言: %r"
 #, python-format
 msgid "Invalid perfometer type: %s"
 msgstr "無効な性能計タイプ: %s"
+
+#, fuzzy
+msgid "Invalid private key"
+msgstr "無効なサイト"
 
 msgid "Invalid regular expression"
 msgstr "無効な正規表現"
@@ -43516,7 +43539,7 @@ msgstr "サービス通知の対象"
 msgid "Submit"
 msgstr "サブミット"
 
-msgid "Submit Report"
+msgid "Submit report"
 msgstr "レポートを送信する"
 
 #, fuzzy
@@ -45051,7 +45074,7 @@ msgid ""
 "The URL of the server that hosts Checkmk. This is the URL your monitoring "
 "users use. It does not need to be accessible to your Identity Provider. For "
 "example: https://mycheckmkserver.com. Note that we only support HTTPS for "
-"this endpoint, because it specifies certificates which should be trusted."
+"this endpoint, because it specifies certificate which should be trusted."
 msgstr ""
 
 msgid "The URL of the target page the link of the element should link to."
@@ -46119,7 +46142,7 @@ msgid ""
 "Provider. This endpoint is used to automatically discover the correct Single "
 "Sign-On endpoint and bindings for a successful SAML communication with the "
 "Identity Provider. Note that we only support HTTPS for this endpoint, "
-"because it specifies certificates which should be trusted."
+"because it specifies certificate which should be trusted."
 msgstr ""
 
 #, python-format
@@ -61987,6 +62010,9 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Submit Report"
+#~ msgstr "レポートを送信する"
+
 #~ msgid "No service level is set in event"
 #~ msgstr "イベントでサービスレベルが設定されていません"
 
@@ -62422,9 +62448,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Submit or download license usage report"
 #~ msgstr "ライセンス使用状況レポートを送信またはダウンロードする"
-
-#~ msgid "Submit report"
-#~ msgstr "レポートを送信する"
 
 #~ msgid "Submitting license usage report..."
 #~ msgstr "ライセンス使用状況レポートの送信..."

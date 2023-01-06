@@ -328,6 +328,7 @@ class DocReference(Enum):
     AGENT_WINDOWS = "agent_windows"
     ALERT_HANDLERS = "alert_handlers"
     ANALYZE_CONFIG = "analyze_configuration"
+    BACKUPS = "backup"
     BI = "bi"  # Business Intelligence
     BOOKMARK_LIST = "user_interface#bookmarks"
     CUSTOM_GRAPH = "graphing#custom_graphs"

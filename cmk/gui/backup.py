@@ -68,6 +68,7 @@ from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_link,
     makeactionuri,
     makeactionuri_contextless,
@@ -432,7 +433,7 @@ class PageBackup:
         self.key_store = key_store
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="backups",
@@ -464,6 +465,8 @@ class PageBackup:
             ],
             breadcrumb=breadcrumb,
         )
+        menu.add_doc_reference(_("Backups"), DocReference.BACKUPS)
+        return menu
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(

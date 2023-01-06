@@ -54,7 +54,7 @@ from cmk.gui.site_config import has_wato_slave_sites, site_is_local, wato_slave_
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri
+from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -536,6 +536,7 @@ class ModeNotifications(ABCNotificationsMode):
             inpage_search=PageMenuSearch(),
         )
         self._extend_display_dropdown(menu)
+        menu.add_doc_reference(_("Notifications"), DocReference.NOTIFICATIONS)
         return menu
 
     def _extend_display_dropdown(self, menu: PageMenu) -> None:

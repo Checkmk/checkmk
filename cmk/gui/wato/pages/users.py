@@ -61,7 +61,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
@@ -100,7 +100,7 @@ class ModeUsers(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
         del breadcrumb[-1]
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="users",
@@ -164,6 +164,8 @@ class ModeUsers(WatoMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
+        return menu
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
         if userdb.sync_possible():

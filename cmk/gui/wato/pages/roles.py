@@ -58,6 +58,7 @@ from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserRole
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.userroles import RoleID
@@ -101,6 +102,7 @@ class ModeRoles(WatoMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
         return menu
 
     def action(self) -> ActionResult:

@@ -350,6 +350,7 @@ class DocReference(Enum):
     LICENSING = "license"
     LDAP = "ldap"
     MKPS = "mkps"
+    NOTIFICATIONS = "notifications"
     PIGGYBACK = "piggyback"
     REGEXES = "regexes"
     REST_API = "rest_api"
@@ -360,6 +361,7 @@ class DocReference(Enum):
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"
     WATO_SERVICES_ENFORCED_SERVICES = "wato_services#enforced_services"
+    WATO_USER = "wato_user"
     WATO_USER_2FA = "wato_user#2fa"
 
     @classmethod

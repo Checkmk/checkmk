@@ -1043,6 +1043,7 @@ class ModeEditRuleset(WatoMode):
 
     def _explain_match_type(self, match_type) -> None:  # type:ignore[no-untyped-def]
         html.open_div(class_="matching_message")
+        html.icon("toggle_details")
         html.b("%s: " % _("Matching"))
         if match_type == "first":
             html.write_text(_("The first matching rule defines the parameter."))

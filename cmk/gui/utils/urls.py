@@ -344,6 +344,7 @@ class DocReference(Enum):
     INTRO_LINUX = "intro#linux"
     INTRO_SERVICES = "intro#services"
     INTRO_WELCOME = "intro_welcome"
+    LICENSING = "license"
     LDAP = "ldap"
     PIGGYBACK = "piggyback"
     REGEXES = "regexes"

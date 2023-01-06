@@ -888,8 +888,6 @@ div.popup_trigger.colorpicker div.popup_menu {
   textarea,
   div.snapin select,
   div.snapin & select,
-  div.snapin textarea,
-  div.snapin & textarea,
   #mk_side_search_field {
     margin: 0;
     margin-bottom: 8px;
@@ -1136,11 +1134,6 @@ div.content {
   box-sizing: border-box;
 }
 
-/* TODO: Reproduce this element then get rid of important styles */
-.op {
-  width: 60px !important;
-}
-
 .bi_rule_tree img.treeangle,
 .invtree img.treeangle,
 .grouped_row_header img.treeangle.nform,
@@ -1200,8 +1193,6 @@ div.info {
   textarea,
   div.snapin select,
   div.snapin & select,
-  div.snapin textarea,
-  div.snapin & textarea,
   #mk_side_search_field {
     box-sizing: content-box;
   }

@@ -171,15 +171,6 @@ body {
       }
     }
 
-    /* TODO: Reproduce this html element */
-    div.urldebug {
-      position: relative;
-      top: -14px;
-      width: 100%;
-      font-family: $font-family-monospace;
-      color: $font-color-white;
-    }
-
     div#main_page_content {
       flex: 1 1 auto;
       height: 100%;
@@ -308,11 +299,6 @@ table.data {
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
-
-    /* TODO: Reproduce this html element */
-    &.tablegap {
-      background-color: transparent; /* none; */
-    }
   }
 
   td {
@@ -418,27 +404,6 @@ table.data {
     cursor: pointer;
   }
 
-  /* TODO: Reproduce this html element */
-  td.host {
-    padding-top: 1ex;
-    padding-left: 0;
-    font-size: $font-size-large;
-    font-weight: bold;
-    border-style: none;
-  }
-
-  td.singleicon {
-    width: 16px;
-    text-align: center;
-
-    /* Link to object in the classic nagios GUI */
-    /* TODO: Reproduce these singleicon elements */
-    img {
-      padding: 0;
-      margin: 0;
-    }
-  }
-
   tr.actions {
     td {
       padding: 5px;
@@ -485,7 +450,6 @@ body.main table.data .popup_menu {
   color: $font-color;
 }
 
-/* TODO: Check whether these narrow and wide styles are deprecated */
 td.narrow {
   width: 10px;
 }
@@ -526,13 +490,14 @@ tr.groupheader:not(:first-child) table.groupheader {
   margin-top: 2 * $spacing;
 }
 
-/* TODO: Reproduce these .grouped_row_header elements */
 tr.data.grouped_row_header {
   td {
     cursor: pointer;
   }
 
-  img.treeangle {
+  img.treeangle,
+  img.treeangle.nform.open,
+  img.treeangle.nform.closed {
     margin-left: 0;
   }
 }
@@ -578,12 +543,6 @@ img.icon {
 img.iconbutton:hover {
   opacity: 0.5;
   filter: alpha(opacity=50); /* For IE8 and earlier */
-}
-
-/* TODO: Reproduce this html item */
-.wato a.checkbox img.iconbutton {
-  width: 60px;
-  height: 16px;
 }
 
 /* reschedule check icon */
@@ -657,7 +616,6 @@ input[type="text"],
 input[type="password"],
 select,
 textarea,
-div.snapin textarea,  // TODO: reproduce this element
 #mk_side_search_field,
 .tagify__input {
   $padding: 3px;
@@ -758,7 +716,6 @@ input.button {
 select,
 textarea,
 div.snapin select,
-div.snapin textarea,
 #mk_side_search_field {
   &.toggle_timespecific_parameter {
     display: block;
@@ -769,10 +726,9 @@ input.toggle_timespecific_parameter {
   margin-top: 5px;
 }
 
-/* TODO: Reproduce this html element */
 td.content hr {
   height: 1px;
-  background-color: rgba($white, 0.2);
+  background-color: $line-color;
   border-style: none;
 }
 
@@ -787,8 +743,6 @@ input.time {
   textarea,
   div.snapin select,
   div.snapin & select,
-  div.snapin textarea,
-  div.snapin & textarea,
   #mk_side_search_field,
   span.checkbox,
   span.select2 .select2-selection,
@@ -1354,28 +1308,6 @@ div.popup_trigger {
 
   &[id*="popup_trigger_move"] img.iconbutton {
     filter: none;
-  }
-}
-
-/* TODO: Can we remove PNP4Nagios styling? */
-div.pnp_graph a {
-  &.popup_trigger {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: block;
-    width: 20px;
-    height: 20px;
-    background-image: url("images/icon_menu.png");
-    background-size: contain;
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-
-  img {
-    filter: $pnp4nagios-img-filter;
   }
 }
 

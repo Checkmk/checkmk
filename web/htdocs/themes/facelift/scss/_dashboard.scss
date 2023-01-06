@@ -42,25 +42,11 @@ div.dashlet {
     padding: 0;
     margin: 0;
     overflow: hidden;
+
     /* Dashlets with "background" set to True */
     &.background {
       background-color: $dashlet-inner-bg-color;
     }
-
-    > div[id*="dashlet_graph"] img[id*="dashlet_img"] {
-      filter: $pnp4nagios-img-filter;
-    }
-  }
-
-  /* TODO: Reproduce these html elements */
-  div.really,
-  div.success,
-  div.error,
-  div.message,
-  div.warning {
-    margin: 0;
-    border-radius: 0;
-    box-shadow: 0;
   }
 
   iframe {
@@ -674,10 +660,11 @@ svg {
 
   // gauge
   .gauge_span {
-    // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
-    // Gives enough contrast on both themes against the color of the gauge level
-    // which is $font-color
-    fill: $darkgrey;
+    fill: $gauge-span-color;
+
+    & ~ path.single_value {
+      fill: $gauge-single-value-color;
+    }
   }
 
   .inventory {

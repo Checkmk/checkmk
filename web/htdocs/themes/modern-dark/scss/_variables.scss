@@ -150,8 +150,6 @@ $node-vis-history-filter: invert(70%);
 
 $agent-config-inner-title-bg-color: $ux-theme-1;
 
-$pnp4nagios-img-filter: invert(84%);
-
 $matches-search-bg-color: $success-dimmed;
 
 $help-bg-color: $navbar-color;
@@ -209,3 +207,5 @@ $bi-box-border-color: $darkgrey;
 $icons-popup-active-color: $darkgrey;
 $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
+$gauge-span-color: $ux-theme-5;
+$gauge-single-value-color: $font-color;

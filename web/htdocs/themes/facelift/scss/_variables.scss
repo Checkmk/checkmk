@@ -150,8 +150,6 @@ $node-vis-history-filter: null;
 
 $agent-config-inner-title-bg-color: $grey-1;
 
-$pnp4nagios-img-filter: null;
-
 $matches-search-bg-color: $green;
 
 $help-bg-color: $input-background-color;
@@ -210,3 +208,5 @@ $bi-box-border-color: $grey-3;
 $icons-popup-active-color: $darkgrey;
 $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
+$gauge-span-color: $ux-theme-5;
+$gauge-single-value-color: $darkgrey;

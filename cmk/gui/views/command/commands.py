@@ -1570,7 +1570,7 @@ class CommandFavorites(Command):
         if request.var("_star") or request.var("_unstar"):
             star = 1 if request.var("_star") else 0
             if star:
-                title = _("<b>add to you favorites</b>")
+                title = _("<b>add to your favorites</b>")
             else:
                 title = _("<b>remove from your favorites</b>")
             return f"STAR;{star};{spec}", title

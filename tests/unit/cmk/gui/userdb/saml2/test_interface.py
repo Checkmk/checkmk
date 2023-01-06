@@ -18,6 +18,8 @@ import pytest
 from freezegun import freeze_time
 from lxml.html import HtmlElement
 from redis import Redis
+from saml2.client import Saml2Client
+from saml2.cryptography.asymmetric import load_pem_private_key
 from saml2.sigver import SignatureError
 from saml2.validate import ResponseLifetimeExceed, ToEarly
 from saml2.xmldsig import SIG_RSA_SHA1
@@ -26,7 +28,13 @@ from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
-from cmk.gui.userdb.saml2.interface import Authenticated, HTMLFormString, Interface, Milliseconds
+from cmk.gui.userdb.saml2.interface import (
+    Authenticated,
+    HTMLFormString,
+    Interface,
+    Milliseconds,
+    saml_config,
+)
 
 
 class SAMLParamName(Enum):
@@ -74,7 +82,7 @@ def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str
 
 
 class TestInterface:
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def ignore_signature(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             "saml2.sigver.SecurityContext._check_signature", lambda s, d, i, *args, **kwargs: i
@@ -93,13 +101,6 @@ class TestInterface:
         yield requests_db
 
     @pytest.fixture
-    def ignore_sign_statement(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setattr(
-            "saml2.sigver.CryptoBackendXmlSec1.sign_statement",
-            lambda s, st, *args, **kwargs: st.decode("utf-8"),
-        )
-
-    @pytest.fixture
     def metadata(self, xml_files_path: Path) -> str:
         return _reduce_xml_template_whitespace(
             Path(xml_files_path / "checkmk_service_provider_metadata.xml").read_text()
@@ -107,10 +108,28 @@ class TestInterface:
 
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
-        interface = Interface(ConnectorConfig(**raw_config).interface_config)
-        interface.authentication_request_id_expiry = Milliseconds(-1)
-        # SHA1 is normally disallowed, but used in the test data
+        config = ConnectorConfig(**raw_config).interface_config
+        interface = Interface(config)
+
+        # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
+        interface.authentication_request_id_expiry = Milliseconds(-1)
+
+        client_config = saml_config(
+            timeout=config.connection_timeout,
+            idp_metadata_endpoint=config.idp_metadata_endpoint,
+            checkmk_server_url=config.checkmk_server_url,
+            signature_private_keyfile=config.signature_certificate.private,
+            signature_public_keyfile=config.signature_certificate.public,
+        )
+        # The below suppressions are due to a bug with the typing extensions of the pysaml2
+        # dependency. They can be removed once the typing extension package has been upgraded to
+        # include https://github.com/cex-solutions/types-pysaml2/pull/59
+        client_config.setattr("sp", "authn_requests_signed", False)  # type: ignore
+        client_config.setattr("sp", "want_assertions_signed", False)  # type: ignore
+        client_config.setattr("sp", "want_response_signed", False)  # type: ignore
+        interface._client = Saml2Client(client_config)
+
         return interface
 
     @pytest.fixture
@@ -212,9 +231,7 @@ class TestInterface:
             (e.tag for e in ET.fromstring(metadata).iter())
         )
 
-    def test_authentication_request_contains_relay_state(
-        self, interface: Interface, ignore_sign_statement: None
-    ) -> None:
+    def test_authentication_request_contains_relay_state(self, interface: Interface) -> None:
         relay_state = _field_from_html(
             html_string=interface.authentication_request(relay_state="index.py").data,
             keyword=SAMLParamName.RELAY_STATE,
@@ -223,7 +240,7 @@ class TestInterface:
         assert relay_state == "index.py"
 
     def test_authentication_request_is_valid(
-        self, interface: Interface, authentication_request: str, ignore_sign_statement: None
+        self, interface: Interface, authentication_request: str
     ) -> None:
         dynamic_elements = {
             "ID": re.compile("id-[a-zA-Z0-9]{17}"),
@@ -246,10 +263,7 @@ class TestInterface:
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_successful_authentication_request_response(
-        self,
-        interface: Interface,
-        authentication_request_response: str,
-        ignore_signature: None,
+        self, interface: Interface, authentication_request_response: str
     ) -> None:
         parsed_response = interface.parse_authentication_request_response(
             authentication_request_response
@@ -260,10 +274,7 @@ class TestInterface:
 
     @freeze_time("2022-12-28T11:11:36Z")
     def test_parse_authentication_request_response_too_old(
-        self,
-        interface: Interface,
-        authentication_request_response: str,
-        ignore_signature: None,
+        self, interface: Interface, authentication_request_response: str
     ) -> None:
         with pytest.raises(ResponseLifetimeExceed):
             interface.parse_authentication_request_response(authentication_request_response)
@@ -310,10 +321,7 @@ class TestInterface:
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_reject_unsolicited_authentication_request_response(
-        self,
-        interface: Interface,
-        unsolicited_authentication_request_response: str,
-        ignore_signature: None,
+        self, interface: Interface, unsolicited_authentication_request_response: str
     ) -> None:
         with pytest.raises(AttributeError):
             interface.parse_authentication_request_response(
@@ -321,7 +329,7 @@ class TestInterface:
             )
 
     def test_authentication_request_ids_expire(
-        self, interface: Interface, monkeypatch: pytest.MonkeyPatch, ignore_sign_statement: None
+        self, interface: Interface, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         redis = get_redis_client()  # this is already monkeypatched to fakeredis
         monkeypatch.setattr(
@@ -339,7 +347,48 @@ class TestInterface:
 
 
 @pytest.mark.skipif(not which("xmlsec1"), reason="Needs xmlsec1 to run")
-class TestInterfaceSigning:
+class TestInterfaceSecurityFeatures:
+    @pytest.fixture(scope="class", name="signature_certificate")
+    def fixture_signature_certificate(
+        self, signature_certificate_paths: tuple[Path, Path]
+    ) -> Iterable[dict[str, str]]:
+        private_keyfile_path, public_keyfile_path = signature_certificate_paths
+
+        private_key_content = private_keyfile_path.read_bytes()
+        public_key_content = public_keyfile_path.read_text()
+
+        # The following awkwardness is done for performance reasons to patch a few slow spots with the
+        # pysaml2 client. Note:
+
+        # - 'load_pem_private_key' takes ages (!)
+        # - the public key is somehow expected without a header by subsequent functions within the
+        #   pysaml2 module
+        in_memory_variant = {
+            str(private_keyfile_path): load_pem_private_key(private_key_content),
+            str(public_keyfile_path): "".join(public_key_content.splitlines()[1:-1]),
+        }
+
+        yield in_memory_variant
+
+    @pytest.fixture(autouse=True)
+    def certificates(
+        self, monkeypatch: pytest.MonkeyPatch, signature_certificate: dict[str, str]
+    ) -> None:
+        monkeypatch.setattr(
+            "saml2.sigver.import_rsa_key_from_file",
+            lambda f: signature_certificate[f],
+        )
+        monkeypatch.setattr("saml2.cert.read_cert_from_file", lambda f, _: signature_certificate[f])
+        monkeypatch.setattr(
+            "saml2.sigver.read_cert_from_file", lambda f, _: signature_certificate[f]
+        )
+        monkeypatch.setattr(
+            "saml2.metadata.read_cert_from_file",
+            lambda f, *_: signature_certificate.get(
+                f
+            ),  # the .get method is used because encryption certificates are not yet implemented
+        )
+
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
         return Interface(ConnectorConfig(**raw_config).interface_config)

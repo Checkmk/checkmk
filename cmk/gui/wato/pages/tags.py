@@ -41,6 +41,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
@@ -123,7 +124,7 @@ class ModeTags(ABCTagMode):
         return _("Tag groups")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
+        menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
                     name="tags",
@@ -172,6 +173,8 @@ class ModeTags(ABCTagMode):
             ],
             breadcrumb=breadcrumb,
         )
+        menu.add_doc_reference(_("Host tags"), DocReference.HOST_TAGS)
+        return menu
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():

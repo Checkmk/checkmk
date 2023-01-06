@@ -339,6 +339,7 @@ class DocReference(Enum):
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     GRAPHING_RRDS = "graphing#rrds"
+    HOST_TAGS = "host_tags"
     INFLUXDB_CONNECTIONS = "metrics_exporter"
     # TODO: Check whether these anchors on the intro page exist and fix/remove broken ones.
     INTRO_CREATING_FOLDERS = "intro#Creating folders"

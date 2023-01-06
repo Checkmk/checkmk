@@ -261,7 +261,7 @@ class NotificationParameterMail(NotificationParameter):
                 (
                     "elements",
                     ListChoice(
-                        title=_("Information to be displayed in the email body"),
+                        title=_("Display additional information"),
                         choices=[
                             ("omdsite", _("OMD Site")),
                             ("hosttags", _("Tags of the Host")),
@@ -284,7 +284,7 @@ class NotificationParameterMail(NotificationParameter):
                 (
                     "insert_html_section",
                     TextAreaUnicode(
-                        title=_("Insert HTML section between body and table"),
+                        title=_("Add HTML section above table (e.g. title, description…)"),
                         default_value="<HTMLTAG>CONTENT</HTMLTAG>",
                         cols=40,
                         rows="auto",

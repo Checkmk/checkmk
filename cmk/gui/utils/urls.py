@@ -338,6 +338,7 @@ class DocReference(Enum):
     DEVEL_CHECK_PLUGINS = "devel_check_plugins"
     DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
+    EVENTCONSOLE = "ec"
     GRAPHING_RRDS = "graphing#rrds"
     HOST_TAGS = "host_tags"
     INFLUXDB_CONNECTIONS = "metrics_exporter"

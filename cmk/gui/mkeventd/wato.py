@@ -47,6 +47,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mkeventd import export_mkp_rule_pack, load_mkeventd_rules, save_mkeventd_rules
 
@@ -1627,6 +1628,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
         )
+        menu.add_doc_reference(_("The Event Console"), DocReference.EVENTCONSOLE)
 
         return menu
 

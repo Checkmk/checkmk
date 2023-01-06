@@ -336,6 +336,7 @@ class DocReference(Enum):
     DEVEL_CHECK_PLUGINS = "devel_check_plugins"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     GRAPHING_RRDS = "graphing#rrds"
+    INFLUXDB_CONNECTIONS = "metrics_exporter"
     # TODO: Check whether these anchors on the intro page exist and fix/remove broken ones.
     INTRO_CREATING_FOLDERS = "intro#Creating folders"
     INTRO_FOLDERS = "intro#folders"

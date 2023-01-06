@@ -347,6 +347,7 @@ class DocReference(Enum):
     INTRO_WELCOME = "intro_welcome"
     LICENSING = "license"
     LDAP = "ldap"
+    MKPS = "mkps"
     PIGGYBACK = "piggyback"
     REGEXES = "regexes"
     REST_API = "rest_api"

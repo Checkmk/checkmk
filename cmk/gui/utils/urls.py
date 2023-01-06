@@ -334,6 +334,7 @@ class DocReference(Enum):
     DASHBOARDS = "dashboards"
     DCD = "dcd"  # dynamic host configuration
     DEVEL_CHECK_PLUGINS = "devel_check_plugins"
+    DIAGNOSTICS = "support_diagnostics"
     DISTRIBUTED_MONITORING = "distributed_monitoring"
     GRAPHING_RRDS = "graphing#rrds"
     INFLUXDB_CONNECTIONS = "metrics_exporter"

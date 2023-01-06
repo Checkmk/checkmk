@@ -63,7 +63,7 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -143,6 +143,7 @@ class ModeDiagnostics(WatoMode):
                 ],
             ),
         )
+        menu.add_doc_reference(self.title(), DocReference[self.name().upper()])
         return menu
 
     def action(self) -> ActionResult:

@@ -177,26 +177,6 @@ class Interface:
             raise UnknownSystemEntity
 
     @property
-    def want_response_signed(self) -> bool:
-        return self._client.want_response_signed
-
-    @property
-    def want_assertions_signed(self) -> bool:
-        return self._client.want_assertions_signed
-
-    @property
-    def authn_requests_signed(self) -> bool:
-        return self._client.authn_requests_signed
-
-    @property
-    def signing_algorithm(self) -> str:
-        return self._client.signing_algorithm
-
-    @property
-    def digest_algorithm(self) -> str:
-        return self._client.digest_algorithm
-
-    @property
     def metadata(self) -> XMLData:
         """Entity ID that is registered with the Identity Provider and information about preferred
         bindings.

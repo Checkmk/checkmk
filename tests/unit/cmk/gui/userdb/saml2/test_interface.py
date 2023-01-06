@@ -207,11 +207,6 @@ class TestInterface:
             == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
         )
 
-    def test_interface_properties_are_secure(self, interface: Interface) -> None:
-        assert interface.want_response_signed is True
-        assert interface.want_assertions_signed is True
-        assert interface.authn_requests_signed is True
-
     def test_metadata(self, interface: Interface, metadata: str) -> None:
         assert list((e.tag for e in ET.fromstring(interface.metadata).iter())) == list(
             (e.tag for e in ET.fromstring(metadata).iter())
@@ -386,6 +381,11 @@ class TestInterfaceSigning:
         )
         malicious_response = original_response.replace("user1", "mwahahaha")
         return _encode(malicious_response)
+
+    def test_interface_properties_are_secure(self, interface: Interface) -> None:
+        assert interface._client.authn_requests_signed is True
+        assert interface._client.want_response_signed is True
+        assert interface._client.want_assertions_signed is True
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_authentication_request_is_signed(

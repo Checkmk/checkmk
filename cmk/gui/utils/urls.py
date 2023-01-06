@@ -358,6 +358,7 @@ class DocReference(Enum):
     REPORTS = "reporting"
     SLA_CONFIGURATION = "sla"
     TIMEPERIODS = "timeperiods"
+    USER_INTERFACE = "user_interface"
     VIEWS = "views"
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"

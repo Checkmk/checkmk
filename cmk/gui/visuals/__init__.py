@@ -51,6 +51,7 @@ from cmk.gui.page_menu import (
     make_javascript_link,
     make_simple_form_page_menu,
     make_simple_link,
+    PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuLink,
@@ -92,6 +93,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     file_name_and_query_vars_from_url,
     make_confirm_link,
     makeactionuri,
@@ -721,7 +723,9 @@ def page_list(  # pylint: disable=too-many-branches
         current_type_dropdown,
         what,
     )
-    doc_reference_to_page_menu(page_menu, what, visual_plural_title)
+
+    _add_doc_references(page_menu, what, visual_plural_title)
+
     make_header(html, title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():
@@ -848,6 +852,18 @@ def page_list(  # pylint: disable=too-many-branches
                     render_custom_columns(table, visual_name, visual)
 
     html.footer()
+
+
+def _add_doc_references(
+    page_menu: PageMenu,
+    what: VisualTypeName,
+    visual_plural_title: str,
+) -> None:
+    # general docs for interface related visuals
+    if what in ["views", "dashboards"]:
+        page_menu.add_doc_reference(_("The user interface"), DocReference.USER_INTERFACE)
+    # specific docs for visual types
+    doc_reference_to_page_menu(page_menu, what, visual_plural_title)
 
 
 def _visual_can_be_linked(

@@ -1160,7 +1160,8 @@ msgstr "<b>conhecer os problemas%s</b> de"
 msgid "<b>add a comment to</b>"
 msgstr "<b>add um comentário para</b>"
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>add para os seus favoritos</b>"
 
 msgid "<b>archive</b>"
@@ -3105,6 +3106,9 @@ msgstr "Adicionar Exceção"
 
 msgid "Add Group"
 msgstr "Adicionar Grupo"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 msgid "Add LDAP connection"
 msgstr "Adicionar conexão LDAP"
@@ -14797,6 +14801,10 @@ msgstr ""
 "Exibir um aviso se um LUN não for apenas de leitura. Sem esta configuração "
 "será exibido um aviso se um LUN for apenas de leitura."
 
+#, fuzzy
+msgid "Display additional information"
+msgstr "Informações adicionais"
+
 msgid "Display additional messages"
 msgstr "Exibir mensagens adicionais"
 
@@ -25442,9 +25450,6 @@ msgstr "Informações sobre tamanho, idade e contagem de arquivos"
 msgid "Information similar to 'docker system df' output"
 msgstr "Informação semelhante à saída do 'docker system df'."
 
-msgid "Information to be displayed in the email body"
-msgstr "Informações a serem exibidas no corpo do e-mail"
-
 msgid "Information to query"
 msgstr "Informações a consultar"
 
@@ -25571,9 +25576,6 @@ msgstr "Potência de entrada"
 
 msgid "Input unicast packets"
 msgstr "Pacotes unicast de entrada"
-
-msgid "Insert HTML section between body and table"
-msgstr "Inserir secção HTML entre o corpo e a tabela"
 
 msgid "Insert page break before each child report"
 msgstr "Inserir quebra de página antes de cada criança denunciar"
@@ -65649,6 +65651,12 @@ msgstr "%s é demasiado baixo. O valor minimo possivel é %s."
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Information to be displayed in the email body"
+#~ msgstr "Informações a serem exibidas no corpo do e-mail"
+
+#~ msgid "Insert HTML section between body and table"
+#~ msgstr "Inserir secção HTML entre o corpo e a tabela"
 
 #~ msgid "Submit Report"
 #~ msgstr "Submeter Relatório"

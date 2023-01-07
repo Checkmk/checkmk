@@ -1167,7 +1167,8 @@ msgstr "<b>connaître les problèmes%s</b> de"
 msgid "<b>add a comment to</b>"
 msgstr "<Ajoutez un commentaire à</b>."
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>Ajouter à vos favoris</b>."
 
 msgid "<b>archive</b>"
@@ -3175,6 +3176,9 @@ msgstr "Ajouter une exception"
 
 msgid "Add Group"
 msgstr "Ajouter un groupe"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 msgid "Add LDAP connection"
 msgstr "Ajouter une connexion LDAP"
@@ -14886,6 +14890,10 @@ msgstr ""
 "Afficher un avertissement si un LUN n'est pas en lecture seule. Sans ce "
 "paramètre, un avertissement sera affiché si un LUN est en lecture seule."
 
+#, fuzzy
+msgid "Display additional information"
+msgstr "Informations complémentaires"
+
 msgid "Display additional messages"
 msgstr "Afficher des messages supplémentaires"
 
@@ -25638,9 +25646,6 @@ msgstr "Informations sur la taille, l'âge et le nombre de fichiers"
 msgid "Information similar to 'docker system df' output"
 msgstr "Informations similaires à la sortie 'docker system df'."
 
-msgid "Information to be displayed in the email body"
-msgstr "Informations à afficher dans le corps du message"
-
 msgid "Information to query"
 msgstr "Informations à consulter"
 
@@ -25761,9 +25766,6 @@ msgstr "Puissance d'entrée"
 
 msgid "Input unicast packets"
 msgstr "Paquets unicast d'entrée"
-
-msgid "Insert HTML section between body and table"
-msgstr "Insérer une section HTML entre le corps et le tableau"
 
 msgid "Insert page break before each child report"
 msgstr "Insérer un saut de page avant chaque rapport d'enfant"
@@ -66204,6 +66206,12 @@ msgstr "%s est trop faible. La valeur minimale autorisée est de %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Information to be displayed in the email body"
+#~ msgstr "Informations à afficher dans le corps du message"
+
+#~ msgid "Insert HTML section between body and table"
+#~ msgstr "Insérer une section HTML entre le corps et le tableau"
 
 #~ msgid "Submit Report"
 #~ msgstr "Soumettre un rapport"

@@ -1138,7 +1138,8 @@ msgstr "<b>問題%sを確認する</b>"
 msgid "<b>add a comment to</b>"
 msgstr "<b>コメントを追加</b>"
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>お気に入りに追加</b>"
 
 msgid "<b>archive</b>"
@@ -2997,6 +2998,9 @@ msgstr "例外を追加"
 
 msgid "Add Group"
 msgstr "グループを追加"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 msgid "Add LDAP connection"
 msgstr "LDAP接続を追加します"
@@ -14131,6 +14135,10 @@ msgstr ""
 "LUNが読み取り専用でない場合は、警告を表示します。この設定がないと、LUNが読み"
 "取り専用の場合に警告が表示されます。"
 
+#, fuzzy
+msgid "Display additional information"
+msgstr "追加情報"
+
 msgid "Display additional messages"
 msgstr "追加のメッセージを表示する"
 
@@ -24209,9 +24217,6 @@ msgstr "ファイルのサイズ、経過時間、数に関する情報"
 msgid "Information similar to 'docker system df' output"
 msgstr "docker system df'出力に類似した情報"
 
-msgid "Information to be displayed in the email body"
-msgstr "メール本文に表示される情報"
-
 msgid "Information to query"
 msgstr "照会する情報"
 
@@ -24330,9 +24335,6 @@ msgstr "入力電力"
 
 msgid "Input unicast packets"
 msgstr "ユニキャストパケットを入力します"
-
-msgid "Insert HTML section between body and table"
-msgstr "本文と表の間にHTMLセクションを挿入します"
 
 msgid "Insert page break before each child report"
 msgstr "各子レポートの前に改ページを挿入します"
@@ -62009,6 +62011,12 @@ msgstr "%sが低すぎます。最小許容値は %s です。"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Information to be displayed in the email body"
+#~ msgstr "メール本文に表示される情報"
+
+#~ msgid "Insert HTML section between body and table"
+#~ msgstr "本文と表の間にHTMLセクションを挿入します"
 
 #~ msgid "Submit Report"
 #~ msgstr "レポートを送信する"

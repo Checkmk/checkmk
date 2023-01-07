@@ -1170,7 +1170,8 @@ msgstr "<b>quittiere die Probleme%s</b> von"
 msgid "<b>add a comment to</b>"
 msgstr "<b>Ergänze Kommentar</b>"
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>zu den Favoriten hinzufügen</b>"
 
 msgid "<b>archive</b>"
@@ -3145,6 +3146,9 @@ msgstr "Ausnahme ergänzen"
 
 msgid "Add Group"
 msgstr "Gruppe hinzufügen"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 msgid "Add LDAP connection"
 msgstr "LDAP-Verbindung hinzufügen"
@@ -14733,6 +14737,10 @@ msgstr ""
 "Es wird eine Warung ausgegeben, wenn eine LUN nicht read-only ist. Ohne "
 "diese Option wird eine Warnung ausgegeben, wenn eine LUN read-only ist."
 
+#, fuzzy
+msgid "Display additional information"
+msgstr "Additional Information"
+
 msgid "Display additional messages"
 msgstr "Zusätzliche Meldungen anzeigen"
 
@@ -25374,9 +25382,6 @@ msgstr "Information über Größe, Alter und Anzahl von Dateien"
 msgid "Information similar to 'docker system df' output"
 msgstr "Informationen die der 'docker system df' Ausgabe gleichen"
 
-msgid "Information to be displayed in the email body"
-msgstr "Informationen, die im Rumpf der Email gezeigt werden sollen"
-
 msgid "Information to query"
 msgstr "Abzurufende Informationen"
 
@@ -25497,9 +25502,6 @@ msgstr "Eingangsleistung"
 
 msgid "Input unicast packets"
 msgstr "Eingehende Unicastpakete"
-
-msgid "Insert HTML section between body and table"
-msgstr "HTML-Sektion zwischen Body und Tabelle einfügen"
 
 msgid "Insert page break before each child report"
 msgstr "Zeilenumbruch vor jedem eingebetteten Bericht einfügen"
@@ -65432,6 +65434,12 @@ msgstr "%s ist zu niedrig (erlaubtes Minimum: %s)."
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Information to be displayed in the email body"
+#~ msgstr "Informationen, die im Rumpf der Email gezeigt werden sollen"
+
+#~ msgid "Insert HTML section between body and table"
+#~ msgstr "HTML-Sektion zwischen Body und Tabelle einfügen"
+
 #~ msgid "Submit Report"
 #~ msgstr "Bericht einsenden"
 
@@ -72530,9 +72538,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Add & remove folders"
 #~ msgstr "Ordner ergänzen & löschen"
-
-#~ msgid "Add additional information"
-#~ msgstr "Additional Information"
 
 #~ msgid "Add comments"
 #~ msgstr "Kommentare ergänzen"

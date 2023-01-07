@@ -1148,7 +1148,8 @@ msgstr "<b>confirmă problemele%s</b> lui"
 msgid "<b>add a comment to</b>"
 msgstr "adaugă un comentariu la"
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>adaugă la favoritele tale</b>"
 
 msgid "<b>archive</b>"
@@ -2848,6 +2849,9 @@ msgstr "Adaugă Excepție"
 #, fuzzy
 msgid "Add Group"
 msgstr "Grupuri RAID"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 #, fuzzy
 msgid "Add LDAP connection"
@@ -14232,6 +14236,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Display additional information"
+msgstr "Informații Adiționale"
+
+#, fuzzy
 msgid "Display additional messages"
 msgstr "Optiuni tabel"
 
@@ -23870,9 +23878,6 @@ msgstr ""
 msgid "Information similar to 'docker system df' output"
 msgstr ""
 
-msgid "Information to be displayed in the email body"
-msgstr ""
-
 #, fuzzy
 msgid "Information to query"
 msgstr "Informații Adiționale"
@@ -24001,9 +24006,6 @@ msgid "Input power"
 msgstr ""
 
 msgid "Input unicast packets"
-msgstr ""
-
-msgid "Insert HTML section between body and table"
 msgstr ""
 
 msgid "Insert page break before each child report"
@@ -63325,10 +63327,6 @@ msgstr ""
 
 #~ msgid "Add & remove folders"
 #~ msgstr "Adaugă sau șterge directoare"
-
-#, fuzzy
-#~ msgid "Add additional information"
-#~ msgstr "Informații Adiționale"
 
 #, fuzzy
 #~ msgid "Add as custom macro"

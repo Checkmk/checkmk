@@ -1162,7 +1162,8 @@ msgstr "<b>ken de problemen%s</b> van"
 msgid "<b>add a comment to</b>"
 msgstr "<b>een reactie toevoegen aan</b>"
 
-msgid "<b>add to you favorites</b>"
+#, fuzzy
+msgid "<b>add to your favorites</b>"
 msgstr "<b>aan uw favorieten toevoegen</b>"
 
 msgid "<b>archive</b>"
@@ -3141,6 +3142,9 @@ msgstr "Uitzondering toevoegen"
 
 msgid "Add Group"
 msgstr "Groep toevoegen"
+
+msgid "Add HTML section above table (e.g. title, description…)"
+msgstr ""
 
 msgid "Add LDAP connection"
 msgstr "LDAP-verbinding toevoegen"
@@ -14712,6 +14716,10 @@ msgstr ""
 "Geef een waarschuwing weer als een LUN niet alleen-lezen is. Zonder deze "
 "instelling wordt een waarschuwing weergegeven als een LUN alleen-lezen is."
 
+#, fuzzy
+msgid "Display additional information"
+msgstr "Aanvullende informatie"
+
 msgid "Display additional messages"
 msgstr "Extra berichten weergeven"
 
@@ -25311,9 +25319,6 @@ msgstr "Informatie over grootte, leeftijd en aantal bestanden"
 msgid "Information similar to 'docker system df' output"
 msgstr "Informatie vergelijkbaar met \"docker system df\" uitvoer"
 
-msgid "Information to be displayed in the email body"
-msgstr "Informatie die moet worden weergegeven in de e-mail body"
-
 msgid "Information to query"
 msgstr "Informatie om te vragen"
 
@@ -25434,9 +25439,6 @@ msgstr "Ingangsvermogen"
 
 msgid "Input unicast packets"
 msgstr "Invoer unicast-pakketten"
-
-msgid "Insert HTML section between body and table"
-msgstr "HTML-sectie invoegen tussen body en tabel"
 
 msgid "Insert page break before each child report"
 msgstr "Pagina-einde invoegen voor elk kinderrapport"
@@ -65337,6 +65339,12 @@ msgstr "%s is te laag. De minimum toegestane waarde is %s."
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Information to be displayed in the email body"
+#~ msgstr "Informatie die moet worden weergegeven in de e-mail body"
+
+#~ msgid "Insert HTML section between body and table"
+#~ msgstr "HTML-sectie invoegen tussen body en tabel"
 
 #~ msgid "Submit Report"
 #~ msgstr "Verslag indienen"

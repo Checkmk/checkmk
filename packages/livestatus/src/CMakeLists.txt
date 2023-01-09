@@ -107,7 +107,7 @@ endif()
 
 FetchContent_Declare(
   asio-omd
-  URL ${CMAKE_SOURCE_DIR}/../../omd/packages/asio/asio-1.24.0-patched.tar.gz
+  URL ${root_repo_dir}/omd/packages/asio/asio-1.24.0-patched.tar.gz
   URL_HASH
     SHA256=09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca
   DOWNLOAD_EXTRACT_TIMESTAMP no)
@@ -120,7 +120,7 @@ FetchContent_GetProperties(
 set(asio_ext_include ${src_dir}/include)
 
 FetchContent_Declare(
-  re2 URL ${CMAKE_SOURCE_DIR}/../../third_party/re2/re2-2022-12-01.tar.gz
+  re2 URL ${root_repo_dir}/third_party/re2/re2-2022-12-01.tar.gz
           DOWNLOAD_EXTRACT_TIMESTAMP no)
 
 # We disable build re2::testing in the recommended manner by re2 because of

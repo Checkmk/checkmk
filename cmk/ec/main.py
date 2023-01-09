@@ -1205,6 +1205,7 @@ class EventServer(ECServerThread):
         )
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
+        self._rule_matcher = RuleMatcher(self._logger, config)
 
     def compile_rules(  # pylint: disable=too-many-branches
         self, rule_packs: Sequence[ECRulePack]

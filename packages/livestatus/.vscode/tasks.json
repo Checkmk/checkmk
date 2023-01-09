@@ -32,6 +32,20 @@
             "problemMatcher": "$gcc"
         },
         {
+            "label": "_Build_ Test",
+            "type": "shell",
+            "command": "cmake --build build --target test",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
             "label": "Build Nagios Mockup",
             "type": "shell",
             "command": "make NagiosMockup",

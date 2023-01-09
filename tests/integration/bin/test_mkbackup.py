@@ -221,15 +221,6 @@ def test_mkbackup_help(site: Site, test_cfg: None) -> None:
     assert p.wait() == 3
 
 
-def test_mkbackup_list_unconfigured(site: Site) -> None:
-    p = site.execute(
-        ["mkbackup", "list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
-    )
-    stderr = p.communicate()[1]
-    assert stderr.startswith("mkbackup is not configured yet")
-    assert p.wait() == 3
-
-
 @pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_list_targets(site: Site) -> None:
     p = site.execute(

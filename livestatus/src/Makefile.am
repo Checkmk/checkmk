@@ -12,7 +12,7 @@ VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quie
 INCLUDES_DIR := includes
 LIBS_DIR := libs
 
-PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
+PACKAGE_ASIO := $(abs_top_srcdir)/third_party/asio
 ASIO_VERSION := asio-1.24.0-patched
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 

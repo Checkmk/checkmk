@@ -19,7 +19,7 @@ MSI_PATCH_FILE 	= $(TOP_SRC_DIR)\cmk\utils\msi_patch.py
 
 EXTLIBS         := extlibs
 
-PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\omd\packages\asio
+PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\third_party\asio
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 ASIO_VERSION 	:= asio-1.24.0-patched
 

@@ -107,7 +107,7 @@ endif()
 
 FetchContent_Declare(
   asio-omd
-  URL ${root_repo_dir}/omd/packages/asio/asio-1.24.0-patched.tar.gz
+  URL ${root_repo_dir}/third_party/asio/asio-1.24.0-patched.tar.gz
   URL_HASH
     SHA256=09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca
   DOWNLOAD_EXTRACT_TIMESTAMP no)

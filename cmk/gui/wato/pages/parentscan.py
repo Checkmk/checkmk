@@ -341,6 +341,7 @@ class ModeParentScan(WatoMode):
                                 item=make_form_submit_link("parentscan", "_start"),
                                 is_shortcut=True,
                                 is_suggested=True,
+                                css_classes=["submit"],
                             ),
                         ],
                     ),

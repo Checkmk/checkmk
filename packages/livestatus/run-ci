@@ -221,7 +221,7 @@ run_iwyu() {
         -p build \
         "${FILES_TO_USE[@]}" -- \
         -Xiwyu --error \
-        -Xiwyu "--mapping_file=$(realpath ../../livestatus/iwyu-mappings/check_mk.imp)" \
+        -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
         ${IWYU_EXTRA_ARGS}
 }
 

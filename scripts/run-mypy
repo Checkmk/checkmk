@@ -19,7 +19,7 @@ VENV_MYPY_PATH="$REPO_PATH/.venv/bin/mypy"
 if [ ! -f "$VENV_MYPY_PATH" ]; then
     # Try to fix this first
     rm -rf "$REPO_PATH/.venv"
-    make --silent -C "$REPO_PATH" .venv 1>&2
+    make -C "$REPO_PATH" .venv 1>&2
 
     if [ ! -f "$VENV_MYPY_PATH" ]; then
         for LAST_ARG; do :; done

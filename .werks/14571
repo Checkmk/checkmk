@@ -1,0 +1,16 @@
+Title: KUBE: Allow invalid value for `names` field of Node
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673255007
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+Previously, if the field <tt>.status.images</tt> of a Kubernetes Node contained any element with
+<tt>names</tt> set to <tt>null</tt>, the API response would be rejected by agent_kube with the error
+C+:
+[special_kube] Agent exited with code 1: Invalid value for `names`, must not be `None`
+C-:
+With this change, this error is fixed.

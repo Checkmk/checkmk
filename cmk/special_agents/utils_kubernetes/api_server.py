@@ -8,6 +8,7 @@ import itertools
 import json
 import logging
 import re
+import types
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Literal, Mapping, Optional, Sequence, Tuple, Union
 
@@ -55,12 +56,8 @@ class CoreAPI:
         self.connection = client.CoreV1Api(api_client)
         self.timeout = timeout
         self.raw_pods = self._query_raw_pods()
-        self.raw_nodes = self._query_raw_nodes()
         self.raw_namespaces = self._query_raw_namespaces()
         self.raw_resource_quotas = self._query_raw_resource_quotas()
-
-    def _query_raw_nodes(self) -> Sequence[client.V1Node]:
-        return self.connection.list_node(_request_timeout=self.timeout).items
 
     def _query_raw_pods(self) -> Sequence[client.V1Pod]:
         return self.connection.list_pod_for_all_namespaces(_request_timeout=self.timeout).items
@@ -174,6 +171,16 @@ class RawAPI:
 
     def query_kubelet_health(self, node_name) -> api.HealthZ:
         return self._get_healthz(f"/api/v1/nodes/{node_name}/proxy/healthz")
+
+    def query_raw_nodes(self) -> Sequence[client.V1Node]:
+        response_json = json.loads(self._request("GET", "/api/v1/nodes").response)
+        for node in response_json["items"]:
+            # The status.images field may contain data, which is rejected by the client (SUP-12139).
+            # We do not need the images of a node, so we simply remove them.
+            node["status"]["images"] = []
+        return self._api_client.deserialize(
+            types.SimpleNamespace(data=json.dumps(response_json)), "V1NodeList"
+        ).items
 
 
 def _extract_sequence_based_identifier(git_version: str) -> Optional[str]:
@@ -372,11 +379,12 @@ class APIServer:
         self._external_api = external_api
         self.version = version
 
+        self._raw_nodes = self._raw_api.query_raw_nodes()
         # It's best if queries to the api happen in a small time window, since then there will fewer
         # mismatches between the objects (which might change inbetween api calls).
         self.node_to_kubelet_health = {
             raw_node.metadata.name: raw_api.query_kubelet_health(raw_node.metadata.name)
-            for raw_node in self._core_api.raw_nodes
+            for raw_node in self._raw_nodes
         }
         self.api_health = raw_api.query_api_health()
 
@@ -430,7 +438,7 @@ class APIServer:
     def nodes(self) -> Sequence[api.Node]:
         return [
             node_from_client(raw_node, self.node_to_kubelet_health[raw_node.metadata.name])
-            for raw_node in self._core_api.raw_nodes
+            for raw_node in self._raw_nodes
         ]
 
     def pods(self) -> Sequence[api.Pod]:

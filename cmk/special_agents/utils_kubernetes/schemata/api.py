@@ -321,6 +321,7 @@ class NodeStatus(BaseModel):
     conditions: Optional[Sequence[NodeCondition]]
     node_info: NodeInfo
     addresses: NodeAddresses
+    # images always equals [] due to the substituion done by api_server.py::_query_raw_nodes
 
 
 class Node(BaseModel):

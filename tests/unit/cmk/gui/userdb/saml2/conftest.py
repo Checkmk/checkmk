@@ -55,7 +55,7 @@ def url_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("cmk.gui.userdb.saml2.interface.url_prefix", lambda: "/heute/")
 
 
-@pytest.fixture(name="xml_files_path")
+@pytest.fixture(name="xml_files_path", scope="session")
 def fixture_xml_files_path() -> Path:
     return Path(__file__).parent / "xml_files"
 

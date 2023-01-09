@@ -81,6 +81,27 @@ def _field_from_html(html_string: HTMLFormString, keyword: SAMLParamName) -> str
     return _decode(message)
 
 
+@pytest.fixture(scope="module", name="authentication_request")
+def fixture_authentication_request(xml_files_path: Path) -> str:
+    return _reduce_xml_template_whitespace(
+        Path(xml_files_path / "authentication_request.xml").read_text()
+    )
+
+
+@pytest.fixture(scope="module", name="decoded_authentication_request_response")
+def fixture_decoded_authentication_request_response(xml_files_path: Path) -> str:
+    return _reconstruct_original_response_format(
+        _reduce_xml_template_whitespace(
+            Path(xml_files_path / "authentication_request_response.xml").read_text()
+        )
+    )
+
+
+@pytest.fixture(scope="module", name="authentication_request_response")
+def fixture_authentication_request_response(decoded_authentication_request_response: str) -> str:
+    return _encode(decoded_authentication_request_response)
+
+
 class TestInterface:
     @pytest.fixture(autouse=True)
     def ignore_signature(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -99,12 +120,6 @@ class TestInterface:
             "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", requests_db
         )
         yield requests_db
-
-    @pytest.fixture
-    def metadata(self, xml_files_path: Path) -> str:
-        return _reduce_xml_template_whitespace(
-            Path(xml_files_path / "checkmk_service_provider_metadata.xml").read_text()
-        )
 
     @pytest.fixture
     def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
@@ -133,25 +148,10 @@ class TestInterface:
         return interface
 
     @pytest.fixture
-    def authentication_request(self, xml_files_path: Path) -> str:
-        return _reduce_xml_template_whitespace(
-            Path(xml_files_path / "authentication_request.xml").read_text()
-        )
-
-    @pytest.fixture
-    def authentication_request_response(self, xml_files_path: Path) -> str:
-        return _encode(
-            _reconstruct_original_response_format(
-                _reduce_xml_template_whitespace(
-                    Path(xml_files_path / "authentication_request_response.xml").read_text()
-                )
-            )
-        )
-
-    @pytest.fixture
-    def authentication_request_response_not_for_us(self, xml_files_path: Path) -> str:
-        response = Path(xml_files_path / "authentication_request_response.xml").read_text()
-        response = response.replace(
+    def authentication_request_response_not_for_us(
+        self, authentication_request_response: str
+    ) -> str:
+        response = authentication_request_response.replace(
             "<saml:Audience>http://localhost/heute/check_mk/saml_metadata.py</saml:Audience>",
             "<saml:Audience>http://some_other_audience.com</saml:Audience>",
         )
@@ -168,10 +168,9 @@ class TestInterface:
         ],
     )
     def authentication_request_response_custom_condition(
-        self, xml_files_path: Path, request: pytest.FixtureRequest
+        self, authentication_request_response: str, request: pytest.FixtureRequest
     ) -> str:
-        response = Path(xml_files_path / "authentication_request_response.xml").read_text()
-        response = response.replace(
+        response = authentication_request_response.replace(
             "</saml:Conditions>",
             f"{request.param}</saml:Conditions>",
         )
@@ -202,10 +201,9 @@ class TestInterface:
         ],
     )
     def unsolicited_authentication_request_response(
-        self, xml_files_path: Path, request: pytest.FixtureRequest
+        self, decoded_authentication_request_response: str, request: pytest.FixtureRequest
     ) -> str:
-        with open(xml_files_path / "authentication_request_response.xml", "r") as f:
-            response = f.readlines()
+        response = decoded_authentication_request_response.split("\n")
 
         original_value, new_value, replacement_criteria = request.param
 
@@ -226,7 +224,11 @@ class TestInterface:
             == "http://localhost:8080/simplesaml/saml2/idp/SSOService.php"
         )
 
-    def test_metadata(self, interface: Interface, metadata: str) -> None:
+    def test_metadata(self, interface: Interface, xml_files_path: Path) -> None:
+        metadata = _reduce_xml_template_whitespace(
+            Path(xml_files_path / "checkmk_service_provider_metadata.xml").read_text()
+        )
+
         assert list((e.tag for e in ET.fromstring(interface.metadata).iter())) == list(
             (e.tag for e in ET.fromstring(metadata).iter())
         )
@@ -406,29 +408,16 @@ class TestInterfaceSecurityFeatures:
         yield requests_db
 
     @pytest.fixture
-    def authentication_request_response(self, xml_files_path: Path) -> str:
-        return _encode(
-            _reconstruct_original_response_format(
-                _reduce_xml_template_whitespace(
-                    Path(xml_files_path / "authentication_request_response.xml").read_text()
-                )
-            )
-        )
-
-    @pytest.fixture
     def unsigned_authentication_request_response(self, xml_files_path: Path) -> str:
         return _encode(
             Path(xml_files_path / "unsigned_authentication_request_response.xml").read_text()
         )
 
     @pytest.fixture
-    def malicious_authentication_request_response(self, xml_files_path: Path) -> str:
-        original_response = _reconstruct_original_response_format(
-            _reduce_xml_template_whitespace(
-                Path(xml_files_path / "authentication_request_response.xml").read_text()
-            )
-        )
-        malicious_response = original_response.replace("user1", "mwahahaha")
+    def malicious_authentication_request_response(
+        self, decoded_authentication_request_response: str
+    ) -> str:
+        malicious_response = decoded_authentication_request_response.replace("user1", "mwahahaha")
         return _encode(malicious_response)
 
     def test_interface_properties_are_secure(self, interface: Interface) -> None:

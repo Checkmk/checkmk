@@ -313,7 +313,7 @@ class PainterSpec:
                     if (link_spec := value["link_spec"]) is None
                     else VisualLinkSpec.from_raw(link_spec)
                 ),
-                tooltip=value["tooltip"],
+                tooltip=value["tooltip"] or None,
                 join_index=join_index,
                 column_title=value["column_title"],
                 _column_type=value.get("column_type"),

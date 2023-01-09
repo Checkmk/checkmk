@@ -141,5 +141,6 @@
                 }
             }
         ]
-    }
+    },
+    "cmake.generator": "Unix Makefiles"
 }

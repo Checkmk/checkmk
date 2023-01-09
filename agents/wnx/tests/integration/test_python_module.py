@@ -64,4 +64,4 @@ def test_python_module(  # type:ignore[no-untyped-def]
     )
     assert output.ret_code == 0
     assert output.stderr.startswith("Missing config file")
-    assert output.stdout.startswith("<<<check_mk>>>")
+    assert output.stdout.startswith("<<<cmk_update_agent_status>>>")

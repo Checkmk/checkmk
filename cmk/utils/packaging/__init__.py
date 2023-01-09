@@ -16,6 +16,8 @@ from itertools import groupby
 from pathlib import Path
 from typing import Final, TypedDict
 
+from pydantic import BaseModel
+
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -617,33 +619,31 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
         )
 
 
-def get_optional_manifests(
+class StoredManifests(BaseModel):
+    local: list[Manifest]
+    shipped: list[Manifest]
+
+
+def get_stored_manifests(
     package_store: PackageStore,
-) -> Mapping[PackageID, tuple[Manifest, bool]]:
-    local_packages = package_store.list_local_packages()
-    local_names = {p.name for p in local_packages}
-    shipped_packages = (
-        p for p in package_store.list_shipped_packages() if p.name not in local_names
+) -> StoredManifests:
+    return StoredManifests(
+        local=_get_manifests(package_store.list_local_packages()),
+        shipped=_get_manifests(package_store.list_shipped_packages()),
     )
-    return {
-        **{k: (v, True) for k, v in _get_manifests(local_packages).items()},
-        **{k: (v, False) for k, v in _get_manifests(shipped_packages).items()},
-    }
 
 
 def get_enabled_manifests(log: logging.Logger | None = None) -> Mapping[PackageID, Manifest]:
-    return _get_manifests(_get_enabled_package_paths(), log)
+    return {m.id: m for m in _get_manifests(_get_enabled_package_paths(), log)}
 
 
-def _get_manifests(
-    paths: Iterable[Path], log: logging.Logger | None = None
-) -> Mapping[PackageID, Manifest]:
-    return {
-        manifest.id: manifest
+def _get_manifests(paths: Iterable[Path], log: logging.Logger | None = None) -> list[Manifest]:
+    return [
+        manifest
         for pkg_path in paths
         if (manifest := extract_manifest_optionally(pkg_path, g_logger if log is None else log))
         is not None
-    }
+    ]
 
 
 def _get_enabled_package_paths() -> list[Path]:

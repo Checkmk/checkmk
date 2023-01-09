@@ -18,7 +18,7 @@ from . import (
     disable,
     disable_outdated,
     get_enabled_manifests,
-    get_optional_manifests,
+    get_stored_manifests,
     get_unpackaged_files,
     install,
     PackageStore,
@@ -260,14 +260,18 @@ def _get_package_id(
     if version is not None:
         return PackageID(name=name, version=version)
 
-    match [p for p in get_optional_manifests(PackageStore()) if p.name == name]:
+    stored_packages = get_stored_manifests(PackageStore())
+    match [
+        *(p for p in stored_packages.local if p.name == name),
+        *(p for p in stored_packages.shipped if p.name == name),
+    ]:
         case ():
             raise PackageException(f"No such package: {name}")
         case (single_match,):
-            return single_match
+            return single_match.id
         case multiple_matches:
             raise PackageException(
-                f"Please specify version ({', '.join(pid.version for pid in multiple_matches)})"
+                f"Please specify version ({', '.join(m.version for m in multiple_matches)})"
             )
 
 

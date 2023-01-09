@@ -277,6 +277,7 @@ class AllPackageInfos(TypedDict):
 
 def get_all_package_infos() -> AllPackageInfos:
     store = packaging.PackageStore()
+    stored_packages = packaging.get_stored_manifests(store)
     return {
         "installed": packaging.get_installed_manifests(),
         "unpackaged": {
@@ -284,7 +285,10 @@ def get_all_package_infos() -> AllPackageInfos:
             for part, files in packaging.get_unpackaged_files().items()
         },
         "parts": packaging.package_part_info(),
-        "optional_packages": packaging.get_optional_manifests(store),
+        "optional_packages": {
+            **{m.id: (m, False) for m in stored_packages.shipped},
+            **{m.id: (m, True) for m in stored_packages.local},
+        },
         "enabled_packages": packaging.get_enabled_manifests(),
     }
 

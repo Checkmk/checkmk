@@ -282,10 +282,12 @@ def test_unpackaged_files() -> None:
 
 
 def test_get_optional_manifests_none() -> None:
-    assert packaging.get_optional_manifests(packaging.PackageStore()) == {}
+    stored = packaging.get_stored_manifests(packaging.PackageStore())
+    assert not stored.local
+    assert not stored.shipped
 
 
-def test_get_optional_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_get_stored_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     mkp_dir = tmp_path.joinpath("optional_packages")
     mkp_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)
@@ -294,12 +296,10 @@ def test_get_optional_manifests(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     _create_simple_test_package(packaging.PackageName("optional"))
     expected_manifest = _read_manifest(packaging.PackageName("optional"))
 
-    assert packaging.get_optional_manifests(packaging.PackageStore()) == {
-        packaging.PackageID(  # pylint: disable=unhashable-member  # you're wrong, pylint.
-            name=packaging.PackageName("optional"),
-            version=packaging.PackageVersion("1.0.0"),
-        ): (expected_manifest, True)
-    }
+    assert packaging.get_stored_manifests(packaging.PackageStore()) == packaging.StoredManifests(
+        local=[expected_manifest],
+        shipped=[],
+    )
 
 
 def test_reload_gui_without_gui_files(reload_apache: Mock, build_setup_search_index: Mock) -> None:

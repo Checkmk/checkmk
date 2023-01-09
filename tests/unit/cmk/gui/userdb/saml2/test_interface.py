@@ -129,7 +129,7 @@ class TestInterface:
 
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
-        interface.authentication_request_id_expiry = Milliseconds(-1)
+        interface._authentication_request_id_expiry = Milliseconds(-1)
 
         client_config = saml_config(
             timeout=config.connection_timeout,
@@ -336,7 +336,7 @@ class TestInterface:
         interface._redis_requests_db = redis
 
         expiry = 1
-        interface.authentication_request_id_expiry = Milliseconds(expiry)
+        interface._authentication_request_id_expiry = Milliseconds(expiry)
 
         interface.authentication_request(relay_state="_")
 

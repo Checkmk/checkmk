@@ -134,15 +134,33 @@ class Interface:
             signature_private_keyfile=config.signature_certificate.private,
             signature_public_keyfile=config.signature_certificate.public,
         )
-        self._attributes_mapping = attributes_mapping(config.user_id_attribute)
-        self._user_id_attribute = self._attributes_mapping["user_id_attribute"]
+
+        if self._config.metadata is None:
+            raise AttributeError("Got no metadata information from Identity Provider")
+
+        self._identity_provider_entity_id = list(self._config.metadata.keys())[
+            0
+        ]  # May or may not be the metadata endpoint of the IdP
+
+        self.acs_endpoint, self.acs_binding = self._config.getattr("endpoints")[
+            "assertion_consumer_service"
+        ][0]
+
         self._client = Saml2Client(config=self._config)
+        try:
+            self.idp_sso_binding, self.idp_sso_destination = self._client.pick_binding(
+                "single_sign_on_service",
+                [self.acs_binding],
+                "idpsso",
+                entity_id=self._identity_provider_entity_id,
+            )
+        except UnknownSystemEntity:
+            # TODO (CMK-11846): handle this
+            raise UnknownSystemEntity
+
         self._metadata = create_metadata_string(configfile=None, config=self._config).decode(
             "utf-8"
         )
-        self._redis_requests_db = requests_db
-        self._redis_namespace = "saml2_authentication_requests"
-        self.authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
 
         # Maintaining an allow-list has the advantage of knowing exactly what we support, and we are
         # less prone to changes made to the pysaml2 dependency. New algorithms are not added
@@ -156,27 +174,12 @@ class Interface:
             SIG_RSA_SHA512,
         }
 
-        self.acs_endpoint, self.acs_binding = self._config.getattr("endpoints")[
-            "assertion_consumer_service"
-        ][0]
+        self._redis_requests_db = requests_db
+        self._redis_namespace = "saml2_authentication_requests"
+        self._authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
 
-        if self._config.metadata is None:
-            raise AttributeError("Got no metadata information from Identity Provider")
-
-        self._identity_provider_entity_id = list(self._config.metadata.keys())[
-            0
-        ]  # May or may not be the metadata endpoint of the IdP
-
-        try:
-            self.idp_sso_binding, self.idp_sso_destination = self._client.pick_binding(
-                "single_sign_on_service",
-                [self.acs_binding],
-                "idpsso",
-                entity_id=self._identity_provider_entity_id,
-            )
-        except UnknownSystemEntity:
-            # TODO (CMK-11846): handle this
-            raise UnknownSystemEntity
+        self._attributes_mapping = attributes_mapping(config.user_id_attribute)
+        self._user_id_attribute = self._attributes_mapping["user_id_attribute"]
 
     @property
     def metadata(self) -> XMLData:
@@ -225,7 +228,7 @@ class Interface:
             )
             pipeline.pexpire(
                 hkey,
-                self.authentication_request_id_expiry,
+                self._authentication_request_id_expiry,
             )
 
         LOGGER.debug("Prepare authentication request")

@@ -41,6 +41,13 @@ from cmk.gui.view_utils import format_plugin_output
             ),
             id="A HREF Replacement",
         ),
+        pytest.param(
+            "Don't look at this: https://bitly.com/98K8eH, This is another summary",
+            HTML(
+                """Don&#x27;t look at this: <a href="https://bitly.com/98K8eH," title="https://bitly.com/98K8eH," onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a> This is another summary"""
+            ),
+            id="The comma should not be part of the URL",  # FIXME
+        ),
     ],
 )
 def test_button_url(args: str, expected: HTML) -> None:

@@ -292,7 +292,7 @@ def _view_editor_spec(
             name, parameters = name_or_parameters
         else:
             name = name_or_parameters
-            parameters = None
+            parameters = PainterParameters()
 
         link_spec = (
             None

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
+from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec, VisualLinkSpec
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
             ),
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -36,7 +36,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
             ),
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -55,7 +55,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
             ),
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -75,7 +75,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
             ),
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -137,7 +137,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
             },
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=VisualLinkSpec(
                     type_name="reports",
                     name="view_name",
@@ -150,7 +150,7 @@ from cmk.gui.type_defs import PainterSpec, RawPainterSpec, VisualLinkSpec
     ],
 )
 def test_painter_spec_from_raw(
-    raw_painter_spec: tuple | RawPainterSpec,
+    raw_painter_spec: tuple | RawLegacyPainterSpec,
     expected_painter_spec: PainterSpec,
 ) -> None:
     assert PainterSpec.from_raw(raw_painter_spec) == expected_painter_spec
@@ -184,7 +184,7 @@ def test_painter_spec_from_raw(
         pytest.param(
             PainterSpec(
                 name="name",
-                parameters=None,
+                parameters={},
                 link_spec=None,
                 tooltip=None,
                 join_index=None,
@@ -192,7 +192,7 @@ def test_painter_spec_from_raw(
             ),
             {
                 "name": "name",
-                "parameters": None,
+                "parameters": {},
                 "link_spec": None,
                 "tooltip": None,
                 "join_index": None,

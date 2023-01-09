@@ -269,12 +269,26 @@ class PainterParameters(TypedDict, total=False):
     uuid: str
 
 
+def _make_default_painter_parameters() -> PainterParameters:
+    return PainterParameters()
+
+
 ColumnTypes = Literal["column", "join_column"]
+
+
+class RawLegacyPainterSpec(TypedDict):
+    name: PainterName
+    parameters: PainterParameters | None
+    link_spec: tuple[VisualTypeName, VisualName] | None
+    tooltip: ColumnName | None
+    join_index: ColumnName | None
+    column_title: str | None
+    column_type: ColumnTypes | None
 
 
 class RawPainterSpec(TypedDict):
     name: PainterName
-    parameters: PainterParameters | None
+    parameters: PainterParameters
     link_spec: tuple[VisualTypeName, VisualName] | None
     tooltip: ColumnName | None
     join_index: ColumnName | None
@@ -285,7 +299,7 @@ class RawPainterSpec(TypedDict):
 @dataclass(frozen=True)
 class PainterSpec:
     name: PainterName
-    parameters: PainterParameters | None = None
+    parameters: PainterParameters = field(default_factory=_make_default_painter_parameters)
     link_spec: VisualLinkSpec | None = None
     tooltip: ColumnName | None = None
     join_index: ColumnName | None = None
@@ -299,15 +313,17 @@ class PainterSpec:
         return "column" if self.join_index is None else "join_column"
 
     @classmethod
-    def from_raw(cls, value: tuple | RawPainterSpec) -> PainterSpec:
-        # TODO The tuple-case can be remove with Checkmk 2.4.
-        # The transformation is done via update_config/plugins/actions/cre_visuals.py
+    def from_raw(cls, value: tuple | RawLegacyPainterSpec) -> PainterSpec:
+        # TODO
+        # 1: The params-None case can be removed with Checkmk 2.3
+        # 2: The tuple-case can be removed with Checkmk 2.4.
+        # => The transformation is done via update_config/plugins/actions/cre_visuals.py
 
         if isinstance(value, dict):
             join_index = value["join_index"]
             return cls(
                 name=value["name"],
-                parameters=value["parameters"],
+                parameters=value["parameters"] or PainterParameters(),
                 link_spec=(
                     None
                     if (link_spec := value["link_spec"]) is None
@@ -323,12 +339,11 @@ class PainterSpec:
         # in their definitions. Consolidate this case to None.
         value = (value[0],) + tuple(p or None for p in value[1:]) + (None,) * (5 - len(value))
 
-        parameters: PainterParameters | None
         if isinstance(value[0], tuple):
             name, parameters = value[0]
         else:
             name = value[0]
-            parameters = None
+            parameters = PainterParameters()
 
         join_index = value[3]
         return cls(

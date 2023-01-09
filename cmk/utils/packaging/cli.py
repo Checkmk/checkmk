@@ -21,7 +21,6 @@ from . import (
     get_optional_manifests,
     get_unpackaged_files,
     install,
-    install_optional_package,
     PackageStore,
     release,
     update_active_packages,
@@ -181,7 +180,7 @@ def _args_package_id(
 
 def _command_enable(args: argparse.Namespace, _logger: logging.Logger) -> int:
     """Enable previously disabled package NAME"""
-    install_optional_package(PackageStore(), _get_package_id(args.name, args.verison))
+    install(PackageStore(), _get_package_id(args.name, args.verison))
     return 0
 
 

@@ -344,14 +344,6 @@ def _create_enabled_mkp_from_installed_package(
     mark_as_enabled(package_store, manifest.id)
 
 
-def install_optional_package(package_store: PackageStore, package_id: PackageID) -> Manifest:
-    return install(
-        package_store,
-        package_id,
-        allow_outdated=True,
-    )
-
-
 def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
     """Mark the package as one of the enabled ones
 

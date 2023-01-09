@@ -12,7 +12,7 @@ import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
-from cmk.utils.type_defs import RuleOptions, RuleOptionsSpec, RuleSpec
+from cmk.utils.type_defs import RuleOptionsSpec, RuleSpec
 
 import cmk.gui.utils
 
@@ -24,6 +24,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
+from cmk.gui.watolib.rulesets import RuleOptions
 
 
 def _ruleset(ruleset_name) -> rulesets.Ruleset:  # type:ignore[no-untyped-def]

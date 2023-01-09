@@ -10,10 +10,9 @@ import typing
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import RuleOptions
 
 from cmk.gui import exceptions, http
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.rule.fields import (
     InputRuleObject,
@@ -30,7 +29,14 @@ from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, RuleConditions, Ruleset
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Rule,
+    RuleConditions,
+    RuleOptions,
+    Ruleset,
+)
 
 PERMISSIONS = permissions.AllPerm(
     [

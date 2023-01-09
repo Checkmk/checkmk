@@ -22,7 +22,7 @@ from cmk.utils.type_defs import (
     HostOrServiceConditionRegex,
     HostOrServiceConditions,
     RuleConditionsSpec,
-    RuleOptions,
+    RuleOptionsSpec,
     RulesetName,
     RuleSpec,
     RuleValue,
@@ -67,6 +67,42 @@ SearchOptions = dict[str, Any]
 # This macro is needed to make the to_config() methods be able to use native pprint/repr for the
 # ruleset data structures. Have a look at to_config() for further information.
 _FOLDER_PATH_MACRO = "%#%FOLDER_PATH%#%"
+
+
+@dataclasses.dataclass()
+class RuleOptions:
+    disabled: bool | None
+    description: str
+    comment: str
+    docu_url: str
+    predefined_condition_id: str | None = None
+
+    @classmethod
+    def from_config(
+        cls,
+        rule_options_config: RuleOptionsSpec,
+    ) -> RuleOptions:
+        return cls(
+            disabled=rule_options_config.get("disabled", None),
+            description=rule_options_config.get("description", ""),
+            comment=rule_options_config.get("comment", ""),
+            docu_url=rule_options_config.get("docu_url", ""),
+            predefined_condition_id=rule_options_config.get("predefined_condition_id"),
+        )
+
+    def to_config(self) -> RuleOptionsSpec:
+        rule_options_config: RuleOptionsSpec = {}
+        if self.disabled is not None:
+            rule_options_config["disabled"] = self.disabled
+        if self.description:
+            rule_options_config["description"] = self.description
+        if self.comment:
+            rule_options_config["comment"] = self.comment
+        if self.docu_url:
+            rule_options_config["docu_url"] = self.docu_url
+        if self.predefined_condition_id:
+            rule_options_config["predefined_condition_id"] = self.predefined_condition_id
+        return rule_options_config
 
 
 class UseHostFolder(Enum):

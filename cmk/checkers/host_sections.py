@@ -66,3 +66,8 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
             cache_info=new_cache_info,
             piggybacked_raw_data=new_piggybacked_raw_data,
         )
+
+    def __bool__(self) -> bool:
+        # This is needed in order to decide whether a host has inventory data or not, see:
+        # cmk.base.agent_based.inventory._inventory.py::_no_data_or_files
+        return bool(self.sections) or bool(self.piggybacked_raw_data)

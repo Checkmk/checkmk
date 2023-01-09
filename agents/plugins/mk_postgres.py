@@ -704,7 +704,7 @@ class PostgresLinux(PostgresBase):
         for proc in procs_list:
             if any(pat.search(proc) for pat in procs_to_match):
                 # the data directory for the instance "main" is not called "main" but "data" on some platforms
-                if self.name in proc or (self.name == 'main' and 'data' in proc):
+                if self.name in proc.lower() or (self.name == "main" and "data" in proc):
                     out += proc + "\n"
         return out.rstrip()
 

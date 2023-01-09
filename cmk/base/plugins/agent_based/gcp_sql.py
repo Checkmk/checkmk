@@ -86,10 +86,9 @@ def check_gcp_sql_status(
         return
     metrics = {
         "up": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/up",
-            "Up:",
-            lambda x: str(bool(x)),
-        ),
+            gcp.MetricExtractionSpec(metric_type="cloudsql.googleapis.com/database/up"),
+            gcp.MetricDisplaySpec(label="Up", render_func=lambda x: str(bool(x))),
+        )
     }
     timeseries = section_gcp_service_cloud_sql[item].rows
     yield from gcp.generic_check(metrics, timeseries, {"up": None})
@@ -130,13 +129,13 @@ def check_gcp_sql_memory(
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
-        # percent render expects numbers range 0 to 100 and not fractions.
         "memory_util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/memory/utilization",
-            "Memory",
-            render.percent,
-            scale=1e2,
-        ),
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/memory/utilization",
+                scale=1e2,  # percent render expects numbers range 0 to 100 and not fractions.
+            ),
+            gcp.MetricDisplaySpec(label="Memory", render_func=render.percent),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -162,8 +161,11 @@ def check_gcp_sql_cpu(
 ) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/cpu/utilization", "CPU", render.percent, scale=1e2
-        ),
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/cpu/utilization", scale=1e2
+            ),
+            gcp.MetricDisplaySpec(label="CPU", render_func=render.percent),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
@@ -189,19 +191,22 @@ def check_gcp_sql_network(
 ) -> CheckResult:
     metrics = {
         "net_data_recv": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/received_bytes_count",
-            "In",
-            render.networkbandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/network/received_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="In", render_func=render.networkbandwidth),
         ),
         "net_data_sent": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/sent_bytes_count",
-            "Out",
-            render.networkbandwidth,
+            gcp.MetricExtractionSpec(
+                "cloudsql.googleapis.com/database/network/sent_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Out", render_func=render.networkbandwidth),
         ),
         "connections": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/network/connections",
-            "Active connections",
-            str,
+            gcp.MetricExtractionSpec(
+                "cloudsql.googleapis.com/database/network/connections",
+            ),
+            gcp.MetricDisplaySpec(label="Active connections", render_func=str),
         ),
     }
     yield from gcp.check(
@@ -232,14 +237,20 @@ def check_gcp_sql_disk(
         return
 
     metrics = {
-        "utilization": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/utilization", "", str),
-        "read_ios": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/read_ops_count", "", str),
-        "write_ios": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/write_ops_count", "", str
+        "utilization": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/utilization"
         ),
-        "capacity": gcp.MetricSpec("cloudsql.googleapis.com/database/disk/quota", "", str),
-        "used_capacity": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/disk/bytes_used", "", str
+        "read_ios": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/read_ops_count"
+        ),
+        "write_ios": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/write_ops_count",
+        ),
+        "capacity": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/quota",
+        ),
+        "used_capacity": gcp.MetricExtractionSpec(
+            "cloudsql.googleapis.com/database/disk/bytes_used",
         ),
     }
 
@@ -329,9 +340,10 @@ def check_gcp_sql_replication(
 ) -> CheckResult:
     metrics = {
         "replication_lag": gcp.MetricSpec(
-            "cloudsql.googleapis.com/database/replication/replica_lag",
-            "Replication lag",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                metric_type="cloudsql.googleapis.com/database/replication/replica_lag"
+            ),
+            gcp.MetricDisplaySpec(label="Replication lag", render_func=render.timespan),
         )
     }
     yield from gcp.check(

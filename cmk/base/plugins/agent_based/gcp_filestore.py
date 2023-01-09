@@ -64,17 +64,19 @@ def check(
         return
 
     metrics = {
-        "utilization": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes_percent", "", str),
-        "read_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/read_ops_count", "", str),
-        "write_ios": gcp.MetricSpec("file.googleapis.com/nfs/server/write_ops_count", "", str),
-        "average_read_wait": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/average_read_latency", "", str
+        "utilization": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/used_bytes_percent"
         ),
-        "average_write_wait": gcp.MetricSpec(
-            "file.googleapis.com/nfs/server/average_write_latency", "", str
+        "read_ios": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/read_ops_count"),
+        "write_ios": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/write_ops_count"),
+        "average_read_wait": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/average_read_latency"
         ),
-        "free_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/free_bytes", "", str),
-        "used_capacity": gcp.MetricSpec("file.googleapis.com/nfs/server/used_bytes", "", str),
+        "average_write_wait": gcp.MetricExtractionSpec(
+            "file.googleapis.com/nfs/server/average_write_latency"
+        ),
+        "free_capacity": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/free_bytes"),
+        "used_capacity": gcp.MetricExtractionSpec("file.googleapis.com/nfs/server/used_bytes"),
     }
 
     timeseries = section_gcp_service_filestore.get(item, gcp.SectionItem(rows=[])).rows

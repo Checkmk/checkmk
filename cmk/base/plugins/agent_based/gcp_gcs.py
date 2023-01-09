@@ -45,7 +45,10 @@ def check_gcp_gcs_requests(
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
-        "requests": gcp.MetricSpec("storage.googleapis.com/api/request_count", "Requests", str)
+        "requests": gcp.MetricSpec(
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/api/request_count"),
+            gcp.MetricDisplaySpec(label="Requests", render_func=str),
+        )
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_gcs, ASSET_TYPE, section_gcp_assets
@@ -71,10 +74,14 @@ def check_gcp_gcs_network(
 ) -> CheckResult:
     metrics = {
         "net_data_sent": gcp.MetricSpec(
-            "storage.googleapis.com/network/sent_bytes_count", "Out", render.networkbandwidth
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/network/sent_bytes_count"),
+            gcp.MetricDisplaySpec(label="Out", render_func=render.networkbandwidth),
         ),
         "net_data_recv": gcp.MetricSpec(
-            "storage.googleapis.com/network/received_bytes_count", "In", render.networkbandwidth
+            gcp.MetricExtractionSpec(
+                metric_type="storage.googleapis.com/network/received_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="In", render_func=render.networkbandwidth),
         ),
     }
     yield from gcp.check(
@@ -101,10 +108,12 @@ def check_gcp_gcs_object(
 ) -> CheckResult:
     metrics = {
         "aws_bucket_size": gcp.MetricSpec(
-            "storage.googleapis.com/storage/total_bytes", "Bucket size", render.bytes
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/storage/total_bytes"),
+            gcp.MetricDisplaySpec(label="Bucket size", render_func=render.bytes),
         ),
         "aws_num_objects": gcp.MetricSpec(
-            "storage.googleapis.com/storage/object_count", "Objects", str
+            gcp.MetricExtractionSpec(metric_type="storage.googleapis.com/storage/object_count"),
+            gcp.MetricDisplaySpec(label="Objects", render_func=str),
         ),
     }
     yield from gcp.check(

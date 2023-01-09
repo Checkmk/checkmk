@@ -16,11 +16,7 @@ def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
     if not string_table:
         return None
     section = gcp.parse_piggyback(string_table)
-    metric = gcp.MetricSpec(
-        "compute.googleapis.com/instance/uptime_total",
-        "uptime",
-        render.timespan,
-    )
+    metric = gcp.MetricExtractionSpec("compute.googleapis.com/instance/uptime_total")
     uptime_sec = gcp.get_value(section, metric)
     return uptime.Section(uptime_sec, None)
 
@@ -52,15 +48,16 @@ def discover_default(section: gcp.PiggyBackSection) -> DiscoveryResult:
 def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
-            "compute.googleapis.com/instance/cpu/utilization",
-            "Utilization",
-            render.percent,
-            scale=1e2,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/cpu/utilization", scale=1e2
+            ),
+            gcp.MetricDisplaySpec(label="Utilization", render_func=render.percent),
         ),
         "vcores": gcp.MetricSpec(
-            "compute.googleapis.com/instance/cpu/reserved_cores",
-            "Reserved vCores",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/cpu/reserved_cores",
+            ),
+            gcp.MetricDisplaySpec(label="Reserved vCores", render_func=str),
         ),
     }
     yield from gcp.generic_check(metrics, section, params)
@@ -92,17 +89,19 @@ def check_network(
 ) -> CheckResult:
     metric_descs = {
         "in": gcp.MetricSpec(
-            "compute.googleapis.com/instance/network/received_bytes_count",
-            "",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/network/received_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="", render_func=render.timespan),
         ),
         "out": gcp.MetricSpec(
-            "compute.googleapis.com/instance/network/sent_bytes_count",
-            "",
-            render.timespan,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/network/sent_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="", render_func=render.timespan),
         ),
     }
-    metrics = {k: gcp.get_value(section, desc) for k, desc in metric_descs.items()}
+    metrics = {k: gcp.get_value(section, desc.extraction) for k, desc in metric_descs.items()}
     interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
         interfaces.InterfaceWithRates(
             attributes=interfaces.Attributes(
@@ -144,24 +143,28 @@ register.agent_section(
 def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> CheckResult:
     metrics = {
         "disk_read_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_bytes_count",
-            "Read",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/read_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Read", render_func=render.iobandwidth),
         ),
         "disk_write_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_bytes_count",
-            "Write",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/write_bytes_count",
+            ),
+            gcp.MetricDisplaySpec(label="Write", render_func=render.iobandwidth),
         ),
         "disk_read_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_ops_count",
-            "Read operations",
-            str,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/read_ops_count",
+            ),
+            gcp.MetricDisplaySpec(label="Read operations", render_func=str),
         ),
         "disk_write_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_ops_count",
-            "Write operations",
-            str,
+            gcp.MetricExtractionSpec(
+                "compute.googleapis.com/instance/disk/write_ops_count",
+            ),
+            gcp.MetricDisplaySpec(label="Write operations", render_func=str),
         ),
     }
     yield from gcp.generic_check(metrics, section, params)

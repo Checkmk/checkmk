@@ -44,24 +44,28 @@ def check_storage(
 ) -> CheckResult:
     metrics = {
         "disk_read_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_bytes_count",
-            "Read",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/read_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="Read", render_func=render.iobandwidth),
         ),
         "disk_write_throughput": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_bytes_count",
-            "Write",
-            render.iobandwidth,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/write_bytes_count"
+            ),
+            gcp.MetricDisplaySpec(label="Write", render_func=render.iobandwidth),
         ),
         "disk_read_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/read_ops_count",
-            "Read operations",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/read_ops_count"
+            ),
+            gcp.MetricDisplaySpec(label="Read operations", render_func=str),
         ),
         "disk_write_ios": gcp.MetricSpec(
-            "compute.googleapis.com/instance/disk/write_ops_count",
-            "Write operations",
-            str,
+            gcp.MetricExtractionSpec(
+                metric_type="compute.googleapis.com/instance/disk/write_ops_count"
+            ),
+            gcp.MetricDisplaySpec(label="Write operations", render_func=str),
         ),
     }
     yield from gcp.check(

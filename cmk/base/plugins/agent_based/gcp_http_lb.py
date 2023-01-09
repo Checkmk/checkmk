@@ -41,8 +41,11 @@ def check_requests(
 ) -> CheckResult:
     metrics = {
         "requests": gcp.MetricSpec(
-            "loadbalancing.googleapis.com/https/request_count", "Requests", str
-        )
+            gcp.MetricExtractionSpec(
+                metric_type="loadbalancing.googleapis.com/https/request_count"
+            ),
+            gcp.MetricDisplaySpec(label="Requests", render_func=str),
+        ),
     }
     yield from gcp.check(
         metrics, item, params, section_gcp_service_http_lb, ASSET_TYPE, section_gcp_assets

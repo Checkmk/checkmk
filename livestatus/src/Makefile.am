@@ -28,7 +28,7 @@ RRDTOOL_BUILD_LOG := $(RRDTOOL_PATH)/build.log
 RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_PATH)/lib
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_PATH)/include
 
-PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
+PACKAGE_GOOGLETEST := $(abs_top_srcdir)/third_party/googletest
 GOOGLETEST_VERSION := googletest-71140c3ca7-patched
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 

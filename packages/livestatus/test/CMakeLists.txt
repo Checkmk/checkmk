@@ -2,7 +2,7 @@ include(FetchContent)
 
 FetchContent_Declare(
   gtest-omd
-  URL ${root_repo_dir}/omd/packages/googletest/googletest-71140c3ca7-patched.tar.gz
+  URL ${root_repo_dir}/third_party/googletest/googletest-71140c3ca7-patched.tar.gz
   URL_HASH
     SHA256=ff90c74541157daf5fe7503b2b02ddc1b1df35bd5d2d861e9865aa4bd53248ce
   DOWNLOAD_EXTRACT_TIMESTAMP no)

@@ -45,7 +45,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import PainterSpec, Visual, VisualContext, VisualLinkSpec
+from cmk.gui.type_defs import PainterParameters, PainterSpec, Visual, VisualContext, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
@@ -1049,7 +1049,7 @@ multisite_builtin_views.update(
             "painters": [
                 PainterSpec(
                     name="host",
-                    parameters={"color_choices": []},
+                    parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
                 PainterSpec(name="host_state"),
@@ -1085,7 +1085,7 @@ multisite_builtin_views.update(
             "painters": [
                 PainterSpec(
                     name="host",
-                    parameters={"color_choices": []},
+                    parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
                 PainterSpec(
@@ -1129,7 +1129,7 @@ multisite_builtin_views.update(
             "painters": [
                 PainterSpec(
                     name="host",
-                    parameters={"color_choices": []},
+                    parameters=PainterParameters(color_choices=[]),
                     link_spec=VisualLinkSpec(type_name="views", name="hoststatus"),
                 ),
                 PainterSpec(name="host_state"),

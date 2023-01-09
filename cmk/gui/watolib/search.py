@@ -258,8 +258,10 @@ class IndexBuilder:
 
 class URLChecker:
     def __init__(self) -> None:
+        from cmk.gui.wato import page_handler
         from cmk.gui.wato.pages.hosts import ModeEditHost
 
+        self._page_handler_module = page_handler
         self._mode_edit_host = ModeEditHost
 
     @staticmethod
@@ -279,13 +281,22 @@ class URLChecker:
         file_name, query_vars = file_name_and_query_vars_from_url(url)
         self._set_query_vars(query_vars)
 
-        is_host_url = "mode=edit_host" in url
-        if is_host_url:
+        mode = modes[0] if (modes := query_vars.get("mode", [])) else None
+
+        if is_host_url := mode == "edit_host":
             self._set_current_folder(query_vars.get("folder", [""])[0])  # "" means root dir
 
         try:
             if is_host_url:
                 self._try_host()
+            # Speedup for SUP-12358. In the master branch, this is solved properly for all modes.
+            elif mode in ("host_groups", "service_groups", "contact_groups"):
+                if (
+                    mode_permissions := self._page_handler_module._get_mode_permission_and_class(
+                        mode
+                    )[0]
+                ) is not None and not user.may("wato.seeall"):
+                    self._page_handler_module._ensure_mode_permissions(mode_permissions)
             else:
                 self._try_page(file_name)
             return True

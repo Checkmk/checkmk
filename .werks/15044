@@ -1,0 +1,17 @@
+Title: Improve Setup search performance
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1673259052
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+When searching for `groups` or related search terms, the Setup search was slowed down by inefficient
+permission checks for the host, service and contact group pages. These checks ensure that the host,
+service and contact group pages are are only included in the search results if the current user is
+allowed to see them. The permissions are now ensured more efficiently.
+
+Note that this issue was resolved in <a href="https://checkmk.com/werk/15041">werk 15041</a> for the
+upcoming Checkmk version 2.2.

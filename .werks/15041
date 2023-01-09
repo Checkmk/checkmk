@@ -10,4 +10,5 @@ Version: 2.2.0i1
 
 The Setup search was slowed down by inefficient permission checks. These checks ensure that only
 pages which the current user is allowed to see are included in the results. The permissions are now
-ensured more efficiently. This affected for example the search `groups` in certain scenarios.
+ensured more efficiently. This affected for example the search for the term `groups` in certain
+scenarios.

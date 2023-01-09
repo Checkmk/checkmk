@@ -1,0 +1,14 @@
+Title: Changing password fails when a password policy is enforced
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1673263047
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+When a password policy (e.g. minumum length) was configured users could not change their passwords due to an internal error.
+Affected users would see the error message `Internal error: object of type 'Password' has no len()`.
+
+This is now fixed.

@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Mapping, NewType
 
 import requests
 from pydantic import BaseModel
+from redis import Redis
 from redis.client import Pipeline
 from saml2 import BINDING_HTTP_POST
 from saml2.client import Saml2Client
@@ -26,7 +29,7 @@ from saml2.xmldsig import (
     SIG_RSA_SHA512,
 )
 
-from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
+from cmk.utils.redis import IntegrityCheckResponse, query_redis
 from cmk.utils.site import url_prefix
 from cmk.utils.type_defs import UserId
 
@@ -39,8 +42,6 @@ XMLData = NewType("XMLData", str)
 HTMLFormString = NewType("HTMLFormString", str)
 RequestId = NewType("RequestId", str)
 Milliseconds = NewType("Milliseconds", int)
-
-AUTHORIZATION_REQUEST_ID_DATABASE = get_redis_client()
 
 
 class Certificate(BaseModel):
@@ -125,7 +126,7 @@ def attributes_mapping(user_id_attribute: str) -> Mapping[str, str]:
 
 
 class Interface:
-    def __init__(self, config: InterfaceConfig) -> None:
+    def __init__(self, config: InterfaceConfig, requests_db: Redis[str]) -> None:
         self._config = saml_config(
             timeout=config.connection_timeout,
             idp_metadata_endpoint=config.idp_metadata_endpoint,
@@ -139,6 +140,7 @@ class Interface:
         self._metadata = create_metadata_string(configfile=None, config=self._config).decode(
             "utf-8"
         )
+        self._redis_requests_db = requests_db
         self._redis_namespace = "saml2_authentication_requests"
         self.authentication_request_id_expiry = Milliseconds(5 * 60 * 1000)
 
@@ -236,7 +238,7 @@ class Interface:
         )
 
         query_redis(
-            client=AUTHORIZATION_REQUEST_ID_DATABASE,
+            client=self._redis_requests_db,
             data_key=self._redis_namespace,
             integrity_callback=lambda: IntegrityCheckResponse.UPDATE,
             update_callback=_redis_update_query,
@@ -375,11 +377,11 @@ class Interface:
         in_response_to_id = authentication_response.in_response_to
         if not (
             identity_provider_entity_id := query_redis(
-                client=AUTHORIZATION_REQUEST_ID_DATABASE,
+                client=self._redis_requests_db,
                 data_key=self._redis_namespace,
                 integrity_callback=lambda: IntegrityCheckResponse.USE,
                 update_callback=lambda p: None,
-                query_callback=lambda: AUTHORIZATION_REQUEST_ID_DATABASE.getdel(
+                query_callback=lambda: self._redis_requests_db.getdel(
                     f"{self._redis_namespace}:{in_response_to_id}"
                 ),
                 timeout=5,

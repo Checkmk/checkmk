@@ -112,21 +112,20 @@ class TestInterface:
         )
 
     @pytest.fixture(autouse=True)
-    def initialised_redis(self, monkeypatch: pytest.MonkeyPatch) -> Iterable[Redis]:
+    def initialised_redis(self) -> Iterable[Redis]:
         requests_db = get_redis_client()  # this is already monkeypatched to fakeredis
         requests_db.set(
             "saml2_authentication_requests:id-Ex1qiCa1tiZj1nBKe",
             "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
         )
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", requests_db
-        )
         yield requests_db
 
     @pytest.fixture
-    def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
+    def interface(
+        self, metadata_from_idp: None, raw_config: dict[str, Any], initialised_redis: Redis
+    ) -> Interface:
         config = ConnectorConfig(**raw_config).interface_config
-        interface = Interface(config)
+        interface = Interface(config=config, requests_db=initialised_redis)
 
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
@@ -332,16 +331,12 @@ class TestInterface:
                 unsolicited_authentication_request_response
             )
 
-    def test_authentication_request_ids_expire(
-        self, interface: Interface, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_authentication_request_ids_expire(self, interface: Interface) -> None:
         redis = get_redis_client()  # this is already monkeypatched to fakeredis
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", redis
-        )
+        interface._redis_requests_db = redis
 
         expiry = 1
-        monkeypatch.setattr(interface, "authentication_request_id_expiry", expiry)
+        interface.authentication_request_id_expiry = Milliseconds(expiry)
 
         interface.authentication_request(relay_state="_")
 
@@ -394,20 +389,21 @@ class TestInterfaceSecurityFeatures:
         )
 
     @pytest.fixture
-    def interface(self, metadata_from_idp: None, raw_config: dict[str, Any]) -> Interface:
-        return Interface(ConnectorConfig(**raw_config).interface_config)
-
-    @pytest.fixture
-    def initialised_redis(self, monkeypatch: pytest.MonkeyPatch) -> Iterable[Redis]:
+    def initialised_redis(self) -> Iterable[Redis]:
         requests_db = get_redis_client()  # this is already monkeypatched to fakeredis
         requests_db.set(
             "saml2_authentication_requests:id-Ex1qiCa1tiZj1nBKe",
             "http://localhost:8080/simplesaml/saml2/idp/metadata.php",
         )
-        monkeypatch.setattr(
-            "cmk.gui.userdb.saml2.interface.AUTHORIZATION_REQUEST_ID_DATABASE", requests_db
-        )
         yield requests_db
+
+    @pytest.fixture
+    def interface(
+        self, metadata_from_idp: None, raw_config: dict[str, Any], initialised_redis: Redis
+    ) -> Interface:
+        return Interface(
+            config=ConnectorConfig(**raw_config).interface_config, requests_db=initialised_redis
+        )
 
     @pytest.fixture
     def unsigned_authentication_request_response(self, xml_files_path: Path) -> str:

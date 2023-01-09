@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from cmk.utils.redis import get_redis_client
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import active_config
@@ -40,7 +41,9 @@ class Connector(UserConnector):
     def __init__(self, raw_config: dict[str, Any]) -> None:
         super().__init__(raw_config)
         self.__config = ConnectorConfig(**self._config)
-        self.__interface = Interface(self.__config.interface_config)
+        self.__interface = Interface(
+            config=self.__config.interface_config, requests_db=get_redis_client()
+        )
 
     @property
     def interface(self) -> Interface:

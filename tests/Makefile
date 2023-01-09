@@ -335,7 +335,7 @@ test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
 
 test-mypy-docker:
-	../scripts/run-in-docker.sh make --quiet test-mypy
+	../scripts/run-in-docker.sh make test-mypy
 
 test-packaging:
 	$(PYTEST) -T packaging packaging

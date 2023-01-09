@@ -7,10 +7,7 @@ include $(abs_top_srcdir)/defines.make
 DOXYGEN ?= doxygen
 PLANTUTML_VERSION ?= 1.2022.12
 IWYU_TOOL ?= python3 $(abs_top_srcdir)/scripts/iwyu_tool.py
-RUN_CLANG_TIDY ?= \
-    python3 $(abs_top_srcdir)/scripts/run-clang-tidy.py \
-        -clang-tidy-binary=clang-tidy-$(CLANG_VERSION) \
-        -clang-apply-replacements-binary=clang-apply-replacements-$(CLANG_VERSION)
+RUN_CLANG_TIDY ?= python3 $(shell command -v run-clang-tidy-$(CLANG_VERSION).py
 VALGRIND ?= $(shell valgrind --version > /dev/null 2>&1 && echo "valgrind --quiet --num-callers=30 --error-exitcode=42")
 INCLUDES_DIR := includes
 LIBS_DIR := libs

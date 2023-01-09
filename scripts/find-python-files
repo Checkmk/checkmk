@@ -75,7 +75,6 @@ get_candidates_from_filesystem() {
         -name .venv -prune -o \
         -name test_docker_parse_node_images.py -prune -o \
         -name typeshed -prune -o \
-        -name run-clang-tidy.py -prune -o \
         -name iwyu_tool.py -prune -o \
         -name chroot -prune -o \
         -name py2 -prune -o \

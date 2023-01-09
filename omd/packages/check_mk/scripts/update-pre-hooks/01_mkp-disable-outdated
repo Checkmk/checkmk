@@ -1,2 +1,2 @@
 #!/bin/bash
-mkp update-active-packages
+mkp update-active

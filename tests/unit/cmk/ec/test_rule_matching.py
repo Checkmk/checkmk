@@ -7,6 +7,8 @@ import logging
 
 import pytest
 
+from cmk.utils.site import omd_site
+
 from cmk.ec.main import (
     Event,
     EventServer,
@@ -24,7 +26,7 @@ from cmk.ec.main import (
 @pytest.fixture(name="m")
 def fixture_m() -> RuleMatcher:
     logger = logging.getLogger("cmk.mkeventd")
-    return RuleMatcher(logger, True)
+    return RuleMatcher(logger, True, omd_site())
 
 
 @pytest.mark.parametrize(

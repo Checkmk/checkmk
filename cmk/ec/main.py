@@ -38,6 +38,8 @@ from typing import Any, Literal, NamedTuple, Protocol, TypedDict
 
 from setproctitle import setthreadtitle
 
+from livestatus import SiteId
+
 import cmk.utils.daemon
 import cmk.utils.debug
 import cmk.utils.defines
@@ -491,7 +493,7 @@ class EventServer(ECServerThread):
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = ActiveHistoryPeriod()
-        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"])
+        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"], omd_site())
 
         # HACK for testing: The real fix would involve breaking up these huge
         # class monsters.
@@ -1205,7 +1207,7 @@ class EventServer(ECServerThread):
         )
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
-        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"])
+        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"], omd_site())
 
     def compile_rules(  # pylint: disable=too-many-branches
         self, rule_packs: Sequence[ECRulePack]
@@ -1898,11 +1900,12 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> E
 
 
 class RuleMatcher:
-    def __init__(self, logger: Logger, debug_rules: bool) -> None:
+    def __init__(self, logger: Logger, debug_rules: bool, omd_site_id: SiteId) -> None:
         super().__init__()
         self._logger = logger
         self._debug_rules = debug_rules
         self._time_periods = TimePeriods(logger)
+        self._omd_site = omd_site_id
 
     def _log_rule_matching(self, message: str, *args: object, indent: bool = True) -> None:
         """Check if debug rules is on and log the message as info level"""
@@ -2052,7 +2055,7 @@ class RuleMatcher:
         return MatchPriority(has_match=has_match, has_canceling_match=has_canceling_match)
 
     def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:
-        if "match_site" not in rule or omd_site() in rule["match_site"]:
+        if "match_site" not in rule or self._omd_site in rule["match_site"]:
             return MatchSuccess(cancelling=False, match_groups={})
         return MatchFailure("The site does not match.")
 

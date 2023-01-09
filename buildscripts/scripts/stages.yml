@@ -31,10 +31,10 @@ VARIABLES:
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_MAKEFILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Makefile' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^Makefile' - || true"
 
     - NAME: CHANGED_TESTS_MAKEFILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/tests/Makefile' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/Makefile' - || true"
 
     - NAME: CHANGED_PYTHON_FILES
       # filter list of changed files to contain only python files
@@ -46,31 +46,31 @@ VARIABLES:
       SH: "${WORKSPACE}/scripts/find-rust-files | grep -h -e '^^' ${GREP_PATTERNS} - | sort"
 
     - NAME: CHANGED_PYLINT_RC_FILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/.pylintrc' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' - || true"
 
     - NAME: CHANGED_PYTEST_INI_FILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pytest.ini' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^pytest.ini' - || true"
 
     - NAME: CHANGED_PYPROJECT_TOML_FILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/pyproject.toml' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^pyproject.toml' - || true"
 
     - NAME: CHANGED_PIPFILE
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Pipfile' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^Pipfile' - || true"
 
     - NAME: CHANGED_PIPFILE_LOCK
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/Pipfile.lock' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^Pipfile.lock' - || true"
 
     - NAME: CHANGED_RUN_BLACK_SCRIPT
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-black' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-black' - || true"
 
     - NAME: CHANGED_RUN_MYPY_SCRIPT
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-mypy' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-mypy' - || true"
 
     - NAME: CHANGED_RUN_PIPENV_SCRIPT
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-pipenv' - || true"
 
     - NAME: CHANGED_RUN_PRETTIER_SCRIPT
-      SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-prettier' - || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-prettier' - || true"
 
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS

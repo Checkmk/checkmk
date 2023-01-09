@@ -6,6 +6,7 @@
 from collections.abc import Sequence
 from datetime import datetime
 
+from cmk.utils.crypto import Password
 from cmk.utils.object_diff import make_diff_text
 
 import cmk.gui.userdb as userdb
@@ -156,7 +157,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
     else:
         password = user_attrs.get("password")
         if password:
-            verify_password_policy(password)
+            verify_password_policy(Password(password))
 
     # Email
     email = user_attrs.get("email")
@@ -227,9 +228,9 @@ def notification_script_choices():
     return choices
 
 
-def verify_password_policy(password):
+def verify_password_policy(password: Password) -> None:
     min_len = active_config.password_policy.get("min_length")
-    if min_len and len(password) < min_len:
+    if min_len and password.char_count() < min_len:
         raise MKUserError(
             "password",
             _("The given password is too short. It must have at least %d characters.") % min_len,
@@ -238,7 +239,7 @@ def verify_password_policy(password):
     num_groups = active_config.password_policy.get("num_groups")
     if num_groups:
         groups = {}
-        for c in password:
+        for c in password.as_string():
             if c in "abcdefghijklmnopqrstuvwxyz":
                 groups["lcase"] = 1
             elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":

@@ -88,18 +88,20 @@ def fixture_authentication_request(xml_files_path: Path) -> str:
     )
 
 
-@pytest.fixture(scope="module", name="decoded_authentication_request_response")
-def fixture_decoded_authentication_request_response(xml_files_path: Path) -> str:
+@pytest.fixture(scope="module", name="decoded_signed_authentication_request_response")
+def fixture_decoded_signed_authentication_request_response(xml_files_path: Path) -> str:
     return _reconstruct_original_response_format(
         _reduce_xml_template_whitespace(
-            Path(xml_files_path / "authentication_request_response.xml").read_text()
+            Path(xml_files_path / "signed_authentication_request_response.xml").read_text()
         )
     )
 
 
-@pytest.fixture(scope="module", name="authentication_request_response")
-def fixture_authentication_request_response(decoded_authentication_request_response: str) -> str:
-    return _encode(decoded_authentication_request_response)
+@pytest.fixture(scope="module", name="signed_authentication_request_response")
+def fixture_signed_authentication_request_response(
+    decoded_signed_authentication_request_response: str,
+) -> str:
+    return _encode(decoded_signed_authentication_request_response)
 
 
 class TestInterface:
@@ -149,9 +151,9 @@ class TestInterface:
 
     @pytest.fixture
     def authentication_request_response_not_for_us(
-        self, authentication_request_response: str
+        self, signed_authentication_request_response: str
     ) -> str:
-        response = authentication_request_response.replace(
+        response = signed_authentication_request_response.replace(
             "<saml:Audience>http://localhost/heute/check_mk/saml_metadata.py</saml:Audience>",
             "<saml:Audience>http://some_other_audience.com</saml:Audience>",
         )
@@ -168,9 +170,9 @@ class TestInterface:
         ],
     )
     def authentication_request_response_custom_condition(
-        self, authentication_request_response: str, request: pytest.FixtureRequest
+        self, signed_authentication_request_response: str, request: pytest.FixtureRequest
     ) -> str:
-        response = authentication_request_response.replace(
+        response = signed_authentication_request_response.replace(
             "</saml:Conditions>",
             f"{request.param}</saml:Conditions>",
         )
@@ -201,9 +203,9 @@ class TestInterface:
         ],
     )
     def unsolicited_authentication_request_response(
-        self, decoded_authentication_request_response: str, request: pytest.FixtureRequest
+        self, decoded_signed_authentication_request_response: str, request: pytest.FixtureRequest
     ) -> str:
-        response = decoded_authentication_request_response.split("\n")
+        response = decoded_signed_authentication_request_response.split("\n")
 
         original_value, new_value, replacement_criteria = request.param
 
@@ -265,10 +267,10 @@ class TestInterface:
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_successful_authentication_request_response(
-        self, interface: Interface, authentication_request_response: str
+        self, interface: Interface, signed_authentication_request_response: str
     ) -> None:
         parsed_response = interface.parse_authentication_request_response(
-            authentication_request_response
+            signed_authentication_request_response
         )
         assert isinstance(parsed_response, Authenticated)
         assert parsed_response.in_response_to_id == "id-Ex1qiCa1tiZj1nBKe"
@@ -276,20 +278,20 @@ class TestInterface:
 
     @freeze_time("2022-12-28T11:11:36Z")
     def test_parse_authentication_request_response_too_old(
-        self, interface: Interface, authentication_request_response: str
+        self, interface: Interface, signed_authentication_request_response: str
     ) -> None:
         with pytest.raises(ResponseLifetimeExceed):
-            interface.parse_authentication_request_response(authentication_request_response)
+            interface.parse_authentication_request_response(signed_authentication_request_response)
 
     @freeze_time("2022-12-28T11:06:04Z")
     def test_parse_authentication_request_response_too_young(
         self,
         interface: Interface,
-        authentication_request_response: str,
+        signed_authentication_request_response: str,
         ignore_signature: None,
     ) -> None:
         with pytest.raises(ToEarly):
-            interface.parse_authentication_request_response(authentication_request_response)
+            interface.parse_authentication_request_response(signed_authentication_request_response)
 
     def test_parse_garbage_xml_authentication_request_response(self, interface: Interface) -> None:
         with pytest.raises(Exception):
@@ -415,9 +417,11 @@ class TestInterfaceSecurityFeatures:
 
     @pytest.fixture
     def malicious_authentication_request_response(
-        self, decoded_authentication_request_response: str
+        self, decoded_signed_authentication_request_response: str
     ) -> str:
-        malicious_response = decoded_authentication_request_response.replace("user1", "mwahahaha")
+        malicious_response = decoded_signed_authentication_request_response.replace(
+            "user1", "mwahahaha"
+        )
         return _encode(malicious_response)
 
     def test_interface_properties_are_secure(self, interface: Interface) -> None:
@@ -450,12 +454,15 @@ class TestInterfaceSecurityFeatures:
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_parse_signed_authentication_request_response(
-        self, interface: Interface, authentication_request_response: str, initialised_redis: Redis
+        self,
+        interface: Interface,
+        signed_authentication_request_response: str,
+        initialised_redis: Redis,
     ) -> None:
         # SHA1 is normally disallowed, but used in the test data for performance reasons
         interface._allowed_algorithms.add(SIG_RSA_SHA1)
         parsed_response = interface.parse_authentication_request_response(
-            authentication_request_response
+            signed_authentication_request_response
         )
         assert isinstance(parsed_response, Authenticated)
 
@@ -477,7 +484,7 @@ class TestInterfaceSecurityFeatures:
 
     @freeze_time("2022-12-28T11:06:05Z")
     def test_rejected_authentication_response_if_signed_with_disallowed_algorithm(
-        self, interface: Interface, authentication_request_response: str
+        self, interface: Interface, signed_authentication_request_response: str
     ) -> None:
         with pytest.raises(AttributeError, match="Insecure algorithm"):
-            interface.parse_authentication_request_response(authentication_request_response)
+            interface.parse_authentication_request_response(signed_authentication_request_response)

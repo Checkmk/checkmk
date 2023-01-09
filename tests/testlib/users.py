@@ -9,6 +9,8 @@ import shutil
 import string
 from collections.abc import Iterator
 
+from tests.testlib.utils import no_search_index_update_background
+
 import cmk.utils.paths
 from cmk.utils.crypto import PasswordHash
 from cmk.utils.type_defs import UserId
@@ -59,6 +61,10 @@ def _mk_user_obj(
     return user
 
 
+# It would be better to wrap this function and call no_search_index_update_background in the
+# wrapping function instead of calling it twice below. However, for some reason, this does not seem
+# to work: After `yield user_id, password`, with the approach described above, the mock is gone. I
+# suspect that it's pytest-related, but I don't know ...
 @contextlib.contextmanager
 def create_and_destroy_user(
     *,
@@ -75,7 +81,7 @@ def create_and_destroy_user(
 
     # Load the config so that superuser's roles are available
     config.load_config()
-    with SuperUserContext():
+    with SuperUserContext(), no_search_index_update_background():
         edit_users(_mk_user_obj(user_id, password, automation, role, custom_attrs=custom_attrs))
 
     # Load the config with the newly created user
@@ -105,7 +111,7 @@ def create_and_destroy_user(
 
     yield user_id, password
 
-    with SuperUserContext():
+    with SuperUserContext(), no_search_index_update_background():
         delete_users([user_id])
 
     # User directories are not deleted by WATO by default. Clean it up here!

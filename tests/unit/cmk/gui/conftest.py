@@ -35,6 +35,7 @@ from tests.testlib.rest_api_client import (
     RestApiClient,
 )
 from tests.testlib.users import create_and_destroy_user
+from tests.testlib.utils import no_search_index_update_background
 
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -57,7 +58,7 @@ from cmk.gui.type_defs import SessionInfo
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
-from cmk.gui.watolib import hosts_and_folders, search
+from cmk.gui.watolib import hosts_and_folders
 
 SPEC_LOCK = threading.Lock()
 
@@ -401,11 +402,8 @@ def wsgi_app_debug_off() -> WebTestAppForCMK:
 
 @pytest.fixture(autouse=True)
 def avoid_search_index_update_background(monkeypatch):
-    monkeypatch.setattr(
-        search,
-        "update_index_background",
-        lambda _change_action_name: ...,
-    )
+    with no_search_index_update_background():
+        yield
 
 
 @pytest.fixture()

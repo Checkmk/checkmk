@@ -11,8 +11,10 @@ import pwd
 import re
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
+from unittest import mock
 
 from cmk.utils.version import Edition
 
@@ -236,3 +238,12 @@ def branch_from_env(fallback: str | Callable[[], str] | None = None) -> str:
     if fallback:
         return fallback if isinstance(fallback, str) else fallback()
     raise RuntimeError("BRANCH environment variable, e.g. master, is missing")
+
+
+@contextmanager
+def no_search_index_update_background() -> Iterator[None]:
+    with mock.patch(
+        "cmk.gui.watolib.search.update_index_background",
+        lambda _change_action_name: ...,
+    ):
+        yield

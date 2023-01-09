@@ -43,12 +43,22 @@ CSSClass = str | None
 CellContent = str | HTML | Mapping[str, Any]
 CellSpec = tuple[CSSClass, CellContent]
 
+# fmt: off
+_URL_PATTERN = (
+    r"("
+    r"http[s]?://"
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+"
+    r")"
+)
+
+# fmt: on
+
 
 def _prepare_button_url(p: re.Match) -> str:
     """The regex to find out if a link button should be placed does not deal correctly with escaped trailing quotes
 
-    Because single quotes are valid characters in a URL only remove this is the match was enclosed in single quotes.
-    This can happen with the check_http plugin
+    Because single quotes are valid characters in a URL only remove them if the match was enclosed in single quotes.
+    This can happen with the check_http plugin.
     """
     m = p.group(1).replace("&quot;", "")
     if p.start(1) >= 6 and p.string[p.start(1) - 6 : p.start(1)] == "&#x27;":
@@ -87,11 +97,10 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
         else False
     )
     if shall_escape and not prevent_url_icons:
-        http_url = r"(http[s]?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
+            "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
                     _prepare_button_url(p),

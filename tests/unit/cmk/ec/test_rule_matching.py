@@ -7,11 +7,9 @@ import logging
 
 import pytest
 
-from cmk.ec.defaults import default_config
 from cmk.ec.main import (
     Event,
     EventServer,
-    make_config,
     MatchFailure,
     MatchGroups,
     MatchPriority,
@@ -26,9 +24,7 @@ from cmk.ec.main import (
 @pytest.fixture(name="m")
 def fixture_m() -> RuleMatcher:
     logger = logging.getLogger("cmk.mkeventd")
-    config = default_config()
-    config["debug_rules"] = True
-    return RuleMatcher(logger, make_config(config))
+    return RuleMatcher(logger, True)
 
 
 @pytest.mark.parametrize(

@@ -491,7 +491,7 @@ class EventServer(ECServerThread):
         self._event_status = event_status
         self._event_columns = event_columns
         self._message_period = ActiveHistoryPeriod()
-        self._rule_matcher = RuleMatcher(self._logger, config)
+        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"])
 
         # HACK for testing: The real fix would involve breaking up these huge
         # class monsters.
@@ -1205,7 +1205,7 @@ class EventServer(ECServerThread):
         )
         self.compile_rules(self._config["rule_packs"])
         self.host_config = HostConfig(self._logger)
-        self._rule_matcher = RuleMatcher(self._logger, config)
+        self._rule_matcher = RuleMatcher(self._logger, config["debug_rules"])
 
     def compile_rules(  # pylint: disable=too-many-branches
         self, rule_packs: Sequence[ECRulePack]
@@ -1898,15 +1898,15 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress: str) -> E
 
 
 class RuleMatcher:
-    def __init__(self, logger: Logger, config: Config) -> None:
+    def __init__(self, logger: Logger, debug_rules: bool) -> None:
         super().__init__()
         self._logger = logger
-        self._config = config
+        self._debug_rules = debug_rules
         self._time_periods = TimePeriods(logger)
 
     def _log_rule_matching(self, message: str, *args: object, indent: bool = True) -> None:
         """Check if debug rules is on and log the message as info level"""
-        if self._config["debug_rules"]:
+        if self._debug_rules:
             self._logger.error(f"  {message}" if indent else message, *args)
 
     def event_rule_matches_non_inverted(self, rule: Rule, event: Event) -> MatchResult:

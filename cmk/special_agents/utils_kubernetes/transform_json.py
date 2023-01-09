@@ -78,16 +78,10 @@ class JSONStatefulSetSpec(TypedDict):
     updateStrategy: JSONStatefulSetUpdateStrategy
 
 
-class JSONStatefulSetStatus(TypedDict, total=False):
-    readyReplicas: int
-    updatedReplicas: int
-    availableReplicas: int
-
-
 class JSONStatefulSet(TypedDict):
     metadata: JSONStatefulSetMetaData
     spec: JSONStatefulSetSpec
-    status: JSONStatefulSetStatus
+    status: object
 
 
 class JSONStatefulSetList(TypedDict):
@@ -173,14 +167,6 @@ def _statefulset_spec_from_json(spec: JSONStatefulSetSpec) -> api.StatefulSetSpe
     )
 
 
-def _statefulset_status_from_json(status: JSONStatefulSetStatus) -> api.StatefulSetStatus:
-    return api.StatefulSetStatus(
-        ready_replicas=status.get("readyReplicas", 0),
-        updated_replicas=status.get("updatedReplicas", 0),
-        available_replicas=status.get("availableReplicas"),
-    )
-
-
 def _statefulset_from_json(
     statefulset: JSONStatefulSet,
     pod_uids: Sequence[api.PodUID],
@@ -188,7 +174,7 @@ def _statefulset_from_json(
     return api.StatefulSet(
         metadata=_metadata_from_json(statefulset["metadata"]),
         spec=_statefulset_spec_from_json(statefulset["spec"]),
-        status=_statefulset_status_from_json(statefulset["status"]),
+        status=api.StatefulSetStatus.parse_obj(statefulset["status"]),
         pods=pod_uids,
     )
 

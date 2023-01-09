@@ -394,45 +394,6 @@ def daemonset_from_client(
     )
 
 
-def parse_statefulset_status(status: client.V1StatefulSetStatus) -> api.StatefulSetStatus:
-    return api.StatefulSetStatus(
-        ready_replicas=status.ready_replicas or 0,
-        updated_replicas=status.updated_replicas or 0,
-    )
-
-
-def parse_statefulset_spec(statefulset_spec: client.V1StatefulSetSpec) -> api.StatefulSetSpec:
-    if statefulset_spec.update_strategy.type == "OnDelete":
-        return api.StatefulSetSpec(
-            strategy=api.OnDelete(),
-            selector=parse_selector(statefulset_spec.selector),
-            replicas=statefulset_spec.replicas,
-        )
-    if statefulset_spec.update_strategy.type == "RollingUpdate":
-        partition = (
-            rolling_update.partition
-            if (rolling_update := statefulset_spec.update_strategy.rolling_update)
-            else 0
-        )
-        return api.StatefulSetSpec(
-            strategy=api.StatefulSetRollingUpdate(partition=partition),
-            selector=parse_selector(statefulset_spec.selector),
-            replicas=statefulset_spec.replicas,
-        )
-    raise ValueError(f"Unknown strategy type: {statefulset_spec.update_strategy.type}")
-
-
-def statefulset_from_client(
-    statefulset: client.V1StatefulSet, pod_uids: Sequence[api.PodUID]
-) -> api.StatefulSet:
-    return api.StatefulSet(
-        metadata=parse_metadata(statefulset.metadata),
-        spec=parse_statefulset_spec(statefulset.spec),
-        status=parse_statefulset_status(statefulset.status),
-        pods=pod_uids,
-    )
-
-
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace(
         metadata=api.NamespaceMetaData.parse_obj(parse_metadata_no_namespace(namespace.metadata)),

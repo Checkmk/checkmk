@@ -7,9 +7,9 @@ import itertools
 import json
 import logging
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 
 from kubernetes import client  # type: ignore[import]
 
@@ -28,7 +28,6 @@ from cmk.special_agents.utils_kubernetes.transform import (
     persistent_volume_claim_from_client,
     pod_from_client,
     resource_quota_from_client,
-    statefulset_from_client,
 )
 from cmk.special_agents.utils_kubernetes.transform_any import parse_open_metric_samples
 from cmk.special_agents.utils_kubernetes.transform_json import (
@@ -91,11 +90,6 @@ class AppsAPI:
 
     def query_raw_daemon_sets(self) -> Sequence[client.V1DaemonSet]:
         return self.connection.list_daemon_set_for_all_namespaces(
-            _request_timeout=self.timeout
-        ).items
-
-    def query_raw_statefulsets(self) -> Sequence[client.V1StatefulSet]:
-        return self.connection.list_stateful_set_for_all_namespaces(
             _request_timeout=self.timeout
         ).items
 
@@ -320,11 +314,8 @@ class APIData:
     cluster_details: api.ClusterDetails
 
 
-StatefulSets = TypeVar("StatefulSets", Sequence[client.V1StatefulSet], JSONStatefulSetList)
-
-
 @dataclass(frozen=True)
-class UnparsedAPIData(Generic[StatefulSets]):
+class UnparsedAPIData:
     raw_jobs: Sequence[client.V1Job]
     raw_cron_jobs: Sequence[client.V1CronJob]
     raw_pods: Sequence[client.V1Pod]
@@ -337,39 +328,8 @@ class UnparsedAPIData(Generic[StatefulSets]):
     raw_replica_sets: Sequence[client.V1ReplicaSet]
     node_to_kubelet_health: Mapping[str, api.HealthZ]
     api_health: api.APIHealth
-    raw_statefulsets: StatefulSets
+    raw_statefulsets: JSONStatefulSetList
     raw_kubelet_open_metrics_dumps: Sequence[str]
-
-
-def query_raw_api_data_v1(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
-) -> UnparsedAPIData[Sequence[client.V1StatefulSet]]:
-    raw_nodes = raw_api.query_raw_nodes()
-    return UnparsedAPIData(
-        raw_jobs=batch_api.query_raw_jobs(),
-        raw_cron_jobs=batch_api.query_raw_cron_jobs(),
-        raw_pods=core_api.query_raw_pods(),
-        raw_nodes=raw_nodes,
-        raw_namespaces=core_api.query_raw_namespaces(),
-        raw_resource_quotas=core_api.query_raw_resource_quotas(),
-        raw_persistent_volume_claims=core_api.query_persistent_volume_claims(),
-        raw_deployments=external_api.query_raw_deployments(),
-        raw_daemonsets=external_api.query_raw_daemon_sets(),
-        raw_statefulsets=external_api.query_raw_statefulsets(),
-        raw_replica_sets=external_api.query_raw_replica_sets(),
-        node_to_kubelet_health={
-            raw_node["metadata"]["name"]: raw_api.query_kubelet_health(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        },
-        api_health=raw_api.query_api_health(),
-        raw_kubelet_open_metrics_dumps=[
-            raw_api.query_kubelet_metrics(raw_node["metadata"]["name"])
-            for raw_node in raw_nodes["items"]
-        ],
-    )
 
 
 def query_raw_api_data_v2(
@@ -377,7 +337,7 @@ def query_raw_api_data_v2(
     core_api: CoreAPI,
     raw_api: RawAPI,
     external_api: AppsAPI,
-) -> UnparsedAPIData[JSONStatefulSetList]:
+) -> UnparsedAPIData:
     raw_nodes = raw_api.query_raw_nodes()
     return UnparsedAPIData(
         raw_jobs=batch_api.query_raw_jobs(),
@@ -403,18 +363,6 @@ def query_raw_api_data_v2(
     )
 
 
-def statefulset_list_from_client(
-    statefulset_list: Sequence[client.V1StatefulSet],
-    controller_to_pods: Mapping[str, Sequence[api.PodUID]],
-) -> Sequence[api.StatefulSet]:
-    return [
-        statefulset_from_client(
-            raw_statefulset, controller_to_pods.get(raw_statefulset.metadata.uid, [])
-        )
-        for raw_statefulset in statefulset_list
-    ]
-
-
 def parse_api_data(
     raw_cron_jobs: Sequence[client.V1CronJob],
     raw_pods: Sequence[client.V1Pod],
@@ -424,7 +372,7 @@ def parse_api_data(
     raw_resource_quotas: Sequence[client.V1ResourceQuota],
     raw_deployments: Sequence[client.V1Deployment],
     raw_daemonsets: Sequence[client.V1DaemonSet],
-    raw_statefulsets: StatefulSets,
+    raw_statefulsets: JSONStatefulSetList,
     raw_persistent_volume_claims: Sequence[client.V1PersistentVolumeClaim],
     node_to_kubelet_health: Mapping[str, api.HealthZ],
     api_health: api.APIHealth,
@@ -433,9 +381,6 @@ def parse_api_data(
     controllers_to_dependents: Mapping[str, Sequence[str]],
     git_version: api.GitVersion,
     kubelet_open_metrics_dumps: Sequence[str],
-    versioned_parse_statefulsets: Callable[
-        [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
-    ],
 ) -> APIData:
     """Parses the Kubernetes API to the format used"""
     job_uids = {raw_job.metadata.uid for raw_job in raw_jobs}
@@ -474,7 +419,7 @@ def parse_api_data(
         )
         for raw_job in raw_jobs
     ]
-    statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)
+    statefulsets = statefulset_list_from_json(raw_statefulsets, controller_to_pods)
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
     nodes = node_list_from_json(raw_nodes, node_to_kubelet_health)
     pods = [pod_from_client(pod, pod_to_controllers.get(pod.metadata.uid, [])) for pod in raw_pods]
@@ -507,57 +452,6 @@ def parse_api_data(
         ],
         resource_quotas=resource_quotas,
         cluster_details=cluster_details,
-    )
-
-
-def create_api_data_v1(
-    batch_api: BatchAPI,
-    core_api: CoreAPI,
-    raw_api: RawAPI,
-    external_api: AppsAPI,
-    git_version: api.GitVersion,
-) -> APIData:
-    raw_api_data = query_raw_api_data_v1(
-        batch_api,
-        core_api,
-        raw_api,
-        external_api,
-    )
-    object_to_owners = parse_object_to_owners(
-        workload_resources_client=itertools.chain(
-            raw_api_data.raw_pods,
-            raw_api_data.raw_deployments,
-            raw_api_data.raw_daemonsets,
-            raw_api_data.raw_statefulsets,
-            raw_api_data.raw_replica_sets,
-            raw_api_data.raw_cron_jobs,
-            raw_api_data.raw_jobs,
-        ),
-        workload_resources_json=(),
-    )
-    controller_to_pods, pod_to_controllers = map_controllers(
-        raw_api_data.raw_pods,
-        object_to_owners=object_to_owners,
-    )
-    return parse_api_data(
-        raw_api_data.raw_cron_jobs,
-        raw_api_data.raw_pods,
-        raw_api_data.raw_jobs,
-        raw_api_data.raw_nodes,
-        raw_api_data.raw_namespaces,
-        raw_api_data.raw_resource_quotas,
-        raw_api_data.raw_deployments,
-        raw_api_data.raw_daemonsets,
-        raw_api_data.raw_statefulsets,
-        raw_api_data.raw_persistent_volume_claims,
-        raw_api_data.node_to_kubelet_health,
-        raw_api_data.api_health,
-        controller_to_pods,
-        pod_to_controllers,
-        map_controllers_top_to_down(object_to_owners),
-        git_version,
-        kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
-        versioned_parse_statefulsets=statefulset_list_from_client,
     )
 
 
@@ -608,7 +502,6 @@ def create_api_data_v2(
         map_controllers_top_to_down(object_to_owners),
         git_version,
         kubelet_open_metrics_dumps=raw_api_data.raw_kubelet_open_metrics_dumps,
-        versioned_parse_statefulsets=statefulset_list_from_json,
     )
 
 
@@ -625,18 +518,6 @@ def from_kubernetes(api_client: client.ApiClient, timeout: tuple[int, int]) -> A
     raw_version = raw_api.query_raw_version()
     version = version_from_json(raw_version)
     _verify_version_support(version)
-
-    if isinstance(version, api.UnknownKubernetesVersion) or (version.major, version.minor) in {
-        (1, 21),
-        (1, 22),
-    }:
-        return create_api_data_v1(
-            batch_api,
-            core_api,
-            raw_api,
-            external_api,
-            version.git_version,
-        )
 
     return create_api_data_v2(
         batch_api,

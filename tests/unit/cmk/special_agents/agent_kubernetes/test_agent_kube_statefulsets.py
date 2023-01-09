@@ -7,7 +7,7 @@
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import parse_metadata, parse_statefulset_status
+from cmk.special_agents.utils_kubernetes.transform import parse_metadata
 
 
 class TestAPIStatefulSets:
@@ -56,49 +56,34 @@ class TestAPIStatefulSets:
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
-    def test_parse_status_successful_creation(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
-    ) -> None:
-        statefulsets_data = {
-            "status": {
-                "observedGeneration": 1,
-                "replicas": 3,
-                "readyReplicas": 3,
-                "currentReplicas": 3,
-                "updatedReplicas": 3,
-                "currentRevision": "web-578cfc4b46",
-                "updateRevision": "web-578cfc4b46",
-                "collisionCount": 0,
-                "availableReplicas": 3,
-            }
+    def test_parse_status_successful_creation(self) -> None:
+        statefulset_data = {
+            "observedGeneration": 1,
+            "replicas": 3,
+            "readyReplicas": 3,
+            "currentReplicas": 3,
+            "updatedReplicas": 3,
+            "currentRevision": "web-578cfc4b46",
+            "updateRevision": "web-578cfc4b46",
+            "collisionCount": 0,
+            "availableReplicas": 3,
         }
 
-        statefulset = apps_client.api_client.deserialize(
-            FakeResponse(statefulsets_data), "V1StatefulSet"
-        )
-        status = parse_statefulset_status(statefulset.status)
+        status = api.StatefulSetStatus.parse_obj(statefulset_data)
         assert status.ready_replicas == 3
         assert status.updated_replicas == 3
 
-    def test_parse_status_failed_creation(  # type:ignore[no-untyped-def]
-        self, apps_client, dummy_host
-    ) -> None:
-        statefulsets_data = {
-            "status": {
-                "observedGeneration": 1,
-                "replicas": 1,
-                "currentReplicas": 1,
-                "updatedReplicas": 1,
-                "currentRevision": "web-from-docs-86f4d798f6",
-                "updateRevision": "web-from-docs-86f4d798f6",
-                "collisionCount": 0,
-            }
+    def test_parse_status_failed_creation(self) -> None:
+        statefulset_data = {
+            "observedGeneration": 1,
+            "replicas": 1,
+            "currentReplicas": 1,
+            "updatedReplicas": 1,
+            "currentRevision": "web-from-docs-86f4d798f6",
+            "updateRevision": "web-from-docs-86f4d798f6",
+            "collisionCount": 0,
         }
 
-        statefulset = apps_client.api_client.deserialize(
-            FakeResponse(statefulsets_data),
-            "V1StatefulSet",
-        )
-        status = parse_statefulset_status(statefulset.status)
+        status = api.StatefulSetStatus.parse_obj(statefulset_data)
         assert status.ready_replicas == 0
         assert status.updated_replicas == 1

@@ -609,9 +609,9 @@ class StatefulSetSpec(BaseModel):
 
 
 class StatefulSetStatus(BaseModel):
-    updated_replicas: int
-    ready_replicas: int
-    available_replicas: int | None = None
+    updated_replicas: int = Field(0, alias="updatedReplicas")
+    ready_replicas: int = Field(0, alias="readyReplicas")
+    available_replicas: int | None = Field(None, alias="availableReplicas")
 
 
 class StatefulSet(BaseModel):

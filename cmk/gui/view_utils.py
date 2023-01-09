@@ -11,6 +11,7 @@ from typing import Any
 
 from livestatus import SiteId
 
+from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.type_defs import TaggroupID, TaggroupIDToTagID, TagID
@@ -55,15 +56,8 @@ def _prepare_button_url(p: re.Match) -> str:
     return unescape(m)
 
 
-# There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
-# whether or not that function needs to be changed too
-# TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
     assert not isinstance(output, dict)
-    ok_marker = '<b class="stmark state0">OK</b>'
-    warn_marker = '<b class="stmark state1">WARN</b>'
-    crit_marker = '<b class="stmark state2">CRIT</b>'
-    unknown_marker = '<b class="stmark state3">UNKN</b>'
 
     # In case we have a host or service row use the optional custom attribute
     # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
@@ -78,12 +72,7 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
     else:
         output = "%s" % output
 
-    output = (
-        output.replace("(!)", warn_marker)
-        .replace("(!!)", crit_marker)
-        .replace("(?)", unknown_marker)
-        .replace("(.)", ok_marker)
-    )
+    output = replace_state_markers(output)
 
     if row and "[running on" in output:
         a = output.index("[running on")

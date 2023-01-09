@@ -27,6 +27,10 @@ from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.store import load_text_from_file
 from cmk.utils.type_defs import PluginNotificationContext
 
+from cmk.utils.html import (  # noqa: F401  # pylint: disable=unused-import  # isort:skip
+    replace_state_markers as format_plugin_output,
+)
+
 
 def collect_context() -> PluginNotificationContext:
     return {var[7:]: value for var, value in os.environ.items() if var.startswith("NOTIFY_")}
@@ -90,25 +94,6 @@ def host_url_from_context(context: PluginNotificationContext) -> str:
 def service_url_from_context(context: PluginNotificationContext) -> str:
     base = _base_url(context)
     return base + context["SERVICEURL"] if base and context["WHAT"] == "SERVICE" else ""
-
-
-# There is common code with cmk/gui/view_utils:format_plugin_output(). Please check
-# whether or not that function needs to be changed too
-# TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output: str) -> str:
-    ok_marker = '<b class="stmarkOK">OK</b>'
-    warn_marker = '<b class="stmarkWARNING">WARN</b>'
-    crit_marker = '<b class="stmarkCRITICAL">CRIT</b>'
-    unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
-
-    output = (
-        output.replace("(!)", warn_marker)
-        .replace("(!!)", crit_marker)
-        .replace("(?)", unknown_marker)
-        .replace("(.)", ok_marker)
-    )
-
-    return output
 
 
 def html_escape_context(context: PluginNotificationContext) -> PluginNotificationContext:

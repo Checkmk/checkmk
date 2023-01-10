@@ -18,7 +18,7 @@ from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from time import sleep
 from typing import Any, Literal, NamedTuple, Type, TypedDict, TypeVar
@@ -5588,7 +5588,7 @@ class SNS(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 
 
-class StatusEnum(str, Enum):
+class StatusEnum(StrEnum):
     active = "ACTIVE"
     provisioning = "PROVISIONING"
     deprovisioning = "DEPROVISIONING"

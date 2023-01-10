@@ -81,12 +81,7 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
 
     output = replace_state_markers(output)
 
-    if row and "[running on" in output:
-        a = output.index("[running on")
-        e = output.index("]", a)
-        hosts = output[a + 12 : e].replace(" ", "").split(",")
-        h = get_host_list_links(row["site"], hosts)
-        output = output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
+    output = _render_host_links(output, row)
 
     if shall_escape and _render_url_icons(row):
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
@@ -122,6 +117,17 @@ def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
 
 def _render_url_icons(row: Row | None) -> bool:
     return row is None or row.get("service_check_command", "") != "check_mk-checkmk_agent"
+
+
+def _render_host_links(output: str, row: Row | None) -> str:
+    if not row or "[running on" not in output:
+        return output
+
+    a = output.index("[running on")
+    e = output.index("]", a)
+    hosts = output[a + 12 : e].replace(" ", "").split(",")
+    h = get_host_list_links(row["site"], hosts)
+    return output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
 
 
 def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:

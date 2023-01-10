@@ -129,12 +129,6 @@ div.dashlet div.success {
   background-color: $base-color;
 }
 
-/* Overview dashlet is not selectable TODO: Check if this style can be dropped */
-table.dashlet_overview h2 {
-  margin: 8px 0;
-  font-size: $font-size-large;
-}
-
 div.dashlet_inner div.stats table.hoststats a,
 div.dashlet_inner div.stats table.hoststats body.main .popup_menu span,
 body.main .popup_menu div.dashlet_inner div.stats table.hoststats span {

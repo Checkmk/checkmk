@@ -8,7 +8,6 @@ from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
 from .graph import TemplateGraphDashlet
 from .logo import MKLogoDashlet
-from .overview import OverviewDashlet
 from .snapin import SnapinDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
@@ -38,7 +37,6 @@ def register_dashlets(dashlet_registry: DashletRegistry) -> None:
     dashlet_registry.register(FailedNotificationsDashlet)
     dashlet_registry.register(TemplateGraphDashlet)
     dashlet_registry.register(MKLogoDashlet)
-    dashlet_registry.register(OverviewDashlet)
     dashlet_registry.register(SnapinDashlet)
     dashlet_registry.register(HostStatsDashlet)
     dashlet_registry.register(ServiceStatsDashlet)

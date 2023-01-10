@@ -6,7 +6,6 @@
 import json
 import re
 from collections.abc import Mapping
-from html import unescape
 from typing import Any
 
 from livestatus import SiteId
@@ -57,32 +56,19 @@ _URL_PATTERN = (
 # fmt: on
 
 
-def _prepare_button_url(p: re.Match) -> str:
-    """The regex to find out if a link button should be placed does not deal correctly with escaped trailing quotes
-
-    Because single quotes are valid characters in a URL only remove them if the match was enclosed in single quotes.
-    This can happen with the check_http plugin.
-    """
-    m = p.group(1).replace("&quot;", "")
-    if p.start(1) >= 6 and p.string[p.start(1) - 6 : p.start(1)] == "&#x27;":
-        m = m[:-6]
-    return unescape(m)
-
-
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
 
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
-    if shall_escape:
+    if shall_escape and _render_url_icons(row):
+        output = _normalize_check_http_link(output)
+        output = _render_icon_button(output)
+    elif shall_escape:
         output = escaping.escape_attribute(output)
 
     output = replace_state_markers(output)
 
     output = _render_host_links(output, row)
-
-    if shall_escape and _render_url_icons(row):
-        output = _normalize_check_http_link(output)
-        output = _render_icon_button(output)
 
     return HTML(output)
 
@@ -117,9 +103,7 @@ def _normalize_check_http_link(output: str) -> str:
     """Handling for the HTML code produced by check_http when "clickable URL" option is active"""
     return (
         re.sub(
-            "&lt;A HREF=&quot;"
-            + _URL_PATTERN
-            + "&quot; target=&quot;_blank&quot;&gt;(.*?) &lt;/A&gt;",
+            '<A HREF="' + _URL_PATTERN + '" target="_blank">(.*?) </A>',
             lambda p: f"{p.group(1)} {p.group(2)}",
             output,
         )
@@ -129,17 +113,14 @@ def _normalize_check_http_link(output: str) -> str:
 
 
 def _render_icon_button(output: str) -> str:
-    return re.sub(
-        _URL_PATTERN,
-        lambda p: str(
-            html.render_icon_button(
-                _prepare_button_url(p),
-                _prepare_button_url(p),
-                "link",
-            )
-        ),
-        output,
-    )
+    buffer = []
+    for idx, token in enumerate(re.split(r"([\"']?)" + _URL_PATTERN + r"(\1)", output)):
+        match idx % 4:
+            case 0:
+                buffer.append(escaping.escape_attribute(token))
+            case 2:
+                buffer.append(str(html.render_icon_button(token, token, "link")))
+    return "".join(buffer)
 
 
 def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:

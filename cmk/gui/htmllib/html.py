@@ -1167,7 +1167,7 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def render_icon_button(
-        url: None | str | str,
+        url: None | str,
         title: str,
         icon: Icon,
         id_: str | None = None,

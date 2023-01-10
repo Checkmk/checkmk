@@ -22,7 +22,12 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import connections_by_type, UserConnectionSpec
+from cmk.gui.plugins.userdb.utils import (
+    connections_by_type,
+    load_connection_config,
+    save_connection_config,
+    UserConnectionSpec,
+)
 from cmk.gui.plugins.wato.utils import make_confirm_link
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
@@ -153,3 +158,28 @@ def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     if cmk_version.is_managed_edition():
         return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
     return get_login_sites()
+
+
+def delete_connection(index: int, *, log_entry_action: str | None) -> None:
+    connections = load_connection_config(lock=True)
+    connection = connections[index]
+    add_change(
+        log_entry_action or "delete-connection",
+        _("Deleted connection %s") % (connection["id"]),
+        get_affected_sites(connection),
+    )
+    del connections[index]
+    save_connection_config(connections)
+
+
+def move_connection(from_index: int, to_index: int, *, log_entry_action: str | None) -> None:
+    connections = load_connection_config(lock=True)
+    connection = connections[from_index]
+    add_change(
+        log_entry_action or "move-connection",
+        _("Changed position of connection %s to %d") % (connection["id"], to_index),
+        get_affected_sites(connection),
+    )
+    del connections[from_index]  # make to_pos now match!
+    connections[to_index:to_index] = [connection]
+    save_connection_config(connections)

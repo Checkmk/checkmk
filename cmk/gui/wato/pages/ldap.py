@@ -67,7 +67,9 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,
+    delete_connection,
     get_affected_sites,
+    move_connection,
     render_connections_page,
 )
 
@@ -714,30 +716,18 @@ class ModeLDAPConfig(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        connections = load_connection_config(lock=True)
         if request.has_var("_delete"):
-            index = request.get_integer_input_mandatory("_delete")
-            connection = connections[index]
-            add_change(
-                "delete-ldap-connection",
-                _("Deleted LDAP connection %s") % (connection["id"]),
-                get_affected_sites(connection),
+            delete_connection(
+                index=request.get_integer_input_mandatory("_delete"),
+                log_entry_action="delete-ldap-connection",
             )
-            del connections[index]
-            save_connection_config(connections)
 
         elif request.has_var("_move"):
-            from_pos = request.get_integer_input_mandatory("_move")
-            to_pos = request.get_integer_input_mandatory("_index")
-            connection = connections[from_pos]
-            add_change(
-                "move-ldap-connection",
-                _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos),
-                get_affected_sites(connection),
+            move_connection(
+                from_index=request.get_integer_input_mandatory("_move"),
+                to_index=request.get_integer_input_mandatory("_index"),
+                log_entry_action="move-ldap-connection",
             )
-            del connections[from_pos]  # make to_pos now match!
-            connections[to_pos:to_pos] = [connection]
-            save_connection_config(connections)
 
         return redirect(self.mode_url())
 

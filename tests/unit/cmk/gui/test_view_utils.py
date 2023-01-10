@@ -14,6 +14,13 @@ from cmk.gui.view_utils import format_plugin_output
     "args, expected",
     [
         pytest.param(
+            "https://example.com A simple example",
+            HTML(
+                """<a href="https://example.com" title="https://example.com" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a> A simple example"""
+            ),
+            id="nothing fancy",
+        ),
+        pytest.param(
             '"http://127.0.0.1:5000/heute/che\'ck_mk"',
             HTML(
                 """&quot;<a href="http://127.0.0.1:5000/heute/che&#x27;ck_mk" title="http://127.0.0.1:5000/heute/che&#x27;ck_mk" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>"""
@@ -35,9 +42,9 @@ from cmk.gui.view_utils import format_plugin_output
             id="enclosed in single quotes",
         ),
         pytest.param(
-            """<A HREF="http://127.0.0.1:5000/heute/check_mk" target="_blank">""",
+            """<A HREF="http://127.0.0.1:5000/heute/check_mk" target="_blank">Some text </A>""",
             HTML(
-                """<a href="http://127.0.0.1:5000/heute/check_mk" title="http://127.0.0.1:5000/heute/check_mk" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>"""
+                """<a href="http://127.0.0.1:5000/heute/check_mk" title="http://127.0.0.1:5000/heute/check_mk" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>Some text"""
             ),
             id="A HREF Replacement",
         ),

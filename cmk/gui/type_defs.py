@@ -320,7 +320,6 @@ class PainterSpec:
         # => The transformation is done via update_config/plugins/actions/cre_visuals.py
 
         if isinstance(value, dict):
-            join_index = value["join_index"]
             return cls(
                 name=value["name"],
                 parameters=value["parameters"] or PainterParameters(),
@@ -330,7 +329,7 @@ class PainterSpec:
                     else VisualLinkSpec.from_raw(link_spec)
                 ),
                 tooltip=value["tooltip"] or None,
-                join_index=join_index,
+                join_index=value["join_index"],
                 column_title=value["column_title"],
                 _column_type=value.get("column_type"),
             )
@@ -345,13 +344,12 @@ class PainterSpec:
             name = value[0]
             parameters = PainterParameters()
 
-        join_index = value[3]
         return cls(
             name=name,
             parameters=parameters,
             link_spec=None if value[1] is None else VisualLinkSpec.from_raw(value[1]),
             tooltip=value[2],
-            join_index=join_index,
+            join_index=value[3],
             column_title=value[4],
             _column_type=None,
         )

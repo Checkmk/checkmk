@@ -73,6 +73,19 @@ def _general_properties() -> list[DictionaryEntry]:
             ),
         ),
         (
+            "name",
+            TextInput(
+                title=_("Name"),
+                help=_(
+                    "A user-friendly name to identify this connection. This will be used for the "
+                    "log-in button that is shown on the log-in page once the connection has been set "
+                    "up."
+                ),
+                allow_empty=False,
+                size=80,
+            ),
+        ),
+        (
             "type",
             FixedValue(value="saml2"),
         ),

@@ -138,7 +138,9 @@ def render_connections_page(
             else:
                 html.empty_icon_button()
 
-            table.cell(_("ID"), connection["id"])
+            connection_id = connection["id"]
+            table.cell(_("ID"), connection_id)
+            table.cell(_("Name"), connection.get("name", connection_id))
 
             if cmk_version.is_managed_edition():
                 table.cell(_("Customer"), managed.get_customer_name(connection))

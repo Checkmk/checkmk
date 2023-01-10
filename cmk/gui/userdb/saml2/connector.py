@@ -29,6 +29,7 @@ class ConnectorConfig(BaseModel):
     type: str
     version: str
     id: str
+    name: str
     description: str
     comment: str
     docu_url: str

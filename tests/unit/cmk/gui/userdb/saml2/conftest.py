@@ -32,6 +32,7 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> dict[s
         "type": "saml2",
         "version": "1.0.0",
         "id": "uuid123",
+        "name": "härbärt",
         "description": "",
         "comment": "",
         "docu_url": "",

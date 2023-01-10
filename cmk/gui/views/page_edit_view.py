@@ -7,7 +7,7 @@
 
 import ast
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload
+from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.utils.type_defs import UserId
 
@@ -180,7 +180,7 @@ def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
 class _VSColumnChoice(NamedTuple):
     column_type: ColumnTypes
     title: str
-    vs: Tuple
+    vs: Dictionary
 
 
 def _get_common_vs_column_choice(ds_name: str) -> _VSColumnChoice:
@@ -188,11 +188,12 @@ def _get_common_vs_column_choice(ds_name: str) -> _VSColumnChoice:
     return _VSColumnChoice(
         column_type="column",
         title=_("Column"),
-        vs=Tuple(
+        vs=Dictionary(
             elements=[
                 _get_vs_column_dropdown(ds_name, "painter", painters),
             ]
             + _get_vs_link_or_tooltip_elements(painters),
+            optional_keys=["link_spec", "tooltip"],
         ),
     )
 
@@ -204,7 +205,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
     return _VSColumnChoice(
         column_type="join_column",
         title=_("Joined column"),
-        vs=Tuple(
+        vs=Dictionary(
             help=_(
                 "A joined column can display information about specific services for "
                 "host objects in a view showing host objects. You need to specify the "
@@ -212,60 +213,73 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
             ),
             elements=[
                 _get_vs_column_dropdown(ds_name, "join_painter", join_painters),
-                TextInput(
-                    title=_("of Service"),
-                    allow_empty=False,
+                (
+                    "join_value",
+                    TextInput(
+                        title=_("of Service"),
+                        allow_empty=False,
+                    ),
                 ),
-                TextInput(title=_("Title")),
+                ("column_title", TextInput(title=_("Title"))),
             ]
             + _get_vs_link_or_tooltip_elements(join_painters),
+            optional_keys=["link_spec", "tooltip"],
         ),
     )
 
 
 def _get_vs_column_dropdown(
     ds_name: str, painter_type: str, painters: Mapping[str, Painter]
-) -> ValueSpec:
-    return CascadingDropdown(
-        title=_("Column"),
-        choices=_painter_choices_with_params(painters),
-        no_preselect_title="",
-        render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
-        render_sub_vs_request_vars={
-            "ds_name": ds_name,
-            "painter_type": painter_type,
-        },
+) -> tuple[str, ValueSpec]:
+    return (
+        "painter_spec",
+        CascadingDropdown(
+            title=_("Column"),
+            choices=_painter_choices_with_params(painters),
+            no_preselect_title="",
+            render_sub_vs_page_name="ajax_cascading_render_painer_parameters",
+            render_sub_vs_request_vars={
+                "ds_name": ds_name,
+                "painter_type": painter_type,
+            },
+        ),
     )
 
 
-def _get_vs_link_or_tooltip_elements(painters: Mapping[str, Painter]) -> list[ValueSpec]:
+def _get_vs_link_or_tooltip_elements(
+    painters: Mapping[str, Painter]
+) -> list[tuple[str, ValueSpec]]:
     return [
-        CascadingDropdown(
-            title=_("Link"),
-            choices=_column_link_choices(),
-            orientation="horizontal",
+        (
+            "link_spec",
+            CascadingDropdown(
+                title=_("Link"),
+                choices=_column_link_choices(),
+                orientation="horizontal",
+            ),
         ),
-        DropdownChoice(
-            title=_("Tooltip"),
-            choices=[(None, "")] + list(_painter_choices(painters)),
+        (
+            "tooltip",
+            DropdownChoice(
+                title=_("Tooltip"),
+                choices=_painter_choices(painters),
+            ),
         ),
     ]
 
 
-_RawColumnPainterSpec = tuple[
-    PainterName | tuple[PainterName, PainterParameters],
-    tuple[VisualTypeName, VisualName] | None,
-    ColumnName | None,
-]
+class _RawVSColumnSpecMandatory(TypedDict):
+    painter_spec: PainterName | tuple[PainterName, PainterParameters]
 
 
-_RawJoinColumnPainterSpec = tuple[
-    PainterName | tuple[PainterName, PainterParameters],
-    ColumnName,
-    str,
-    tuple[VisualTypeName, VisualName] | None,
-    ColumnName | None,
-]
+class _RawVSColumnSpec(_RawVSColumnSpecMandatory, total=False):
+    link_spec: tuple[VisualTypeName, VisualName]
+    tooltip: ColumnName
+
+
+class _RawVSJoinColumnSpec(_RawVSColumnSpec, total=False):
+    join_value: ColumnName
+    column_title: str
 
 
 def _view_editor_spec(
@@ -282,13 +296,13 @@ def _view_editor_spec(
 
     def _from_vs(
         value: (
-            tuple[Literal["column"], _RawColumnPainterSpec]
-            | tuple[Literal["join_column"], _RawJoinColumnPainterSpec]
+            tuple[Literal["column"], _RawVSColumnSpec]
+            | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
         )
     ) -> PainterSpec:
         column_type, inner_value = value
 
-        if isinstance(name_or_parameters := inner_value[0], tuple):
+        if isinstance(name_or_parameters := inner_value["painter_spec"], tuple):
             name, parameters = name_or_parameters
         else:
             name = name_or_parameters
@@ -296,10 +310,10 @@ def _view_editor_spec(
 
         link_spec = (
             None
-            if (raw_link_spec := inner_value[-2]) is None
+            if (raw_link_spec := inner_value.get("link_spec")) is None
             else VisualLinkSpec.from_raw(raw_link_spec)
         )
-        tooltip = inner_value[-1]
+        tooltip = inner_value.get("tooltip")
 
         if column_type == "column":
             return PainterSpec(
@@ -312,17 +326,17 @@ def _view_editor_spec(
 
         if (
             column_type == "join_column"
-            and isinstance(join_index := inner_value[1], str)
-            and isinstance(column_title := inner_value[2], str)
+            and isinstance(join_value := inner_value.get("join_value"), str)
+            and isinstance(column_title := inner_value.get("column_title"), str)
         ):
             return PainterSpec(
                 _column_type=column_type,
                 name=name,
                 parameters=parameters,
-                join_index=join_index,
-                column_title=column_title,
                 link_spec=link_spec,
                 tooltip=tooltip,
+                join_index=join_value,
+                column_title=column_title,
             )
 
         raise ValueError()
@@ -330,44 +344,34 @@ def _view_editor_spec(
     def _to_vs(
         painter_spec: PainterSpec | None,
     ) -> (
-        tuple[Literal["column"], _RawColumnPainterSpec]
-        | tuple[Literal["join_column"], _RawJoinColumnPainterSpec]
+        tuple[Literal["column"], _RawVSColumnSpec]
+        | tuple[Literal["join_column"], _RawVSJoinColumnSpec]
         | None
     ):
         if painter_spec is None:
             return None
 
-        raw_link_spec = None if painter_spec.link_spec is None else painter_spec.link_spec.to_raw()
+        if (column_type := painter_spec.column_type) == "column":
+            raw_vs = _RawVSColumnSpec(painter_spec=_get_painter_spec(painter_spec))
+            if painter_spec.link_spec:
+                raw_vs["link_spec"] = painter_spec.link_spec.to_raw()
+            if painter_spec.tooltip:
+                raw_vs["tooltip"] = painter_spec.tooltip
+            return column_type, raw_vs
 
-        if painter_spec.column_type == "column" and painter_spec.join_index is None:
-            return (
-                painter_spec.column_type,
-                (
-                    _get_name_or_params(painter_spec),
-                    raw_link_spec,
-                    painter_spec.tooltip,
-                ),
-            )
-
-        if (
-            painter_spec.column_type == "join_column"
-            and isinstance(painter_spec.join_index, str)
-            and isinstance(painter_spec.column_title, str)
-        ):
-            return (
-                painter_spec.column_type,
-                (
-                    _get_name_or_params(painter_spec),
-                    painter_spec.join_index,
-                    painter_spec.column_title,
-                    raw_link_spec,
-                    painter_spec.tooltip,
-                ),
-            )
+        if column_type == "join_column" and painter_spec.join_index:
+            raw_vs = _RawVSJoinColumnSpec(painter_spec=_get_painter_spec(painter_spec))
+            if painter_spec.link_spec:
+                raw_vs["link_spec"] = painter_spec.link_spec.to_raw()
+            if painter_spec.tooltip:
+                raw_vs["tooltip"] = painter_spec.tooltip
+            raw_vs["join_value"] = painter_spec.join_index
+            raw_vs["column_title"] = painter_spec.column_title or ""
+            return column_type, raw_vs
 
         raise ValueError()
 
-    def _get_name_or_params(
+    def _get_painter_spec(
         painter_spec: PainterSpec,
     ) -> PainterName | tuple[PainterName, PainterParameters]:
         if painter_spec.parameters is None:
@@ -401,7 +405,6 @@ def _view_editor_spec(
 
 def _column_link_choices() -> list[CascadingDropdownChoice]:
     return [
-        (None, _("Do not add a link")),
         (
             "views",
             _("Link to view") + ":",

@@ -296,6 +296,9 @@ class RawPainterSpec(TypedDict):
     column_type: ColumnTypes | None
 
 
+# TODO Rename PainterSpec -> ColumnSpec, join_index -> join_value
+
+
 @dataclass(frozen=True)
 class PainterSpec:
     name: PainterName

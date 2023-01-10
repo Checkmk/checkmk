@@ -5,8 +5,11 @@
 
 from collections.abc import Iterable
 
+from livestatus import SiteId
+
 import cmk.utils.version as cmk_version
 
+import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -19,13 +22,17 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import connections_by_type
+from cmk.gui.plugins.userdb.utils import connections_by_type, UserConnectionSpec
 from cmk.gui.plugins.wato.utils import make_confirm_link
+from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
+from cmk.gui.watolib.audit_log import LogMessage
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
@@ -136,3 +143,13 @@ def render_connections_page(
                 )
                 html.write_text("&nbsp;")
             html.write_text(connection["description"])
+
+
+def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
+    _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
+
+
+def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
+    if cmk_version.is_managed_edition():
+        return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
+    return get_login_sites()

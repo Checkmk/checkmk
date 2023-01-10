@@ -7,12 +7,9 @@
 import re
 from collections.abc import Collection
 
-from livestatus import SiteId
-
 import cmk.utils.version as cmk_version
 
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -30,7 +27,6 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     load_connection_config,
     save_connection_config,
-    UserConnectionSpec,
 )
 from cmk.gui.plugins.wato.utils import (
     MigrateNotUpdatedToIndividualOrStoredPassword,
@@ -39,7 +35,6 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.ldap_connector import (
@@ -69,12 +64,14 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato.pages.userdb_common import add_connections_page_menu, render_connections_page
-from cmk.gui.watolib.audit_log import LogMessage
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.wato.pages.userdb_common import (
+    add_change,
+    add_connections_page_menu,
+    get_affected_sites,
+    render_connections_page,
+)
 
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # .
@@ -688,18 +685,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 )
 
 
-class LDAPMode(WatoMode):
-    def _add_change(self, action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
-        _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
-
-    def _get_affected_sites(self, connection: UserConnectionSpec) -> list[SiteId]:
-        if cmk_version.is_managed_edition():
-            return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
-        return get_login_sites()
-
-
 @mode_registry.register
-class ModeLDAPConfig(LDAPMode):
+class ModeLDAPConfig(WatoMode):
     @classmethod
     def name(cls) -> str:
         return "ldap_config"
@@ -731,10 +718,10 @@ class ModeLDAPConfig(LDAPMode):
         if request.has_var("_delete"):
             index = request.get_integer_input_mandatory("_delete")
             connection = connections[index]
-            self._add_change(
+            add_change(
                 "delete-ldap-connection",
                 _("Deleted LDAP connection %s") % (connection["id"]),
-                self._get_affected_sites(connection),
+                get_affected_sites(connection),
             )
             del connections[index]
             save_connection_config(connections)
@@ -743,10 +730,10 @@ class ModeLDAPConfig(LDAPMode):
             from_pos = request.get_integer_input_mandatory("_move")
             to_pos = request.get_integer_input_mandatory("_index")
             connection = connections[from_pos]
-            self._add_change(
+            add_change(
                 "move-ldap-connection",
                 _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos),
-                self._get_affected_sites(connection),
+                get_affected_sites(connection),
             )
             del connections[from_pos]  # make to_pos now match!
             connections[to_pos:to_pos] = [connection]
@@ -763,7 +750,7 @@ class ModeLDAPConfig(LDAPMode):
 
 
 @mode_registry.register
-class ModeEditLDAPConnection(LDAPMode):
+class ModeEditLDAPConnection(WatoMode):
     @classmethod
     def name(cls) -> str:
         return "edit_ldap_connection"
@@ -855,7 +842,7 @@ class ModeEditLDAPConnection(LDAPMode):
         else:
             log_what = "edit-ldap-connection"
             log_text = _("Changed LDAP connection %s") % self._connection_id
-        self._add_change(log_what, log_text, self._get_affected_sites(self._connection_cfg))
+        add_change(log_what, log_text, get_affected_sites(self._connection_cfg))
 
         save_connection_config(self._connections)
         active_config.user_connections = (

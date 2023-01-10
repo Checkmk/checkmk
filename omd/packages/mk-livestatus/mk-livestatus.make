@@ -33,8 +33,8 @@ $(MK_LIVESTATUS_BUILD): $(MK_LIVESTATUS_UNPACK) $(RRDTOOL_CACHE_PKG_PROCESS_LIBR
 	    ./configure CXXFLAGS="-gdwarf-4 -O3 -Wall -Wextra" --prefix=$(OMD_ROOT)
 	unset DESTDIR MAKEFLAGS ; \
 	    $(MAKE) -C $(MK_LIVESTATUS_BUILD_DIR) \
-		PACKAGE_GOOGLETEST=$(PACKAGE_DIR)/googletest \
-		PACKAGE_ASIO=$(PACKAGE_DIR)/asio \
+		PACKAGE_GOOGLETEST=$(PACKAGE_DIR)/../../third_party/googletest \
+		PACKAGE_ASIO=$(PACKAGE_DIR)/../../third_party/asio \
 		RRDTOOL_PATH=$(PACKAGE_RRDTOOL_DESTDIR) \
 		-j3 all-packaging
 	$(TOUCH) $@
@@ -43,8 +43,8 @@ $(MK_LIVESTATUS_INSTALL): $(MK_LIVESTATUS_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHO
 	$(MAKE) -j1 \
 	    -C $(MK_LIVESTATUS_BUILD_DIR) \
 	    DESTDIR=$(DESTDIR) \
-	    PACKAGE_GOOGLETEST=$(PACKAGE_DIR)/googletest \
-	    PACKAGE_ASIO=$(PACKAGE_DIR)/asio \
+	    PACKAGE_GOOGLETEST=$(PACKAGE_DIR)/../../third_party/googletest \
+	    PACKAGE_ASIO=$(PACKAGE_DIR)/../../third_party/asio \
 	    RRDTOOL_PATH=$(PACKAGE_RRDTOOL_DESTDIR) \
 	    install-exec install-data
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin

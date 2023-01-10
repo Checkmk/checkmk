@@ -10,8 +10,8 @@ import sys
 from typing import Any
 
 import urllib3
-from jira import JIRA  # type: ignore[import]
-from jira.exceptions import JIRAError  # type: ignore[import]
+from jira import JIRA
+from jira.exceptions import JIRAError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from cmk.utils.password_store import replace_passwords

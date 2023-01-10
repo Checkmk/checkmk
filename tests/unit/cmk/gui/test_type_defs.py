@@ -5,7 +5,13 @@
 
 import pytest
 
-from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec, VisualLinkSpec
+from cmk.gui.type_defs import (
+    PainterParameters,
+    PainterSpec,
+    RawLegacyPainterSpec,
+    RawPainterSpec,
+    VisualLinkSpec,
+)
 
 
 @pytest.mark.parametrize(
@@ -18,7 +24,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             ),
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -36,7 +42,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             ),
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -55,7 +61,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             ),
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -75,7 +81,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             ),
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -95,7 +101,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             ),
             PainterSpec(
                 name="name",
-                parameters={"column_title": "another column title"},
+                parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
                     type_name="reports",
                     name="view_name",
@@ -116,7 +122,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             },
             PainterSpec(
                 name="name",
-                parameters={"column_title": "another column title"},
+                parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -137,7 +143,7 @@ from cmk.gui.type_defs import PainterSpec, RawLegacyPainterSpec, RawPainterSpec,
             },
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=VisualLinkSpec(
                     type_name="reports",
                     name="view_name",
@@ -162,7 +168,7 @@ def test_painter_spec_from_raw(
         pytest.param(
             PainterSpec(
                 name="name",
-                parameters={"column_title": "another column title"},
+                parameters=PainterParameters(column_title="another column title"),
                 link_spec=VisualLinkSpec(
                     type_name="views",
                     name="view_name",
@@ -184,7 +190,7 @@ def test_painter_spec_from_raw(
         pytest.param(
             PainterSpec(
                 name="name",
-                parameters={},
+                parameters=PainterParameters(),
                 link_spec=None,
                 tooltip=None,
                 join_index=None,

@@ -4983,15 +4983,15 @@ def cmk_sites_painters() -> Sequence[PainterSpec]:
     return [
         PainterSpec(
             name="host",
-            parameters={
-                "color_choices": [
+            parameters=PainterParameters(
+                color_choices=[
                     "colorize_up",
                     "colorize_down",
                     "colorize_unreachable",
                     "colorize_pending",
                     "colorize_downtime",
                 ]
-            },
+            ),
             link_spec=VisualLinkSpec(type_name="views", name="host"),
             tooltip="host_addresses",
         ),

@@ -38,6 +38,7 @@
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
 #include "User.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DynamicColumn.h"

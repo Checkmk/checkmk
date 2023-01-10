@@ -22,6 +22,7 @@
 #include "TableServices.h"
 #include "TimeColumn.h"
 #include "User.h"
+#include "livestatus/Attributes.h"  // IWYU pragma: keep
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/DoubleColumn.h"

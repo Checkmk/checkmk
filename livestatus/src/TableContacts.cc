@@ -21,6 +21,7 @@
 #include "Query.h"
 #include "TimeperiodsCache.h"
 #include "contact_fwd.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/ListColumn.h"
 #include "livestatus/StringColumn.h"

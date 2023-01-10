@@ -53,22 +53,6 @@ struct CommentData {
     std::chrono::system_clock::time_point _entry_time;
 };
 
-enum class AttributeKind { custom_variables, tags, labels, label_sources };
-
-inline std::tuple<AttributeKind, std::string> to_attribute_kind(
-    const std::string &name) {
-    if (mk::starts_with(name, "_TAG_")) {
-        return {AttributeKind::tags, name.substr(5)};
-    }
-    if (mk::starts_with(name, "_LABEL_")) {
-        return {AttributeKind::labels, name.substr(7)};
-    }
-    if (mk::starts_with(name, "_LABELSOURCE_")) {
-        return {AttributeKind::label_sources, name.substr(13)};
-    }
-    return {AttributeKind::custom_variables, name};
-}
-
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:

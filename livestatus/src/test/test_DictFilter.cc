@@ -11,10 +11,10 @@
 
 #include "CustomAttributeMap.h"
 #include "DictColumn.h"
-#include "MonitoringCore.h"
 #include "NagiosCore.h"
 #include "User.h"
 #include "gtest/gtest.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictFilter.h"
 #include "livestatus/Filter.h"

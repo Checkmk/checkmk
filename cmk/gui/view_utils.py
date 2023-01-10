@@ -70,14 +70,11 @@ def _prepare_button_url(p: re.Match) -> str:
 
 
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
-    assert not isinstance(output, dict)
 
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape:
         output = escaping.escape_attribute(output)
-    else:
-        output = "%s" % output
 
     output = replace_state_markers(output)
 
@@ -128,20 +125,18 @@ def _render_host_links(output: str, row: Row | None) -> str:
 
 
 def _normalize_check_http_link(output: str) -> str:
-    if "A HREF" not in output:
-        return output
-
-    # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
-    # handling for the HTML code produced by check_http when "clickable URL" option is active.
-    output = re.sub(
-        "&lt;A HREF=&quot;" + _URL_PATTERN + "&quot; target=&quot;_blank&quot;&gt;",
-        lambda p: f"{p.group(1)} ",
-        output,
+    """Handling for the HTML code produced by check_http when "clickable URL" option is active"""
+    return (
+        re.sub(
+            "&lt;A HREF=&quot;"
+            + _URL_PATTERN
+            + "&quot; target=&quot;_blank&quot;&gt;(.*?) &lt;/A&gt;",
+            lambda p: f"{p.group(1)} {p.group(2)}",
+            output,
+        )
+        if "A HREF" in output
+        else output
     )
-
-    if output.endswith(" &lt;/A&gt;"):
-        output = output[:-11]
-    return output
 
 
 def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:

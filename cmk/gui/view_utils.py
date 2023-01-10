@@ -82,18 +82,7 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
 
     if shall_escape and _render_url_icons(row):
         output = _normalize_check_http_link(output)
-
-        output = re.sub(
-            _URL_PATTERN,
-            lambda p: str(
-                html.render_icon_button(
-                    _prepare_button_url(p),
-                    _prepare_button_url(p),
-                    "link",
-                )
-            ),
-            output,
-        )
+        output = _render_icon_button(output)
 
     return HTML(output)
 
@@ -136,6 +125,20 @@ def _normalize_check_http_link(output: str) -> str:
         )
         if "A HREF" in output
         else output
+    )
+
+
+def _render_icon_button(output: str) -> str:
+    return re.sub(
+        _URL_PATTERN,
+        lambda p: str(
+            html.render_icon_button(
+                _prepare_button_url(p),
+                _prepare_button_url(p),
+                "link",
+            )
+        ),
+        output,
     )
 
 

@@ -16,8 +16,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "DictFilter.h"
 #include "livestatus/Column.h"
+#include "livestatus/DictFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"

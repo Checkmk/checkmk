@@ -6,14 +6,12 @@
 #ifndef DictFilter_h
 #define DictFilter_h
 
-#include "config.h"  // IWYU pragma: keep
-
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
 
-#include "MonitoringCore.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/opids.h"

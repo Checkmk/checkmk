@@ -42,6 +42,7 @@
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
 #include "gtest/gtest.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Column.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Triggers.h"

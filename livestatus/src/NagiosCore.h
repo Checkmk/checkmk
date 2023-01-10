@@ -23,6 +23,7 @@
 #include "Store.h"
 #include "User.h"
 #include "contact_fwd.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/Triggers.h"
 #include "nagios.h"
 class InputBuffer;

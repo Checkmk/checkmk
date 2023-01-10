@@ -17,6 +17,7 @@
 
 #include "Metric.h"
 #include "User.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Triggers.h"
 enum class Encoding;
@@ -52,7 +53,6 @@ struct CommentData {
     std::chrono::system_clock::time_point _entry_time;
 };
 
-using Attributes = std::unordered_map<std::string, std::string>;
 enum class AttributeKind { custom_variables, tags, labels, label_sources };
 
 inline std::tuple<AttributeKind, std::string> to_attribute_kind(

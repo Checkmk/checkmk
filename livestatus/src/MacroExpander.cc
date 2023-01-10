@@ -11,6 +11,7 @@
 #include <utility>
 
 #include "MonitoringCore.h"
+#include "livestatus/Attributes.h"
 #include "livestatus/RegExp.h"
 #include "livestatus/StringUtils.h"
 #include "nagios.h"

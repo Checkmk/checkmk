@@ -106,7 +106,6 @@ liblivestatusneb_a_LD_FLAGS = \
 liblivestatusneb_a_SOURCES = \
         AttributeListColumn.cc \
         CommentRenderer.cc \
-        DictFilter.cc \
         DowntimeRenderer.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \

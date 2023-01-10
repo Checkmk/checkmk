@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "MonitoringCore.h"
+#include "livestatus/Attributes.h"
 #include "nagios.h"
 
 // Nagios and const-correctness: A Tale of Two Worlds...

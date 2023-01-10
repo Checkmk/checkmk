@@ -10,6 +10,7 @@ set(livestatus_headers
     ${header_location}/CountAggregator.h
     ${header_location}/CrashReport.h
     ${header_location}/data_encoding.h
+    ${header_location}/DictFilter.h
     ${header_location}/DoubleAggregator.h
     ${header_location}/DoubleColumn.h
     ${header_location}/DoubleFilter.h
@@ -63,6 +64,7 @@ set(livestatus_sources
     Column.cc
     ColumnFilter.cc
     CountAggregator.cc
+    DictFilter.cc
     DoubleFilter.cc
     EventConsoleConnection.cc
     FileSystemHelper.cc

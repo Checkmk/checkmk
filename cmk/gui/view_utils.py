@@ -31,6 +31,19 @@ CellSpec = Tuple[CSSClass, CellContent]
 if TYPE_CHECKING:
     from cmk.gui.type_defs import Row
 
+# fmt: off
+_URL_PATTERN = (
+    r"("
+    r"http[s]?://"
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]*"  # including *all* sub-delimiters
+    # In theory, URIs are allowed to end in a sub-delimitter ("!$&'()*+,;=")
+    # We exclude the ',' here, because it is used to separate our check results,
+    # and disallowing a trailing ',' hopefully breaks fewer links than allowing it.
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+;=%]"
+    r")"
+)
+# fmt: on
+
 
 def _prepare_button_url(p: re.Match) -> str:
     """The regex to find out if a link button should be placed does not deal correctly with escaped trailing quotes
@@ -89,11 +102,10 @@ def format_plugin_output(
         else False
     )
     if shall_escape and not prevent_url_icons:
-        http_url = r"(http[s]?://[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
+            "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
                     _prepare_button_url(p),

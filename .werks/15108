@@ -1,0 +1,13 @@
+Title: Broken links in service summaries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1673359857
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p20
+
+Links rendered in service summaries where not clickable if another result followed the link.
+

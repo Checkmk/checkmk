@@ -309,9 +309,12 @@ class ModeEditSAML2Config(WatoMode):
     def page(self) -> None:
         html.begin_form("value_editor", method="POST")
 
-        self._valuespec.render_input_as_form(
-            self._html_valuespec_param_prefix, self.from_config_file()
-        )
+        if clone_id := request.var("clone"):
+            render_values = self._action_clone(clone_id=clone_id)
+        else:
+            render_values = self.from_config_file(connection_id=request.get_ascii_input("id"))
+
+        self._valuespec.render_input_as_form(self._html_valuespec_param_prefix, render_values)
 
         forms.end()
         html.hidden_fields()
@@ -326,8 +329,8 @@ class ModeEditSAML2Config(WatoMode):
 
         return redirect(mode_url("saml_config"))
 
-    def from_config_file(self) -> DictionaryModel:
-        if not (connection_id := request.get_ascii_input("id")):
+    def from_config_file(self, *, connection_id: str | None = None) -> DictionaryModel:
+        if not connection_id:
             return {}
 
         for connection in active_connections_by_type(self.type):
@@ -357,6 +360,14 @@ class ModeEditSAML2Config(WatoMode):
         updated_connections = [c for c in connections if c["id"] != user_input["id"]]
         updated_connections.append(self.to_config_file(user_input))
         save_connection_config(updated_connections)
+
+    def _action_clone(self, clone_id: str) -> DictionaryModel:
+        for connection in load_connection_config(lock=False):
+            if connection["id"] == clone_id:
+                connection["id"] = UUID().from_html_vars(self._html_valuespec_param_prefix)
+                return _config_to_valuespec(ConnectorConfig(**connection))
+
+        raise MKUserError(None, _("The requested connection does not exist."))
 
 
 def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:

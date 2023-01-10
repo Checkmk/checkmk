@@ -161,13 +161,9 @@ def test_from_config_file(monkeypatch: pytest.MonkeyPatch, config_variables: Var
     }
     monkeypatch.setattr("pathlib.Path.read_text", lambda s: file_content[str(s)])
     monkeypatch.setattr(
-        "cmk.gui.wato.pages.saml2.request.get_ascii_input",
-        lambda s: config_variables.valuespec["id"],
-    )
-    monkeypatch.setattr(
         "cmk.gui.plugins.userdb.utils.active_config.user_connections", [config_variables.serialised]
     )
     wato_mode = ModeEditSAML2Config()
-    config = wato_mode.from_config_file()
+    config = wato_mode.from_config_file(connection_id=config_variables.valuespec["id"])
 
     assert config == config_variables.valuespec

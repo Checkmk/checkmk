@@ -47,10 +47,13 @@ CellSpec = tuple[CSSClass, CellContent]
 _URL_PATTERN = (
     r"("
     r"http[s]?://"
-    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+"
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]*"  # including *all* sub-delimiters
+    # In theory, URIs are allowed to end in a sub-delimitter ("!$&'()*+,;=")
+    # We exclude the ',' here, because it is used to separate our check results,
+    # and disallowing a trailing ',' hopefully breaks fewer links than allowing it.
+    r"[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+;=%]"
     r")"
 )
-
 # fmt: on
 
 

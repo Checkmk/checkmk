@@ -26,12 +26,11 @@ import datetime
 import enum
 import math
 from collections.abc import Mapping, Sequence
-from typing import Generic, Literal, NewType, TypeVar
+from typing import Literal, NewType
 
 from pydantic import BaseModel
 from pydantic.class_validators import validator
 from pydantic.fields import Field
-from pydantic.generics import GenericModel
 
 CronJobUID = NewType("CronJobUID", str)
 JobUID = NewType("JobUID", str)
@@ -142,8 +141,6 @@ NamespaceName = NewType("NamespaceName", str)
 NodeName = NewType("NodeName", str)
 IpAddress = NewType("IpAddress", str)
 
-ObjectName = TypeVar("ObjectName", bound=str)
-
 
 def parse_cpu_cores(value: str) -> float:
     """Parses and then rounds up to nearest millicore.
@@ -219,20 +216,27 @@ def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
     return Timestamp(date_time.timestamp())
 
 
-class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
-    name: ObjectName
+class MetaDataNoNamespace(BaseModel):
+    name: str
     creation_timestamp: Timestamp
     labels: Labels
     annotations: Annotations
 
 
-class MetaData(MetaDataNoNamespace[ObjectName], Generic[ObjectName]):
-    name: ObjectName
+class MetaData(MetaDataNoNamespace):
     namespace: NamespaceName
 
 
+class NamespaceMetaData(MetaDataNoNamespace):
+    name: NamespaceName
+
+
+class NodeMetaData(MetaDataNoNamespace):
+    name: NodeName
+
+
 class Namespace(BaseModel):
-    metadata: MetaDataNoNamespace[NamespaceName]
+    metadata: NamespaceMetaData
 
 
 # TODO: PodCrossNamespaceAffinity is currently not supported
@@ -341,7 +345,7 @@ class ResourceQuota(BaseModel):
         multiple RQs targeting the same namespace)
     """
 
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: ResourceQuotaSpec
 
 
@@ -461,7 +465,7 @@ def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
 
 
 class Node(BaseModel):
-    metadata: MetaDataNoNamespace[NodeName]
+    metadata: NodeMetaData
     status: NodeStatus
     kubelet_health: HealthZ
 
@@ -572,7 +576,7 @@ class DeploymentSpec(BaseModel):
 
 
 class Deployment(BaseModel):
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: DeploymentSpec
     status: DeploymentStatus
     pods: Sequence[PodUID]
@@ -592,7 +596,7 @@ class DaemonSetStatus(BaseModel):
 
 
 class DaemonSet(BaseModel):
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: DaemonSetSpec
     status: DaemonSetStatus
     pods: Sequence[PodUID]
@@ -611,7 +615,7 @@ class StatefulSetStatus(BaseModel):
 
 
 class StatefulSet(BaseModel):
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: StatefulSetSpec
     status: StatefulSetStatus
     pods: Sequence[PodUID]
@@ -767,7 +771,7 @@ class Controller(BaseModel):
 
 class Pod(BaseModel):
     uid: PodUID
-    metadata: MetaData[str]
+    metadata: MetaData
     status: PodStatus
     spec: PodSpec
     containers: Mapping[str, ContainerStatus]
@@ -807,7 +811,7 @@ class CronJobStatus(BaseModel):
 
 class CronJob(BaseModel):
     uid: CronJobUID
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: CronJobSpec
     status: CronJobStatus
     pod_uids: Sequence[PodUID]
@@ -866,7 +870,7 @@ class JobStatus(BaseModel):
 
 class Job(BaseModel):
     uid: JobUID
-    metadata: MetaData[str]
+    metadata: MetaData
     status: JobStatus
     pod_uids: Sequence[PodUID]
 
@@ -980,7 +984,7 @@ class PersistentVolumeClaimStatus(ClientModel):
 
 
 class PersistentVolumeClaim(BaseModel):
-    metadata: MetaData[str]
+    metadata: MetaData
     spec: PersistentVolumeClaimSpec
     status: PersistentVolumeClaimStatus
 

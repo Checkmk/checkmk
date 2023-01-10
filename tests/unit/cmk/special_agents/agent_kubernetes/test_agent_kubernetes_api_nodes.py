@@ -10,7 +10,7 @@ from kubernetes import client  # type: ignore[import]
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import parse_metadata_no_namespace
+from cmk.special_agents.utils_kubernetes.transform_json import _metadata_no_namespace_from_json
 
 
 class NodeConditions(pydantic.BaseModel):
@@ -38,15 +38,12 @@ class TestAPINode:
 
         node_raw_metadata = {
             "name": "k8",
-            "creation_timestamp": datetime.datetime.strptime(
-                "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ).replace(tzinfo=datetime.timezone.utc),
+            "creationTimestamp": "2021-05-04T09:01:13Z",
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
             "labels": labels,
             "annotations": annotations,
         }
-        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
         assert metadata.name == "k8"
         assert metadata.labels
         assert metadata.annotations == {
@@ -57,13 +54,10 @@ class TestAPINode:
     def test_parse_metadata_missing_annotations_and_labels(self) -> None:
         node_raw_metadata = {
             "name": "k8",
-            "creation_timestamp": datetime.datetime.strptime(
-                "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ).replace(tzinfo=datetime.timezone.utc),
+            "creationTimestamp": "2021-05-04T09:01:13Z",
             "uid": "42c82288-5524-49cb-af75-065e73fedc88",
         }
-        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
         assert metadata.labels == {}
         assert metadata.annotations == {}
 
@@ -71,11 +65,10 @@ class TestAPINode:
         now = datetime.datetime(2021, 10, 11, 13, 53, 10, tzinfo=datetime.timezone.utc)
         node_raw_metadata = {
             "name": "unittest",
-            "creation_timestamp": now,
+            "creationTimestamp": now,
             "uid": "f57f3e64-2a89-11ec-bb97-3f4358ab72b2",
         }
-        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
-        metadata = parse_metadata_no_namespace(metadata_obj, api.NodeName)
+        metadata = _metadata_no_namespace_from_json(node_raw_metadata)  # type: ignore
         assert metadata.creation_timestamp == now.timestamp()
 
     def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:

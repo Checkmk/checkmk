@@ -49,7 +49,7 @@ class TestAPIPod:
         }
         pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
 
-        metadata = parse_metadata(pod.metadata, type_=str)
+        metadata = parse_metadata(pod.metadata)
         assert metadata.name == "cluster-collector-595b64557d-x9t5q"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
@@ -84,7 +84,7 @@ class TestAPIPod:
 
         pod = core_client.api_client.deserialize(FakeResponse(mocked_pods), "V1Pod")
 
-        metadata = parse_metadata(pod.metadata, type_=str)
+        metadata = parse_metadata(pod.metadata)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

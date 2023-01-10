@@ -110,7 +110,7 @@ class JSONNodeList(TypedDict):
     items: Sequence[JSONNode]
 
 
-def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
+def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData:
     return api.MetaData(
         name=metadata["name"],
         namespace=api.NamespaceName(metadata["namespace"]),
@@ -120,10 +120,8 @@ def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
     )
 
 
-def _metadata_no_namespace_from_json(
-    metadata: JSONNodeMetaData,
-) -> api.MetaDataNoNamespace[api.NodeName]:
-    return api.MetaDataNoNamespace(
+def _metadata_no_namespace_from_json(metadata: JSONNodeMetaData) -> api.NodeMetaData:
+    return api.NodeMetaData(
         name=metadata["name"],
         creation_timestamp=api.convert_to_timestamp(metadata["creationTimestamp"]),
         labels=parse_labels(metadata.get("labels", {})),

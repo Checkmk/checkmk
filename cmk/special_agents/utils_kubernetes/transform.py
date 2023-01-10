@@ -21,25 +21,19 @@ from .schemata.api import convert_to_timestamp, parse_cpu_cores, parse_resource_
 from .transform_any import parse_annotations, parse_labels, parse_match_labels
 
 
-def parse_metadata_no_namespace(
-    metadata: client.V1ObjectMeta, type_: type[api.ObjectName]
-) -> api.MetaDataNoNamespace[api.ObjectName]:
+def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
     return api.MetaDataNoNamespace(
-        name=type_(metadata.name),
+        name=metadata.name,
         creation_timestamp=convert_to_timestamp(metadata.creation_timestamp),
         labels=parse_labels(metadata.labels),
         annotations=parse_annotations(metadata.annotations),
     )
 
 
-def parse_metadata(
-    metadata: client.V1ObjectMeta, type_: type[api.ObjectName]
-) -> api.MetaData[api.ObjectName]:
-    metadata_no_namespace: api.MetaDataNoNamespace = parse_metadata_no_namespace(
-        metadata, type_=type_
-    )
+def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
+    metadata_no_namespace: api.MetaDataNoNamespace = parse_metadata_no_namespace(metadata)
     return api.MetaData(
-        name=type_(metadata_no_namespace.name),
+        name=metadata_no_namespace.name,
         namespace=api.NamespaceName(metadata.namespace),
         creation_timestamp=metadata_no_namespace.creation_timestamp,
         labels=metadata_no_namespace.labels,
@@ -232,7 +226,7 @@ def deployment_conditions(
 def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) -> api.Pod:
     return api.Pod(
         uid=api.PodUID(pod.metadata.uid),
-        metadata=parse_metadata(pod.metadata, str),
+        metadata=parse_metadata(pod.metadata),
         status=pod_status(pod),
         spec=pod_spec(pod),
         containers=pod_containers(pod.status.container_statuses),
@@ -282,7 +276,7 @@ def deployment_from_client(
     deployment: client.V1Deployment, pod_uids: Sequence[api.PodUID]
 ) -> api.Deployment:
     return api.Deployment(
-        metadata=parse_metadata(deployment.metadata, str),
+        metadata=parse_metadata(deployment.metadata),
         spec=parse_deployment_spec(deployment.spec),
         status=api.DeploymentStatus(
             conditions=deployment_conditions(deployment.status),
@@ -321,7 +315,7 @@ def cron_job_from_client(
 ) -> api.CronJob:
     return api.CronJob(
         uid=api.CronJobUID(cron_job.metadata.uid),
-        metadata=parse_metadata(cron_job.metadata, str),
+        metadata=parse_metadata(cron_job.metadata),
         spec=parse_cron_job_spec(cron_job.spec),
         status=parse_cron_job_status(cron_job.status),
         pod_uids=pod_uids,
@@ -356,7 +350,7 @@ def job_from_client(
 ) -> api.Job:
     return api.Job(
         uid=api.JobUID(job.metadata.uid),
-        metadata=parse_metadata(job.metadata, str),
+        metadata=parse_metadata(job.metadata),
         status=parse_job_status(job.status),
         pod_uids=pod_uids,
     )
@@ -393,7 +387,7 @@ def daemonset_from_client(
     daemonset: client.V1DaemonSet, pod_uids: Sequence[api.PodUID]
 ) -> api.DaemonSet:
     return api.DaemonSet(
-        metadata=parse_metadata(daemonset.metadata, str),
+        metadata=parse_metadata(daemonset.metadata),
         spec=parse_daemonset_spec(daemonset.spec),
         status=parse_daemonset_status(status=daemonset.status),
         pods=pod_uids,
@@ -432,7 +426,7 @@ def statefulset_from_client(
     statefulset: client.V1StatefulSet, pod_uids: Sequence[api.PodUID]
 ) -> api.StatefulSet:
     return api.StatefulSet(
-        metadata=parse_metadata(statefulset.metadata, str),
+        metadata=parse_metadata(statefulset.metadata),
         spec=parse_statefulset_spec(statefulset.spec),
         status=parse_statefulset_status(statefulset.status),
         pods=pod_uids,
@@ -441,7 +435,7 @@ def statefulset_from_client(
 
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
     return api.Namespace(
-        metadata=parse_metadata_no_namespace(namespace.metadata, api.NamespaceName),
+        metadata=api.NamespaceMetaData.parse_obj(parse_metadata_no_namespace(namespace.metadata)),
     )
 
 
@@ -519,7 +513,7 @@ def resource_quota_from_client(
         return None
 
     return api.ResourceQuota(
-        metadata=parse_metadata(resource_quota.metadata, str),
+        metadata=parse_metadata(resource_quota.metadata),
         spec=spec,
     )
 
@@ -528,7 +522,7 @@ def persistent_volume_claim_from_client(
     persistent_volume_claim: client.V1PersistentVolumeClaim,
 ) -> api.PersistentVolumeClaim:
     return api.PersistentVolumeClaim(
-        metadata=parse_metadata(persistent_volume_claim.metadata, str),
+        metadata=parse_metadata(persistent_volume_claim.metadata),
         spec=api.PersistentVolumeClaimSpec.from_orm(persistent_volume_claim.spec),
         status=api.PersistentVolumeClaimStatus.from_orm(persistent_volume_claim.status),
     )

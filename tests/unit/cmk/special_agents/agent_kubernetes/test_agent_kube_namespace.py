@@ -9,7 +9,7 @@ from kubernetes import client  # type: ignore[import]
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import parse_metadata_no_namespace
+from cmk.special_agents.utils_kubernetes.transform import namespace_from_client
 
 
 class TestAPINamespace:
@@ -30,17 +30,15 @@ class TestAPINamespace:
         namespace = core_client.api_client.deserialize(
             FakeResponse(namespace_metadata), "V1Namespace"
         )
-        metadata = parse_metadata_no_namespace(namespace.metadata, api.NamespaceName)
-        assert isinstance(metadata, api.MetaDataNoNamespace)
-        assert metadata.name == "checkmk-monitoring"
-        assert isinstance(metadata.creation_timestamp, float)
-        assert metadata.labels == {
+        ns = namespace_from_client(namespace)
+        assert ns.metadata.name == "checkmk-monitoring"
+        assert ns.metadata.labels == {
             "kubernetes.io/metadata.name": api.Label(
                 name=api.LabelName("kubernetes.io/metadata.name"),
                 value=api.LabelValue("checkmk-monitoring"),
             )
         }
-        assert metadata.annotations == {}
+        assert ns.metadata.annotations == {}
 
     def test_parse_metadata_missing_annotations_and_labels(
         self, core_client: client.CoreV1Api, dummy_host: str
@@ -57,6 +55,6 @@ class TestAPINamespace:
         namespace = core_client.api_client.deserialize(
             FakeResponse(namespace_metadata), "V1Namespace"
         )
-        metadata = parse_metadata_no_namespace(namespace.metadata, type_=api.NamespaceName)
-        assert metadata.labels == {}
-        assert metadata.annotations == {}
+        ns = namespace_from_client(namespace)
+        assert ns.metadata.labels == {}
+        assert ns.metadata.annotations == {}

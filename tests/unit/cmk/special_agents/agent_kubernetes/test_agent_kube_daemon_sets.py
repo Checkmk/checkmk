@@ -34,7 +34,7 @@ class TestAPIDaemonSets:
             FakeResponse(daemon_sets_metadata),
             "V1DaemonSet",
         )
-        metadata = parse_metadata(daemon_set.metadata, type_=str)
+        metadata = parse_metadata(daemon_set.metadata)
         assert isinstance(metadata, api.MetaData)
         assert metadata.name == "node-collector-container-metrics"
         assert isinstance(metadata.creation_timestamp, float)
@@ -59,7 +59,7 @@ class TestAPIDaemonSets:
             FakeResponse(daemon_sets_metadata),
             "V1DaemonSet",
         )
-        metadata = parse_metadata(daemon_set.metadata, type_=str)
+        metadata = parse_metadata(daemon_set.metadata)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

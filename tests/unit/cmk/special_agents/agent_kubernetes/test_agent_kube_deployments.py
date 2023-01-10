@@ -34,7 +34,7 @@ class TestAPIDeployments:
             "V1Deployment",
         )
 
-        metadata = parse_metadata(deployment.metadata, type_=str)
+        metadata = parse_metadata(deployment.metadata)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
@@ -61,7 +61,7 @@ class TestAPIDeployments:
             "V1Deployment",
         )
 
-        metadata = parse_metadata(deployment.metadata, type_=str)
+        metadata = parse_metadata(deployment.metadata)
         assert metadata.name == "cluster-collector"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)

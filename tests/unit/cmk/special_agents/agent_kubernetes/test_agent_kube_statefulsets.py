@@ -28,7 +28,7 @@ class TestAPIStatefulSets:
         statefulset = apps_client.api_client.deserialize(
             FakeResponse(statefulsets_metadata), "V1StatefulSet"
         )
-        metadata = parse_metadata(statefulset.metadata, type_=str)
+        metadata = parse_metadata(statefulset.metadata)
         assert isinstance(metadata, api.MetaData)
         assert metadata.name == "web"
         assert isinstance(metadata.creation_timestamp, float)
@@ -52,7 +52,7 @@ class TestAPIStatefulSets:
         statefulset = apps_client.api_client.deserialize(
             FakeResponse(statefulsets_metadata), "V1StatefulSet"
         )
-        metadata = parse_metadata(statefulset.metadata, type_=str)
+        metadata = parse_metadata(statefulset.metadata)
         assert metadata.labels == {}
         assert metadata.annotations == {}
 

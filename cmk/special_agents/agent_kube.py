@@ -353,7 +353,7 @@ def aggregate_resources(
 # TODO: addition of test framework for output sections
 @dataclass(frozen=True)
 class Deployment(PodOwner):
-    metadata: api.MetaData[str]
+    metadata: api.MetaData
     spec: api.DeploymentSpec
     status: api.DeploymentStatus
     type_: str = "deployment"
@@ -413,7 +413,7 @@ def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
 
 @dataclass(frozen=True)
 class DaemonSet(PodOwner):
-    metadata: api.MetaData[str]
+    metadata: api.MetaData
     spec: api.DaemonSetSpec
     status: api.DaemonSetStatus
     type_: str = "daemonset"
@@ -453,7 +453,7 @@ def daemonset_info(
 
 @dataclass(frozen=True)
 class StatefulSet(PodOwner):
-    metadata: api.MetaData[str]
+    metadata: api.MetaData
     spec: api.StatefulSetSpec
     status: api.StatefulSetStatus
     type_: str = "statefulset"
@@ -491,7 +491,7 @@ def statefulset_info(
 
 @dataclass(frozen=True)
 class Node(PodOwner):
-    metadata: api.MetaDataNoNamespace[api.NodeName]
+    metadata: api.NodeMetaData
     status: api.NodeStatus
     kubelet_health: api.HealthZ
 
@@ -1450,7 +1450,7 @@ def write_deployments_api_sections(
             output_sections(deployment)
 
 
-def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
+def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
     return api.namespaced_name(metadata.namespace, metadata.name)
 
 

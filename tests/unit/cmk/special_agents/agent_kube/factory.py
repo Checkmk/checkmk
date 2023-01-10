@@ -63,8 +63,8 @@ class ContainerResourcesFactory(ModelFactory):
 # General Factories
 
 
-class MetaDataFactory(ModelFactory[api.MetaData[str]]):
-    __model__ = api.MetaData[str]
+class MetaDataFactory(ModelFactory[api.MetaData]):
+    __model__ = api.MetaData
 
 
 # Pod related Factories
@@ -158,7 +158,7 @@ def api_to_agent_statefulset(
 
 
 class NamespaceMetaDataFactory(ModelFactory):
-    __model__ = api.MetaDataNoNamespace[api.NamespaceName]
+    __model__ = api.NamespaceMetaData
 
 
 class APIResourceQuotaFactory(ModelFactory):
@@ -221,7 +221,7 @@ class PersistentVolumeClaimFactory(ModelFactory):
 
 
 class NodeMetaDataFactory(ModelFactory):
-    __model__ = api.MetaDataNoNamespace[api.NodeName]
+    __model__ = api.NodeMetaData
 
 
 class NodeResourcesFactory(ModelFactory):

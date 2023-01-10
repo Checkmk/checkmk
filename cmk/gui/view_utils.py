@@ -113,7 +113,7 @@ def _render_icon_button(output: str) -> str:
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:
-                buffer.append(str(html.render_icon_button(token, token, "link")))
+                buffer.append(str(html.render_icon_button(token, token, "link", target="_blank")))
     return "".join(buffer)
 
 

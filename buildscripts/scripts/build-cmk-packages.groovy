@@ -275,14 +275,8 @@ def main() {
                                         passwordVariable: 'NEXUS_PASSWORD',
                                         usernameVariable: 'NEXUS_USERNAME')
                                 ]) {
-                                    withCredentials([usernamePassword(
-                                        credentialsId: 'bazel-caching-credentials',
-                                        passwordVariable: 'BAZEL_CACHE_PWD',
-                                        usernameVariable: 'BAZEL_CACHE_USER')
-                                    ]) {
-                                        versioning.print_image_tag();
-                                        build_package(distro_package_type(distro), distro_dir, omd_env_vars);
-                                    }
+                                    versioning.print_image_tag();
+                                    build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
                             }
                         }

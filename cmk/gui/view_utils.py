@@ -72,13 +72,7 @@ def _prepare_button_url(p: re.Match) -> str:
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
     assert not isinstance(output, dict)
 
-    # In case we have a host or service row use the optional custom attribute
-    # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
-    # setting.
-    if row:
-        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
-        if "ESCAPE_PLUGIN_OUTPUT" in custom_vars:
-            shall_escape = custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
+    shall_escape = _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape:
         output = escaping.escape_attribute(output)
@@ -94,12 +88,7 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
         h = get_host_list_links(row["site"], hosts)
         output = output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
 
-    prevent_url_icons = (
-        row.get("service_check_command", "") == "check_mk-checkmk_agent"
-        if row is not None
-        else False
-    )
-    if shall_escape and not prevent_url_icons:
+    if shall_escape and _render_url_icons(row):
         # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
         # handling for the HTML code produced by check_http when "clickable URL" option is active.
         output = re.sub(
@@ -118,6 +107,21 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
             output = output[:-11]
 
     return HTML(output)
+
+
+def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
+    # In case we have a host or service row use the optional custom attribute
+    # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
+    # setting.
+    if row:
+        custom_vars = row.get("service_custom_variables", row.get("host_custom_variables", {}))
+        if "ESCAPE_PLUGIN_OUTPUT" in custom_vars:
+            return custom_vars["ESCAPE_PLUGIN_OUTPUT"] == "1"
+    return shall_escape
+
+
+def _render_url_icons(row: Row | None) -> bool:
+    return row is None or row.get("service_check_command", "") != "check_mk-checkmk_agent"
 
 
 def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:

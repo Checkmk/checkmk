@@ -44,7 +44,7 @@ from cmk.gui.view_utils import format_plugin_output
         pytest.param(
             """<A HREF="http://127.0.0.1:5000/heute/check_mk" target="_blank">Some text </A>""",
             HTML(
-                """<a href="http://127.0.0.1:5000/heute/check_mk" title="http://127.0.0.1:5000/heute/check_mk" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>Some text"""
+                """<a href="http://127.0.0.1:5000/heute/check_mk" title="http://127.0.0.1:5000/heute/check_mk" onfocus="if (this.blur) this.blur();" target=''><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a> Some text"""
             ),
             id="A HREF Replacement",
         ),

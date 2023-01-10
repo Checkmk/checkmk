@@ -84,10 +84,10 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
     output = _render_host_links(output, row)
 
     if shall_escape and _render_url_icons(row):
-        # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
-        # handling for the HTML code produced by check_http when "clickable URL" option is active.
+        output = _normalize_check_http_link(output)
+
         output = re.sub(
-            "(?:&lt;A HREF=&quot;)?" + _URL_PATTERN + "(?: target=&quot;_blank&quot;&gt;)?",
+            _URL_PATTERN,
             lambda p: str(
                 html.render_icon_button(
                     _prepare_button_url(p),
@@ -97,9 +97,6 @@ def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool
             ),
             output,
         )
-
-        if output.endswith(" &lt;/A&gt;"):
-            output = output[:-11]
 
     return HTML(output)
 
@@ -128,6 +125,23 @@ def _render_host_links(output: str, row: Row | None) -> str:
     hosts = output[a + 12 : e].replace(" ", "").split(",")
     h = get_host_list_links(row["site"], hosts)
     return output[:a] + "running on " + ", ".join(h) + output[e + 1 :]
+
+
+def _normalize_check_http_link(output: str) -> str:
+    if "A HREF" not in output:
+        return output
+
+    # (?:&lt;A HREF=&quot;), (?: target=&quot;_blank&quot;&gt;)? and endswith(" </A>") is a special
+    # handling for the HTML code produced by check_http when "clickable URL" option is active.
+    output = re.sub(
+        "&lt;A HREF=&quot;" + _URL_PATTERN + "&quot; target=&quot;_blank&quot;&gt;",
+        lambda p: f"{p.group(1)} ",
+        output,
+    )
+
+    if output.endswith(" &lt;/A&gt;"):
+        output = output[:-11]
+    return output
 
 
 def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:

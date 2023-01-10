@@ -273,19 +273,14 @@ class LoginPage(Page):
             html.show_message(active_config.login_screen["login_message"])
             html.close_div()
 
-        if saml_connection := active_connections_by_type("saml2"):
-            relay_state = RelayState(
-                target_url=origtarget,
-                connection_id=saml_connection[0][
-                    "id"
-                ],  # Only one connection is currently supported
-            )
+        for connection in active_connections_by_type("saml2"):
+            relay_state = RelayState(target_url=origtarget, connection_id=connection["id"])
             html.open_div(id_="saml_button")
             html.buttonlink(
                 href=makeuri_contextless(
                     request, [("RelayState", str(relay_state))], filename="saml_sso.py"
                 ),
-                text=_("Login with Identity Provider"),
+                text=f"{_('Login with')} {connection['name']}",
                 obj_id="_saml2_login_button",
                 class_=["hot"],
             )

@@ -67,9 +67,8 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
     add_connections_page_menu,
-    delete_connection,
+    connection_actions,
     get_affected_sites,
-    move_connection,
     render_connections_page,
 )
 
@@ -713,23 +712,7 @@ class ModeLDAPConfig(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not transactions.check_transaction():
-            return redirect(self.mode_url())
-
-        if request.has_var("_delete"):
-            delete_connection(
-                index=request.get_integer_input_mandatory("_delete"),
-                log_entry_action="delete-ldap-connection",
-            )
-
-        elif request.has_var("_move"):
-            move_connection(
-                from_index=request.get_integer_input_mandatory("_move"),
-                to_index=request.get_integer_input_mandatory("_index"),
-                log_entry_action="move-ldap-connection",
-            )
-
-        return redirect(self.mode_url())
+        return connection_actions(config_mode_url=self.mode_url(), connection_type=self.type)
 
     def page(self) -> None:
         render_connections_page(

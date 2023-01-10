@@ -28,9 +28,11 @@ from cmk.gui.plugins.userdb.utils import (
     save_connection_config,
     UserConnectionSpec,
 )
-from cmk.gui.plugins.wato.utils import make_confirm_link
+from cmk.gui.plugins.wato.utils import make_confirm_link, redirect
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
+from cmk.gui.type_defs import ActionResult
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -160,11 +162,11 @@ def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     return get_login_sites()
 
 
-def delete_connection(index: int, *, log_entry_action: str | None) -> None:
+def _delete_connection(index: int, connection_type: str) -> None:
     connections = load_connection_config(lock=True)
     connection = connections[index]
     add_change(
-        log_entry_action or "delete-connection",
+        f"delete-{connection_type}-connection",
         _("Deleted connection %s") % (connection["id"]),
         get_affected_sites(connection),
     )
@@ -172,14 +174,34 @@ def delete_connection(index: int, *, log_entry_action: str | None) -> None:
     save_connection_config(connections)
 
 
-def move_connection(from_index: int, to_index: int, *, log_entry_action: str | None) -> None:
+def _move_connection(from_index: int, to_index: int, connection_type: str) -> None:
     connections = load_connection_config(lock=True)
     connection = connections[from_index]
     add_change(
-        log_entry_action or "move-connection",
+        f"move-{connection_type}-connection",
         _("Changed position of connection %s to %d") % (connection["id"], to_index),
         get_affected_sites(connection),
     )
     del connections[from_index]  # make to_pos now match!
     connections[to_index:to_index] = [connection]
     save_connection_config(connections)
+
+
+def connection_actions(config_mode_url: str, connection_type: str) -> ActionResult:
+    if not transactions.check_transaction():
+        return redirect(config_mode_url)
+
+    if request.has_var("_delete"):
+        _delete_connection(
+            index=request.get_integer_input_mandatory("_delete"),
+            connection_type=connection_type,
+        )
+
+    elif request.has_var("_move"):
+        _move_connection(
+            from_index=request.get_integer_input_mandatory("_move"),
+            to_index=request.get_integer_input_mandatory("_index"),
+            connection_type=connection_type,
+        )
+
+    return redirect(config_mode_url)

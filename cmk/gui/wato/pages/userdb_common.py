@@ -62,7 +62,7 @@ def add_connections_page_menu(
     edit_mode_path: str,
     breadcrumb: Breadcrumb,
     *,
-    documentation_reference: DocReference,
+    documentation_reference: DocReference | None = None,
 ) -> PageMenu:
     page_menu: PageMenu = PageMenu(
         dropdowns=[
@@ -100,7 +100,8 @@ def add_connections_page_menu(
         breadcrumb=breadcrumb,
         inpage_search=PageMenuSearch(),
     )
-    page_menu.add_doc_reference(title=title, doc_ref=documentation_reference)
+    if documentation_reference:
+        page_menu.add_doc_reference(title=title, doc_ref=documentation_reference)
     return page_menu
 
 

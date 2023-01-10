@@ -17,11 +17,11 @@ from cmk.utils.paths import (
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
-    make_confirmed_form_submit_link,
     make_form_submit_link,
     PageMenu,
     PageMenuDropdown,
@@ -34,7 +34,7 @@ from cmk.gui.plugins.userdb.utils import (
     load_connection_config,
     save_connection_config,
 )
-from cmk.gui.plugins.wato.utils import redirect, WatoMode
+from cmk.gui.plugins.wato.utils import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.userdb.saml2.connector import ConnectorConfig
@@ -53,6 +53,11 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
     UUID,
+)
+from cmk.gui.wato.pages.userdb_common import (
+    add_connections_page_menu,
+    connection_actions,
+    render_connections_page,
 )
 
 
@@ -209,11 +214,6 @@ def saml2_connection_valuespec() -> Dictionary:
 
 
 class ModeSAML2Config(WatoMode):
-    def _from_vars(self) -> None:
-        self.__configuration = self.from_config_file()
-        self.__valuespec = saml2_connection_valuespec()
-        self.__html_valuespec_param_prefix = "vs"
-
     @classmethod
     def name(cls) -> str:
         return "saml_config"
@@ -226,12 +226,54 @@ class ModeSAML2Config(WatoMode):
     def type(self) -> str:
         return "saml2"
 
+    def title(self) -> str:
+        return _("SAML connections")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return add_connections_page_menu(
+            title=self.title(),
+            edit_mode_path="edit_saml_config",
+            breadcrumb=breadcrumb,
+        )
+
+    def action(self) -> ActionResult:
+        return connection_actions(config_mode_url=self.mode_url(), connection_type=self.type)
+
+    def page(self) -> None:
+        render_connections_page(
+            connection_type=self.type,
+            edit_mode_path="edit_saml_config",
+            config_mode_path="saml_config",
+        )
+
+
+class ModeEditSAML2Config(WatoMode):
+    def _from_vars(self) -> None:
+        self._valuespec = saml2_connection_valuespec()
+        self._html_valuespec_param_prefix = "vs"
+
+    @classmethod
+    def name(cls) -> str:
+        return "edit_saml_config"
+
+    @staticmethod
+    def static_permissions() -> Collection[PermissionName]:
+        return ["global"]
+
+    @classmethod
+    def parent_mode(cls) -> type[WatoMode]:
+        return ModeSAML2Config
+
+    @property
+    def type(self) -> str:
+        return "saml2"
+
     @property
     def version(self) -> str:
         return "1.0.0"
 
     def title(self) -> str:
-        title = self.__valuespec.title()
+        title = self._valuespec.title()
         assert title is not None
         return title
 
@@ -244,7 +286,7 @@ class ModeSAML2Config(WatoMode):
                     topics=[
                         PageMenuTopic(
                             title=_("Actions"),
-                            entries=list(self.page_menu_entries()),
+                            entries=list(self._page_menu_entries()),
                         ),
                     ],
                 ),
@@ -253,8 +295,7 @@ class ModeSAML2Config(WatoMode):
             inpage_search=PageMenuSearch(),
         )
 
-    def page_menu_entries(self) -> Iterator[PageMenuEntry]:
-
+    def _page_menu_entries(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Save"),
             icon_name="save",
@@ -264,25 +305,12 @@ class ModeSAML2Config(WatoMode):
             is_enabled=True,
             css_classes=["submit"],
         )
-        yield PageMenuEntry(
-            title=_("Delete"),
-            icon_name="delete",
-            item=make_confirmed_form_submit_link(
-                form_name="value_editor",
-                button_name="_delete",
-                message="Do you really want to delete this SAML connection?",
-            ),
-            is_shortcut=True,
-            is_suggested=True,
-            is_enabled=True,
-            css_classes=["submit"],
-        )
 
     def page(self) -> None:
         html.begin_form("value_editor", method="POST")
 
-        self.__valuespec.render_input_as_form(
-            self.__html_valuespec_param_prefix, self.from_config_file()
+        self._valuespec.render_input_as_form(
+            self._html_valuespec_param_prefix, self.from_config_file()
         )
 
         forms.end()
@@ -295,19 +323,18 @@ class ModeSAML2Config(WatoMode):
 
         if request.has_var("_save"):
             self._action_save()
-        elif request.has_var("_delete"):
-            self._action_delete()
 
-        return redirect(self.mode_url())
+        return redirect(mode_url("saml_config"))
 
     def from_config_file(self) -> DictionaryModel:
-        connections = active_connections_by_type(self.type)
-
-        if not connections:
+        if not (connection_id := request.get_ascii_input("id")):
             return {}
 
-        # Only one SAML connection is currently supported
-        return _config_to_valuespec(ConnectorConfig(**connections[0]))
+        for connection in active_connections_by_type(self.type):
+            if connection["id"] == connection_id:
+                return _config_to_valuespec(ConnectorConfig(**connection))
+
+        raise MKUserError(None, _("The requested connection does not exist."))
 
     def to_config_file(self, user_input: DictionaryModel) -> DictionaryModel:
         # The config needs to be serialised to JSON and loaded back into a dict because the .dict()
@@ -318,28 +345,18 @@ class ModeSAML2Config(WatoMode):
         # 'ast.literal_eval' for loading).
         return json.loads(_valuespec_to_config(user_input).json())
 
-    def _connection_id(self) -> str:
-        return self.__configuration.get("id", self._user_input()["id"])
-
-    def _user_input(self) -> DictionaryModel:
-        return self.__valuespec.from_html_vars(self.__html_valuespec_param_prefix)
-
     def _validate_user_input(self, user_input: DictionaryModel) -> None:
-        self.__valuespec.validate_value(user_input, self.__html_valuespec_param_prefix)
-        self.__valuespec.validate_datatype(user_input, self.__html_valuespec_param_prefix)
+        self._valuespec.validate_value(user_input, self._html_valuespec_param_prefix)
+        self._valuespec.validate_datatype(user_input, self._html_valuespec_param_prefix)
 
     def _action_save(self) -> None:
-        user_input = self._user_input()
+        user_input = self._valuespec.from_html_vars(self._html_valuespec_param_prefix)
         self._validate_user_input(user_input)
 
         connections = load_connection_config(lock=True)
-        updated_connections = [c for c in connections if c["id"] != self._connection_id()]
+        updated_connections = [c for c in connections if c["id"] != user_input["id"]]
         updated_connections.append(self.to_config_file(user_input))
         save_connection_config(updated_connections)
-
-    def _action_delete(self) -> None:
-        connections = load_connection_config(lock=True)
-        save_connection_config([c for c in connections if c["id"] != self._connection_id()])
 
 
 def _valuespec_to_config(user_input: DictionaryModel) -> ConnectorConfig:
@@ -420,3 +437,4 @@ def register(
     mode_registry: ModeRegistry,
 ) -> None:
     mode_registry.register(ModeSAML2Config)
+    mode_registry.register(ModeEditSAML2Config)

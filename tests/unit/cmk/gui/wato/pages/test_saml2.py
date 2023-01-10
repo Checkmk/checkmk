@@ -17,7 +17,7 @@ from cmk.utils.paths import (
 )
 
 from cmk.gui.http import Request
-from cmk.gui.wato.pages.saml2 import ModeSAML2Config
+from cmk.gui.wato.pages.saml2 import ModeEditSAML2Config
 
 
 class Variables(NamedTuple):
@@ -146,8 +146,8 @@ def test_to_config_file(
 ) -> None:
     monkeypatch.setattr("pathlib.Path.write_text", lambda s, t: None)
 
-    wato_mode = ModeSAML2Config()
-    valuespec_config = wato_mode._user_input()
+    wato_mode = ModeEditSAML2Config()
+    valuespec_config = wato_mode._valuespec.from_html_vars(wato_mode._html_valuespec_param_prefix)
     actual_serialised_config = wato_mode.to_config_file(valuespec_config)
 
     assert valuespec_config == config_variables.valuespec
@@ -161,9 +161,13 @@ def test_from_config_file(monkeypatch: pytest.MonkeyPatch, config_variables: Var
     }
     monkeypatch.setattr("pathlib.Path.read_text", lambda s: file_content[str(s)])
     monkeypatch.setattr(
+        "cmk.gui.wato.pages.saml2.request.get_ascii_input",
+        lambda s: config_variables.valuespec["id"],
+    )
+    monkeypatch.setattr(
         "cmk.gui.plugins.userdb.utils.active_config.user_connections", [config_variables.serialised]
     )
-    wato_mode = ModeSAML2Config()
+    wato_mode = ModeEditSAML2Config()
     config = wato_mode.from_config_file()
 
     assert config == config_variables.valuespec

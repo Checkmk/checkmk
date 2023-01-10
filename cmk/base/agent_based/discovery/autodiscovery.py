@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import itertools
 import logging
 import socket
 import time
@@ -144,7 +145,7 @@ def automation_discovery(
         fetched: Sequence[
             tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
         ] = fetch_all(
-            *(
+            itertools.chain.from_iterable(
                 make_sources(
                     host_name_,
                     ipaddress_,

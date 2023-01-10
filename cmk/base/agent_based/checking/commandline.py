@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 from collections.abc import Callable, Container
 from functools import partial
 
@@ -85,7 +86,7 @@ def _commandline_checking(
         hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
     fetched = fetch_all(
-        *(
+        itertools.chain.from_iterable(
             make_sources(
                 host_name_,
                 ipaddress_,

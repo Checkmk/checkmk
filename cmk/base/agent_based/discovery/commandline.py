@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import itertools
 import logging
 from collections import Counter
 from collections.abc import Callable, Container, Sequence
@@ -84,7 +85,7 @@ def commandline_discovery(
             fetched: Sequence[
                 tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
             ] = fetch_all(
-                *(
+                itertools.chain.from_iterable(
                     make_sources(
                         host_name_,
                         ip_address_,
@@ -269,7 +270,7 @@ def _commandline_check_discovery(
         hosts = [(node, config.lookup_ip_address(config_cache, node)) for node in nodes]
 
     fetched = fetch_all(
-        *(
+        itertools.chain.from_iterable(
             make_sources(
                 host_name_,
                 ipaddress_,

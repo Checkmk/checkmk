@@ -235,7 +235,7 @@ def _fetch_real_host_data(
     fetched: Sequence[
         tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
-        *(
+        itertools.chain.from_iterable(
             make_sources(
                 host_name_,
                 ipaddress_,

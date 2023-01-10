@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 from collections.abc import Sequence
 from typing import Any, Literal
@@ -81,7 +82,7 @@ def get_check_preview(
     fetched: Sequence[
         tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
-        *(
+        itertools.chain.from_iterable(
             make_sources(
                 host_name_,
                 ip_address_,

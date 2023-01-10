@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 from dataclasses import dataclass
-from enum import Enum, IntEnum, unique
+from enum import IntEnum, StrEnum, unique
 from typing import Any, Final, Mapping, MutableMapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
@@ -288,7 +288,7 @@ def _is_work_metric(metric: str) -> bool:
     return metric not in ("timestamp", "frequency") and not metric.endswith("base")
 
 
-class MetricSuffix(str, Enum):
+class MetricSuffix(StrEnum):
     QUEUE_LENGTH = "ql"  # Queue Lengths (currently only Windows). Windows uses counters here.
     WAIT = "wait"
 

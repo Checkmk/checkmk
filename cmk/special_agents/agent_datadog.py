@@ -599,7 +599,7 @@ class LogsQuerier:
 
     @staticmethod
     def _datetime_to_api_compliant_str(d: datetime.datetime) -> str:
-        return d.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        return d.astimezone().isoformat(timespec="seconds")
 
 
 _SEVERITY_MAPPER: Mapping[str, int] = {

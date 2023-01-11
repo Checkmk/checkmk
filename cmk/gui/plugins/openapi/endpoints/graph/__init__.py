@@ -5,7 +5,7 @@
 """Graphs
 
 Graphs visible in the Checkmk user interface can also be retrieved via the
-REST-API. You have to specify site, host, service and finally the graph id or metric name.
+REST-API.
 """
 
 from cmk.gui.plugins.metrics.graph_images import graph_spec_from_request

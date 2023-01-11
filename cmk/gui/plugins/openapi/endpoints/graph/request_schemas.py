@@ -9,13 +9,14 @@ from cmk.gui.plugins.openapi.endpoints.graph.common import (
     BaseRequestSchema,
     GraphIdField,
     MetricIdField,
+    TYPE_FIELD,
 )
 
 from cmk.fields import String
 
 
 class _BaseGetSchema(BaseRequestSchema):
-    type = String(enum=["graph", "single_metric"], example="single_metric", required=True)
+    type = TYPE_FIELD
     site = SiteField(description="The name of the site.", example="heute", required=True)
     host_name = HostField(
         description="The hostname to use.",

@@ -19,11 +19,24 @@ GRAPH_NAME_VALIDATOR = marshmallow.validate.Regexp(
     regex=GRAPH_NAME_REGEX, error=GRAPH_NAME_ERROR_MESSAGE, flags=re.ASCII
 )
 
+TYPE_FIELD = String(
+    enum=["graph", "single_metric"],
+    example="single_metric",
+    required=True,
+    description=(
+        "Specify whether you want to receive a single metric (via metric_id), "
+        "or a graph containing multiple metrics (via graph_id)."
+    ),
+)
+
 
 class GraphIdField(String):
     def __init__(self):
         super().__init__(
             description="The ID of the graph.",
+            # TODO: After activating the "Show internal IDs" in the "display
+            # options" of the Service view, you can see the ID of a graph in
+            # the title of the graph.
             example="cmk_cpu_time_by_phase",
             required=True,
             validate=GRAPH_NAME_VALIDATOR,
@@ -34,6 +47,9 @@ class MetricIdField(String):
     def __init__(self):
         super().__init__(
             description="The ID of the metric.",
+            # TODO: After activating the "Show internal IDs" in the "display
+            # options" of the Service view, you can see the ID of a metric in
+            # the legend of the graph.
             example="cmk_time_agent",
             required=True,
             validate=GRAPH_NAME_VALIDATOR,

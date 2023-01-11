@@ -13,7 +13,6 @@ from livestatus import SiteId
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
-from cmk.utils.structured_data import RawStructuredDataNode
 
 # This is an awful type, but just putting `Any` and hoping for the best is no solution.
 _JSONSerializable = Union[
@@ -29,7 +28,7 @@ DiagnosticsCLParameters = list[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
 CheckmkFilesMap = dict[str, Path]
-DiagnosticsElementJSONResult = Union[Mapping[str, _JSONSerializable], RawStructuredDataNode]
+DiagnosticsElementJSONResult = Mapping[str, _JSONSerializable]
 DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 

@@ -25,7 +25,14 @@ import cmk.utils.paths
 import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.structured_data import load_tree, make_filter, SDKey, SDPath, StructuredDataNode
+from cmk.utils.structured_data import (
+    load_tree,
+    make_filter,
+    SDKey,
+    SDPath,
+    SDRawPath,
+    StructuredDataNode,
+)
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
@@ -70,7 +77,7 @@ class InventoryPath:
     key: SDKey | None = None
 
     @classmethod
-    def parse(cls, raw_path: str) -> InventoryPath:
+    def parse(cls, raw_path: SDRawPath) -> InventoryPath:
         if not raw_path:
             return InventoryPath(
                 path=tuple(),

@@ -28,12 +28,14 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import (
+    ATTRIBUTES_KEY,
     make_filter_from_choice,
     parse_visible_raw_path,
     RawIntervalsFromConfig,
     RetentionIntervals,
     SDPath,
     StructuredDataNode,
+    TABLE_KEY,
     UpdateResult,
 )
 from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, result, RuleSetName
@@ -561,10 +563,6 @@ def _create_trees_from_inventory_plugin_items(
 #             retention_interval: configured in the above ruleset
 
 
-_ATTRIBUTES_KEY = "Attributes"
-_TABLE_KEY = "Table"
-
-
 def _may_update(
     *,
     now: int,
@@ -581,9 +579,9 @@ def _may_update(
 
     def _get_node_type(item: Attributes | TableRow) -> str:
         if isinstance(item, Attributes):
-            return _ATTRIBUTES_KEY
+            return ATTRIBUTES_KEY
         if isinstance(item, TableRow):
-            return _TABLE_KEY
+            return TABLE_KEY
         raise NotImplementedError()
 
     raw_cache_info_by_retention_key = {
@@ -612,7 +610,7 @@ def _may_update(
             retention_interval=from_config.interval,
         )
 
-        if node_type == _ATTRIBUTES_KEY:
+        if node_type == ATTRIBUTES_KEY:
             results.append(
                 inv_node.attributes.update_from_previous(
                     now,
@@ -622,7 +620,7 @@ def _may_update(
                 )
             )
 
-        elif node_type == _TABLE_KEY:
+        elif node_type == TABLE_KEY:
             results.append(
                 inv_node.table.update_from_previous(
                     now,
@@ -654,11 +652,11 @@ def _get_intervals_from_config(
 
         if for_attributes := entry.get("attributes"):
             intervals.setdefault(
-                (node_path, _ATTRIBUTES_KEY), IntervalFromConfig(for_attributes, interval)
+                (node_path, ATTRIBUTES_KEY), IntervalFromConfig(for_attributes, interval)
             )
 
         if for_table := entry.get("columns"):
-            intervals.setdefault((node_path, _TABLE_KEY), IntervalFromConfig(for_table, interval))
+            intervals.setdefault((node_path, TABLE_KEY), IntervalFromConfig(for_table, interval))
 
     return intervals
 

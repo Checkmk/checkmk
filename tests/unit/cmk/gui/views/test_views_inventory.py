@@ -8,7 +8,15 @@ from collections.abc import Sequence
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDKey, SDPairs, SDPath, SDRow, SDValue, StructuredDataNode
+from cmk.utils.structured_data import (
+    SDKey,
+    SDPairs,
+    SDPath,
+    SDRawPath,
+    SDRow,
+    SDValue,
+    StructuredDataNode,
+)
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -491,7 +499,7 @@ def test_make_node_displayhint(
     ],
 )
 def test_make_node_displayhint_from_hint(
-    raw_path: str,
+    raw_path: SDRawPath,
     expected_node_hint: NodeDisplayHint,
     expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
@@ -650,7 +658,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         ),
     ],
 )
-def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
+def test_make_column_displayhint_from_hint(
+    raw_path: SDRawPath, expected: ColumnDisplayHint
+) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
     hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
 
@@ -776,7 +786,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     ],
 )
 def test_make_attribute_displayhint_from_hint(
-    raw_path: str, expected: AttributeDisplayHint
+    raw_path: SDRawPath, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
     hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_attribute_hint(inventory_path.key or "")

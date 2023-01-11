@@ -1,8 +1,8 @@
 PYTHON3_MOD_WSGI := python3-mod_wsgi
-PYTHON3_MOD_WSGI_VERS := 4.7.0
+PYTHON3_MOD_WSGI_VERS := 4.9.4
 PYTHON3_MOD_WSGI_DIR := $(PYTHON3_MOD_WSGI)-$(PYTHON3_MOD_WSGI_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_MOD_WSGI_BUILD_ID := 4
+PYTHON3_MOD_WSGI_BUILD_ID := 1
 
 # Try to find the apxs binary
 ifneq ("$(wildcard /usr/sbin/apxs)","")

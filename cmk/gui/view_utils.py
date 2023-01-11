@@ -101,15 +101,9 @@ def _render_host_links(output: str, row: Row | None) -> str:
 
 def _normalize_check_http_link(output: str) -> str:
     """Handling for the HTML code produced by check_http when "clickable URL" option is active"""
-    return (
-        re.sub(
-            '<A HREF="' + _URL_PATTERN + '" target="_blank">(.*?) </A>',
-            lambda p: f"{p.group(1)} {p.group(2)}",
-            output,
-        )
-        if "A HREF" in output
-        else output
-    )
+    if not (match := re.match('<A HREF="' + _URL_PATTERN + '" target="_blank">(.*?) </A>', output)):
+        return output
+    return f"{match.group(1)} {match.group(2)}"
 
 
 def _render_icon_button(output: str) -> str:

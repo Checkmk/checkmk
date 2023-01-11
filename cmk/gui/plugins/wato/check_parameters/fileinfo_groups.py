@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.fileinfo_utils import (
+    get_fileinfo_negative_age_tolerance_element,
+)
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     HostRulespec,
@@ -307,6 +310,7 @@ def get_fileinfo_groups_param_elements():
                 ),
             ),
         ),
+        get_fileinfo_negative_age_tolerance_element(),
     ]
 
 

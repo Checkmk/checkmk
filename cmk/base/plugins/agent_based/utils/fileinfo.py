@@ -307,14 +307,23 @@ def _fileinfo_check_function(
         if metric.value is None:
             continue
 
-        if "age" in metric.title.lower() and metric.value < 0:
-            age = metric.verbose_func(abs(metric.value))
+        # if the age of the file is negative but falls within the negative_age_tolerance
+        # period, set the age to 0
+        tolerance = params.get("negative_age_tolerance", 0)
+        adjusted_metric_value = (
+            0
+            if "age" in metric.title.lower() and metric.value < 0 and abs(metric.value) <= tolerance
+            else metric.value
+        )
+
+        if "age" in metric.title.lower() and adjusted_metric_value < 0:
+            age = metric.verbose_func(abs(adjusted_metric_value))
             message = (
                 "The timestamp of the file is in the future. Please investigate your host times"
             )
 
             yield Result(state=State.UNKNOWN, summary=f"{metric.title}: -{age}, {message}")
-            yield Metric(metric.key, metric.value)
+            yield Metric(metric.key, adjusted_metric_value)
 
             continue
 
@@ -322,7 +331,7 @@ def _fileinfo_check_function(
         min_levels = params.get("min" + metric.key, (None, None))
 
         yield from check_levels(
-            metric.value,
+            adjusted_metric_value,
             levels_upper=max_levels,
             levels_lower=min_levels,
             metric_name=metric.key,
@@ -421,9 +430,14 @@ def _check_individual_files(
     This is done to generate information for the long output.
     """
 
+    # if the age of the file is negative but falls within the negative_age_tolerance
+    # period, set the age to 0
+    tolerance = params.get("negative_age_tolerance", 0)
+    adjusted_file_age = 0 if file_age < 0 and abs(file_age) <= tolerance else file_age
+
     for key, value in [
-        ("age_oldest", file_age),
-        ("age_newest", file_age),
+        ("age_oldest", adjusted_file_age),
+        ("age_newest", adjusted_file_age),
         ("size_smallest", file_size),
         ("size_largest", file_size),
     ]:
@@ -441,9 +455,9 @@ def _check_individual_files(
         return
 
     size = render.filesize(file_size)
-    age = render.timespan(abs(file_age))
+    age = render.timespan(abs(adjusted_file_age))
 
-    if file_age < 0:
+    if adjusted_file_age < 0:
         message = "The timestamp of the file is in the future. Please investigate your host times"
         yield Result(
             state=State.UNKNOWN, summary=f"[{file_name}] Age: -{age}, Size: {size}, {message}"

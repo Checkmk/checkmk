@@ -42,7 +42,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CertificateWithPrivateKey,
-    Checkbox,
     Dictionary,
     DictionaryEntry,
     DictionaryModel,
@@ -165,18 +164,6 @@ def _user_properties() -> list[DictionaryEntry]:
                 ),
                 default_value="user_id",
                 allow_empty=False,
-            ),
-        ),
-        (
-            "create_users_on_login",
-            Checkbox(
-                title=_("Create new users on login"),
-                help=_(
-                    "If enabled, Checkmk automatically creates new users when they first log in. If "
-                    "the user profile cannot be determined based on the current configuration, the "
-                    "default user profile from the global settings is used."
-                ),
-                default_value=True,
             ),
         ),
     ]

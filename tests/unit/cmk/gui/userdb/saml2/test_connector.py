@@ -77,22 +77,6 @@ class TestConnector:
         connector = Connector(config)
         assert connector.is_enabled() is False
 
-    def test_edit_user_does_not_create_new_user(
-        self,
-        raw_config: dict[str, Any],
-        users_pre_edit: Users,
-        user_store: Users,
-    ) -> None:
-        config = {**raw_config, **{"create_users_on_login": False}}
-        connector = Connector(config)
-
-        new_user_id = UserId("Paul")
-
-        with pytest.raises(ValueError):
-            connector.create_and_update_user(new_user_id)
-
-        assert user_store == users_pre_edit
-
     def test_edit_user_creates_new_user(
         self,
         raw_config: dict[str, Any],
@@ -100,8 +84,7 @@ class TestConnector:
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
-        config = {**raw_config, **{"create_users_on_login": True}}
-        connector = Connector(config)
+        connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
         new_user_spec = UserSpec({"connector": connector.id})
@@ -118,8 +101,7 @@ class TestConnector:
         users_pre_edit: Users,
         user_store: Users,
     ) -> None:
-        config = {**raw_config, **{"create_users_on_login": True}}
-        connector = Connector(config)
+        connector = Connector(raw_config)
 
         new_user_id = UserId("Paul")
 

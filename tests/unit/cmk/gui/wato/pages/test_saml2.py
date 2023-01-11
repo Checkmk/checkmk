@@ -93,7 +93,6 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
             "vs_p_connection_timeout_1": "12",
             **signature_certificate.http,
             "vs_p_user_id_attribute": "username",
-            "vs_p_create_users_on_login": "on",
         },
         valuespec={
             "type": "saml2",
@@ -109,7 +108,6 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
             "idp_metadata_endpoint": "https://myidp.com",
             **signature_certificate.valuespec,
             "user_id_attribute": "username",
-            "create_users_on_login": True,
         },
         serialised={
             "type": "saml2",
@@ -127,7 +125,6 @@ def fixture_config_variables(signature_certificate: Variables) -> Variables:
                 "user_id_attribute": "username",
                 **signature_certificate.serialised,
             },
-            "create_users_on_login": True,
         },
     )
 

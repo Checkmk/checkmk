@@ -47,7 +47,6 @@ def fixture_raw_config(signature_certificate_paths: tuple[Path, Path]) -> dict[s
                 "public": str(public_keyfile_path),
             },
         },
-        "create_users_on_login": False,
     }
 
 

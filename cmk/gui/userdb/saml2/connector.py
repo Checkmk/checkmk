@@ -35,7 +35,6 @@ class ConnectorConfig(BaseModel):
     docu_url: str
     disabled: bool
     interface_config: InterfaceConfig
-    create_users_on_login: bool
 
 
 class Connector(UserConnector):
@@ -77,9 +76,8 @@ class Connector(UserConnector):
     ) -> None:
         """Update user profile in Checkmk users store.
 
-        It can be configured whether to create new users when they first log in. In this case, the
-        user is created on the condition that a user with the same ID does not already exist for a
-        different connection.
+        A new user is created on the condition that a user with the same ID does not already exist
+        for a different connection.
 
         Args:
             user_id: The unique ID of the user that is to be created or edited
@@ -89,7 +87,6 @@ class Connector(UserConnector):
 
         Raises:
             ValueError:
-                - The user does not exist, and it is not configured to create users
                 - The user exists, but the corresponding connection cannot be determined (e.g. when
                   a connection has been deleted)
                 - The user already exists for a different connection
@@ -101,7 +98,7 @@ class Connector(UserConnector):
 
         with UserStore(mode=OpenFileMode.WRITE) as user_store:
             if not (user_entry := user_store.get(user_id)):
-                self._create_user(user_id, updated_user_profile, user_store)
+                user_store[user_id] = updated_user_profile
                 return
 
             self._update_user(
@@ -110,13 +107,6 @@ class Connector(UserConnector):
                 connection_id=user_entry.get("connector"),
                 user_store=user_store,
             )
-
-    def _create_user(self, user_id: UserId, user_profile: UserSpec, user_store: Users) -> None:
-        if not self.__config.create_users_on_login:
-            LOGGER.debug("User %s does not exist, and not configured to create", repr(user_id))
-            raise ValueError("User does not exist")
-
-        user_store[user_id] = user_profile
 
     def _update_user(
         self, user_id: UserId, user_profile: UserSpec, user_store: Users, connection_id: str | None
